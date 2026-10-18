@@ -12,9 +12,9 @@
 
 O projeto é um jogo de luta **100% 2D**, com partidas centradas em leitura do oponente, execução de comandos, defesa, agarrões, punições, vantagem de frames e controle de distância.
 
-A direção artística combina a expressividade, as silhuetas e a energia dos jogos de luta 2D clássicos — tendo **The King of Fighters 2002** como uma referência visual — com animações muito expressivas, poses fortes e exagero estilizado inspirados em **Skullgirls**. O combate usa como referência sistemas associados a **Tekken**, adaptados para um plano 2D: quatro botões de ataque, comandos simultâneos, agarrões, defesa, vantagem de frames, punições e golpes com execução precisa. Alguns especiais terão sequências interativas durante uma cena cinematográfica, inspiradas na ideia de pressionar botões durante especiais de jogos como **Naruto: Ultimate Ninja 5**.
+A direção de arte deve seguir o guia autoral em [`identidade-visual.md`](./identidade-visual.md): ilustração 2D de alta definição, silhuetas marcantes, poses expressivas, animação desenhada em quadros e a leitura imediata de um jogo de luta clássico. Esse guia é a base visual para personagens, cenários, efeitos, interface e materiais promocionais.
 
-Essas referências definem intenções, não uma cópia: personagens, cenários, nomes, animações, trilha sonora, efeitos, interface e propriedades específicas devem ser originais.
+O combate é um jogo de luta técnico em plano 2D, com quatro botões de ataque, comandos simultâneos, agarrões, defesa, vantagem de frames, punições e golpes de execução precisa. Personagens, nomes, animações, trilha sonora, efeitos, interface e propriedades específicas devem ser originais.
 
 ### 1.1 Pilares de design
 
