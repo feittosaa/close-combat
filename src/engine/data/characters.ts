@@ -11,6 +11,7 @@ export interface CharacterDefinition {
 }
 
 export const DEFAULT_CHARACTER_ID = 'tester';
+export const SECOND_TEST_CHARACTER_ID = 'dummy';
 
 /** Primeiro personagem provisório; ambos os lados o usam até existir seleção. */
 export const characters: readonly CharacterDefinition[] = [
@@ -23,6 +24,17 @@ export const characters: readonly CharacterDefinition[] = [
     assets: {
       spritesheet: 'sprites/characters/tester/tester.png',
       animationManifest: 'animations/tester.json',
+    },
+  },
+  {
+    id: SECOND_TEST_CHARACTER_ID,
+    name: 'Dummy',
+    maxHealth: 900,
+    movement: { walkSpeed: 2.5, jumpVelocity: -10.5 },
+    moveIds: ['test-jab', 'test-cross', 'test-low-kick', 'test-heavy-kick'],
+    assets: {
+      spritesheet: 'sprites/characters/dummy/dummy.png',
+      animationManifest: 'animations/dummy.json',
     },
   },
 ];

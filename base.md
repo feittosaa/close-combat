@@ -96,6 +96,8 @@ Combinações simultâneas são representadas com `+`:
 
 **Regra de leitura:** `+` significa simultâneo dentro de uma janela de tolerância configurável; a vírgula significa sequência. No protótipo, o buffer guarda 30 frames e considera simultâneos pressionamentos separados por até 3 frames, inclusive. Esses valores são provisórios.
 
+Se um botão puder formar um chord registrado, seu golpe simples aguarda o fechamento dessa janela. Um chord registrado corresponde ao conjunto exato de botões e tem prioridade sobre golpes simples. Uma combinação sem golpe cadastrado dentro da janela é consumida e ignorada; seus botões não viram ataques simples acidentais.
+
 ### 3.2 Direções
 
 As direções são relativas ao adversário, e não fixas à tela. `F` e `B` trocam de lado quando o personagem troca de posição em relação ao oponente.
@@ -682,11 +684,10 @@ O projeto deve crescer com testes pequenos e reproduzíveis. No mínimo, criar t
 
 ## 20. Decisões em aberto
 
-As decisões abaixo não impedem o início do protótipo. Até serem confirmadas, usar padrões configuráveis e evitar espalhar suposições pelo código.
+As decisões abaixo não impedem o início do protótipo. Até serem confirmadas, usar padrões configuráveis e evitar espalhar suposições pelo código. As regras provisórias de rounds, sequências e elenco de teste estão definidas nesta especificação e implementadas na Etapa 2 de `pipeline.md`.
 
 - **Direção exata da arte:** proporção dos sprites, resolução-base, animação quadro a quadro ou híbrida e quantidade de quadros por golpe.
 - **Formato da arena:** limites, paredes, cenários e interações com o ambiente.
-- **Regras de round:** quantidade, duração, vida e condições de empate.
 - **Mapeamento físico padrão:** teclas iniciais e prioridade de teclado/controle.
 - **Sistema de recursos:** barra de especial, custo de golpes e recuperação de recurso.
 - **Alcance dos QTEs:** quais especiais os usam, se o defensor também participa e como o desempenho altera o resultado.
@@ -705,7 +706,11 @@ Os valores abaixo servem apenas para validar movimento e interface na fundação
 - gravidade: `0,55` unidades por frame²;
 - largura de colisão corporal: `54` unidades;
 - vida inicial: `1000`;
-- duração visual provisória do round: `99` segundos.
+- duração provisória do round: `99` segundos;
+- quantidade inicial de rounds: `2`;
+- pausa após o resultado do round: `90` frames.
+
+`match.maxHealth` configura o teto de vida do protótipo; a vida de cada personagem não pode exceder esse teto.
 
 Reavaliar esses valores ao testar sensação de controle e regras de round; manter a configuração fora da lógica de renderização.
 
@@ -725,6 +730,13 @@ Até os personagens e golpes oficiais serem definidos, os botões `1`–`4` disp
 | `2` | 6 | 3 | 14 | 65 | médio |
 | `3` | 7 | 3 | 16 | 60 | baixo |
 | `4` | 9 | 4 | 19 | 85 | médio |
+
+Tester também tem dois chords provisórios para exercitar o parser; números sem decisão de balanceamento:
+
+| Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
+|---|---|---:|---:|---:|---:|---|
+| `1+2` | soco duplo | 6 | 2 | 14 | 75 | médio |
+| `3+4` | chute duplo | 8 | 3 | 17 | 90 | médio |
 
 Comandos direcionais também terão variantes provisórias, reconhecidas no frame em que o botão é pressionado:
 
@@ -760,7 +772,20 @@ Os golpes usam hitboxes retangulares de teste e atingem uma vez por execução. 
 
 A interface identifica os modos neutro, movimento, dash, no ar, agachado, preparo, ativo, recuperação, defesa, atordoado, bloqueio, agarrado e caído. A hitbox visual aparece apenas nos frames ativos e usa a mesma geometria da checagem de acerto.
 
-Na primeira implementação, um ataque é iniciado por um novo pressionamento de um único botão. No chão, `D` seleciona variante abaixada quando existir; as demais direções selecionam a variante exata e por fim o golpe básico. No ar, escolhe o golpe aéreo do botão. Combinações simultâneas e sequências ainda não disparam golpes; manter essa limitação explícita até o parser de comandos ser implementado.
+Na primeira implementação, um ataque é iniciado por um novo comando reconhecido. `1+2` e `3+4` selecionam os chords de teste de Tester; combinações sem golpe cadastrado são ignoradas, sem virar ataques simples. Comandos de um botão que possam integrar um chord registrado aguardam o fechamento da janela de 3 frames. No chão, `D` seleciona variante abaixada quando existir; as demais direções selecionam a variante exata e por fim o golpe básico. No ar, escolhe o golpe aéreo do botão. Sequências usam direções relativas ao personagem: `F,F+2` exige soltar e pressionar frente novamente; `D,DF+3` aceita a transição direta de baixo para diagonal. Os passos precisam caber em 12 frames; a sequência reconhecida tem prioridade sobre o golpe simples do mesmo botão.
+
+### Regras provisórias de round e elenco
+
+`roundCount` indica o número exato de rounds da luta local. Cada round termina por nocaute (vida chega a zero) ou tempo; no tempo, vence quem tiver mais vida. Vida igual ou nocaute duplo gera empate e não concede ponto. A luta mostra o resultado por 90 frames antes de iniciar o próximo round. Depois do último round, vence quem ganhou mais rounds; igualdade gera empate. `R` reinicia a luta completa usando os valores atuais da configuração. O round reiniciado limpa vida, posições, golpes, stun, dash, buffer e marcador de rounds.
+
+O elenco inclui `Tester` e `Dummy` (`dummy`) para validar atributos e associação de golpes por personagem. Dummy é apenas um segundo conjunto mínimo de dados, não um personagem final.
+
+### Comandos de sequência provisórios de Tester
+
+| Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
+|---|---|---:|---:|---:|---:|---|
+| `F,F+2` | soco de avanço duplo | 8 | 3 | 18 | 80 | médio |
+| `D,DF+3` | chute de entrada diagonal | 7 | 3 | 17 | 68 | médio |
 
 ---
 

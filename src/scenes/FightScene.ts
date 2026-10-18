@@ -22,6 +22,13 @@ export class FightScene extends Phaser.Scene {
   private hitboxView?: HitboxView;
   private hud?: CombatHud;
   private readonly handleEscape = (): void => { this.scene.start('MenuScene'); };
+  private readonly handleRestart = (): void => {
+    if (!this.simulation?.isMatchOver()) return;
+    this.simulation.resetMatch();
+    this.commandBuffers.forEach((buffer) => buffer.clear());
+    this.currentInputs = [neutralInput(), neutralInput()];
+    this.syncViewsAndHud();
+  };
 
   constructor() {
     super('FightScene');
@@ -48,6 +55,7 @@ export class FightScene extends Phaser.Scene {
     ];
 
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
+    this.input.keyboard?.on('keydown-R', this.handleRestart);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup, this);
     this.syncViewsAndHud();
   }
@@ -81,6 +89,7 @@ export class FightScene extends Phaser.Scene {
 
   private cleanup(): void {
     this.input.keyboard?.off('keydown-ESC', this.handleEscape);
+    this.input.keyboard?.off('keydown-R', this.handleRestart);
     this.keyboardInputs.forEach((input) => input.destroy());
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());

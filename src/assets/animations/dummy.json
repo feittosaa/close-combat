@@ -1,0 +1,23 @@
+{
+  "characterId": "dummy",
+  "textureKey": "dummy",
+  "spritesheet": "../sprites/characters/dummy/dummy.png",
+  "frameSize": {
+    "width": null,
+    "height": null
+  },
+  "clips": [
+    { "key": "dummy-idle", "start": null, "end": null, "frameRate": 8, "repeat": -1 },
+    { "key": "dummy-walk", "start": null, "end": null, "frameRate": 10, "repeat": -1 },
+    { "key": "dummy-dash", "start": null, "end": null, "frameRate": 14, "repeat": 0 },
+    { "key": "dummy-jump", "start": null, "end": null, "frameRate": 10, "repeat": 0 },
+    { "key": "dummy-crouch", "start": null, "end": null, "frameRate": 8, "repeat": -1 },
+    { "key": "dummy-block", "start": null, "end": null, "frameRate": 8, "repeat": -1 },
+    { "key": "dummy-hit", "start": null, "end": null, "frameRate": 12, "repeat": 0 },
+    { "key": "dummy-blockstun", "start": null, "end": null, "frameRate": 10, "repeat": 0 },
+    { "key": "dummy-grabbed", "start": null, "end": null, "frameRate": 10, "repeat": 0 },
+    { "key": "dummy-knockdown", "start": null, "end": null, "frameRate": 8, "repeat": 0 }
+  ],
+  "attackClipKeyPattern": "dummy-{moveId}-{phase}",
+  "note": "Modelo de configuração. Preencha dimensões e limites de frames antes de carregar no Phaser."
+}

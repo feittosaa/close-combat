@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { FrameInput } from '../input/types';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
+import { defaultCharacter } from '../engine/data/characters';
 
 const config = createGameConfig(1024, 576);
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
@@ -126,6 +127,129 @@ describe('Simulation movement foundation', () => {
     const crossedX = first.x;
     step(simulation, [forward, neutral]);
     expect(simulation.snapshot().characters[0].x).toBe(crossedX - config.movement.walkSpeed);
+
+    for (let frame = 0; frame < 120 && !simulation.snapshot().characters[0].grounded; frame += 1) {
+      step(simulation, [neutral, neutral]);
+    }
+
+    step(simulation, [{ direction: 'F', buttons: new Set(['1']) }, neutral]);
+    for (let frame = 0; frame < 4; frame += 1) step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot().characters[0].attack?.moveId).toBe('test-advancing-jab');
+  });
+
+  it('recognizes F,F+2 and D,DF+3 as moves in the simulation', () => {
+    const doubleForward = new Simulation(config);
+    step(doubleForward, [{ direction: 'F', buttons: new Set() }, neutral]);
+    step(doubleForward, [neutral, neutral]);
+    step(doubleForward, [{ direction: 'F', buttons: new Set() }, neutral]);
+    step(doubleForward, [{ direction: 'F', buttons: new Set(['2']) }, neutral]);
+    for (let frame = 0; frame < 4; frame += 1) step(doubleForward, [neutral, neutral]);
+    expect(doubleForward.snapshot().characters[0].attack?.moveId).toBe('test-forward-double-punch');
+
+    const diagonal = new Simulation(config);
+    step(diagonal, [{ direction: 'D', buttons: new Set() }, neutral]);
+    step(diagonal, [{ direction: 'DF', buttons: new Set(['3']) }, neutral]);
+    for (let frame = 0; frame < 4; frame += 1) step(diagonal, [neutral, neutral]);
+    expect(diagonal.snapshot().characters[0].attack?.moveId).toBe('test-diagonal-entry-kick');
+  });
+
+  it('resolves a knockout, starts the configured next round, and declares a match winner', () => {
+    const testCharacter = { ...defaultCharacter, maxHealth: 40 };
+    const roundConfig = {
+      ...config,
+      match: { ...config.match, roundCount: 2, roundDurationFrames: 2000, roundEndPauseFrames: 2 },
+    };
+    const simulation = new Simulation(roundConfig, [testCharacter, testCharacter]);
+
+    const winRound = (): void => {
+      const forward: FrameInput = { direction: 'F', buttons: new Set() };
+      for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+      step(simulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
+      for (let frame = 0; frame < 20 && simulation.snapshot().phase === 'fight'; frame += 1) {
+        step(simulation, [neutral, neutral]);
+      }
+    };
+
+    winRound();
+    expect(simulation.snapshot()).toMatchObject({ phase: 'round-over', round: 1, roundWins: [1, 0], roundWinnerId: 'player-1', roundEndReason: 'knockout' });
+    step(simulation, [neutral, neutral]);
+    step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot()).toMatchObject({ phase: 'fight', round: 2, roundWins: [1, 0] });
+    expect(simulation.snapshot().characters.map((character) => character.health)).toEqual([40, 40]);
+
+    winRound();
+    expect(simulation.snapshot().phase).toBe('round-over');
+    step(simulation, [neutral, neutral]);
+    step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot()).toMatchObject({ phase: 'match-over', round: 2, roundWins: [2, 0], matchWinnerId: 'player-1' });
+  });
+
+  it('ends a tied round on time and resets the full match from configuration', () => {
+    const roundConfig = {
+      ...config,
+      match: { ...config.match, roundCount: 1, roundDurationFrames: 1, roundEndPauseFrames: 1 },
+    };
+    const simulation = new Simulation(roundConfig);
+    step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot()).toMatchObject({ phase: 'round-over', roundEndReason: 'draw', roundWins: [0, 0] });
+    step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot()).toMatchObject({ phase: 'match-over', round: 1 });
+
+    simulation.resetMatch();
+    expect(simulation.snapshot()).toMatchObject({ phase: 'fight', round: 1, roundWins: [0, 0], roundFramesRemaining: 1 });
+    expect(simulation.snapshot().characters.map((character) => character.health)).toEqual([1000, 1000]);
+    expect(simulation.isMatchOver()).toBe(false);
+  });
+
+  it('awards a timeout round to the fighter with more remaining health', () => {
+    const timeoutConfig = {
+      ...config,
+      match: { ...config.match, roundCount: 1, roundDurationFrames: 1, roundEndPauseFrames: 1 },
+    };
+    const dummy = { ...defaultCharacter, id: 'dummy', maxHealth: 900 };
+    const simulation = new Simulation(timeoutConfig, [defaultCharacter, dummy]);
+    step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot()).toMatchObject({
+      phase: 'round-over',
+      roundEndReason: 'time',
+      roundWinnerId: 'player-1',
+      roundWins: [1, 0],
+    });
+  });
+
+  it('treats a simultaneous knockout as a tied round and clears active hitboxes', () => {
+    const testCharacter = { ...defaultCharacter, maxHealth: 40 };
+    const roundConfig = {
+      ...config,
+      match: { ...config.match, roundCount: 1, roundDurationFrames: 2000, roundEndPauseFrames: 2 },
+    };
+    const simulation = new Simulation(roundConfig, [testCharacter, testCharacter]);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
+    step(simulation, [jab, jab]);
+    for (let frame = 0; frame < 20 && simulation.snapshot().phase === 'fight'; frame += 1) {
+      step(simulation, [neutral, neutral]);
+    }
+    expect(simulation.snapshot()).toMatchObject({ phase: 'round-over', roundEndReason: 'draw', roundWins: [0, 0] });
+    expect(simulation.snapshot().activeHitboxes).toHaveLength(0);
+  });
+
+  it('produces the same final state for identical input streams', () => {
+    const first = new Simulation(config);
+    const second = new Simulation(config);
+    const stream: FrameInput[] = [
+      { direction: 'F', buttons: new Set() },
+      neutral,
+      { direction: 'F', buttons: new Set() },
+      { direction: 'N', buttons: new Set(['1']) },
+      ...Array.from({ length: 24 }, () => neutral),
+    ];
+    stream.forEach((input) => {
+      step(first, [input, neutral]);
+      step(second, [input, neutral]);
+    });
+    expect(first.snapshot()).toEqual(second.snapshot());
   });
 
   it.each([
@@ -144,12 +268,14 @@ describe('Simulation movement foundation', () => {
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
     for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
     step(simulation, [{ direction, buttons: new Set([button]) }, neutral]);
+    for (let frame = 0; frame < 4; frame += 1) step(simulation, [neutral, neutral]);
     expect(simulation.snapshot().characters[0].attack?.moveId).toBe(moveId);
   });
 
   it('keeps the crouching stance and hurtbox during a crouching attack', () => {
     const simulation = new Simulation(config);
     step(simulation, [{ direction: 'D', buttons: new Set(['1']) }, neutral]);
+    for (let frame = 0; frame < 4; frame += 1) step(simulation, [neutral, neutral]);
     expect(simulation.snapshot().characters[0].attack?.moveId).toBe('test-crouching-jab');
     expect(simulation.snapshot().characters[0].crouching).toBe(true);
 
@@ -189,6 +315,27 @@ describe('Simulation movement foundation', () => {
       expect(snapshot.hitEvents[0]?.outcome).toBe('block');
       expect(snapshot.characters[1].x).toBeGreaterThan(targetX);
     }
+  });
+
+  it('recognizes registered chords pressed within the three-frame window', () => {
+    const simulation = new Simulation(config);
+    step(simulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
+    step(simulation, [neutral, neutral]);
+    step(simulation, [neutral, neutral]);
+    step(simulation, [{ direction: 'N', buttons: new Set(['2']) }, neutral]);
+
+    expect(simulation.snapshot().characters[0].attack?.moveId).toBe('test-double-punch');
+    expect(simulation.snapshot().characters[0].attack?.buttons).toEqual(['1', '2']);
+  });
+
+  it('delays a single attack until its chord window closes', () => {
+    const simulation = new Simulation(config);
+    step(simulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
+    expect(simulation.snapshot().characters[0].attack).toBeUndefined();
+    for (let frame = 0; frame < 3; frame += 1) step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot().characters[0].attack).toBeUndefined();
+    step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot().characters[0].attack?.moveId).toBe('test-jab');
   });
 
   it('does not block a low while standing or a mid while crouching', () => {
@@ -237,7 +384,7 @@ describe('Simulation movement foundation', () => {
 
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, neutral]);
-    for (let frame = 0; frame < 3; frame += 1) step(simulation, [neutral, neutral]);
+    for (let frame = 0; frame < 7; frame += 1) step(simulation, [neutral, neutral]);
 
     const active = simulation.snapshot();
     expect(active.characters[0].mode).toBe('active');
@@ -261,8 +408,9 @@ describe('Simulation movement foundation', () => {
 
   it('keeps unassigned simultaneous button chords from becoming accidental attacks', () => {
     const simulation = new Simulation(config);
-    const chord: FrameInput = { direction: 'DF', buttons: new Set(['1', '2']) };
+    const chord: FrameInput = { direction: 'DF', buttons: new Set(['1', '3']) };
     step(simulation, [chord, neutral]);
+    for (let frame = 0; frame < 5; frame += 1) step(simulation, [neutral, neutral]);
 
     expect(simulation.snapshot().characters[0].attack).toBeUndefined();
   });
@@ -274,7 +422,7 @@ describe('Simulation movement foundation', () => {
 
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, jab]);
-    for (let frame = 0; frame < 4; frame += 1) step(simulation, [neutral, neutral]);
+    for (let frame = 0; frame < 8; frame += 1) step(simulation, [neutral, neutral]);
     step(simulation, [neutral, neutral]);
 
     const [first, second] = simulation.snapshot().characters;
