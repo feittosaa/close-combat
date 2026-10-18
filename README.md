@@ -15,12 +15,20 @@ npm install
 npm run dev
 ```
 
-Pressione **Enter** ou clique no menu para abrir a cena de luta provisória. Na cena de luta, **Esc** retorna ao menu. Os bonecos e o HUD são formas temporárias; o combate ainda não está implementado.
+Pressione **Enter** ou clique no menu para abrir a cena de luta. Na cena, **Esc** retorna ao menu. Os lutadores são formas provisórias. Os botões `1`–`4` executam golpes de teste; direções, botões e sequência recente aparecem nos indicadores de cada jogador. As hitboxes piscam durante os frames ativos e usam a geometria da simulação.
+
+### Controles provisórios
+
+- **Jogador 1:** mover/saltar/agachar com `A`, `D`, `W`, `S`; ataques `1`–`4` em `J`, `K`, `N`, `M`.
+- **Jogador 2:** mover/saltar/agachar com as setas; ataques `1`–`4` no teclado numérico `1`–`4`.
+- Para saltar, toque em cima ou numa diagonal para cima. `Esc` volta ao menu.
+
+O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas, defesa e comandos especiais ainda não estão implementados.
 
 ## Comandos
 
 - `npm run dev` — servidor de desenvolvimento Vite.
-- `npm run test` — executa os testes da lógica pura (ainda não há casos implementados).
+- `npm run test` — executa os testes da lógica pura.
 - `npm run build` — verificação TypeScript e build web de produção.
 - `npm run preview` — prévia local do build.
 

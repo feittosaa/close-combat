@@ -1,38 +1,48 @@
 // src/input/KeyboardInput.ts
 import type { AttackButton, Direction, FrameInput } from './types';
 
+export interface KeyboardLayout {
+  directions: { left: string; right: string; up: string; down: string };
+  buttons: Record<AttackButton, string>;
+}
+
 /** Adaptador mínimo de teclado. O remapeamento será configurável em etapa posterior. */
 export class KeyboardInput {
   private readonly pressed = new Set<string>();
   private readonly onKeyDown = (event: KeyboardEvent): void => { this.pressed.add(event.code); };
   private readonly onKeyUp = (event: KeyboardEvent): void => { this.pressed.delete(event.code); };
+  private readonly onBlur = (): void => { this.pressed.clear(); };
 
-  constructor(private readonly target: Window = window) {
+  constructor(
+    private readonly layout: KeyboardLayout,
+    private readonly target: Window = window,
+  ) {
     target.addEventListener('keydown', this.onKeyDown);
     target.addEventListener('keyup', this.onKeyUp);
+    target.addEventListener('blur', this.onBlur);
   }
 
   read(facing: 'left' | 'right' = 'right'): FrameInput {
-    const left = this.pressed.has('KeyA');
-    const right = this.pressed.has('KeyD');
-    const up = this.pressed.has('KeyW');
-    const down = this.pressed.has('KeyS');
+    const left = this.pressed.has(this.layout.directions.left);
+    const right = this.pressed.has(this.layout.directions.right);
+    const up = this.pressed.has(this.layout.directions.up);
+    const down = this.pressed.has(this.layout.directions.down);
     const towardOpponent = facing === 'right' ? right : left;
     const awayFromOpponent = facing === 'right' ? left : right;
-    const horizontal = towardOpponent === awayFromOpponent ? '' : (towardOpponent ? 'F' : 'B');
-    const vertical = up === down ? '' : (up ? 'U' : 'D');
+    const horizontal = towardOpponent === awayFromOpponent ? '' : towardOpponent ? 'F' : 'B';
+    const vertical = up === down ? '' : up ? 'U' : 'D';
     const direction = (vertical && horizontal ? `${vertical}${horizontal}` : vertical || horizontal || 'N') as Direction;
     const buttons = new Set<AttackButton>();
-    if (this.pressed.has('KeyJ')) buttons.add('1');
-    if (this.pressed.has('KeyK')) buttons.add('2');
-    if (this.pressed.has('KeyU')) buttons.add('3');
-    if (this.pressed.has('KeyI')) buttons.add('4');
+    for (const button of ['1', '2', '3', '4'] as const) {
+      if (this.pressed.has(this.layout.buttons[button])) buttons.add(button);
+    }
     return { direction, buttons };
   }
 
   destroy(): void {
     this.target.removeEventListener('keydown', this.onKeyDown);
     this.target.removeEventListener('keyup', this.onKeyUp);
+    this.target.removeEventListener('blur', this.onBlur);
     this.pressed.clear();
   }
 }
