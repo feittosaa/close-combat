@@ -263,6 +263,14 @@ Categorias definem interação com defesa e movimentação. O comportamento exat
 
 A resolução de dois golpes que se conectam no mesmo frame precisa seguir uma regra estável. O projeto deve considerar: troca de golpes (*trade*), cancelamento de ataques por hit, invulnerabilidade, armadura e interrupção por agarrão. O resultado não pode variar conforme a ordem de renderização dos sprites.
 
+Regra do protótipo: todos os contatos do frame são detectados antes de aplicar dano, então dois strikes válidos podem trocar golpes (*trade*) mesmo que cada um cause hitstun no outro. A ordem de resolução é agarrão, invulnerabilidade contra strikes, parry, bloqueio e acerto. Invulnerabilidade é declarada no golpe por número de frames e categoria; `strikeInvulnerableStartupFrames` protege apenas durante os primeiros frames do startup contra golpes normais, sem cancelar nem causar dano ao atacante. O `test-rising-punch` tem 5 frames dessa propriedade para servir de exemplo. Agarrões não são strikes e não são evitados por essa propriedade; armadura não está implementada e não altera esta regra.
+
+### 7.5 Dados específicos por personagem
+
+Cada personagem possui seu próprio livro `moves` e perfil `collision`. O livro contém golpes básicos, direcionais, aéreos, especiais, agarrões e regras de cancelamento; nomes e números não são globais nem precisam ser iguais entre personagens. Um golpe define sua hitbox de ataque junto de startup, frames ativos e recuperação. O motor resolve o golpe pelo personagem que o executa, portanto dois livros podem até reutilizar um ID se forem diferentes.
+
+O perfil de colisão define `bodyWidth` para movimento/contato entre corpos e hurtboxes separadas `standing`, `crouching` e `airborne`. Cada hurtbox usa `offsetX` em relação ao centro horizontal e `offsetY` em relação aos pés, com largura e altura em pixels lógicos. No ar o motor usa sempre `airborne`; no chão escolhe entre em pé e agachada. Hitboxes de ataque usam `forward` medido a partir do centro na direção do oponente, `yOffset` em relação aos pés e dimensões próprias por golpe. Todos os valores podem variar por personagem.
+
 ---
 
 ## 8. Defesa
@@ -311,7 +319,7 @@ Agarrões são uma ferramenta de curta distância para enfrentar adversários qu
 
 Os valores de alcance, startup, janela de quebra, dano e recuperação serão definidos golpe a golpe. Não implementar todos os agarrões como uma animação sem regras próprias.
 
-**Padrão provisório de teste:** Tester tem agarrão frontal `1+3` e agarrão forte `2+4`. Ambos só alcançam um alvo em pé, no chão, à frente do atacante e a até 76 unidades; bloqueio não os impede, mas agachar, estar no ar ou já estar em ataque/stun evita o agarrão. Após conectar, o defensor tem 6 frames para pressionar o chord oposto (`2+4` quebra `1+3`, e vice-versa). A quebra não causa dano e deixa o atacante em 12 frames de recuperação. Sem quebra, o agarrão causa dano e hitstun dos dados do golpe; se errar o alcance, usa a recuperação normal. Os números são provisórios.
+**Padrão provisório de teste:** Tester tem agarrão frontal `1+3` e agarrão forte `2+4`. Ambos só alcançam um alvo em pé, no chão, à frente do atacante e a até 76 unidades; bloqueio não os impede, mas agachar, estar no ar ou já estar em ataque/stun evita o agarrão. A direção mantida quando o comando é reconhecido escolhe o arremesso: `F`/`DF`/`UF` lança à frente, `B`/`DB`/`UB` lança para trás; sem direção, usa frente. Cada golpe configura a distância lançada nas duas direções, relativa ao atacante e ao seu facing. Um arremesso para trás pode cruzar o alvo por cima do atacante e inverter os lados; o facing relativo é atualizado após o lançamento. Após conectar, o defensor tem 6 frames para pressionar o chord oposto (`2+4` quebra `1+3`, e vice-versa). A quebra não causa dano e deixa o atacante em 12 frames de recuperação. Sem quebra, o agarrão causa dano e hitstun dos dados do golpe; se errar o alcance, usa a recuperação normal. Os números são provisórios.
 
 ---
 
@@ -702,7 +710,7 @@ Os valores abaixo servem apenas para validar movimento e interface na fundação
 - velocidade horizontal: `3` unidades de mundo por frame;
 - impulso inicial do salto: `-11` unidades por frame;
 - gravidade: `0,55` unidades por frame²;
-- largura de colisão corporal: `54` unidades;
+- largura corporal por personagem: Tester `54` e Dummy `60` unidades (provisório; definida no perfil `collision`);
 - vida inicial: `1000`;
 - duração provisória do round: `99` segundos;
 - quantidade inicial de rounds: `2`;
@@ -716,7 +724,7 @@ Reavaliar esses valores ao testar sensação de controle e regras de round; mant
 
 O primeiro personagem de teste é **Tester** (`tester`), personagem principal e padrão temporário para os dois lados da luta. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 3 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
 
-Os sprites-fonte de Tester ficam em `src/assets/sprites/characters/tester/`; o manifesto de animações fica em `src/assets/animations/tester.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. O manifesto começa como modelo sem quadros configurados e só deve ser carregado quando a spritesheet e suas dimensões forem adicionadas.
+Os sprites-fonte de cada personagem ficam em `src/assets/sprites/characters/{id}/`; o manifesto de animações fica em `src/assets/animations/{id}.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. Consulte os READMEs dessas pastas para o formato esperado dos atlas e manifestos. Os dados de combate são independentes da arte: cada definição em `characters.ts` tem seu livro `moves` e perfil `collision`; cada golpe define sua hitbox de ataque, e cada personagem tem hurtboxes em pé, agachada e aérea.
 
 ### Golpes provisórios para validar teclado e hitboxes
 

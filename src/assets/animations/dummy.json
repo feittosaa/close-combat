@@ -1,7 +1,7 @@
 {
   "characterId": "dummy",
   "textureKey": "dummy",
-  "spritesheet": "../sprites/characters/dummy/dummy.png",
+  "spritesheet": "../sprites/characters/dummy/dummy-atlas-v01.png",
   "frameSize": {
     "width": null,
     "height": null

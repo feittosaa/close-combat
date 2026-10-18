@@ -107,10 +107,12 @@
 
 - [x] Expor vantagem de frames em acerto e bloqueio usando a convenção definida em `base.md`.
 - [x] Implementar agarrões, alcance e quebra de agarrão.
+- [x] Permitir escolher arremesso à frente/atrás pela direção mantida e validar a troca de lado.
 - [x] Completar comandos diagonais, especiais e regras de cancelamento.
 - [x] Implementar janelas de execução precisa e casos-limite de frame.
 - [x] Implementar parry para golpes elegíveis: sucesso atordoa o atacante por 18 frames; erro deixa o ataque resolver normalmente.
-- [ ] Definir e testar troca de golpes, invulnerabilidade e prioridades.
+- [x] Definir e testar troca de golpes, invulnerabilidade e prioridades.
+- [x] Separar livros de golpes e perfis de hitbox/hurtbox por personagem, incluindo hurtbox aérea.
 - [ ] Implementar combos com limites e recuperação sem estados travados ou loops.
 - [ ] Testar alcance e punição considerando distância e pushback.
 
@@ -155,4 +157,4 @@ Só trazer esses itens para o escopo ativo quando a fundação local estiver est
 
 ## Próximo bloco de trabalho
 
-Continuar a Etapa 3 definindo e implementando troca de golpes, invulnerabilidade e prioridades, conforme `base.md`.
+Continuar a Etapa 3 implementando combos com limites e recuperação conforme `base.md`.

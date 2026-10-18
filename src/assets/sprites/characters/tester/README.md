@@ -1,5 +1,14 @@
-# Tester — sprites
+# Tester — entrega de sprites
 
-Coloque os arquivos originais do personagem Tester aqui. Nome de entrada recomendado: `tester.png` para a spritesheet e `tester-source.*` para o arquivo editável do projeto de arte.
+Coloque os arquivos deste personagem somente neste diretório:
 
-Quando a folha for criada, registre neste arquivo a largura/altura de cada frame, escala, ponto de pivô (alinhado aos pés) e convenção das linhas/colunas. Os frames devem cobrir pelo menos idle, caminhada, salto, agachamento, defesa, dano e as fases dos golpes. Não há imagem carregável neste diretório ainda; o lutador continua sendo desenhado com formas provisórias.
+- `tester-atlas-v01.png`: spritesheet PNG RGBA transparente usada pelo jogo.
+- `tester-source.*`: arquivo editável original (`.aseprite`, `.kra`, `.psd` ou equivalente).
+
+O atlas deve usar células de tamanho fixo, sem trim automático e sem padding entre células. Organize os frames da esquerda para a direita e de cima para baixo; declare dimensões da célula e intervalos inclusivos em `src/assets/animations/tester.json`. Use a mesma escala em todas as poses, mantenha o personagem voltado para a direita e alinhe os pés à mesma base em todas as células. Não inclua fundo, hitboxes ou hurtboxes na arte.
+
+Inclua loops `idle`, `walk`, `crouch` e `block`; poses/trechos para `dash`, `jump`, `hit`, `blockstun`, `grabbed` e `knockdown`; e três clipes por golpe do livro de Tester, com chaves `{fighterId}-{moveId}-{startup|active|recovery}`. Se uma ação ainda não tiver arte, deixe o clipe sem cadastro para usar o placeholder.
+
+Atualize o manifesto com dimensões reais, índices dos frames, velocidade em FPS e repetição. Não deixe `null` em uma exportação pronta. Hitboxes de ataque e hurtboxes são dados de combate em `src/engine/data/characters.ts` e `moves.ts`; não são inferidas dos pixels.
+
+Ainda não há imagem carregável neste diretório; o lutador continua sendo desenhado com formas provisórias.

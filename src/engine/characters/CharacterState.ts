@@ -1,5 +1,6 @@
 // src/engine/characters/CharacterState.ts
 import type { AttackButton } from '../../input/types';
+import type { CharacterCollisionProfile } from '../data/characters';
 
 export type CharacterMode =
   | 'neutral'
@@ -25,17 +26,20 @@ export interface CharacterAttack {
   hitElapsedFrames?: number;
   hitOutcome?: 'hit' | 'block';
   preciseExecution: boolean;
+  throwDirection?: 'forward' | 'backward';
 }
 
 export interface CharacterGrab {
   attackerId: string;
   moveId: string;
   remainingFrames: number;
+  throwDirection: 'forward' | 'backward';
 }
 
 export interface CharacterState {
   characterId: string;
   fighterId: string;
+  collision: CharacterCollisionProfile;
   x: number;
   y: number;
   facing: 'left' | 'right';

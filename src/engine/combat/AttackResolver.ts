@@ -1,6 +1,6 @@
 // src/engine/combat/AttackResolver.ts
 import type { CharacterState } from '../characters/CharacterState';
-import { getMoveById, type MoveDefinition } from '../data/moves';
+import type { MoveDefinition } from '../data/moves';
 import { intersects } from '../collision/intersects';
 import type { Hitbox, Hurtbox } from '../collision/types';
 import type { AttackButton, FrameInput } from '../../input/types';
@@ -17,15 +17,18 @@ export interface HitEvent {
   attackerStunFrames?: number;
   frameAdvantage?: number;
   breakButtons?: readonly AttackButton[];
+  targetOffsetFromAttacker?: number;
 }
 
 /** Resolve contatos da simulação e fornece a geometria exata para a visualização. */
 export class AttackResolver {
-  constructor(private readonly bodyWidth: number) {}
+  constructor(
+    private readonly resolveMove: (fighterId: string, moveId: string) => MoveDefinition | undefined,
+  ) {}
 
   activeHitboxes(characters: readonly CharacterState[]): Hitbox[] {
     return characters.flatMap((character) => {
-      const move = character.attack ? getMoveById(character.attack.moveId) : undefined;
+      const move = character.attack ? this.resolveMove(character.fighterId, character.attack.moveId) : undefined;
       if (!move || !isActive(character, move)) return [];
       return [createHitbox(character, move)];
     });
@@ -46,7 +49,7 @@ export class AttackResolver {
 
     characters.forEach((attacker, attackerIndex) => {
       const attack = attacker.attack;
-      const move = attack ? getMoveById(attack.moveId) : undefined;
+      const move = attack ? this.resolveMove(attacker.fighterId, attack.moveId) : undefined;
       if (!attack || attack.hasHit || !move || !isActive(attacker, move)) return;
 
       const target = characters[1 - attackerIndex];
@@ -65,8 +68,9 @@ export class AttackResolver {
         });
         return;
       }
+      if (this.isStrikeInvulnerable(target)) return;
       if (move.hitLevel === 'high' && target.crouching) return;
-      if (intersects(hitbox, createHurtbox(target, this.bodyWidth))) {
+      if (intersects(hitbox, createHurtbox(target))) {
         const targetInput = inputs[1 - attackerIndex];
         const parried = move.parryable === true && freshBack[1 - attackerIndex] === true;
         const blocked = !parried && target.mode === 'blocking' && canBlock(move.hitLevel, targetInput);
@@ -95,7 +99,8 @@ export class AttackResolver {
 
     // Calcular todos os contatos antes de aplicar efeitos permite trades determinísticos.
     pending.forEach(({ event, attack, target }) => {
-      const move = getMoveById(event.moveId);
+      const attackerState = characters.find((character) => character.characterId === event.attackerId);
+      const move = attackerState ? this.resolveMove(attackerState.fighterId, event.moveId) : undefined;
       if (!move) return;
       attack.hasHit = true;
       attack.hitOutcome = event.outcome === 'hit' || event.outcome === 'block' ? event.outcome : undefined;
@@ -116,6 +121,7 @@ export class AttackResolver {
             attackerId: attacker.characterId,
             moveId: move.id,
             remainingFrames: throwMove.breakFrames,
+            throwDirection: attack.throwDirection ?? 'forward',
           };
         } else {
           target.grab = undefined;
@@ -161,7 +167,7 @@ export class AttackResolver {
       const grab = target.grab;
       if (!grab || target.mode !== 'grabbed') return;
       const attacker = characters.find((character) => character.characterId === grab.attackerId);
-      const move = getMoveById(grab.moveId);
+      const move = attacker ? this.resolveMove(attacker.fighterId, grab.moveId) : undefined;
       if (!attacker || !move?.throw) {
         target.grab = undefined;
         target.mode = 'neutral';
@@ -197,12 +203,26 @@ export class AttackResolver {
         ...emptyEvent(attacker.characterId, target.characterId, move.id),
         outcome: 'throw',
         damage: move.damage,
+        targetOffsetFromAttacker: grab.throwDirection === 'backward'
+          ? -move.throw.launchDistance.backward
+          : move.throw.launchDistance.forward,
         attackerRecoveryFrames: move.recovery,
         defenderStunFrames: move.hitstun,
         frameAdvantage: move.recovery - move.hitstun,
       });
     });
     return events;
+  }
+
+  private isStrikeInvulnerable(character: CharacterState): boolean {
+    const attack = character.attack;
+    const move = attack ? this.resolveMove(character.fighterId, attack.moveId) : undefined;
+    return Boolean(
+      move?.strikeInvulnerableStartupFrames &&
+      attack &&
+      attack.elapsedFrames < move.startup &&
+      attack.elapsedFrames < move.strikeInvulnerableStartupFrames,
+    );
   }
 }
 
@@ -249,13 +269,16 @@ function createHitbox(character: CharacterState, move: MoveDefinition): Hitbox {
   };
 }
 
-function createHurtbox(character: CharacterState, bodyWidth: number): Hurtbox {
-  const height = character.crouching ? 96 : 152;
+function createHurtbox(character: CharacterState): Hurtbox {
+  const profile = character.collision.hurtboxes;
+  const box = !character.grounded
+    ? profile.airborne
+    : character.crouching ? profile.crouching : profile.standing;
   return {
     ownerId: character.characterId,
-    x: character.x - bodyWidth / 2,
-    y: character.y - height,
-    width: bodyWidth,
-    height,
+    x: character.x + box.offsetX - box.width / 2,
+    y: character.y + box.offsetY,
+    width: box.width,
+    height: box.height,
   };
 }
