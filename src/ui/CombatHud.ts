@@ -7,6 +7,7 @@ const MODE_LABELS: Record<CharacterMode, string> = {
   neutral: 'NEUTRO', moving: 'MOVIMENTO', dashing: 'DASH', airborne: 'NO AR',
   crouching: 'AGACHADO', startup: 'PREPARO', active: 'ATIVO', recovery: 'RECUPERAÇÃO',
   blocking: 'DEFESA', hitstun: 'ATORDOADO', blockstun: 'BLOQUEIO', grabbed: 'AGARRADO',
+  throwRecovery: 'RECUPERAÇÃO DO AGARRÃO',
   knockdown: 'CAÍDO',
 };
 
@@ -76,13 +77,21 @@ export class CombatHud {
       this.lastImpactFrame = Number.NEGATIVE_INFINITY;
     }
     if (hit) {
-      const result = hit.outcome === 'block' ? 'BLOCK' : `HIT · -${hit.damage}`;
-      this.lastImpactLabel = `${result} · ADV ${hit.frameAdvantage > 0 ? '+' : ''}${hit.frameAdvantage}F`;
+      if (hit.outcome === 'throw-start') {
+        const breakButtons = hit.breakButtons?.join('+') ?? '—';
+        this.lastImpactLabel = `AGARRÃO · QUEBRA ${breakButtons}`;
+      }
+      else if (hit.outcome === 'throw-break') this.lastImpactLabel = 'AGARRÃO QUEBRADO';
+      else {
+        const result = hit.outcome === 'parry' ? `PARRY · ATACANTE ATORDOADO ${hit.attackerStunFrames}F` : hit.outcome === 'block' ? 'BLOCK' : hit.outcome === 'throw' ? `AGARRÃO · -${hit.damage}` : `HIT · -${hit.damage}`;
+        this.lastImpactLabel = hit.outcome === 'parry' ? result : `${result} · ADV ${hit.frameAdvantage! > 0 ? '+' : ''}${hit.frameAdvantage ?? 0}F`;
+      }
       this.lastImpactFrame = snapshot.frame;
     }
     this.hitLabel.setText(snapshot.frame - this.lastImpactFrame <= 90 ? this.lastImpactLabel : '');
     snapshot.characters.forEach((character, index) => {
-      this.modeLabels[index]?.setText(MODE_LABELS[character.mode]);
+      const modeLabel = character.attack?.preciseExecution ? 'PRECISO · ' : '';
+      this.modeLabels[index]?.setText(`${modeLabel}${MODE_LABELS[character.mode]}`);
       this.modeLabels[index]?.setColor(character.mode === 'hitstun' ? '#ff7777' : character.mode === 'blockstun' || character.mode === 'blocking' ? '#8cb4ff' : '#f4f0e8');
     });
     this.updateBars(snapshot.characters, width);

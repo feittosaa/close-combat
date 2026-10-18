@@ -11,6 +11,7 @@ export interface CommandCandidate {
     direction?: Direction;
     sequence?: readonly Direction[];
   };
+  precisionWindowFrames?: number;
   airborne?: boolean;
   crouching?: boolean;
 }
@@ -58,7 +59,7 @@ export class CommandParser {
     candidates: readonly T[],
     context: CommandContext,
   ): T | undefined {
-    if (input.direction !== this.previousDirection && input.direction !== 'N') {
+    if (input.direction !== this.previousDirection) {
       this.directionPresses.push({ direction: input.direction, frame });
     }
     this.previousDirection = input.direction;
@@ -126,27 +127,42 @@ export class CommandParser {
       if (candidate.input.buttons.length !== buttonSet.size ||
         !candidate.input.buttons.every((button) => buttonSet.has(button))) return false;
       if (candidate.input.direction !== undefined && candidate.input.direction !== press.direction) return false;
-      return !candidate.input.sequence || this.matchesSequence(candidate.input.sequence, press.frame);
+      if (!candidate.input.sequence) return candidate.precisionWindowFrames === undefined;
+      const sequenceFrame = this.matchingSequenceFrame(candidate.input.sequence, press.frame);
+      if (sequenceFrame === undefined) return false;
+      return candidate.precisionWindowFrames === undefined ||
+        press.frame - sequenceFrame <= candidate.precisionWindowFrames;
     });
     matching.sort((left, right) =>
       right.input.buttons.length - left.input.buttons.length ||
       (right.input.sequence?.length ?? 0) - (left.input.sequence?.length ?? 0) ||
+      Number(right.precisionWindowFrames !== undefined) - Number(left.precisionWindowFrames !== undefined) ||
       Number(right.input.direction !== undefined) - Number(left.input.direction !== undefined),
     );
     return matching[0];
   }
 
-  private matchesSequence(sequence: readonly Direction[], commandFrame: number): boolean {
-    if (sequence.length === 0) return false;
+  private matchingSequenceFrame(sequence: readonly Direction[], commandFrame: number): number | undefined {
+    if (sequence.length === 0) return undefined;
     let matched = sequence.length - 1;
+    let finalDirectionFrame: number | undefined;
     for (let index = this.directionPresses.length - 1; index >= 0; index -= 1) {
       const press = this.directionPresses[index];
       if (!press || press.frame > commandFrame) continue;
-      if (press.direction !== sequence[matched]) continue;
-      matched -= 1;
-      if (matched < 0) return commandFrame - press.frame <= COMMAND_SEQUENCE_WINDOW_FRAMES;
+      if (press.direction === sequence[matched]) {
+        if (matched === sequence.length - 1) finalDirectionFrame = press.frame;
+        matched -= 1;
+        if (matched < 0) {
+          return finalDirectionFrame !== undefined &&
+            commandFrame - finalDirectionFrame <= COMMAND_SEQUENCE_WINDOW_FRAMES
+            ? finalDirectionFrame
+            : undefined;
+        }
+      } else if (press.direction !== 'N' || sequence[matched] === 'N') {
+        return undefined;
+      }
     }
-    return false;
+    return undefined;
   }
 
   private forContext<T extends CommandCandidate>(

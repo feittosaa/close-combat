@@ -14,6 +14,7 @@ export type CharacterMode =
   | 'hitstun'
   | 'blockstun'
   | 'grabbed'
+  | 'throwRecovery'
   | 'knockdown';
 
 export interface CharacterAttack {
@@ -21,6 +22,15 @@ export interface CharacterAttack {
   buttons: readonly AttackButton[];
   elapsedFrames: number;
   hasHit: boolean;
+  hitElapsedFrames?: number;
+  hitOutcome?: 'hit' | 'block';
+  preciseExecution: boolean;
+}
+
+export interface CharacterGrab {
+  attackerId: string;
+  moveId: string;
+  remainingFrames: number;
 }
 
 export interface CharacterState {
@@ -37,5 +47,6 @@ export interface CharacterState {
   grounded: boolean;
   crouching: boolean;
   attack?: CharacterAttack;
+  grab?: CharacterGrab;
   hitFlashFrames: number;
 }

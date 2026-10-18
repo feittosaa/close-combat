@@ -2,7 +2,7 @@
 
 > **Documento de execução:** este roteiro transforma o plano de [`base.md`](./base.md) em etapas de implementação verificáveis. `base.md` continua sendo a fonte de verdade para visão, regras e decisões do jogo; este arquivo organiza a ordem do trabalho e seu estado.
 >
-> **Status:** Etapas 1 e 2 concluídas; Etapa 3 iniciada. A fundação inclui dash terrestre, defesa básica, golpes direcionais/abaixados/aéreos, sequências e chords de teste, dois personagens de teste, rounds configuráveis, vitória/empate, reinício, cobertura determinística da simulação e exibição de vantagem de frames.
+> **Status:** Etapas 1 e 2 concluídas; primeiros quatro pontos da Etapa 3 concluídos. A fundação inclui agarrões quebráveis, comandos especiais, cancelamentos após acerto, execução precisa configurada e vantagem de frames, além dos sistemas locais anteriores.
 
 ## Como usar este pipeline
 
@@ -106,10 +106,10 @@
 **Base:** `base.md` §§8–14, 17–18 e Fase 3 de §19.
 
 - [x] Expor vantagem de frames em acerto e bloqueio usando a convenção definida em `base.md`.
-- [ ] Implementar agarrões, alcance e quebra de agarrão.
-- [ ] Completar comandos diagonais, especiais e regras de cancelamento.
-- [ ] Implementar janelas de execução precisa e casos-limite de frame.
-- [ ] Implementar parry para categorias e golpes definidos, incluindo risco ao falhar.
+- [x] Implementar agarrões, alcance e quebra de agarrão.
+- [x] Completar comandos diagonais, especiais e regras de cancelamento.
+- [x] Implementar janelas de execução precisa e casos-limite de frame.
+- [x] Implementar parry para golpes elegíveis: sucesso atordoa o atacante por 18 frames; erro deixa o ataque resolver normalmente.
 - [ ] Definir e testar troca de golpes, invulnerabilidade e prioridades.
 - [ ] Implementar combos com limites e recuperação sem estados travados ou loops.
 - [ ] Testar alcance e punição considerando distância e pushback.
@@ -155,4 +155,4 @@ Só trazer esses itens para o escopo ativo quando a fundação local estiver est
 
 ## Próximo bloco de trabalho
 
-Continuar a Etapa 3 com agarrões, alcance e quebra de agarrão. O comando universal de parry (`B` no frame exato do contato) já está definido em `base.md`; a resolução aguarda a definição das consequências globais de sucesso e falha.
+Continuar a Etapa 3 definindo e implementando troca de golpes, invulnerabilidade e prioridades, conforme `base.md`.

@@ -153,6 +153,101 @@ describe('Simulation movement foundation', () => {
     expect(diagonal.snapshot().characters[0].attack?.moveId).toBe('test-diagonal-entry-kick');
   });
 
+  it('recognizes the F,N,DF+2 special and its one-frame precise variant', () => {
+    const execute = (buttonDelay: number): string | undefined => {
+      const simulation = new Simulation(config);
+      step(simulation, [{ direction: 'F', buttons: new Set() }, neutral]);
+      step(simulation, [neutral, neutral]);
+      step(simulation, [{ direction: 'DF', buttons: new Set() }, neutral]);
+      for (let frame = 0; frame < buttonDelay; frame += 1) step(simulation, [neutral, neutral]);
+      step(simulation, [{ direction: 'N', buttons: new Set(['2']) }, neutral]);
+      for (let frame = 0; frame < 4; frame += 1) step(simulation, [neutral, neutral]);
+      return simulation.snapshot().characters[0].attack?.moveId;
+    };
+
+    expect(execute(0)).toBe('test-electric-palm-precise');
+    expect(execute(2)).toBe('test-electric-palm');
+  });
+
+  it('allows Tester to cancel a jab into the special only after a hit', () => {
+    const hitSimulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(hitSimulation, [forward, forward]);
+    step(hitSimulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
+    let hitSnapshot = hitSimulation.snapshot();
+    for (let frame = 0; frame < 14 && hitSnapshot.hitEvents.length === 0; frame += 1) {
+      step(hitSimulation, [neutral, neutral]);
+      hitSnapshot = hitSimulation.snapshot();
+    }
+    expect(hitSnapshot.hitEvents[0]?.outcome).toBe('hit');
+    step(hitSimulation, [{ direction: 'F', buttons: new Set() }, neutral]);
+    step(hitSimulation, [neutral, neutral]);
+    step(hitSimulation, [{ direction: 'DF', buttons: new Set(['2']) }, neutral]);
+    for (let frame = 0; frame < 4; frame += 1) step(hitSimulation, [neutral, neutral]);
+    expect(hitSimulation.snapshot().characters[0].attack?.moveId).toBe('test-electric-palm-precise');
+
+    const blockSimulation = new Simulation(config);
+    for (let frame = 0; frame < 100; frame += 1) step(blockSimulation, [forward, forward]);
+    step(blockSimulation, [{ direction: 'N', buttons: new Set(['1']) }, { direction: 'B', buttons: new Set() }]);
+    let blockSnapshot = blockSimulation.snapshot();
+    for (let frame = 0; frame < 14 && blockSnapshot.hitEvents.length === 0; frame += 1) {
+      step(blockSimulation, [neutral, { direction: 'B', buttons: new Set() }]);
+      blockSnapshot = blockSimulation.snapshot();
+    }
+    expect(blockSnapshot.hitEvents[0]?.outcome).toBe('block');
+    step(blockSimulation, [{ direction: 'F', buttons: new Set() }, { direction: 'B', buttons: new Set() }]);
+    step(blockSimulation, [neutral, { direction: 'B', buttons: new Set() }]);
+    step(blockSimulation, [{ direction: 'DF', buttons: new Set(['2']) }, { direction: 'B', buttons: new Set() }]);
+    for (let frame = 0; frame < 4; frame += 1) step(blockSimulation, [neutral, { direction: 'B', buttons: new Set() }]);
+    expect(blockSimulation.snapshot().characters[0].attack?.moveId).toBe('test-jab');
+  });
+
+  it('lets the opposite chord break a nearby grab during the configured window', () => {
+    const simulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    step(simulation, [{ direction: 'N', buttons: new Set(['1', '3']) }, { direction: 'B', buttons: new Set() }]);
+    let snapshot = simulation.snapshot();
+    for (let frame = 0; frame < 12 && snapshot.characters[1].mode !== 'grabbed'; frame += 1) {
+      step(simulation, [neutral, { direction: 'B', buttons: new Set() }]);
+      snapshot = simulation.snapshot();
+    }
+    expect(snapshot.characters[1].mode).toBe('grabbed');
+    expect(snapshot.characters[1].health).toBe(1000);
+    for (let frame = 0; frame < 5; frame += 1) step(simulation, [neutral, { direction: 'B', buttons: new Set() }]);
+
+    step(simulation, [neutral, { direction: 'B', buttons: new Set(['2', '4']) }]);
+    snapshot = simulation.snapshot();
+    expect(snapshot.hitEvents[0]?.outcome).toBe('throw-break');
+    expect(snapshot.characters[1].mode).toBe('neutral');
+    expect(snapshot.characters[1].health).toBe(1000);
+    expect(snapshot.characters[0].mode).toBe('throwRecovery');
+  });
+
+  it('resolves an unbroken grab after six frames and makes a whiff recover normally', () => {
+    const simulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    step(simulation, [{ direction: 'N', buttons: new Set(['2', '4']) }, neutral]);
+    let snapshot = simulation.snapshot();
+    for (let frame = 0; frame < 12 && snapshot.characters[1].mode !== 'grabbed'; frame += 1) {
+      step(simulation, [neutral, neutral]);
+      snapshot = simulation.snapshot();
+    }
+    expect(snapshot.characters[1].mode).toBe('grabbed');
+    for (let frame = 0; frame < 6; frame += 1) step(simulation, [neutral, neutral]);
+    snapshot = simulation.snapshot();
+    expect(snapshot.hitEvents[0]).toMatchObject({ outcome: 'throw', damage: 150, frameAdvantage: -2 });
+    expect(snapshot.characters[1].health).toBe(850);
+    expect(snapshot.characters[1].mode).toBe('hitstun');
+
+    const whiff = new Simulation(config);
+    step(whiff, [{ direction: 'N', buttons: new Set(['1', '3']) }, neutral]);
+    for (let frame = 0; frame < 40; frame += 1) step(whiff, [neutral, neutral]);
+    expect(whiff.snapshot().characters[1].health).toBe(1000);
+    expect(whiff.snapshot().characters[1].mode).not.toBe('grabbed');
+  });
+
   it('resolves a knockout, starts the configured next round, and declares a match winner', () => {
     const testCharacter = { ...defaultCharacter, maxHealth: 40 };
     const roundConfig = {
@@ -317,6 +412,61 @@ describe('Simulation movement foundation', () => {
     }
   });
 
+  it('parries an eligible jab on the contact frame and stuns the attacker', () => {
+    const simulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    step(simulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
+    let snapshot = simulation.snapshot();
+    while (snapshot.characters[0].attack?.moveId !== 'test-jab') {
+      step(simulation, [neutral, neutral]);
+      snapshot = simulation.snapshot();
+    }
+    let parryEvent;
+    for (let frame = 0; frame < 12 && snapshot.hitEvents.length === 0; frame += 1) {
+      const contactFrame = snapshot.characters[0].attack?.elapsedFrames === 4;
+      step(simulation, [neutral, contactFrame ? { direction: 'B', buttons: new Set() } : neutral]);
+      snapshot = simulation.snapshot();
+      parryEvent = snapshot.hitEvents[0];
+    }
+
+    expect(parryEvent?.outcome).toBe('parry');
+    expect(snapshot.characters[1].health).toBe(config.match.maxHealth);
+    expect(snapshot.characters[0].mode).toBe('hitstun');
+    expect(snapshot.characters[0].remainingStateFrames).toBe(18);
+    expect(snapshot.characters[0].attack).toBeUndefined();
+  });
+
+  it('lets a mistimed or ineligible parry resolve as a normal hit', () => {
+    for (const button of ['1', '2'] as const) {
+      const simulation = new Simulation(config);
+      const forward: FrameInput = { direction: 'F', buttons: new Set() };
+      for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+      step(simulation, [{ direction: 'N', buttons: new Set([button]) }, neutral]);
+      let snapshot = simulation.snapshot();
+      while (snapshot.characters[0].attack === undefined) {
+        step(simulation, [neutral, neutral]);
+        snapshot = simulation.snapshot();
+      }
+      let hitEvent;
+      let pressedEarly = false;
+      for (let frame = 0; frame < 16 && snapshot.hitEvents.length === 0; frame += 1) {
+        const elapsed = snapshot.characters[0].attack?.elapsedFrames ?? -1;
+        const pressEarly = button === '1' && elapsed === 3;
+        const contact = button === '1' ? elapsed === 4 : elapsed === 6;
+        const defenderDirection = pressEarly ? 'B' : 'N';
+        pressedEarly ||= pressEarly;
+        step(simulation, [neutral, contact && button === '2' ? { direction: 'B', buttons: new Set() } : { direction: defenderDirection, buttons: new Set() }]);
+        snapshot = simulation.snapshot();
+        hitEvent = snapshot.hitEvents[0];
+      }
+      expect(button === '1' ? pressedEarly : true).toBe(true);
+      expect(hitEvent?.outcome).toBe(button === '1' ? 'hit' : 'block');
+      if (button === '1') expect(snapshot.characters[1].health).toBeLessThan(config.match.maxHealth);
+      else expect(snapshot.characters[1].health).toBe(config.match.maxHealth);
+    }
+  });
+
   it('exposes frame advantage using remaining attack frames minus defender stun', () => {
     const blocked = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
@@ -447,7 +597,7 @@ describe('Simulation movement foundation', () => {
 
   it('keeps unassigned simultaneous button chords from becoming accidental attacks', () => {
     const simulation = new Simulation(config);
-    const chord: FrameInput = { direction: 'DF', buttons: new Set(['1', '3']) };
+    const chord: FrameInput = { direction: 'DF', buttons: new Set(['1', '4']) };
     step(simulation, [chord, neutral]);
     for (let frame = 0; frame < 5; frame += 1) step(simulation, [neutral, neutral]);
 
