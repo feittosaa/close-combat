@@ -6,6 +6,15 @@ export type HitLevel = 'high' | 'mid' | 'low' | 'air' | 'throw' | 'special';
 export interface MoveDefinition {
   id: string;
   input: { direction?: Direction; sequence?: readonly Direction[]; buttons: readonly AttackButton[] };
+  precisionWindowFrames?: number;
+  cancelOnHit?: { moveIds: readonly string[]; windowFrames: number };
+  throw?: {
+    range: number;
+    breakButtons: readonly AttackButton[];
+    breakFrames: number;
+    breakRecovery: number;
+  };
+  parryable?: boolean;
   airborne?: boolean;
   crouching?: boolean;
   startup: number;
@@ -33,7 +42,12 @@ export const moves: readonly MoveDefinition[] = [
     blockstun: 10,
     pushback: { hit: 18, block: 12 },
     hitLevel: 'high',
+    parryable: true,
     hitbox: { forward: 25, yOffset: -118, width: 54, height: 34 },
+    cancelOnHit: {
+      moveIds: ['test-rising-punch', 'test-electric-palm', 'test-electric-palm-precise'],
+      windowFrames: 8,
+    },
   },
   {
     id: 'test-cross',
@@ -126,6 +140,61 @@ export const moves: readonly MoveDefinition[] = [
     pushback: { hit: 20, block: 14 },
     hitLevel: 'mid',
     hitbox: { forward: 26, yOffset: -72, width: 72, height: 40 },
+  },
+  {
+    id: 'test-electric-palm-precise',
+    input: { sequence: ['F', 'N', 'DF'], buttons: ['2'] },
+    precisionWindowFrames: 1,
+    startup: 10,
+    activeFrames: 3,
+    recovery: 22,
+    damage: 120,
+    hitstun: 26,
+    blockstun: 13,
+    pushback: { hit: 26, block: 18 },
+    hitLevel: 'special',
+    hitbox: { forward: 28, yOffset: -126, width: 92, height: 56 },
+  },
+  {
+    id: 'test-electric-palm',
+    input: { sequence: ['F', 'N', 'DF'], buttons: ['2'] },
+    startup: 10,
+    activeFrames: 3,
+    recovery: 22,
+    damage: 100,
+    hitstun: 26,
+    blockstun: 13,
+    pushback: { hit: 26, block: 18 },
+    hitLevel: 'special',
+    hitbox: { forward: 28, yOffset: -126, width: 92, height: 56 },
+  },
+  {
+    id: 'test-front-throw',
+    input: { buttons: ['1', '3'] },
+    throw: { range: 76, breakButtons: ['2', '4'], breakFrames: 6, breakRecovery: 12 },
+    startup: 6,
+    activeFrames: 1,
+    recovery: 22,
+    damage: 110,
+    hitstun: 24,
+    blockstun: 0,
+    pushback: { hit: 0, block: 0 },
+    hitLevel: 'throw',
+    hitbox: { forward: 25, yOffset: -132, width: 70, height: 110 },
+  },
+  {
+    id: 'test-power-throw',
+    input: { buttons: ['2', '4'] },
+    throw: { range: 76, breakButtons: ['1', '3'], breakFrames: 6, breakRecovery: 12 },
+    startup: 9,
+    activeFrames: 1,
+    recovery: 28,
+    damage: 150,
+    hitstun: 30,
+    blockstun: 0,
+    pushback: { hit: 0, block: 0 },
+    hitLevel: 'throw',
+    hitbox: { forward: 25, yOffset: -132, width: 70, height: 110 },
   },
   {
     id: 'test-advancing-jab',

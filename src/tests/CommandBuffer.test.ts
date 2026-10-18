@@ -147,4 +147,48 @@ describe('command buffer and priority', () => {
     parser.update({ direction: 'N', buttons: new Set() }, 15, candidates, context);
     expect(parser.update({ direction: 'N', buttons: new Set(['2']) }, 16, candidates, context)?.id).toBe('simple');
   });
+
+  it('selects the precise variant at both inclusive edges of its one-frame window', () => {
+    const candidates = [
+      { id: 'normal', input: { sequence: ['F', 'N', 'DF'] as const, buttons: ['2'] as const } },
+      { id: 'precise', input: { sequence: ['F', 'N', 'DF'] as const, buttons: ['2'] as const }, precisionWindowFrames: 1 },
+    ];
+    const exact = new CommandParser();
+    exact.update({ direction: 'F', buttons: new Set() }, 0, candidates, context);
+    exact.update({ direction: 'N', buttons: new Set() }, 1, candidates, context);
+    exact.update({ direction: 'DF', buttons: new Set() }, 2, candidates, context);
+    expect(exact.update({ direction: 'DF', buttons: new Set(['2']) }, 3, candidates, context)?.id).toBe('precise');
+
+    const latest = new CommandParser();
+    latest.update({ direction: 'F', buttons: new Set() }, 0, candidates, context);
+    latest.update({ direction: 'N', buttons: new Set() }, 1, candidates, context);
+    latest.update({ direction: 'DF', buttons: new Set() }, 2, candidates, context);
+    expect(latest.update({ direction: 'N', buttons: new Set(['2']) }, 3, candidates, context)?.id).toBe('precise');
+  });
+
+  it('falls back to the normal variant when the precise window is missed', () => {
+    const parser = new CommandParser();
+    const candidates = [
+      { id: 'normal', input: { sequence: ['F', 'N', 'DF'] as const, buttons: ['2'] as const } },
+      { id: 'precise', input: { sequence: ['F', 'N', 'DF'] as const, buttons: ['2'] as const }, precisionWindowFrames: 1 },
+    ];
+    parser.update({ direction: 'F', buttons: new Set() }, 0, candidates, context);
+    parser.update({ direction: 'N', buttons: new Set() }, 1, candidates, context);
+    parser.update({ direction: 'DF', buttons: new Set() }, 2, candidates, context);
+    parser.update({ direction: 'N', buttons: new Set() }, 3, candidates, context);
+    parser.update({ direction: 'N', buttons: new Set() }, 4, candidates, context);
+    expect(parser.update({ direction: 'N', buttons: new Set(['2']) }, 5, candidates, context)?.id).toBe('normal');
+  });
+
+  it('does not treat a different directional press as an omitted sequence step', () => {
+    const parser = new CommandParser();
+    const candidates = [
+      { id: 'simple', input: { buttons: ['2'] as const } },
+      { id: 'double-forward', input: { sequence: ['F', 'F'] as const, buttons: ['2'] as const } },
+    ];
+    parser.update({ direction: 'F', buttons: new Set() }, 0, candidates, context);
+    parser.update({ direction: 'B', buttons: new Set() }, 1, candidates, context);
+    parser.update({ direction: 'F', buttons: new Set() }, 2, candidates, context);
+    expect(parser.update({ direction: 'F', buttons: new Set(['2']) }, 3, candidates, context)?.id).toBe('simple');
+  });
 });

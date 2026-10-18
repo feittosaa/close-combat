@@ -48,7 +48,7 @@ describe('provisional Tester character', () => {
     const attacking = {
       ...fighter!,
       mode: 'active' as const,
-      attack: { moveId: 'test-jab', buttons: ['1'] as const, elapsedFrames: 4, hasHit: false },
+      attack: { moveId: 'test-jab', buttons: ['1'] as const, elapsedFrames: 4, hasHit: false, preciseExecution: false },
     };
     expect(getCharacterAnimationKey(attacking)).toBe('tester-test-jab-active');
   });

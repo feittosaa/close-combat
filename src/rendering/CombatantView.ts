@@ -29,7 +29,7 @@ export class CombatantView {
       this.body.setFillStyle(0xffd166);
       this.body.setDisplaySize(66, state.crouching ? 96 : 144);
     } else if (state.mode === 'startup') {
-      this.body.setFillStyle(0xffa65b);
+      this.body.setFillStyle(state.attack?.preciseExecution ? 0xffd166 : 0xffa65b);
       this.body.setDisplaySize(58, state.crouching ? 96 : 152);
     } else if (state.mode === 'recovery') {
       this.body.setFillStyle(0xaaa6b1);
@@ -37,6 +37,12 @@ export class CombatantView {
     } else if (state.mode === 'dashing') {
       this.body.setFillStyle(0x9b7bff);
       this.body.setDisplaySize(60, 142);
+    } else if (state.mode === 'grabbed') {
+      this.body.setFillStyle(0xdb78d4);
+      this.body.setDisplaySize(58, 152);
+    } else if (state.mode === 'throwRecovery') {
+      this.body.setFillStyle(0xaaa6b1);
+      this.body.setDisplaySize(54, 152);
     } else if (state.mode === 'blocking' || state.mode === 'blockstun') {
       this.body.setFillStyle(0x63c7d5);
       this.body.setDisplaySize(50, state.crouching ? 96 : 152);

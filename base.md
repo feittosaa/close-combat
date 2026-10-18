@@ -311,6 +311,8 @@ Agarrões são uma ferramenta de curta distância para enfrentar adversários qu
 
 Os valores de alcance, startup, janela de quebra, dano e recuperação serão definidos golpe a golpe. Não implementar todos os agarrões como uma animação sem regras próprias.
 
+**Padrão provisório de teste:** Tester tem agarrão frontal `1+3` e agarrão forte `2+4`. Ambos só alcançam um alvo em pé, no chão, à frente do atacante e a até 76 unidades; bloqueio não os impede, mas agachar, estar no ar ou já estar em ataque/stun evita o agarrão. Após conectar, o defensor tem 6 frames para pressionar o chord oposto (`2+4` quebra `1+3`, e vice-versa). A quebra não causa dano e deixa o atacante em 12 frames de recuperação. Sem quebra, o agarrão causa dano e hitstun dos dados do golpe; se errar o alcance, usa a recuperação normal. Os números são provisórios.
+
 ---
 
 ## 10. Especiais cinematográficos com comandos durante a cena
@@ -353,6 +355,8 @@ Alguns movimentos terão uma versão reforçada quando o comando é executado nu
 - A melhoria não deve conceder todas as vantagens simultaneamente por padrão.
 - O feedback visual/sonoro deve confirmar a execução correta sem depender apenas de um indicador textual.
 
+**Padrão provisório de comando:** o especial de teste de Tester usa `F,N,DF+2`. O parser registra também a soltura para neutro. A variante precisa é reconhecida se `2` for pressionado no mesmo frame de `DF` ou no frame lógico seguinte; fora dessa janela, o comando ainda executa a variante normal. A variante precisa aumenta apenas o dano em 20 pontos. Como cancel de teste, `test-jab` pode cancelar para o soco ascendente ou para esse especial somente depois de acertar, até 8 frames após o contato; bloqueio e erro não abrem cancel. Os valores servem à validação do sistema.
+
 ### 11.2 Exemplo conceitual de definição
 
 Um golpe pode aceitar o comando `F`, depois `N`, depois `DF+2`. Se `2` for reconhecido no intervalo de frame configurado após a última direção, o motor cria a versão reforçada; caso contrário, executa a versão normal ou não executa o golpe, conforme o desenho daquele personagem. Isso é apenas um exemplo de comando: o comando e a janela finais serão definidos personagem por personagem.
@@ -371,12 +375,12 @@ O sistema terá parries para **golpes específicos**, não uma resposta universa
 
 O parry usa sempre o mesmo comando defensivo: **pressionar `B` no frame exato em que o golpe toca**. A direção é relativa ao oponente e precisa ser um novo pressionamento naquele frame; manter `B` pressionado continua sendo bloqueio comum e não prolonga a janela de parry. A janela universal é de um frame de lógica e não varia por personagem ou por golpe.
 
-Cada golpe declara apenas se pode ser aparado (`parryable`). Um ataque sem essa propriedade nunca sofre parry, embora ainda possa ser bloqueado pelas regras normais. Categorias e casos especiais podem restringir essa elegibilidade nos dados do golpe, sem mudar o comando ou a janela global. O sucesso, a falha, o risco de erro, os agarrões e a interação com golpes multi-hit devem seguir regras globais consistentes; números e resposta exata ainda são provisórios e precisam ser definidos antes de implementar a resolução de parry.
+Cada golpe declara apenas se pode ser aparado (`parryable`). Um ataque sem essa propriedade nunca sofre parry, embora ainda possa ser bloqueado pelas regras normais. Categorias e casos especiais podem restringir essa elegibilidade nos dados do golpe, sem mudar o comando ou a janela global. No protótipo, o sucesso cancela o golpe e deixa o atacante em hitstun por 18 frames, abrindo uma janela para punição; o defensor não recebe dano nem empurrão. O parry só é reconhecido por um novo pressionamento de `B` no frame exato do contato. Um pressionamento fora desse frame não produz parry: o ataque segue sua resolução normal, então o defensor recebe o golpe se não estiver bloqueando. Manter `B` antes e durante o contato continua sendo bloqueio comum.
 
 ### 12.2 Regras de equilíbrio
 
-- Um parry bem-sucedido precisa de resposta visual e sonora inequívoca.
-- Um parry falho deve expor algum risco, como recuperação ou perda de posição.
+- Um parry bem-sucedido cancela o ataque aparado e atordoa o atacante por 18 frames para permitir punição.
+- Um parry fora do frame exato falha; o ataque resolve normalmente e acerta o defensor, a menos que ele esteja em bloqueio comum válido.
 - Um parry não deve funcionar contra toda categoria de ataque a menos que seja uma habilidade rara, explícita e balanceada.
 - Golpes com vários hits precisam definir se o parry evita um hit, a sequência completa ou apenas uma parte.
 - A janela não deve ser tão ampla que substitua o bloqueio como defesa padrão.

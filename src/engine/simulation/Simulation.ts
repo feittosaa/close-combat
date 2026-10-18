@@ -5,7 +5,7 @@ import { defaultCharacter, type CharacterDefinition } from '../data/characters';
 import type { GameConfig } from '../data/gameConfig';
 import { getMovesForCharacter, getMoveById, type MoveDefinition } from '../data/moves';
 import { CommandParser } from '../../input/CommandBuffer';
-import type { FrameInput } from '../../input/types';
+import type { AttackButton, FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
 
@@ -41,6 +41,8 @@ export class Simulation {
   private readonly fighterMoves: readonly [readonly MoveDefinition[], readonly MoveDefinition[]];
   private readonly commandParsers: [CommandParser, CommandParser] = [new CommandParser(), new CommandParser()];
   private readonly jumpHeld = [false, false];
+  private readonly previousInputButtons: [Set<AttackButton>, Set<AttackButton>] = [new Set(), new Set()];
+  private readonly previousDirections: [FrameInput['direction'], FrameInput['direction']] = ['N', 'N'];
   private readonly previousHorizontalAxis = [0, 0];
   private readonly lastTapAxis = [0, 0];
   private readonly lastTapFrame = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
@@ -87,6 +89,7 @@ export class Simulation {
       characters: this.characters.map((character) => ({
         ...character,
         attack: character.attack ? { ...character.attack } : undefined,
+        grab: character.grab ? { ...character.grab } : undefined,
       })),
       activeHitboxes: this.attackResolver.activeHitboxes(this.characters),
       hitEvents: [...this.lastHitEvents],
@@ -119,6 +122,22 @@ export class Simulation {
     const previousX = this.characters.map(({ x }) => x) as [number, number];
     const nextX = [...previousX] as [number, number];
     this.lastHitEvents = [];
+    const freshlyPressedFor = (index: number): ReadonlySet<AttackButton> => {
+      const input = inputs[index];
+      const previous = this.previousInputButtons[index];
+      const pressed = new Set([...(input?.buttons ?? [])].filter((button) => !previous?.has(button)));
+      this.previousInputButtons[index] = new Set(input?.buttons ?? []);
+      return pressed;
+    };
+    const freshlyPressed: [ReadonlySet<AttackButton>, ReadonlySet<AttackButton>] = [
+      freshlyPressedFor(0), freshlyPressedFor(1),
+    ];
+    const freshBack: [boolean, boolean] = [0, 1].map((index) => {
+      const direction = inputs[index]?.direction ?? 'N';
+      const pressed = direction === 'B' && this.previousDirections[index] !== 'B';
+      this.previousDirections[index] = direction;
+      return pressed;
+    }) as [boolean, boolean];
 
     this.characters.forEach((character, index) => {
       const input = inputs[index] ?? neutralInput();
@@ -146,12 +165,18 @@ export class Simulation {
         else if (input.direction === 'B' || input.direction === 'DB') character.mode = 'blocking';
         else if (horizontal !== 0 && character.grounded && !character.crouching) character.mode = 'moving';
 
-        const move = this.startAttack(character, moveCommand);
-        if (move?.advance) nextX[index] += facingSign * move.advance;
       } else {
         this.previousHorizontalAxis[index] = horizontalAxis(input.direction);
         this.dashFramesRemaining[index] = 0;
         this.dashAxis[index] = 0;
+      }
+
+      if (canControl || this.canCancel(character, moveCommand)) {
+        const move = this.startAttack(character, moveCommand);
+        if (move?.advance) {
+          const facingSign = character.facing === 'right' ? 1 : -1;
+          nextX[index] += facingSign * move.advance;
+        }
       }
 
       const halfWidth = this.config.movement.bodyWidth / 2;
@@ -165,7 +190,7 @@ export class Simulation {
     this.characters.forEach((character, index) => { character.x = nextX[index]; });
     this.resolveBodySpacing(previousX);
     this.updateFacing();
-    this.lastHitEvents = this.attackResolver.resolve(this.characters, inputs);
+    this.lastHitEvents = this.attackResolver.resolve(this.characters, inputs, freshlyPressed, freshBack);
     this.lastHitEvents.forEach((event) => {
       const attacker = this.characters.find((character) => character.characterId === event.attackerId);
       const target = this.characters.find((character) => character.characterId === event.targetId);
@@ -242,9 +267,12 @@ export class Simulation {
         grounded: true,
         crouching: false,
         attack: undefined,
+        grab: undefined,
         hitFlashFrames: 0,
       });
       this.commandParsers[index]?.clear();
+      this.previousInputButtons[index]?.clear();
+      this.previousDirections[index] = 'N';
       this.jumpHeld[index] = false;
       this.previousHorizontalAxis[index] = 0;
       this.lastTapAxis[index] = 0;
@@ -285,6 +313,7 @@ export class Simulation {
 
   private updateStunAndFeedback(character: CharacterState): void {
     if (character.hitFlashFrames > 0) character.hitFlashFrames -= 1;
+    if (character.mode === 'grabbed') return;
     if (!isStunned(character)) return;
 
     character.remainingStateFrames -= 1;
@@ -331,10 +360,27 @@ export class Simulation {
   private startAttack(character: CharacterState, move: MoveDefinition | undefined): MoveDefinition | undefined {
     if (!move) return undefined;
 
-    character.attack = { moveId: move.id, buttons: [...move.input.buttons], elapsedFrames: 0, hasHit: false };
+    character.attack = {
+      moveId: move.id,
+      buttons: [...move.input.buttons],
+      elapsedFrames: 0,
+      hasHit: false,
+      preciseExecution: move.precisionWindowFrames !== undefined,
+    };
     character.crouching = move.crouching === true;
     character.mode = 'startup';
     return move;
+  }
+
+  private canCancel(character: CharacterState, nextMove: MoveDefinition | undefined): boolean {
+    const attack = character.attack;
+    const currentMove = attack ? getMoveById(attack.moveId) : undefined;
+    const cancelRule = currentMove?.cancelOnHit;
+    if (!attack || !nextMove || attack.hitOutcome !== 'hit' || attack.hitElapsedFrames === undefined || !cancelRule) {
+      return false;
+    }
+    return attack.elapsedFrames - attack.hitElapsedFrames <= cancelRule.windowFrames &&
+      cancelRule.moveIds.includes(nextMove.id);
   }
 
   private updateDash(index: number, horizontal: number, grounded: boolean): boolean {
@@ -446,7 +492,8 @@ function verticalAxis(direction: FrameInput['direction']): 'up' | 'down' | 'neut
 }
 
 function isStunned(character: CharacterState): boolean {
-  return character.mode === 'hitstun' || character.mode === 'blockstun';
+  return character.mode === 'hitstun' || character.mode === 'blockstun' ||
+    character.mode === 'grabbed' || character.mode === 'throwRecovery';
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
