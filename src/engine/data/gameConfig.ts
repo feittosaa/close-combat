@@ -2,7 +2,6 @@
 export interface GameConfig {
   arena: { left: number; right: number; floorY: number };
   movement: {
-    bodyWidth: number;
     walkSpeed: number;
     jumpImpulse: number;
     gravity: number;
@@ -23,7 +22,6 @@ export function createGameConfig(width: number, height: number): GameConfig {
       floorY: height - 88,
     },
     movement: {
-      bodyWidth: 54,
       walkSpeed: 3,
       jumpImpulse: -11,
       gravity: 0.55,

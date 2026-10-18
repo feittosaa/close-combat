@@ -25,7 +25,7 @@ Pressione **Enter** ou clique no menu para abrir a cena de luta. Na cena, **Esc*
 - `F/B+1`, `DF/DB+2`, `D+3` e `UF/UB+4` executam variantes direcionais; `D+1`, `D+2` e `D+4` são golpes abaixados. Pressione `1`–`4` durante o salto para golpes aéreos. `Esc` volta ao menu.
 - `1+2` e `3+4` executam chords de teste; pressionamentos são agrupados se ocorrerem dentro de 3 frames. Golpes de um botão que possam formar esses chords aguardam o fim da janela; combinações sem golpe cadastrado são ignoradas.
 - `F,F+2` e `D,DF+3` são sequências provisórias de Tester; `R` reinicia a luta depois do resultado final.
-- `1+3` e `2+4` iniciam agarrões; quebre com a combinação oposta em até 6 frames. `F,N,DF+2` executa o especial de teste; pressionar `2` até um frame após `DF` ativa a variante precisa. O jab pode cancelar para o soco ascendente ou o especial depois de acertar.
+- `1+3` e `2+4` iniciam agarrões; segure `F` para lançar à frente ou `B` para lançar para trás (sem direção, lança à frente), e quebre com a combinação oposta em até 6 frames. `F,N,DF+2` executa o especial de teste; pressionar `2` até um frame após `DF` ativa a variante precisa. O jab pode cancelar para o soco ascendente ou o especial depois de acertar.
 
 O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas sem variante cadastrada são ignoradas. O parry é testável contra o golpe elegível `test-jab`: pressione `B` no frame do contato para atordoar o atacante por 18 frames; fora da janela, o ataque resolve normalmente.
 

@@ -248,6 +248,25 @@ describe('Simulation movement foundation', () => {
     expect(whiff.snapshot().characters[1].mode).not.toBe('grabbed');
   });
 
+  it.each([
+    ['F', true],
+    ['B', false],
+  ] as const)('lets the throw input direction choose %s launch and side order', (direction, targetStaysInFront) => {
+    const simulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    step(simulation, [{ direction, buttons: new Set(['1', '3']) }, neutral]);
+    let snapshot = simulation.snapshot();
+    for (let frame = 0; frame < 20 && snapshot.hitEvents[0]?.outcome !== 'throw'; frame += 1) {
+      step(simulation, [neutral, neutral]);
+      snapshot = simulation.snapshot();
+    }
+
+    expect(snapshot.hitEvents[0]?.outcome).toBe('throw');
+    expect(snapshot.characters[1].x > snapshot.characters[0].x).toBe(targetStaysInFront);
+    expect(snapshot.characters[1].mode).toBe('hitstun');
+  });
+
   it('resolves a knockout, starts the configured next round, and declares a match winner', () => {
     const testCharacter = { ...defaultCharacter, maxHealth: 40 };
     const roundConfig = {
@@ -550,9 +569,9 @@ describe('Simulation movement foundation', () => {
     for (let frame = 0; frame < 240; frame += 1) step(simulation, [towardOpponent, towardOpponent]);
 
     const [first, second] = simulation.snapshot().characters;
-    expect(first.x).toBeGreaterThanOrEqual(config.arena.left + config.movement.bodyWidth / 2);
-    expect(second.x).toBeLessThanOrEqual(config.arena.right - config.movement.bodyWidth / 2);
-    expect(second.x - first.x).toBeGreaterThanOrEqual(config.movement.bodyWidth);
+    expect(first.x).toBeGreaterThanOrEqual(config.arena.left + first.collision.bodyWidth / 2);
+    expect(second.x).toBeLessThanOrEqual(config.arena.right - second.collision.bodyWidth / 2);
+    expect(second.x - first.x).toBeGreaterThanOrEqual((first.collision.bodyWidth + second.collision.bodyWidth) / 2);
   });
 
   it('clamps backward movement to both arena boundaries', () => {
@@ -561,9 +580,8 @@ describe('Simulation movement foundation', () => {
     for (let frame = 0; frame < 240; frame += 1) step(simulation, [awayFromOpponent, awayFromOpponent]);
 
     const [first, second] = simulation.snapshot().characters;
-    const halfBody = config.movement.bodyWidth / 2;
-    expect(first.x).toBe(config.arena.left + halfBody);
-    expect(second.x).toBe(config.arena.right - halfBody);
+    expect(first.x).toBe(config.arena.left + first.collision.bodyWidth / 2);
+    expect(second.x).toBe(config.arena.right - second.collision.bodyWidth / 2);
   });
 
   it('starts an attack from a fresh button press and exposes its active hitbox', () => {
@@ -617,5 +635,30 @@ describe('Simulation movement foundation', () => {
     const [first, second] = simulation.snapshot().characters;
     expect(first.health).toBe(config.match.maxHealth - 45);
     expect(second.health).toBe(config.match.maxHealth - 45);
+  });
+
+  it('keeps deterministic trades while rising punch startup invulnerability evades strikes', () => {
+    const simulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    step(simulation, [
+      { direction: 'N', buttons: new Set(['1']) },
+      { direction: 'DF', buttons: new Set(['2']) },
+    ]);
+    let snapshot = simulation.snapshot();
+    while (snapshot.characters[0].attack?.moveId !== 'test-jab' || snapshot.characters[1].attack?.moveId !== 'test-rising-punch') {
+      step(simulation, [neutral, { direction: 'DF', buttons: new Set(['2']) }]);
+      snapshot = simulation.snapshot();
+    }
+    for (let frame = 0; frame < 4 && snapshot.characters[0].attack?.elapsedFrames !== 4; frame += 1) {
+      step(simulation, [neutral, neutral]);
+      snapshot = simulation.snapshot();
+    }
+
+    expect(snapshot.characters[0].attack?.elapsedFrames).toBe(4);
+    expect(snapshot.characters[1].attack?.moveId).toBe('test-rising-punch');
+    expect(snapshot.characters[1].attack?.elapsedFrames).toBeLessThan(5);
+    expect(snapshot.hitEvents).toHaveLength(0);
+    expect(snapshot.characters[1].health).toBe(config.match.maxHealth);
   });
 });

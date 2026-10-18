@@ -3,7 +3,7 @@ import type { CharacterState } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import { defaultCharacter, type CharacterDefinition } from '../data/characters';
 import type { GameConfig } from '../data/gameConfig';
-import { getMovesForCharacter, getMoveById, type MoveDefinition } from '../data/moves';
+import type { MoveDefinition } from '../data/moves';
 import { CommandParser } from '../../input/CommandBuffer';
 import type { AttackButton, FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
@@ -57,8 +57,8 @@ export class Simulation {
     const { arena, match } = config;
     this.fighterDefinitions = fighterDefinitions;
     this.fighterMoves = [
-      getMovesForCharacter(fighterDefinitions[0].moveIds),
-      getMovesForCharacter(fighterDefinitions[1].moveIds),
+      fighterDefinitions[0].moves,
+      fighterDefinitions[1].moves,
     ];
     const inset = Math.min(190, (arena.right - arena.left) * 0.22);
     this.characters = [
@@ -66,7 +66,10 @@ export class Simulation {
       this.createCharacter('player-2', fighterDefinitions[1], arena.right - inset, 'left'),
     ];
     this.roundFramesRemaining = match.roundDurationFrames;
-    this.attackResolver = new AttackResolver(config.movement.bodyWidth);
+    const moveBooks = new Map(fighterDefinitions.map((definition, index) => [definition.id, this.fighterMoves[index]]));
+    this.attackResolver = new AttackResolver(
+      (fighterId, moveId) => moveBooks.get(fighterId)?.find((move) => move.id === moveId),
+    );
   }
 
   advance(
@@ -172,14 +175,14 @@ export class Simulation {
       }
 
       if (canControl || this.canCancel(character, moveCommand)) {
-        const move = this.startAttack(character, moveCommand);
+        const move = this.startAttack(character, moveCommand, input.direction);
         if (move?.advance) {
           const facingSign = character.facing === 'right' ? 1 : -1;
           nextX[index] += facingSign * move.advance;
         }
       }
 
-      const halfWidth = this.config.movement.bodyWidth / 2;
+      const halfWidth = character.collision.bodyWidth / 2;
       nextX[index] = clamp(
         nextX[index],
         this.config.arena.left + halfWidth,
@@ -196,11 +199,11 @@ export class Simulation {
       const target = this.characters.find((character) => character.characterId === event.targetId);
       if (!attacker || !target) return;
       const direction = attacker.facing === 'right' ? 1 : -1;
-      target.x = clamp(
-        target.x + direction * event.pushback,
-        this.config.arena.left + this.config.movement.bodyWidth / 2,
-        this.config.arena.right - this.config.movement.bodyWidth / 2,
-      );
+      const displacedX = event.targetOffsetFromAttacker === undefined
+        ? target.x + direction * event.pushback
+        : attacker.x + direction * event.targetOffsetFromAttacker;
+      target.x = clamp(displacedX, this.config.arena.left + target.collision.bodyWidth / 2,
+        this.config.arena.right - target.collision.bodyWidth / 2);
     });
     this.resolveBodySpacing(this.characters.map(({ x }) => x));
     this.updateFacing();
@@ -293,6 +296,7 @@ export class Simulation {
     return {
       characterId,
       fighterId: definition.id,
+      collision: definition.collision,
       x,
       y: this.config.arena.floorY,
       facing,
@@ -349,7 +353,7 @@ export class Simulation {
     }
 
     const crouchingAttack = character.attack
-      ? getMoveById(character.attack.moveId)?.crouching === true
+      ? this.moveFor(character, character.attack.moveId)?.crouching === true
       : false;
     character.crouching = (canControl && character.grounded && vertical === 'down') || crouchingAttack;
     if (canControl && !character.attack) {
@@ -357,7 +361,11 @@ export class Simulation {
     }
   }
 
-  private startAttack(character: CharacterState, move: MoveDefinition | undefined): MoveDefinition | undefined {
+  private startAttack(
+    character: CharacterState,
+    move: MoveDefinition | undefined,
+    direction: FrameInput['direction'],
+  ): MoveDefinition | undefined {
     if (!move) return undefined;
 
     character.attack = {
@@ -366,6 +374,9 @@ export class Simulation {
       elapsedFrames: 0,
       hasHit: false,
       preciseExecution: move.precisionWindowFrames !== undefined,
+      throwDirection: move.throw
+        ? isBackwardDirection(direction) ? 'backward' : 'forward'
+        : undefined,
     };
     character.crouching = move.crouching === true;
     character.mode = 'startup';
@@ -374,7 +385,7 @@ export class Simulation {
 
   private canCancel(character: CharacterState, nextMove: MoveDefinition | undefined): boolean {
     const attack = character.attack;
-    const currentMove = attack ? getMoveById(attack.moveId) : undefined;
+    const currentMove = attack ? this.moveFor(character, attack.moveId) : undefined;
     const cancelRule = currentMove?.cancelOnHit;
     if (!attack || !nextMove || attack.hitOutcome !== 'hit' || attack.hitElapsedFrames === undefined || !cancelRule) {
       return false;
@@ -419,7 +430,7 @@ export class Simulation {
   private advanceAttacks(): void {
     this.characters.forEach((character) => {
       const attack = character.attack;
-      const move = attack ? getMoveById(attack.moveId) : undefined;
+      const move = attack ? this.moveFor(character, attack.moveId) : undefined;
       if (!attack || !move) return;
 
       attack.elapsedFrames += 1;
@@ -442,7 +453,7 @@ export class Simulation {
 
   private resolveBodySpacing(previousX: readonly number[]): void {
     const [first, second] = this.characters;
-    const minimumDistance = this.config.movement.bodyWidth;
+    const minimumDistance = (first.collision.bodyWidth + second.collision.bodyWidth) / 2;
     const airborneCrossing = (!first.grounded || !second.grounded) &&
       Math.abs(first.y - second.y) >= minimumDistance;
     if (airborneCrossing) return;
@@ -475,6 +486,11 @@ export class Simulation {
       second.facing = 'right';
     }
   }
+
+  private moveFor(character: CharacterState, moveId: string): MoveDefinition | undefined {
+    const index = character.characterId === 'player-1' ? 0 : 1;
+    return this.fighterMoves[index].find((move) => move.id === moveId);
+  }
 }
 
 function neutralInput(): FrameInput {
@@ -489,6 +505,10 @@ function verticalAxis(direction: FrameInput['direction']): 'up' | 'down' | 'neut
   if (direction.startsWith('U')) return 'up';
   if (direction.startsWith('D')) return 'down';
   return 'neutral';
+}
+
+function isBackwardDirection(direction: FrameInput['direction']): boolean {
+  return direction === 'B' || direction === 'DB' || direction === 'UB';
 }
 
 function isStunned(character: CharacterState): boolean {

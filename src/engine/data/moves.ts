@@ -13,8 +13,11 @@ export interface MoveDefinition {
     breakButtons: readonly AttackButton[];
     breakFrames: number;
     breakRecovery: number;
+    launchDistance: { forward: number; backward: number };
   };
   parryable?: boolean;
+  /** Frames iniciais do startup em que o golpe ignora ataques de strike. */
+  strikeInvulnerableStartupFrames?: number;
   airborne?: boolean;
   crouching?: boolean;
   startup: number;
@@ -30,7 +33,8 @@ export interface MoveDefinition {
 }
 
 /** Valores de protótipo; correspondem à tabela provisória em base.md. */
-export const moves: readonly MoveDefinition[] = [
+/** Livro provisório de golpes de Tester; outros personagens definem seu próprio array. */
+export const testerMoves: readonly MoveDefinition[] = [
   {
     id: 'test-jab',
     input: { buttons: ['1'] },
@@ -171,7 +175,7 @@ export const moves: readonly MoveDefinition[] = [
   {
     id: 'test-front-throw',
     input: { buttons: ['1', '3'] },
-    throw: { range: 76, breakButtons: ['2', '4'], breakFrames: 6, breakRecovery: 12 },
+    throw: { range: 76, breakButtons: ['2', '4'], breakFrames: 6, breakRecovery: 12, launchDistance: { forward: 120, backward: 140 } },
     startup: 6,
     activeFrames: 1,
     recovery: 22,
@@ -185,7 +189,7 @@ export const moves: readonly MoveDefinition[] = [
   {
     id: 'test-power-throw',
     input: { buttons: ['2', '4'] },
-    throw: { range: 76, breakButtons: ['1', '3'], breakFrames: 6, breakRecovery: 12 },
+    throw: { range: 76, breakButtons: ['1', '3'], breakFrames: 6, breakRecovery: 12, launchDistance: { forward: 145, backward: 170 } },
     startup: 9,
     activeFrames: 1,
     recovery: 28,
@@ -222,6 +226,7 @@ export const moves: readonly MoveDefinition[] = [
     pushback: { hit: 22, block: 16 },
     advance: 4,
     hitLevel: 'mid',
+    strikeInvulnerableStartupFrames: 5,
     hitbox: { forward: 24, yOffset: -144, width: 64, height: 52 },
   },
   {
@@ -392,16 +397,3 @@ export const moves: readonly MoveDefinition[] = [
     hitbox: { forward: 30, yOffset: -122, width: 84, height: 52 },
   },
 ];
-
-export function getMoveByButton(button: AttackButton): MoveDefinition | undefined {
-  return moves.find((move) => move.input.buttons.length === 1 && move.input.buttons[0] === button);
-}
-
-export function getMovesForCharacter(allowedMoveIds: readonly string[]): readonly MoveDefinition[] {
-  const allowed = new Set(allowedMoveIds);
-  return moves.filter((move) => allowed.has(move.id));
-}
-
-export function getMoveById(moveId: string): MoveDefinition | undefined {
-  return moves.find((move) => move.id === moveId);
-}

@@ -1,7 +1,7 @@
 {
   "characterId": "tester",
   "textureKey": "tester",
-  "spritesheet": "../sprites/characters/tester/tester.png",
+  "spritesheet": "../sprites/characters/tester/tester-atlas-v01.png",
   "frameSize": {
     "width": null,
     "height": null
