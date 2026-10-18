@@ -2,7 +2,7 @@
 
 > **Documento de execução:** este roteiro transforma o plano de [`base.md`](./base.md) em etapas de implementação verificáveis. `base.md` continua sendo a fonte de verdade para visão, regras e decisões do jogo; este arquivo organiza a ordem do trabalho e seu estado.
 >
-> **Status:** Fundação local implementada com dash, defesa básica, golpes direcionais de frente e trás, golpes aéreos e indicação dos modos no HUD. Sequências, chords de botões e regras avançadas seguem pendentes.
+> **Status:** Fundação local implementada com dash terrestre, defesa básica, golpes direcionais/abaixados/aéreos, cruzamento aéreo e indicação dos modos no HUD. Estrutura de assets organizada; arte original e parser avançado seguem pendentes.
 
 ## Como usar este pipeline
 
@@ -44,7 +44,7 @@
 - [x] Suportar entrada para os dois jogadores sem conflito de teclas.
 - [x] Implementar andar para frente e para trás, agachar, salto vertical e saltos direcionais previstos.
 - [x] Permitir dash por toque duplo somente no chão; ignorar taps direcionais durante o salto.
-- [ ] Permitir troca de lado em estados apropriados e confirmar que `F`/`B` acompanham o oponente (a colisão corporal atualmente impede a passagem).
+- [x] Permitir cruzamento aéreo quando há separação vertical suficiente e confirmar atualização de `F`/`B` após a troca.
 - [x] Manter os lutadores dentro da arena e impedir passagem corporal indevida.
 - [x] Separar estado lógico/posição do objeto visual Phaser.
 
@@ -115,7 +115,7 @@
 
 **Base:** `base.md` §§1, 4, 16, 19 e princípios de §21.
 
-- [ ] Definir direção visual e formato de arte em `base.md` antes de produzir conteúdo em escala.
+- [x] Definir direção visual em `base.md` e criar diretórios para animações, sprites, cenários e cenas Phaser.
 - [ ] Criar seleção de personagens e paletas de botões com número/sigla além da cor.
 - [ ] Substituir os retângulos provisórios por arte original e animações.
 - [ ] Adicionar efeitos e áudio originais para acerto, defesa, parry e execução precisa.
@@ -149,4 +149,4 @@ Só trazer esses itens para o escopo ativo quando a fundação local estiver est
 
 ## Próximo bloco de trabalho
 
-Validar movimentação, defesa, golpes aéreos/direcionais/abaixados e identificação de modos no navegador com duas pessoas; rever a sensação dos valores temporários e ajustar `base.md` com as decisões aprovadas. Parser de sequências e chords de botões continua pendente.
+Implementar o parser de comandos conforme `base.md`, começando pela janela de simultaneidade e pela prioridade de reconhecimento. Em seguida, validar movimento, defesa, cruzamento aéreo e golpes no navegador com duas pessoas; substituir os lutadores provisórios somente quando houver arte original pronta.

@@ -38,6 +38,9 @@ O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](.
 ```text
 src/
   assets/             # recursos visuais e sonoros originais
+    animations/       # sequências de quadros exportadas
+    sprites/          # folhas de personagens, efeitos e interface
+    scenes/           # fundos e objetos de cenários
   engine/
     characters/       # estado dos lutadores
     combat/           # regras de combate
@@ -46,7 +49,8 @@ src/
     simulation/       # relógio e orquestração em passo fixo
   input/              # teclado, buffer e entradas abstratas
   rendering/          # representação Phaser separada da lógica
-  scenes/             # menu e cena provisória de luta
+    animations/       # associação de estados de combate às animações Phaser
+  scenes/             # classes Phaser de menu e luta
   tests/              # testes da lógica pura
   ui/                 # HUD e interface
   main.ts             # configuração e inicialização do Phaser
