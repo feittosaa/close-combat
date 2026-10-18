@@ -2,7 +2,7 @@
 import type { CharacterState } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import type { GameConfig } from '../data/gameConfig';
-import { getMoveByButton, getMoveById } from '../data/moves';
+import { getMoveForInput, getMoveById, type MoveDefinition } from '../data/moves';
 import type { FrameInput, AttackButton } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
@@ -27,6 +27,11 @@ export class Simulation {
   private readonly characters: [CharacterState, CharacterState];
   private readonly jumpHeld = [false, false];
   private readonly previousButtons = [new Set<AttackButton>(), new Set<AttackButton>()];
+  private readonly previousHorizontalAxis = [0, 0];
+  private readonly lastTapAxis = [0, 0];
+  private readonly lastTapFrame = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+  private readonly dashFramesRemaining = [0, 0];
+  private readonly dashAxis = [0, 0];
   private lastHitEvents: HitEvent[] = [];
 
   constructor(private readonly config: GameConfig) {
@@ -69,15 +74,26 @@ export class Simulation {
     this.characters.forEach((character, index) => {
       const input = inputs[index] ?? neutralInput();
       const canControl = !character.attack && !isStunned(character);
+      const airborneAtInput = !character.grounded;
       this.updateStunAndFeedback(character);
       this.updateVerticalMovement(character, input, index, canControl);
 
       if (canControl) {
         const horizontal = horizontalAxis(input.direction);
         const facingSign = character.facing === 'right' ? 1 : -1;
-        nextX[index] += horizontal * facingSign * this.config.movement.walkSpeed;
-        if (horizontal !== 0 && character.grounded && !character.crouching) character.mode = 'moving';
-        this.startAttack(character, input, index);
+        const dashing = this.updateDash(index, horizontal, character.grounded);
+        const speed = dashing ? this.config.movement.dashSpeed : this.config.movement.walkSpeed;
+        nextX[index] += horizontal * facingSign * speed;
+        if (dashing) character.mode = 'dashing';
+        else if (input.direction === 'B' || input.direction === 'DB') character.mode = 'blocking';
+        else if (horizontal !== 0 && character.grounded && !character.crouching) character.mode = 'moving';
+
+        const move = this.startAttack(character, input, index, airborneAtInput);
+        if (move?.advance) nextX[index] += facingSign * move.advance;
+      } else {
+        this.previousHorizontalAxis[index] = horizontalAxis(input.direction);
+        this.dashFramesRemaining[index] = 0;
+        this.dashAxis[index] = 0;
       }
 
       const halfWidth = this.config.movement.bodyWidth / 2;
@@ -92,7 +108,20 @@ export class Simulation {
     this.characters.forEach((character, index) => { character.x = nextX[index]; });
     this.resolveBodySpacing(previousX);
     this.updateFacing();
-    this.lastHitEvents = this.attackResolver.resolve(this.characters);
+    this.lastHitEvents = this.attackResolver.resolve(this.characters, inputs);
+    this.lastHitEvents.forEach((event) => {
+      const attacker = this.characters.find((character) => character.characterId === event.attackerId);
+      const target = this.characters.find((character) => character.characterId === event.targetId);
+      if (!attacker || !target) return;
+      const direction = attacker.facing === 'right' ? 1 : -1;
+      target.x = clamp(
+        target.x + direction * event.pushback,
+        this.config.arena.left + this.config.movement.bodyWidth / 2,
+        this.config.arena.right - this.config.movement.bodyWidth / 2,
+      );
+    });
+    this.resolveBodySpacing(this.characters.map(({ x }) => x));
+    this.updateFacing();
     this.advanceAttacks();
     this.frame += 1;
     this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
@@ -156,27 +185,70 @@ export class Simulation {
       }
     }
 
-    character.crouching = canControl && character.grounded && vertical === 'down';
+    const crouchingAttack = character.attack
+      ? getMoveById(character.attack.moveId)?.crouching === true
+      : false;
+    character.crouching = (canControl && character.grounded && vertical === 'down') || crouchingAttack;
     if (canControl && !character.attack) {
-      character.mode = character.crouching ? 'crouching' : 'neutral';
+      character.mode = character.crouching ? 'crouching' : character.grounded ? 'neutral' : 'airborne';
     }
   }
 
-  private startAttack(character: CharacterState, input: FrameInput, index: number): void {
+  private startAttack(
+    character: CharacterState,
+    input: FrameInput,
+    index: number,
+    airborne: boolean,
+  ): MoveDefinition | undefined {
     const justPressed = BUTTON_PRIORITY.filter((button) =>
       input.buttons.has(button) && !this.previousButtons[index].has(button),
     );
 
     // Combinações ainda não têm golpes atribuídos; não separam um chord em ataques acidentais.
-    if (justPressed.length !== 1 || input.buttons.size !== 1) return;
+    if (justPressed.length !== 1 || input.buttons.size !== 1) return undefined;
 
     const button = justPressed[0];
-    const move = button ? getMoveByButton(button) : undefined;
-    if (!button || !move) return;
+    const crouchingInput = input.direction === 'D' && character.crouching;
+    const move = button ? getMoveForInput(button, input.direction, airborne, crouchingInput) : undefined;
+    if (!button || !move) return undefined;
 
     character.attack = { moveId: move.id, button, elapsedFrames: 0, hasHit: false };
-    character.crouching = false;
+    character.crouching = move.crouching === true;
     character.mode = 'startup';
+    return move;
+  }
+
+  private updateDash(index: number, horizontal: number, grounded: boolean): boolean {
+    if (!grounded) {
+      this.previousHorizontalAxis[index] = horizontal;
+      this.lastTapAxis[index] = 0;
+      this.lastTapFrame[index] = Number.NEGATIVE_INFINITY;
+      this.dashFramesRemaining[index] = 0;
+      this.dashAxis[index] = 0;
+      return false;
+    }
+
+    const wasPressed = this.previousHorizontalAxis[index] !== 0;
+    const isPressed = horizontal !== 0;
+    if (isPressed && (!wasPressed || horizontal !== this.previousHorizontalAxis[index])) {
+      const withinWindow = this.frame - this.lastTapFrame[index] <= this.config.movement.doubleTapWindowFrames;
+      if (horizontal === this.lastTapAxis[index] && withinWindow) {
+        this.dashFramesRemaining[index] = this.config.movement.dashDurationFrames;
+        this.dashAxis[index] = horizontal;
+      }
+      this.lastTapAxis[index] = horizontal;
+      this.lastTapFrame[index] = this.frame;
+    }
+
+    this.previousHorizontalAxis[index] = horizontal;
+    if (!isPressed || horizontal !== this.dashAxis[index]) {
+      this.dashFramesRemaining[index] = 0;
+      return false;
+    }
+    if (this.dashFramesRemaining[index] <= 0) return false;
+
+    this.dashFramesRemaining[index] -= 1;
+    return true;
   }
 
   private advanceAttacks(): void {

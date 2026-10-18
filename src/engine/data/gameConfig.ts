@@ -6,6 +6,9 @@ export interface GameConfig {
     walkSpeed: number;
     jumpImpulse: number;
     gravity: number;
+    dashSpeed: number;
+    dashDurationFrames: number;
+    doubleTapWindowFrames: number;
   };
   match: { maxHealth: number; roundDurationFrames: number; roundCount: number };
 }
@@ -24,6 +27,9 @@ export function createGameConfig(width: number, height: number): GameConfig {
       walkSpeed: 3,
       jumpImpulse: -11,
       gravity: 0.55,
+      dashSpeed: 8,
+      dashDurationFrames: 8,
+      doubleTapWindowFrames: 12,
     },
     match: {
       maxHealth: 1000,

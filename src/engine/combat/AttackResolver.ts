@@ -3,12 +3,15 @@ import type { CharacterState } from '../characters/CharacterState';
 import { getMoveById, type MoveDefinition } from '../data/moves';
 import { intersects } from '../collision/intersects';
 import type { Hitbox, Hurtbox } from '../collision/types';
+import type { FrameInput } from '../../input/types';
 
 export interface HitEvent {
   attackerId: string;
   targetId: string;
   moveId: string;
   damage: number;
+  outcome: 'hit' | 'block';
+  pushback: number;
 }
 
 /** Resolve contatos da simulação e fornece a geometria exata para a visualização. */
@@ -23,7 +26,7 @@ export class AttackResolver {
     });
   }
 
-  resolve(characters: CharacterState[]): HitEvent[] {
+  resolve(characters: CharacterState[], inputs: readonly FrameInput[]): HitEvent[] {
     const pending: Array<{
       event: HitEvent;
       attack: NonNullable<CharacterState['attack']>;
@@ -37,13 +40,18 @@ export class AttackResolver {
 
       const target = characters[1 - attackerIndex];
       const hitbox = createHitbox(attacker, move);
+      if (move.hitLevel === 'high' && target.crouching) return;
       if (intersects(hitbox, createHurtbox(target, this.bodyWidth))) {
+        const targetInput = inputs[1 - attackerIndex];
+        const blocked = target.mode === 'blocking' && canBlock(move.hitLevel, targetInput);
         pending.push({
           event: {
             attackerId: attacker.characterId,
             targetId: target.characterId,
             moveId: move.id,
-            damage: move.damage,
+            damage: blocked ? 0 : move.damage,
+            outcome: blocked ? 'block' : 'hit',
+            pushback: blocked ? move.pushback.block : move.pushback.hit,
           },
           attack,
           target,
@@ -56,16 +64,27 @@ export class AttackResolver {
       const move = getMoveById(event.moveId);
       if (!move) return;
       attack.hasHit = true;
-      target.health = Math.max(0, target.health - move.damage);
-      target.mode = 'hitstun';
-      target.remainingStateFrames = Math.max(target.remainingStateFrames, move.hitstun);
+      if (event.outcome === 'block') {
+        target.mode = 'blockstun';
+        target.remainingStateFrames = Math.max(target.remainingStateFrames, move.blockstun);
+      } else {
+        target.health = Math.max(0, target.health - move.damage);
+        target.mode = 'hitstun';
+        target.remainingStateFrames = Math.max(target.remainingStateFrames, move.hitstun);
+        target.hitFlashFrames = 5;
+      }
       target.attack = undefined;
       target.crouching = false;
-      target.hitFlashFrames = 5;
     });
 
     return pending.map(({ event }) => event);
   }
+}
+
+function canBlock(hitLevel: MoveDefinition['hitLevel'], input: FrameInput | undefined): boolean {
+  if (!input) return false;
+  if (hitLevel === 'low') return input.direction === 'DB';
+  return input.direction === 'B';
 }
 
 function isActive(character: CharacterState, move: MoveDefinition): boolean {
