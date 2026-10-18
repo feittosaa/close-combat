@@ -19,6 +19,8 @@ export class CombatHud {
   private readonly hitLabel: Phaser.GameObjects.Text;
   private readonly resultLabel: Phaser.GameObjects.Text;
   private readonly modeLabels: Phaser.GameObjects.Text[];
+  private lastImpactLabel = '';
+  private lastImpactFrame = Number.NEGATIVE_INFINITY;
   private readonly barWidth = 360;
   private readonly barHeight = 22;
   private readonly sidePadding = 28;
@@ -69,7 +71,16 @@ export class CombatHud {
       this.resultLabel.setText('');
     }
     const hit = snapshot.hitEvents[0];
-    this.hitLabel.setText(hit ? `${hit.outcome === 'block' ? 'BLOCK' : 'HIT'} · -${hit.damage}` : '');
+    if (snapshot.frame < this.lastImpactFrame) {
+      this.lastImpactLabel = '';
+      this.lastImpactFrame = Number.NEGATIVE_INFINITY;
+    }
+    if (hit) {
+      const result = hit.outcome === 'block' ? 'BLOCK' : `HIT · -${hit.damage}`;
+      this.lastImpactLabel = `${result} · ADV ${hit.frameAdvantage > 0 ? '+' : ''}${hit.frameAdvantage}F`;
+      this.lastImpactFrame = snapshot.frame;
+    }
+    this.hitLabel.setText(snapshot.frame - this.lastImpactFrame <= 90 ? this.lastImpactLabel : '');
     snapshot.characters.forEach((character, index) => {
       this.modeLabels[index]?.setText(MODE_LABELS[character.mode]);
       this.modeLabels[index]?.setColor(character.mode === 'hitstun' ? '#ff7777' : character.mode === 'blockstun' || character.mode === 'blocking' ? '#8cb4ff' : '#f4f0e8');

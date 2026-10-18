@@ -317,6 +317,45 @@ describe('Simulation movement foundation', () => {
     }
   });
 
+  it('exposes frame advantage using remaining attack frames minus defender stun', () => {
+    const blocked = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(blocked, [forward, forward]);
+    step(blocked, [{ direction: 'N', buttons: new Set(['1']) }, { direction: 'B', buttons: new Set() }]);
+    let blockedSnapshot = blocked.snapshot();
+    for (let frame = 0; frame < 14 && blockedSnapshot.hitEvents.length === 0; frame += 1) {
+      step(blocked, [neutral, { direction: 'B', buttons: new Set() }]);
+      blockedSnapshot = blocked.snapshot();
+    }
+    expect(blockedSnapshot.hitEvents[0]).toMatchObject({
+      outcome: 'block', attackerRecoveryFrames: 11, defenderStunFrames: 10, frameAdvantage: 1,
+    });
+
+    const hit = new Simulation(config);
+    for (let frame = 0; frame < 100; frame += 1) step(hit, [forward, forward]);
+    step(hit, [{ direction: 'N', buttons: new Set(['2']) }, neutral]);
+    let hitSnapshot = hit.snapshot();
+    for (let frame = 0; frame < 16 && hitSnapshot.hitEvents.length === 0; frame += 1) {
+      step(hit, [neutral, neutral]);
+      hitSnapshot = hit.snapshot();
+    }
+    expect(hitSnapshot.hitEvents[0]).toMatchObject({
+      outcome: 'hit', attackerRecoveryFrames: 16, defenderStunFrames: 16, frameAdvantage: 0,
+    });
+
+    const negative = new Simulation(config);
+    for (let frame = 0; frame < 100; frame += 1) step(negative, [forward, forward]);
+    step(negative, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
+    let negativeSnapshot = negative.snapshot();
+    for (let frame = 0; frame < 14 && negativeSnapshot.hitEvents.length === 0; frame += 1) {
+      step(negative, [neutral, neutral]);
+      negativeSnapshot = negative.snapshot();
+    }
+    expect(negativeSnapshot.hitEvents[0]).toMatchObject({
+      outcome: 'hit', attackerRecoveryFrames: 11, defenderStunFrames: 12, frameAdvantage: -1,
+    });
+  });
+
   it('recognizes registered chords pressed within the three-frame window', () => {
     const simulation = new Simulation(config);
     step(simulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
