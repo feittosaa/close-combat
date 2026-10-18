@@ -2,7 +2,7 @@
 
 > **Documento de execução:** este roteiro transforma o plano de [`base.md`](./base.md) em etapas de implementação verificáveis. `base.md` continua sendo a fonte de verdade para visão, regras e decisões do jogo; este arquivo organiza a ordem do trabalho e seu estado.
 >
-> **Status:** Fundação local implementada com dash terrestre, defesa básica, golpes direcionais/abaixados/aéreos, cruzamento aéreo e indicação dos modos no HUD. Estrutura de assets organizada; arte original e parser avançado seguem pendentes.
+> **Status:** Fundação local implementada com dash terrestre, defesa básica, golpes direcionais/abaixados/aéreos, cruzamento aéreo e indicação dos modos no HUD. Buffer de 30 frames, janela provisória de 3 frames e prioridade de seleção estão definidos; reconhecimento de chords e sequências segue pendente.
 
 ## Como usar este pipeline
 
@@ -64,15 +64,17 @@
 
 ### 2.1 Parser e dados
 
-- [ ] Definir buffer, janela de simultaneidade, duração e prioridade de comandos.
+- [x] Definir buffer de 30 frames, janela de simultaneidade de 3 frames e prioridade de seleção de comandos.
 - [x] Reconhecer pressionamentos simples dos botões `1`, `2`, `3`, `4` como golpes provisórios.
 - [x] Reconhecer variantes direcionais provisórias de aproximação e recuo (`F/B+1`, `DF/DB+2`, `D+3`, `UF/UB+4`).
 - [x] Selecionar golpes aéreos provisórios por botão quando o personagem já está no ar.
 - [x] Selecionar golpes abaixados provisórios com `D+1`, `D+2` e `D+4`; manter `D+3` como rasteira.
 - [ ] Reconhecer combinações simultâneas não cadastradas e sequências.
+- [ ] Integrar reconhecimento de botões pressionados dentro da janela ao início dos golpes.
 - [x] Registrar entradas direcionais/botões recentes na interface.
 - [x] Definir os campos iniciais de dados de golpes: startup, active, recovery, nível, hitbox, dano, hitstun, blockstun, pushback e condição aérea.
-- [ ] Criar pelo menos dois personagens de teste com dados mínimos; identificar claramente valores provisórios.
+- [x] Criar o primeiro personagem de teste, Tester, associar golpes e usá-lo como padrão temporário.
+- [ ] Criar pelo menos um segundo personagem de teste com dados mínimos.
 
 ### 2.2 Estados e colisão
 
@@ -87,7 +89,8 @@
 ### 2.3 Testes da simulação
 
 - [ ] Cobrir troca de lado e conversão de direções relativas.
-- [ ] Cobrir botões, combinações, diagonais e prioridade do parser.
+- [x] Cobrir capacidade do buffer, prioridade de combinações e prioridade direcional do parser.
+- [ ] Cobrir chords capturados ao longo da janela, diagonais e sequência de comandos.
 - [x] Cobrir startup, frames ativos, recovery, escolha de variantes direcionais/aéreas/abaixadas, acerto e dano dos golpes provisórios.
 - [x] Cobrir dash terrestre e rejeitar dash iniciado por entradas no ar.
 - [x] Cobrir regras básicas de bloqueio alto/baixo e blockstun; ampliar cobertura de empurrão, rounds e interações pendentes.
@@ -116,6 +119,7 @@
 **Base:** `base.md` §§1, 4, 16, 19 e princípios de §21.
 
 - [x] Definir direção visual em `base.md` e criar diretórios para animações, sprites, cenários e cenas Phaser.
+- [x] Criar manifesto-modelo e mapeamento de chaves de animação para Tester, prontos para receber uma spritesheet.
 - [ ] Criar seleção de personagens e paletas de botões com número/sigla além da cor.
 - [ ] Substituir os retângulos provisórios por arte original e animações.
 - [ ] Adicionar efeitos e áudio originais para acerto, defesa, parry e execução precisa.
@@ -149,4 +153,4 @@ Só trazer esses itens para o escopo ativo quando a fundação local estiver est
 
 ## Próximo bloco de trabalho
 
-Implementar o parser de comandos conforme `base.md`, começando pela janela de simultaneidade e pela prioridade de reconhecimento. Em seguida, validar movimento, defesa, cruzamento aéreo e golpes no navegador com duas pessoas; substituir os lutadores provisórios somente quando houver arte original pronta.
+Integrar os pressionamentos separados por até 3 frames ao reconhecimento de chords sem disparar golpes simples acidentais; depois implementar sequências conforme `base.md`. A estrutura de assets já está pronta para receber arte original.

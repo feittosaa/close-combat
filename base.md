@@ -94,7 +94,7 @@ Combinações simultâneas são representadas com `+`:
 - `1+3` e `2+4`: combinações que podem ser usadas para agarrões ou golpes especiais, conforme o personagem.
 - `1, 2, 4`: pressionar uma sequência em ordem, não simultaneamente.
 
-**Regra de leitura:** `+` significa simultâneo dentro de uma janela de tolerância configurável; a vírgula significa sequência. A janela exata de simultaneidade será definida nos testes de sensação de controle.
+**Regra de leitura:** `+` significa simultâneo dentro de uma janela de tolerância configurável; a vírgula significa sequência. No protótipo, o buffer guarda 30 frames e considera simultâneos pressionamentos separados por até 3 frames, inclusive. Esses valores são provisórios.
 
 ### 3.2 Direções
 
@@ -574,6 +574,8 @@ O parser mantém um buffer curto de entradas com direções e botões por frame.
 
 A prioridade de comando precisa ser previsível. Uma entrada `1+3`, por exemplo, não deve às vezes acionar um agarrão e às vezes dois ataques sem uma regra explícita.
 
+Prioridade provisória no protótipo: primeiro o comando com mais botões que corresponda exatamente à entrada; depois a variante com direção explícita; por fim o comando genérico. Em empate, manter a ordem declarada nos dados dos golpes. O buffer retém os últimos 30 frames e a janela de simultaneidade é de 3 frames, incluindo o frame inicial e final.
+
 ### 17.2 Máquina de estados
 
 Cada personagem deve ter estados claros, como neutro, movimento, startup, ativo, recuperação, bloqueio, hitstun, blockstun, agarrado, agarrando, queda, levantando, parry e especial cinematográfico. Ações incompatíveis não devem ser ativadas ao mesmo tempo sem uma regra específica de cancelamento ou interrupção.
@@ -706,6 +708,12 @@ Os valores abaixo servem apenas para validar movimento e interface na fundação
 - duração visual provisória do round: `99` segundos.
 
 Reavaliar esses valores ao testar sensação de controle e regras de round; manter a configuração fora da lógica de renderização.
+
+### Primeiro personagem provisório
+
+O primeiro personagem de teste é **Tester** (`tester`), personagem principal e padrão temporário para os dois lados da luta. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 3 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
+
+Os sprites-fonte de Tester ficam em `src/assets/sprites/characters/tester/`; o manifesto de animações fica em `src/assets/animations/tester.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. O manifesto começa como modelo sem quadros configurados e só deve ser carregado quando a spritesheet e suas dimensões forem adicionadas.
 
 ### Golpes provisórios para validar teclado e hitboxes
 

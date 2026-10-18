@@ -25,6 +25,7 @@ export interface CharacterAttack {
 
 export interface CharacterState {
   characterId: string;
+  fighterId: string;
   x: number;
   y: number;
   facing: 'left' | 'right';
