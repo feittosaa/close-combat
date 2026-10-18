@@ -2,7 +2,7 @@
 
 > **Documento de execução:** este roteiro transforma o plano de [`base.md`](./base.md) em etapas de implementação verificáveis. `base.md` continua sendo a fonte de verdade para visão, regras e decisões do jogo; este arquivo organiza a ordem do trabalho e seu estado.
 >
-> **Status:** Fundação local e primeiro ciclo de ataques básicos implementados. Dois jogadores podem mover-se e executar golpes de teste em simulação de 60 Hz; o HUD mostra entradas, vida e hitboxes ativas. Defesa, parser de sequências e regras avançadas seguem pendentes.
+> **Status:** Fundação local implementada com dash, defesa básica, golpes direcionais de frente e trás, golpes aéreos e indicação dos modos no HUD. Sequências, chords de botões e regras avançadas seguem pendentes.
 
 ## Como usar este pipeline
 
@@ -43,6 +43,7 @@
 - [x] Definir/documentar o mapeamento inicial de teclado e exibi-lo no README.
 - [x] Suportar entrada para os dois jogadores sem conflito de teclas.
 - [x] Implementar andar para frente e para trás, agachar, salto vertical e saltos direcionais previstos.
+- [x] Permitir dash por toque duplo somente no chão; ignorar taps direcionais durante o salto.
 - [ ] Permitir troca de lado em estados apropriados e confirmar que `F`/`B` acompanham o oponente (a colisão corporal atualmente impede a passagem).
 - [x] Manter os lutadores dentro da arena e impedir passagem corporal indevida.
 - [x] Separar estado lógico/posição do objeto visual Phaser.
@@ -65,9 +66,12 @@
 
 - [ ] Definir buffer, janela de simultaneidade, duração e prioridade de comandos.
 - [x] Reconhecer pressionamentos simples dos botões `1`, `2`, `3`, `4` como golpes provisórios.
-- [ ] Reconhecer combinações simultâneas, comandos com direções obrigatórias e sequências.
+- [x] Reconhecer variantes direcionais provisórias de aproximação e recuo (`F/B+1`, `DF/DB+2`, `D+3`, `UF/UB+4`).
+- [x] Selecionar golpes aéreos provisórios por botão quando o personagem já está no ar.
+- [x] Selecionar golpes abaixados provisórios com `D+1`, `D+2` e `D+4`; manter `D+3` como rasteira.
+- [ ] Reconhecer combinações simultâneas não cadastradas e sequências.
 - [x] Registrar entradas direcionais/botões recentes na interface.
-- [x] Definir os campos iniciais de dados de golpes: startup, active, recovery, nível, hitbox, dano e hitstun.
+- [x] Definir os campos iniciais de dados de golpes: startup, active, recovery, nível, hitbox, dano, hitstun, blockstun, pushback e condição aérea.
 - [ ] Criar pelo menos dois personagens de teste com dados mínimos; identificar claramente valores provisórios.
 
 ### 2.2 Estados e colisão
@@ -76,7 +80,7 @@
 - [x] Atualizar hitboxes e hurtboxes por frame de lógica.
 - [x] Resolver contatos sem depender de física genérica do renderizador e desenhar as hitboxes ativas.
 - [x] Implementar ataques básicos, dano e hitstun.
-- [ ] Implementar bloqueio alto/baixo, blockstun e empurrão.
+- [x] Implementar bloqueio alto/baixo, blockstun e empurrão provisórios.
 - [ ] Implementar rounds, vitória e reinício a partir de configuração.
 - [x] Resolver ataques simultâneos como trade no protótipo.
 
@@ -84,8 +88,9 @@
 
 - [ ] Cobrir troca de lado e conversão de direções relativas.
 - [ ] Cobrir botões, combinações, diagonais e prioridade do parser.
-- [x] Cobrir startup, frames ativos, recovery, acerto e dano dos golpes provisórios.
-- [ ] Cobrir bloqueio, empurrão, rounds e demais interações ainda não implementadas.
+- [x] Cobrir startup, frames ativos, recovery, escolha de variantes direcionais/aéreas/abaixadas, acerto e dano dos golpes provisórios.
+- [x] Cobrir dash terrestre e rejeitar dash iniciado por entradas no ar.
+- [x] Cobrir regras básicas de bloqueio alto/baixo e blockstun; ampliar cobertura de empurrão, rounds e interações pendentes.
 - [x] Cobrir alcance, colisão, dano, hitstun e trade básico.
 - [ ] Confirmar que a mesma sequência de entradas produz o mesmo estado final.
 
@@ -144,4 +149,4 @@ Só trazer esses itens para o escopo ativo quando a fundação local estiver est
 
 ## Próximo bloco de trabalho
 
-Validar a movimentação e o HUD no navegador com duas pessoas, rever a sensação dos valores temporários e ajustar `base.md` com as decisões aprovadas. Em seguida, iniciar a Etapa 2 definindo o parser de comandos e o esquema de golpes.
+Validar movimentação, defesa, golpes aéreos/direcionais/abaixados e identificação de modos no navegador com duas pessoas; rever a sensação dos valores temporários e ajustar `base.md` com as decisões aprovadas. Parser de sequências e chords de botões continua pendente.

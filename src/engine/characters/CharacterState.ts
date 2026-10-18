@@ -4,6 +4,8 @@ import type { AttackButton } from '../../input/types';
 export type CharacterMode =
   | 'neutral'
   | 'moving'
+  | 'dashing'
+  | 'airborne'
   | 'crouching'
   | 'startup'
   | 'active'

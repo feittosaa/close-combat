@@ -207,6 +207,10 @@ O combate acontece em um único plano horizontal. Os personagens podem se aproxi
 
 A aceleração, velocidade e distância de salto podem variar por personagem, desde que os dados sejam explícitos e testáveis.
 
+### 6.1.1 Comandos direcionais provisórios
+
+Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma direção no chão dentro de 12 frames inicia um dash de até 8 frames enquanto a direção continuar pressionada. Dash não pode iniciar nem continuar no ar; os toques feitos durante o salto não contam para um dash após aterrissar. O dash usa velocidade 8 unidades por frame; a caminhada usa 3. Os valores são configuráveis e provisórios. As direções continuam relativas ao oponente.
+
 ### 6.2 Espaçamento entre personagens
 
 - Os personagens não devem atravessar um ao outro livremente quando estiverem em estados que exigem colisão corporal.
@@ -271,6 +275,8 @@ Defender-se deve ser uma decisão ativa, baseada na direção do adversário e n
 - Certos ataques podem ser desbloqueáveis ou exigir uma defesa específica; isso deve ficar claro pela animação, pelo efeito ou por um indicador de treino.
 
 O jogo deve evitar situações em que a defesa falha por uma direção confusa. A direção defensiva é sempre relativa ao oponente, mesmo após troca de lado.
+
+Para o protótipo: `B` bloqueia ataques altos e médios quando o personagem está em pé; `DB` bloqueia baixos; um ataque alto é evitado ao agachar; ataques médios acertam `DB`; baixos acertam `B`. Um bloqueio bem-sucedido entra em blockstun e aplica o pushback definido no golpe. Os tempos e distâncias iniciais são provisórios.
 
 ### 8.2 Stun e recuperação
 
@@ -705,9 +711,41 @@ Até os personagens e golpes oficiais serem definidos, os botões `1`–`4` disp
 | `3` | 7 | 3 | 16 | 60 | baixo |
 | `4` | 9 | 4 | 19 | 85 | médio |
 
-Os golpes usam hitboxes retangulares de teste, aplicam hitstun provisório e atingem uma vez por execução. A interface de treino deve mostrar a direção relativa e os botões recebidos; a hitbox visual aparece apenas nos frames ativos e usa a mesma geometria da checagem de acerto. Não tratar esses números como balanceamento final.
+Comandos direcionais também terão variantes provisórias, reconhecidas no frame em que o botão é pressionado:
 
-Na primeira implementação, um ataque é iniciado por um novo pressionamento de um único botão. Combinações simultâneas e sequências ainda não disparam golpes; manter essa limitação explícita até o parser de comandos ser implementado. Bloqueio e distinção mecânica entre níveis alto/médio/baixo também permanecem pendentes.
+| Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
+|---|---|---:|---:|---:|---:|---|
+| `F+1` | soco avançando | 5 | 2 | 12 | 55 | alto |
+| `DF+2` | soco ascendente | 8 | 3 | 17 | 75 | médio |
+| `D+3` | rasteira | 7 | 3 | 18 | 70 | baixo |
+| `UF+4` | chute saltando | 8 | 4 | 20 | 80 | médio |
+| `B+1` | jab recuando | 6 | 2 | 14 | 50 | alto |
+| `DB+2` | cotovelo baixo recuando | 9 | 3 | 18 | 70 | médio |
+| `UB+4` | chute saltando para trás | 9 | 4 | 21 | 78 | médio |
+
+Golpes abaixados são selecionados ao pressionar um botão mantendo a direção exata `D` no chão. As diagonais `DF` e `DB` continuam selecionando suas variantes direcionais (ou bloqueio, quando não há ataque), enquanto o personagem adota postura baixa. `D+3` continua sendo a rasteira já cadastrada:
+
+| Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
+|---|---|---:|---:|---:|---:|---|
+| `D+1` | jab curto agachado | 5 | 2 | 12 | 42 | médio |
+| `D+2` | gancho agachado | 7 | 3 | 16 | 62 | médio |
+| `D+3` | rasteira | 7 | 3 | 18 | 70 | baixo |
+| `D+4` | chute varrido agachado | 8 | 3 | 19 | 72 | baixo |
+
+Variantes aéreas provisórias ficam disponíveis ao pressionar um botão enquanto o lutador não está no chão. Elas substituem a variante terrestre para aquele botão; direção horizontal pode ser mantida para controlar deslocamento, sem alterar a escolha do golpe nesta etapa:
+
+| Comando no ar | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
+|---|---|---:|---:|---:|---:|---|
+| `1` | soco aéreo | 5 | 3 | 13 | 50 | alto |
+| `2` | golpe aéreo forte | 7 | 3 | 17 | 68 | médio |
+| `3` | chute aéreo descendente | 6 | 3 | 16 | 62 | médio |
+| `4` | chute aéreo forte | 9 | 4 | 21 | 82 | médio |
+
+Os golpes usam hitboxes retangulares de teste e atingem uma vez por execução. `F` e `B` selecionam variantes distintas para os botões 1, 2 e 4; `D+1`, `D+2` e `D+4` selecionam golpes abaixados, e `D+3` é a rasteira. Variantes aéreas substituem a escolha terrestre enquanto o personagem está no ar. Os golpes básicos causam 12–21 frames de hitstun, 10 frames de blockstun e 18 unidades de pushback no acerto/12 no bloqueio. Valores dos demais golpes são provisórios por golpe, não balanceamento final.
+
+A interface identifica os modos neutro, movimento, dash, no ar, agachado, preparo, ativo, recuperação, defesa, atordoado, bloqueio, agarrado e caído. A hitbox visual aparece apenas nos frames ativos e usa a mesma geometria da checagem de acerto.
+
+Na primeira implementação, um ataque é iniciado por um novo pressionamento de um único botão. No chão, `D` seleciona variante abaixada quando existir; as demais direções selecionam a variante exata e por fim o golpe básico. No ar, escolhe o golpe aéreo do botão. Combinações simultâneas e sequências ainda não disparam golpes; manter essa limitação explícita até o parser de comandos ser implementado.
 
 ---
 

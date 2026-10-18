@@ -71,6 +71,121 @@ describe('Simulation movement foundation', () => {
     expect(simulation.snapshot().characters[0].crouching).toBe(true);
   });
 
+  it('starts a dash after tapping the same horizontal direction twice', () => {
+    const simulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    step(simulation, [forward, neutral]);
+    step(simulation, [neutral, neutral]);
+    step(simulation, [forward, neutral]);
+
+    const player = simulation.snapshot().characters[0];
+    expect(player.mode).toBe('dashing');
+    expect(player.x).toBeGreaterThan(config.arena.left + 190 + config.movement.walkSpeed * 2);
+  });
+
+  it('does not count directional taps in the air toward a dash', () => {
+    const simulation = new Simulation(config);
+    step(simulation, [{ direction: 'U', buttons: new Set() }, neutral]);
+    const airborneStartX = simulation.snapshot().characters[0].x;
+    step(simulation, [{ direction: 'F', buttons: new Set() }, neutral]);
+    step(simulation, [neutral, neutral]);
+    step(simulation, [{ direction: 'F', buttons: new Set() }, neutral]);
+
+    const airbornePlayer = simulation.snapshot().characters[0];
+    expect(airbornePlayer.grounded).toBe(false);
+    expect(airbornePlayer.mode).toBe('airborne');
+    expect(airbornePlayer.x - airborneStartX).toBe(config.movement.walkSpeed * 2);
+
+    for (let frame = 0; frame < 120 && !simulation.snapshot().characters[0].grounded; frame += 1) {
+      step(simulation, [neutral, neutral]);
+    }
+    const landedX = simulation.snapshot().characters[0].x;
+    step(simulation, [{ direction: 'F', buttons: new Set() }, neutral]);
+    const groundedPlayer = simulation.snapshot().characters[0];
+    expect(groundedPlayer.mode).toBe('moving');
+    expect(groundedPlayer.x - landedX).toBe(config.movement.walkSpeed);
+  });
+
+  it.each([
+    ['F', '1', 'test-advancing-jab'],
+    ['B', '1', 'test-retreating-jab'],
+    ['DF', '2', 'test-rising-punch'],
+    ['DB', '2', 'test-retreating-elbow'],
+    ['D', '3', 'test-sweep'],
+    ['D', '1', 'test-crouching-jab'],
+    ['D', '2', 'test-crouching-hook'],
+    ['D', '4', 'test-crouching-sweep-kick'],
+    ['UF', '4', 'test-jumping-kick'],
+    ['UB', '4', 'test-backward-jumping-kick'],
+  ] as const)('selects the directional move %s+%s', (direction, button, moveId) => {
+    const simulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    step(simulation, [{ direction, buttons: new Set([button]) }, neutral]);
+    expect(simulation.snapshot().characters[0].attack?.moveId).toBe(moveId);
+  });
+
+  it('keeps the crouching stance and hurtbox during a crouching attack', () => {
+    const simulation = new Simulation(config);
+    step(simulation, [{ direction: 'D', buttons: new Set(['1']) }, neutral]);
+    expect(simulation.snapshot().characters[0].attack?.moveId).toBe('test-crouching-jab');
+    expect(simulation.snapshot().characters[0].crouching).toBe(true);
+
+    step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot().characters[0].crouching).toBe(true);
+  });
+
+  it.each([
+    ['1', 'test-air-jab'],
+    ['2', 'test-air-strong'],
+    ['3', 'test-air-descending-kick'],
+    ['4', 'test-air-heavy-kick'],
+  ] as const)('selects the airborne move for button %s', (button, moveId) => {
+    const simulation = new Simulation(config);
+    step(simulation, [{ direction: 'U', buttons: new Set() }, neutral]);
+    expect(simulation.snapshot().characters[0].grounded).toBe(false);
+
+    step(simulation, [{ direction: 'N', buttons: new Set([button]) }, neutral]);
+    expect(simulation.snapshot().characters[0].attack?.moveId).toBe(moveId);
+  });
+
+  it('blocks high and mid attacks standing, and blocks lows while crouching', () => {
+    for (const [button, direction] of [['1', 'B'], ['2', 'B'], ['3', 'DB']] as const) {
+      const simulation = new Simulation(config);
+      const forward: FrameInput = { direction: 'F', buttons: new Set() };
+      for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+      const targetX = simulation.snapshot().characters[1].x;
+      step(simulation, [{ direction: 'N', buttons: new Set([button]) }, { direction, buttons: new Set() }]);
+      let snapshot = simulation.snapshot();
+      for (let frame = 0; frame < 14 && snapshot.hitEvents.length === 0; frame += 1) {
+        step(simulation, [neutral, { direction, buttons: new Set() }]);
+        snapshot = simulation.snapshot();
+      }
+
+      expect(snapshot.characters[1].health).toBe(config.match.maxHealth);
+      expect(snapshot.characters[1].mode).toBe('blockstun');
+      expect(snapshot.hitEvents[0]?.outcome).toBe('block');
+      expect(snapshot.characters[1].x).toBeGreaterThan(targetX);
+    }
+  });
+
+  it('does not block a low while standing or a mid while crouching', () => {
+    for (const [button, direction] of [['3', 'B'], ['2', 'DB']] as const) {
+      const simulation = new Simulation(config);
+      const forward: FrameInput = { direction: 'F', buttons: new Set() };
+      for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+      step(simulation, [{ direction: 'N', buttons: new Set([button]) }, { direction, buttons: new Set() }]);
+      let snapshot = simulation.snapshot();
+      for (let frame = 0; frame < 14 && snapshot.hitEvents.length === 0; frame += 1) {
+        step(simulation, [neutral, { direction, buttons: new Set() }]);
+        snapshot = simulation.snapshot();
+      }
+
+      expect(snapshot.characters[1].health).toBeLessThan(config.match.maxHealth);
+      expect(snapshot.hitEvents[0]?.outcome).toBe('hit');
+    }
+  });
+
   it('keeps the fighters in the arena and prevents them passing through each other', () => {
     const simulation = new Simulation(config);
     const towardOpponent: FrameInput = { direction: 'F', buttons: new Set() };

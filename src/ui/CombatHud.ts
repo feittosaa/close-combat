@@ -1,6 +1,14 @@
 // src/ui/CombatHud.ts
 import Phaser from 'phaser';
+import type { CharacterMode } from '../engine/characters/CharacterState';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
+
+const MODE_LABELS: Record<CharacterMode, string> = {
+  neutral: 'NEUTRO', moving: 'MOVIMENTO', dashing: 'DASH', airborne: 'NO AR',
+  crouching: 'AGACHADO', startup: 'PREPARO', active: 'ATIVO', recovery: 'RECUPERAÇÃO',
+  blocking: 'DEFESA', hitstun: 'ATORDOADO', blockstun: 'BLOQUEIO', grabbed: 'AGARRADO',
+  knockdown: 'CAÍDO',
+};
 
 /** HUD provisório, atualizado exclusivamente a partir de um snapshot da simulação. */
 export class CombatHud {
@@ -9,6 +17,7 @@ export class CombatHud {
   private readonly timer: Phaser.GameObjects.Text;
   private readonly roundLabel: Phaser.GameObjects.Text;
   private readonly hitLabel: Phaser.GameObjects.Text;
+  private readonly modeLabels: Phaser.GameObjects.Text[];
   private readonly barWidth = 360;
   private readonly barHeight = 22;
   private readonly sidePadding = 28;
@@ -19,6 +28,10 @@ export class CombatHud {
       scene.add.text(width - this.sidePadding, 18, 'JOGADOR 2', { color: '#f4f0e8', fontSize: '16px' }).setOrigin(1, 0),
     ];
     this.healthGraphics = scene.add.graphics();
+    this.modeLabels = [
+      scene.add.text(this.sidePadding, 67, 'NEUTRO', { color: '#f4f0e8', fontSize: '12px', fontStyle: 'bold' }),
+      scene.add.text(width - this.sidePadding, 67, 'NEUTRO', { color: '#f4f0e8', fontSize: '12px', fontStyle: 'bold' }).setOrigin(1, 0),
+    ];
     this.timer = scene.add.text(width / 2, 14, '99', {
       color: '#ffd166',
       fontSize: '32px',
@@ -40,12 +53,17 @@ export class CombatHud {
     this.timer.setText(String(Math.ceil(snapshot.roundFramesRemaining / 60)).padStart(2, '0'));
     this.roundLabel.setText(`ROUND ${snapshot.round}`);
     const hit = snapshot.hitEvents[0];
-    this.hitLabel.setText(hit ? `HIT · -${hit.damage}` : '');
+    this.hitLabel.setText(hit ? `${hit.outcome === 'block' ? 'BLOCK' : 'HIT'} · -${hit.damage}` : '');
+    snapshot.characters.forEach((character, index) => {
+      this.modeLabels[index]?.setText(MODE_LABELS[character.mode]);
+      this.modeLabels[index]?.setColor(character.mode === 'hitstun' ? '#ff7777' : character.mode === 'blockstun' || character.mode === 'blocking' ? '#8cb4ff' : '#f4f0e8');
+    });
     this.updateBars(snapshot.characters, width);
   }
 
   destroy(): void {
     this.labels.forEach((label) => label.destroy());
+    this.modeLabels.forEach((label) => label.destroy());
     this.healthGraphics.destroy();
     this.timer.destroy();
     this.roundLabel.destroy();

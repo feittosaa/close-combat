@@ -19,7 +19,7 @@ export class CombatantView {
 
   sync(state: CharacterState): void {
     const facingSign = state.facing === 'right' ? 1 : -1;
-    const lunge = state.mode === 'active' ? 7 * facingSign : 0;
+    const lunge = state.mode === 'dashing' ? 5 * facingSign : state.mode === 'active' ? 7 * facingSign : 0;
     this.body.setPosition(state.x + lunge, state.y);
 
     if (state.hitFlashFrames > 0) {
@@ -34,6 +34,21 @@ export class CombatantView {
     } else if (state.mode === 'recovery') {
       this.body.setFillStyle(0xaaa6b1);
       this.body.setDisplaySize(54, state.crouching ? 96 : 152);
+    } else if (state.mode === 'dashing') {
+      this.body.setFillStyle(0x9b7bff);
+      this.body.setDisplaySize(60, 142);
+    } else if (state.mode === 'blocking' || state.mode === 'blockstun') {
+      this.body.setFillStyle(0x63c7d5);
+      this.body.setDisplaySize(50, state.crouching ? 96 : 152);
+    } else if (state.mode === 'hitstun') {
+      this.body.setFillStyle(0xff6b6b);
+      this.body.setDisplaySize(58, state.crouching ? 96 : 152);
+    } else if (state.mode === 'airborne') {
+      this.body.setFillStyle(0xf2c14e);
+      this.body.setDisplaySize(54, 144);
+    } else if (state.mode === 'crouching') {
+      this.body.setFillStyle(this.color);
+      this.body.setDisplaySize(54, 96);
     } else {
       this.body.setFillStyle(this.color);
       this.body.setDisplaySize(54, state.crouching ? 96 : 152);

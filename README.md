@@ -21,9 +21,10 @@ Pressione **Enter** ou clique no menu para abrir a cena de luta. Na cena, **Esc*
 
 - **Jogador 1:** mover/saltar/agachar com `A`, `D`, `W`, `S`; ataques `1`–`4` em `J`, `K`, `N`, `M`.
 - **Jogador 2:** mover/saltar/agachar com as setas; ataques `1`–`4` no teclado numérico `1`–`4`.
-- Para saltar, toque em cima ou numa diagonal para cima. `Esc` volta ao menu.
+- `F`/`B` duas vezes rapidamente no chão ativa dash; dash não funciona no ar. `B` defende altos/médios e `DB` defende baixos.
+- `F/B+1`, `DF/DB+2`, `D+3` e `UF/UB+4` executam variantes direcionais; `D+1`, `D+2` e `D+4` são golpes abaixados. Pressione `1`–`4` durante o salto para golpes aéreos. `Esc` volta ao menu.
 
-O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas, defesa e comandos especiais ainda não estão implementados.
+O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas sem variante cadastrada e comandos especiais ainda não estão implementados.
 
 ## Comandos
 
