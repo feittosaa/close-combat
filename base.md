@@ -132,6 +132,17 @@ A notação de luta é independente da tecla física. O jogador poderá usar tec
 
 O jogo não deve exigir que o usuário tenha um layout de teclado específico. A configuração padrão será definida no protótipo e documentada no README.
 
+### 3.5 Mapeamento provisório do protótipo local
+
+Para viabilizar os primeiros testes locais de dois jogadores no mesmo teclado, o protótipo usará temporariamente:
+
+| Ação | Jogador 1 | Jogador 2 |
+|---|---|---|
+| Direita / esquerda / cima / baixo | `D` / `A` / `W` / `S` | setas `→` / `←` / `↑` / `↓` |
+| Botões `1`, `2`, `3`, `4` | `J`, `K`, `N`, `M` | `NumPad 1`, `NumPad 2`, `NumPad 3`, `NumPad 4` |
+
+Esse mapeamento existe para o protótipo e deverá ser remapeável antes de ser tratado como configuração final. Direções horizontais são convertidas para frente/trás relativamente ao lado atual do oponente; cima e baixo permanecem direções verticais.
+
 ---
 
 ## 4. Personalização das cores dos botões
@@ -669,6 +680,34 @@ As decisões abaixo não impedem o início do protótipo. Até serem confirmadas
 - **Movimentos verticais:** conjunto de saltos, evasões e regras de ataques que acertam personagens no ar.
 - **Online:** se fará parte de uma versão futura e qual estratégia de sincronização será usada.
 - **Acessibilidade:** opções de simplificação de QTE, remapeamento, contraste, redução de efeitos e leitura sem cor.
+
+### Valores provisórios do primeiro protótipo
+
+Os valores abaixo servem apenas para validar movimento e interface na fundação. São configuráveis e não representam decisões de balanceamento:
+
+- velocidade horizontal: `3` unidades de mundo por frame;
+- impulso inicial do salto: `-11` unidades por frame;
+- gravidade: `0,55` unidades por frame²;
+- largura de colisão corporal: `54` unidades;
+- vida inicial: `1000`;
+- duração visual provisória do round: `99` segundos.
+
+Reavaliar esses valores ao testar sensação de controle e regras de round; manter a configuração fora da lógica de renderização.
+
+### Golpes provisórios para validar teclado e hitboxes
+
+Até os personagens e golpes oficiais serem definidos, os botões `1`–`4` disparam ataques básicos de teste. Estes parâmetros são exclusivamente provisórios:
+
+| Botão | Startup | Ativo | Recovery | Dano | Nível |
+|---|---:|---:|---:|---:|---|
+| `1` | 4 | 2 | 10 | 45 | alto |
+| `2` | 6 | 3 | 14 | 65 | médio |
+| `3` | 7 | 3 | 16 | 60 | baixo |
+| `4` | 9 | 4 | 19 | 85 | médio |
+
+Os golpes usam hitboxes retangulares de teste, aplicam hitstun provisório e atingem uma vez por execução. A interface de treino deve mostrar a direção relativa e os botões recebidos; a hitbox visual aparece apenas nos frames ativos e usa a mesma geometria da checagem de acerto. Não tratar esses números como balanceamento final.
+
+Na primeira implementação, um ataque é iniciado por um novo pressionamento de um único botão. Combinações simultâneas e sequências ainda não disparam golpes; manter essa limitação explícita até o parser de comandos ser implementado. Bloqueio e distinção mecânica entre níveis alto/médio/baixo também permanecem pendentes.
 
 ---
 

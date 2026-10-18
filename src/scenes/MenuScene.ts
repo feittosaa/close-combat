@@ -1,6 +1,11 @@
 import Phaser from 'phaser';
 
 export class MenuScene extends Phaser.Scene {
+  private readonly handleEnter = (): void => this.startFight();
+  private readonly handleShutdown = (): void => {
+    this.input.keyboard?.off('keydown-ENTER', this.handleEnter);
+  };
+
   constructor() {
     super('MenuScene');
   }
@@ -35,7 +40,13 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
-    start.on('pointerdown', () => this.scene.start('FightScene'));
-    this.input.keyboard?.once('keydown-ENTER', () => this.scene.start('FightScene'));
+    start.on('pointerdown', () => this.startFight());
+    this.input.keyboard?.on('keydown-ENTER', this.handleEnter);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown);
+  }
+
+  private startFight(): void {
+    this.input.keyboard?.off('keydown-ENTER', this.handleEnter);
+    this.scene.start('FightScene');
   }
 }

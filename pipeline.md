@@ -2,7 +2,7 @@
 
 > **Documento de execução:** este roteiro transforma o plano de [`base.md`](./base.md) em etapas de implementação verificáveis. `base.md` continua sendo a fonte de verdade para visão, regras e decisões do jogo; este arquivo organiza a ordem do trabalho e seu estado.
 >
-> **Status inicial:** Fundação iniciada. A configuração TypeScript/Vite/Phaser, o menu e uma cena de luta provisória existem. Movimento jogável, barras de vida ligadas à simulação e testes da lógica ainda faltam.
+> **Status:** Fundação local e primeiro ciclo de ataques básicos implementados. Dois jogadores podem mover-se e executar golpes de teste em simulação de 60 Hz; o HUD mostra entradas, vida e hitboxes ativas. Defesa, parser de sequências e regras avançadas seguem pendentes.
 
 ## Como usar este pipeline
 
@@ -20,8 +20,8 @@
 - [x] Criar menu e cena de luta provisória.
 - [x] Criar o esqueleto dos módulos de entrada, simulação, combate, colisão, dados, renderização e interface.
 - [x] Configurar `.gitignore` para dependências, builds, caches e arquivos locais.
-- [ ] Confirmar os comandos `npm install`, `npm run dev`, `npm run test`, `npm run build` e `npm run preview` no ambiente de desenvolvimento.
-- [ ] Manter `README.md` com requisitos, comandos e controles existentes.
+- [ ] Confirmar os comandos `npm install`, `npm run dev`, `npm run test`, `npm run build` e `npm run preview` em instalação limpa.
+- [x] Manter `README.md` com requisitos, comandos e controles existentes.
 
 **Saída:** o projeto instala, inicia no navegador e gera um build; os comandos documentados correspondem aos configurados.
 
@@ -32,28 +32,28 @@
 ### 1.1 Simulação em passo fixo
 
 - [x] Criar relógio de passo fixo de 60 Hz, separado da renderização.
-- [ ] Fazer a cena avançar uma instância da simulação em cada passo fixo.
-- [ ] Definir estado inicial explícito para os dois jogadores e limites da arena configuráveis.
-- [ ] Garantir que delta grande de renderização não gere uma sequência ilimitada de passos atrasados.
+- [x] Fazer a cena avançar uma instância da simulação em cada passo fixo.
+- [x] Definir estado inicial explícito para os dois jogadores e limites da arena configuráveis.
+- [x] Garantir que delta grande de renderização não gere uma sequência ilimitada de passos atrasados.
 
 ### 1.2 Entrada e movimento
 
 - [x] Definir tipos de direções relativas ao oponente e botões `1`–`4`.
 - [x] Criar adaptador inicial de teclado e buffer de entradas por frame.
-- [ ] Definir/documentar o mapeamento inicial de teclado e exibi-lo no README.
-- [ ] Suportar entrada para os dois jogadores sem conflito de teclas.
-- [ ] Implementar andar para frente e para trás, agachar, salto vertical e saltos direcionais previstos.
-- [ ] Atualizar `F` e `B` conforme os jogadores trocam de lado.
-- [ ] Manter os lutadores dentro da arena e impedir passagem corporal indevida.
-- [ ] Separar estado lógico/posição do objeto visual Phaser.
+- [x] Definir/documentar o mapeamento inicial de teclado e exibi-lo no README.
+- [x] Suportar entrada para os dois jogadores sem conflito de teclas.
+- [x] Implementar andar para frente e para trás, agachar, salto vertical e saltos direcionais previstos.
+- [ ] Permitir troca de lado em estados apropriados e confirmar que `F`/`B` acompanham o oponente (a colisão corporal atualmente impede a passagem).
+- [x] Manter os lutadores dentro da arena e impedir passagem corporal indevida.
+- [x] Separar estado lógico/posição do objeto visual Phaser.
 
 ### 1.3 Apresentação provisória
 
 - [x] Carregar menu e cena de luta.
 - [x] Desenhar lutadores provisórios e HUD textual.
-- [ ] Exibir barras de vida, timer e indicador de round com dados configuráveis.
-- [ ] Exibir controles na tela de início/pausa ou no README.
-- [ ] Permitir retornar ao menu e iniciar outra luta sem duplicar listeners ou estado.
+- [x] Exibir barras de vida, timer e indicador de round com dados configuráveis.
+- [x] Exibir controles no README.
+- [x] Permitir retornar ao menu e iniciar outra luta sem duplicar listeners ou estado.
 
 **Saída da etapa:** dois jogadores podem mover-se localmente, saltar e agachar; lado e direção relativa são corretos após troca de posição; o resultado não depende do FPS de renderização.
 
@@ -64,26 +64,29 @@
 ### 2.1 Parser e dados
 
 - [ ] Definir buffer, janela de simultaneidade, duração e prioridade de comandos.
-- [ ] Reconhecer botões `1`, `2`, `3`, `4`, combinações e comandos direcionais/diagonais.
-- [ ] Registrar comandos reconhecidos para depuração e feedback.
-- [ ] Definir esquema validável de dados de golpes, incluindo startup, active, recovery, nível, alcance, stun e pushback.
+- [x] Reconhecer pressionamentos simples dos botões `1`, `2`, `3`, `4` como golpes provisórios.
+- [ ] Reconhecer combinações simultâneas, comandos com direções obrigatórias e sequências.
+- [x] Registrar entradas direcionais/botões recentes na interface.
+- [x] Definir os campos iniciais de dados de golpes: startup, active, recovery, nível, hitbox, dano e hitstun.
 - [ ] Criar pelo menos dois personagens de teste com dados mínimos; identificar claramente valores provisórios.
 
 ### 2.2 Estados e colisão
 
-- [ ] Implementar transições explícitas de estado do lutador.
-- [ ] Atualizar hitboxes e hurtboxes por frame de lógica.
-- [ ] Resolver contato sem depender de física genérica do renderizador.
-- [ ] Implementar ataque, acerto, bloqueio alto/baixo, dano, hitstun, blockstun e empurrão.
+- [x] Implementar estados de startup, ativo, recuperação e hitstun para golpes de teste.
+- [x] Atualizar hitboxes e hurtboxes por frame de lógica.
+- [x] Resolver contatos sem depender de física genérica do renderizador e desenhar as hitboxes ativas.
+- [x] Implementar ataques básicos, dano e hitstun.
+- [ ] Implementar bloqueio alto/baixo, blockstun e empurrão.
 - [ ] Implementar rounds, vitória e reinício a partir de configuração.
-- [ ] Definir e documentar prioridade de contatos simultâneos antes de implementá-la.
+- [x] Resolver ataques simultâneos como trade no protótipo.
 
 ### 2.3 Testes da simulação
 
 - [ ] Cobrir troca de lado e conversão de direções relativas.
 - [ ] Cobrir botões, combinações, diagonais e prioridade do parser.
-- [ ] Cobrir startup, frames ativos, recovery, acerto e bloqueio.
-- [ ] Cobrir colisão, alcance, dano, stun, empurrão e rounds.
+- [x] Cobrir startup, frames ativos, recovery, acerto e dano dos golpes provisórios.
+- [ ] Cobrir bloqueio, empurrão, rounds e demais interações ainda não implementadas.
+- [x] Cobrir alcance, colisão, dano, hitstun e trade básico.
 - [ ] Confirmar que a mesma sequência de entradas produz o mesmo estado final.
 
 **Saída da etapa:** uma luta local pequena com ataques e defesa pode ser reproduzida e testada sem abrir o navegador.
@@ -141,4 +144,4 @@ Só trazer esses itens para o escopo ativo quando a fundação local estiver est
 
 ## Próximo bloco de trabalho
 
-Concluir a Etapa 1 na seguinte ordem: ligar `Simulation` à cena; definir estado e arena iniciais configuráveis; implementar controles simultâneos para dois jogadores; adicionar movimento horizontal, salto, agachamento e troca de lado; completar o HUD mínimo; então cobrir as regras de movimento com testes. Atualizar `base.md` antes de fixar qualquer regra que ainda esteja em aberto.
+Validar a movimentação e o HUD no navegador com duas pessoas, rever a sensação dos valores temporários e ajustar `base.md` com as decisões aprovadas. Em seguida, iniciar a Etapa 2 definindo o parser de comandos e o esquema de golpes.
