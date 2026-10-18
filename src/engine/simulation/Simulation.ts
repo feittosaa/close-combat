@@ -278,6 +278,10 @@ export class Simulation {
   private resolveBodySpacing(previousX: readonly number[]): void {
     const [first, second] = this.characters;
     const minimumDistance = this.config.movement.bodyWidth;
+    const airborneCrossing = (!first.grounded || !second.grounded) &&
+      Math.abs(first.y - second.y) >= minimumDistance;
+    if (airborneCrossing) return;
+
     const firstWasLeft = previousX[0] <= previousX[1];
     const overlap = firstWasLeft
       ? first.x + minimumDistance > second.x

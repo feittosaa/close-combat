@@ -214,6 +214,7 @@ Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma dire�
 ### 6.2 Espaçamento entre personagens
 
 - Os personagens não devem atravessar um ao outro livremente quando estiverem em estados que exigem colisão corporal.
+- Um personagem no ar pode cruzar sobre o oponente quando a diferença vertical entre as posições de chão dos dois for pelo menos a largura corporal configurada. No chão, a colisão continua impedindo a passagem. Depois da troca, `F`/`B` acompanham o novo lado do oponente.
 - Ataques podem mover o atacante e aplicar empurrão no oponente.
 - O empurrão após acerto e bloqueio é uma propriedade do golpe.
 - O posicionamento perto da parede pode limitar recuo e criar situações de pressão, desde que a regra de parede seja consistente.
@@ -539,7 +540,8 @@ Uma organização possível, sujeita à estrutura real do repositório:
 src/
   app/              # entrada do app, rotas/telas e configuração
   scenes/            # menu, seleção, partida e resultado
-  rendering/         # sprites, animações, efeitos, câmera e áudio
+  rendering/         # apresentação Phaser: sprites, animações, efeitos e câmera
+    animations/      # mapeamento dos modos lógicos para animações visuais
   input/             # teclado, gamepad, remapeamento e buffer de comandos
   engine/
     simulation/      # relógio fixo e ordem de atualização
@@ -548,11 +550,16 @@ src/
     characters/      # estado e comportamento dos personagens
     data/            # tipos e definições de personagens/golpes
   ui/                # HUD, seleção de paleta e menus
-  assets/            # referências e arquivos visuais/sonoros organizados
+  assets/
+    animations/      # sequências/exportações de animação
+    sprites/         # spritesheets e imagens-fonte por categoria
+    scenes/          # fundos, props e arte dos cenários/arenas
   tests/             # testes automatizados de regras
 ```
 
 Essa árvore é uma orientação, não uma exigência de criar todos os diretórios antecipadamente. A divisão importante é manter a lógica de combate desacoplada da representação visual.
+
+No projeto atual, os arquivos de arte carregáveis ficam em `src/assets/animations/`, `src/assets/sprites/` e `src/assets/scenes/`. As classes Phaser de menu e luta ficam em `src/scenes/`; os adaptadores de animação Phaser ficam em `src/rendering/animations/`. Sprite sheets devem manter os quadros de um personagem juntos quando compartilharem escala e ponto de pivô. Arte e nomes devem ser originais; não colocar código de cena ou regras de combate dentro dos diretórios de imagens.
 
 ### 17.1 Parser de comandos
 

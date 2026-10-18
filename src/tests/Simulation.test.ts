@@ -106,6 +106,28 @@ describe('Simulation movement foundation', () => {
     expect(groundedPlayer.x - landedX).toBe(config.movement.walkSpeed);
   });
 
+  it('allows an airborne fighter to cross the opponent and updates relative facing', () => {
+    const simulation = new Simulation(config);
+    const forward: FrameInput = { direction: 'F', buttons: new Set() };
+    for (let frame = 0; frame < 200; frame += 1) step(simulation, [forward, neutral]);
+
+    step(simulation, [{ direction: 'U', buttons: new Set() }, neutral]);
+    for (let frame = 0; frame < 60; frame += 1) {
+      const [first, second] = simulation.snapshot().characters;
+      if (first.x > second.x) break;
+      step(simulation, [forward, neutral]);
+    }
+
+    const [first, second] = simulation.snapshot().characters;
+    expect(first.x).toBeGreaterThan(second.x);
+    expect(first.facing).toBe('left');
+    expect(second.facing).toBe('right');
+
+    const crossedX = first.x;
+    step(simulation, [forward, neutral]);
+    expect(simulation.snapshot().characters[0].x).toBe(crossedX - config.movement.walkSpeed);
+  });
+
   it.each([
     ['F', '1', 'test-advancing-jab'],
     ['B', '1', 'test-retreating-jab'],
