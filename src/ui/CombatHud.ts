@@ -22,10 +22,10 @@ export class CombatHud {
   private readonly barHeight = 22;
   private readonly sidePadding = 28;
 
-  constructor(scene: Phaser.Scene, width: number) {
+  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string, string] = ['JOGADOR 1', 'JOGADOR 2']) {
     this.labels = [
-      scene.add.text(this.sidePadding, 18, 'JOGADOR 1', { color: '#f4f0e8', fontSize: '16px' }),
-      scene.add.text(width - this.sidePadding, 18, 'JOGADOR 2', { color: '#f4f0e8', fontSize: '16px' }).setOrigin(1, 0),
+      scene.add.text(this.sidePadding, 18, `P1 · ${fighterNames[0].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }),
+      scene.add.text(width - this.sidePadding, 18, `P2 · ${fighterNames[1].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }).setOrigin(1, 0),
     ];
     this.healthGraphics = scene.add.graphics();
     this.modeLabels = [

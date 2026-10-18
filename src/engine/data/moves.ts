@@ -1,5 +1,6 @@
 // src/engine/data/moves.ts
 import type { AttackButton, Direction } from '../../input/types';
+import { resolveCommand } from '../../input/CommandBuffer';
 
 export type HitLevel = 'high' | 'mid' | 'low' | 'air' | 'throw' | 'special';
 
@@ -280,23 +281,19 @@ export function getMoveForInput(
   direction: Direction,
   airborne = false,
   crouching = false,
+  allowedMoveIds?: readonly string[],
 ): MoveDefinition | undefined {
-  const matchingButton = (move: MoveDefinition): boolean =>
-    move.input.buttons.length === 1 &&
-    move.input.buttons[0] === button;
-
-  if (airborne) {
-    return moves.find((move) => matchingButton(move) && move.airborne && move.input.direction === direction) ??
-      moves.find((move) => matchingButton(move) && move.airborne);
-  }
-
+  const input = { direction, buttons: new Set([button]) };
+  const availableMoves = allowedMoveIds
+    ? moves.filter((move) => allowedMoveIds.includes(move.id))
+    : moves;
+  if (airborne) return resolveCommand(input, availableMoves.filter((move) => move.airborne));
   if (crouching) {
-    const crouchingMove = moves.find((move) => matchingButton(move) && move.crouching);
+    const crouchingMove = resolveCommand(input, availableMoves.filter((move) => move.crouching));
     if (crouchingMove) return crouchingMove;
   }
 
-  return moves.find((move) => matchingButton(move) && !move.airborne && !move.crouching && move.input.direction === direction) ??
-    moves.find((move) => matchingButton(move) && !move.airborne && !move.crouching && move.input.direction === undefined);
+  return resolveCommand(input, availableMoves.filter((move) => !move.airborne && !move.crouching));
 }
 
 export function getMoveById(moveId: string): MoveDefinition | undefined {

@@ -1,6 +1,7 @@
 // src/engine/simulation/Simulation.ts
 import type { CharacterState } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
+import { defaultCharacter, type CharacterDefinition } from '../data/characters';
 import type { GameConfig } from '../data/gameConfig';
 import { getMoveForInput, getMoveById, type MoveDefinition } from '../data/moves';
 import type { FrameInput, AttackButton } from '../../input/types';
@@ -25,6 +26,7 @@ export class Simulation {
   private frame = 0;
   private roundFramesRemaining: number;
   private readonly characters: [CharacterState, CharacterState];
+  private readonly fighterDefinitions: readonly [CharacterDefinition, CharacterDefinition];
   private readonly jumpHeld = [false, false];
   private readonly previousButtons = [new Set<AttackButton>(), new Set<AttackButton>()];
   private readonly previousHorizontalAxis = [0, 0];
@@ -34,12 +36,16 @@ export class Simulation {
   private readonly dashAxis = [0, 0];
   private lastHitEvents: HitEvent[] = [];
 
-  constructor(private readonly config: GameConfig) {
+  constructor(
+    private readonly config: GameConfig,
+    fighterDefinitions: readonly [CharacterDefinition, CharacterDefinition] = [defaultCharacter, defaultCharacter],
+  ) {
     const { arena, match } = config;
+    this.fighterDefinitions = fighterDefinitions;
     const inset = Math.min(190, (arena.right - arena.left) * 0.22);
     this.characters = [
-      this.createCharacter('player-1', arena.left + inset, 'right', match.maxHealth),
-      this.createCharacter('player-2', arena.right - inset, 'left', match.maxHealth),
+      this.createCharacter('player-1', fighterDefinitions[0], arena.left + inset, 'right'),
+      this.createCharacter('player-2', fighterDefinitions[1], arena.right - inset, 'left'),
     ];
     this.roundFramesRemaining = match.roundDurationFrames;
     this.attackResolver = new AttackResolver(config.movement.bodyWidth);
@@ -82,13 +88,15 @@ export class Simulation {
         const horizontal = horizontalAxis(input.direction);
         const facingSign = character.facing === 'right' ? 1 : -1;
         const dashing = this.updateDash(index, horizontal, character.grounded);
-        const speed = dashing ? this.config.movement.dashSpeed : this.config.movement.walkSpeed;
+        const speed = dashing
+          ? this.config.movement.dashSpeed
+          : this.fighterDefinitions[index].movement.walkSpeed;
         nextX[index] += horizontal * facingSign * speed;
         if (dashing) character.mode = 'dashing';
         else if (input.direction === 'B' || input.direction === 'DB') character.mode = 'blocking';
         else if (horizontal !== 0 && character.grounded && !character.crouching) character.mode = 'moving';
 
-        const move = this.startAttack(character, input, index, airborneAtInput);
+        const move = this.startAttack(character, input, index, airborneAtInput, this.fighterDefinitions[index].moveIds);
         if (move?.advance) nextX[index] += facingSign * move.advance;
       } else {
         this.previousHorizontalAxis[index] = horizontalAxis(input.direction);
@@ -129,17 +137,18 @@ export class Simulation {
 
   private createCharacter(
     characterId: string,
+    definition: CharacterDefinition,
     x: number,
     facing: CharacterState['facing'],
-    maxHealth: number,
   ): CharacterState {
     return {
       characterId,
+      fighterId: definition.id,
       x,
       y: this.config.arena.floorY,
       facing,
-      health: maxHealth,
-      maxHealth,
+      health: definition.maxHealth,
+      maxHealth: definition.maxHealth,
       mode: 'neutral',
       remainingStateFrames: 0,
       verticalVelocity: 0,
@@ -171,7 +180,7 @@ export class Simulation {
     this.jumpHeld[index] = vertical === 'up';
 
     if (canControl && jumpPressed && character.grounded) {
-      character.verticalVelocity = this.config.movement.jumpImpulse;
+      character.verticalVelocity = this.fighterDefinitions[index].movement.jumpVelocity;
       character.grounded = false;
     }
 
@@ -199,6 +208,7 @@ export class Simulation {
     input: FrameInput,
     index: number,
     airborne: boolean,
+    allowedMoveIds: readonly string[],
   ): MoveDefinition | undefined {
     const justPressed = BUTTON_PRIORITY.filter((button) =>
       input.buttons.has(button) && !this.previousButtons[index].has(button),
@@ -209,7 +219,9 @@ export class Simulation {
 
     const button = justPressed[0];
     const crouchingInput = input.direction === 'D' && character.crouching;
-    const move = button ? getMoveForInput(button, input.direction, airborne, crouchingInput) : undefined;
+    const move = button
+      ? getMoveForInput(button, input.direction, airborne, crouchingInput, allowedMoveIds)
+      : undefined;
     if (!button || !move) return undefined;
 
     character.attack = { moveId: move.id, button, elapsedFrames: 0, hasHit: false };

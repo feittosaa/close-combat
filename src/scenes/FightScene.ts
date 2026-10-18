@@ -1,5 +1,6 @@
 // src/scenes/FightScene.ts
 import Phaser from 'phaser';
+import { defaultCharacter } from '../engine/data/characters';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
@@ -29,7 +30,7 @@ export class FightScene extends Phaser.Scene {
   create(): void {
     const { width, height } = this.scale;
     const config = createGameConfig(width, height);
-    this.simulation = new Simulation(config);
+    this.simulation = new Simulation(config, [defaultCharacter, defaultCharacter]);
     this.keyboardInputs = [new KeyboardInput(PLAYER_ONE_KEYS), new KeyboardInput(PLAYER_TWO_KEYS)];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
 
@@ -40,7 +41,7 @@ export class FightScene extends Phaser.Scene {
       new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4),
     ];
     this.hitboxView = new HitboxView(this);
-    this.hud = new CombatHud(this, width);
+    this.hud = new CombatHud(this, width, [defaultCharacter.name, defaultCharacter.name]);
     this.inputDisplays = [
       new PlayerInputDisplay(this, 18, 78, 'P1 · WASD / J K N M', '#ff8c8c'),
       new PlayerInputDisplay(this, width - 218, 78, 'P2 · SETAS / NUMPAD', '#8cb4ff'),

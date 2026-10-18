@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-Pressione **Enter** ou clique no menu para abrir a cena de luta. Na cena, **Esc** retorna ao menu. Os lutadores são formas provisórias. Os botões `1`–`4` executam golpes de teste; direções, botões e sequência recente aparecem nos indicadores de cada jogador. As hitboxes piscam durante os frames ativos e usam a geometria da simulação.
+Pressione **Enter** ou clique no menu para abrir a cena de luta. Na cena, **Esc** retorna ao menu. **Tester** é o personagem provisório padrão dos dois jogadores; os lutadores ainda aparecem como formas enquanto os sprites não são criados. Os botões `1`–`4` executam golpes de teste; direções, botões e sequência recente aparecem nos indicadores de cada jogador. As hitboxes piscam durante os frames ativos e usam a geometria da simulação.
 
 ### Controles provisórios
 
