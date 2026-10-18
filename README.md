@@ -23,6 +23,8 @@ Pressione **Enter** ou clique no menu para abrir a cena de luta. Na cena, **Esc*
 - **Jogador 2:** mover/saltar/agachar com as setas; ataques `1`–`4` no teclado numérico `1`–`4`.
 - `F`/`B` duas vezes rapidamente no chão ativa dash; dash não funciona no ar. `B` defende altos/médios e `DB` defende baixos.
 - `F/B+1`, `DF/DB+2`, `D+3` e `UF/UB+4` executam variantes direcionais; `D+1`, `D+2` e `D+4` são golpes abaixados. Pressione `1`–`4` durante o salto para golpes aéreos. `Esc` volta ao menu.
+- `1+2` e `3+4` executam chords de teste; pressionamentos são agrupados se ocorrerem dentro de 3 frames. Golpes de um botão que possam formar esses chords aguardam o fim da janela; combinações sem golpe cadastrado são ignoradas.
+- `F,F+2` e `D,DF+3` são sequências provisórias de Tester; `R` reinicia a luta depois do resultado final.
 
 O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas sem variante cadastrada e comandos especiais ainda não estão implementados.
 

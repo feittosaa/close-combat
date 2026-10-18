@@ -17,6 +17,7 @@ export class CombatHud {
   private readonly timer: Phaser.GameObjects.Text;
   private readonly roundLabel: Phaser.GameObjects.Text;
   private readonly hitLabel: Phaser.GameObjects.Text;
+  private readonly resultLabel: Phaser.GameObjects.Text;
   private readonly modeLabels: Phaser.GameObjects.Text[];
   private readonly barWidth = 360;
   private readonly barHeight = 22;
@@ -46,12 +47,27 @@ export class CombatHud {
       fontSize: '14px',
       fontStyle: 'bold',
     }).setOrigin(0.5, 0);
+    this.resultLabel = scene.add.text(width / 2, 114, '', {
+      color: '#f4f0e8',
+      fontSize: '14px',
+      fontStyle: 'bold',
+    }).setOrigin(0.5, 0);
     this.updateBars([], width);
   }
 
   update(snapshot: SimulationSnapshot, width: number): void {
     this.timer.setText(String(Math.ceil(snapshot.roundFramesRemaining / 60)).padStart(2, '0'));
     this.roundLabel.setText(`ROUND ${snapshot.round}`);
+    const winnerIndex = snapshot.characters.findIndex(({ characterId }) => characterId === snapshot.roundWinnerId);
+    const matchWinnerIndex = snapshot.characters.findIndex(({ characterId }) => characterId === snapshot.matchWinnerId);
+    if (snapshot.phase === 'match-over') {
+      this.resultLabel.setText(matchWinnerIndex < 0 ? 'EMPATE · R PARA REINICIAR' : `LUTA · P${matchWinnerIndex + 1} VENCE · R PARA REINICIAR`);
+    } else if (snapshot.phase === 'round-over') {
+      const outcome = snapshot.roundEndReason === 'knockout' ? 'K.O.' : snapshot.roundEndReason === 'time' ? 'TEMPO' : 'EMPATE';
+      this.resultLabel.setText(winnerIndex < 0 ? `ROUND ${outcome}` : `ROUND ${outcome} · P${winnerIndex + 1} VENCE`);
+    } else {
+      this.resultLabel.setText('');
+    }
     const hit = snapshot.hitEvents[0];
     this.hitLabel.setText(hit ? `${hit.outcome === 'block' ? 'BLOCK' : 'HIT'} · -${hit.damage}` : '');
     snapshot.characters.forEach((character, index) => {
@@ -68,6 +84,7 @@ export class CombatHud {
     this.timer.destroy();
     this.roundLabel.destroy();
     this.hitLabel.destroy();
+    this.resultLabel.destroy();
   }
 
   private updateBars(

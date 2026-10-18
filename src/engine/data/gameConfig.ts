@@ -10,7 +10,7 @@ export interface GameConfig {
     dashDurationFrames: number;
     doubleTapWindowFrames: number;
   };
-  match: { maxHealth: number; roundDurationFrames: number; roundCount: number };
+  match: { maxHealth: number; roundDurationFrames: number; roundCount: number; roundEndPauseFrames: number };
 }
 
 /** Valores temporários de protótipo documentados em base.md §20. */
@@ -35,6 +35,7 @@ export function createGameConfig(width: number, height: number): GameConfig {
       maxHealth: 1000,
       roundDurationFrames: 99 * 60,
       roundCount: 2,
+      roundEndPauseFrames: 90,
     },
   };
 }

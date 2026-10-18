@@ -2,7 +2,7 @@
 
 > **Documento de execução:** este roteiro transforma o plano de [`base.md`](./base.md) em etapas de implementação verificáveis. `base.md` continua sendo a fonte de verdade para visão, regras e decisões do jogo; este arquivo organiza a ordem do trabalho e seu estado.
 >
-> **Status:** Fundação local implementada com dash terrestre, defesa básica, golpes direcionais/abaixados/aéreos, cruzamento aéreo e indicação dos modos no HUD. Buffer de 30 frames, janela provisória de 3 frames e prioridade de seleção estão definidos; reconhecimento de chords e sequências segue pendente.
+> **Status:** Etapas 1 e 2 concluídas. A fundação inclui dash terrestre, defesa básica, golpes direcionais/abaixados/aéreos, sequências e chords de teste, dois personagens de teste, rounds configuráveis, vitória/empate, reinício e cobertura determinística da simulação.
 
 ## Como usar este pipeline
 
@@ -69,12 +69,13 @@
 - [x] Reconhecer variantes direcionais provisórias de aproximação e recuo (`F/B+1`, `DF/DB+2`, `D+3`, `UF/UB+4`).
 - [x] Selecionar golpes aéreos provisórios por botão quando o personagem já está no ar.
 - [x] Selecionar golpes abaixados provisórios com `D+1`, `D+2` e `D+4`; manter `D+3` como rasteira.
-- [ ] Reconhecer combinações simultâneas não cadastradas e sequências.
-- [ ] Integrar reconhecimento de botões pressionados dentro da janela ao início dos golpes.
+- [x] Reconhecer chords provisórios cadastrados de Tester (`1+2`, `3+4`) e consumir combinações sem cadastro sem dividi-las em golpes simples.
+- [x] Integrar botões pressionados dentro da janela ao início do golpe, com fallback simples após o fechamento da janela.
+- [x] Reconhecer sequências de comandos como `F,F+2` e `D,DF+3`, com janela e prioridade documentadas.
 - [x] Registrar entradas direcionais/botões recentes na interface.
 - [x] Definir os campos iniciais de dados de golpes: startup, active, recovery, nível, hitbox, dano, hitstun, blockstun, pushback e condição aérea.
 - [x] Criar o primeiro personagem de teste, Tester, associar golpes e usá-lo como padrão temporário.
-- [ ] Criar pelo menos um segundo personagem de teste com dados mínimos.
+- [x] Criar pelo menos um segundo personagem de teste com dados mínimos.
 
 ### 2.2 Estados e colisão
 
@@ -83,19 +84,20 @@
 - [x] Resolver contatos sem depender de física genérica do renderizador e desenhar as hitboxes ativas.
 - [x] Implementar ataques básicos, dano e hitstun.
 - [x] Implementar bloqueio alto/baixo, blockstun e empurrão provisórios.
-- [ ] Implementar rounds, vitória e reinício a partir de configuração.
+- [x] Implementar rounds, vitória, empate por KO/tempo e reinício a partir de configuração.
 - [x] Resolver ataques simultâneos como trade no protótipo.
 
 ### 2.3 Testes da simulação
 
-- [ ] Cobrir troca de lado e conversão de direções relativas.
+- [x] Cobrir troca de lado e conversão de direções relativas.
 - [x] Cobrir capacidade do buffer, prioridade de combinações e prioridade direcional do parser.
-- [ ] Cobrir chords capturados ao longo da janela, diagonais e sequência de comandos.
+- [x] Cobrir chords na janela inclusiva de 3 frames, fallback para golpe simples e descarte de combinação sem cadastro.
+- [x] Cobrir sequências de comandos, diagonais e prioridade de seleção do parser.
 - [x] Cobrir startup, frames ativos, recovery, escolha de variantes direcionais/aéreas/abaixadas, acerto e dano dos golpes provisórios.
 - [x] Cobrir dash terrestre e rejeitar dash iniciado por entradas no ar.
-- [x] Cobrir regras básicas de bloqueio alto/baixo e blockstun; ampliar cobertura de empurrão, rounds e interações pendentes.
+- [x] Cobrir bloqueio alto/baixo, blockstun, empurrão, rounds, reinício e interações entre os sistemas.
 - [x] Cobrir alcance, colisão, dano, hitstun e trade básico.
-- [ ] Confirmar que a mesma sequência de entradas produz o mesmo estado final.
+- [x] Confirmar que a mesma sequência de entradas produz o mesmo estado final.
 
 **Saída da etapa:** uma luta local pequena com ataques e defesa pode ser reproduzida e testada sem abrir o navegador.
 
@@ -153,4 +155,4 @@ Só trazer esses itens para o escopo ativo quando a fundação local estiver est
 
 ## Próximo bloco de trabalho
 
-Integrar os pressionamentos separados por até 3 frames ao reconhecimento de chords sem disparar golpes simples acidentais; depois implementar sequências conforme `base.md`. A estrutura de assets já está pronta para receber arte original.
+Iniciar a Etapa 3 expondo vantagem de frames em acerto e bloqueio, conforme a convenção definida em `base.md`. A Etapa 2 está concluída e sua estrutura de assets já está pronta para receber arte original.

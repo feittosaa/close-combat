@@ -18,7 +18,7 @@ export type CharacterMode =
 
 export interface CharacterAttack {
   moveId: string;
-  button: AttackButton;
+  buttons: readonly AttackButton[];
   elapsedFrames: number;
   hasHit: boolean;
 }

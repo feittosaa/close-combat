@@ -1,12 +1,11 @@
 // src/engine/data/moves.ts
 import type { AttackButton, Direction } from '../../input/types';
-import { resolveCommand } from '../../input/CommandBuffer';
 
 export type HitLevel = 'high' | 'mid' | 'low' | 'air' | 'throw' | 'special';
 
 export interface MoveDefinition {
   id: string;
-  input: { direction?: Direction; buttons: readonly AttackButton[] };
+  input: { direction?: Direction; sequence?: readonly Direction[]; buttons: readonly AttackButton[] };
   airborne?: boolean;
   crouching?: boolean;
   startup: number;
@@ -74,6 +73,59 @@ export const moves: readonly MoveDefinition[] = [
     pushback: { hit: 18, block: 12 },
     hitLevel: 'mid',
     hitbox: { forward: 25, yOffset: -82, width: 86, height: 50 },
+  },
+  {
+    id: 'test-double-punch',
+    input: { buttons: ['1', '2'] },
+    startup: 6,
+    activeFrames: 2,
+    recovery: 14,
+    damage: 75,
+    hitstun: 18,
+    blockstun: 11,
+    pushback: { hit: 22, block: 16 },
+    hitLevel: 'mid',
+    hitbox: { forward: 26, yOffset: -120, width: 78, height: 48 },
+  },
+  {
+    id: 'test-double-kick',
+    input: { buttons: ['3', '4'] },
+    startup: 8,
+    activeFrames: 3,
+    recovery: 17,
+    damage: 90,
+    hitstun: 21,
+    blockstun: 12,
+    pushback: { hit: 24, block: 18 },
+    hitLevel: 'mid',
+    hitbox: { forward: 27, yOffset: -86, width: 90, height: 54 },
+  },
+  {
+    id: 'test-forward-double-punch',
+    input: { sequence: ['F', 'F'], buttons: ['2'] },
+    startup: 8,
+    activeFrames: 3,
+    recovery: 18,
+    damage: 80,
+    hitstun: 20,
+    blockstun: 12,
+    pushback: { hit: 22, block: 16 },
+    advance: 8,
+    hitLevel: 'mid',
+    hitbox: { forward: 27, yOffset: -124, width: 76, height: 48 },
+  },
+  {
+    id: 'test-diagonal-entry-kick',
+    input: { sequence: ['D', 'DF'], buttons: ['3'] },
+    startup: 7,
+    activeFrames: 3,
+    recovery: 17,
+    damage: 68,
+    hitstun: 18,
+    blockstun: 11,
+    pushback: { hit: 20, block: 14 },
+    hitLevel: 'mid',
+    hitbox: { forward: 26, yOffset: -72, width: 72, height: 40 },
   },
   {
     id: 'test-advancing-jab',
@@ -276,24 +328,9 @@ export function getMoveByButton(button: AttackButton): MoveDefinition | undefine
   return moves.find((move) => move.input.buttons.length === 1 && move.input.buttons[0] === button);
 }
 
-export function getMoveForInput(
-  button: AttackButton,
-  direction: Direction,
-  airborne = false,
-  crouching = false,
-  allowedMoveIds?: readonly string[],
-): MoveDefinition | undefined {
-  const input = { direction, buttons: new Set([button]) };
-  const availableMoves = allowedMoveIds
-    ? moves.filter((move) => allowedMoveIds.includes(move.id))
-    : moves;
-  if (airborne) return resolveCommand(input, availableMoves.filter((move) => move.airborne));
-  if (crouching) {
-    const crouchingMove = resolveCommand(input, availableMoves.filter((move) => move.crouching));
-    if (crouchingMove) return crouchingMove;
-  }
-
-  return resolveCommand(input, availableMoves.filter((move) => !move.airborne && !move.crouching));
+export function getMovesForCharacter(allowedMoveIds: readonly string[]): readonly MoveDefinition[] {
+  const allowed = new Set(allowedMoveIds);
+  return moves.filter((move) => allowed.has(move.id));
 }
 
 export function getMoveById(moveId: string): MoveDefinition | undefined {
