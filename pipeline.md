@@ -2,7 +2,7 @@
 
 > **Documento de execução:** este roteiro transforma o plano de [`base.md`](./base.md) em etapas de implementação verificáveis. `base.md` continua sendo a fonte de verdade para visão, regras e decisões do jogo; este arquivo organiza a ordem do trabalho e seu estado.
 >
-> **Status:** Etapas 1 e 2 concluídas. A fundação inclui dash terrestre, defesa básica, golpes direcionais/abaixados/aéreos, sequências e chords de teste, dois personagens de teste, rounds configuráveis, vitória/empate, reinício e cobertura determinística da simulação.
+> **Status:** Etapas 1 e 2 concluídas; Etapa 3 iniciada. A fundação inclui dash terrestre, defesa básica, golpes direcionais/abaixados/aéreos, sequências e chords de teste, dois personagens de teste, rounds configuráveis, vitória/empate, reinício, cobertura determinística da simulação e exibição de vantagem de frames.
 
 ## Como usar este pipeline
 
@@ -105,7 +105,7 @@
 
 **Base:** `base.md` §§8–14, 17–18 e Fase 3 de §19.
 
-- [ ] Expor vantagem de frames em acerto e bloqueio usando a convenção definida em `base.md`.
+- [x] Expor vantagem de frames em acerto e bloqueio usando a convenção definida em `base.md`.
 - [ ] Implementar agarrões, alcance e quebra de agarrão.
 - [ ] Completar comandos diagonais, especiais e regras de cancelamento.
 - [ ] Implementar janelas de execução precisa e casos-limite de frame.
@@ -155,4 +155,4 @@ Só trazer esses itens para o escopo ativo quando a fundação local estiver est
 
 ## Próximo bloco de trabalho
 
-Iniciar a Etapa 3 expondo vantagem de frames em acerto e bloqueio, conforme a convenção definida em `base.md`. A Etapa 2 está concluída e sua estrutura de assets já está pronta para receber arte original.
+Continuar a Etapa 3 com agarrões, alcance e quebra de agarrão. O comando universal de parry (`B` no frame exato do contato) já está definido em `base.md`; a resolução aguarda a definição das consequências globais de sucesso e falha.

@@ -369,15 +369,9 @@ O sistema terá parries para **golpes específicos**, não uma resposta universa
 
 ### 12.1 Propriedades configuráveis de parry
 
-Cada parry deverá declarar:
+O parry usa sempre o mesmo comando defensivo: **pressionar `B` no frame exato em que o golpe toca**. A direção é relativa ao oponente e precisa ser um novo pressionamento naquele frame; manter `B` pressionado continua sendo bloqueio comum e não prolonga a janela de parry. A janela universal é de um frame de lógica e não varia por personagem ou por golpe.
 
-- comandos necessários;
-- categorias de ataque que consegue aparar;
-- janela de ativação e duração em frames;
-- se exige direção, botão de ataque ou combinação;
-- resultado no sucesso (interrupção, vantagem, desvio, contra-ataque ou outra resposta);
-- recuperação em caso de erro;
-- regras para agarrões, ataques baixos, aéreos, multi-hit e golpes especiais.
+Cada golpe declara apenas se pode ser aparado (`parryable`). Um ataque sem essa propriedade nunca sofre parry, embora ainda possa ser bloqueado pelas regras normais. Categorias e casos especiais podem restringir essa elegibilidade nos dados do golpe, sem mudar o comando ou a janela global. O sucesso, a falha, o risco de erro, os agarrões e a interação com golpes multi-hit devem seguir regras globais consistentes; números e resposta exata ainda são provisórios e precisam ser definidos antes de implementar a resolução de parry.
 
 ### 12.2 Regras de equilíbrio
 

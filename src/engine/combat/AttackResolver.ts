@@ -12,6 +12,9 @@ export interface HitEvent {
   damage: number;
   outcome: 'hit' | 'block';
   pushback: number;
+  attackerRecoveryFrames: number;
+  defenderStunFrames: number;
+  frameAdvantage: number;
 }
 
 /** Resolve contatos da simulação e fornece a geometria exata para a visualização. */
@@ -44,6 +47,10 @@ export class AttackResolver {
       if (intersects(hitbox, createHurtbox(target, this.bodyWidth))) {
         const targetInput = inputs[1 - attackerIndex];
         const blocked = target.mode === 'blocking' && canBlock(move.hitLevel, targetInput);
+        const defenderStunFrames = blocked ? move.blockstun : move.hitstun;
+        const totalAttackFrames = move.startup + move.activeFrames + move.recovery;
+        // The contact frame has already happened; count only future locked frames.
+        const attackerRecoveryFrames = Math.max(0, totalAttackFrames - attack.elapsedFrames - 1);
         pending.push({
           event: {
             attackerId: attacker.characterId,
@@ -52,6 +59,9 @@ export class AttackResolver {
             damage: blocked ? 0 : move.damage,
             outcome: blocked ? 'block' : 'hit',
             pushback: blocked ? move.pushback.block : move.pushback.hit,
+            attackerRecoveryFrames,
+            defenderStunFrames,
+            frameAdvantage: attackerRecoveryFrames - defenderStunFrames,
           },
           attack,
           target,
