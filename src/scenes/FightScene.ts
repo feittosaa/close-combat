@@ -1,5 +1,7 @@
 // src/scenes/FightScene.ts
 import Phaser from 'phaser';
+import testerManifest from '../assets/animations/tester.json';
+import testerAtlasUrl from '../assets/sprites/characters/tester/tester-atlas-v01.png';
 import { defaultCharacter } from '../engine/data/characters';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
@@ -34,7 +36,27 @@ export class FightScene extends Phaser.Scene {
     super('FightScene');
   }
 
+  preload(): void {
+    this.load.spritesheet(testerManifest.textureKey, testerAtlasUrl, {
+      frameWidth: testerManifest.frameSize.width,
+      frameHeight: testerManifest.frameSize.height,
+    });
+  }
+
   create(): void {
+    testerManifest.clips.forEach((clip) => {
+      if (this.anims.exists(clip.key)) return;
+      this.anims.create({
+        key: clip.key,
+        frames: this.anims.generateFrameNumbers(testerManifest.textureKey, {
+          start: clip.start,
+          end: clip.end,
+        }),
+        frameRate: clip.frameRate,
+        repeat: clip.repeat,
+      });
+    });
+
     const { width, height } = this.scale;
     const config = createGameConfig(width, height);
     this.simulation = new Simulation(config, [defaultCharacter, defaultCharacter]);
@@ -44,8 +66,8 @@ export class FightScene extends Phaser.Scene {
     this.add.rectangle(width / 2, config.arena.floorY + 44, width, 88, 0x24232b);
     this.add.rectangle(width / 2, config.arena.floorY, width, 4, 0xf4f0e8, 0.7);
     this.combatants = [
-      new CombatantView(this, config.arena.left, config.arena.floorY, 0xe45b5b),
-      new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4),
+      new CombatantView(this, config.arena.left, config.arena.floorY, 0xe45b5b, defaultCharacter.id),
+      new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4, defaultCharacter.id),
     ];
     this.hitboxView = new HitboxView(this);
     this.hud = new CombatHud(this, width, [defaultCharacter.name, defaultCharacter.name]);

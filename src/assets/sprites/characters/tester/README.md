@@ -11,4 +11,4 @@ Inclua loops `idle`, `walk`, `crouch` e `block`; poses/trechos para `dash`, `jum
 
 Atualize o manifesto com dimensões reais, índices dos frames, velocidade em FPS e repetição. Não deixe `null` em uma exportação pronta. Hitboxes de ataque e hurtboxes são dados de combate em `src/engine/data/characters.ts` e `moves.ts`; não são inferidas dos pixels.
 
-Ainda não há imagem carregável neste diretório; o lutador continua sendo desenhado com formas provisórias.
+O atlas inicial `tester-atlas-v01.png` contém os clipes `idle`, `walk` e `test-jab` recortados das três fontes PNG incluídas. As imagens de origem foram preservadas como `tester-source-idle.png`, `tester-source-walk.png` e `tester-source-lp.png`. O restante das ações ainda usa o placeholder.

@@ -1,67 +1,90 @@
-// src/rendering/CombatantView.ts
 import Phaser from 'phaser';
 import type { CharacterState } from '../engine/characters/CharacterState';
+import { getCharacterAnimationKey } from './animations/CharacterAnimationMap';
 
-/** Representação temporária de um lutador, sem autoridade sobre a simulação. */
+/** Visual do lutador; a simulação continua sendo a autoridade sobre o combate. */
 export class CombatantView {
-  readonly body: Phaser.GameObjects.Rectangle;
-
+  private readonly sprite?: Phaser.GameObjects.Sprite;
+  private readonly placeholder?: Phaser.GameObjects.Rectangle;
   private readonly color: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, color: number, textureKey: string) {
     this.color = color;
-    this.body = scene.add.rectangle(x, y, 54, 152, color).setOrigin(0.5, 1);
-  }
-
-  setPosition(x: number, y: number): void {
-    this.body.setPosition(x, y);
+    if (scene.textures.exists(textureKey)) {
+      this.sprite = scene.add.sprite(x, y, textureKey).setOrigin(0.5, 1);
+      // Atlas cells are 256px square and the drawn figure fills roughly 224px vertically.
+      this.sprite.setDisplaySize(174, 174);
+    } else {
+      this.placeholder = scene.add.rectangle(x, y, 54, 152, color).setOrigin(0.5, 1);
+    }
   }
 
   sync(state: CharacterState): void {
     const facingSign = state.facing === 'right' ? 1 : -1;
     const lunge = state.mode === 'dashing' ? 5 * facingSign : state.mode === 'active' ? 7 * facingSign : 0;
-    this.body.setPosition(state.x + lunge, state.y);
+    const x = state.x + lunge;
+    if (this.sprite) {
+      this.syncSprite(state, x);
+      return;
+    }
 
+    const body = this.placeholder;
+    if (!body) return;
+    body.setPosition(x, state.y);
     if (state.hitFlashFrames > 0) {
-      this.body.setFillStyle(0xffffff);
-      this.body.setDisplaySize(56, state.crouching ? 96 : 152);
+      body.setFillStyle(0xffffff);
+      body.setDisplaySize(56, state.crouching ? 96 : 152);
     } else if (state.mode === 'active') {
-      this.body.setFillStyle(0xffd166);
-      this.body.setDisplaySize(66, state.crouching ? 96 : 144);
+      body.setFillStyle(0xffd166);
+      body.setDisplaySize(66, state.crouching ? 96 : 144);
     } else if (state.mode === 'startup') {
-      this.body.setFillStyle(state.attack?.preciseExecution ? 0xffd166 : 0xffa65b);
-      this.body.setDisplaySize(58, state.crouching ? 96 : 152);
-    } else if (state.mode === 'recovery') {
-      this.body.setFillStyle(0xaaa6b1);
-      this.body.setDisplaySize(54, state.crouching ? 96 : 152);
+      body.setFillStyle(state.attack?.preciseExecution ? 0xffd166 : 0xffa65b);
+      body.setDisplaySize(58, state.crouching ? 96 : 152);
+    } else if (state.mode === 'recovery' || state.mode === 'throwRecovery') {
+      body.setFillStyle(0xaaa6b1);
+      body.setDisplaySize(54, state.crouching ? 96 : 152);
     } else if (state.mode === 'dashing') {
-      this.body.setFillStyle(0x9b7bff);
-      this.body.setDisplaySize(60, 142);
+      body.setFillStyle(0x9b7bff);
+      body.setDisplaySize(60, 142);
     } else if (state.mode === 'grabbed') {
-      this.body.setFillStyle(0xdb78d4);
-      this.body.setDisplaySize(58, 152);
-    } else if (state.mode === 'throwRecovery') {
-      this.body.setFillStyle(0xaaa6b1);
-      this.body.setDisplaySize(54, 152);
+      body.setFillStyle(0xdb78d4);
+      body.setDisplaySize(58, 152);
     } else if (state.mode === 'blocking' || state.mode === 'blockstun') {
-      this.body.setFillStyle(0x63c7d5);
-      this.body.setDisplaySize(50, state.crouching ? 96 : 152);
+      body.setFillStyle(0x63c7d5);
+      body.setDisplaySize(50, state.crouching ? 96 : 152);
     } else if (state.mode === 'hitstun') {
-      this.body.setFillStyle(0xff6b6b);
-      this.body.setDisplaySize(58, state.crouching ? 96 : 152);
+      body.setFillStyle(0xff6b6b);
+      body.setDisplaySize(58, state.crouching ? 96 : 152);
     } else if (state.mode === 'airborne') {
-      this.body.setFillStyle(0xf2c14e);
-      this.body.setDisplaySize(54, 144);
-    } else if (state.mode === 'crouching') {
-      this.body.setFillStyle(this.color);
-      this.body.setDisplaySize(54, 96);
+      body.setFillStyle(0xf2c14e);
+      body.setDisplaySize(54, 144);
     } else {
-      this.body.setFillStyle(this.color);
-      this.body.setDisplaySize(54, state.crouching ? 96 : 152);
+      body.setFillStyle(this.color);
+      body.setDisplaySize(54, state.crouching ? 96 : 152);
     }
   }
 
+  private syncSprite(state: CharacterState, x: number): void {
+    const sprite = this.sprite;
+    if (!sprite) return;
+    sprite.setPosition(x, state.y);
+    sprite.setFlipX(state.facing === 'left');
+
+    const desiredKey = getCharacterAnimationKey(state);
+    const animationKey = sprite.scene.anims.exists(desiredKey) ? desiredKey : `${state.fighterId}-idle`;
+    if (sprite.scene.anims.exists(animationKey) && sprite.anims.getName() !== animationKey) {
+      sprite.play(animationKey);
+    }
+
+    if (state.hitFlashFrames > 0) sprite.setTint(0xffffff);
+    else if (state.mode === 'active') sprite.setTint(0xffd166);
+    else if (state.mode === 'startup') sprite.setTint(state.attack?.preciseExecution ? 0xffd166 : 0xffa65b);
+    else if (state.mode === 'hitstun') sprite.setTint(0xffb0b0);
+    else sprite.clearTint();
+  }
+
   destroy(): void {
-    this.body.destroy();
+    this.sprite?.destroy();
+    this.placeholder?.destroy();
   }
 }

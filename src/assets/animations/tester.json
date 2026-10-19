@@ -3,21 +3,46 @@
   "textureKey": "tester",
   "spritesheet": "../sprites/characters/tester/tester-atlas-v01.png",
   "frameSize": {
-    "width": null,
-    "height": null
+    "width": 256,
+    "height": 256
   },
   "clips": [
-    { "key": "tester-idle", "start": null, "end": null, "frameRate": 8, "repeat": -1 },
-    { "key": "tester-walk", "start": null, "end": null, "frameRate": 10, "repeat": -1 },
-    { "key": "tester-dash", "start": null, "end": null, "frameRate": 14, "repeat": 0 },
-    { "key": "tester-jump", "start": null, "end": null, "frameRate": 10, "repeat": 0 },
-    { "key": "tester-crouch", "start": null, "end": null, "frameRate": 8, "repeat": -1 },
-    { "key": "tester-block", "start": null, "end": null, "frameRate": 8, "repeat": -1 },
-    { "key": "tester-hit", "start": null, "end": null, "frameRate": 12, "repeat": 0 },
-    { "key": "tester-blockstun", "start": null, "end": null, "frameRate": 10, "repeat": 0 },
-    { "key": "tester-grabbed", "start": null, "end": null, "frameRate": 10, "repeat": 0 },
-    { "key": "tester-knockdown", "start": null, "end": null, "frameRate": 8, "repeat": 0 }
+    {
+      "key": "tester-idle",
+      "start": 0,
+      "end": 5,
+      "frameRate": 8,
+      "repeat": -1
+    },
+    {
+      "key": "tester-walk",
+      "start": 6,
+      "end": 10,
+      "frameRate": 10,
+      "repeat": -1
+    },
+    {
+      "key": "tester-test-jab-startup",
+      "start": 11,
+      "end": 13,
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "tester-test-jab-active",
+      "start": 14,
+      "end": 15,
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "tester-test-jab-recovery",
+      "start": 16,
+      "end": 17,
+      "frameRate": 12,
+      "repeat": 0
+    }
   ],
   "attackClipKeyPattern": "tester-{moveId}-{phase}",
-  "note": "Modelo de configuração. Preencha dimensões e limites de frames antes de carregar no Phaser."
+  "note": "Atlas inicial derivado das fontes idle, walk e lp fornecidas. LP foi associado ao golpe provisório test-jab; frames de startup/active/recovery agrupados conforme as poses da faixa."
 }
