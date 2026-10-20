@@ -25,8 +25,8 @@ export function createGameConfig(width: number, height: number): GameConfig {
       walkSpeed: 3,
       jumpImpulse: -11,
       gravity: 0.55,
-      dashSpeed: 8,
-      dashDurationFrames: 8,
+      dashSpeed: 6,
+      dashDurationFrames: 12,
       doubleTapWindowFrames: 12,
     },
     match: {

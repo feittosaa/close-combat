@@ -443,7 +443,7 @@ describe('Simulation movement foundation', () => {
     }
     let parryEvent;
     for (let frame = 0; frame < 12 && snapshot.hitEvents.length === 0; frame += 1) {
-      const contactFrame = snapshot.characters[0].attack?.elapsedFrames === 4;
+      const contactFrame = snapshot.characters[0].attack?.elapsedFrames === 6;
       step(simulation, [neutral, contactFrame ? { direction: 'B', buttons: new Set() } : neutral]);
       snapshot = simulation.snapshot();
       parryEvent = snapshot.hitEvents[0];

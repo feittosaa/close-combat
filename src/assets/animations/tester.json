@@ -11,38 +11,108 @@
       "key": "tester-idle",
       "start": 0,
       "end": 5,
-      "frameRate": 8,
+      "frameRate": 6,
       "repeat": -1
     },
     {
       "key": "tester-walk",
       "start": 6,
-      "end": 10,
-      "frameRate": 10,
+      "end": 11,
+      "frameRate": 6,
       "repeat": -1
     },
     {
-      "key": "tester-test-jab-startup",
-      "start": 11,
-      "end": 13,
-      "frameRate": 12,
+      "key": "tester-defense",
+      "start": 12,
+      "end": 16,
+      "frameRate": 6,
+      "repeat": -1
+    },
+    {
+      "key": "tester-dash",
+      "start": 17,
+      "end": 24,
+      "frameRate": 60,
       "repeat": 0
     },
     {
-      "key": "tester-test-jab-active",
-      "start": 14,
-      "end": 15,
-      "frameRate": 12,
+      "key": "tester-crouch",
+      "start": 25,
+      "end": 29,
+      "frameRate": 6,
+      "repeat": -1
+    },
+    {
+      "key": "tester-jump",
+      "start": 30,
+      "end": 34,
+      "frameRate": 6,
       "repeat": 0
     },
     {
-      "key": "tester-test-jab-recovery",
-      "start": 16,
-      "end": 17,
-      "frameRate": 12,
+      "key": "tester-test-electric-palm-startup",
+      "start": 48,
+      "end": 49,
+      "frameRate": 6,
+      "repeat": 0
+    },
+    {
+      "key": "tester-test-electric-palm-active",
+      "start": 50,
+      "end": 55,
+      "frameRate": 6,
+      "repeat": 0
+    },
+    {
+      "key": "tester-test-electric-palm-recovery",
+      "start": 56,
+      "end": 59,
+      "frameRate": 6,
+      "repeat": 0
+    },
+    {
+      "key": "tester-light-punch-startup",
+      "start": 35,
+      "end": 36,
+      "frameRate": 60,
+      "repeat": 0
+    },
+    {
+      "key": "tester-light-punch-active",
+      "start": 37,
+      "end": 39,
+      "frameRate": 60,
+      "repeat": 0
+    },
+    {
+      "key": "tester-light-punch-recovery",
+      "start": 40,
+      "end": 40,
+      "frameRate": 60,
+      "repeat": 0
+    },
+    {
+      "key": "tester-heavy-punch-startup",
+      "start": 41,
+      "end": 43,
+      "frameRate": 60,
+      "repeat": 0
+    },
+    {
+      "key": "tester-heavy-punch-active",
+      "start": 44,
+      "end": 46,
+      "frameRate": 60,
+      "repeat": 0
+    },
+    {
+      "key": "tester-heavy-punch-recovery",
+      "start": 47,
+      "end": 47,
+      "frameRate": 60,
       "repeat": 0
     }
   ],
   "attackClipKeyPattern": "tester-{moveId}-{phase}",
-  "note": "Atlas inicial derivado das fontes idle, walk e lp fornecidas. LP foi associado ao golpe provisório test-jab; frames de startup/active/recovery agrupados conforme as poses da faixa."
+  "note": "Attack phases are authored as simulation-frame-length clips: light punch 6 startup / 3 active / 12 recovery; heavy punch 9 startup / 3 active / 16 recovery. Dash now lasts 12 simulation frames and its 8 atlas frames play at 60 FPS. Walk is forward; defense is backward and guard."
 }

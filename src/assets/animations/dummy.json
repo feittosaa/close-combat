@@ -8,7 +8,8 @@
   },
   "clips": [
     { "key": "dummy-idle", "start": null, "end": null, "frameRate": 8, "repeat": -1 },
-    { "key": "dummy-walk", "start": null, "end": null, "frameRate": 10, "repeat": -1 },
+    { "key": "dummy-walk-forward", "start": null, "end": null, "frameRate": 10, "repeat": -1 },
+    { "key": "dummy-walk-backward", "start": null, "end": null, "frameRate": 10, "repeat": -1 },
     { "key": "dummy-dash", "start": null, "end": null, "frameRate": 14, "repeat": 0 },
     { "key": "dummy-jump", "start": null, "end": null, "frameRate": 10, "repeat": 0 },
     { "key": "dummy-crouch", "start": null, "end": null, "frameRate": 8, "repeat": -1 },
