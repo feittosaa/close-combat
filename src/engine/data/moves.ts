@@ -40,7 +40,7 @@ export const testerMoves: readonly MoveDefinition[] = [
     input: { buttons: ['1'] },
     startup: 6,
     activeFrames: 3,
-    recovery: 12,
+    recovery: 9,
     damage: 45,
     hitstun: 12,
     blockstun: 10,

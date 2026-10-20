@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { FrameInput } from '../input/types';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
-import { defaultCharacter } from '../engine/data/characters';
+import { defaultCharacter, getCharacterById } from '../engine/data/characters';
 
 const config = createGameConfig(1024, 576);
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
@@ -70,6 +70,15 @@ describe('Simulation movement foundation', () => {
     const simulation = new Simulation(config);
     step(simulation, [{ direction: 'D', buttons: new Set() }, neutral]);
     expect(simulation.snapshot().characters[0].crouching).toBe(true);
+  });
+
+  it('moves at half walk speed while crouching', () => {
+    const simulation = new Simulation(config);
+    step(simulation, [{ direction: 'D', buttons: new Set() }, neutral]);
+    const before = simulation.snapshot().characters[0].x;
+    step(simulation, [{ direction: 'DF', buttons: new Set() }, neutral]);
+
+    expect(simulation.snapshot().characters[0].x - before).toBe(config.movement.walkSpeed * 0.5);
   });
 
   it('starts a dash after tapping the same horizontal direction twice', () => {
@@ -265,6 +274,36 @@ describe('Simulation movement foundation', () => {
     expect(snapshot.hitEvents[0]?.outcome).toBe('throw');
     expect(snapshot.characters[1].x > snapshot.characters[0].x).toBe(targetStaysInFront);
     expect(snapshot.characters[1].mode).toBe('hitstun');
+  });
+
+  it('continues applying gravity during an airborne attack', () => {
+    const may = getCharacterById('guilty-gear')!;
+    const simulation = new Simulation(config, [may, may]);
+    step(simulation, [{ direction: 'U', buttons: new Set() }, neutral]);
+    step(simulation, [{ direction: 'N', buttons: new Set(['3']) }, neutral]);
+    let attacker = simulation.snapshot().characters[0]!;
+    expect(attacker.attack?.airborne).toBe(true);
+    const startingY = attacker.y;
+    const startingVelocity = attacker.verticalVelocity;
+
+    step(simulation, [neutral, neutral]);
+    attacker = simulation.snapshot().characters[0]!;
+    expect(attacker.y).not.toBe(startingY);
+    expect(attacker.verticalVelocity).toBeGreaterThan(startingVelocity);
+  });
+
+  it('keeps horizontal air movement while starting an aerial attack', () => {
+    const may = getCharacterById('guilty-gear')!;
+    const simulation = new Simulation(config, [may, may]);
+    step(simulation, [{ direction: 'U', buttons: new Set() }, neutral]);
+    const forward = { direction: 'F' as const, buttons: new Set(['3' as const]) };
+    const before = simulation.snapshot().characters[0]!;
+    step(simulation, [forward, neutral]);
+    const after = simulation.snapshot().characters[0]!;
+
+    expect(after.attack?.airborne).toBe(true);
+    expect(after.x).toBe(before.x + config.movement.walkSpeed);
+    expect(after.verticalVelocity).toBeGreaterThan(before.verticalVelocity);
   });
 
   it('resolves a knockout, starts the configured next round, and declares a match winner', () => {
@@ -471,8 +510,8 @@ describe('Simulation movement foundation', () => {
       let pressedEarly = false;
       for (let frame = 0; frame < 16 && snapshot.hitEvents.length === 0; frame += 1) {
         const elapsed = snapshot.characters[0].attack?.elapsedFrames ?? -1;
-        const pressEarly = button === '1' && elapsed === 3;
-        const contact = button === '1' ? elapsed === 4 : elapsed === 6;
+        const pressEarly = button === '1' && elapsed === 5;
+        const contact = button === '1' ? elapsed === 6 : elapsed === 9;
         const defenderDirection = pressEarly ? 'B' : 'N';
         pressedEarly ||= pressEarly;
         step(simulation, [neutral, contact && button === '2' ? { direction: 'B', buttons: new Set() } : { direction: defenderDirection, buttons: new Set() }]);
@@ -509,7 +548,7 @@ describe('Simulation movement foundation', () => {
       hitSnapshot = hit.snapshot();
     }
     expect(hitSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'hit', attackerRecoveryFrames: 16, defenderStunFrames: 16, frameAdvantage: 0,
+      outcome: 'hit', attackerRecoveryFrames: 18, defenderStunFrames: 16, frameAdvantage: 2,
     });
 
     const negative = new Simulation(config);
@@ -591,7 +630,7 @@ describe('Simulation movement foundation', () => {
 
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, neutral]);
-    for (let frame = 0; frame < 7; frame += 1) step(simulation, [neutral, neutral]);
+    for (let frame = 0; frame < 9; frame += 1) step(simulation, [neutral, neutral]);
 
     const active = simulation.snapshot();
     expect(active.characters[0].mode).toBe('active');
@@ -629,7 +668,7 @@ describe('Simulation movement foundation', () => {
 
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, jab]);
-    for (let frame = 0; frame < 8; frame += 1) step(simulation, [neutral, neutral]);
+    for (let frame = 0; frame < 10; frame += 1) step(simulation, [neutral, neutral]);
     step(simulation, [neutral, neutral]);
 
     const [first, second] = simulation.snapshot().characters;
