@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { FrameInput } from '../input/types';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
-import { defaultCharacter, getCharacterById } from '../engine/data/characters';
+import { defaultCharacter } from '../engine/data/characters';
 
 const config = createGameConfig(1024, 576);
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
@@ -72,13 +72,13 @@ describe('Simulation movement foundation', () => {
     expect(simulation.snapshot().characters[0].crouching).toBe(true);
   });
 
-  it('moves at half walk speed while crouching', () => {
+  it('stays stationary while crouching with a horizontal direction held', () => {
     const simulation = new Simulation(config);
     step(simulation, [{ direction: 'D', buttons: new Set() }, neutral]);
     const before = simulation.snapshot().characters[0].x;
     step(simulation, [{ direction: 'DF', buttons: new Set() }, neutral]);
 
-    expect(simulation.snapshot().characters[0].x - before).toBe(config.movement.walkSpeed * 0.5);
+    expect(simulation.snapshot().characters[0].x).toBe(before);
   });
 
   it('starts a dash after tapping the same horizontal direction twice', () => {
@@ -277,8 +277,8 @@ describe('Simulation movement foundation', () => {
   });
 
   it('continues applying gravity during an airborne attack', () => {
-    const may = getCharacterById('guilty-gear')!;
-    const simulation = new Simulation(config, [may, may]);
+    const fighter = defaultCharacter;
+    const simulation = new Simulation(config, [fighter, fighter]);
     step(simulation, [{ direction: 'U', buttons: new Set() }, neutral]);
     step(simulation, [{ direction: 'N', buttons: new Set(['3']) }, neutral]);
     let attacker = simulation.snapshot().characters[0]!;
@@ -293,8 +293,8 @@ describe('Simulation movement foundation', () => {
   });
 
   it('keeps horizontal air movement while starting an aerial attack', () => {
-    const may = getCharacterById('guilty-gear')!;
-    const simulation = new Simulation(config, [may, may]);
+    const fighter = defaultCharacter;
+    const simulation = new Simulation(config, [fighter, fighter]);
     step(simulation, [{ direction: 'U', buttons: new Set() }, neutral]);
     const forward = { direction: 'F' as const, buttons: new Set(['3' as const]) };
     const before = simulation.snapshot().characters[0]!;
@@ -467,6 +467,12 @@ describe('Simulation movement foundation', () => {
       expect(snapshot.characters[1].mode).toBe('blockstun');
       expect(snapshot.hitEvents[0]?.outcome).toBe('block');
       expect(snapshot.characters[1].x).toBeGreaterThan(targetX);
+      if (direction === 'DB') {
+        expect(snapshot.characters[1].crouching).toBe(true);
+        const blockedX = snapshot.characters[1].x;
+        step(simulation, [neutral, { direction, buttons: new Set() }]);
+        expect(simulation.snapshot().characters[1]).toMatchObject({ x: blockedX, crouching: true, mode: 'blockstun' });
+      }
     }
   });
 

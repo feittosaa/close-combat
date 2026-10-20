@@ -2,10 +2,8 @@ import Phaser from 'phaser';
 
 export class MenuScene extends Phaser.Scene {
   private readonly handleEnter = (): void => this.startFight();
-  private readonly handleGuiltyGear = (): void => this.startFight('guilty-gear');
   private readonly handleShutdown = (): void => {
     this.input.keyboard?.off('keydown-ENTER', this.handleEnter);
-    this.input.keyboard?.off('keydown-G', this.handleGuiltyGear);
   };
 
   constructor() {
@@ -43,23 +41,12 @@ export class MenuScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     start.on('pointerdown', () => this.startFight());
-    this.add
-      .text(width / 2, height * 0.74, 'G · TESTAR GUILTY GEAR', {
-        color: '#b9a6ff',
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '18px',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', this.handleGuiltyGear);
     this.input.keyboard?.on('keydown-ENTER', this.handleEnter);
-    this.input.keyboard?.on('keydown-G', this.handleGuiltyGear);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown);
   }
 
   private startFight(fighterId = 'tester'): void {
     this.input.keyboard?.off('keydown-ENTER', this.handleEnter);
-    this.input.keyboard?.off('keydown-G', this.handleGuiltyGear);
     this.scene.start('FightScene', { fighterId });
   }
 }

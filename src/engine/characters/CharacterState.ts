@@ -45,6 +45,8 @@ export interface CharacterState {
   x: number;
   y: number;
   facing: 'left' | 'right';
+  /** Direção da locomoção relativa ao oponente; não muda a orientação lógica do combate. */
+  movementDirection?: 'forward' | 'backward';
   health: number;
   maxHealth: number;
   mode: CharacterMode;

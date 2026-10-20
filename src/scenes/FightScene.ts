@@ -1,9 +1,7 @@
 // src/scenes/FightScene.ts
 import Phaser from 'phaser';
 import testerManifest from '../assets/animations/tester.json';
-import testerAtlasUrl from '../assets/sprites/characters/tester/tester-atlas-v01.png';
-import guiltyGearManifest from '../assets/animations/guilty-gear.json';
-import guiltyGearAtlasUrl from '../assets/sprites/characters/guilty-gear/guilty-gear-atlas.png';
+import testerAtlasUrl from '../assets/sprites/characters/tester/tester-atlas.png';
 import { defaultCharacter, getCharacterById } from '../engine/data/characters';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
@@ -12,13 +10,15 @@ import { KeyboardInput } from '../input/KeyboardInput';
 import { PLAYER_ONE_KEYS, PLAYER_TWO_KEYS } from '../input/keyboardLayouts';
 import type { FrameInput } from '../input/types';
 import { CombatantView } from '../rendering/CombatantView';
+import { getClipFrames } from '../rendering/animations/AnimationPlayback';
+import type { CharacterAnimationManifest } from '../rendering/animations/AnimationPlayback';
 import { HitboxView } from '../rendering/HitboxView';
 import { CombatHud } from '../ui/CombatHud';
 import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 
 export class FightScene extends Phaser.Scene {
   private selectedFighter = defaultCharacter;
-  private selectedManifest = testerManifest;
+  private selectedManifest: CharacterAnimationManifest = testerManifest;
   private simulation?: Simulation;
   private keyboardInputs: KeyboardInput[] = [];
   private commandBuffers: [CommandBuffer, CommandBuffer] = [new CommandBuffer(), new CommandBuffer()];
@@ -42,12 +42,11 @@ export class FightScene extends Phaser.Scene {
 
   init(data: { fighterId?: string } = {}): void {
     this.selectedFighter = getCharacterById(data.fighterId ?? '') ?? defaultCharacter;
-    this.selectedManifest = this.selectedFighter.id === 'guilty-gear' ? guiltyGearManifest : testerManifest;
+    this.selectedManifest = testerManifest;
   }
 
   preload(): void {
-    const atlasUrl = this.selectedFighter.id === 'guilty-gear' ? guiltyGearAtlasUrl : testerAtlasUrl;
-    this.load.spritesheet(this.selectedManifest.textureKey, atlasUrl, {
+    this.load.spritesheet(this.selectedManifest.textureKey, testerAtlasUrl, {
       frameWidth: this.selectedManifest.frameSize.width,
       frameHeight: this.selectedManifest.frameSize.height,
     });
@@ -59,8 +58,7 @@ export class FightScene extends Phaser.Scene {
       this.anims.create({
         key: clip.key,
         frames: this.anims.generateFrameNumbers(this.selectedManifest.textureKey, {
-          start: clip.start,
-          end: clip.end,
+          frames: getClipFrames(clip),
         }),
         frameRate: clip.frameRate,
         repeat: clip.repeat,
@@ -76,8 +74,8 @@ export class FightScene extends Phaser.Scene {
     this.add.rectangle(width / 2, config.arena.floorY + 44, width, 88, 0x24232b);
     this.add.rectangle(width / 2, config.arena.floorY, width, 4, 0xf4f0e8, 0.7);
     this.combatants = [
-      new CombatantView(this, config.arena.left, config.arena.floorY, 0xe45b5b, this.selectedManifest.textureKey),
-      new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4, this.selectedManifest.textureKey),
+      new CombatantView(this, config.arena.left, config.arena.floorY, 0xe45b5b, this.selectedManifest.textureKey, this.selectedManifest),
+      new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4, this.selectedManifest.textureKey, this.selectedManifest),
     ];
     this.hitboxView = new HitboxView(this);
     this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.selectedFighter.name]);

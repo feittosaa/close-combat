@@ -142,33 +142,48 @@ export class Simulation {
       return pressed;
     }) as [boolean, boolean];
 
-    this.characters.forEach((character, index) => {
+    const canControlAtInput = this.characters.map((character) => !character.attack && !isStunned(character));
+    // Read both commands before deciding guard, so a new attack is visible to
+    // either defender on the same frame regardless of player iteration order.
+    const commands = this.characters.map((character, index) => {
       const input = inputs[index] ?? neutralInput();
-      const canControl = !character.attack && !isStunned(character);
+      const canControl = canControlAtInput[index];
       const airborneAtInput = !character.grounded;
+      character.movementDirection = undefined;
       this.updateStunAndFeedback(character);
       this.updateVerticalMovement(character, input, index, canControl);
       const crouchingInput = input.direction === 'D' && character.crouching;
-      const moveCommand = this.commandParsers[index].update(
+      return this.commandParsers[index].update(
         input,
         this.frame,
         this.fighterMoves[index],
         { airborne: airborneAtInput, crouching: crouchingInput },
       );
+    });
+    const attacking = this.characters.map((character, index) => Boolean(character.attack) ||
+      Boolean(commands[index] && (canControlAtInput[index] || this.canCancel(character, commands[index]))));
+
+    this.characters.forEach((character, index) => {
+      const input = inputs[index] ?? neutralInput();
+      const canControl = canControlAtInput[index];
+      const moveCommand = commands[index];
 
       if (canControl) {
         const horizontal = horizontalAxis(input.direction);
         const facingSign = character.facing === 'right' ? 1 : -1;
-        const dashing = this.updateDash(index, horizontal, character.grounded);
+        const guarding = character.grounded && (input.direction === 'B' || input.direction === 'DB') && attacking[1 - index];
+        const stationary = guarding || (character.grounded && character.crouching);
+        const dashing = this.updateDash(index, horizontal, character.grounded && !stationary);
         const speed = dashing
           ? this.config.movement.dashSpeed
-          : character.crouching && character.grounded
-            ? this.fighterDefinitions[index].movement.walkSpeed * 0.5
-            : this.fighterDefinitions[index].movement.walkSpeed;
-        nextX[index] += horizontal * facingSign * speed;
-        if (dashing) character.mode = 'dashing';
-        else if (input.direction === 'B' || input.direction === 'DB') character.mode = 'blocking';
+          : this.fighterDefinitions[index].movement.walkSpeed;
+        if (!stationary) nextX[index] += horizontal * facingSign * speed;
+        if (guarding) character.mode = 'blocking';
+        else if (dashing) character.mode = 'dashing';
         else if (horizontal !== 0 && character.grounded && !character.crouching) character.mode = 'moving';
+        if (character.mode === 'moving' || character.mode === 'dashing') {
+          character.movementDirection = horizontal < 0 ? 'backward' : 'forward';
+        }
 
       } else {
         this.previousHorizontalAxis[index] = horizontalAxis(input.direction);
@@ -178,7 +193,7 @@ export class Simulation {
 
       if (canControl || this.canCancel(character, moveCommand)) {
         const move = this.startAttack(character, moveCommand, input.direction);
-        if (move?.advance && !move.airborne) {
+        if (move?.advance && !move.airborne && !character.crouching) {
           const facingSign = character.facing === 'right' ? 1 : -1;
           nextX[index] += facingSign * move.advance;
         }
@@ -264,6 +279,7 @@ export class Simulation {
         x: index === 0 ? this.config.arena.left + inset : this.config.arena.right - inset,
         y: this.config.arena.floorY,
         facing: index === 0 ? 'right' : 'left',
+        movementDirection: undefined,
         health: this.configuredMaxHealth(definition),
         maxHealth: this.configuredMaxHealth(definition),
         mode: 'neutral',
@@ -357,7 +373,7 @@ export class Simulation {
     const crouchingAttack = character.attack
       ? this.moveFor(character, character.attack.moveId)?.crouching === true
       : false;
-    character.crouching = (canControl && character.grounded && vertical === 'down') || crouchingAttack;
+    character.crouching = (character.grounded && vertical === 'down' && (canControl || character.mode === 'blockstun')) || crouchingAttack;
     if (canControl && !character.attack) {
       character.mode = character.crouching ? 'crouching' : character.grounded ? 'neutral' : 'airborne';
     }
@@ -384,6 +400,7 @@ export class Simulation {
     };
     character.crouching = move.crouching === true;
     character.mode = 'startup';
+    character.movementDirection = undefined;
     return move;
   }
 
@@ -469,6 +486,19 @@ export class Simulation {
 
     if (!overlap) return;
 
+    // A moving opponent must not drag a guarding or crouching fighter along.
+    // Actual hit/block displacement is applied separately from body spacing.
+    const firstAnchored = isStationaryGrounded(first);
+    const secondAnchored = isStationaryGrounded(second);
+    if (firstAnchored && !secondAnchored) {
+      second.x = first.x + (firstWasLeft ? minimumDistance : -minimumDistance);
+      return;
+    }
+    if (secondAnchored && !firstAnchored) {
+      first.x = second.x + (firstWasLeft ? -minimumDistance : minimumDistance);
+      return;
+    }
+
     const midpoint = (first.x + second.x) / 2;
     const halfDistance = minimumDistance / 2;
     if (firstWasLeft) {
@@ -499,6 +529,10 @@ export class Simulation {
 
 function neutralInput(): FrameInput {
   return { direction: 'N', buttons: new Set() };
+}
+
+function isStationaryGrounded(character: CharacterState): boolean {
+  return character.grounded && (character.crouching || character.mode === 'blocking' || character.mode === 'blockstun');
 }
 
 function horizontalAxis(direction: FrameInput['direction']): number {
