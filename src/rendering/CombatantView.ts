@@ -68,7 +68,8 @@ export class CombatantView {
     const sprite = this.sprite;
     if (!sprite) return;
     sprite.setPosition(x, state.y);
-    sprite.setFlipX(state.facing === 'left');
+    const artFacesRight = state.fighterId !== 'guilty-gear';
+    sprite.setFlipX((state.facing === 'right') !== artFacesRight);
 
     const desiredKey = getCharacterAnimationKey(state);
     const animationKey = sprite.scene.anims.exists(desiredKey) ? desiredKey : `${state.fighterId}-idle`;

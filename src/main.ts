@@ -9,6 +9,8 @@ const game = new Phaser.Game({
   width: 1024,
   height: 576,
   backgroundColor: '#101014',
+  pixelArt: true,
+  roundPixels: true,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

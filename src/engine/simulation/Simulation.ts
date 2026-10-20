@@ -162,7 +162,9 @@ export class Simulation {
         const dashing = this.updateDash(index, horizontal, character.grounded);
         const speed = dashing
           ? this.config.movement.dashSpeed
-          : this.fighterDefinitions[index].movement.walkSpeed;
+          : character.crouching && character.grounded
+            ? this.fighterDefinitions[index].movement.walkSpeed * 0.5
+            : this.fighterDefinitions[index].movement.walkSpeed;
         nextX[index] += horizontal * facingSign * speed;
         if (dashing) character.mode = 'dashing';
         else if (input.direction === 'B' || input.direction === 'DB') character.mode = 'blocking';
@@ -176,7 +178,7 @@ export class Simulation {
 
       if (canControl || this.canCancel(character, moveCommand)) {
         const move = this.startAttack(character, moveCommand, input.direction);
-        if (move?.advance) {
+        if (move?.advance && !move.airborne) {
           const facingSign = character.facing === 'right' ? 1 : -1;
           nextX[index] += facingSign * move.advance;
         }
@@ -371,6 +373,8 @@ export class Simulation {
     character.attack = {
       moveId: move.id,
       buttons: [...move.input.buttons],
+      airborne: move.airborne === true,
+      crouching: move.crouching === true,
       elapsedFrames: 0,
       hasHit: false,
       preciseExecution: move.precisionWindowFrames !== undefined,

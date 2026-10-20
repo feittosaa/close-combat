@@ -2,7 +2,9 @@
 import Phaser from 'phaser';
 import testerManifest from '../assets/animations/tester.json';
 import testerAtlasUrl from '../assets/sprites/characters/tester/tester-atlas-v01.png';
-import { defaultCharacter } from '../engine/data/characters';
+import guiltyGearManifest from '../assets/animations/guilty-gear.json';
+import guiltyGearAtlasUrl from '../assets/sprites/characters/guilty-gear/guilty-gear-atlas.png';
+import { defaultCharacter, getCharacterById } from '../engine/data/characters';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
@@ -15,6 +17,8 @@ import { CombatHud } from '../ui/CombatHud';
 import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 
 export class FightScene extends Phaser.Scene {
+  private selectedFighter = defaultCharacter;
+  private selectedManifest = testerManifest;
   private simulation?: Simulation;
   private keyboardInputs: KeyboardInput[] = [];
   private commandBuffers: [CommandBuffer, CommandBuffer] = [new CommandBuffer(), new CommandBuffer()];
@@ -36,19 +40,25 @@ export class FightScene extends Phaser.Scene {
     super('FightScene');
   }
 
+  init(data: { fighterId?: string } = {}): void {
+    this.selectedFighter = getCharacterById(data.fighterId ?? '') ?? defaultCharacter;
+    this.selectedManifest = this.selectedFighter.id === 'guilty-gear' ? guiltyGearManifest : testerManifest;
+  }
+
   preload(): void {
-    this.load.spritesheet(testerManifest.textureKey, testerAtlasUrl, {
-      frameWidth: testerManifest.frameSize.width,
-      frameHeight: testerManifest.frameSize.height,
+    const atlasUrl = this.selectedFighter.id === 'guilty-gear' ? guiltyGearAtlasUrl : testerAtlasUrl;
+    this.load.spritesheet(this.selectedManifest.textureKey, atlasUrl, {
+      frameWidth: this.selectedManifest.frameSize.width,
+      frameHeight: this.selectedManifest.frameSize.height,
     });
   }
 
   create(): void {
-    testerManifest.clips.forEach((clip) => {
+    this.selectedManifest.clips.forEach((clip) => {
       if (this.anims.exists(clip.key)) return;
       this.anims.create({
         key: clip.key,
-        frames: this.anims.generateFrameNumbers(testerManifest.textureKey, {
+        frames: this.anims.generateFrameNumbers(this.selectedManifest.textureKey, {
           start: clip.start,
           end: clip.end,
         }),
@@ -59,18 +69,18 @@ export class FightScene extends Phaser.Scene {
 
     const { width, height } = this.scale;
     const config = createGameConfig(width, height);
-    this.simulation = new Simulation(config, [defaultCharacter, defaultCharacter]);
+    this.simulation = new Simulation(config, [this.selectedFighter, this.selectedFighter]);
     this.keyboardInputs = [new KeyboardInput(PLAYER_ONE_KEYS), new KeyboardInput(PLAYER_TWO_KEYS)];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
 
     this.add.rectangle(width / 2, config.arena.floorY + 44, width, 88, 0x24232b);
     this.add.rectangle(width / 2, config.arena.floorY, width, 4, 0xf4f0e8, 0.7);
     this.combatants = [
-      new CombatantView(this, config.arena.left, config.arena.floorY, 0xe45b5b, defaultCharacter.id),
-      new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4, defaultCharacter.id),
+      new CombatantView(this, config.arena.left, config.arena.floorY, 0xe45b5b, this.selectedManifest.textureKey),
+      new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4, this.selectedManifest.textureKey),
     ];
     this.hitboxView = new HitboxView(this);
-    this.hud = new CombatHud(this, width, [defaultCharacter.name, defaultCharacter.name]);
+    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.selectedFighter.name]);
     this.inputDisplays = [
       new PlayerInputDisplay(this, 18, 78, 'P1 · WASD / J K N M', '#ff8c8c'),
       new PlayerInputDisplay(this, width - 218, 78, 'P2 · SETAS / NUMPAD', '#8cb4ff'),
