@@ -246,7 +246,7 @@ describe('Simulation movement foundation', () => {
     expect(snapshot.characters[1].mode).toBe('grabbed');
     for (let frame = 0; frame < 6; frame += 1) step(simulation, [neutral, neutral]);
     snapshot = simulation.snapshot();
-    expect(snapshot.hitEvents[0]).toMatchObject({ outcome: 'throw', damage: 150, frameAdvantage: -2 });
+    expect(snapshot.hitEvents[0]).toMatchObject({ outcome: 'throw', damage: 150, frameAdvantage: 2 });
     expect(snapshot.characters[1].health).toBe(850);
     expect(snapshot.characters[1].mode).toBe('hitstun');
 
@@ -531,7 +531,7 @@ describe('Simulation movement foundation', () => {
     }
   });
 
-  it('exposes frame advantage using remaining attack frames minus defender stun', () => {
+  it('exposes attacker advantage using defender stun minus remaining attack frames', () => {
     const blocked = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
     for (let frame = 0; frame < 100; frame += 1) step(blocked, [forward, forward]);
@@ -542,7 +542,7 @@ describe('Simulation movement foundation', () => {
       blockedSnapshot = blocked.snapshot();
     }
     expect(blockedSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'block', attackerRecoveryFrames: 11, defenderStunFrames: 10, frameAdvantage: 1,
+      outcome: 'block', attackerRecoveryFrames: 11, defenderStunFrames: 10, frameAdvantage: -1,
     });
 
     const hit = new Simulation(config);
@@ -554,7 +554,7 @@ describe('Simulation movement foundation', () => {
       hitSnapshot = hit.snapshot();
     }
     expect(hitSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'hit', attackerRecoveryFrames: 18, defenderStunFrames: 16, frameAdvantage: 2,
+      outcome: 'hit', attackerRecoveryFrames: 18, defenderStunFrames: 16, frameAdvantage: -2,
     });
 
     const negative = new Simulation(config);
@@ -566,7 +566,7 @@ describe('Simulation movement foundation', () => {
       negativeSnapshot = negative.snapshot();
     }
     expect(negativeSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'hit', attackerRecoveryFrames: 11, defenderStunFrames: 12, frameAdvantage: -1,
+      outcome: 'hit', attackerRecoveryFrames: 11, defenderStunFrames: 12, frameAdvantage: 1,
     });
   });
 

@@ -21,6 +21,15 @@ export interface SimulationSnapshot {
   characters: readonly CharacterState[];
   activeHitboxes: readonly Hitbox[];
   hitEvents: readonly HitEvent[];
+  recentContacts: readonly CombatLogEntry[];
+}
+
+export interface CombatLogEntry { frame: number; event: HitEvent }
+
+export interface SimulationOptions {
+  training?: boolean;
+  /** Distância inicial entre centros para exercícios; ausente preserva o spawn da partida. */
+  initialDistance?: number;
 }
 
 /** Simulação determinística inicial de movimento e ataques locais para dois jogadores. */
@@ -49,21 +58,23 @@ export class Simulation {
   private readonly dashFramesRemaining = [0, 0];
   private readonly dashAxis = [0, 0];
   private lastHitEvents: HitEvent[] = [];
+  private recentContacts: CombatLogEntry[] = [];
 
   constructor(
     private readonly config: GameConfig,
     fighterDefinitions: readonly [CharacterDefinition, CharacterDefinition] = [defaultCharacter, defaultCharacter],
+    private readonly options: SimulationOptions = {},
   ) {
-    const { arena, match } = config;
+    const { match } = config;
     this.fighterDefinitions = fighterDefinitions;
     this.fighterMoves = [
       fighterDefinitions[0].moves,
       fighterDefinitions[1].moves,
     ];
-    const inset = Math.min(190, (arena.right - arena.left) * 0.22);
+    const positions = this.spawnPositions();
     this.characters = [
-      this.createCharacter('player-1', fighterDefinitions[0], arena.left + inset, 'right'),
-      this.createCharacter('player-2', fighterDefinitions[1], arena.right - inset, 'left'),
+      this.createCharacter('player-1', fighterDefinitions[0], positions[0], 'right'),
+      this.createCharacter('player-2', fighterDefinitions[1], positions[1], 'left'),
     ];
     this.roundFramesRemaining = match.roundDurationFrames;
     const moveBooks = new Map(fighterDefinitions.map((definition, index) => [definition.id, this.fighterMoves[index]]));
@@ -74,9 +85,15 @@ export class Simulation {
 
   advance(
     deltaMs: number,
-    readInputs: (characters: readonly CharacterState[]) => readonly FrameInput[],
+    readInputs: (characters: readonly CharacterState[], frame: number) => readonly FrameInput[],
   ): void {
-    this.clock.advance(deltaMs, () => this.step(readInputs(this.characters)));
+    this.clock.advance(deltaMs, () => this.step(readInputs(this.characters, this.frame)));
+  }
+
+  /** A training step uses exactly the same rules as normal fixed-clock playback. */
+  stepFrame(inputs: readonly FrameInput[]): void {
+    this.clock.reset();
+    this.step(inputs);
   }
 
   snapshot(): SimulationSnapshot {
@@ -96,6 +113,7 @@ export class Simulation {
       })),
       activeHitboxes: this.attackResolver.activeHitboxes(this.characters),
       hitEvents: [...this.lastHitEvents],
+      recentContacts: this.recentContacts.map(({ frame, event }) => ({ frame, event: { ...event } })),
     };
   }
 
@@ -123,6 +141,7 @@ export class Simulation {
       return;
     }
     const previousX = this.characters.map(({ x }) => x) as [number, number];
+    const previousStates = this.characters.map(({ mode, attack, crouching }) => ({ mode, attack, crouching }));
     const nextX = [...previousX] as [number, number];
     this.lastHitEvents = [];
     const freshlyPressedFor = (index: number): ReadonlySet<AttackButton> => {
@@ -226,9 +245,23 @@ export class Simulation {
     this.updateFacing();
     this.advanceAttacks();
     this.frame += 1;
-    this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
-    if (this.characters.some(({ health }) => health === 0)) this.finishRound('knockout');
-    else if (this.roundFramesRemaining === 0) this.finishRound('time');
+    if (this.lastHitEvents.length) {
+      this.recentContacts.push(...this.lastHitEvents.map((event) => ({ frame: this.frame, event })));
+      this.recentContacts = this.recentContacts.slice(-32);
+    }
+    if (!this.options.training) {
+      this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
+      if (this.characters.some(({ health }) => health === 0)) this.finishRound('knockout');
+      else if (this.roundFramesRemaining === 0) this.finishRound('time');
+    }
+    this.characters.forEach((character, index) => {
+      const previous = previousStates[index];
+      const renewedReaction = this.lastHitEvents.some((event) =>
+        (event.targetId === character.characterId && ['hit', 'block', 'throw', 'throw-start'].includes(event.outcome)) ||
+        (event.attackerId === character.characterId && event.outcome === 'parry'));
+      if (character.mode !== previous.mode || character.attack !== previous.attack ||
+          character.crouching !== previous.crouching || renewedReaction) character.stateStartedFrame = this.frame;
+    });
   }
 
   private finishRound(reason: 'knockout' | 'time'): void {
@@ -271,18 +304,19 @@ export class Simulation {
   }
 
   private resetRoundState(): void {
-    const inset = Math.min(190, (this.config.arena.right - this.config.arena.left) * 0.22);
+    const positions = this.spawnPositions();
     this.characters.forEach((character, index) => {
       const definition = this.fighterDefinitions[index];
       if (!definition) return;
       Object.assign(character, {
-        x: index === 0 ? this.config.arena.left + inset : this.config.arena.right - inset,
+        x: positions[index],
         y: this.config.arena.floorY,
         facing: index === 0 ? 'right' : 'left',
         movementDirection: undefined,
         health: this.configuredMaxHealth(definition),
         maxHealth: this.configuredMaxHealth(definition),
         mode: 'neutral',
+        stateStartedFrame: this.frame,
         remainingStateFrames: 0,
         verticalVelocity: 0,
         grounded: true,
@@ -302,7 +336,23 @@ export class Simulation {
       this.dashAxis[index] = 0;
     });
     this.lastHitEvents = [];
+    this.recentContacts = [];
     this.roundFramesRemaining = this.config.match.roundDurationFrames;
+  }
+
+  private spawnPositions(): readonly [number, number] {
+    const { left, right } = this.config.arena;
+    const initialDistance = this.options.initialDistance;
+    if (initialDistance !== undefined && Number.isFinite(initialDistance)) {
+      const halfWidths = this.fighterDefinitions.map((definition) => definition.collision.bodyWidth / 2);
+      const minimumDistance = halfWidths[0] + halfWidths[1];
+      const distance = clamp(initialDistance, minimumDistance, right - left - minimumDistance);
+      const center = (left + right) / 2;
+      return [clamp(center - distance / 2, left + halfWidths[0], right - halfWidths[0]),
+        clamp(center + distance / 2, left + halfWidths[1], right - halfWidths[1])];
+    }
+    const inset = Math.min(190, (right - left) * 0.22);
+    return [left + inset, right - inset];
   }
 
   private createCharacter(
@@ -321,6 +371,7 @@ export class Simulation {
       health: this.configuredMaxHealth(definition),
       maxHealth: this.configuredMaxHealth(definition),
       mode: 'neutral',
+      stateStartedFrame: this.frame,
       remainingStateFrames: 0,
       verticalVelocity: 0,
       grounded: true,

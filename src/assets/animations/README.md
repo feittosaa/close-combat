@@ -1,11 +1,17 @@
 # Manifestos de animação
 
-Guarde um manifesto JSON por personagem (`tester.json`, `dummy.json`) nesta pasta; o atlas PNG correspondente fica em `../sprites/characters/{id}/`. Use dimensões reais e positivas em `frameSize`. Cada item de `clips` declara `key`, índices `start`/`end` inclusivos, `frameRate` em quadros por segundo e `repeat` (`-1` para loop, `0` para tocar uma vez).
+Um manifesto por personagem; o atlas correspondente fica em `../sprites/characters/<id>/`. O contrato completo e a matriz de produção estão em [`docs/animacao.md`](../../../docs/animacao.md).
 
-As chaves de estado usam `{id}-idle`, `-walk-forward`, `-walk-backward`, `-dash`, `-jump`, `-crouch`, `-block`, `-hit`, `-blockstun`, `-grabbed` e `-knockdown`. `walk-forward` acompanha a caminhada na direção do oponente; `walk-backward`, o recuo. `block` representa a pose de defesa quando um ataque colide com a hurtbox durante a defesa ativa; `blockstun` representa a reação ao bloqueio. Para cada golpe no livro do personagem, cadastre `{id}-{moveId}-startup`, `-active` e `-recovery`. Deixe ausentes os clipes sem arte; não use índices vazios ou `null` em uma exportação pronta. As células do atlas têm tamanho uniforme, não são trimadas e conservam a origem alinhada aos pés. Consulte os READMEs em `../sprites/characters/` para detalhes de exportação.
+- Células reais e uniformes em `frameSize`; `displaySize` mantém escala uniforme nos dois eixos.
+- `start`/`end` inclusivos; `frames` explícito tem precedência e determina a ordem das poses.
+- `frameRate` define cadência padrão; `frameDurations` permite holds em frames lógicos. Em fases de ataque, os valores funcionam como pesos dentro do tempo definido pelo golpe.
+- `repeat: -1` repete; `0` toca uma vez e mantém a pose final. A reprodução depende do frame da simulação, sem temporizador independente do Phaser.
+- `sourceFacesLeft` declara a direção original de cada clipe. Não inverter o atlas inteiro: há clipes com orientações diferentes.
+- `airbornePoses` liga a pose à subida, ao ápice e à descida da trajetória lógica.
+- `moveClips` associa cada golpe a um conjunto de três fases. Golpes sem cobertura são recusados pela validação; aproximações são declaradas em `provisionalMoves`.
 
-O mapeamento entre animação e modo de combate pertence a `src/rendering/animations/`; o manifesto não pode alterar frames de combate, hitboxes ou hurtboxes.
+Estados atuais: `idle`, `walk`, `dash`, `jump`, `crouch`, `defense`, `hit`, `blockstun`, `grabbed`, `knockdown` e `throw-recovery`. O recuo usa `walk` espelhado. Defesa baixa reutiliza `crouch`. Chaves de ataque: `{id}-{nomeDoClipe}-{startup|active|recovery}`.
 
-O manifesto de Tester registra as faixas da folha-fonte sem nome como `tester-source-row-00` a `tester-source-row-30`. Os clipes de estado selecionam os quadros identificados visualmente para caminhada, guarda, agachamento, salto, queda e golpes.
+O Tester preserva 31 faixas de origem como `tester-source-row-00` a `tester-source-row-30`, com 399 quadros válidos. Esses clipes servem à revisão e não são escolhidos aleatoriamente durante a luta. O Dummy possui apenas dados mínimos de desenvolvimento; sua arte e sua seleção no menu ainda não estão integradas.
 
-Cada clipe pode declarar `frames` para uma sequência explícita, com precedência sobre `start`/`end`, e `sourceFacesLeft` para arte desenhada à esquerda. `moveClips` associa IDs de golpes do personagem aos nomes dos clipes. As fases de ataque usam os frames da simulação para distribuir suas poses durante toda a fase lógica.
+Tempo de combate, dano, hitboxes, hurtboxes, deslocamento e regras de stun pertencem ao motor, nunca a este manifesto.

@@ -9,12 +9,19 @@ export interface AnimationClip {
   frameRate: number;
   repeat: number;
   sourceFacesLeft?: boolean;
+  /** Duração de cada pose em frames lógicos; em ataques funciona como peso dentro da fase. */
+  frameDurations?: readonly number[];
+  /** Poses de salto escolhidas pela trajetória, sem terminar o clipe antes da aterrissagem. */
+  airbornePoses?: { rising: number; apex: number; falling: number; apexSpeed: number };
 }
 
 export interface CharacterAnimationManifest {
   textureKey: string;
   frameSize: { width: number; height: number };
   clips: readonly AnimationClip[];
+  totalFrames?: number;
+  displaySize?: { width: number; height: number };
+  moveClips?: Readonly<Record<string, string>>;
 }
 
 /** Explicit sequences can return through intermediate poses without duplicating the endpoints. */
@@ -24,6 +31,33 @@ export function getClipFrames(clip: AnimationClip): number[] {
 
 export function shouldFlipAnimation(facing: CharacterState['facing'], clip?: AnimationClip, walkingBackward = false): boolean {
   return ((facing === 'left') !== (clip?.sourceFacesLeft ?? false)) !== walkingBackward;
+}
+
+function poseAtTime(frames: readonly number[], durations: readonly number[], time: number): number {
+  let cursor = 0;
+  for (let index = 0; index < frames.length; index += 1) {
+    cursor += durations[index];
+    if (time < cursor) return frames[index];
+  }
+  return frames[frames.length - 1];
+}
+
+/** Sample the exact logical frame. Pausing or changing display FPS cannot advance a pose. */
+export function getStateAnimationFrame(state: CharacterState, clip: AnimationClip, simulationFrame: number): number {
+  if (!state.grounded && clip.airbornePoses) {
+    const poses = clip.airbornePoses;
+    if (Math.abs(state.verticalVelocity) <= poses.apexSpeed) return poses.apex;
+    return state.verticalVelocity < 0 ? poses.rising : poses.falling;
+  }
+  const frames = getClipFrames(clip);
+  const durations = clip.frameDurations ?? frames.map(() => 60 / clip.frameRate);
+  const cycle = durations.reduce((sum, duration) => sum + duration, 0);
+  const elapsed = Math.max(0, simulationFrame - state.stateStartedFrame);
+  if (['hitstun', 'blockstun', 'grabbed', 'throwRecovery'].includes(state.mode) && state.remainingStateFrames > 0) {
+    return poseAtTime(frames, durations, elapsed * cycle / (elapsed + state.remainingStateFrames));
+  }
+  if (clip.repeat !== -1 && elapsed >= cycle * (clip.repeat + 1)) return frames[frames.length - 1];
+  return poseAtTime(frames, durations, elapsed % cycle);
 }
 
 /** Spread the drawn poses across the actual combat phase; visual playback never changes combat timing. */
@@ -47,6 +81,49 @@ export function getAttackAnimationFrame(
   } else return undefined;
 
   const frames = getClipFrames(clip);
-  const index = Math.min(frames.length - 1, Math.floor(Math.max(0, elapsed) * frames.length / Math.max(1, duration)));
-  return frames[index];
+  const weights = clip.frameDurations ?? frames.map(() => 1);
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  const time = Math.max(0, Math.min(duration - 1, elapsed)) * total / Math.max(1, duration);
+  return poseAtTime(frames, weights, time);
+}
+
+/** Reject invalid delivery data before a match starts instead of silently showing unrelated frames. */
+export function validateAnimationManifest(manifest: CharacterAnimationManifest): void {
+  const positive = (value: number): boolean => Number.isFinite(value) && value > 0;
+  if (!manifest.textureKey || !positive(manifest.frameSize.width) || !positive(manifest.frameSize.height) ||
+      !manifest.clips.length || (manifest.totalFrames !== undefined && (!Number.isInteger(manifest.totalFrames) || manifest.totalFrames <= 0))) {
+    throw new Error(`Manifesto de animação inválido: ${manifest.textureKey}`);
+  }
+  if (manifest.displaySize && (!positive(manifest.displaySize.width) || !positive(manifest.displaySize.height) ||
+      manifest.displaySize.width / manifest.frameSize.width !== manifest.displaySize.height / manifest.frameSize.height)) {
+    throw new Error(`Escala de personagem deve ser uniforme: ${manifest.textureKey}`);
+  }
+  const keys = new Set<string>();
+  for (const clip of manifest.clips) {
+    const frames = getClipFrames(clip);
+    if (keys.has(clip.key) || !clip.key || !Number.isInteger(clip.start) || !Number.isInteger(clip.end) || clip.start > clip.end ||
+        !frames.length || frames.some((frame) => !Number.isInteger(frame) || frame < 0 ||
+          (manifest.totalFrames !== undefined && frame >= manifest.totalFrames)) ||
+        !positive(clip.frameRate) || !Number.isInteger(clip.repeat) || clip.repeat < -1 ||
+        (clip.frameDurations && (clip.frameDurations.length !== frames.length || !clip.frameDurations.every(positive)))) {
+      throw new Error(`Clipe de animação inválido: ${clip.key}`);
+    }
+    if (clip.airbornePoses && (!Number.isFinite(clip.airbornePoses.apexSpeed) || clip.airbornePoses.apexSpeed < 0 ||
+        ![clip.airbornePoses.rising, clip.airbornePoses.apex, clip.airbornePoses.falling].every((frame) => frames.includes(frame)))) {
+      throw new Error(`Poses aéreas inválidas: ${clip.key}`);
+    }
+    keys.add(clip.key);
+  }
+}
+
+export function validateAnimationCoverage(manifest: CharacterAnimationManifest, characterId: string, moves: readonly MoveDefinition[]): void {
+  const keys = new Set(manifest.clips.map(({ key }) => key));
+  const required = ['idle', 'walk', 'dash', 'jump', 'crouch', 'defense', 'hit', 'blockstun', 'grabbed', 'knockdown', 'throw-recovery']
+    .map((suffix) => `${characterId}-${suffix}`);
+  for (const move of moves) {
+    const name = manifest.moveClips?.[move.id] ?? move.id;
+    for (const phase of ['startup', 'active', 'recovery']) required.push(`${characterId}-${name}-${phase}`);
+  }
+  const missing = required.filter((key) => !keys.has(key));
+  if (missing.length) throw new Error(`Animações ausentes para ${characterId}: ${missing.join(', ')}`);
 }

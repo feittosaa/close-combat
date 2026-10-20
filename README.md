@@ -15,7 +15,11 @@ npm install
 npm run dev
 ```
 
-Pressione **Enter** ou clique no menu para abrir a cena de luta. Na cena, **Esc** retorna ao menu. **Tester** é o personagem provisório padrão dos dois jogadores; os lutadores ainda aparecem como formas enquanto os sprites não são criados. Os botões `1`–`4` executam golpes de teste; direções, botões e sequência recente aparecem nos indicadores de cada jogador. As hitboxes piscam durante os frames ativos e usam a geometria da simulação.
+Pressione **Enter** para uma partida local ou **T** para o treino. Na cena, **Esc** retorna ao menu. **Tester** é o personagem provisório dos dois jogadores, com atlas e animações próprios. Os botões `1`–`4` executam golpes de teste; direções, botões e sequência recente aparecem nos indicadores de cada jogador. No treino, as hitboxes/hurtboxes mostram a geometria real da simulação e podem ser ocultadas.
+
+O primeiro cenário é **Cais**, composto de fundo, chão e caixas. A câmera acompanha os lutadores: o fundo se move mais lentamente, enquanto caixas e chão mantêm escala e movimento comuns. O sistema aceita qualquer quantidade de camadas por cenário; estrutura, manifesto e instruções de entrega estão em [`src/assets/scenes/README.md`](./src/assets/scenes/README.md).
+
+Na revisão atual, as cargas foram reduzidas em 24% com apoio preservado no chão, e a célula visual do Tester passou de 220 para 256 (cerca de 16% maior), aproximando o corpo desenhado da hurtbox existente. Alcance, dano, velocidades e tempos dos golpes permanecem configurados no motor.
 
 ### Controles provisórios
 
@@ -28,6 +32,22 @@ Pressione **Enter** ou clique no menu para abrir a cena de luta. Na cena, **Esc*
 - `1+3` e `2+4` iniciam agarrões; segure `F` para lançar à frente ou `B` para lançar para trás (sem direção, lança à frente), e quebre com a combinação oposta em até 6 frames. `F,N,DF+2` executa o especial de teste; pressionar `2` até um frame após `DF` ativa a variante precisa. O jab pode cancelar para o soco ascendente ou o especial depois de acertar.
 
 O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas sem variante cadastrada são ignoradas. O parry é testável contra o golpe elegível `test-jab`: pressione `B` no frame do contato para atordoar o atacante por 18 frames; fora da janela, o ataque resolve normalmente.
+
+### Treino inicial
+
+| Tecla | Ação |
+| --- | --- |
+| `T` no menu | Abrir treino com cronômetro livre e distância curta |
+| `P` | Pausar/retomar lógica e animações |
+| `.` | Avançar exatamente um frame enquanto pausado |
+| `F2` | Reiniciar vida, posições, comandos e histórico |
+| `G` | Alternar adversário manual, guarda alta, guarda baixa e repetição de soco `2` |
+| `H` | Mostrar/ocultar hitboxes, hurtboxes e pivô dos pés |
+| `I` | Mostrar/ocultar painéis de entrada |
+
+O treino mostra preparo/atividade/recuperação, distância, stun e vantagem **do atacante**: positivo favorece quem atacou. Contatos reais podem indicar punição de bloqueio, punição de erro ou contra-ataque; o rótulo não acrescenta dano. O treino usa os mesmos dados e regras da partida e não encerra rounds por tempo ou vida zero. `F2` restaura a vida; ainda não há gravação livre de sequências ou recuperação automática.
+
+Loops, reações e golpes seguem frames da simulação. O atlas ainda contém poses aproximadas e reutilizações declaradas em `provisionalMoves`; a cobertura de todos os golpes não significa animação final aprovada. Processo e matriz de revisão: [`docs/animacao.md`](./docs/animacao.md).
 
 ## Comandos
 
@@ -53,10 +73,16 @@ src/
   input/              # teclado, buffer e entradas abstratas
   rendering/          # representação Phaser separada da lógica
     animations/       # associação de estados de combate às animações Phaser
+    stages/           # catálogo de cenários, camadas e câmera com parallax
   scenes/             # classes Phaser de menu e luta
+  training/           # comportamentos de treino que produzem entradas normais
   tests/              # testes da lógica pura
   ui/                 # HUD e interface
   main.ts             # configuração e inicialização do Phaser
 ```
 
-A lógica de combate será implementada separada das cenas e da renderização, seguindo a arquitetura e o plano de fases de `base.md`.
+A lógica de combate permanece separada das cenas e da renderização, seguindo a arquitetura e o plano de fases de `base.md`.
+
+## Estado e próximos passos
+
+A pipeline atual preserva a fundação existente e prioriza animação coerente e punições, seguidas de combos/recuperação e fluxo de jogo. Consulte [`pipeline.md`](./pipeline.md) para dependências e critérios de saída e [`docs/revisao-2026-10-20.md`](./docs/revisao-2026-10-20.md) para o registro desta entrega.
