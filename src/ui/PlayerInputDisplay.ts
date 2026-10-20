@@ -7,6 +7,7 @@ const ATTACK_BUTTONS = ['1', '2', '3', '4'] as const;
 
 /** Exibe direção, botões e sequência recente lidos do teclado. */
 export class PlayerInputDisplay {
+  private readonly root: Phaser.GameObjects.Container;
   private readonly directionKeys = new Map<string, Phaser.GameObjects.Text>();
   private readonly attackKeys = new Map<string, Phaser.GameObjects.Text>();
   private readonly history: Phaser.GameObjects.Text;
@@ -18,9 +19,9 @@ export class PlayerInputDisplay {
     title: string,
     accent: string,
   ) {
-    scene.add.rectangle(x + 100, y + 64, 200, 128, 0x17171d, 0.94)
+    const background = scene.add.rectangle(x + 100, y + 64, 200, 128, 0x17171d, 0.94)
       .setStrokeStyle(1, 0x57545e, 0.9);
-    scene.add.text(x + 10, y + 7, title, {
+    const heading = scene.add.text(x + 10, y + 7, title, {
       color: accent,
       fontSize: '13px',
       fontStyle: 'bold',
@@ -58,6 +59,9 @@ export class PlayerInputDisplay {
       fixedWidth: 180,
       maxLines: 1,
     });
+    this.root = scene.add.container(0, 0, [
+      background, heading, ...this.directionKeys.values(), ...this.attackKeys.values(), this.history,
+    ]).setScrollFactor(0).setDepth(100);
   }
 
   update(input: FrameInput, recentInputs: readonly FrameInput[]): void {
@@ -85,9 +89,13 @@ export class PlayerInputDisplay {
   }
 
   destroy(): void {
-    this.directionKeys.forEach((key) => key.destroy());
-    this.attackKeys.forEach((key) => key.destroy());
-    this.history.destroy();
+    this.root.destroy(true);
+    this.directionKeys.clear();
+    this.attackKeys.clear();
+  }
+
+  setVisible(visible: boolean): void {
+    this.root.setVisible(visible);
   }
 }
 

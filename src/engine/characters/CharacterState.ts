@@ -50,6 +50,8 @@ export interface CharacterState {
   health: number;
   maxHealth: number;
   mode: CharacterMode;
+  /** Frame lógico de entrada no estado atual; permite apresentação e inspeção determinísticas. */
+  stateStartedFrame: number;
   remainingStateFrames: number;
   verticalVelocity: number;
   grounded: boolean;

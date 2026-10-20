@@ -39,10 +39,13 @@ Um jogo de luta 2D de ritmo clássico, apresentado com ilustração de alta defi
 - Evitar movimento contínuo sem acentos. Pausas curtas ajudam o jogador a ler a decisão, o contato e a recuperação.
 - Espelhar horizontalmente a animação quando apropriado. Desenhar a pose base voltada para a direita e verificar que acessórios, letras e assimetrias não ficam invertidos de forma incorreta.
 - Separar os clipes por personagem e por ação. Golpes devem ter poses/trechos correspondentes a preparação, frames ativos e recuperação; estados sem arte podem continuar usando o placeholder.
+- Distribuir o tempo entre as poses com holds, antecipações e retornos próprios. Loops, reações e trajetórias aéreas devem seguir o frame lógico, para que a pose permaneça estável durante pausa e avanço de um frame.
+- Tratar o fallback como material provisório declarado, sem apresentar uma pose de parado como se fosse a animação de um golpe. A matriz de produção e o processo de aprovação por ação estão em `docs/animacao.md`.
 
 ## Cenários e composição
 
 - Usar arenas 2D com profundidade sugerida por planos, perspectiva, escala e iluminação, sem criar um plano de movimento lateral.
+- Dar prioridade visual aos lutadores: conferir altura aparente e volume de caixas, portas e outras referências de tamanho. Ajustes de props preservam seu apoio e não mudam o enquadramento ou o collider do personagem por acidente.
 - Criar cenários estilizados com arquitetura e objetos de formas reconhecíveis, atmosfera forte e detalhes que não se confundam com os lutadores.
 - Manter a faixa de luta limpa: nenhum objeto importante deve cobrir corpos, pés ou efeitos de contato.
 - Organizar elementos em primeiro plano, plano de luta e fundo. O primeiro plano deve ser discreto; o fundo pode ter movimento lento, desde que não concorra com a ação.
@@ -93,6 +96,10 @@ Antes de aprovar qualquer recurso visual, verificar:
 - Realismo fotográfico, materiais uniformemente brilhantes ou excesso de textura que apague o desenho.
 - Animações que escondam antecipação, contato, recuperação ou estado do oponente.
 - Cenários, interface e efeitos mais chamativos do que os personagens durante a luta.
+
+## Material provisório existente
+
+O atlas do Tester e o Cais permitem desenvolver a apresentação e revisar movimentos. O Cais atual usa pixel art; essa base não muda a direção final de ilustração em alta definição. A harmonização de cenário, personagens e efeitos, a revisão de proporções e a substituição das aproximações de animação são entregas da pipeline. Não tratar o material provisório como identidade final aprovada.
 
 ## Regra de precedência
 

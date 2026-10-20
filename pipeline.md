@@ -1,16 +1,41 @@
-# Pipeline de desenvolvimento — Close Combat
+# Close Combat — Pipeline de implementação
 
-> **Documento de execução:** este roteiro transforma o plano de [`base.md`](./base.md) em etapas de implementação verificáveis. `base.md` continua sendo a fonte de verdade para visão, regras e decisões do jogo; este arquivo organiza a ordem do trabalho e seu estado.
->
-> **Status:** Etapas 1 e 2 concluídas; primeiros quatro pontos da Etapa 3 concluídos. A fundação inclui agarrões quebráveis, comandos especiais, cancelamentos após acerto, execução precisa configurada e vantagem de frames, além dos sistemas locais anteriores.
+> **Raiz:** [`base.md`](./base.md), versão 0.2.0.
+> **Revisão:** 20/10/2026.
+> **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
+> **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos, quedas/levantadas e balanceamento continuam pendentes.
 
-## Como usar este pipeline
+## Como usar
 
-- Trabalhar na ordem das etapas e concluir os critérios de saída antes de avançar.
-- Atualizar as caixas deste arquivo ao concluir trabalho; não marcar como concluído algo que ainda seja só visual ou um stub.
-- Registrar primeiro em `base.md` qualquer nova regra de combate, controle ou design. Depois implementar a regra e refletir aqui o trabalho necessário.
-- Manter regras temporais em frames de simulação e manter a simulação independente do Phaser.
-- Não escolher valores finais de balanceamento para preencher lacunas. Usar configuração provisória identificada como tal ou deixar a decisão em aberto em `base.md`.
+- As Etapas 0–2 preservam o trabalho concluído da pipeline anterior; não devem ser refeitas.
+- A ordem atual é **Etapa 3 → Etapa 4 → Etapa 5 → Etapa 6 → Etapa 7**. Os primeiros instrumentos da Etapa 4 podem apoiar a revisão visual da Etapa 3.
+- Cada checkbox significa implementação concreta. Cobertura automatizada, revisão visual e balanceamento são critérios separados; um build não aprova animação nem justiça de colisão.
+- Registrar regras em `base.md` antes de codificar, usar dados por personagem e manter combate a 60 Hz independente do Phaser.
+- Os números atuais dos golpes são provisórios. Não copiar números de outro jogo nem alterar todos os startups para encobrir problema de animação ou entrada.
+- Não marcar um sistema inteiro como pronto por existir um clipe ou um rótulo. Registrar limitações e próxima entrega.
+
+## Referências e decisões
+
+| Referência de pesquisa | Aplicação em Close Combat | Limite desta revisão |
+| --- | --- | --- |
+| Apresentação de The King of Fighters 2000/2002 | Cadência de poses desenhadas, silhueta, continuidade entre estados, espelhamento, reações legíveis e cenários em planos | Arte própria; o atlas atual é material provisório de desenvolvimento |
+| Combate técnico de Tekken 7 | Quatro botões por membro, altos/médios/baixos, risco/retorno, vantagem, punição de bloqueio e erro, treino mensurável | Espaço horizontal 2D e regras já acordadas de guarda e movimento |
+| Projeto atual | Parser, golpes locais por personagem, colisões próprias, parry, agarrões e execução precisa | Preservar comportamento existente ao consolidar a apresentação |
+
+As fontes oficiais confirmam que as referências possuem sistemas diferentes: [KOF 2000](https://www.snk-corp.co.jp/kof30th/en/materials/kof00/index.html) destaca assistentes ativos, e o [sistema de KOF 2002](https://www.snk-corp.co.jp/official/kof2002/english/e_kof2002_system.html) descreve times e diferentes saltos. São opções de pesquisa para outra etapa. Times, assistentes, múltiplos saltos, esquivas e barras precisam de decisões próprias antes de entrar no escopo.
+
+O [treino e a exibição de frames de Tekken 7](https://en.bandainamcoent.eu/tekken/news/tekken-7s-season-3-winter-updates) orientam os instrumentos de aprendizado. As [notas oficiais de ajuste 4.10](https://media-center.bandainamcoent.eu/games/tekken/tekken-7/t7_S4_410_Adjustmentlist.pdf) também relacionam punição à recuperação e à distância no bloqueio. Em Close Combat, recomendações precisam considerar a geometria e o parser locais; um número negativo sozinho não prova uma punição.
+
+Os guias de produção de arte usam linguagem descritiva própria em [`identidade-visual.md`](./identidade-visual.md) e [`docs/animacao.md`](./docs/animacao.md). As referências acima orientam estrutura e leitura; não definem uma nova lista global de golpes.
+
+## Entrega iniciada nesta revisão
+
+- [x] Reduzir as cargas do Cais em 24%, ancorando sua base e mantendo chão/cargas no mesmo parallax.
+- [x] Ajustar a célula visual do Tester de 220 para 256, alinhando melhor a silhueta às hurtboxes existentes, sem mudar regras de combate.
+- [x] Reproduzir loops, reações e fases de ataque pelo relógio lógico; acrescentar holds por pose e poses aéreas vinculadas à trajetória.
+- [x] Corrigir o sinal da vantagem e identificar punições/contra-ataques a partir de contatos reais.
+- [x] Acrescentar treino com pausa, passo único, reset, geometria e opções simples do adversário.
+- [ ] Concluir os critérios de saída das Etapas 3 e 4; esses instrumentos ainda não equivalem a animação final, treino completo ou balanceamento aprovado.
 
 ## Etapa 0 — Preparar e manter o projeto
 
@@ -27,7 +52,7 @@
 
 ## Etapa 1 — Fundação jogável
 
-**Base:** `base.md` §§2, 5, 6, 17 e Fase 1 de §19.
+**Base:** `base.md` §§2, 5, 6, 17 e marco M1 de §19.
 
 ### 1.1 Simulação em passo fixo
 
@@ -60,7 +85,7 @@
 
 ## Etapa 2 — Núcleo de luta
 
-**Base:** `base.md` §§7–11, 15, 17–18 e Fase 2 de §19.
+**Base:** `base.md` §§7–11, 15, 17–18 e marco M2 de §19.
 
 ### 2.1 Parser e dados
 
@@ -101,65 +126,135 @@
 
 **Saída da etapa:** uma luta local pequena com ataques e defesa pode ser reproduzida e testada sem abrir o navegador.
 
-## Etapa 3 — Sistemas técnicos
+## Etapa 2.4 — Sistemas técnicos já existentes
 
-**Base:** `base.md` §§8–14, 17–18 e Fase 3 de §19.
+Preservados da antiga Etapa 3:
 
-- [x] Expor vantagem de frames em acerto e bloqueio usando a convenção definida em `base.md`.
-- [x] Implementar agarrões, alcance e quebra de agarrão.
-- [x] Permitir escolher arremesso à frente/atrás pela direção mantida e validar a troca de lado.
-- [x] Completar comandos diagonais, especiais e regras de cancelamento.
-- [x] Implementar janelas de execução precisa e casos-limite de frame.
-- [x] Implementar parry para golpes elegíveis: sucesso atordoa o atacante por 18 frames; erro deixa o ataque resolver normalmente.
-- [x] Definir e testar troca de golpes, invulnerabilidade e prioridades.
-- [x] Separar livros de golpes e perfis de hitbox/hurtbox por personagem, incluindo hurtbox aérea.
-- [ ] Implementar combos com limites e recuperação sem estados travados ou loops.
-- [ ] Testar alcance e punição considerando distância e pushback.
+- [x] Agarrões com alcance, quebra e arremesso à frente/atrás.
+- [x] Comandos diagonais, especiais e cancelamentos permitidos por golpe.
+- [x] Execução precisa e parry elegível com atordoamento de 18 frames.
+- [x] Trocas de golpes e invulnerabilidade declarada por golpe.
+- [x] Livros de golpes e perfis de body/hurtbox separados por personagem.
+- [x] Eventos de contato com recuperação restante, stun e vantagem; convenção de sinal corrigida nesta revisão.
 
-**Saída da etapa:** os sistemas técnicos definidos para o protótipo funcionam em conjunto e têm regras e testes representativos.
+## Etapa 3 — Coerência de animação e escala
 
-## Etapa 4 — Identidade, interface e feedback
+**Base:** §§1, 6, 7, 16–17; [`docs/animacao.md`](./docs/animacao.md). **Marco M3.**
 
-**Base:** `base.md` §§1, 4, 16, 19 e princípios de §21.
+### 3.1 Contrato e reprodução
 
-- [x] Definir direção visual em `base.md` e criar diretórios para animações, sprites, cenários e cenas Phaser.
-- [x] Criar manifesto-modelo e mapeamento de chaves de animação para Tester, prontos para receber uma spritesheet.
-- [x] Integrar o atlas do Tester enviado, mapear faixas de movimento e golpes, e remover o personagem e os assets experimentais de Guilty Gear.
-- [x] Corrigir direção por clipe, conectar todos os chutes do Tester, alinhar loops e sincronizar poses de ataque às fases da simulação.
-- [x] Espelhar a caminhada no recuo; ativar guarda em `B`/`DB` durante golpes adversários a qualquer distância; imobilizar guarda/agachamento e aplicar pequeno empurrão apenas no contato bloqueado.
-- [x] Substituir a reação de bloqueio por poses de guarda e corrigir o espelhamento horizontal do pulo.
-- [x] Usar reação curta em pé no hitstun comum, removendo a sequência de cambalhota desse estado.
-- [ ] Criar seleção de personagens e paletas de botões com número/sigla além da cor.
-- [ ] Substituir os retângulos provisórios por arte original e animações.
-- [ ] Adicionar efeitos e áudio originais para acerto, defesa, parry e execução precisa.
-- [ ] Implementar HUD final e feedback acessível, sem ocultar informação importante apenas por cor.
-- [ ] Criar ferramentas de treino: frames, vantagem, hitboxes/hurtboxes, reinício e histórico de entradas.
-- [ ] Implementar um especial cinematográfico interativo somente depois de suas regras serem definidas em `base.md`.
+- [x] Atlas do Tester integrado com 399 quadros, faixas de origem e mapeamento dos golpes/chutes.
+- [x] Direção original por clipe, recuo com caminhada espelhada e pulo voltado para o lado correto.
+- [x] Guarda, reação ao bloqueio e hitstun em pé sem reutilizar a cambalhota da queda.
+- [x] Frame de entrada do estado, reprodução em tempo lógico e holds de duração variável por pose.
+- [x] Startup/atividade/recuperação amostrados dentro da duração real do golpe.
+- [x] Subida/ápice/descida selecionados pela velocidade vertical; sem clipe de salto terminando no meio da trajetória.
+- [x] Validação de quadros, repetições, holds, escala e mapeamento antes da partida.
+- [ ] Verificar equivalência de poses com diferentes FPS de renderização e após pausa/reinício em cobertura automatizada.
 
-**Saída da etapa:** uma partida completa demonstra a identidade visual e os sistemas escolhidos, com feedback legível e controles acessíveis.
+### 3.2 Produção e transições
 
-## Etapa 5 — Publicação web
+- [x] Matriz de ações e política de fallback/provisoriedade documentadas.
+- [ ] Auditar os 26 golpes do Tester, nas três fases, nos dois lados, com contato/erro/bloqueio e câmera em movimento.
+- [ ] Produzir arte própria para entrada/saída de agachamento, preparação/aterrissagem do salto e retorno de recuperação à guarda.
+- [ ] Criar reações distintas por altura e intensidade, preservando a guarda baixa e os pés.
+- [ ] Reavaliar captura, queda e recuperação do agarrão; não usar poses de giro no acerto comum.
+- [ ] Introduzir hitstop configurável por contato após definir duração, timer, comandos e congelamento de ambos em `base.md`.
+- [ ] Revisar pivôs, escala, mãos/pés, alcance aparente e sobreposição com adversário em cada quadro.
 
-**Base:** `base.md` §§2.1, 2.4, 18–19.
+### 3.3 Composição e cenário
 
-- [ ] Completar README com instalação, controles, comandos e limitações conhecidas.
-- [ ] Configurar automação de build e testes no GitHub.
-- [ ] Criar e validar build estático para hospedagem web, por exemplo GitHub Pages.
-- [ ] Fazer uma verificação de instalação limpa seguindo apenas a documentação.
-- [ ] Publicar versão web e releases versionados quando aprovados.
-- [ ] Avaliar PWA/offline como etapa própria; testar o comportamento em vez de presumir suporte.
-- [ ] Avaliar desktop nativo somente se surgir necessidade real.
+- [x] Catálogo automático de cenários e quantidade livre de camadas; primeiro Cais com fundo, chão e cargas.
+- [x] Transparência, proporções uniformes, escala de conteúdo ancorada e parallax compartilhado; interface fixa.
+- [x] Encerramento tolerante ao ciclo da câmera Phaser; retorno entre treino, menu e partida sem a falha de câmera encerrada.
+- [ ] Revisar bordas da câmera, legibilidade dos lutadores e consistência de perspectiva em todos os cenários futuros.
+- [ ] Definir contraste final e identidade comum entre ilustração de personagem e cenário provisório em pixel art.
 
-**Saída da etapa:** uma pessoa que não desenvolveu o projeto consegue abrir a demo ou seguir as instruções sem passos não documentados.
+**Saída:** cada ação principal é identificável em ambos os lados; pés e volume são estáveis; golpes mostram preparo, contato e recuperação nos frames corretos; não há mudança de personagem, inversão indevida, queda na defesa ou salto preso no último quadro.
 
-## Fora do primeiro protótipo
+## Etapa 4 — Punições, espaço e treino
 
-- Multijogador online, sincronização de rede e ranking.
-- IA completa, elenco ampliado e balanceamento final.
-- PWA/offline e empacotamento desktop.
+**Base:** §§7–9, 12–16. **Marco M4.**
 
-Só trazer esses itens para o escopo ativo quando a fundação local estiver estável e a decisão estiver registrada em `base.md`.
+### 4.1 Instrumentos iniciais
 
-## Próximo bloco de trabalho
+- [x] Vantagem do atacante = stun do defensor menos recuperação restante; positivo favorece quem atacou.
+- [x] Registrar contatos recentes para não perder feedback quando um render avança vários frames lógicos.
+- [x] Marcar acerto real em recuperação após bloqueio, recuperação de erro e interrupção de preparo/atividade.
+- [x] Treino no menu, cronômetro livre, distância inicial curta e reinício de vida/posições/comandos.
+- [x] Pausar e avançar exatamente um frame pelo mesmo caminho da simulação.
+- [x] Mostrar fases de golpe, geometria real, distância, recuperação, stun, vantagem e entradas.
+- [x] Adversário manual, guarda alta, guarda baixa e repetição de soco por entrada real.
 
-Continuar a Etapa 3 implementando combos com limites e recuperação conforme `base.md`.
+### 4.2 Janela de ação e punição garantida
+
+- [ ] Auditar o primeiro frame em que cada lado pode agir após contato, com o frame de impacto excluído das duas contagens.
+- [ ] Separar janela de chord, buffer de ataque durante stun e leniência direcional; preservar execução precisa.
+- [ ] Definir buffer ao sair de stun/recuperação, incluindo expiração, prioridade e trocas de lado, antes de implementá-lo.
+- [ ] Classificar opções de punição por livro do personagem, estado e alcance após pushback; incluir baixos, guarda alta e invulnerabilidade.
+- [ ] Reproduzir punição no limite, resposta um frame atrasada e golpe que cabe na janela mas não alcança.
+- [ ] Diferenciar dado teórico, janela disponível e punição confirmada. Não exibir “garantido” sem simulação válida do caso.
+
+### 4.3 Treino completo
+
+- [ ] Gravar/reproduzir sequências de entradas com direção relativa e reset de cenário.
+- [ ] Adversário que bloqueia e responde no primeiro frame legal, com respostas escolhidas por personagem.
+- [ ] Exercícios guiados de bloqueio, punição de erro, alcance, contra-ataque e quebra de agarrão.
+- [ ] Oferecer recuperação de vida configurável e reinício em posições central/esquerda/direita sem vazamento de comandos.
+- [ ] Exportar relatório reproduzível de exercício com versão dos dados e sequência de entradas.
+
+**Saída:** é possível explicar uma punição por tempo, estado e distância; o mesmo exercício reproduz o contato ou a falha sem depender do FPS. O treino não altera as regras da partida.
+
+## Etapa 5 — Combos, quedas e recuperação
+
+**Base:** §§7, 9, 13–15. **Marco M5. Dependência:** Etapas 3 e 4 estáveis.
+
+- [ ] Documentar strings por personagem, janelas de continuação, confirmação de acerto e interrupção por defesa.
+- [ ] Definir launcher, juggle, gravidade, limite de contatos, deterioração de dano e encerramento de combo; sem adotar valores finais por suposição.
+- [ ] Separar hitstun em pé, no ar, queda e levantada; definir colisão e vulnerabilidade de cada estado.
+- [ ] Definir recuperação no chão, opções defensivas e interação com paredes antes de acrescentar golpes que dependam delas.
+- [ ] Sincronizar clipes próprios com cada estado; manter animador sem autoridade sobre dano/colisão.
+- [ ] Verificar que cancelamentos, agarrões, esquinas e hits simultâneos não criam loops infinitos ou estados travados.
+
+**Saída:** uma rota curta por personagem funciona e tem fim; o defensor recupera controle conforme a regra; erro e bloqueio interrompem a rota nos pontos previstos.
+
+## Etapa 6 — Conteúdo, fluxo e feedback
+
+**Base:** §§1, 4–5, 16. **Marco M6.**
+
+- [ ] Seleção real dos dois personagens e de cenário; carregar apenas os assets disponíveis de cada escolha.
+- [ ] Segundo personagem com arte e livro próprios; evitar espelhar o mesmo kit para simular variedade.
+- [ ] Entrada de round, anúncio, resultado e revanche; definir claramente rounds disputados ou necessários para vencer.
+- [ ] Gamepad/remapeamento; números/siglas e paletas com contraste, sem depender apenas de cor.
+- [ ] HUD final, impactos, áudio, volume, redução de flashes/tremor e informação de treino alternável.
+- [ ] Ensaio completo: menu → seleção → luta → resultado → revanche/menu, sem listeners duplicados.
+- [ ] Avaliar especial cinematográfico somente após especificar suas regras e acessibilidade; fora do caminho crítico de punição/animação.
+
+**Saída:** uma pessoa consegue iniciar, entender e terminar a luta, identificar ações e retornar ao menu com controles legíveis.
+
+## Etapa 7 — Qualidade e publicação web
+
+**Base:** §§2, 18, 21. **Marco M7.**
+
+- [ ] Executar a matriz de regressão de animação, input, contato, punição, queda e round quando for solicitado validar a implementação.
+- [ ] Confirmar instalação limpa, README e comandos em ambiente sem caches locais.
+- [ ] Configurar build e testes no GitHub, depois revisar orçamento de textura, download e desempenho.
+- [ ] Publicar demo e releases versionados após aprovação de publicação.
+- [ ] Avaliar PWA/offline, desktop, IA ampliada e online como entregas independentes.
+
+**Saída:** build estático reproduzível, uso de memória/desempenho conhecido, assets de distribuição revisados e fluxo completo validado.
+
+## Registro de verificação desta revisão
+
+- Compilação TypeScript e build web realizados durante a implementação.
+- Inspeção no navegador: composição do Cais, salto, pausa, passo único, reset, guarda, repetição do adversário, alternância dos painéis e retorno entre cenas. Casos e limites em [`docs/revisao-2026-10-20.md`](./docs/revisao-2026-10-20.md).
+- Suíte automatizada não executada nesta revisão. As expectativas existentes de sinal da vantagem foram ajustadas à fórmula corrigida; novos casos permanecem nos critérios de saída.
+
+## Próximo bloco concreto
+
+1. Fechar a auditoria de ações do Tester usando o treino e a matriz de `docs/animacao.md`, sobretudo aterrissagem, agarrão e recuperação.
+2. Especificar o buffer de resposta ao sair do stun; a janela atual de chords não equivale a buffer de punição.
+3. Criar o primeiro exercício reproduzível de bloqueio e resposta, com variante que falha por alcance.
+4. Só então avançar para strings, combo aéreo e queda/levantada.
+
+Online, ranking, times, assistentes, medidores e novas modalidades de salto continuam fora da entrega atual.

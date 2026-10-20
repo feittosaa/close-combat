@@ -1,18 +1,11 @@
 // src/ui/CombatHud.ts
 import Phaser from 'phaser';
-import type { CharacterMode } from '../engine/characters/CharacterState';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
-
-const MODE_LABELS: Record<CharacterMode, string> = {
-  neutral: 'NEUTRO', moving: 'MOVIMENTO', dashing: 'DASH', airborne: 'NO AR',
-  crouching: 'AGACHADO', startup: 'PREPARO', active: 'ATIVO', recovery: 'RECUPERAÇÃO',
-  blocking: 'DEFESA', hitstun: 'ATORDOADO', blockstun: 'BLOQUEIO', grabbed: 'AGARRADO',
-  throwRecovery: 'RECUPERAÇÃO DO AGARRÃO',
-  knockdown: 'CAÍDO',
-};
+import { contactLabel, MODE_LABELS } from './combatLabels';
 
 /** HUD provisório, atualizado exclusivamente a partir de um snapshot da simulação. */
 export class CombatHud {
+  private readonly root: Phaser.GameObjects.Container;
   private readonly labels: Phaser.GameObjects.Text[];
   private readonly healthGraphics: Phaser.GameObjects.Graphics;
   private readonly timer: Phaser.GameObjects.Text;
@@ -26,7 +19,7 @@ export class CombatHud {
   private readonly barHeight = 22;
   private readonly sidePadding = 28;
 
-  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string, string] = ['JOGADOR 1', 'JOGADOR 2']) {
+  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string, string] = ['JOGADOR 1', 'JOGADOR 2'], stageName = '', private readonly training = false) {
     this.labels = [
       scene.add.text(this.sidePadding, 18, `P1 · ${fighterNames[0].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }),
       scene.add.text(width - this.sidePadding, 18, `P2 · ${fighterNames[1].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }).setOrigin(1, 0),
@@ -55,12 +48,19 @@ export class CombatHud {
       fontSize: '14px',
       fontStyle: 'bold',
     }).setOrigin(0.5, 0);
+    const stageLabel = scene.add.text(width / 2, 72, stageName.toUpperCase(), {
+      color: '#f4f0e8', fontSize: '11px',
+    }).setOrigin(0.5, 0);
+    this.root = scene.add.container(0, 0, [
+      ...this.labels, this.healthGraphics, ...this.modeLabels, this.timer,
+      this.roundLabel, stageLabel, this.hitLabel, this.resultLabel,
+    ]).setScrollFactor(0).setDepth(100);
     this.updateBars([], width);
   }
 
   update(snapshot: SimulationSnapshot, width: number): void {
-    this.timer.setText(String(Math.ceil(snapshot.roundFramesRemaining / 60)).padStart(2, '0'));
-    this.roundLabel.setText(`ROUND ${snapshot.round}`);
+    this.timer.setText(this.training ? '∞' : String(Math.ceil(snapshot.roundFramesRemaining / 60)).padStart(2, '0'));
+    this.roundLabel.setText(this.training ? 'TREINO LIVRE' : `ROUND ${snapshot.round}`);
     const winnerIndex = snapshot.characters.findIndex(({ characterId }) => characterId === snapshot.roundWinnerId);
     const matchWinnerIndex = snapshot.characters.findIndex(({ characterId }) => characterId === snapshot.matchWinnerId);
     if (snapshot.phase === 'match-over') {
@@ -71,22 +71,14 @@ export class CombatHud {
     } else {
       this.resultLabel.setText('');
     }
-    const hit = snapshot.hitEvents[0];
+    const latest = snapshot.recentContacts[snapshot.recentContacts.length - 1];
     if (snapshot.frame < this.lastImpactFrame) {
       this.lastImpactLabel = '';
       this.lastImpactFrame = Number.NEGATIVE_INFINITY;
     }
-    if (hit) {
-      if (hit.outcome === 'throw-start') {
-        const breakButtons = hit.breakButtons?.join('+') ?? '—';
-        this.lastImpactLabel = `AGARRÃO · QUEBRA ${breakButtons}`;
-      }
-      else if (hit.outcome === 'throw-break') this.lastImpactLabel = 'AGARRÃO QUEBRADO';
-      else {
-        const result = hit.outcome === 'parry' ? `PARRY · ATACANTE ATORDOADO ${hit.attackerStunFrames}F` : hit.outcome === 'block' ? 'BLOCK' : hit.outcome === 'throw' ? `AGARRÃO · -${hit.damage}` : `HIT · -${hit.damage}`;
-        this.lastImpactLabel = hit.outcome === 'parry' ? result : `${result} · ADV ${hit.frameAdvantage! > 0 ? '+' : ''}${hit.frameAdvantage ?? 0}F`;
-      }
-      this.lastImpactFrame = snapshot.frame;
+    if (latest && latest.frame > this.lastImpactFrame) {
+      this.lastImpactLabel = contactLabel(latest.event);
+      this.lastImpactFrame = latest.frame;
     }
     this.hitLabel.setText(snapshot.frame - this.lastImpactFrame <= 90 ? this.lastImpactLabel : '');
     snapshot.characters.forEach((character, index) => {
@@ -98,13 +90,7 @@ export class CombatHud {
   }
 
   destroy(): void {
-    this.labels.forEach((label) => label.destroy());
-    this.modeLabels.forEach((label) => label.destroy());
-    this.healthGraphics.destroy();
-    this.timer.destroy();
-    this.roundLabel.destroy();
-    this.hitLabel.destroy();
-    this.resultLabel.destroy();
+    this.root.destroy(true);
   }
 
   private updateBars(

@@ -17,3 +17,13 @@ O hitstun normal usa a reação em pé 144–145–144, sem repetir. Os quadros 
 `moveClips` liga todos os chutes cadastrados às fases correspondentes: leve, forte, rasteira/agachado e aéreo. As poses de startup, ativo e recuperação são distribuídas pela duração real da fase no livro de golpes do Tester. A cadência visual não altera dano, hitboxes ou tempos da simulação.
 
 Avanço e recuo usam o mesmo clipe `tester-walk`: a direção de locomoção espelha o desenho no recuo sem trocar a orientação lógica do combate. Guarda usa seu clipe apenas com `B`/`DB` durante um ataque do adversário, mesmo fora de alcance; defesa baixa mantém a pose agachada. Defesa e agachamento ficam imóveis, salvo deslocamento por contato de ataque.
+
+## Revisão de 20/10/2026
+
+`displaySize` agora usa 256×256 no mundo (antes 220×220). Com as margens do atlas, a pose de idle ocupa cerca de 153 unidades de altura, próxima da hurtbox em pé de 152. O pivô permanece nos pés; a alteração é visual e não muda os dados de combate.
+
+Todos os 26 golpes têm associação explícita às três fases. `provisionalMoves` registra variações que reutilizam poses aproximadas: chords/direcionais, captura, socos agachados/aéreos e soco ascendente. Isso corrige o fallback silencioso em idle, mas ainda exige revisão e autoria específica.
+
+A captura reutiliza alcance das mãos em 12–16 e recuperação 16–17–12; socos agachados usam 306–307/313–314 e aéreos usam 17–20. A vítima e seu reposicionamento continuam sob controle do motor. Não considerar essa sincronia final de arremesso.
+
+Holds por pose e todas as reações seguem o relógio lógico. Subida, ápice e descida usam poses selecionadas pela velocidade vertical. Processo, limitações e aprovação por ação estão em [`docs/animacao.md`](../../../../../docs/animacao.md).

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { getCharacterAnimationKey } from './animations/CharacterAnimationMap';
 import { getCharacterById } from '../engine/data/characters';
-import { getAttackAnimationFrame, shouldFlipAnimation } from './animations/AnimationPlayback';
+import { getAttackAnimationFrame, getStateAnimationFrame, shouldFlipAnimation } from './animations/AnimationPlayback';
 import type { AnimationClip, CharacterAnimationManifest } from './animations/AnimationPlayback';
 
 /** Visual do lutador; a simulação continua sendo a autoridade sobre o combate. */
@@ -11,27 +11,26 @@ export class CombatantView {
   private readonly placeholder?: Phaser.GameObjects.Rectangle;
   private readonly color: number;
   private readonly clips: ReadonlyMap<string, AnimationClip>;
-  private currentAnimationKey?: string;
+  private readonly moveClips?: Readonly<Record<string, string>>;
 
   constructor(scene: Phaser.Scene, x: number, y: number, color: number, textureKey: string, manifest?: CharacterAnimationManifest) {
     this.color = color;
     this.clips = new Map(manifest?.clips.map((clip) => [clip.key, clip]));
+    this.moveClips = manifest?.moveClips;
     if (scene.textures.exists(textureKey)) {
       this.sprite = scene.add.sprite(x, y, textureKey).setOrigin(0.5, 1);
-      // The normalized atlas keeps transparent margins in 256px cells; this size
-      // makes the character silhouette match the prototype hurtbox height.
-      this.sprite.setDisplaySize(220, 220);
+      // Keep the source aspect ratio and foot pivot; presentation size belongs to the manifest.
+      const displaySize = manifest?.displaySize ?? manifest?.frameSize ?? { width: 220, height: 220 };
+      this.sprite.setDisplaySize(displaySize.width, displaySize.height);
     } else {
       this.placeholder = scene.add.rectangle(x, y, 54, 152, color).setOrigin(0.5, 1);
     }
   }
 
-  sync(state: CharacterState): void {
-    const facingSign = state.facing === 'right' ? 1 : -1;
-    const lunge = state.mode === 'dashing' ? 5 * facingSign : state.mode === 'active' ? 7 * facingSign : 0;
-    const x = state.x + lunge;
+  sync(state: CharacterState, simulationFrame: number): void {
+    const x = state.x;
     if (this.sprite) {
-      this.syncSprite(state, x);
+      this.syncSprite(state, x, simulationFrame);
       return;
     }
 
@@ -71,25 +70,19 @@ export class CombatantView {
     }
   }
 
-  private syncSprite(state: CharacterState, x: number): void {
+  private syncSprite(state: CharacterState, x: number, simulationFrame: number): void {
     const sprite = this.sprite;
     if (!sprite) return;
     sprite.setPosition(x, state.y);
-    const desiredKey = getCharacterAnimationKey(state);
-    const animationKey = sprite.scene.anims.exists(desiredKey) ? desiredKey : `${state.fighterId}-idle`;
+    const desiredKey = getCharacterAnimationKey(state, this.moveClips);
+    const animationKey = this.clips.has(desiredKey) ? desiredKey : `${state.fighterId}-idle`;
     const clip = this.clips.get(animationKey);
     const walkingBackward = (state.mode === 'moving' || state.mode === 'dashing') && state.movementDirection === 'backward';
     sprite.setFlipX(shouldFlipAnimation(state.facing, clip, walkingBackward));
 
     const move = state.attack ? getCharacterById(state.fighterId)?.moves.find(({ id }) => id === state.attack?.moveId) : undefined;
     const attackFrame = clip ? getAttackAnimationFrame(state, clip, move) : undefined;
-    if (attackFrame !== undefined) {
-      if (sprite.anims.isPlaying) sprite.anims.stop();
-      sprite.setFrame(attackFrame);
-    } else if (sprite.scene.anims.exists(animationKey) && this.currentAnimationKey !== animationKey) {
-      sprite.play(animationKey);
-    }
-    this.currentAnimationKey = animationKey;
+    if (clip) sprite.setFrame(attackFrame ?? getStateAnimationFrame(state, clip, simulationFrame));
 
     if (state.hitFlashFrames > 0) sprite.setTint(0xffffff);
     else if (state.mode === 'active') sprite.setTint(0xffd166);

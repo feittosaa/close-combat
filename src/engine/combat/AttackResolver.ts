@@ -2,8 +2,11 @@
 import type { CharacterState } from '../characters/CharacterState';
 import type { MoveDefinition } from '../data/moves';
 import { intersects } from '../collision/intersects';
-import type { Hitbox, Hurtbox } from '../collision/types';
+import type { Hitbox } from '../collision/types';
+import { createHitbox, createHurtbox } from '../collision/combatGeometry';
 import type { AttackButton, FrameInput } from '../../input/types';
+import { classifyHitContext, frameAdvantage } from './frameData';
+import type { HitContext } from './frameData';
 
 export interface HitEvent {
   attackerId: string;
@@ -18,6 +21,7 @@ export interface HitEvent {
   frameAdvantage?: number;
   breakButtons?: readonly AttackButton[];
   targetOffsetFromAttacker?: number;
+  context?: HitContext;
 }
 
 /** Resolve contatos da simulação e fornece a geometria exata para a visualização. */
@@ -74,7 +78,7 @@ export class AttackResolver {
         const targetInput = inputs[1 - attackerIndex];
         const parried = move.parryable === true && freshBack[1 - attackerIndex] === true;
         const blocked = !parried && target.mode === 'blocking' && canBlock(move.hitLevel, targetInput);
-        const defenderStunFrames = blocked ? move.blockstun : move.hitstun;
+        const defenderStunFrames = Math.max(target.remainingStateFrames, blocked ? move.blockstun : move.hitstun);
         const totalAttackFrames = move.startup + move.activeFrames + move.recovery;
         // The contact frame has already happened; count only future locked frames.
         const attackerRecoveryFrames = Math.max(0, totalAttackFrames - attack.elapsedFrames - 1);
@@ -89,7 +93,8 @@ export class AttackResolver {
             attackerRecoveryFrames: parried ? undefined : attackerRecoveryFrames,
             defenderStunFrames: parried ? undefined : defenderStunFrames,
             attackerStunFrames: parried ? PARRY_STUN_FRAMES : undefined,
-            frameAdvantage: parried ? undefined : attackerRecoveryFrames - defenderStunFrames,
+            frameAdvantage: parried ? undefined : frameAdvantage(attackerRecoveryFrames, defenderStunFrames),
+            context: !blocked && !parried ? classifyHitContext(target) : undefined,
           },
           attack,
           target,
@@ -208,7 +213,7 @@ export class AttackResolver {
           : move.throw.launchDistance.forward,
         attackerRecoveryFrames: move.recovery,
         defenderStunFrames: move.hitstun,
-        frameAdvantage: move.recovery - move.hitstun,
+        frameAdvantage: frameAdvantage(move.recovery, move.hitstun),
       });
     });
     return events;
@@ -253,32 +258,4 @@ function canBlock(hitLevel: MoveDefinition['hitLevel'], input: FrameInput | unde
 function isActive(character: CharacterState, move: MoveDefinition): boolean {
   const frame = character.attack?.elapsedFrames ?? -1;
   return frame >= move.startup && frame < move.startup + move.activeFrames;
-}
-
-function createHitbox(character: CharacterState, move: MoveDefinition): Hitbox {
-  const facingRight = character.facing === 'right';
-  return {
-    ownerId: character.characterId,
-    attackId: move.id,
-    x: facingRight
-      ? character.x + move.hitbox.forward
-      : character.x - move.hitbox.forward - move.hitbox.width,
-    y: character.y + move.hitbox.yOffset,
-    width: move.hitbox.width,
-    height: move.hitbox.height,
-  };
-}
-
-function createHurtbox(character: CharacterState): Hurtbox {
-  const profile = character.collision.hurtboxes;
-  const box = !character.grounded
-    ? profile.airborne
-    : character.crouching ? profile.crouching : profile.standing;
-  return {
-    ownerId: character.characterId,
-    x: character.x + box.offsetX - box.width / 2,
-    y: character.y + box.offsetY,
-    width: box.width,
-    height: box.height,
-  };
 }

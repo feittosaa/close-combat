@@ -1,9 +1,9 @@
 # Close Combat — Documento Principal de Design
 
-> **Status:** documento-base inicial  
-> **Versão:** 0.1.0  
-> **Idioma:** português (Brasil)  
-> **Título do jogo:** Close Combat  
+> **Status:** protótipo local; consolidação de animação e punições em andamento
+> **Versão:** 0.2.0 · revisão de 20/10/2026
+> **Idioma:** português (Brasil)
+> **Título do jogo:** Close Combat
 > **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
 
 ---
@@ -15,6 +15,12 @@ O projeto é um jogo de luta **100% 2D**, com partidas centradas em leitura do o
 A direção de arte deve seguir o guia autoral em [`identidade-visual.md`](./identidade-visual.md): ilustração 2D de alta definição, silhuetas marcantes, poses expressivas, animação desenhada em quadros e a leitura imediata de um jogo de luta clássico. Esse guia é a base visual para personagens, cenários, efeitos, interface e materiais promocionais.
 
 O combate é um jogo de luta técnico em plano 2D, com quatro botões de ataque, comandos simultâneos, agarrões, defesa, vantagem de frames, punições e golpes de execução precisa. Personagens, nomes, animações, trilha sonora, efeitos, interface e propriedades específicas devem ser originais.
+
+### Direção da revisão atual
+
+A apresentação busca a cadência de poses, leitura de silhueta, espelhamento e continuidade das animações de jogos arcade 2D do início dos anos 2000. O combate prioriza disputa de espaço, altos/médios/baixos, recuperação, punição de bloqueio e punição de golpes que erram, usando os quatro botões por membro já definidos. As referências de pesquisa e o plano executável estão em `pipeline.md`; os guias de arte usam descrições próprias.
+
+Preservar os comandos, a guarda parada durante ataques adversários, o agachamento imóvel e a caminhada espelhada no recuo já solicitados. Variações de salto, corrida, esquiva, times, assistentes, barras e sistemas de queda não entram automaticamente no jogo por causa das referências; precisam de regra própria antes da implementação. O alvo imediato é uma luta local **1 contra 1**, com um conjunto pequeno e consistente de ações.
 
 ### 1.1 Pilares de design
 
@@ -186,7 +192,7 @@ As cores acima são exemplos iniciais. Os nomes devem vir acompanhados de amostr
 
 **MVP obrigatório:** dois jogadores locais no mesmo computador (teclado e/ou controle, conforme suporte implementado) contra um adversário humano.
 
-**Depois do MVP:** modo individual contra IA simples, treino com reinício rápido e exibição de dados de combate. Multijogador online é uma etapa futura e não deve ser anunciado como funcional antes de existir sincronização e testes reais.
+**Ferramenta de desenvolvimento prioritária:** treino local com pausa, avanço de um frame, reinício rápido, dados de combate e adversário controlável. O treino usa as mesmas regras e livros de golpes da partida; não altera a vantagem para facilitar punições. Depois do MVP, avaliar IA de partida. Multijogador online é uma etapa futura e não deve ser anunciado como funcional antes de existir sincronização e testes reais.
 
 ### 5.3 Regras de vitória
 
@@ -425,7 +431,7 @@ A vantagem indica qual personagem pode agir primeiro depois que um golpe é acer
 
 Como convenção de documentação, calcular a vantagem no evento de contato assim:
 
-`Vantagem = recuperação restante do atacante − stun restante do defensor`
+`Vantagem do atacante = stun restante do defensor − recuperação restante do atacante`
 
 - Resultado **positivo**: o atacante recupera-se antes e tem vantagem.
 - Resultado **zero**: ambos voltam a poder agir no mesmo momento.
@@ -434,6 +440,10 @@ Como convenção de documentação, calcular a vantagem no evento de contato ass
 Exemplo hipotético: se o atacante ainda precisa de 12 frames para recuperar-se e o defensor fica em stun por 17 frames, o atacante tem `+5`. Se o atacante precisa de 20 frames e o defensor fica em stun por 15, o atacante tem `−5`.
 
 Essa convenção deve ser usada de modo consistente no código, nos dados de golpes e na interface de treino. A implementação precisa testar casos de borda para não haver diferença de um frame causada por contar ou não o frame do impacto.
+
+O frame de contato já ocorreu e não entra nas duas contagens. `+5` sempre significa que o **atacante** poderá agir cinco frames antes do defensor. O sinal invertido presente na primeira versão do protótipo é um defeito a corrigir, sem alterar artificialmente startup ou stun para compensá-lo.
+
+O stun informado no evento corresponde ao bloqueio efetivo restante: se um novo acerto mantém um stun anterior mais longo, usar esse valor maior. A vantagem no contato considera a conclusão normal do golpe; um cancelamento legal pode mudar a sequência posterior e não transforma esse dado isolado em promessa de punição.
 
 ### 13.3 Punições
 
@@ -446,6 +456,8 @@ O jogo deve suportar situações como:
 - punível somente por um golpe de maior alcance;
 - risco de whiff punish quando o ataque erra;
 - recompensa por bloquear uma opção arriscada.
+
+O feedback inicial distingue contatos reais: **punição de bloqueio** quando um strike acerta o adversário ainda preso ao golpe que foi bloqueado; **punição de erro** quando acerta a recuperação de um golpe que não tocou; **contra-ataque** quando interrompe preparo ou atividade, sem bônus de dano implícito. O rótulo só nasce de um acerto real, nunca apenas de vantagem negativa. Treino e interface não devem prometer punição garantida sem conferir estado, distância, categoria, pushback, janela de entrada e frame efetivo do contato.
 
 ### 13.4 Cancelamentos e combos
 
@@ -538,7 +550,27 @@ A interface precisa priorizar a leitura da luta e não cobrir os personagens sem
 - historico de botoes pressionados.
 - sinalização das paletas de controle escolhidas.
 
-As ferramentas de treino não são necessárias para a primeira tela do MVP, mas a arquitetura deve permitir adicioná-las sem reescrever o motor de combate.
+O treino é a ferramenta de desenvolvimento prioritária desta revisão. As funções completas abaixo continuam planejadas; a primeira entrega está delimitada na seção seguinte.
+
+### Primeiro treino local
+
+O menu oferece partida local (`Enter`) e treino (`T`). No treino, `P` pausa ou retoma a simulação; `.` avança exatamente um frame quando pausado; `F2` reinicia posições, vida, histórico e comandos. `G` alterna entre segundo jogador livre, guarda alta, guarda baixa e repetição do soco `2`. `H` alterna a visualização de hitboxes/hurtboxes; `I` alterna os painéis de entrada.
+
+O treino começa com distância de 96 unidades entre os centros, usa cronômetro livre e não encerra rounds por vida zero. Dano, stun, geometria e comandos permanecem os da luta. Reiniciar restaura a vida; recuperação automática e gravação livre do adversário ficam para a próxima entrega. Trocar o comportamento do adversário não cancela um golpe em andamento.
+
+O adversário de guarda fica neutro quando não há ataque, assume a direção defensiva durante ataques e permanece sem deslocamento intencional. A repetição usa uma entrada real de botão `2` a cada 120 frames, passando pelo mesmo parser do jogador. Não é uma IA competitiva.
+
+### Contrato de animação
+
+- Cada estado registra seu frame lógico de entrada. Loops e reações amostram poses usando esse tempo, sem relógio independente de renderização.
+- O manifesto pode declarar `frameDurations` para segurar poses por durações distintas. Em ataques, esses números são pesos distribuídos dentro da fase lógica; a soma não muda startup, atividade ou recuperação.
+- Startup, atividade e recuperação de cada golpe têm clipes próprios; a pose de contato deve ocupar os frames em que a hitbox realmente está ativa.
+- O salto pode declarar poses de subida, ápice e descida, selecionadas pela velocidade vertical. A posição física e a aterrissagem vêm da simulação.
+- Espelhar um clipe não reinicia seu ciclo. O recuo continua usando a caminhada espelhada já solicitada.
+- Novos contatos podem reiniciar a reação sem depender de trocar a chave do clipe. Parar a lógica também para as poses; renderizar mais vezes o mesmo frame não avança animação.
+- Pivô nos pés, escala comum, direção original por clipe e cobertura dos golpes são requisitos de entrega. O manifesto é validado antes da partida; clipes provisórios e faltantes precisam ficar registrados na matriz de produção.
+
+O detalhamento de autoria, revisão e cobertura das animações está em [`docs/animacao.md`](./docs/animacao.md).
 
 ---
 
@@ -552,6 +584,7 @@ src/
   scenes/            # menu, seleção, partida e resultado
   rendering/         # apresentação Phaser: sprites, animações, efeitos e câmera
     animations/      # mapeamento dos modos lógicos para animações visuais
+    stages/          # catálogo, composição de camadas e câmera com parallax
   input/             # teclado, gamepad, remapeamento e buffer de comandos
   engine/
     simulation/      # relógio fixo e ordem de atualização
@@ -570,6 +603,18 @@ src/
 Essa árvore é uma orientação, não uma exigência de criar todos os diretórios antecipadamente. A divisão importante é manter a lógica de combate desacoplada da representação visual.
 
 No projeto atual, os arquivos de arte carregáveis ficam em `src/assets/animations/`, `src/assets/sprites/` e `src/assets/scenes/`. As classes Phaser de menu e luta ficam em `src/scenes/`; os adaptadores de animação Phaser ficam em `src/rendering/animations/`. Sprite sheets devem manter os quadros de um personagem juntos quando compartilharem escala e ponto de pivô. Arte e nomes devem ser originais; não colocar código de cena ou regras de combate dentro dos diretórios de imagens.
+
+### Cenários em camadas
+
+Cada cenário usa `src/assets/scenes/<id>/stage.json`, imagens prontas em `layers/`, originais em `sources/` e README de entrega. O catálogo descobre os manifestos e permite qualquer quantidade de camadas, sem ramificações específicas por cenário. As regras detalhadas de entrega estão em [`src/assets/scenes/README.md`](./src/assets/scenes/README.md).
+
+As camadas compartilham dimensões de referência e escala uniforme; `groundY` alinha a linha dos pés ao piso lógico. `depth` define a ordem de desenho, `x`/`y` ajustam o encaixe e `parallax` define a fração do deslocamento horizontal da câmera. Chão e objetos apoiados nele usam o mesmo fator `1`; planos distantes usam fatores menores. Áreas vazias devem ser transparentes, sem cor de chroma visível.
+
+Props podem declarar `contentScale` e `scaleOrigin` para corrigir seu tamanho dentro da composição, sempre com escala uniforme nos dois eixos e um ponto de apoio explícito. A escala comum do cenário e o fator de parallax continuam compartilhados. No Cais, as cargas usam `contentScale: 0.76`, ancoradas no centro horizontal e na base da arte, preservando o apoio no chão. O Tester usa uma célula visual de 256 × 256 em vez de 220 × 220, aproximando a altura desenhada em idle (cerca de 153 unidades) da hurtbox em pé (152). Essa correção de apresentação não muda os dados de combate.
+
+A câmera acompanha horizontalmente o centro dos lutadores, limitada ao cenário, sem zoom ou movimento vertical. A interface fica fixa na tela. Centralizar a arena no espaço visual não muda sua largura jogável, os comandos, o relógio de 60 Hz ou as regras de colisão. Imagens de cenário não definem obstáculos.
+
+O cenário inicial é **Cais**, com três camadas: fundo (`0.25`), chão (`1`) e caixas (`1`). Caixas e chão mantêm a mesma proporção e deslocamento; a posição das cargas é ajustada no manifesto para apoiá-las visualmente atrás dos lutadores. Novos cenários podem ter quatro, cinco ou mais camadas com o mesmo sistema.
 
 ### 17.1 Parser de comandos
 
@@ -639,54 +684,21 @@ O projeto deve crescer com testes pequenos e reproduzíveis. No mínimo, criar t
 
 ## 19. Plano de desenvolvimento
 
-### Fase 1 — Fundação
+A ordem executável, as dependências e os checklists estão em [`pipeline.md`](./pipeline.md). Os marcos abaixo resumem o produto esperado sem duplicar o registro de progresso.
 
-- Criar repositório e projeto TypeScript/Vite/Phaser.
-- Mostrar uma tela de menu simples e carregar uma cena de luta.
-- Desenhar dois bonecos provisórios e barras de vida.
-- Implementar o relógio fixo de 60 frames e controles básicos.
-- Implementar movimento horizontal, salto e agachamento.
+| Marco | Produto esperado | Critério de saída |
+| --- | --- | --- |
+| M1 — Fundação | Luta local, simulação fixa, entradas e movimento | Lados, chão e limites corretos, sem dependência do FPS |
+| M2 — Núcleo | Golpes, defesa, colisões, stun, rounds e comandos por personagem | Contatos e estados reproduzíveis, sem autoridade da arte sobre o combate |
+| M3 — Animação coerente | Matriz de ações, fases visuais, loops, escala e cenários em camadas | Ações legíveis nos dois lados, pés estáveis e contato/recuperação sincronizados |
+| M4 — Punições e treino | Vantagem correta, instrumentos de treino e respostas por estado/alcance | Explicar e reproduzir punição, atraso e falha por distância |
+| M5 — Combos e recuperação | Strings, cancelamentos, aéreo, queda e levantada documentados por personagem | Rotas com início/fim e devolução previsível do controle, sem loops infinitos |
+| M6 — Fluxo e feedback | Seleção, controles, HUD, áudio, acessibilidade e conteúdo próprio | Menu até resultado/revanche completos e legíveis |
+| M7 — Publicação | Instalação/build reproduzíveis, desempenho e assets revisados | Demo publicável após validação e aprovação |
 
-**Pronto quando:** dois jogadores conseguem mover-se sem troca incorreta de lado ou dependência do FPS de renderização.
+M1 e M2 aproveitam a fundação já criada. A prioridade desta revisão é M3, apoiada pelo primeiro conjunto de ferramentas de M4. Não ampliar o elenco, os recursos ou os sistemas de combo antes de estabilizar essas duas frentes.
 
-### Fase 2 — Núcleo de luta
-
-- Implementar parser de direções e os quatro botões.
-- Criar dados de golpes com startup, active e recovery.
-- Implementar hitboxes, hurtboxes, dano, hitstun e blockstun.
-- Implementar bloqueio alto/baixo, empurrão e rounds.
-- Criar testes da simulação.
-
-**Pronto quando:** uma luta básica com ataques, defesa e fim de round é reproduzível e testável.
-
-### Fase 3 — Sistemas técnicos
-
-- Implementar vantagem de frames e casos de punição.
-- Acrescentar agarrões e regras de quebra.
-- Adicionar comandos diagonais e movimentos especiais.
-- Implementar janelas frame-perfect.
-- Adicionar parry para um conjunto pequeno de golpes.
-
-**Pronto quando:** os principais sistemas podem ser combinados sem estados travados ou resultados inconsistentes.
-
-### Fase 4 — Identidade e apresentação
-
-- Criar seleção de personagens e paletas coloridas dos quatro botões.
-- Adicionar arte, animações, efeitos e áudio originais.
-- Implementar um especial cinematográfico interativo.
-- Melhorar HUD, menus, feedback e acessibilidade.
-
-**Pronto quando:** uma partida completa demonstra a identidade visual e ao menos um exemplo de cada sistema principal previsto para a primeira versão.
-
-### Fase 5 — Publicação
-
-- Preparar README com instalação e controles.
-- Configurar testes e build no fluxo de trabalho do GitHub.
-- Publicar a versão web em uma página estática.
-- Publicar releases versionados e verificar o pacote em uma instalação limpa.
-- Avaliar PWA/offline e empacotamento desktop como tarefas separadas.
-
-**Pronto quando:** uma pessoa que não desenvolveu o projeto consegue abrir a demo ou seguir as instruções do repositório sem depender de passos não documentados.
+Especiais cinematográficos, times, assistentes, múltiplos saltos, medidores, IA completa e online dependem de decisões explícitas e entregas próprias. Não são pré-requisitos para fechar a primeira luta local.
 
 ---
 
@@ -694,8 +706,8 @@ O projeto deve crescer com testes pequenos e reproduzíveis. No mínimo, criar t
 
 As decisões abaixo não impedem o início do protótipo. Até serem confirmadas, usar padrões configuráveis e evitar espalhar suposições pelo código. As regras provisórias de rounds, sequências e elenco de teste estão definidas nesta especificação e implementadas na Etapa 2 de `pipeline.md`.
 
-- **Direção exata da arte:** proporção dos sprites, resolução-base, animação quadro a quadro ou híbrida e quantidade de quadros por golpe.
-- **Formato da arena:** limites, paredes, cenários e interações com o ambiente.
+- **Produção final da arte:** arte própria, uniformização do cenário provisório em pixel art com a direção ilustrada, quantidade de desenhos por ação e revisão do atlas. A reprodução em frames lógicos e o pivô nos pés já estão definidos.
+- **Interações da arena:** regras de paredes, quedas e objetos interativos. O sistema visual de cenários em camadas já está definido em §17.
 - **Mapeamento físico padrão:** teclas iniciais e prioridade de teclado/controle.
 - **Sistema de recursos:** barra de especial, custo de golpes e recuperação de recurso.
 - **Alcance dos QTEs:** quais especiais os usam, se o defensor também participa e como o desempenho altera o resultado.
@@ -728,7 +740,7 @@ O primeiro personagem de teste é **Tester** (`tester`), personagem principal e 
 
 Os sprites-fonte de cada personagem ficam em `src/assets/sprites/characters/{id}/`; o manifesto de animações fica em `src/assets/animations/{id}.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. Consulte os READMEs dessas pastas para o formato esperado dos atlas e manifestos. Os dados de combate são independentes da arte: cada definição em `characters.ts` tem seu livro `moves` e perfil `collision`; cada golpe define sua hitbox de ataque, e cada personagem tem hurtboxes em pé, agachada e aérea.
 
-O manifesto pode declarar sequências explícitas de quadros, orientação original por clipe e associação entre IDs de golpes e clipes. A apresentação espelha cada clipe para acompanhar o adversário e distribui suas poses pelo startup, atividade e recuperação já definidos no livro de golpes; não modifica os tempos lógicos para acomodar a arte. Loops preservam escala, pivô e linha de chão entre quadros.
+O manifesto pode declarar sequências explícitas de quadros, holds, poses aéreas, tamanho visual, orientação original por clipe e associação entre IDs de golpes e clipes. Todos os 26 golpes precisam de cobertura das três fases; reutilizações aproximadas são registradas em `provisionalMoves`. A apresentação espelha cada clipe para acompanhar o adversário e distribui suas poses pelo startup, atividade e recuperação já definidos no livro de golpes; não modifica os tempos lógicos para acomodar a arte. Loops preservam escala, pivô e linha de chão entre quadros.
 
 ### Golpes provisórios para validar teclado e hitboxes
 

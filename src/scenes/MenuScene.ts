@@ -2,8 +2,10 @@ import Phaser from 'phaser';
 
 export class MenuScene extends Phaser.Scene {
   private readonly handleEnter = (): void => this.startFight();
+  private readonly handleTraining = (): void => this.startFight('tester', 'training');
   private readonly handleShutdown = (): void => {
     this.input.keyboard?.off('keydown-ENTER', this.handleEnter);
+    this.input.keyboard?.off('keydown-T', this.handleTraining);
   };
 
   constructor() {
@@ -32,7 +34,7 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const start = this.add
-      .text(width / 2, height * 0.66, 'ENTER · TESTER', {
+      .text(width / 2, height * 0.64, 'ENTER · PARTIDA LOCAL', {
         color: '#ffd166',
         fontFamily: 'Arial, sans-serif',
         fontSize: '20px',
@@ -41,12 +43,20 @@ export class MenuScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     start.on('pointerdown', () => this.startFight());
+    const training = this.add.text(width / 2, height * 0.73, 'T · TREINO DE COMBATE', {
+      color: '#8cb4ff', fontFamily: 'Arial, sans-serif', fontSize: '20px',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    training.on('pointerdown', this.handleTraining);
+    this.add.text(width / 2, height * 0.83, 'TESTER · CAIS', {
+      color: '#b5b1bd', fontSize: '13px',
+    }).setOrigin(0.5);
     this.input.keyboard?.on('keydown-ENTER', this.handleEnter);
+    this.input.keyboard?.on('keydown-T', this.handleTraining);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown);
   }
 
-  private startFight(fighterId = 'tester'): void {
+  private startFight(fighterId = 'tester', mode: 'versus' | 'training' = 'versus'): void {
     this.input.keyboard?.off('keydown-ENTER', this.handleEnter);
-    this.scene.start('FightScene', { fighterId });
+    this.scene.start('FightScene', { fighterId, mode });
   }
 }
