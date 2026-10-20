@@ -73,23 +73,14 @@ describe('provisional Tester character', () => {
     expect(getCharacterAnimationKey(attacking)).toBe('tester-light-punch-active');
   });
 
-  it('maps Guilty Gear crouch, kick, and aerial attack clips separately', () => {
-    const fighter = { ...new Simulation(createGameConfig(1024, 576)).snapshot().characters[0]!, fighterId: 'guilty-gear' };
-    expect(getCharacterAnimationKey({ ...fighter, mode: 'crouching' })).toBe('guilty-gear-crouch');
+  it('maps Tester movement and attack states to its animation keys', () => {
+    const [fighter] = new Simulation(createGameConfig(1024, 576)).snapshot().characters;
+    expect(getCharacterAnimationKey({ ...fighter!, mode: 'moving' })).toBe('tester-walk');
+    expect(getCharacterAnimationKey({ ...fighter!, mode: 'crouching' })).toBe('tester-crouch');
     expect(getCharacterAnimationKey({
-      ...fighter,
+      ...fighter!,
       mode: 'active',
-      attack: { moveId: 'test-low-kick', buttons: ['3'], elapsedFrames: 1, hasHit: false, preciseExecution: false },
-    })).toBe('guilty-gear-light-kick');
-    expect(getCharacterAnimationKey({
-      ...fighter,
-      mode: 'active',
-      attack: { moveId: 'test-air-descending-kick', buttons: ['3'], airborne: true, elapsedFrames: 1, hasHit: false, preciseExecution: false },
-    })).toBe('guilty-gear-air-light-kick');
-    expect(getCharacterAnimationKey({
-      ...fighter,
-      mode: 'active',
-      attack: { moveId: 'test-crouching-hook', buttons: ['2'], crouching: true, elapsedFrames: 1, hasHit: false, preciseExecution: false },
-    })).toBe('guilty-gear-crouch-heavy-punch');
+      attack: { moveId: 'test-jab', buttons: ['1'], elapsedFrames: 1, hasHit: false, preciseExecution: false },
+    })).toBe('tester-light-punch-active');
   });
 });

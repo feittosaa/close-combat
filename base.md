@@ -211,7 +211,7 @@ A aceleração, velocidade e distância de salto podem variar por personagem, de
 
 ### 6.1.1 Comandos direcionais provisórios
 
-Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma direção no chão dentro de 12 frames inicia um dash de até 12 frames enquanto a direção continuar pressionada. Dash não pode iniciar nem continuar no ar; os toques feitos durante o salto não contam para um dash após aterrissar. O dash usa velocidade 6 unidades por frame; a caminhada usa 3. Enquanto agachado, o personagem anda à metade da velocidade normal. Durante golpes aéreos, a direção horizontal continua controlando a trajetória e a gravidade continua atuando. Os valores são configuráveis e provisórios. As direções continuam relativas ao oponente.
+Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma direção no chão dentro de 12 frames inicia um dash de até 12 frames enquanto a direção continuar pressionada. Dash não pode iniciar nem continuar no ar; os toques feitos durante o salto não contam para um dash após aterrissar. O dash usa velocidade 6 unidades por frame; a caminhada usa 3. Enquanto agachado, o personagem permanece no mesmo lugar, inclusive com `DF` ou `DB`; esses comandos não iniciam nem mantêm dash. Avanços próprios de golpes agachados também não deslocam o lutador. Durante golpes aéreos, a direção horizontal continua controlando a trajetória e a gravidade continua atuando. Os valores são configuráveis e provisórios. As direções continuam relativas ao oponente.
 
 ### 6.2 Espaçamento entre personagens
 
@@ -281,15 +281,15 @@ Defender-se deve ser uma decisão ativa, baseada na direção do adversário e n
 
 ### 8.1 Bloqueio básico
 
-- Segurar `B` bloqueia ataques que o personagem pode defender em pé.
+- Segurar `B` recua usando a mesma caminhada espelhada. Se o adversário estiver executando um golpe (preparo, atividade ou recuperação), `B` assume a guarda em pé e interrompe a locomoção, independentemente da distância.
 - Segurar `DB` defende baixos e deve ser vulnerável a golpes médios que atinjam personagens agachados.
 - Ataques altos podem ser evitados por agachamento quando suas propriedades permitirem.
-- O bloqueio produz um estado de **blockstun** e pode causar empurrão.
+- A defesa e o agachamento permanecem parados, inclusive quando o adversário pressiona a colisão corporal. Um contato bloqueado produz **blockstun** e um pequeno empurrão para trás, definido no golpe; um golpe que não alcança o defensor não o desloca.
 - Certos ataques podem ser desbloqueáveis ou exigir uma defesa específica; isso deve ficar claro pela animação, pelo efeito ou por um indicador de treino.
 
 O jogo deve evitar situações em que a defesa falha por uma direção confusa. A direção defensiva é sempre relativa ao oponente, mesmo após troca de lado.
 
-Para o protótipo: `B` bloqueia ataques altos e médios quando o personagem está em pé; `DB` bloqueia baixos; um ataque alto é evitado ao agachar; ataques médios acertam `DB`; baixos acertam `B`. Um bloqueio bem-sucedido entra em blockstun e aplica o pushback definido no golpe. Os tempos e distâncias iniciais são provisórios.
+Para o protótipo: `B` bloqueia ataques altos e médios quando o personagem está em pé; `DB` bloqueia baixos; um ataque alto é evitado ao agachar; ataques médios acertam `DB`; baixos acertam `B`. A guarda exige `B`/`DB` e um golpe em execução pelo adversário; não é automática em neutro. Os comandos dos dois jogadores são considerados antes da escolha da defesa no frame. Um bloqueio bem-sucedido entra em blockstun e aplica o pushback definido no golpe (4 unidades nos strikes atuais do Tester). Os tempos e distâncias iniciais são provisórios.
 
 ### 8.2 Stun e recuperação
 
@@ -728,6 +728,8 @@ O primeiro personagem de teste é **Tester** (`tester`), personagem principal e 
 
 Os sprites-fonte de cada personagem ficam em `src/assets/sprites/characters/{id}/`; o manifesto de animações fica em `src/assets/animations/{id}.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. Consulte os READMEs dessas pastas para o formato esperado dos atlas e manifestos. Os dados de combate são independentes da arte: cada definição em `characters.ts` tem seu livro `moves` e perfil `collision`; cada golpe define sua hitbox de ataque, e cada personagem tem hurtboxes em pé, agachada e aérea.
 
+O manifesto pode declarar sequências explícitas de quadros, orientação original por clipe e associação entre IDs de golpes e clipes. A apresentação espelha cada clipe para acompanhar o adversário e distribui suas poses pelo startup, atividade e recuperação já definidos no livro de golpes; não modifica os tempos lógicos para acomodar a arte. Loops preservam escala, pivô e linha de chão entre quadros.
+
 ### Golpes provisórios para validar teclado e hitboxes
 
 Até os personagens e golpes oficiais serem definidos, os botões `1`–`4` disparam ataques básicos de teste. Estes parâmetros são exclusivamente provisórios:
@@ -776,7 +778,7 @@ Variantes aéreas provisórias ficam disponíveis ao pressionar um botão enquan
 | `3` | chute aéreo descendente | 6 | 3 | 16 | 62 | médio |
 | `4` | chute aéreo forte | 9 | 4 | 21 | 82 | médio |
 
-Os golpes usam hitboxes retangulares de teste e atingem uma vez por execução. `F` e `B` selecionam variantes distintas para os botões 1, 2 e 4; `D+1`, `D+2` e `D+4` selecionam golpes abaixados, e `D+3` é a rasteira. Variantes aéreas substituem a escolha terrestre enquanto o personagem está no ar. Os golpes básicos causam 12–21 frames de hitstun, 10 frames de blockstun e 18 unidades de pushback no acerto/12 no bloqueio. Valores dos demais golpes são provisórios por golpe, não balanceamento final.
+Os golpes usam hitboxes retangulares de teste e atingem uma vez por execução. `F` e `B` selecionam variantes distintas para os botões 1, 2 e 4; `D+1`, `D+2` e `D+4` selecionam golpes abaixados, e `D+3` é a rasteira. Variantes aéreas substituem a escolha terrestre enquanto o personagem está no ar. Os golpes básicos causam 12–21 frames de hitstun, 10 frames de blockstun e 18 unidades de pushback no acerto/4 no bloqueio. Valores dos demais golpes são provisórios por golpe, não balanceamento final.
 
 A interface identifica os modos neutro, movimento, dash, no ar, agachado, preparo, ativo, recuperação, defesa, atordoado, bloqueio, agarrado e caído. A hitbox visual aparece apenas nos frames ativos e usa a mesma geometria da checagem de acerto.
 

@@ -32,7 +32,6 @@ export interface CharacterDefinition {
 
 export const DEFAULT_CHARACTER_ID = 'tester';
 export const SECOND_TEST_CHARACTER_ID = 'dummy';
-export const SPRITE_MAPPING_TEST_CHARACTER_ID = 'guilty-gear';
 
 const testerCollision: CharacterCollisionProfile = {
   bodyWidth: 54,
@@ -68,7 +67,7 @@ export const characters: readonly CharacterDefinition[] = [
     moves: testerMoves,
     collision: testerCollision,
     assets: {
-      spritesheet: 'sprites/characters/tester/tester-atlas-v01.png',
+      spritesheet: 'sprites/characters/tester/tester-atlas.png',
       animationManifest: 'animations/tester.json',
     },
   },
@@ -82,18 +81,6 @@ export const characters: readonly CharacterDefinition[] = [
     assets: {
       spritesheet: 'sprites/characters/dummy/dummy-atlas-v01.png',
       animationManifest: 'animations/dummy.json',
-    },
-  },
-  {
-    id: SPRITE_MAPPING_TEST_CHARACTER_ID,
-    name: 'Guilty Gear',
-    maxHealth: 1000,
-    movement: { walkSpeed: 3, jumpVelocity: -11 },
-    moves: testerMoves,
-    collision: testerCollision,
-    assets: {
-      spritesheet: 'sprites/characters/guilty-gear/guilty-gear-atlas.png',
-      animationManifest: 'animations/guilty-gear.json',
     },
   },
 ];

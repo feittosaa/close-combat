@@ -85,7 +85,7 @@ export class AttackResolver {
             moveId: move.id,
             damage: blocked || parried ? 0 : move.damage,
             outcome: parried ? 'parry' : blocked ? 'block' : 'hit',
-            pushback: blocked || parried ? 0 : move.pushback.hit,
+            pushback: parried ? 0 : blocked ? move.pushback.block : move.pushback.hit,
             attackerRecoveryFrames: parried ? undefined : attackerRecoveryFrames,
             defenderStunFrames: parried ? undefined : defenderStunFrames,
             attackerStunFrames: parried ? PARRY_STUN_FRAMES : undefined,
@@ -152,7 +152,7 @@ export class AttackResolver {
         target.hitFlashFrames = 5;
       }
       target.attack = undefined;
-      target.crouching = false;
+      if (event.outcome !== 'block') target.crouching = false;
     });
 
     return [...resolvedThrows, ...pending.map(({ event }) => event)];

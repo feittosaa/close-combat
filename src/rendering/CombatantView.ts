@@ -1,19 +1,26 @@
 import Phaser from 'phaser';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { getCharacterAnimationKey } from './animations/CharacterAnimationMap';
+import { getCharacterById } from '../engine/data/characters';
+import { getAttackAnimationFrame, shouldFlipAnimation } from './animations/AnimationPlayback';
+import type { AnimationClip, CharacterAnimationManifest } from './animations/AnimationPlayback';
 
 /** Visual do lutador; a simulação continua sendo a autoridade sobre o combate. */
 export class CombatantView {
   private readonly sprite?: Phaser.GameObjects.Sprite;
   private readonly placeholder?: Phaser.GameObjects.Rectangle;
   private readonly color: number;
+  private readonly clips: ReadonlyMap<string, AnimationClip>;
+  private currentAnimationKey?: string;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, textureKey: string) {
+  constructor(scene: Phaser.Scene, x: number, y: number, color: number, textureKey: string, manifest?: CharacterAnimationManifest) {
     this.color = color;
+    this.clips = new Map(manifest?.clips.map((clip) => [clip.key, clip]));
     if (scene.textures.exists(textureKey)) {
       this.sprite = scene.add.sprite(x, y, textureKey).setOrigin(0.5, 1);
-      // Atlas cells are 256px square and the drawn figure fills roughly 224px vertically.
-      this.sprite.setDisplaySize(174, 174);
+      // The normalized atlas keeps transparent margins in 256px cells; this size
+      // makes the character silhouette match the prototype hurtbox height.
+      this.sprite.setDisplaySize(220, 220);
     } else {
       this.placeholder = scene.add.rectangle(x, y, 54, 152, color).setOrigin(0.5, 1);
     }
@@ -68,14 +75,21 @@ export class CombatantView {
     const sprite = this.sprite;
     if (!sprite) return;
     sprite.setPosition(x, state.y);
-    const artFacesRight = state.fighterId !== 'guilty-gear';
-    sprite.setFlipX((state.facing === 'right') !== artFacesRight);
-
     const desiredKey = getCharacterAnimationKey(state);
     const animationKey = sprite.scene.anims.exists(desiredKey) ? desiredKey : `${state.fighterId}-idle`;
-    if (sprite.scene.anims.exists(animationKey) && sprite.anims.getName() !== animationKey) {
+    const clip = this.clips.get(animationKey);
+    const walkingBackward = (state.mode === 'moving' || state.mode === 'dashing') && state.movementDirection === 'backward';
+    sprite.setFlipX(shouldFlipAnimation(state.facing, clip, walkingBackward));
+
+    const move = state.attack ? getCharacterById(state.fighterId)?.moves.find(({ id }) => id === state.attack?.moveId) : undefined;
+    const attackFrame = clip ? getAttackAnimationFrame(state, clip, move) : undefined;
+    if (attackFrame !== undefined) {
+      if (sprite.anims.isPlaying) sprite.anims.stop();
+      sprite.setFrame(attackFrame);
+    } else if (sprite.scene.anims.exists(animationKey) && this.currentAnimationKey !== animationKey) {
       sprite.play(animationKey);
     }
+    this.currentAnimationKey = animationKey;
 
     if (state.hitFlashFrames > 0) sprite.setTint(0xffffff);
     else if (state.mode === 'active') sprite.setTint(0xffd166);

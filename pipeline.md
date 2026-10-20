@@ -124,6 +124,11 @@
 
 - [x] Definir direção visual em `base.md` e criar diretórios para animações, sprites, cenários e cenas Phaser.
 - [x] Criar manifesto-modelo e mapeamento de chaves de animação para Tester, prontos para receber uma spritesheet.
+- [x] Integrar o atlas do Tester enviado, mapear faixas de movimento e golpes, e remover o personagem e os assets experimentais de Guilty Gear.
+- [x] Corrigir direção por clipe, conectar todos os chutes do Tester, alinhar loops e sincronizar poses de ataque às fases da simulação.
+- [x] Espelhar a caminhada no recuo; ativar guarda em `B`/`DB` durante golpes adversários a qualquer distância; imobilizar guarda/agachamento e aplicar pequeno empurrão apenas no contato bloqueado.
+- [x] Substituir a reação de bloqueio por poses de guarda e corrigir o espelhamento horizontal do pulo.
+- [x] Usar reação curta em pé no hitstun comum, removendo a sequência de cambalhota desse estado.
 - [ ] Criar seleção de personagens e paletas de botões com número/sigla além da cor.
 - [ ] Substituir os retângulos provisórios por arte original e animações.
 - [ ] Adicionar efeitos e áudio originais para acerto, defesa, parry e execução precisa.
