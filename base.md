@@ -211,7 +211,7 @@ A aceleração, velocidade e distância de salto podem variar por personagem, de
 
 ### 6.1.1 Comandos direcionais provisórios
 
-Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma direção no chão dentro de 12 frames inicia um dash de até 8 frames enquanto a direção continuar pressionada. Dash não pode iniciar nem continuar no ar; os toques feitos durante o salto não contam para um dash após aterrissar. O dash usa velocidade 8 unidades por frame; a caminhada usa 3. Os valores são configuráveis e provisórios. As direções continuam relativas ao oponente.
+Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma direção no chão dentro de 12 frames inicia um dash de até 12 frames enquanto a direção continuar pressionada. Dash não pode iniciar nem continuar no ar; os toques feitos durante o salto não contam para um dash após aterrissar. O dash usa velocidade 6 unidades por frame; a caminhada usa 3. Os valores são configuráveis e provisórios. As direções continuam relativas ao oponente.
 
 ### 6.2 Espaçamento entre personagens
 
@@ -268,6 +268,8 @@ Regra do protótipo: todos os contatos do frame são detectados antes de aplicar
 ### 7.5 Dados específicos por personagem
 
 Cada personagem possui seu próprio livro `moves` e perfil `collision`. O livro contém golpes básicos, direcionais, aéreos, especiais, agarrões e regras de cancelamento; nomes e números não são globais nem precisam ser iguais entre personagens. Um golpe define sua hitbox de ataque junto de startup, frames ativos e recuperação. O motor resolve o golpe pelo personagem que o executa, portanto dois livros podem até reutilizar um ID se forem diferentes.
+
+No protótipo, o ritmo-base dos golpes é definido pelo tipo de golpe, não por uma velocidade global do personagem: o soco leve Tester usa 6 frames de startup, 3 ativos e 12 de recuperação; o soco pesado usa 9 de startup, 3 ativos e 16 de recuperação. As poses do ápice ficam visíveis durante os três frames ativos. Variações de outros golpes devem declarar seus próprios frames no livro de golpes, sem alterar a cadência de caminhada do personagem.
 
 O perfil de colisão define `bodyWidth` para movimento/contato entre corpos e hurtboxes separadas `standing`, `crouching` e `airborne`. Cada hurtbox usa `offsetX` em relação ao centro horizontal e `offsetY` em relação aos pés, com largura e altura em pixels lógicos. No ar o motor usa sempre `airborne`; no chão escolhe entre em pé e agachada. Hitboxes de ataque usam `forward` medido a partir do centro na direção do oponente, `yOffset` em relação aos pés e dimensões próprias por golpe. Todos os valores podem variar por personagem.
 

@@ -1,14 +1,7 @@
-# Tester — entrega de sprites
+# Tester — sprites
 
-Coloque os arquivos deste personagem somente neste diretório:
+O jogo carrega `tester-atlas-v01.png`, um atlas PNG RGBA com células de 256×256. A lista de clipes e os intervalos estão em `src/assets/animations/tester.json`.
 
-- `tester-atlas-v01.png`: spritesheet PNG RGBA transparente usada pelo jogo.
-- `tester-source.*`: arquivo editável original (`.aseprite`, `.kra`, `.psd` ou equivalente).
+`tester_walk.png` alimenta `walk` ao avançar. `tester_defense.png` alimenta `defense` ao recuar e ao defender. Os demais clipes incluem `idle`, `dash`, `crouch`, `jump`, `light-punch`, `heavy-punch` e `test-electric-palm` (especial). `tester_turnaround.png` fica como referência estática e não entra no atlas. As sequências de dash e especial continuam da linha superior para a inferior.
 
-O atlas deve usar células de tamanho fixo, sem trim automático e sem padding entre células. Organize os frames da esquerda para a direita e de cima para baixo; declare dimensões da célula e intervalos inclusivos em `src/assets/animations/tester.json`. Use a mesma escala em todas as poses, mantenha o personagem voltado para a direita e alinhe os pés à mesma base em todas as células. Não inclua fundo, hitboxes ou hurtboxes na arte.
-
-Inclua loops `idle`, `walk`, `crouch` e `block`; poses/trechos para `dash`, `jump`, `hit`, `blockstun`, `grabbed` e `knockdown`; e três clipes por golpe do livro de Tester, com chaves `{fighterId}-{moveId}-{startup|active|recovery}`. Se uma ação ainda não tiver arte, deixe o clipe sem cadastro para usar o placeholder.
-
-Atualize o manifesto com dimensões reais, índices dos frames, velocidade em FPS e repetição. Não deixe `null` em uma exportação pronta. Hitboxes de ataque e hurtboxes são dados de combate em `src/engine/data/characters.ts` e `moves.ts`; não são inferidas dos pixels.
-
-O atlas inicial `tester-atlas-v01.png` contém os clipes `idle`, `walk` e `test-jab` recortados das três fontes PNG incluídas. As imagens de origem foram preservadas como `tester-source-idle.png`, `tester-source-walk.png` e `tester-source-lp.png`. O restante das ações ainda usa o placeholder.
+As imagens-fonte estão preservadas neste diretório. Hitboxes e hurtboxes são dados de combate e não devem ser inferidas da arte.

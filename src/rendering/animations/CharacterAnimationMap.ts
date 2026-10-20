@@ -6,7 +6,7 @@ const MODE_CLIPS: Partial<Record<CharacterState['mode'], string>> = {
   dashing: 'dash',
   airborne: 'jump',
   crouching: 'crouch',
-  blocking: 'block',
+  blocking: 'defense',
   hitstun: 'hit',
   blockstun: 'blockstun',
   grabbed: 'grabbed',
@@ -16,6 +16,12 @@ const MODE_CLIPS: Partial<Record<CharacterState['mode'], string>> = {
 /** Resolve a stable Phaser animation key without giving the visual layer game authority. */
 export function getCharacterAnimationKey(state: CharacterState): string {
   if (state.attack && (state.mode === 'startup' || state.mode === 'active' || state.mode === 'recovery')) {
+    const punchClip = state.attack.moveId === 'test-jab'
+      ? 'light-punch'
+      : state.attack.moveId === 'test-cross'
+        ? 'heavy-punch'
+        : undefined;
+    if (punchClip) return `${state.fighterId}-${punchClip}-${state.mode}`;
     return `${state.fighterId}-${state.attack.moveId}-${state.mode}`;
   }
 

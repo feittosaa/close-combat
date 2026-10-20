@@ -61,7 +61,7 @@ describe('provisional Tester character', () => {
     expect(snapshot.characters.map((character) => character.health)).toEqual([750, 750]);
   });
 
-  it('maps combat modes and attack phases to stable animation keys', () => {
+  it('maps combat modes and attacks to stable animation keys', () => {
     const [fighter] = new Simulation(createGameConfig(1024, 576)).snapshot().characters;
     expect(getCharacterAnimationKey(fighter!)).toBe('tester-idle');
 
@@ -70,6 +70,6 @@ describe('provisional Tester character', () => {
       mode: 'active' as const,
       attack: { moveId: 'test-jab', buttons: ['1'] as const, elapsedFrames: 4, hasHit: false, preciseExecution: false },
     };
-    expect(getCharacterAnimationKey(attacking)).toBe('tester-test-jab-active');
+    expect(getCharacterAnimationKey(attacking)).toBe('tester-light-punch');
   });
 });
