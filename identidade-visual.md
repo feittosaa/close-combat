@@ -2,6 +2,12 @@
 
 Este guia define a linguagem visual de todo o jogo: personagens, animações, cenários, efeitos, interface, retratos e materiais promocionais. Deve orientar a criação de arte original e manter as partes do projeto visualmente coesas.
 
+## Referência e etapa de produção — 21/10/2026
+
+A referência visual global é Guilty Gear Strive: personagens, retratos, cenários, efeitos, HUD, tipografia e menus. Traduzir essa direção em linguagem e assets próprios, com contornos fortes, sombras de cel shading, volume sugerido, poses expressivas e impacto gráfico em alta definição. A referência usa técnica híbrida 2D/3D; Close Combat adota assets 2D e não exige modelos 3D no runtime. Uma eventual ferramenta 3D de apoio à autoria não ganha autoridade sobre colisões, movimento ou tempo de combate.
+
+Por enquanto, manter pixel art para testes, sem gerar nem substituir o elenco nesta revisão documental. A passagem a HD será uma migração coordenada de todos os sistemas visuais, preservando IDs, âncoras e keyframes lógicos. Não ampliar sprites com filtro e chamá-los de arte HD final. Validar primeiro uma ação completa de Ayla em resolução de autoria definida e somente depois ampliar a produção.
+
 ## Direção em uma frase
 
 Um jogo de luta 2D de ritmo clássico, apresentado com ilustração de alta definição, personagens de traço anime adulto, poses fortes e efeitos de impacto gráficos. A imagem deve combinar acabamento detalhado com leitura instantânea durante a luta.
