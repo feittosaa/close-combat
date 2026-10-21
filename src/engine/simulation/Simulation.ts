@@ -1,3 +1,7 @@
+import { recoveryFrames } from '../combat/frameData';
+import { CombatCommandParser, type CombatCommandResult } from '../combat/CombatCommandParser';
+import { inWindow } from '../combat/strikeTimeline';
+import { updateCombatState, applyCombatAction, finishCombo } from '../combat/CombatRuntime';
 // src/engine/simulation/Simulation.ts
 import type { CharacterState } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
@@ -52,6 +56,7 @@ export class Simulation {
   private readonly fighterDefinitions: readonly [CharacterDefinition, CharacterDefinition];
   private readonly fighterMoves: readonly [readonly MoveDefinition[], readonly MoveDefinition[]];
   private readonly commandParsers: [CommandParser, CommandParser] = [new CommandParser(), new CommandParser()];
+  private readonly combatParsers = [new CombatCommandParser(), new CombatCommandParser()];
   private readonly jumpHeld = [false, false];
   private readonly previousInputButtons: [Set<AttackButton>, Set<AttackButton>] = [new Set(), new Set()];
   private readonly previousDirections: [FrameInput['direction'], FrameInput['direction']] = ['N', 'N'];
@@ -116,7 +121,9 @@ export class Simulation {
       matchWinnerId: this.matchWinnerId,
       characters: this.characters.map((character) => ({
         ...character,
-        attack: character.attack ? { ...character.attack } : undefined,
+        attack: character.attack ? { ...character.attack, connectedStrikes: [...(character.attack.connectedStrikes ?? [])] } : undefined,
+        combo: character.combo ? { ...character.combo, moveIds: [...character.combo.moveIds] } : undefined,
+        lastCombo: character.lastCombo ? { ...character.lastCombo, moveIds: [...character.lastCombo.moveIds] } : undefined,
         grab: character.grab ? { ...character.grab } : undefined,
       })),
       activeHitboxes: [...this.attackResolver.activeHitboxes(this.characters), ...this.projectiles.map((p) => projectileHitbox(p))],
@@ -124,6 +131,16 @@ export class Simulation {
       hitEvents: [...this.lastHitEvents],
       recentContacts: this.recentContacts.map(({ frame, event }) => ({ frame, event: { ...event } })),
     };
+  }
+
+  /** Drop UI navigation/held inputs on pause boundaries without resetting combat state. */
+  clearInputHistory(): void {
+    this.clock.reset();
+    this.commandParsers.forEach(parser => parser.clear());
+    this.combatParsers.forEach(parser => parser.clear());
+    this.previousInputButtons.forEach(buttons => buttons.clear());
+    this.previousDirections.fill('N');
+    this.jumpHeld.fill(false);
   }
 
   isMatchOver(): boolean {
@@ -188,7 +205,21 @@ export class Simulation {
       const canControl = canControlAtInput[index];
       const airborneAtInput = !character.grounded;
       character.movementDirection = undefined;
+      updateCombatState(character, input);
       this.updateStunAndFeedback(character);
+      if (this.fighterMoves[index].some(move => move.combat && !move.legacy)) {
+        // Optional string -> crouch-dash transition authored for Ayla's 3,1 family.
+        const current = character.attack ? this.moveFor(character, character.attack.moveId) : undefined;
+        if (current?.combat?.reference?.command === '3,1' && input.direction === 'DF' &&
+            character.attack && character.attack.elapsedFrames >= current.startup + current.activeFrames) {
+          character.stance = 'crouch-dash'; character.stanceFrames = character.combatRules?.stanceFrames ?? 24; character.attack = undefined;
+        }
+        const halfWidth = character.collision.bodyWidth / 2;
+        const atWall = character.x - halfWidth <= this.config.arena.left + 12 || character.x + halfWidth >= this.config.arena.right - 12;
+        const command = this.combatParsers[index].update(input, this.frame, character, this.characters[1 - index], this.fighterMoves[index], atWall);
+        this.updateVerticalMovement(character, input, index, canControl && !command);
+        return command;
+      }
       this.updateVerticalMovement(character, input, index, canControl);
       const crouchingInput = input.direction === 'D' && character.crouching;
       return this.commandParsers[index].update(
@@ -210,7 +241,7 @@ export class Simulation {
       if (canControl) {
         const horizontal = horizontalAxis(input.direction);
         const facingSign = character.facing === 'right' ? 1 : -1;
-        const guarding = character.grounded && (input.direction === 'B' || input.direction === 'DB') && attacking[1 - index];
+        const guarding = character.stance !== 'charging' && character.grounded && (input.direction === 'B' || input.direction === 'DB') && attacking[1 - index];
         const stationary = guarding || (character.grounded && character.crouching);
         const dashing = this.updateDash(index, horizontal, character.grounded && !stationary);
         const speed = dashing
@@ -230,9 +261,10 @@ export class Simulation {
         this.dashAxis[index] = 0;
       }
 
-      if (canControl || this.canCancel(character, moveCommand)) {
+      if (canControl || this.canCancel(character, moveCommand) || (moveCommand && !character.attack && !isStunned(character))) {
         const move = this.startAttack(character, moveCommand, input.direction);
-        if (move?.advance && !move.airborne && !character.crouching) {
+        if (move?.combat?.action?.move) nextX[index] += (character.facing === 'right' ? 1 : -1) * move.combat.action.move;
+        if (move?.advance && !move.airborne && (move.combat || !character.crouching)) {
           const facingSign = character.facing === 'right' ? 1 : -1;
           nextX[index] += facingSign * move.advance;
         }
@@ -255,6 +287,7 @@ export class Simulation {
 
     this.characters.forEach((character, index) => { character.x = nextX[index]; });
     this.resolveBodySpacing(previousX);
+    this.constrainBodiesToArena();
     this.updateFacing();
     this.advanceProjectiles();
     this.lastHitEvents = this.attackResolver.resolve(this.characters, inputs, freshlyPressed, freshBack, this.projectiles);
@@ -272,8 +305,23 @@ export class Simulation {
         : attacker.x + direction * event.targetOffsetFromAttacker;
       target.x = clamp(displacedX, this.config.arena.left + target.collision.bodyWidth / 2,
         this.config.arena.right - target.collision.bodyWidth / 2);
+      const move = this.moveFor(attacker, event.moveId);
+      const strike = move?.combat?.strikes[event.strikeIndex ?? 0];
+      if (event.outcome === 'hit' && target.combo && !target.combo.wallUsed &&
+          !target.grounded && target.x !== displacedX && strike?.wallSplat) {
+        target.combo.wallUsed = true;
+        target.combo.wallFrames = attacker.combatRules?.wallStunFrames ?? 22;
+        target.verticalVelocity = 0;
+        target.y = Math.min(target.y, this.config.arena.floorY - 105);
+        target.remainingStateFrames = Math.max(target.remainingStateFrames, target.combo.wallFrames + 12);
+        if (strike.wallBounce) { target.combo.wallFrames = 0; target.verticalVelocity = -5; target.x -= direction * 75; }
+      }
+      if (event.outcome === 'hit' && move?.combat?.action?.sideSwitch) {
+        const oldX = attacker.x; attacker.x = target.x; target.x = oldX;
+      }
     });
     this.resolveBodySpacing(this.characters.map(({ x }) => x));
+    this.constrainBodiesToArena();
     this.updateFacing();
     this.advanceAttacks();
     this.frame += 1;
@@ -372,8 +420,12 @@ export class Simulation {
         attack: undefined,
         grab: undefined,
         hitFlashFrames: 0,
+        stance: 'standing', stanceFrames: 0, crouchFrames: 0, risingFrames: 0,
+        powerFrames: 0, powerAvailable: true, rageUsed: false, lowParryFrames: 0, lowParryHeld: false,
+        combo: undefined, lastCombo: undefined,
       });
       this.commandParsers[index]?.clear();
+      this.combatParsers[index]?.clear();
       this.previousInputButtons[index]?.clear();
       this.previousDirections[index] = 'N';
       this.jumpHeld[index] = false;
@@ -413,6 +465,8 @@ export class Simulation {
       characterId,
       fighterId: definition.id,
       collision: definition.collision,
+      combatRules: definition.combatRules,
+      stance: 'standing', powerFrames: 0, powerAvailable: true, rageUsed: false,
       x,
       y: this.config.arena.floorY,
       facing,
@@ -437,10 +491,12 @@ export class Simulation {
     if (character.mode === 'grabbed') return;
     if (!isStunned(character)) return;
 
+    if (!character.grounded && character.combo) { character.remainingStateFrames = Math.max(1, character.remainingStateFrames - 1); return; }
     character.remainingStateFrames -= 1;
     if (character.remainingStateFrames <= 0) {
       character.remainingStateFrames = 0;
       character.mode = 'neutral';
+      finishCombo(character);
     }
   }
 
@@ -460,12 +516,19 @@ export class Simulation {
     }
 
     if (!character.grounded) {
-      character.verticalVelocity += this.config.movement.gravity;
+      if ((character.combo?.wallFrames ?? 0) > 0) { character.combo!.wallFrames -= 1; return; }
+      const juggleRules = this.fighterDefinitions[1 - index].combatRules;
+      const baseGravity = character.combo && character.combo.hits > 1 ? juggleRules?.juggleBaseGravity ?? this.config.movement.gravity : this.config.movement.gravity;
+      character.verticalVelocity += baseGravity + (character.combo ? character.combo.hits * (juggleRules?.juggleGravity ?? 0) : 0);
       character.y += character.verticalVelocity;
       if (character.y >= this.config.arena.floorY) {
         character.y = this.config.arena.floorY;
         character.verticalVelocity = 0;
         character.grounded = true;
+        if (character.combo && character.mode === 'hitstun') {
+          character.mode = 'knockdown';
+          character.remainingStateFrames = this.fighterDefinitions[1 - index].combatRules?.knockdownFrames ?? 32;
+        }
       }
     }
 
@@ -480,10 +543,13 @@ export class Simulation {
 
   private startAttack(
     character: CharacterState,
-    move: MoveDefinition | undefined,
+    move: CombatCommandResult | undefined,
     direction: FrameInput['direction'],
   ): MoveDefinition | undefined {
     if (!move) return undefined;
+    const charged = character.stance === 'charging';
+    applyCombatAction(character, move);
+    if (move.combat && !move.combat.strikes.length && !move.combat.action?.cancelRecovery) { character.attack = undefined; character.mode = character.grounded ? 'neutral' : 'airborne'; character.stateStartedFrame = this.frame; return move; }
 
     character.attack = {
       moveId: move.id,
@@ -491,13 +557,17 @@ export class Simulation {
       airborne: move.airborne === true,
       crouching: move.crouching === true,
       hurtboxStance: move.hurtboxStances?.startup,
-      elapsedFrames: 0,
+      elapsedFrames: move.bufferedStartupFrames ?? 0,
       hasHit: false,
-      preciseExecution: move.precisionWindowFrames !== undefined,
+      preciseExecution: move.precisionWindowFrames !== undefined || move.combat?.command.preciseFrames !== undefined,
+      connectedStrikes: [],
+      forceCounterHit: charged,
+      hurtboxOverride: move.combat?.hurtboxes.find(box => box.from <= 0 && box.to >= 0)?.box,
       throwDirection: move.throw
         ? isBackwardDirection(direction) ? 'backward' : 'forward'
         : undefined,
     };
+    if (charged) { character.stance = 'standing'; character.stanceFrames = 0; }
     character.crouching = move.crouching === true;
     character.mode = 'startup';
     character.movementDirection = undefined;
@@ -523,13 +593,14 @@ export class Simulation {
     for (const character of this.characters) {
       const attack = character.attack;
       const move = attack ? this.moveFor(character, attack.moveId) : undefined;
-      const definition = move?.projectile;
-      if (!attack || !move || !definition || attack.elapsedFrames !== (definition.spawnFrame ?? move.startup)) continue;
+      const strikeIndex = move?.combat?.strikes.findIndex(strike => strike.projectile && attack?.elapsedFrames === strike.from) ?? -1;
+      const definition = strikeIndex >= 0 ? move?.combat?.strikes[strikeIndex].projectile : move?.projectile;
+      if (!attack || !move || !definition || (strikeIndex < 0 && attack.elapsedFrames !== (definition.spawnFrame ?? move.startup))) continue;
       const owned = this.projectiles.filter((p) => p.ownerId === character.characterId && p.moveId === move.id).length;
       if (owned >= (definition.maxActive ?? 1)) continue;
       const x = character.x + (character.facing === 'right' ? 1 : -1) * definition.forward;
       this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
-        moveId: move.id, x, previousX: x, y: character.y + definition.yOffset, facing: character.facing,
+        moveId: move.id, strikeIndex: strikeIndex >= 0 ? strikeIndex : undefined, x, previousX: x, y: character.y + definition.yOffset, facing: character.facing,
         ageFrames: 0, remainingFrames: definition.lifetimeFrames, hasHit: false, definition });
     }
     for (let i = 0; i < this.projectiles.length; i += 1) {
@@ -551,6 +622,7 @@ export class Simulation {
   private canCancel(character: CharacterState, nextMove: MoveDefinition | undefined): boolean {
     const attack = character.attack;
     const currentMove = attack ? this.moveFor(character, attack.moveId) : undefined;
+    if (attack && nextMove?.combat?.command.parentId === attack.moveId) return true;
     const cancelRule = currentMove?.cancelOnHit;
     if (!attack || !nextMove || attack.hitOutcome !== 'hit' || attack.hitElapsedFrames === undefined || !cancelRule) {
       return false;
@@ -601,7 +673,7 @@ export class Simulation {
       attack.elapsedFrames += 1;
       const activeStartsAt = move.startup;
       const recoveryStartsAt = move.startup + move.activeFrames;
-      const totalFrames = recoveryStartsAt + move.recovery;
+      const totalFrames = recoveryStartsAt + recoveryFrames(move, attack.hitOutcome === 'hit' || attack.hitOutcome === 'block');
 
       if (attack.elapsedFrames >= totalFrames) {
         character.attack = undefined;
@@ -613,6 +685,7 @@ export class Simulation {
       } else {
         character.mode = 'startup';
       }
+      attack.hurtboxOverride = inWindow(attack.elapsedFrames, move.combat?.highCrush) ? character.collision.hurtboxes.crouching : move.combat?.hurtboxes.find(box => attack.elapsedFrames >= box.from && attack.elapsedFrames <= box.to)?.box;
       attack.hurtboxStance = character.mode === 'startup' || character.mode === 'active' || character.mode === 'recovery'
         ? move.hurtboxStances?.[character.mode] : undefined;
     });
@@ -656,6 +729,19 @@ export class Simulation {
     }
   }
 
+  private constrainBodiesToArena(): void {
+    this.characters.forEach(character => {
+      const half = character.collision.bodyWidth / 2;
+      character.x = clamp(character.x, this.config.arena.left + half, this.config.arena.right - half);
+    });
+    const [left, right] = [...this.characters].sort((a, b) => a.x - b.x);
+    const minimum = (left.collision.bodyWidth + right.collision.bodyWidth) / 2;
+    if (Math.abs(left.y - right.y) >= minimum && (!left.grounded || !right.grounded)) return;
+    if (right.x - left.x >= minimum) return;
+    if (right.x + right.collision.bodyWidth / 2 >= this.config.arena.right) left.x = right.x - minimum;
+    else right.x = left.x + minimum;
+  }
+
   private updateFacing(): void {
     const [first, second] = this.characters;
     if (first.x < second.x) {
@@ -697,7 +783,7 @@ function isBackwardDirection(direction: FrameInput['direction']): boolean {
 
 function isStunned(character: CharacterState): boolean {
   return character.mode === 'hitstun' || character.mode === 'blockstun' ||
-    character.mode === 'grabbed' || character.mode === 'throwRecovery';
+    character.mode === 'grabbed' || character.mode === 'throwRecovery' || character.mode === 'knockdown';
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

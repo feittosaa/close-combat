@@ -1,3 +1,4 @@
+import type { ComboRecipe, CombatRules } from './combat/CombatBook';
 // src/engine/data/characters.ts
 import { testerMoves } from './moves';
 import type { MoveDefinition } from './moves';
@@ -18,6 +19,8 @@ export interface CharacterCollisionProfile {
     standing: CharacterHurtbox;
     crouching: CharacterHurtbox;
     airborne: CharacterHurtbox;
+    knockdown?: CharacterHurtbox;
+    juggled?: CharacterHurtbox;
   };
 }
 
@@ -30,6 +33,8 @@ export interface CharacterDefinition {
   movement: { walkSpeed: number; jumpVelocity: number; dashSpeed?: number };
   /** Livro de golpes exclusivo deste personagem; IDs só precisam ser únicos dentro do livro. */
   moves: readonly MoveDefinition[];
+  combos?: readonly ComboRecipe[];
+  combatRules?: CombatRules;
   collision: CharacterCollisionProfile;
   assets: { portrait?: string; spritesheet?: string; animationManifest?: string };
 }
@@ -101,5 +106,5 @@ export const playableCharacters = characters.filter((character) => character.sel
 
 /** A quantidade de especiais é derivada do livro, nunca de um catálogo global. */
 export function getSpecialMoves(character: CharacterDefinition): readonly MoveDefinition[] {
-  return character.moves.filter((move) => move.kind === 'special' || move.hitLevel === 'special' || move.projectile);
+  return character.moves.filter((move) => !move.legacy && (move.kind === 'special' || move.hitLevel === 'special' || move.projectile));
 }

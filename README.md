@@ -17,11 +17,11 @@ npm install
 npm run dev
 ```
 
-Escolha **Arcade**, **Luta PvP**, **Modo Treino** ou **Configurações**. Use clique ou setas/Enter; atalhos do menu: `A`, `V`, `T`, `C`. Depois escolha **Ayla**, **Gris** ou **Tester** para P1 e confirme o cenário **Cais**. P2 é definido pelo modo. **Esc** retorna à tela anterior ou ao menu durante a luta.
+Escolha **Arcade**, **Luta PvP**, **Modo Treino** ou **Configurações**. Use clique ou setas/Enter; atalhos do menu: `A`, `V`, `T`, `C`. Depois escolha **Ayla**, **Gris** ou **Tester** para P1 e confirme o cenário **Cais**. P2 é definido pelo modo. Nos menus, **Esc** retorna à tela anterior. Durante a luta, **P** ou **Esc** abre o pause; o retorno ao menu fica dentro dele.
 
 No **PvP**, P2 usa os controles do segundo jogador. No **Arcade**, o computador enfrenta P1 com comandos normais do próprio livro de golpes; vencer libera o próximo adversário com Enter. O **Treino** mantém pausa, avanço por frame, dados de golpes e adversário controlável. **Configurações** possui uma página reservada, ainda sem opções, como solicitado. Direções, sequência de entradas e colisões aparecem apenas no treino.
 
-Ayla possui cinco especiais, incluindo onda rasteira e erupção de energia; Gris possui quatro, com tesoura gigante dourada sempre empunhada e um projétil separado de energia de corte. Cada lutador tem livro, tamanho, hurtboxes e velocidades próprios; cada golpe e projétil tem sua hitbox. Quantidade de especiais é livre por personagem, de zero a N.
+Ayla usa um livro de combate com as 135 entradas adaptadas da referência Kazuya/T8, posturas e 36 receitas de combo. O pause do treino permite consultar golpes por categoria, buscar comandos e fixar uma receita. Arte provisória e lacunas de dados estão registradas em [`docs/ayla-combate.md`](./docs/ayla-combate.md). Gris possui quatro especiais, com tesoura gigante dourada sempre empunhada e um projétil separado de energia de corte. Cada lutador tem livro, tamanho, hurtboxes e velocidades próprios; cada golpe e projétil tem sua hitbox. Quantidade de especiais é livre por personagem, de zero a N.
 
 O primeiro cenário é **Cais**, composto de fundo, chão e caixas. A câmera acompanha os lutadores: o fundo se move mais lentamente, enquanto caixas e chão mantêm escala e movimento comuns. O sistema aceita qualquer quantidade de camadas por cenário; estrutura, manifesto e instruções de entrega estão em [`src/assets/scenes/README.md`](./src/assets/scenes/README.md).
 
@@ -32,7 +32,7 @@ Na revisão atual, as cargas foram reduzidas em 24% com apoio preservado no chã
 - **Jogador 1:** mover/saltar/agachar com `A`, `D`, `W`, `S`; ataques `1`–`4` em `J`, `K`, `N`, `M`.
 - **Jogador 2:** mover/saltar/agachar com as setas; ataques `1`–`4` no teclado numérico `1`–`4`.
 - `F`/`B` duas vezes rapidamente no chão ativa dash; dash não funciona no ar. O recuo usa a caminhada espelhada. Segurar `B`/`DB` durante um golpe adversário ativa guarda parada a qualquer distância (`B` para altos/médios, `DB` para baixos). Agachar também impede a locomoção. O bloqueio de um golpe do Tester desloca o defensor 4 unidades; um golpe fora de alcance não o desloca.
-- No Tester, `F/B+1`, `DF/DB+2`, `D+3` e `UF/UB+4` executam variantes direcionais. Ayla e Gris têm quatro ataques em pé, quatro agachados (`D+1`–`D+4`) e quatro aéreos. `Esc` volta ao menu.
+- No Tester, `F/B+1`, `DF/DB+2`, `D+3` e `UF/UB+4` executam variantes direcionais. Gris mantém quatro ataques em pé, quatro agachados e quatro aéreos. Ayla usa o novo livro contextual (incluindo FC/WS, strings e elétrico); consulte-o no pause. `P`/`Esc` abre ou fecha o pause.
 - `1+2` e `3+4` executam chords de teste; pressionamentos são agrupados se ocorrerem dentro de 3 frames. Golpes de um botão que possam formar esses chords aguardam o fim da janela; combinações sem golpe cadastrado são ignoradas.
 - `F,F+2` e `D,DF+3` são sequências provisórias de Tester; `R` reinicia a luta depois do resultado final.
 - Ayla e Gris usam `1+3` para agarrar e `2+4` para quebrar. Tester possui agarrões em `1+3` e `2+4`, com quebra pela combinação oposta. Segure `F` para lançar à frente ou `B` para lançar para trás; a janela de quebra é de 6 frames. No Tester, `F,N,DF+2` executa o especial de teste; pressionar `2` até um frame após `DF` ativa a variante precisa. Seu jab pode cancelar para o soco ascendente ou o especial depois de acertar.

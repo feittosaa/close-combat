@@ -61,7 +61,8 @@ describe('Gris e seleção por modo', () => {
   });
   it('possui livro, velocidades, colisões e quantidade de especiais próprios', () => {
     expect(getSpecialMoves(gris)).toHaveLength(4);
-    expect(getSpecialMoves(ayla)).toHaveLength(5);
+    expect(getSpecialMoves(ayla).some(move => move.combat?.reference?.command === 'f,n,d,df:2')).toBe(true);
+    expect(getSpecialMoves(ayla).length).not.toBe(getSpecialMoves(gris).length);
     expect(gris.movement).not.toEqual(ayla.movement);
     expect(gris.collision).not.toEqual(ayla.collision);
     expect(new Set(gris.moves.map(m => m.id)).size).toBe(gris.moves.length);
