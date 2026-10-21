@@ -2,7 +2,6 @@
 import Phaser from 'phaser';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import testerManifest from '../assets/animations/tester.json';
-import testerAtlasUrl from '../assets/sprites/characters/tester/tester-atlas.png';
 import { defaultCharacter, getCharacterById } from '../engine/data/characters';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
@@ -21,10 +20,22 @@ import { CombatHud } from '../ui/CombatHud';
 import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
+import { getAnimationManifest, preloadCharacter } from '../rendering/animations/characterAssets';
+import { ProjectileView } from '../rendering/ProjectileView';
+import { ArcadeController } from '../engine/combat/ArcadeController';
+import { arcadeOpponents, opponentFor, type FightSetup, type MatchMode } from './matchSetup';
 
 export class FightScene extends Phaser.Scene {
   private selectedFighter = defaultCharacter;
+  private opponentFighter = defaultCharacter;
   private selectedManifest: CharacterAnimationManifest = testerManifest;
+  private opponentManifest: CharacterAnimationManifest = testerManifest;
+  private projectileView?: ProjectileView;
+  private mode: MatchMode = 'versus';
+  private arcadeIndex = 0;
+  private bot?: ArcadeController;
+  private botRound = 0;
+  private arcadeInfo?: Phaser.GameObjects.Text;
   private selectedStage = defaultStage;
   private stageView?: StageView;
   private simulation?: Simulation;
@@ -71,9 +82,21 @@ export class FightScene extends Phaser.Scene {
       this.inputDisplays.forEach((display) => display.setVisible(this.training!.showInputs));
     }],
   ];
-  private readonly handleEscape = (): void => { this.scene.start('MenuScene'); };
+  private readonly handleEscape = (): void => { this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }); };
+  private readonly handleContinue = (): void => {
+    const snapshot = this.simulation?.snapshot();
+    if (this.mode !== 'arcade' || snapshot?.phase !== 'match-over' || snapshot.matchWinnerId !== 'player-1') return;
+    if (this.arcadeIndex + 1 >= arcadeOpponents(this.selectedFighter.id).length) return;
+    this.scene.restart({ fighterId: this.selectedFighter.id, stageId: this.selectedStage.id,
+      mode: 'arcade', arcadeIndex: this.arcadeIndex + 1 });
+  };
   private readonly handleRestart = (): void => {
     if (!this.simulation?.isMatchOver()) return;
+    if (this.mode === 'arcade' && this.simulation.snapshot().matchWinnerId === 'player-1' &&
+        this.arcadeIndex + 1 >= arcadeOpponents(this.selectedFighter.id).length) {
+      this.scene.restart({ fighterId: this.selectedFighter.id, stageId: this.selectedStage.id, mode: 'arcade', arcadeIndex: 0 });
+      return;
+    }
     this.resetFight();
   };
 
@@ -81,25 +104,32 @@ export class FightScene extends Phaser.Scene {
     super('FightScene');
   }
 
-  init(data: { fighterId?: string; stageId?: string; mode?: 'versus' | 'training' } = {}): void {
+  init(data: FightSetup = {}): void {
     this.selectedFighter = getCharacterById(data.fighterId ?? '') ?? defaultCharacter;
-    this.selectedManifest = testerManifest;
+    this.mode = data.mode ?? 'versus';
+    this.arcadeIndex = Math.max(0, Math.trunc(data.arcadeIndex ?? 0));
+    this.opponentFighter = this.mode === 'arcade'
+      ? opponentFor(this.selectedFighter.id, 'arcade', this.arcadeIndex)
+      : getCharacterById(data.opponentId ?? '') ?? opponentFor(this.selectedFighter.id, this.mode);
+    this.selectedManifest = getAnimationManifest(this.selectedFighter.id);
+    this.opponentManifest = getAnimationManifest(this.opponentFighter.id);
     this.selectedStage = getStageById(data.stageId ?? '') ?? defaultStage;
     this.training = data.mode === 'training' ? new TrainingSession() : undefined;
+    this.bot = this.mode === 'arcade' ? new ArcadeController(this.opponentFighter, this.selectedFighter) : undefined;
+    this.botRound = 0;
   }
 
   preload(): void {
     preloadStage(this, this.selectedStage);
-    if (this.textures.exists(this.selectedManifest.textureKey)) return;
-    this.load.spritesheet(this.selectedManifest.textureKey, testerAtlasUrl, {
-      frameWidth: this.selectedManifest.frameSize.width,
-      frameHeight: this.selectedManifest.frameSize.height,
-    });
+    preloadCharacter(this, this.selectedFighter.id);
+    preloadCharacter(this, this.opponentFighter.id);
   }
 
   create(): void {
     validateAnimationManifest(this.selectedManifest);
     validateAnimationCoverage(this.selectedManifest, this.selectedFighter.id, this.selectedFighter.moves);
+    validateAnimationManifest(this.opponentManifest);
+    validateAnimationCoverage(this.opponentManifest, this.opponentFighter.id, this.opponentFighter.moves);
 
     const { width, height } = this.scale;
     const config = createGameConfig(width, height);
@@ -108,7 +138,7 @@ export class FightScene extends Phaser.Scene {
     config.arena.left += stageLayout.arenaOffsetX;
     config.arena.right += stageLayout.arenaOffsetX;
     this.stageView = new StageView(this, this.selectedStage, stageLayout);
-    this.simulation = new Simulation(config, [this.selectedFighter, this.selectedFighter], this.training
+    this.simulation = new Simulation(config, [this.selectedFighter, this.opponentFighter], this.training
       ? { training: true, initialDistance: this.training.initialDistance } : {});
     this.simulation.setTrainingAutoRestore(this.training?.autoRestore ?? false);
     this.keyboardInputs = [new KeyboardInput(PLAYER_ONE_KEYS), new KeyboardInput(PLAYER_TWO_KEYS)];
@@ -116,11 +146,15 @@ export class FightScene extends Phaser.Scene {
 
     this.combatants = [
       new CombatantView(this, config.arena.left, config.arena.floorY, 0xe45b5b, this.selectedManifest.textureKey, this.selectedManifest),
-      new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4, this.selectedManifest.textureKey, this.selectedManifest),
+      new CombatantView(this, config.arena.right, config.arena.floorY, 0x5b8de4, this.opponentManifest.textureKey, this.opponentManifest),
     ];
     this.hitboxView = new HitboxView(this);
     this.hitboxView.setVisible(Boolean(this.training));
-    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.selectedFighter.name], this.selectedStage.name, Boolean(this.training));
+    this.projectileView = new ProjectileView(this);
+    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name], this.selectedStage.name, Boolean(this.training));
+    if (this.mode === 'arcade') this.arcadeInfo = this.add.text(width / 2, 91, '', {
+      color: '#f2d299', fontSize: '13px', align: 'center', fontStyle: 'bold',
+    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(110);
     if (this.training) {
       this.inputDisplays = [
         new PlayerInputDisplay(this, 18, 82, 'P1 · WASD / J K N M', '#ff8c8c'),
@@ -143,6 +177,7 @@ export class FightScene extends Phaser.Scene {
 
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
     this.input.keyboard?.on('keydown-R', this.handleRestart);
+    this.input.keyboard?.on('keydown-ENTER', this.handleContinue);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup, this);
     this.syncViewsAndHud();
   }
@@ -156,8 +191,14 @@ export class FightScene extends Phaser.Scene {
 
   private readInputs(characters: readonly CharacterState[], frame: number): readonly FrameInput[] {
     const inputs = this.keyboardInputs.map((input, index) => input.read(characters[index]?.facing ?? (index === 0 ? 'right' : 'left')));
-    const dummyInput = this.training?.dummyInput(frame, characters);
+    const snapshot = this.simulation?.snapshot();
+    const dummyInput = this.training?.dummyInput(frame, characters, snapshot?.projectiles);
     if (dummyInput) inputs[1] = dummyInput;
+    if (this.bot && snapshot) {
+      if (this.botRound !== snapshot.round) { this.bot.reset(); this.botRound = snapshot.round; }
+      inputs[1] = snapshot.phase === 'fight'
+        ? this.bot.readInput(frame, characters[1], characters[0], snapshot.projectiles) : neutralInput();
+    }
     this.currentInputs = inputs as [FrameInput, FrameInput];
     this.currentInputs.forEach((input, index) => this.commandBuffers[index]?.push(input));
     return this.currentInputs;
@@ -165,6 +206,8 @@ export class FightScene extends Phaser.Scene {
 
   private resetFight(): void {
     this.simulation?.resetMatch(this.training?.initialDistance);
+    this.bot?.reset();
+    this.botRound = 0;
     this.training?.resetInspection();
     this.keyboardInputs.forEach((input) => input.clear());
     this.commandBuffers.forEach((buffer) => buffer.clear());
@@ -177,9 +220,25 @@ export class FightScene extends Phaser.Scene {
     if (!snapshot) return;
 
     this.stageView?.sync(snapshot.characters.map((character) => character.x));
-    snapshot.characters.forEach((character, index) => this.combatants[index]?.sync(character, snapshot.frame));
+    snapshot.characters.forEach((character, index) => {
+      const presentation = snapshot.phase !== 'fight'
+        ? character.characterId === snapshot.roundWinnerId ? 'victory' : character.health === 0 ? 'knockdown' : undefined
+        : undefined;
+      this.combatants[index]?.sync(character, snapshot.frame, presentation);
+    });
+    this.projectileView?.sync(snapshot.projectiles);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.scale.width);
+    if (this.arcadeInfo) {
+      const count = arcadeOpponents(this.selectedFighter.id).length;
+      let label = `ARCADE · LUTA ${this.arcadeIndex + 1}/${count} · COMPUTADOR`;
+      if (snapshot.phase === 'match-over') {
+        label = snapshot.matchWinnerId === 'player-1'
+          ? this.arcadeIndex + 1 < count ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'ARCADE CONCLUÍDO · R RECOMEÇAR · ESC MENU'
+          : snapshot.matchWinnerId ? 'FIM DE JOGO · R TENTAR NOVAMENTE · ESC MENU' : 'EMPATE · R REPETIR · ESC MENU';
+      }
+      this.arcadeInfo.setText(label);
+    }
     if (this.training) {
       this.training.observe(snapshot);
       this.trainingHud?.update(snapshot, this.training);
@@ -192,6 +251,7 @@ export class FightScene extends Phaser.Scene {
   private cleanup(): void {
     this.input.keyboard?.off('keydown-ESC', this.handleEscape);
     this.input.keyboard?.off('keydown-R', this.handleRestart);
+    this.input.keyboard?.off('keydown-ENTER', this.handleContinue);
     this.trainingListeners.forEach((listener, key) => this.input.keyboard?.off(key, listener));
     this.trainingListeners.clear();
     if (this.training) this.input.keyboard?.removeCapture(['P', 'PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
@@ -199,6 +259,11 @@ export class FightScene extends Phaser.Scene {
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());
     this.combatants = [];
+    this.projectileView?.destroy();
+    this.projectileView = undefined;
+    this.arcadeInfo?.destroy();
+    this.arcadeInfo = undefined;
+    this.bot = undefined;
     this.inputDisplays.forEach((display) => display.destroy());
     this.inputDisplays = [];
     this.hitboxView?.destroy();

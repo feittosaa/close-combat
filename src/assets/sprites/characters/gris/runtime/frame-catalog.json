@@ -1,0 +1,1652 @@
+{
+  "0": {
+    "name": "gris-idle-01",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 389,
+      "y": 4,
+      "w": 160,
+      "h": 310
+    },
+    "rootX": 489.84375,
+    "footY": 314,
+    "scale": 0.61,
+    "goldPixels": 3171,
+    "weaponReviewed": true
+  },
+  "1": {
+    "name": "gris-idle-02",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 687,
+      "y": 9,
+      "w": 167,
+      "h": 305
+    },
+    "rootX": 788.6484375,
+    "footY": 314,
+    "scale": 0.61,
+    "goldPixels": 2976,
+    "weaponReviewed": true
+  },
+  "2": {
+    "name": "gris-idle-03",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 1015,
+      "y": 8,
+      "w": 158,
+      "h": 306
+    },
+    "rootX": 1092.3515625,
+    "footY": 314,
+    "scale": 0.61,
+    "goldPixels": 3230,
+    "weaponReviewed": true
+  },
+  "3": {
+    "name": "gris-walk-00",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 57,
+      "y": 322,
+      "w": 219,
+      "h": 310
+    },
+    "rootX": 195.9375,
+    "footY": 632,
+    "scale": 0.61,
+    "goldPixels": 3250,
+    "weaponReviewed": true
+  },
+  "4": {
+    "name": "gris-walk-01",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 361,
+      "y": 322,
+      "w": 226,
+      "h": 310
+    },
+    "rootX": 499.640625,
+    "footY": 632,
+    "scale": 0.61,
+    "goldPixels": 3312,
+    "weaponReviewed": true
+  },
+  "5": {
+    "name": "gris-walk-02",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 672,
+      "y": 327,
+      "w": 226,
+      "h": 305
+    },
+    "rootX": 798.4453125,
+    "footY": 632,
+    "scale": 0.61,
+    "goldPixels": 3429,
+    "weaponReviewed": true
+  },
+  "6": {
+    "name": "gris-walk-03",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 980,
+      "y": 327,
+      "w": 227,
+      "h": 305
+    },
+    "rootX": 1111.9453125,
+    "footY": 632,
+    "scale": 0.61,
+    "goldPixels": 3475,
+    "weaponReviewed": true
+  },
+  "7": {
+    "name": "gris-crouch-00",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 16,
+      "y": 662,
+      "w": 294,
+      "h": 237
+    },
+    "rootX": 200.8359375,
+    "footY": 899,
+    "scale": 0.61,
+    "goldPixels": 3518,
+    "weaponReviewed": true
+  },
+  "8": {
+    "name": "gris-crouch-01",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 330,
+      "y": 664,
+      "w": 271,
+      "h": 233
+    },
+    "rootX": 504.5390625,
+    "footY": 897,
+    "scale": 0.61,
+    "goldPixels": 3261,
+    "weaponReviewed": true
+  },
+  "9": {
+    "name": "gris-crouch-02",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 629,
+      "y": 667,
+      "w": 288,
+      "h": 232
+    },
+    "rootX": 808.2421875,
+    "footY": 899,
+    "scale": 0.61,
+    "goldPixels": 3085,
+    "weaponReviewed": true
+  },
+  "10": {
+    "name": "gris-crouch-03",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 943,
+      "y": 669,
+      "w": 289,
+      "h": 230
+    },
+    "rootX": 1116.84375,
+    "footY": 899,
+    "scale": 0.61,
+    "goldPixels": 3264,
+    "weaponReviewed": true
+  },
+  "11": {
+    "name": "gris-jump-00",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 16,
+      "y": 926,
+      "w": 250,
+      "h": 312
+    },
+    "rootX": 195.9375,
+    "footY": 1238,
+    "scale": 0.61,
+    "goldPixels": 3280,
+    "weaponReviewed": true
+  },
+  "12": {
+    "name": "gris-jump-01",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 319,
+      "y": 920,
+      "w": 250,
+      "h": 262
+    },
+    "rootX": 499.640625,
+    "footY": 1182,
+    "scale": 0.61,
+    "goldPixels": 2807,
+    "weaponReviewed": true
+  },
+  "13": {
+    "name": "gris-jump-02",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 628,
+      "y": 923,
+      "w": 264,
+      "h": 308
+    },
+    "rootX": 798.4453125,
+    "footY": 1231,
+    "scale": 0.61,
+    "goldPixels": 3289,
+    "weaponReviewed": true
+  },
+  "14": {
+    "name": "gris-jump-03",
+    "sheet": "movement",
+    "sourceRect": {
+      "x": 931,
+      "y": 1013,
+      "w": 297,
+      "h": 226
+    },
+    "rootX": 1116.84375,
+    "footY": 1239,
+    "scale": 0.61,
+    "goldPixels": 3056,
+    "weaponReviewed": true
+  },
+  "15": {
+    "name": "gris-standing-lp-00",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 52,
+      "y": 24,
+      "w": 195,
+      "h": 290
+    },
+    "rootX": 161.6484375,
+    "footY": 314,
+    "scale": 0.63,
+    "goldPixels": 3909,
+    "weaponReviewed": true
+  },
+  "16": {
+    "name": "gris-standing-lp-01",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 334,
+      "y": 18,
+      "w": 247,
+      "h": 296
+    },
+    "rootX": 450.65625,
+    "footY": 314,
+    "scale": 0.63,
+    "goldPixels": 3880,
+    "weaponReviewed": true
+  },
+  "17": {
+    "name": "gris-standing-lp-02",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 673,
+      "y": 24,
+      "w": 263,
+      "h": 290
+    },
+    "rootX": 783.75,
+    "footY": 314,
+    "scale": 0.63,
+    "goldPixels": 3769,
+    "weaponReviewed": true
+  },
+  "18": {
+    "name": "gris-standing-lp-03",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 1001,
+      "y": 19,
+      "w": 217,
+      "h": 295
+    },
+    "rootX": 1097.25,
+    "footY": 314,
+    "scale": 0.63,
+    "goldPixels": 3746,
+    "weaponReviewed": true
+  },
+  "19": {
+    "name": "gris-standing-lk-00",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 59,
+      "y": 635,
+      "w": 191,
+      "h": 290
+    },
+    "rootX": 171.4453125,
+    "footY": 925,
+    "scale": 0.63,
+    "goldPixels": 3484,
+    "weaponReviewed": true
+  },
+  "20": {
+    "name": "gris-standing-lk-01",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 336,
+      "y": 645,
+      "w": 318,
+      "h": 281
+    },
+    "rootX": 440.859375,
+    "footY": 926,
+    "scale": 0.63,
+    "goldPixels": 3362,
+    "weaponReviewed": true
+  },
+  "21": {
+    "name": "gris-standing-lk-02",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 704,
+      "y": 643,
+      "w": 196,
+      "h": 283
+    },
+    "rootX": 778.8515625,
+    "footY": 926,
+    "scale": 0.63,
+    "goldPixels": 3261,
+    "weaponReviewed": true
+  },
+  "22": {
+    "name": "gris-standing-lk-03",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 1035,
+      "y": 645,
+      "w": 191,
+      "h": 281
+    },
+    "rootX": 1097.25,
+    "footY": 926,
+    "scale": 0.63,
+    "goldPixels": 3232,
+    "weaponReviewed": true
+  },
+  "23": {
+    "name": "gris-standing-rk-00",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 41,
+      "y": 937,
+      "w": 205,
+      "h": 282
+    },
+    "rootX": 171.4453125,
+    "footY": 1219,
+    "scale": 0.63,
+    "goldPixels": 3822,
+    "weaponReviewed": true
+  },
+  "24": {
+    "name": "gris-standing-rk-01",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 336,
+      "y": 943,
+      "w": 294,
+      "h": 271
+    },
+    "rootX": 440.859375,
+    "footY": 1214,
+    "scale": 0.63,
+    "goldPixels": 3382,
+    "weaponReviewed": true
+  },
+  "25": {
+    "name": "gris-standing-rk-02",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 685,
+      "y": 942,
+      "w": 274,
+      "h": 276
+    },
+    "rootX": 788.6484375,
+    "footY": 1218,
+    "scale": 0.63,
+    "goldPixels": 3328,
+    "weaponReviewed": true
+  },
+  "26": {
+    "name": "gris-standing-rk-03",
+    "sheet": "normals",
+    "sourceRect": {
+      "x": 1027,
+      "y": 947,
+      "w": 201,
+      "h": 272
+    },
+    "rootX": 1107.046875,
+    "footY": 1219,
+    "scale": 0.63,
+    "goldPixels": 3428,
+    "weaponReviewed": true
+  },
+  "27": {
+    "name": "gris-crouching-lp-00",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 42,
+      "y": 44,
+      "w": 218,
+      "h": 270
+    },
+    "rootX": 181.2421875,
+    "footY": 314,
+    "scale": 0.61,
+    "goldPixels": 3770,
+    "weaponReviewed": true
+  },
+  "28": {
+    "name": "gris-crouching-lp-01",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 352,
+      "y": 48,
+      "w": 258,
+      "h": 266
+    },
+    "rootX": 475.1484375,
+    "footY": 314,
+    "scale": 0.61,
+    "goldPixels": 3684,
+    "weaponReviewed": true
+  },
+  "29": {
+    "name": "gris-crouching-lp-02",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 662,
+      "y": 48,
+      "w": 276,
+      "h": 266
+    },
+    "rootX": 783.75,
+    "footY": 314,
+    "scale": 0.61,
+    "goldPixels": 3760,
+    "weaponReviewed": true
+  },
+  "30": {
+    "name": "gris-crouching-lp-03",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 988,
+      "y": 47,
+      "w": 216,
+      "h": 267
+    },
+    "rootX": 1097.25,
+    "footY": 314,
+    "scale": 0.61,
+    "goldPixels": 3638,
+    "weaponReviewed": true
+  },
+  "31": {
+    "name": "gris-crouching-lk-00",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 47,
+      "y": 674,
+      "w": 232,
+      "h": 248
+    },
+    "rootX": 186.140625,
+    "footY": 922,
+    "scale": 0.61,
+    "goldPixels": 3330,
+    "weaponReviewed": true
+  },
+  "32": {
+    "name": "gris-crouching-lk-01",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 368,
+      "y": 669,
+      "w": 240,
+      "h": 254
+    },
+    "rootX": 484.9453125,
+    "footY": 923,
+    "scale": 0.61,
+    "goldPixels": 3346,
+    "weaponReviewed": true
+  },
+  "33": {
+    "name": "gris-crouching-lk-02",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 649,
+      "y": 670,
+      "w": 311,
+      "h": 253
+    },
+    "rootX": 783.75,
+    "footY": 923,
+    "scale": 0.61,
+    "goldPixels": 3651,
+    "weaponReviewed": true
+  },
+  "34": {
+    "name": "gris-crouching-lk-03",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 1008,
+      "y": 663,
+      "w": 204,
+      "h": 257
+    },
+    "rootX": 1097.25,
+    "footY": 920,
+    "scale": 0.61,
+    "goldPixels": 3436,
+    "weaponReviewed": true
+  },
+  "35": {
+    "name": "gris-crouching-rk-00",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 15,
+      "y": 980,
+      "w": 269,
+      "h": 219
+    },
+    "rootX": 186.140625,
+    "footY": 1199,
+    "scale": 0.61,
+    "goldPixels": 2998,
+    "weaponReviewed": true
+  },
+  "36": {
+    "name": "gris-crouching-rk-03",
+    "sheet": "crouching",
+    "sourceRect": {
+      "x": 980,
+      "y": 982,
+      "w": 239,
+      "h": 219
+    },
+    "rootX": 1092.3515625,
+    "footY": 1201,
+    "scale": 0.61,
+    "goldPixels": 2503,
+    "weaponReviewed": true
+  },
+  "37": {
+    "name": "gris-air-lp-00",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 56,
+      "y": 13,
+      "w": 228,
+      "h": 286
+    },
+    "rootX": 195.9375,
+    "footY": 299,
+    "scale": 0.61,
+    "goldPixels": 3061,
+    "weaponReviewed": true
+  },
+  "38": {
+    "name": "gris-air-lp-01",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 339,
+      "y": 15,
+      "w": 309,
+      "h": 301
+    },
+    "rootX": 465.3515625,
+    "footY": 316,
+    "scale": 0.61,
+    "goldPixels": 3497,
+    "weaponReviewed": true
+  },
+  "39": {
+    "name": "gris-air-lp-02",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 655,
+      "y": 15,
+      "w": 297,
+      "h": 311
+    },
+    "rootX": 778.8515625,
+    "footY": 326,
+    "scale": 0.61,
+    "goldPixels": 2929,
+    "weaponReviewed": true
+  },
+  "40": {
+    "name": "gris-air-lp-03",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 1017,
+      "y": 19,
+      "w": 190,
+      "h": 290
+    },
+    "rootX": 1097.25,
+    "footY": 309,
+    "scale": 0.61,
+    "goldPixels": 2873,
+    "weaponReviewed": true
+  },
+  "41": {
+    "name": "gris-air-rp-00",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 37,
+      "y": 323,
+      "w": 223,
+      "h": 301
+    },
+    "rootX": 191.0390625,
+    "footY": 624,
+    "scale": 0.61,
+    "goldPixels": 3463,
+    "weaponReviewed": true
+  },
+  "42": {
+    "name": "gris-air-rp-01",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 335,
+      "y": 333,
+      "w": 307,
+      "h": 291
+    },
+    "rootX": 460.453125,
+    "footY": 624,
+    "scale": 0.61,
+    "goldPixels": 3247,
+    "weaponReviewed": true
+  },
+  "43": {
+    "name": "gris-air-rp-02",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 660,
+      "y": 372,
+      "w": 313,
+      "h": 262
+    },
+    "rootX": 773.953125,
+    "footY": 634,
+    "scale": 0.61,
+    "goldPixels": 2825,
+    "weaponReviewed": true
+  },
+  "44": {
+    "name": "gris-air-rp-03",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 1001,
+      "y": 332,
+      "w": 204,
+      "h": 283
+    },
+    "rootX": 1107.046875,
+    "footY": 615,
+    "scale": 0.61,
+    "goldPixels": 2964,
+    "weaponReviewed": true
+  },
+  "45": {
+    "name": "gris-air-lk-00",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 46,
+      "y": 636,
+      "w": 212,
+      "h": 273
+    },
+    "rootX": 186.140625,
+    "footY": 909,
+    "scale": 0.61,
+    "goldPixels": 3041,
+    "weaponReviewed": true
+  },
+  "46": {
+    "name": "gris-air-lk-01",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 313,
+      "y": 643,
+      "w": 308,
+      "h": 272
+    },
+    "rootX": 465.3515625,
+    "footY": 915,
+    "scale": 0.61,
+    "goldPixels": 3143,
+    "weaponReviewed": true
+  },
+  "47": {
+    "name": "gris-air-lk-02",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 668,
+      "y": 647,
+      "w": 304,
+      "h": 271
+    },
+    "rootX": 783.75,
+    "footY": 918,
+    "scale": 0.61,
+    "goldPixels": 2816,
+    "weaponReviewed": true
+  },
+  "48": {
+    "name": "gris-air-lk-03",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 1013,
+      "y": 645,
+      "w": 190,
+      "h": 271
+    },
+    "rootX": 1111.9453125,
+    "footY": 916,
+    "scale": 0.61,
+    "goldPixels": 2952,
+    "weaponReviewed": true
+  },
+  "49": {
+    "name": "gris-air-rk-00",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 19,
+      "y": 931,
+      "w": 260,
+      "h": 288
+    },
+    "rootX": 186.140625,
+    "footY": 1219,
+    "scale": 0.61,
+    "goldPixels": 3098,
+    "weaponReviewed": true
+  },
+  "50": {
+    "name": "gris-air-rk-03",
+    "sheet": "air",
+    "sourceRect": {
+      "x": 1037,
+      "y": 941,
+      "w": 184,
+      "h": 277
+    },
+    "rootX": 1116.84375,
+    "footY": 1218,
+    "scale": 0.61,
+    "goldPixels": 2969,
+    "weaponReviewed": true
+  },
+  "51": {
+    "name": "gris-rising-shear-00",
+    "sheet": "specials",
+    "sourceRect": {
+      "x": 37,
+      "y": 524,
+      "w": 260,
+      "h": 185
+    },
+    "rootX": 195.9375,
+    "footY": 709,
+    "scale": 0.67,
+    "goldPixels": 2316,
+    "weaponReviewed": true
+  },
+  "52": {
+    "name": "gris-rising-shear-01",
+    "sheet": "specials",
+    "sourceRect": {
+      "x": 390,
+      "y": 323,
+      "w": 204,
+      "h": 402
+    },
+    "rootX": 489.84375,
+    "footY": 725,
+    "scale": 0.67,
+    "goldPixels": 2259,
+    "weaponReviewed": true
+  },
+  "53": {
+    "name": "gris-rising-shear-03",
+    "sheet": "specials",
+    "sourceRect": {
+      "x": 999,
+      "y": 528,
+      "w": 217,
+      "h": 181
+    },
+    "rootX": 1097.25,
+    "footY": 709,
+    "scale": 0.67,
+    "goldPixels": 2225,
+    "weaponReviewed": true
+  },
+  "54": {
+    "name": "gris-hit-00",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 33,
+      "y": 104,
+      "w": 293,
+      "h": 260
+    },
+    "rootX": 225.328125,
+    "footY": 364,
+    "scale": 0.6,
+    "goldPixels": 2078,
+    "weaponReviewed": true
+  },
+  "55": {
+    "name": "gris-hit-01",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 356,
+      "y": 128,
+      "w": 254,
+      "h": 246
+    },
+    "rootX": 494.7421875,
+    "footY": 374,
+    "scale": 0.6,
+    "goldPixels": 1909,
+    "weaponReviewed": true
+  },
+  "56": {
+    "name": "gris-hit-02",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 678,
+      "y": 121,
+      "w": 238,
+      "h": 253
+    },
+    "rootX": 793.546875,
+    "footY": 374,
+    "scale": 0.6,
+    "goldPixels": 2011,
+    "weaponReviewed": true
+  },
+  "57": {
+    "name": "gris-hit-03",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 984,
+      "y": 103,
+      "w": 226,
+      "h": 271
+    },
+    "rootX": 1107.046875,
+    "footY": 374,
+    "scale": 0.6,
+    "goldPixels": 1982,
+    "weaponReviewed": true
+  },
+  "58": {
+    "name": "gris-knockdown-00",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 43,
+      "y": 420,
+      "w": 260,
+      "h": 224
+    },
+    "rootX": 151.8515625,
+    "footY": 644,
+    "scale": 0.6,
+    "goldPixels": 1930,
+    "weaponReviewed": true
+  },
+  "59": {
+    "name": "gris-knockdown-01",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 331,
+      "y": 452,
+      "w": 286,
+      "h": 188
+    },
+    "rootX": 470.25,
+    "footY": 640,
+    "scale": 0.6,
+    "goldPixels": 1770,
+    "weaponReviewed": true
+  },
+  "60": {
+    "name": "gris-knockdown-02",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 616,
+      "y": 552,
+      "w": 310,
+      "h": 105
+    },
+    "rootX": 744.5625,
+    "footY": 657,
+    "scale": 0.6,
+    "goldPixels": 1723,
+    "weaponReviewed": true
+  },
+  "61": {
+    "name": "gris-knockdown-03",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 943,
+      "y": 557,
+      "w": 298,
+      "h": 98
+    },
+    "rootX": 1067.859375,
+    "footY": 655,
+    "scale": 0.6,
+    "goldPixels": 1647,
+    "weaponReviewed": true
+  },
+  "62": {
+    "name": "gris-getup-00",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 17,
+      "y": 794,
+      "w": 303,
+      "h": 130
+    },
+    "rootX": 142.0546875,
+    "footY": 924,
+    "scale": 0.6,
+    "goldPixels": 2054,
+    "weaponReviewed": true
+  },
+  "63": {
+    "name": "gris-getup-01",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 335,
+      "y": 745,
+      "w": 303,
+      "h": 171
+    },
+    "rootX": 489.84375,
+    "footY": 916,
+    "scale": 0.6,
+    "goldPixels": 2025,
+    "weaponReviewed": true
+  },
+  "64": {
+    "name": "gris-getup-02",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 697,
+      "y": 663,
+      "w": 228,
+      "h": 261
+    },
+    "rootX": 813.140625,
+    "footY": 924,
+    "scale": 0.6,
+    "goldPixels": 2640,
+    "weaponReviewed": true
+  },
+  "65": {
+    "name": "gris-getup-03",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 984,
+      "y": 660,
+      "w": 234,
+      "h": 268
+    },
+    "rootX": 1102.1484375,
+    "footY": 928,
+    "scale": 0.6,
+    "goldPixels": 2092,
+    "weaponReviewed": true
+  },
+  "66": {
+    "name": "gris-victory-00",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 55,
+      "y": 951,
+      "w": 206,
+      "h": 268
+    },
+    "rootX": 176.34375,
+    "footY": 1219,
+    "scale": 0.6,
+    "goldPixels": 1977,
+    "weaponReviewed": true
+  },
+  "67": {
+    "name": "gris-victory-01",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 393,
+      "y": 925,
+      "w": 212,
+      "h": 301
+    },
+    "rootX": 489.84375,
+    "footY": 1226,
+    "scale": 0.6,
+    "goldPixels": 2578,
+    "weaponReviewed": true
+  },
+  "68": {
+    "name": "gris-victory-02",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 706,
+      "y": 935,
+      "w": 201,
+      "h": 289
+    },
+    "rootX": 793.546875,
+    "footY": 1224,
+    "scale": 0.6,
+    "goldPixels": 2861,
+    "weaponReviewed": true
+  },
+  "69": {
+    "name": "gris-victory-03",
+    "sheet": "reactions",
+    "sourceRect": {
+      "x": 1024,
+      "y": 938,
+      "w": 183,
+      "h": 290
+    },
+    "rootX": 1097.25,
+    "footY": 1228,
+    "scale": 0.6,
+    "goldPixels": 2757,
+    "weaponReviewed": true
+  },
+  "70": {
+    "name": "gris-defense-00",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 68,
+      "y": 16,
+      "w": 253,
+      "h": 320
+    },
+    "rootX": 186.140625,
+    "footY": 336,
+    "scale": 0.6,
+    "goldPixels": 3640,
+    "weaponReviewed": true
+  },
+  "71": {
+    "name": "gris-defense-01",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 368,
+      "y": 25,
+      "w": 226,
+      "h": 314
+    },
+    "rootX": 460.453125,
+    "footY": 339,
+    "scale": 0.6,
+    "goldPixels": 3716,
+    "weaponReviewed": true
+  },
+  "72": {
+    "name": "gris-defense-02",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 669,
+      "y": 43,
+      "w": 231,
+      "h": 298
+    },
+    "rootX": 764.15625,
+    "footY": 341,
+    "scale": 0.6,
+    "goldPixels": 3739,
+    "weaponReviewed": true
+  },
+  "73": {
+    "name": "gris-defense-03",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 963,
+      "y": 20,
+      "w": 233,
+      "h": 317
+    },
+    "rootX": 1077.65625,
+    "footY": 337,
+    "scale": 0.6,
+    "goldPixels": 3888,
+    "weaponReviewed": true
+  },
+  "74": {
+    "name": "gris-crouch-defense-00",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 32,
+      "y": 398,
+      "w": 282,
+      "h": 216
+    },
+    "rootX": 181.2421875,
+    "footY": 614,
+    "scale": 0.6,
+    "goldPixels": 2578,
+    "weaponReviewed": true
+  },
+  "75": {
+    "name": "gris-crouch-defense-01",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 356,
+      "y": 441,
+      "w": 279,
+      "h": 173
+    },
+    "rootX": 489.84375,
+    "footY": 614,
+    "scale": 0.6,
+    "goldPixels": 1949,
+    "weaponReviewed": true
+  },
+  "76": {
+    "name": "gris-crouch-defense-02",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 658,
+      "y": 449,
+      "w": 265,
+      "h": 165
+    },
+    "rootX": 788.6484375,
+    "footY": 614,
+    "scale": 0.6,
+    "goldPixels": 1577,
+    "weaponReviewed": true
+  },
+  "77": {
+    "name": "gris-crouch-defense-03",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 952,
+      "y": 400,
+      "w": 280,
+      "h": 215
+    },
+    "rootX": 1087.453125,
+    "footY": 615,
+    "scale": 0.6,
+    "goldPixels": 2550,
+    "weaponReviewed": true
+  },
+  "78": {
+    "name": "gris-forward-throw-00",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 36,
+      "y": 629,
+      "w": 269,
+      "h": 291
+    },
+    "rootX": 156.75,
+    "footY": 920,
+    "scale": 0.6,
+    "goldPixels": 2683,
+    "weaponReviewed": true
+  },
+  "79": {
+    "name": "gris-forward-throw-01",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 344,
+      "y": 637,
+      "w": 280,
+      "h": 283
+    },
+    "rootX": 460.453125,
+    "footY": 920,
+    "scale": 0.6,
+    "goldPixels": 2516,
+    "weaponReviewed": true
+  },
+  "80": {
+    "name": "gris-forward-throw-02",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 633,
+      "y": 634,
+      "w": 309,
+      "h": 283
+    },
+    "rootX": 759.2578125,
+    "footY": 917,
+    "scale": 0.6,
+    "goldPixels": 2096,
+    "weaponReviewed": true
+  },
+  "81": {
+    "name": "gris-forward-throw-03",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 992,
+      "y": 630,
+      "w": 215,
+      "h": 290
+    },
+    "rootX": 1092.3515625,
+    "footY": 920,
+    "scale": 0.6,
+    "goldPixels": 2652,
+    "weaponReviewed": true
+  },
+  "82": {
+    "name": "gris-taunt-00",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 88,
+      "y": 945,
+      "w": 201,
+      "h": 283
+    },
+    "rootX": 176.34375,
+    "footY": 1228,
+    "scale": 0.6,
+    "goldPixels": 2737,
+    "weaponReviewed": true
+  },
+  "83": {
+    "name": "gris-taunt-01",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 375,
+      "y": 954,
+      "w": 209,
+      "h": 275
+    },
+    "rootX": 480.046875,
+    "footY": 1229,
+    "scale": 0.6,
+    "goldPixels": 2812,
+    "weaponReviewed": true
+  },
+  "84": {
+    "name": "gris-taunt-02",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 674,
+      "y": 955,
+      "w": 242,
+      "h": 276
+    },
+    "rootX": 788.6484375,
+    "footY": 1231,
+    "scale": 0.6,
+    "goldPixels": 2765,
+    "weaponReviewed": true
+  },
+  "85": {
+    "name": "gris-taunt-03",
+    "sheet": "defense",
+    "sourceRect": {
+      "x": 1012,
+      "y": 951,
+      "w": 180,
+      "h": 277
+    },
+    "rootX": 1102.1484375,
+    "footY": 1228,
+    "scale": 0.6,
+    "goldPixels": 2773,
+    "weaponReviewed": true
+  },
+  "86": {
+    "name": "gris-standing-rp-clean-00",
+    "sheet": "clean-standing-rp",
+    "sourceRect": {
+      "x": 87,
+      "y": 47,
+      "w": 400,
+      "h": 561
+    },
+    "rootX": 279.2109375,
+    "footY": 608,
+    "scale": 0.34,
+    "goldPixels": 17899,
+    "weaponReviewed": true
+  },
+  "87": {
+    "name": "gris-standing-rp-clean-01",
+    "sheet": "clean-standing-rp",
+    "sourceRect": {
+      "x": 632,
+      "y": 131,
+      "w": 605,
+      "h": 477
+    },
+    "rootX": 852.328125,
+    "footY": 608,
+    "scale": 0.34,
+    "goldPixels": 19559,
+    "weaponReviewed": true
+  },
+  "88": {
+    "name": "gris-standing-rp-clean-02",
+    "sheet": "clean-standing-rp",
+    "sourceRect": {
+      "x": 41,
+      "y": 685,
+      "w": 679,
+      "h": 503
+    },
+    "rootX": 303.703125,
+    "footY": 1188,
+    "scale": 0.34,
+    "goldPixels": 22122,
+    "weaponReviewed": true
+  },
+  "89": {
+    "name": "gris-standing-rp-clean-03",
+    "sheet": "clean-standing-rp",
+    "sourceRect": {
+      "x": 786,
+      "y": 649,
+      "w": 403,
+      "h": 559
+    },
+    "rootX": 989.484375,
+    "footY": 1208,
+    "scale": 0.34,
+    "goldPixels": 17129,
+    "weaponReviewed": true
+  },
+  "90": {
+    "name": "gris-crouching-rp-clean-00",
+    "sheet": "clean-crouching-rp",
+    "sourceRect": {
+      "x": 47,
+      "y": 105,
+      "w": 471,
+      "h": 480
+    },
+    "rootX": 279.2109375,
+    "footY": 585,
+    "scale": 0.34,
+    "goldPixels": 12005,
+    "weaponReviewed": true
+  },
+  "91": {
+    "name": "gris-crouching-rp-clean-01",
+    "sheet": "clean-crouching-rp",
+    "sourceRect": {
+      "x": 592,
+      "y": 230,
+      "w": 639,
+      "h": 360
+    },
+    "rootX": 822.9375,
+    "footY": 590,
+    "scale": 0.34,
+    "goldPixels": 12491,
+    "weaponReviewed": true
+  },
+  "92": {
+    "name": "gris-crouching-rp-clean-02",
+    "sheet": "clean-crouching-rp",
+    "sourceRect": {
+      "x": 40,
+      "y": 772,
+      "w": 723,
+      "h": 353
+    },
+    "rootX": 293.90625,
+    "footY": 1125,
+    "scale": 0.34,
+    "goldPixels": 12627,
+    "weaponReviewed": true
+  },
+  "93": {
+    "name": "gris-crouching-rp-clean-03",
+    "sheet": "clean-crouching-rp",
+    "sourceRect": {
+      "x": 785,
+      "y": 683,
+      "w": 406,
+      "h": 457
+    },
+    "rootX": 999.28125,
+    "footY": 1140,
+    "scale": 0.34,
+    "goldPixels": 10891,
+    "weaponReviewed": true
+  },
+  "94": {
+    "name": "gris-golden-arc-clean-00",
+    "sheet": "clean-golden-arc",
+    "sourceRect": {
+      "x": 90,
+      "y": 49,
+      "w": 393,
+      "h": 555
+    },
+    "rootX": 293.90625,
+    "footY": 604,
+    "scale": 0.34,
+    "goldPixels": 12121,
+    "weaponReviewed": true
+  },
+  "95": {
+    "name": "gris-golden-arc-clean-01",
+    "sheet": "clean-golden-arc",
+    "sourceRect": {
+      "x": 560,
+      "y": 184,
+      "w": 667,
+      "h": 424
+    },
+    "rootX": 803.34375,
+    "footY": 608,
+    "scale": 0.34,
+    "goldPixels": 15208,
+    "weaponReviewed": true
+  },
+  "96": {
+    "name": "gris-golden-arc-clean-02",
+    "sheet": "clean-golden-arc",
+    "sourceRect": {
+      "x": 50,
+      "y": 721,
+      "w": 720,
+      "h": 477
+    },
+    "rootX": 293.90625,
+    "footY": 1198,
+    "scale": 0.34,
+    "goldPixels": 12817,
+    "weaponReviewed": true
+  },
+  "97": {
+    "name": "gris-golden-arc-clean-03",
+    "sheet": "clean-golden-arc",
+    "sourceRect": {
+      "x": 861,
+      "y": 655,
+      "w": 369,
+      "h": 547
+    },
+    "rootX": 1058.0625,
+    "footY": 1202,
+    "scale": 0.34,
+    "goldPixels": 11494,
+    "weaponReviewed": true
+  },
+  "98": {
+    "name": "gris-silk-step-clean-00",
+    "sheet": "clean-silk-step",
+    "sourceRect": {
+      "x": 28,
+      "y": 161,
+      "w": 562,
+      "h": 368
+    },
+    "rootX": 254.71875,
+    "footY": 529,
+    "scale": 0.34,
+    "goldPixels": 10412,
+    "weaponReviewed": true
+  },
+  "99": {
+    "name": "gris-silk-step-clean-01",
+    "sheet": "clean-silk-step",
+    "sourceRect": {
+      "x": 630,
+      "y": 171,
+      "w": 618,
+      "h": 375
+    },
+    "rootX": 871.921875,
+    "footY": 546,
+    "scale": 0.34,
+    "goldPixels": 11469,
+    "weaponReviewed": true
+  },
+  "100": {
+    "name": "gris-silk-step-clean-02",
+    "sheet": "clean-silk-step",
+    "sourceRect": {
+      "x": 53,
+      "y": 788,
+      "w": 679,
+      "h": 364
+    },
+    "rootX": 333.09375,
+    "footY": 1152,
+    "scale": 0.34,
+    "goldPixels": 12269,
+    "weaponReviewed": true
+  },
+  "101": {
+    "name": "gris-silk-step-clean-03",
+    "sheet": "clean-silk-step",
+    "sourceRect": {
+      "x": 774,
+      "y": 651,
+      "w": 403,
+      "h": 505
+    },
+    "rootX": 974.7890625,
+    "footY": 1156,
+    "scale": 0.34,
+    "goldPixels": 11316,
+    "weaponReviewed": true
+  },
+  "102": {
+    "name": "gris-royal-cleave-clean-00",
+    "sheet": "clean-royal-cleave",
+    "sourceRect": {
+      "x": 108,
+      "y": 48,
+      "w": 413,
+      "h": 553
+    },
+    "rootX": 318.3984375,
+    "footY": 601,
+    "scale": 0.34,
+    "goldPixels": 12695,
+    "weaponReviewed": true
+  },
+  "103": {
+    "name": "gris-royal-cleave-clean-01",
+    "sheet": "clean-royal-cleave",
+    "sourceRect": {
+      "x": 619,
+      "y": 136,
+      "w": 622,
+      "h": 475
+    },
+    "rootX": 832.734375,
+    "footY": 611,
+    "scale": 0.34,
+    "goldPixels": 14350,
+    "weaponReviewed": true
+  },
+  "104": {
+    "name": "gris-royal-cleave-clean-02",
+    "sheet": "clean-royal-cleave",
+    "sourceRect": {
+      "x": 63,
+      "y": 675,
+      "w": 673,
+      "h": 517
+    },
+    "rootX": 337.9921875,
+    "footY": 1192,
+    "scale": 0.34,
+    "goldPixels": 13601,
+    "weaponReviewed": true
+  },
+  "105": {
+    "name": "gris-royal-cleave-clean-03",
+    "sheet": "clean-royal-cleave",
+    "sourceRect": {
+      "x": 775,
+      "y": 663,
+      "w": 423,
+      "h": 538
+    },
+    "rootX": 1013.9765625,
+    "footY": 1201,
+    "scale": 0.34,
+    "goldPixels": 12018,
+    "weaponReviewed": true
+  },
+  "106": {
+    "name": "gris-fx-golden-arc-00",
+    "sheet": "effects",
+    "sourceRect": {
+      "x": 199,
+      "y": 208,
+      "w": 246,
+      "h": 304
+    },
+    "rootX": 199,
+    "footY": 360.0,
+    "scale": 0.105,
+    "goldPixels": 22399,
+    "weaponReviewed": false
+  },
+  "107": {
+    "name": "gris-fx-golden-arc-01",
+    "sheet": "effects",
+    "sourceRect": {
+      "x": 717,
+      "y": 191,
+      "w": 446,
+      "h": 367
+    },
+    "rootX": 717,
+    "footY": 374.5,
+    "scale": 0.105,
+    "goldPixels": 53875,
+    "weaponReviewed": false
+  },
+  "108": {
+    "name": "gris-fx-golden-arc-02",
+    "sheet": "effects",
+    "sourceRect": {
+      "x": 78,
+      "y": 714,
+      "w": 537,
+      "h": 423
+    },
+    "rootX": 78,
+    "footY": 925.5,
+    "scale": 0.105,
+    "goldPixels": 81890,
+    "weaponReviewed": false
+  },
+  "109": {
+    "name": "gris-fx-golden-arc-03",
+    "sheet": "effects",
+    "sourceRect": {
+      "x": 869,
+      "y": 774,
+      "w": 321,
+      "h": 335
+    },
+    "rootX": 869,
+    "footY": 941.5,
+    "scale": 0.105,
+    "goldPixels": 34227,
+    "weaponReviewed": false
+  }
+}

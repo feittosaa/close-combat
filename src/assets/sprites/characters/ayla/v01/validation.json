@@ -1,0 +1,23 @@
+{
+  "status": "passed-structural-checks",
+  "sheets": 6,
+  "actorClips": 32,
+  "effectClips": 2,
+  "namedFrames": 270,
+  "checks": [
+    "PNG dimensions match catalog",
+    "RGBA and transparent pixels in every selected PNG",
+    "Unique frame names",
+    "All source rectangles inside PNG boundaries",
+    "All animation references resolve",
+    "Attack phases preserve frame order"
+  ],
+  "visualApproval": false,
+  "runtimeIntegrated": false,
+  "knownLimitations": [
+    "sweep frame03/04 shared silhouette edge requires cleanup",
+    "victory sole at image boundary",
+    "cross-sheet scale and animation continuity require gameplay review",
+    "super casting reused; no combat data implemented"
+  ]
+}

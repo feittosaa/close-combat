@@ -18,10 +18,12 @@ export function createHitbox(character: CharacterState, move: MoveDefinition): H
 
 export function createHurtbox(character: CharacterState): Hurtbox {
   const profile = character.collision.hurtboxes;
-  const box = !character.grounded ? profile.airborne : character.crouching ? profile.crouching : profile.standing;
+  const stance = !character.grounded ? 'airborne'
+    : character.attack?.hurtboxStance ?? (character.crouching ? 'crouching' : 'standing');
+  const box = profile[stance];
   return {
     ownerId: character.characterId,
-    x: character.x + box.offsetX - box.width / 2,
+    x: character.x + box.offsetX * (character.facing === 'right' ? 1 : -1) - box.width / 2,
     y: character.y + box.offsetY,
     width: box.width,
     height: box.height,

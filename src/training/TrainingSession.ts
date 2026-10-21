@@ -50,7 +50,7 @@ export class TrainingSession {
     this.dummyMode = DUMMY_MODES[(DUMMY_MODES.indexOf(this.dummyMode) + 1) % DUMMY_MODES.length];
   }
 
-  dummyInput(frame: number, characters: readonly CharacterState[]): FrameInput | undefined {
+  dummyInput(frame: number, characters: readonly CharacterState[], projectiles: SimulationSnapshot['projectiles'] = []): FrameInput | undefined {
     if (this.dummyMode === 'manual') return undefined;
     if (this.dummyMode.startsWith('repeat-')) {
       const button = this.dummyMode === 'repeat-jab' ? '1' : this.dummyMode === 'repeat-kick' ? '4' : '2';
@@ -59,7 +59,7 @@ export class TrainingSession {
     const opponent = characters[0];
     // Inputs are read immediately before a logic step. Release B as soon as the
     // opponent has no attack, avoiding an intentional retreat between repetitions.
-    const shouldGuard = Boolean(opponent?.attack);
+    const shouldGuard = Boolean(opponent?.attack) || projectiles.some((projectile) => projectile.ownerId === opponent?.characterId);
     return { direction: shouldGuard ? this.dummyMode === 'guard-low' ? 'DB' : 'B' : 'N', buttons: new Set() };
   }
 }

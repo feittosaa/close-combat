@@ -8,6 +8,8 @@ import { CommandParser } from '../../input/CommandBuffer';
 import type { AttackButton, FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
+import { projectileHitbox, type ProjectileState } from '../combat/Projectile';
+import { intersects } from '../collision/intersects';
 
 export interface SimulationSnapshot {
   frame: number;
@@ -22,6 +24,7 @@ export interface SimulationSnapshot {
   activeHitboxes: readonly Hitbox[];
   hitEvents: readonly HitEvent[];
   recentContacts: readonly CombatLogEntry[];
+  projectiles: readonly ProjectileState[];
 }
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
@@ -62,6 +65,8 @@ export class Simulation {
   private trainingDistance?: number;
   private trainingAutoRestore = false;
   private trainingQuietFrames = 0;
+  private projectiles: ProjectileState[] = [];
+  private nextProjectileId = 1;
 
   constructor(
     private readonly config: GameConfig,
@@ -114,7 +119,8 @@ export class Simulation {
         attack: character.attack ? { ...character.attack } : undefined,
         grab: character.grab ? { ...character.grab } : undefined,
       })),
-      activeHitboxes: this.attackResolver.activeHitboxes(this.characters),
+      activeHitboxes: [...this.attackResolver.activeHitboxes(this.characters), ...this.projectiles.map((p) => projectileHitbox(p))],
+      projectiles: this.projectiles.map((projectile) => ({ ...projectile })),
       hitEvents: [...this.lastHitEvents],
       recentContacts: this.recentContacts.map(({ frame, event }) => ({ frame, event: { ...event } })),
     };
@@ -193,6 +199,7 @@ export class Simulation {
       );
     });
     const attacking = this.characters.map((character, index) => Boolean(character.attack) ||
+      this.projectiles.some((projectile) => projectile.ownerId === character.characterId) ||
       Boolean(commands[index] && (canControlAtInput[index] || this.canCancel(character, commands[index]))));
 
     this.characters.forEach((character, index) => {
@@ -207,7 +214,7 @@ export class Simulation {
         const stationary = guarding || (character.grounded && character.crouching);
         const dashing = this.updateDash(index, horizontal, character.grounded && !stationary);
         const speed = dashing
-          ? this.config.movement.dashSpeed
+          ? this.fighterDefinitions[index].movement.dashSpeed ?? this.config.movement.dashSpeed
           : this.fighterDefinitions[index].movement.walkSpeed;
         if (!stationary) nextX[index] += horizontal * facingSign * speed;
         if (guarding) character.mode = 'blocking';
@@ -231,6 +238,13 @@ export class Simulation {
         }
       }
 
+      const travelingMove = character.attack ? this.moveFor(character, character.attack.moveId) : undefined;
+      if (travelingMove?.travelSpeed && character.attack && !character.crouching &&
+          character.attack.elapsedFrames >= travelingMove.startup &&
+          character.attack.elapsedFrames < travelingMove.startup + travelingMove.activeFrames) {
+        nextX[index] += (character.facing === 'right' ? 1 : -1) * travelingMove.travelSpeed;
+      }
+
       const halfWidth = character.collision.bodyWidth / 2;
       nextX[index] = clamp(
         nextX[index],
@@ -242,12 +256,17 @@ export class Simulation {
     this.characters.forEach((character, index) => { character.x = nextX[index]; });
     this.resolveBodySpacing(previousX);
     this.updateFacing();
-    this.lastHitEvents = this.attackResolver.resolve(this.characters, inputs, freshlyPressed, freshBack);
+    this.advanceProjectiles();
+    this.lastHitEvents = this.attackResolver.resolve(this.characters, inputs, freshlyPressed, freshBack, this.projectiles);
+    this.projectiles = this.projectiles.filter((projectile) => {
+      const box = projectileHitbox(projectile);
+      return !projectile.hasHit && box.x + box.width >= this.config.arena.left && box.x <= this.config.arena.right;
+    });
     this.lastHitEvents.forEach((event) => {
       const attacker = this.characters.find((character) => character.characterId === event.attackerId);
       const target = this.characters.find((character) => character.characterId === event.targetId);
       if (!attacker || !target) return;
-      const direction = attacker.facing === 'right' ? 1 : -1;
+      const direction = (event.direction ?? attacker.facing) === 'right' ? 1 : -1;
       const displacedX = event.targetOffsetFromAttacker === undefined
         ? target.x + direction * event.pushback
         : attacker.x + direction * event.targetOffsetFromAttacker;
@@ -280,7 +299,7 @@ export class Simulation {
 
   private restoreTrainingHealthIfQuiet(): void {
     if (!this.options.training || !this.trainingAutoRestore) return;
-    const quiet = !this.lastHitEvents.length && this.characters.every((character) =>
+    const quiet = !this.lastHitEvents.length && !this.projectiles.length && this.characters.every((character) =>
       character.grounded && !character.attack && !character.grab && !isStunned(character));
     this.trainingQuietFrames = quiet ? this.trainingQuietFrames + 1 : 0;
     if (this.trainingQuietFrames < 90) return;
@@ -289,6 +308,7 @@ export class Simulation {
   }
 
   private finishRound(reason: 'knockout' | 'time'): void {
+    this.projectiles = [];
     const [first, second] = this.characters;
     let winnerIndex = -1;
     if (reason === 'knockout') {
@@ -301,6 +321,7 @@ export class Simulation {
     if (winnerIndex >= 0) this.roundWins[winnerIndex] += 1;
     this.characters.forEach((character) => {
       character.attack = undefined;
+      character.stateStartedFrame = this.frame + 1;
       character.hitFlashFrames = 0;
       if (['startup', 'active', 'recovery'].includes(character.mode)) character.mode = 'neutral';
     });
@@ -328,6 +349,8 @@ export class Simulation {
   }
 
   private resetRoundState(): void {
+    this.projectiles = [];
+    this.nextProjectileId = 1;
     this.trainingQuietFrames = 0;
     const positions = this.spawnPositions();
     this.characters.forEach((character, index) => {
@@ -467,6 +490,7 @@ export class Simulation {
       buttons: [...move.input.buttons],
       airborne: move.airborne === true,
       crouching: move.crouching === true,
+      hurtboxStance: move.hurtboxStances?.startup,
       elapsedFrames: 0,
       hasHit: false,
       preciseExecution: move.precisionWindowFrames !== undefined,
@@ -477,7 +501,51 @@ export class Simulation {
     character.crouching = move.crouching === true;
     character.mode = 'startup';
     character.movementDirection = undefined;
+    if (move.launchVelocity !== undefined) {
+      character.verticalVelocity = move.launchVelocity;
+      character.grounded = false;
+      character.crouching = false;
+    }
     return move;
+  }
+
+  private advanceProjectiles(): void {
+    for (const projectile of this.projectiles) {
+      projectile.previousX = projectile.x;
+      projectile.x += (projectile.facing === 'right' ? 1 : -1) * projectile.definition.speed;
+      projectile.ageFrames += 1;
+      projectile.remainingFrames -= 1;
+    }
+    this.projectiles = this.projectiles.filter((projectile) => {
+      const box = projectileHitbox(projectile, true);
+      return projectile.remainingFrames > 0 && box.x + box.width >= this.config.arena.left && box.x <= this.config.arena.right;
+    });
+    for (const character of this.characters) {
+      const attack = character.attack;
+      const move = attack ? this.moveFor(character, attack.moveId) : undefined;
+      const definition = move?.projectile;
+      if (!attack || !move || !definition || attack.elapsedFrames !== (definition.spawnFrame ?? move.startup)) continue;
+      const owned = this.projectiles.filter((p) => p.ownerId === character.characterId && p.moveId === move.id).length;
+      if (owned >= (definition.maxActive ?? 1)) continue;
+      const x = character.x + (character.facing === 'right' ? 1 : -1) * definition.forward;
+      this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
+        moveId: move.id, x, previousX: x, y: character.y + definition.yOffset, facing: character.facing,
+        ageFrames: 0, remainingFrames: definition.lifetimeFrames, hasHit: false, definition });
+    }
+    for (let i = 0; i < this.projectiles.length; i += 1) {
+      const first = this.projectiles[i];
+      if (first.hasHit || first.definition.clash === false) continue;
+      for (let j = i + 1; j < this.projectiles.length; j += 1) {
+        const second = this.projectiles[j];
+        if (second.hasHit || second.ownerId === first.ownerId || second.definition.clash === false) continue;
+        if (intersects(projectileHitbox(first, true), projectileHitbox(second, true))) {
+          first.hasHit = true;
+          second.hasHit = true;
+          break;
+        }
+      }
+    }
+    this.projectiles = this.projectiles.filter((projectile) => !projectile.hasHit);
   }
 
   private canCancel(character: CharacterState, nextMove: MoveDefinition | undefined): boolean {
@@ -545,6 +613,8 @@ export class Simulation {
       } else {
         character.mode = 'startup';
       }
+      attack.hurtboxStance = character.mode === 'startup' || character.mode === 'active' || character.mode === 'recovery'
+        ? move.hurtboxStances?.[character.mode] : undefined;
     });
   }
 

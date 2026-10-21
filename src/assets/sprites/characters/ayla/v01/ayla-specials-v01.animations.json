@@ -1,0 +1,313 @@
+{
+  "sheet": "specials",
+  "clips": [
+    {
+      "key": "ayla-air-punch-startup",
+      "frames": [
+        "ayla-air-punch-00",
+        "ayla-air-punch-01",
+        "ayla-air-punch-02"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-air-punch-active",
+      "frames": [
+        "ayla-air-punch-03",
+        "ayla-air-punch-04"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-air-punch-recovery",
+      "frames": [
+        "ayla-air-punch-05",
+        "ayla-air-punch-06",
+        "ayla-air-punch-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-air-punch",
+      "frames": [
+        "ayla-air-punch-00",
+        "ayla-air-punch-01",
+        "ayla-air-punch-02",
+        "ayla-air-punch-03",
+        "ayla-air-punch-04",
+        "ayla-air-punch-05",
+        "ayla-air-punch-06",
+        "ayla-air-punch-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-air-kick-startup",
+      "frames": [
+        "ayla-air-kick-00",
+        "ayla-air-kick-01",
+        "ayla-air-kick-02"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-air-kick-active",
+      "frames": [
+        "ayla-air-kick-03",
+        "ayla-air-kick-04"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-air-kick-recovery",
+      "frames": [
+        "ayla-air-kick-05",
+        "ayla-air-kick-06",
+        "ayla-air-kick-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-air-kick",
+      "frames": [
+        "ayla-air-kick-00",
+        "ayla-air-kick-01",
+        "ayla-air-kick-02",
+        "ayla-air-kick-03",
+        "ayla-air-kick-04",
+        "ayla-air-kick-05",
+        "ayla-air-kick-06",
+        "ayla-air-kick-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-crimson-wave-startup",
+      "frames": [
+        "ayla-crimson-wave-00",
+        "ayla-crimson-wave-01",
+        "ayla-crimson-wave-02"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-crimson-wave-active",
+      "frames": [
+        "ayla-crimson-wave-03",
+        "ayla-crimson-wave-04"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-crimson-wave-recovery",
+      "frames": [
+        "ayla-crimson-wave-05",
+        "ayla-crimson-wave-06",
+        "ayla-crimson-wave-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-crimson-wave",
+      "frames": [
+        "ayla-crimson-wave-00",
+        "ayla-crimson-wave-01",
+        "ayla-crimson-wave-02",
+        "ayla-crimson-wave-03",
+        "ayla-crimson-wave-04",
+        "ayla-crimson-wave-05",
+        "ayla-crimson-wave-06",
+        "ayla-crimson-wave-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-scarlet-rush-startup",
+      "frames": [
+        "ayla-scarlet-rush-00",
+        "ayla-scarlet-rush-01",
+        "ayla-scarlet-rush-02"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-scarlet-rush-active",
+      "frames": [
+        "ayla-scarlet-rush-03",
+        "ayla-scarlet-rush-04"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-scarlet-rush-recovery",
+      "frames": [
+        "ayla-scarlet-rush-05",
+        "ayla-scarlet-rush-06",
+        "ayla-scarlet-rush-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-scarlet-rush",
+      "frames": [
+        "ayla-scarlet-rush-00",
+        "ayla-scarlet-rush-01",
+        "ayla-scarlet-rush-02",
+        "ayla-scarlet-rush-03",
+        "ayla-scarlet-rush-04",
+        "ayla-scarlet-rush-05",
+        "ayla-scarlet-rush-06",
+        "ayla-scarlet-rush-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-rising-kick-startup",
+      "frames": [
+        "ayla-rising-kick-00",
+        "ayla-rising-kick-01",
+        "ayla-rising-kick-02"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-rising-kick-active",
+      "frames": [
+        "ayla-rising-kick-03",
+        "ayla-rising-kick-04"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-rising-kick-recovery",
+      "frames": [
+        "ayla-rising-kick-05",
+        "ayla-rising-kick-06",
+        "ayla-rising-kick-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-rising-kick",
+      "frames": [
+        "ayla-rising-kick-00",
+        "ayla-rising-kick-01",
+        "ayla-rising-kick-02",
+        "ayla-rising-kick-03",
+        "ayla-rising-kick-04",
+        "ayla-rising-kick-05",
+        "ayla-rising-kick-06",
+        "ayla-rising-kick-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-leaping-kick-startup",
+      "frames": [
+        "ayla-leaping-kick-00",
+        "ayla-leaping-kick-01",
+        "ayla-leaping-kick-02"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-leaping-kick-active",
+      "frames": [
+        "ayla-leaping-kick-03",
+        "ayla-leaping-kick-04"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-leaping-kick-recovery",
+      "frames": [
+        "ayla-leaping-kick-05",
+        "ayla-leaping-kick-06",
+        "ayla-leaping-kick-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-leaping-kick",
+      "frames": [
+        "ayla-leaping-kick-00",
+        "ayla-leaping-kick-01",
+        "ayla-leaping-kick-02",
+        "ayla-leaping-kick-03",
+        "ayla-leaping-kick-04",
+        "ayla-leaping-kick-05",
+        "ayla-leaping-kick-06",
+        "ayla-leaping-kick-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-forward-throw-startup",
+      "frames": [
+        "ayla-forward-throw-00",
+        "ayla-forward-throw-01",
+        "ayla-forward-throw-02"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-forward-throw-active",
+      "frames": [
+        "ayla-forward-throw-03",
+        "ayla-forward-throw-04"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-forward-throw-recovery",
+      "frames": [
+        "ayla-forward-throw-05",
+        "ayla-forward-throw-06",
+        "ayla-forward-throw-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    },
+    {
+      "key": "ayla-forward-throw",
+      "frames": [
+        "ayla-forward-throw-00",
+        "ayla-forward-throw-01",
+        "ayla-forward-throw-02",
+        "ayla-forward-throw-03",
+        "ayla-forward-throw-04",
+        "ayla-forward-throw-05",
+        "ayla-forward-throw-06",
+        "ayla-forward-throw-07"
+      ],
+      "frameRate": 12,
+      "repeat": 0
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 # Close Combat — Pipeline de implementação
 
 > **Raiz:** [`base.md`](./base.md), versão 0.2.1.
-> **Revisão:** 20/10/2026.
+> **Revisão:** 21/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos, quedas/levantadas e balanceamento continuam pendentes.
 
@@ -29,6 +29,8 @@ O [treino e a exibição de frames de Tekken 7](https://en.bandainamcoent.eu/tek
 Os guias de produção de arte usam linguagem descritiva própria em [`identidade-visual.md`](./identidade-visual.md) e [`docs/animacao.md`](./docs/animacao.md). As referências acima orientam estrutura e leitura; não definem uma nova lista global de golpes.
 
 ## Entrega iniciada nesta revisão
+
+**Ayla, Gris e fluxo inicial — 21/10/2026:** código integrado com livros próprios (cinco especiais de Ayla, quatro de Gris), hitboxes de cada golpe/projétil, hurtboxes por personagem/postura, velocidades individuais e entidades de projétil a 60 Hz. Atlas selecionados: 249 recortes de Ayla e 110 de Gris; contatos largos substituídos e recortes contaminados excluídos. Menu implementado com personagem de P1, cenário Cais, treino, PvP, arcade PvE por entradas comuns e configurações. 138 testes e build passaram. A revisão visual dos personagens, teclado, treino, PvP e sequência completa de arcade foi concluída, incluindo vitória/derrota, passagem ao próximo adversário e reinício. Evidências e limites em [`docs/ayla-gris-progresso.md`](./docs/ayla-gris-progresso.md). Esta entrega não encerra os demais marcos gerais da pipeline.
 
 - [x] Reduzir as cargas do Cais em 24%, ancorando sua base e mantendo chão/cargas no mesmo parallax.
 - [x] Ajustar a célula visual do Tester de 220 para 256, alinhando melhor a silhueta às hurtboxes existentes, sem mudar regras de combate.
@@ -256,7 +258,7 @@ Preservados da antiga Etapa 3:
 
 - Compilação TypeScript e build web realizados durante a implementação.
 - Inspeção no navegador: composição do Cais, salto, pausa, passo único, reset, guarda, repetição do adversário, alternância dos painéis e retorno entre cenas. Casos e limites em [`docs/revisao-2026-10-20.md`](./docs/revisao-2026-10-20.md).
-- Suíte automatizada não executada nesta revisão. As expectativas existentes de sinal da vantagem foram ajustadas à fórmula corrigida; novos casos permanecem nos critérios de saída.
+- Em 21/10, a suíte completa passou com 138 testes, incluindo livros locais, projéteis e partidas completas de arcade. Build e diff foram verificados. A revisão visual de Ayla, Gris e dos três modos está concluída em [`docs/ayla-gris-progresso.md`](./docs/ayla-gris-progresso.md); os demais critérios de saída desta pipeline permanecem próprios de suas etapas.
 
 ## Próximo bloco concreto
 
@@ -270,3 +272,7 @@ Online, ranking, times, assistentes, medidores e novas modalidades de salto cont
 ### Revisão de animações e treino — 20/10/2026
 
 Correções de escala, remapeamento de golpes e cadência, partida sem depuração e expansão do treino estão descritas em [`docs/revisao-animacoes-treino.md`](./docs/revisao-animacoes-treino.md). Isso não encerra a auditoria dos 26 golpes nem aprova o atlas como arte final. A nova recuperação modifica os valores de vantagem: revisar punições e cancelamentos antes de balancear.
+
+### Cadência da Gris — 21/10/2026
+
+Loops com retorno intermediário e holds explícitos; menu e arena respeitam as mesmas durações. Cortes fortes e especiais mantêm o seguimento da tesoura na recuperação, sem mudar tempos lógicos, dano ou caixas. Conferido no treino; 138 testes e build aprovados. Detalhes e evidências em `docs/ayla-gris-progresso.md`.

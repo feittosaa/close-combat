@@ -28,10 +28,10 @@ export class CombatantView {
     }
   }
 
-  sync(state: CharacterState, simulationFrame: number): void {
+  sync(state: CharacterState, simulationFrame: number, presentation?: 'victory' | 'knockdown'): void {
     const x = state.x;
     if (this.sprite) {
-      this.syncSprite(state, x, simulationFrame);
+      this.syncSprite(state, x, simulationFrame, presentation);
       return;
     }
 
@@ -71,25 +71,27 @@ export class CombatantView {
     }
   }
 
-  private syncSprite(state: CharacterState, x: number, simulationFrame: number): void {
+  private syncSprite(state: CharacterState, x: number, simulationFrame: number, presentation?: 'victory' | 'knockdown'): void {
     const sprite = this.sprite;
     if (!sprite) return;
     sprite.setPosition(x, state.y);
-    const desiredKey = getCharacterAnimationKey(state, this.moveClips);
+    const desiredKey = presentation ? `${state.fighterId}-${presentation}` : getCharacterAnimationKey(state, this.moveClips);
     const animationKey = this.clips.has(desiredKey) ? desiredKey : `${state.fighterId}-idle`;
     const clip = this.clips.get(animationKey);
     const walkingBackward = (state.mode === 'moving' || state.mode === 'dashing') && state.movementDirection === 'backward';
     sprite.setFlipX(shouldFlipAnimation(state.facing, clip, walkingBackward));
 
     const move = state.attack ? getCharacterById(state.fighterId)?.moves.find(({ id }) => id === state.attack?.moveId) : undefined;
-    const attackFrame = clip ? getAttackAnimationFrame(state, clip, move) : undefined;
+    const attackFrame = clip && !presentation ? getAttackAnimationFrame(state, clip, move) : undefined;
     if (clip) {
       const frame = attackFrame ?? getStateAnimationFrame(state, clip, simulationFrame);
       const transform = this.manifest?.frameTransforms?.[String(frame)];
       const scale = transform?.scale ?? 1;
       const frameHeight = this.manifest?.frameSize.height ?? 256;
       const anchorY = transform?.footAnchorY ?? this.manifest?.footAnchorY ?? frameHeight;
-      sprite.setFrame(frame);
+      const texture = this.manifest?.frameTextures?.[String(frame)] ?? this.manifest?.textureKey;
+      if (texture) sprite.setTexture(texture, frame);
+      else sprite.setFrame(frame);
       sprite.setOrigin(0.5, anchorY / frameHeight);
       sprite.setDisplaySize(this.displaySize.width * scale, this.displaySize.height * scale);
     }

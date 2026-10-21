@@ -5,7 +5,7 @@ import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { getCharacterAnimationKey } from '../rendering/animations/CharacterAnimationMap';
-import { getAttackAnimationFrame, getClipFrames, shouldFlipAnimation } from '../rendering/animations/AnimationPlayback';
+import { getAttackAnimationFrame, getClipFrames, getTimedAnimationFrame, shouldFlipAnimation } from '../rendering/animations/AnimationPlayback';
 import type { AnimationClip } from '../rendering/animations/AnimationPlayback';
 
 const clips: readonly AnimationClip[] = testerManifest.clips;
@@ -21,6 +21,12 @@ function attacking(moveId: string, mode: 'startup' | 'active' | 'recovery', elap
 }
 
 describe('character animation playback', () => {
+  it('samples explicit holds and the return seam identically for previews and state clips', () => {
+    const loop: AnimationClip = { key: 'held-loop', start: 0, end: 2, frames: [0, 1, 2, 1], frameDurations: [14, 10, 14, 10], frameRate: 10, repeat: -1 };
+    expect([0, 13, 14, 23, 24, 37, 38, 47, 48].map(t => getTimedAnimationFrame(loop, t)))
+      .toEqual([0, 0, 1, 1, 2, 2, 1, 1, 0]);
+    expect(getTimedAnimationFrame({ ...loop, repeat: 0 }, 100)).toBe(1);
+  });
   it('faces the opponent for both source orientations, including idle, walking and kicks', () => {
     for (const key of ['tester-idle', 'tester-walk', 'tester-dash', 'tester-light-kick-active']) {
       const clip = clips.find((clip) => clip.key === key)!;

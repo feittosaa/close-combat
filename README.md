@@ -15,7 +15,11 @@ npm install
 npm run dev
 ```
 
-Pressione **Enter** para uma partida local ou **T** para o treino. Na cena, **Esc** retorna ao menu. **Tester** é o personagem provisório dos dois jogadores, com atlas e animações próprios. Os botões `1`–`4` executam golpes de teste; direções, botões e sequência recente aparecem apenas no treino. A partida normal mantém a interface de luta limpa. No treino, as hitboxes/hurtboxes mostram a geometria real da simulação e podem ser ocultadas.
+Escolha **Arcade**, **Luta PvP**, **Modo Treino** ou **Configurações**. Use clique ou setas/Enter; atalhos do menu: `A`, `V`, `T`, `C`. Depois escolha **Ayla**, **Gris** ou **Tester** para P1 e confirme o cenário **Cais**. P2 é definido pelo modo. **Esc** retorna à tela anterior ou ao menu durante a luta.
+
+No **PvP**, P2 usa os controles do segundo jogador. No **Arcade**, o computador enfrenta P1 com comandos normais do próprio livro de golpes; vencer libera o próximo adversário com Enter. O **Treino** mantém pausa, avanço por frame, dados de golpes e adversário controlável. **Configurações** possui uma página reservada, ainda sem opções, como solicitado. Direções, sequência de entradas e colisões aparecem apenas no treino.
+
+Ayla possui cinco especiais, incluindo onda rasteira e erupção de energia; Gris possui quatro, com tesoura gigante dourada sempre empunhada e um projétil separado de energia de corte. Cada lutador tem livro, tamanho, hurtboxes e velocidades próprios; cada golpe e projétil tem sua hitbox. Quantidade de especiais é livre por personagem, de zero a N.
 
 O primeiro cenário é **Cais**, composto de fundo, chão e caixas. A câmera acompanha os lutadores: o fundo se move mais lentamente, enquanto caixas e chão mantêm escala e movimento comuns. O sistema aceita qualquer quantidade de camadas por cenário; estrutura, manifesto e instruções de entrega estão em [`src/assets/scenes/README.md`](./src/assets/scenes/README.md).
 
@@ -26,12 +30,28 @@ Na revisão atual, as cargas foram reduzidas em 24% com apoio preservado no chã
 - **Jogador 1:** mover/saltar/agachar com `A`, `D`, `W`, `S`; ataques `1`–`4` em `J`, `K`, `N`, `M`.
 - **Jogador 2:** mover/saltar/agachar com as setas; ataques `1`–`4` no teclado numérico `1`–`4`.
 - `F`/`B` duas vezes rapidamente no chão ativa dash; dash não funciona no ar. O recuo usa a caminhada espelhada. Segurar `B`/`DB` durante um golpe adversário ativa guarda parada a qualquer distância (`B` para altos/médios, `DB` para baixos). Agachar também impede a locomoção. O bloqueio de um golpe do Tester desloca o defensor 4 unidades; um golpe fora de alcance não o desloca.
-- `F/B+1`, `DF/DB+2`, `D+3` e `UF/UB+4` executam variantes direcionais; `D+1`, `D+2` e `D+4` são golpes abaixados. Pressione `1`–`4` durante o salto para golpes aéreos. `Esc` volta ao menu.
+- No Tester, `F/B+1`, `DF/DB+2`, `D+3` e `UF/UB+4` executam variantes direcionais. Ayla e Gris têm quatro ataques em pé, quatro agachados (`D+1`–`D+4`) e quatro aéreos. `Esc` volta ao menu.
 - `1+2` e `3+4` executam chords de teste; pressionamentos são agrupados se ocorrerem dentro de 3 frames. Golpes de um botão que possam formar esses chords aguardam o fim da janela; combinações sem golpe cadastrado são ignoradas.
 - `F,F+2` e `D,DF+3` são sequências provisórias de Tester; `R` reinicia a luta depois do resultado final.
-- `1+3` e `2+4` iniciam agarrões; segure `F` para lançar à frente ou `B` para lançar para trás (sem direção, lança à frente), e quebre com a combinação oposta em até 6 frames. `F,N,DF+2` executa o especial de teste; pressionar `2` até um frame após `DF` ativa a variante precisa. O jab pode cancelar para o soco ascendente ou o especial depois de acertar.
+- Ayla e Gris usam `1+3` para agarrar e `2+4` para quebrar. Tester possui agarrões em `1+3` e `2+4`, com quebra pela combinação oposta. Segure `F` para lançar à frente ou `B` para lançar para trás; a janela de quebra é de 6 frames. No Tester, `F,N,DF+2` executa o especial de teste; pressionar `2` até um frame após `DF` ativa a variante precisa. Seu jab pode cancelar para o soco ascendente ou o especial depois de acertar.
 
 O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas sem variante cadastrada são ignoradas. O parry é testável contra o golpe elegível `test-jab`: pressione `B` no frame do contato para atordoar o atacante por 18 frames; fora da janela, o ataque resolve normalmente.
+
+### Especiais de Ayla e Gris
+
+Direções relativas ao adversário: `D` baixo, `DF` baixo/frente, `F` frente, `DB` baixo/trás e `B` trás. Na posição inicial de P1, `D,DF,F+1` corresponde a `S → S+D → D+J`. As diagonais fazem parte do comando.
+
+| Comando | Ayla | Gris |
+| --- | --- | --- |
+| D,DF,F + 1 | Onda Carmesim — projétil baixo | Arco Dourado — energia de corte |
+| D,DF,F + 2 | Investida Escarlate | Passo de Seda |
+| D,DB,B + 3 | Giro Ascendente | Tesoura Ascendente |
+| D,DB,B + 4 | Chute de Avanço | Corte Régio |
+| D,DF,F + 1+2 | Erupção Rubra | Sem golpe cadastrado |
+
+Projéteis continuam viajando depois da recuperação ou interrupção do emissor. Defesa, vida útil, colisão entre projéteis e caixas pertencem ao motor. Nenhum efeito decide o dano pela imagem. Os números atuais ainda precisam de balanceamento de jogo.
+
+Atlas, nomes, prompts e instruções: [Ayla](src/assets/sprites/characters/ayla/README.md) e [Gris](src/assets/sprites/characters/gris/README.md). Com o servidor aberto, a [revisão de atlas](http://localhost:5173/src/dev/animation-review.html) permite conferir poses, fases e espelhamento sem modificar o combate.
 
 ### Treino
 

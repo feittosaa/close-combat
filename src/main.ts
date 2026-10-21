@@ -11,6 +11,15 @@ const game = new Phaser.Game({
   backgroundColor: '#101014',
   pixelArt: true,
   roundPixels: true,
+  callbacks: {
+    postBoot: (instance: Phaser.Game): void => {
+      // O canvas precisa receber foco para teclado, navegação e automação acessível.
+      instance.canvas.tabIndex = 0;
+      instance.canvas.setAttribute('aria-label', 'Close Combat — jogo e menus');
+      instance.canvas.addEventListener('pointerdown', () => instance.canvas.focus());
+      instance.canvas.focus();
+    },
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
