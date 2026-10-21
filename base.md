@@ -3,7 +3,7 @@
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
 > **Status:** protótipo em pixel art; direção Tekken 7/Ayla definida; migração mecânica e visual HD pendentes
-> **Versão:** 0.3.1 · revisão de 21/10/2026
+> **Versão:** 0.3.3 · revisão de 21/10/2026
 > **Idioma:** português (Brasil)
 > **Título do jogo:** Close Combat
 > **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
@@ -944,3 +944,21 @@ Um jogo de luta 2D para navegador, distribuído pelo GitHub, com visual que comb
 ### Movimento técnico — revisão de 21/10/2026
 
 Ayla diferencia `1` em neutro de `f+1` durante avanço. O segundo é uma variante autoral 2D (i12, dano 24, alcance +10, avanço 8, recuperação 20 no vazio/18 no contato) e admite as continuações de `1,1` e `1,2`. A entrada direcional seleciona o movimento; velocidade de caminhada não acelera seus keyframes. A referência original de Kazuya permanece preservada no catálogo. Cada personagem define suas próprias variantes e continuações; não se adiciona esse jab aos demais lutadores.
+
+### Fluidez, corrida e controles — 21/10/2026
+
+- Ayla: pela regra revisada abaixo, elétrico recupera 18F somente se bloqueado; gancho normal usa 21F somente se bloqueado. Acerto e erro liberam no fim da atividade. O elétrico avança 12 unidades e o gancho normal 10, mantendo alcance próprio de aproximação. O elétrico mantém +5F no primeiro contato bloqueado. A janela de preparação de um comando completo no fim da recuperação é de 8F para Ayla; não cancela a ação anterior, não repete botão mantido e entradas antecipadas expiram. É uma adaptação de execução 2D, não reprodução do impedimento de buffer do crouch dash de referência. Não reduzir recuperações globalmente.
+- Após completar os 12F do dash para frente, continuar segurando avanço inicia `running`. Soltar, inverter direção, agachar, defender, saltar, atacar, receber golpe ou reiniciar interrompe corrida. Backdash não vira corrida. Velocidades próprias: Ayla 5,8, Gris 5,4, Tester 5,4 e Dummy 4,9 unidades/frame. Corrida usa clipe próprio de loop, provisoriamente derivado do avanço acelerado.
+- O enquadramento aproxima a câmera até 1,55× no combate próximo e afasta conforme a distância para conservar ambos os lutadores na tela. Personagens, cenário, projéteis e caixas crescem juntos; a geometria lógica e os tempos não mudam. HUD usa câmera separada sem zoom.
+- Motor e dados mantêm direções relativas e botões 1–4. A apresentação usa setas e as teclas configuradas de cada jogador; padrão P1 J/K/N/M, nas cores azul/rosa/verde/amarelo. Configurações e pause permitem remapear direções/ataques e salvar localmente, sem duplicar uma tecla entre ações/jogadores nem reutilizar atalhos reservados.
+- O treino conserva 24 mudanças de entrada por jogador e mostra as 10 recentes com direção física, teclas coloridas, frame inicial e duração. Inclui soltura/neutro e acordes, conserva entradas durante pausa e limpa no reset. O histórico é somente leitura; não participa do reconhecimento dos comandos.
+
+A revisão de fluidez também atribui volumes de juggle individuais a Gris (88×90, offsetY −40), Tester (90×86, −38) e Dummy (96×82, −36). Antes eles reutilizavam a hurtbox vertical de salto, o que fazia a sequência falhar nesses alvos. Os volumes em pé e salto livre permanecem próprios; reações desenhadas compatíveis ainda precisam de produção. O teste do elétrico cobre os quatro alvos a distância 96.
+
+### Regra revisada de combos livres — 21/10/2026
+
+Esta solicitação do usuário substitui as recuperações de contato/erro descritas nas revisões anteriores: **strikes só entram em recuperação quando algum contato é bloqueado**. Acerto ou erro liberam o lutador ao fim da atividade; startup e frames ativos continuam sendo executados. Não repetir ataque por botão mantido. Agarrões continuam com sua captura, quebra e `throwRecovery` próprios. Esta é a regra autoral atual do protótipo; não afirmar que reproduz a recuperação real de todos os golpes de Tekken.
+
+A janela da string é independente do bloqueio de controle: guardar o último golpe elegível e seu relógio permite continuar `1,1,2` mesmo após ficar livre. O contexto não bloqueia movimento nem outro golpe raiz, expira no fim da janela e é descartado por nova ação, dano ou reset. Fichas e HUD indicam recuperação somente no bloqueio. Golpes multihit conservam essa recuperação se qualquer contato tiver sido bloqueado.
+
+Ayla usa lançamento inicial −9,6 unidades/frame e gravidade inicial 0,5, produzindo aproximadamente 38F de voo sem novos contatos e altura de 85–100 unidades. Golpes aéreos usam gravidade base 0,385 com acréscimo 0,025 por contato no ar, impulso de manutenção −5,4 com deterioração por quantidade de hits, Screw único com impulso −8,5 e queda de 26F após aterrissar. Os socos anteriores no chão não alteram a gravidade do lançamento inicial. Parâmetros são dados próprios da personagem e adaptações 2D; acertos renovam a trajetória sem congelar o alvo no ar indefinidamente.

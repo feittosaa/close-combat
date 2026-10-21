@@ -37,7 +37,7 @@ export const aylaForwardJab: MoveDefinition = {
     command: { notation: 'f+1', directions: ['F'], buttons: ['1'] },
     strikes: jab.combat!.strikes.map(strike => ({ ...strike, from: strike.from + 2, to: strike.to + 2,
       damage: 24, hitbox: { ...strike.hitbox, width: strike.hitbox.width + 10 } })),
-    adaptation: 'Variante autoral 2D de avanço: i12, alcance +10, avanço 8; permite seguir com 1 ou 2. Não é um frame dado de Kazuya.',
+    adaptation: 'Variante autoral 2D de avanço: i12, alcance +10, avanço 8, recuperação somente no bloqueio; permite seguir com 1 ou 2. Não é um frame dado de Kazuya.',
     animation: { clip: 'standing-lp', status: 'provisional' } },
 };
 const sourceWithForwardFollowups = aylaReferenceMoves.map(move =>
@@ -47,9 +47,10 @@ export const aylaCombatMoves: readonly MoveDefinition[] = [
   ...sourceWithForwardFollowups, aylaForwardJab, adapter('ayla-sway-2d', 'F', 'sway'), adapter('ayla-turn-2d', 'B', 'backturned'), ...powerDashes,
 ];
 export const aylaCombatRules: CombatRules = {
-  lowParryFrames: 6, lowParryStunFrames: 18, stanceFrames: 24,
-  comboScaling: [1, .7, .6, .5, .4, .3, .25, .2], juggleGravity: .025, juggleBaseGravity: .3,
-  knockdownFrames: 32, wallStunFrames: 26, powerFrames: 600,
+  launchVelocity: -9.6, launchGravity: .5, juggleHitVelocity: -5.4, screwVelocity: -8.5,
+  commandBufferFrames: 8, lowParryFrames: 6, lowParryStunFrames: 18, stanceFrames: 24,
+  comboScaling: [1, .7, .6, .5, .4, .3, .25, .2], juggleGravity: .025, juggleBaseGravity: .385,
+  knockdownFrames: 26, wallStunFrames: 26, powerFrames: 600,
 };
 
 function chain(command: string): string[] {

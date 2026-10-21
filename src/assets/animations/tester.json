@@ -1325,6 +1325,30 @@
       "frameRate": 30,
       "repeat": 0,
       "sourceFacesLeft": true
+    },
+    {
+      "key": "tester-run",
+      "start": 219,
+      "end": 224,
+      "frameRate": 20,
+      "repeat": -1,
+      "frames": [
+        219,
+        220,
+        221,
+        222,
+        223,
+        224
+      ],
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ]
     }
   ],
   "attackClipKeyPattern": "tester-{moveId}-{phase}",

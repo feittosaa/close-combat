@@ -59,7 +59,7 @@ describe('livros de golpes e perfis locais', () => {
     };
     expect(createHurtbox(asymmetric).x).toBe(asymmetric.x - 20);
   });
-  it('abaixa a hurtbox no contato com o chão e restaura a alta na recuperação', () => {
+  it('abaixa a hurtbox no contato e restaura a alta ao ficar livre após errar', () => {
     const sim = new Simulation(createGameConfig(1024, 576), [emitter(), defaultCharacter]);
     tick(sim, input('N', ['1']));
     expect(createHurtbox(sim.snapshot().characters[0]).height).toBe(140);
@@ -67,7 +67,7 @@ describe('livros de golpes e perfis locais', () => {
     expect(sim.snapshot().characters[0].mode).toBe('active');
     expect(createHurtbox(sim.snapshot().characters[0]).height).toBe(87);
     tick(sim);
-    expect(sim.snapshot().characters[0].mode).toBe('recovery');
+    expect(sim.snapshot().characters[0].mode).toBe('neutral');
     expect(createHurtbox(sim.snapshot().characters[0]).height).toBe(140);
   });
 });

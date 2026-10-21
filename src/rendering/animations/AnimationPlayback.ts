@@ -93,7 +93,7 @@ export function getAttackAnimationFrame(
     duration = move.activeFrames;
   } else if (state.mode === 'recovery') {
     elapsed = state.attack.elapsedFrames - move.startup - move.activeFrames;
-    duration = recoveryFrames(move, state.attack.hitOutcome === 'hit' || state.attack.hitOutcome === 'block');
+    duration = recoveryFrames(move, state.attack.wasBlocked ? 'block' : state.attack.hitOutcome);
   } else return undefined;
 
   const frames = getClipFrames(clip);

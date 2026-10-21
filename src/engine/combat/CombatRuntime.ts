@@ -53,6 +53,7 @@ export function applyStrikeReaction(attacker: CharacterState, target: CharacterS
   const existing = target.combo?.attackerId === attacker.characterId ? target.combo : undefined;
   target.combo = existing ?? { attackerId: attacker.characterId, hits: 0, damage: 0, screwUsed: false, wallUsed: false, wallFrames: 0, moveIds: [] };
   const combo = target.combo;
+  combo.airHits = target.grounded ? 0 : (combo.airHits ?? 0) + 1;
   combo.hits += 1;
   combo.damage += damage;
   combo.moveIds.push(move.id);
@@ -63,10 +64,10 @@ export function applyStrikeReaction(attacker: CharacterState, target: CharacterS
   if ((reaction === 'launch' && target.grounded) || screw) {
     target.grounded = false;
     target.y -= target.y === attacker.y ? 2 : 0;
-    target.verticalVelocity = screw ? -12.5 : Math.min(-3, -13.5 + combo.hits * .3);
+    target.verticalVelocity = screw ? attacker.combatRules.screwVelocity ?? -8.5 : attacker.combatRules.launchVelocity ?? -9.6;
     target.remainingStateFrames = Math.max(target.remainingStateFrames, 28);
   } else if (!target.grounded) {
-    target.verticalVelocity = Math.min(target.verticalVelocity, Math.min(-1, -6 + combo.hits * .25));
+    target.verticalVelocity = Math.min(target.verticalVelocity, Math.min(-1, (attacker.combatRules.juggleHitVelocity ?? -4.6) + combo.hits * .12));
     target.remainingStateFrames = Math.max(target.remainingStateFrames, 18);
   } else if (reaction === 'knockdown') {
     target.mode = 'knockdown';

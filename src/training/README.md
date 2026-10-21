@@ -15,3 +15,8 @@ Gravação, respostas automáticas no primeiro frame legal, buffer de punição,
 ## Pause e catálogo
 
 P/Esc pausa todos os modos locais. No treino, `PauseMenu` lê `fighterMoveList`: categorias disponíveis, busca, escolha de P1/P2, ficha e receita fixada. A UI não força acertos nem despacha strings automaticamente. Ao retomar, limpar teclado e histórico de reconhecimento sem alterar o estado de combate. Novos personagens devem declarar seus próprios livros e receitas.
+
+
+## Histórico de entradas
+
+`InputHistory` conserva até 24 mudanças por jogador; a UI mostra 10, mais recente primeiro. Cada mudança guarda frame inicial, duração, direção, conjunto de botões e facing. A grade e histórico mostram direção física; o catálogo usa setas relativas ao oponente. Solturas/neutros e acordes ficam explícitos. O relógio parado não cria entradas; reset limpa o histórico. Cores seguem a ação, teclas seguem o layout configurado.

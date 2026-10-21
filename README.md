@@ -111,3 +111,9 @@ A lógica de combate permanece separada das cenas e da renderização, seguindo 
 ## Estado e próximos passos
 
 A pipeline atual preserva a fundação existente e prioriza animação coerente e punições, seguidas de combos/recuperação e fluxo de jogo. Consulte [`pipeline.md`](./pipeline.md) para dependências e critérios de saída e [`docs/revisao-2026-10-20.md`](./docs/revisao-2026-10-20.md) para o registro desta entrega.
+
+### Controles e treino
+
+Abra **Configurações** no menu ou **Controles** no pause para remapear direções e ataques dos dois jogadores. O jogo salva as teclas neste navegador; o catálogo mostra setas e as teclas escolhidas, com cores fixas por ação. O histórico do treino mostra as mudanças recentes, solturas, acordes e duração em frames. Após um dash para frente, manter avanço inicia corrida. O enquadramento amplia os lutadores no combate próximo. Detalhes em [fluidez e treino](./docs/fluidez-corrida-treino.md).
+
+Na regra atual, strikes só recuperam se forem bloqueados. Acerto ou erro liberam a próxima ação depois da atividade; as janelas de strings continuam independentes. Suspensão e queda foram ajustadas e verificadas em replays: veja [combos livres](./docs/combos-livres.md).

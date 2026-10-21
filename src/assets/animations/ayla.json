@@ -2327,6 +2327,146 @@
       "frameRate": 40,
       "repeat": 0,
       "sourceFacesLeft": false
+    },
+    {
+      "key": "ayla-run",
+      "start": 16,
+      "end": 23,
+      "frames": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "frameRate": 20,
+      "repeat": -1,
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ]
+    },
+    {
+      "key": "ayla-electric-uppercut-startup",
+      "start": 74,
+      "end": 105,
+      "frames": [
+        104,
+        105,
+        74
+      ],
+      "frameDurations": [
+        2,
+        2,
+        1
+      ],
+      "frameRate": 12,
+      "repeat": 0,
+      "sourceFacesLeft": false
+    },
+    {
+      "key": "ayla-electric-uppercut-active",
+      "start": 75,
+      "end": 76,
+      "frames": [
+        75,
+        76
+      ],
+      "frameDurations": [
+        1,
+        1
+      ],
+      "frameRate": 12,
+      "repeat": 0,
+      "sourceFacesLeft": false
+    },
+    {
+      "key": "ayla-electric-uppercut-recovery",
+      "start": 0,
+      "end": 79,
+      "frames": [
+        76,
+        77,
+        78,
+        79,
+        0
+      ],
+      "frameDurations": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "frameRate": 12,
+      "repeat": 0,
+      "sourceFacesLeft": false
+    },
+    {
+      "key": "ayla-wind-uppercut-startup",
+      "start": 74,
+      "end": 105,
+      "frames": [
+        104,
+        105,
+        74
+      ],
+      "frameDurations": [
+        2,
+        2,
+        1
+      ],
+      "frameRate": 12,
+      "repeat": 0,
+      "sourceFacesLeft": false
+    },
+    {
+      "key": "ayla-wind-uppercut-active",
+      "start": 75,
+      "end": 76,
+      "frames": [
+        75,
+        76
+      ],
+      "frameDurations": [
+        1,
+        1
+      ],
+      "frameRate": 12,
+      "repeat": 0,
+      "sourceFacesLeft": false
+    },
+    {
+      "key": "ayla-wind-uppercut-recovery",
+      "start": 0,
+      "end": 79,
+      "frames": [
+        76,
+        77,
+        78,
+        79,
+        0
+      ],
+      "frameDurations": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "frameRate": 12,
+      "repeat": 0,
+      "sourceFacesLeft": false
     }
   ],
   "mappingNotes": {

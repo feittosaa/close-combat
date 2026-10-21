@@ -6,7 +6,7 @@ export interface KeyboardLayout {
   buttons: Record<AttackButton, string>;
 }
 
-/** Adaptador mínimo de teclado. O remapeamento será configurável em etapa posterior. */
+/** Adaptador mínimo de teclado. O layout configurado é independente dos comandos do motor. */
 export class KeyboardInput {
   private readonly pressed = new Set<string>();
   private readonly waitingForRelease = new Set<string>();

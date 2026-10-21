@@ -7,6 +7,7 @@ export type CharacterMode =
   | 'neutral'
   | 'moving'
   | 'dashing'
+  | 'running'
   | 'airborne'
   | 'crouching'
   | 'startup'
@@ -29,6 +30,7 @@ export interface CharacterAttack {
   hasHit: boolean;
   hitElapsedFrames?: number;
   hitOutcome?: 'hit' | 'block';
+  wasBlocked?: boolean;
   preciseExecution: boolean;
   forceCounterHit?: boolean;
   parryConfirmed?: boolean;
@@ -72,9 +74,11 @@ export interface CharacterState {
   rageUsed?: boolean;
   lowParryFrames?: number;
   lowParryHeld?: boolean;
-  combo?: { attackerId: string; hits: number; damage: number; screwUsed: boolean; wallUsed: boolean; wallFrames: number; moveIds: string[] };
+  combo?: { airHits?: number; attackerId: string; hits: number; damage: number; screwUsed: boolean; wallUsed: boolean; wallFrames: number; moveIds: string[] };
   lastCombo?: { hits: number; damage: number; moveIds: string[] };
   attack?: CharacterAttack;
+  /** String continuation context; never prevents movement or a fresh root command. */
+  followup?: CharacterAttack;
   grab?: CharacterGrab;
   hitFlashFrames: number;
 }
