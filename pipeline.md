@@ -31,7 +31,18 @@ Validação local: instalação reproduzível, 300 testes, build e checagem de d
 
 A revisão visual final é de apresentação funcional com arte provisória. Não homologa os sprites novos nem declara todos os matchups balanceados. Testes/build locais e CI remota são relatados separadamente no PR.
 
-Próxima entrega solicitada: movimento mais lento, ataques distintos em neutro/avanço e animação própria de recuo/backstep mantendo a orientação ao adversário, substituindo o espelhamento da caminhada normal. Será validada após esta entrega de combate.
+Combate integrado em `development` pelo PR #3, commit `5549034`, com CI remota aprovada.
+
+### Movimento técnico — `codex/feature-movimento-tecnico`
+
+- [x] Reduzir velocidades e separar recuo/backdash por personagem.
+- [x] Diferenciar jab neutro/avanço de Ayla e preservar suas strings.
+- [x] Conectar recuo dedicado de Ayla e manter facing sem espelhar a caminhada normal.
+- [x] Registrar poses provisórias de recuo de Gris/Tester e jab de avanço pendente de arte.
+- [x] Validar 305 testes, build, diff e apresentação no treino/arcade.
+- [ ] Confirmar push, CI e integração do movimento em development.
+
+Evidências: `docs/evidence/combat/ayla-recuo.png` e `ayla-jab-avanco.png`.
 
 ## Revisão de direção — Ayla / Tekken 7 / HD 2D
 

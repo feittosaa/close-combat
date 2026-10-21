@@ -22,10 +22,10 @@ export function createGameConfig(width: number, height: number): GameConfig {
       floorY: height - 88,
     },
     movement: {
-      walkSpeed: 3,
+      walkSpeed: 2,
       jumpImpulse: -11,
       gravity: 0.55,
-      dashSpeed: 6,
+      dashSpeed: 4.2,
       dashDurationFrames: 12,
       doubleTapWindowFrames: 12,
     },

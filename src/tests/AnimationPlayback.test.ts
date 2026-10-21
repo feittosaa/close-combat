@@ -82,13 +82,13 @@ describe('character animation playback', () => {
       .toBe('dummy-test-low-kick-active');
   });
 
-  it('mirrors the same walk clip for retreat without turning the combat facing', () => {
-    const walk = clips.find((clip) => clip.key === 'tester-walk')!;
-    expect(getCharacterAnimationKey({ ...fighter, mode: 'moving', movementDirection: 'forward' }))
-      .toBe(getCharacterAnimationKey({ ...fighter, mode: 'moving', movementDirection: 'backward' }));
-    for (const facing of ['left', 'right'] as const) {
-      expect(shouldFlipAnimation(facing, walk, true)).toBe(!shouldFlipAnimation(facing, walk, false));
-    }
+  it('selects a separate retreat clip and preserves facing toward the opponent', () => {
+    const retreat = clips.find(clip => clip.key === 'tester-walk-backward')!;
+    expect(getCharacterAnimationKey({ ...fighter, mode: 'moving', movementDirection: 'backward' })).toBe('tester-walk-backward');
+    expect(getCharacterAnimationKey({ ...fighter, mode: 'dashing', movementDirection: 'backward' })).toBe('tester-backdash');
+    expect(getClipFrames(retreat)).not.toEqual(getClipFrames(clips.find(clip => clip.key === 'tester-walk')!));
+    expect(shouldFlipAnimation('right', retreat)).toBe(true);
+    expect(shouldFlipAnimation('left', retreat)).toBe(false);
   });
 
   it('holds the impact pose throughout active frames and spans the whole recovery', () => {

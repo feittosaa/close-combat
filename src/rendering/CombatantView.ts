@@ -78,8 +78,7 @@ export class CombatantView {
     const desiredKey = presentation ? `${state.fighterId}-${presentation}` : getCharacterAnimationKey(state, this.moveClips);
     const animationKey = this.clips.has(desiredKey) ? desiredKey : `${state.fighterId}-idle`;
     const clip = this.clips.get(animationKey);
-    const walkingBackward = (state.mode === 'moving' || state.mode === 'dashing') && state.movementDirection === 'backward';
-    sprite.setFlipX(shouldFlipAnimation(state.facing, clip, walkingBackward));
+    sprite.setFlipX(shouldFlipAnimation(state.facing, clip));
 
     const move = state.attack ? getCharacterById(state.fighterId)?.moves.find(({ id }) => id === state.attack?.moveId) : undefined;
     const attackFrame = clip && !presentation ? getAttackAnimationFrame(state, clip, move) : undefined;

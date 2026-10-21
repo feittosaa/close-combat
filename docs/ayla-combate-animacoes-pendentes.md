@@ -146,3 +146,9 @@ As 135 entradas são executáveis com poses provisórias, não animações homol
 - Wall splat, wall bounce, Screw e queda/levantada: produzir sequências próprias e conferir seus keyframes no treino.
 - Fulgor, carga, transições SS/BT em 2D e avanço confirmado: faltam poses e efeitos específicos.
 - Adaptações do livro e seus IDs adicionais: `src/engine/data/combat/aylaCombatBook.ts`. Nenhum clipe provisório equivale a animação homologada.
+
+## Extensão de movimento técnico
+
+- `ayla-forward-jab` (`f+1`): produzir passo de preparação e jab estendido com contato i12; fallback atual `standing-lp`.
+- Ayla `walk-backward`/`backdash`: conectados aos quadros dedicados 24–31 do atlas existente; conferir refinamento de apoio/continuidade na arte final.
+- Gris e Tester `walk-backward`/`backdash`: sequência provisória de guarda própria, mantendo facing; faltam quadros dedicados de pés e transferência de peso. Não usam caminhada espelhada.

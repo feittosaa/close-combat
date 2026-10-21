@@ -41,8 +41,8 @@ describe('Simulation movement foundation', () => {
     step(simulation, [backward, backward]);
     const after = simulation.snapshot().characters;
 
-    expect(before[0].x - after[0].x).toBe(config.movement.walkSpeed);
-    expect(after[1].x - before[1].x).toBe(config.movement.walkSpeed);
+    expect(before[0].x - after[0].x).toBe(defaultCharacter.movement.backwardWalkSpeed);
+    expect(after[1].x - before[1].x).toBe(defaultCharacter.movement.backwardWalkSpeed);
   });
 
   it('uses a diagonal direction to jump and move toward the opponent', () => {
@@ -119,9 +119,8 @@ describe('Simulation movement foundation', () => {
   });
 
   it('allows an airborne fighter to cross the opponent and updates relative facing', () => {
-    const simulation = new Simulation(config);
+    const simulation = new Simulation(config, [defaultCharacter, defaultCharacter], { training: true, initialDistance: 54 });
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 200; frame += 1) step(simulation, [forward, neutral]);
 
     step(simulation, [{ direction: 'U', buttons: new Set() }, neutral]);
     for (let frame = 0; frame < 60; frame += 1) {
@@ -135,7 +134,11 @@ describe('Simulation movement foundation', () => {
     expect(first.facing).toBe('left');
     expect(second.facing).toBe('right');
 
-    const crossedX = first.x;
+    for (let frame = 0; frame < 120 && !simulation.snapshot().characters[0].grounded; frame++) step(simulation, [neutral, neutral]);
+    expect(simulation.snapshot().characters[0].grounded).toBe(true);
+    for (let frame = 0; frame < 8; frame++) step(simulation, [{ direction: 'B', buttons: new Set() }, neutral]);
+    step(simulation, [neutral, neutral]);
+    const crossedX = simulation.snapshot().characters[0].x;
     step(simulation, [forward, neutral]);
     expect(simulation.snapshot().characters[0].x).toBe(crossedX - config.movement.walkSpeed);
 
@@ -183,7 +186,7 @@ describe('Simulation movement foundation', () => {
   it('allows Tester to cancel a jab into the special only after a hit', () => {
     const hitSimulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(hitSimulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(hitSimulation, [forward, forward]);
     step(hitSimulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
     let hitSnapshot = hitSimulation.snapshot();
     for (let frame = 0; frame < 32 && hitSnapshot.hitEvents.length === 0; frame += 1) {
@@ -198,7 +201,7 @@ describe('Simulation movement foundation', () => {
     expect(hitSimulation.snapshot().characters[0].attack?.moveId).toBe('test-electric-palm-precise');
 
     const blockSimulation = new Simulation(config);
-    for (let frame = 0; frame < 100; frame += 1) step(blockSimulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(blockSimulation, [forward, forward]);
     step(blockSimulation, [{ direction: 'N', buttons: new Set(['1']) }, { direction: 'B', buttons: new Set() }]);
     let blockSnapshot = blockSimulation.snapshot();
     for (let frame = 0; frame < 32 && blockSnapshot.hitEvents.length === 0; frame += 1) {
@@ -216,7 +219,7 @@ describe('Simulation movement foundation', () => {
   it('lets the opposite chord break a nearby grab during the configured window', () => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
     step(simulation, [{ direction: 'N', buttons: new Set(['1', '3']) }, { direction: 'B', buttons: new Set() }]);
     let snapshot = simulation.snapshot();
     for (let frame = 0; frame < 12 && snapshot.characters[1].mode !== 'grabbed'; frame += 1) {
@@ -238,7 +241,7 @@ describe('Simulation movement foundation', () => {
   it('resolves an unbroken grab after six frames and makes a whiff recover normally', () => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
     step(simulation, [{ direction: 'N', buttons: new Set(['2', '4']) }, neutral]);
     let snapshot = simulation.snapshot();
     for (let frame = 0; frame < 12 && snapshot.characters[1].mode !== 'grabbed'; frame += 1) {
@@ -265,7 +268,7 @@ describe('Simulation movement foundation', () => {
   ] as const)('lets the throw input direction choose %s launch and side order', (direction, targetStaysInFront) => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
     step(simulation, [{ direction, buttons: new Set(['1', '3']) }, neutral]);
     let snapshot = simulation.snapshot();
     for (let frame = 0; frame < 20 && snapshot.hitEvents[0]?.outcome !== 'throw'; frame += 1) {
@@ -318,7 +321,7 @@ describe('Simulation movement foundation', () => {
 
     const winRound = (): void => {
       const forward: FrameInput = { direction: 'F', buttons: new Set() };
-      for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+      for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
       step(simulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
       for (let frame = 0; frame < 20 && simulation.snapshot().phase === 'fight'; frame += 1) {
         step(simulation, [neutral, neutral]);
@@ -380,7 +383,7 @@ describe('Simulation movement foundation', () => {
     };
     const simulation = new Simulation(roundConfig, [testCharacter, testCharacter]);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, jab]);
     for (let frame = 0; frame < 20 && simulation.snapshot().phase === 'fight'; frame += 1) {
@@ -421,7 +424,7 @@ describe('Simulation movement foundation', () => {
   ] as const)('selects the directional move %s+%s', (direction, button, moveId) => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
     step(simulation, [{ direction, buttons: new Set([button]) }, neutral]);
     for (let frame = 0; frame < 4; frame += 1) step(simulation, [neutral, neutral]);
     expect(simulation.snapshot().characters[0].attack?.moveId).toBe(moveId);
@@ -456,7 +459,7 @@ describe('Simulation movement foundation', () => {
     for (const [button, direction] of [['1', 'B'], ['2', 'B'], ['3', 'DB']] as const) {
       const simulation = new Simulation(config);
       const forward: FrameInput = { direction: 'F', buttons: new Set() };
-      for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+      for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
       const targetX = simulation.snapshot().characters[1].x;
       step(simulation, [{ direction: 'N', buttons: new Set([button]) }, { direction, buttons: new Set() }]);
       let snapshot = simulation.snapshot();
@@ -481,7 +484,7 @@ describe('Simulation movement foundation', () => {
   it('parries an eligible jab on the contact frame and stuns the attacker', () => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
     step(simulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
     let snapshot = simulation.snapshot();
     while (snapshot.characters[0].attack?.moveId !== 'test-jab') {
@@ -507,7 +510,7 @@ describe('Simulation movement foundation', () => {
     for (const button of ['1', '2'] as const) {
       const simulation = new Simulation(config);
       const forward: FrameInput = { direction: 'F', buttons: new Set() };
-      for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+      for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
       step(simulation, [{ direction: 'N', buttons: new Set([button]) }, neutral]);
       let snapshot = simulation.snapshot();
       while (snapshot.characters[0].attack === undefined) {
@@ -536,7 +539,7 @@ describe('Simulation movement foundation', () => {
   it('exposes attacker advantage using defender stun minus remaining attack frames', () => {
     const blocked = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(blocked, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(blocked, [forward, forward]);
     step(blocked, [{ direction: 'N', buttons: new Set(['1']) }, { direction: 'B', buttons: new Set() }]);
     let blockedSnapshot = blocked.snapshot();
     for (let frame = 0; frame < 32 && blockedSnapshot.hitEvents.length === 0; frame += 1) {
@@ -549,7 +552,7 @@ describe('Simulation movement foundation', () => {
     });
 
     const hit = new Simulation(config);
-    for (let frame = 0; frame < 100; frame += 1) step(hit, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(hit, [forward, forward]);
     step(hit, [{ direction: 'N', buttons: new Set(['2']) }, neutral]);
     let hitSnapshot = hit.snapshot();
     for (let frame = 0; frame < 16 && hitSnapshot.hitEvents.length === 0; frame += 1) {
@@ -562,7 +565,7 @@ describe('Simulation movement foundation', () => {
     });
 
     const negative = new Simulation(config);
-    for (let frame = 0; frame < 100; frame += 1) step(negative, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(negative, [forward, forward]);
     step(negative, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
     let negativeSnapshot = negative.snapshot();
     for (let frame = 0; frame < 32 && negativeSnapshot.hitEvents.length === 0; frame += 1) {
@@ -600,7 +603,7 @@ describe('Simulation movement foundation', () => {
     for (const [button, direction] of [['3', 'B'], ['2', 'DB']] as const) {
       const simulation = new Simulation(config);
       const forward: FrameInput = { direction: 'F', buttons: new Set() };
-      for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+      for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
       step(simulation, [{ direction: 'N', buttons: new Set([button]) }, { direction, buttons: new Set() }]);
       let snapshot = simulation.snapshot();
       for (let frame = 0; frame < 32 && snapshot.hitEvents.length === 0; frame += 1) {
@@ -637,7 +640,7 @@ describe('Simulation movement foundation', () => {
   it('starts an attack from a fresh button press and exposes its active hitbox', () => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
 
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, neutral]);
@@ -655,7 +658,7 @@ describe('Simulation movement foundation', () => {
   it('does not repeat an attack while the same key remains held', () => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
 
     const heldJab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     for (let frame = 0; frame < 40; frame += 1) step(simulation, [heldJab, neutral]);
@@ -675,7 +678,7 @@ describe('Simulation movement foundation', () => {
   it('resolves simultaneous active attacks as a trade', () => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
 
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, jab]);
@@ -690,7 +693,7 @@ describe('Simulation movement foundation', () => {
   it('keeps deterministic trades while rising punch startup invulnerability evades strikes', () => {
     const simulation = new Simulation(config);
     const forward: FrameInput = { direction: 'F', buttons: new Set() };
-    for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
+    for (let frame = 0; frame < 180; frame += 1) step(simulation, [forward, forward]);
     step(simulation, [
       { direction: 'N', buttons: new Set(['1']) },
       { direction: 'DF', buttons: new Set(['2']) },

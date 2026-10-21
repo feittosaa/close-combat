@@ -291,7 +291,7 @@ A aceleração, velocidade e distância de salto podem variar por personagem, de
 
 ### 6.1.1 Comandos direcionais provisórios
 
-Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma direção no chão dentro de 12 frames inicia um dash de até 12 frames enquanto a direção continuar pressionada. Dash não pode iniciar nem continuar no ar; os toques feitos durante o salto não contam para um dash após aterrissar. O dash usa velocidade 6 unidades por frame; a caminhada usa 3. Enquanto agachado, o personagem permanece no mesmo lugar, inclusive com `DF` ou `DB`; esses comandos não iniciam nem mantêm dash. Avanços próprios de golpes agachados também não deslocam o lutador. Durante golpes aéreos, a direção horizontal continua controlando a trajetória e a gravidade continua atuando. Os valores são configuráveis e provisórios. As direções continuam relativas ao oponente.
+Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma direção no chão dentro de 12 frames inicia um dash de até 12 frames enquanto a direção continuar pressionada. Dash não pode iniciar nem continuar no ar; os toques feitos durante o salto não contam para um dash após aterrissar. Na revisão de movimento técnico, Ayla usa caminhada 2, recuo 1,5, dash 4,6 e backdash 3,8 unidades por frame. Gris usa 1,85 / 1,4 / 4,3 / 3,5; Tester usa 2 / 1,5 / 4,2 / 3,4. Esses parâmetros pertencem a cada personagem, com fallback de motor 2 / 4,2 para caminhada/dash. Enquanto agachado, o personagem permanece no mesmo lugar, inclusive com `DF` ou `DB`; esses comandos não iniciam nem mantêm dash. Golpes do livro de combate podem declarar seu próprio avanço, inclusive agachados; a imobilidade continua sendo regra da locomoção agachada e dos golpes legados. Durante golpes aéreos, a direção horizontal continua controlando a trajetória e a gravidade continua atuando. Os valores são configuráveis e provisórios. As direções continuam relativas ao oponente.
 
 ### 6.2 Espaçamento entre personagens
 
@@ -371,7 +371,7 @@ Defender-se deve ser uma decisão ativa, baseada na direção do adversário e n
 
 **Alvo Tekken 7:** preservar a relação alto/médio/baixo, defesa em pé/agachada, recuperação e punições por postura. Auditar guarda neutra e transições antes de homologar fidelidade. A regra atual de parar ao segurar `B` enquanto o adversário ataca, independentemente da distância, é uma concessão do protótipo; não deve ser apresentada como reprodução exata de Tekken 7.
 
-- Segurar `B` recua usando a mesma caminhada espelhada. Se o adversário estiver executando um golpe (preparo, atividade ou recuperação), `B` assume a guarda em pé e interrompe a locomoção, independentemente da distância.
+- Segurar `B` recua com clipe próprio de passos para trás, mantendo a frente orientada ao adversário. O backdash usa outro clipe, sem inverter a orientação da caminhada. Se o adversário estiver executando um golpe (preparo, atividade ou recuperação), `B` assume a guarda em pé e interrompe a locomoção, independentemente da distância.
 - Segurar `DB` defende baixos e deve ser vulnerável a golpes médios que atinjam personagens agachados.
 - Ataques altos podem ser evitados por agachamento quando suas propriedades permitirem.
 - A defesa e o agachamento permanecem parados, inclusive quando o adversário pressiona a colisão corporal. Um contato bloqueado produz **blockstun** e um pequeno empurrão para trás, definido no golpe; um golpe que não alcança o defensor não o desloca.
@@ -675,7 +675,7 @@ O adversário de guarda fica neutro quando não há ataque, assume direção def
 - Revisão da cadência de Gris (21/10/2026): loops de guarda/locomoção retornam pelas poses intermediárias e usam holds explícitos, inclusive no menu. Os cortes sustentam uma pose legível durante a atividade e mostram o seguimento da tesoura no começo da recuperação antes de recolher. Uma pose de seguimento na recuperação não mantém a hitbox ativa nem aplica um segundo contato; tempos de combate, dano, stun e caixas continuam definidos pelo livro do personagem.
 - Startup, atividade e recuperação de cada golpe têm clipes próprios; a pose de contato deve ocupar os frames em que a hitbox realmente está ativa.
 - O salto pode declarar poses de subida, ápice e descida, selecionadas pela velocidade vertical. A posição física e a aterrissagem vêm da simulação.
-- Espelhar um clipe não reinicia seu ciclo. O recuo continua usando a caminhada espelhada já solicitada.
+- A orientação visual segue o lado do adversário e a orientação autorada no asset. Recuo e backdash têm clipes próprios; recuar não inverte a caminhada normal.
 - Novos contatos podem reiniciar a reação sem depender de trocar a chave do clipe. Parar a lógica também para as poses; renderizar mais vezes o mesmo frame não avança animação.
 - O manifesto pode corrigir escala uniforme e âncora vertical por quadro do atlas. São correções autoradas de apresentação, nunca normalização automática por altura da silhueta; agachar reduz a altura do corpo sem ampliar cabeça e membros. Não alteram posição nem colisão da simulação.
 - As fases de ataque não tingem o corpo inteiro: a troca de preparo/contato/recuperação deve preservar as cores da roupa e evitar o efeito de piscar.
@@ -847,7 +847,7 @@ Reavaliar esses valores ao testar sensação de controle e regras de round; mant
 
 ### Personagem de referência e personagem de teste
 
-A primeira personagem de balanceamento é **Ayla**, com direção Kazuya definida em §1.3. O personagem técnico de teste é **Tester** (`tester`), preservado como padrão da simulação isolada, adversário de treino e opção do elenco. A tela inicial permite escolher Ayla, Gris ou Tester para P1. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 3 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
+A primeira personagem de balanceamento é **Ayla**, com direção Kazuya definida em §1.3. O personagem técnico de teste é **Tester** (`tester`), preservado como padrão da simulação isolada, adversário de treino e opção do elenco. A tela inicial permite escolher Ayla, Gris ou Tester para P1. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 2 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
 
 Os sprites-fonte de cada personagem ficam em `src/assets/sprites/characters/{id}/`; o manifesto de animações fica em `src/assets/animations/{id}.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. Consulte os READMEs dessas pastas para o formato esperado dos atlas e manifestos. Os dados de combate são independentes da arte: cada definição em `characters.ts` tem seu livro `moves` e perfil `collision`; cada golpe define sua hitbox de ataque, e cada personagem tem hurtboxes em pé, agachada e aérea.
 
@@ -940,3 +940,7 @@ O elenco inclui `Tester` e `Dummy` (`dummy`) para validar atributos e associaç�
 ## Resumo da proposta
 
 Um jogo de luta 2D para navegador, distribuído pelo GitHub, com visual que combina energia de sprites clássicos e animação expressiva; combate técnico baseado em quatro botões (`1`–`4`), comandos direcionais e simultâneos; defesa alta/baixa, agarrões, parries específicos, frame advantage, controle de distância e golpes fortalecidos por execução precisa; além de especiais cinematográficos com sequências interativas de botões. A implementação deve começar com uma simulação própria, determinística e testável, para que a profundidade do combate não dependa da camada visual.
+
+### Movimento técnico — revisão de 21/10/2026
+
+Ayla diferencia `1` em neutro de `f+1` durante avanço. O segundo é uma variante autoral 2D (i12, dano 24, alcance +10, avanço 8, recuperação 20 no vazio/18 no contato) e admite as continuações de `1,1` e `1,2`. A entrada direcional seleciona o movimento; velocidade de caminhada não acelera seus keyframes. A referência original de Kazuya permanece preservada no catálogo. Cada personagem define suas próprias variantes e continuações; não se adiciona esse jab aos demais lutadores.
