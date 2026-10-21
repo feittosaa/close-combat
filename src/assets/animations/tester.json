@@ -371,7 +371,15 @@
         223,
         224
       ],
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ]
     },
     {
       "key": "tester-defense",
@@ -397,7 +405,7 @@
       "key": "tester-dash",
       "start": 219,
       "end": 224,
-      "frameRate": 24,
+      "frameRate": 16,
       "repeat": 0,
       "frames": [
         219,
@@ -407,7 +415,15 @@
         223,
         224
       ],
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
     },
     {
       "key": "tester-crouch",
@@ -1277,6 +1293,38 @@
         2,
         4
       ]
+    },
+    {
+      "key": "tester-walk-backward",
+      "start": 212,
+      "end": 270,
+      "frames": [
+        268,
+        269,
+        270,
+        269,
+        213,
+        212
+      ],
+      "frameRate": 10,
+      "repeat": -1,
+      "sourceFacesLeft": true
+    },
+    {
+      "key": "tester-backdash",
+      "start": 212,
+      "end": 270,
+      "frames": [
+        268,
+        269,
+        270,
+        269,
+        213,
+        212
+      ],
+      "frameRate": 30,
+      "repeat": 0,
+      "sourceFacesLeft": true
     }
   ],
   "attackClipKeyPattern": "tester-{moveId}-{phase}",

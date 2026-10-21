@@ -29,8 +29,22 @@ const powerDashes: readonly MoveDefinition[] = aylaReferenceMoves.filter(move =>
     strikes: [], hurtboxes: [], action: { power: 'consume', move: 42 },
     adaptation: 'Avanço 2D após confirmação de acerto, consumindo Fulgor; sem mudança de eixo.' },
 }));
+const jab = aylaMove('1');
+export const aylaForwardJab: MoveDefinition = {
+  ...jab, id: 'ayla-forward-jab', startup: 12, recovery: 20, advance: 8, damage: 24,
+  hitbox: { ...jab.hitbox, width: jab.hitbox.width + 10 },
+  combat: { ...jab.combat!, name: 'Jab de avanço', reference: undefined, recoveryOnContact: 18,
+    command: { notation: 'f+1', directions: ['F'], buttons: ['1'] },
+    strikes: jab.combat!.strikes.map(strike => ({ ...strike, from: strike.from + 2, to: strike.to + 2,
+      damage: 24, hitbox: { ...strike.hitbox, width: strike.hitbox.width + 10 } })),
+    adaptation: 'Variante autoral 2D de avanço: i12, alcance +10, avanço 8; permite seguir com 1 ou 2. Não é um frame dado de Kazuya.',
+    animation: { clip: 'standing-lp', status: 'provisional' } },
+};
+const sourceWithForwardFollowups = aylaReferenceMoves.map(move =>
+  move.combat?.command.parentId === jab.id ? { ...move, combat: { ...move.combat,
+    command: { ...move.combat.command, alternateParentIds: [aylaForwardJab.id] } } } : move);
 export const aylaCombatMoves: readonly MoveDefinition[] = [
-  ...aylaReferenceMoves, adapter('ayla-sway-2d', 'F', 'sway'), adapter('ayla-turn-2d', 'B', 'backturned'), ...powerDashes,
+  ...sourceWithForwardFollowups, aylaForwardJab, adapter('ayla-sway-2d', 'F', 'sway'), adapter('ayla-turn-2d', 'B', 'backturned'), ...powerDashes,
 ];
 export const aylaCombatRules: CombatRules = {
   lowParryFrames: 6, lowParryStunFrames: 18, stanceFrames: 24,

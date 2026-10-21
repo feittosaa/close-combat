@@ -66,7 +66,7 @@ export const grisMoves: readonly MoveDefinition[] = [
 
 export const gris: CharacterDefinition = {
   id: 'gris', name: 'Gris', maxHealth: 1000,
-  movement: { walkSpeed: 3.1, dashSpeed: 6.4, jumpVelocity: -12.2 },
+  movement: { walkSpeed: 1.85, backwardWalkSpeed: 1.4, dashSpeed: 4.3, backdashSpeed: 3.5, jumpVelocity: -12.2 },
   moves: grisMoves,
   collision: {
     bodyWidth: 44, hurtboxes: {

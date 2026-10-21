@@ -200,6 +200,7 @@ for m in moves:
  if any(strike.get('projectile') for strike in m['combat']['strikes']):production+='; efeito de projétil próprio (atual: fx-crimson-wave provisório)'
  lines.append(f"| `{m['id']}` | `{m['combat']['command']['notation']}` | `{m['combat']['animation']['clip']}` | {production} |")
 lines += ['', '## Reações e posturas adicionais', '', '- Juggle: reação horizontal compatível com a hurtbox individual `juggled` (86 × 80); o sprite atual é provisório.', '- Wall splat, wall bounce, Screw e queda/levantada: produzir sequências próprias e conferir seus keyframes no treino.', '- Fulgor, carga, transições SS/BT em 2D e avanço confirmado: faltam poses e efeitos específicos.', '- Adaptações do livro e seus IDs adicionais: `src/engine/data/combat/aylaCombatBook.ts`. Nenhum clipe provisório equivale a animação homologada.']
+lines += ['', '## Extensão de movimento técnico\n\n- `ayla-forward-jab` (`f+1`): produzir passo de preparação e jab estendido com contato i12; fallback atual `standing-lp`.\n- Ayla `walk-backward`/`backdash`: conectados aos quadros dedicados 24–31 do atlas existente; conferir refinamento de apoio/continuidade na arte final.\n- Gris e Tester `walk-backward`/`backdash`: sequência provisória de guarda própria, mantendo facing; faltam quadros dedicados de pés e transferência de peso. Não usam caminhada espelhada.']
 (ROOT/'docs/ayla-combate-animacoes-pendentes.md').write_text('\n'.join(lines)+'\n')
 print(f'{len(moves)} reference entries generated')
 

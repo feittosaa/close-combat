@@ -14,6 +14,7 @@ export interface CombatCommand {
   buttons: readonly AttackButton[];
   stance?: CombatStance;
   parentId?: string;
+  alternateParentIds?: readonly string[];
   followupWindow?: { from: number; to: number; onHit?: boolean };
   holdFrames?: number;
   preciseFrames?: number;
