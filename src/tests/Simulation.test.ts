@@ -6,6 +6,8 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { defaultCharacter } from '../engine/data/characters';
 
 const config = createGameConfig(1024, 576);
+const jabMove = defaultCharacter.moves.find(({ id }) => id === 'test-jab')!;
+const crossMove = defaultCharacter.moves.find(({ id }) => id === 'test-cross')!;
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
 
 function step(simulation: Simulation, inputs: readonly FrameInput[]): void {
@@ -184,7 +186,7 @@ describe('Simulation movement foundation', () => {
     for (let frame = 0; frame < 100; frame += 1) step(hitSimulation, [forward, forward]);
     step(hitSimulation, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
     let hitSnapshot = hitSimulation.snapshot();
-    for (let frame = 0; frame < 14 && hitSnapshot.hitEvents.length === 0; frame += 1) {
+    for (let frame = 0; frame < 32 && hitSnapshot.hitEvents.length === 0; frame += 1) {
       step(hitSimulation, [neutral, neutral]);
       hitSnapshot = hitSimulation.snapshot();
     }
@@ -199,7 +201,7 @@ describe('Simulation movement foundation', () => {
     for (let frame = 0; frame < 100; frame += 1) step(blockSimulation, [forward, forward]);
     step(blockSimulation, [{ direction: 'N', buttons: new Set(['1']) }, { direction: 'B', buttons: new Set() }]);
     let blockSnapshot = blockSimulation.snapshot();
-    for (let frame = 0; frame < 14 && blockSnapshot.hitEvents.length === 0; frame += 1) {
+    for (let frame = 0; frame < 32 && blockSnapshot.hitEvents.length === 0; frame += 1) {
       step(blockSimulation, [neutral, { direction: 'B', buttons: new Set() }]);
       blockSnapshot = blockSimulation.snapshot();
     }
@@ -458,7 +460,7 @@ describe('Simulation movement foundation', () => {
       const targetX = simulation.snapshot().characters[1].x;
       step(simulation, [{ direction: 'N', buttons: new Set([button]) }, { direction, buttons: new Set() }]);
       let snapshot = simulation.snapshot();
-      for (let frame = 0; frame < 14 && snapshot.hitEvents.length === 0; frame += 1) {
+      for (let frame = 0; frame < 32 && snapshot.hitEvents.length === 0; frame += 1) {
         step(simulation, [neutral, { direction, buttons: new Set() }]);
         snapshot = simulation.snapshot();
       }
@@ -488,7 +490,7 @@ describe('Simulation movement foundation', () => {
     }
     let parryEvent;
     for (let frame = 0; frame < 12 && snapshot.hitEvents.length === 0; frame += 1) {
-      const contactFrame = snapshot.characters[0].attack?.elapsedFrames === 6;
+      const contactFrame = snapshot.characters[0].attack?.elapsedFrames === jabMove.startup;
       step(simulation, [neutral, contactFrame ? { direction: 'B', buttons: new Set() } : neutral]);
       snapshot = simulation.snapshot();
       parryEvent = snapshot.hitEvents[0];
@@ -516,8 +518,8 @@ describe('Simulation movement foundation', () => {
       let pressedEarly = false;
       for (let frame = 0; frame < 16 && snapshot.hitEvents.length === 0; frame += 1) {
         const elapsed = snapshot.characters[0].attack?.elapsedFrames ?? -1;
-        const pressEarly = button === '1' && elapsed === 5;
-        const contact = button === '1' ? elapsed === 6 : elapsed === 9;
+        const pressEarly = button === '1' && elapsed === jabMove.startup - 1;
+        const contact = elapsed === (button === '1' ? jabMove.startup : crossMove.startup);
         const defenderDirection = pressEarly ? 'B' : 'N';
         pressedEarly ||= pressEarly;
         step(simulation, [neutral, contact && button === '2' ? { direction: 'B', buttons: new Set() } : { direction: defenderDirection, buttons: new Set() }]);
@@ -537,12 +539,13 @@ describe('Simulation movement foundation', () => {
     for (let frame = 0; frame < 100; frame += 1) step(blocked, [forward, forward]);
     step(blocked, [{ direction: 'N', buttons: new Set(['1']) }, { direction: 'B', buttons: new Set() }]);
     let blockedSnapshot = blocked.snapshot();
-    for (let frame = 0; frame < 14 && blockedSnapshot.hitEvents.length === 0; frame += 1) {
+    for (let frame = 0; frame < 32 && blockedSnapshot.hitEvents.length === 0; frame += 1) {
       step(blocked, [neutral, { direction: 'B', buttons: new Set() }]);
       blockedSnapshot = blocked.snapshot();
     }
     expect(blockedSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'block', attackerRecoveryFrames: 11, defenderStunFrames: 10, frameAdvantage: -1,
+      outcome: 'block', attackerRecoveryFrames: jabMove.activeFrames + jabMove.recovery - 1,
+      defenderStunFrames: jabMove.blockstun, frameAdvantage: jabMove.blockstun - (jabMove.activeFrames + jabMove.recovery - 1),
     });
 
     const hit = new Simulation(config);
@@ -554,19 +557,21 @@ describe('Simulation movement foundation', () => {
       hitSnapshot = hit.snapshot();
     }
     expect(hitSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'hit', attackerRecoveryFrames: 18, defenderStunFrames: 16, frameAdvantage: -2,
+      outcome: 'hit', attackerRecoveryFrames: crossMove.activeFrames + crossMove.recovery - 1,
+      defenderStunFrames: crossMove.hitstun, frameAdvantage: crossMove.hitstun - (crossMove.activeFrames + crossMove.recovery - 1),
     });
 
     const negative = new Simulation(config);
     for (let frame = 0; frame < 100; frame += 1) step(negative, [forward, forward]);
     step(negative, [{ direction: 'N', buttons: new Set(['1']) }, neutral]);
     let negativeSnapshot = negative.snapshot();
-    for (let frame = 0; frame < 14 && negativeSnapshot.hitEvents.length === 0; frame += 1) {
+    for (let frame = 0; frame < 32 && negativeSnapshot.hitEvents.length === 0; frame += 1) {
       step(negative, [neutral, neutral]);
       negativeSnapshot = negative.snapshot();
     }
     expect(negativeSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'hit', attackerRecoveryFrames: 11, defenderStunFrames: 12, frameAdvantage: 1,
+      outcome: 'hit', attackerRecoveryFrames: jabMove.activeFrames + jabMove.recovery - 1,
+      defenderStunFrames: jabMove.hitstun, frameAdvantage: jabMove.hitstun - (jabMove.activeFrames + jabMove.recovery - 1),
     });
   });
 
@@ -598,7 +603,7 @@ describe('Simulation movement foundation', () => {
       for (let frame = 0; frame < 100; frame += 1) step(simulation, [forward, forward]);
       step(simulation, [{ direction: 'N', buttons: new Set([button]) }, { direction, buttons: new Set() }]);
       let snapshot = simulation.snapshot();
-      for (let frame = 0; frame < 14 && snapshot.hitEvents.length === 0; frame += 1) {
+      for (let frame = 0; frame < 32 && snapshot.hitEvents.length === 0; frame += 1) {
         step(simulation, [neutral, { direction, buttons: new Set() }]);
         snapshot = simulation.snapshot();
       }
@@ -636,7 +641,7 @@ describe('Simulation movement foundation', () => {
 
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, neutral]);
-    for (let frame = 0; frame < 9; frame += 1) step(simulation, [neutral, neutral]);
+    for (let frame = 0; frame < jabMove.startup + 3; frame += 1) step(simulation, [neutral, neutral]);
 
     const active = simulation.snapshot();
     expect(active.characters[0].mode).toBe('active');
@@ -674,7 +679,7 @@ describe('Simulation movement foundation', () => {
 
     const jab: FrameInput = { direction: 'N', buttons: new Set(['1']) };
     step(simulation, [jab, jab]);
-    for (let frame = 0; frame < 10; frame += 1) step(simulation, [neutral, neutral]);
+    for (let frame = 0; frame < jabMove.startup + 4; frame += 1) step(simulation, [neutral, neutral]);
     step(simulation, [neutral, neutral]);
 
     const [first, second] = simulation.snapshot().characters;

@@ -6,6 +6,6 @@
 
 O snapshot expõe eventos do último passo e um histórico limitado aos 32 contatos recentes. Cada entrada inclui frame e evento, evitando perder feedback quando a renderização avança mais de um passo de lógica. Reset de luta/round limpa o histórico.
 
-`SimulationOptions.training` desativa encerramento por cronômetro/KO para exercícios; não muda dano, stun, geometria, comandos ou guarda. `initialDistance` permite spawn curto para treino; ausente, preserva o posicionamento da partida. Vida é restaurada por reset; recuperação automática ainda não existe.
+`SimulationOptions.training` desativa encerramento por cronômetro/KO para exercícios; não muda dano, stun, geometria, comandos ou guarda. `initialDistance` permite spawn curto para treino; ausente, preserva o posicionamento da partida. `resetMatch(distância)` só aceita a distância alternativa no treino. `setTrainingAutoRestore` também só atua no treino; restaura vida após 90 frames lógicos consecutivos no chão, sem ataques, agarrões, stun ou contato, conservando os demais estados. A sessão pode desligar essa conveniência.
 
 Regras e critérios de evolução ficam em `base.md`; buffer de punição, combos completos e quedas/levantadas continuam pendentes na pipeline.

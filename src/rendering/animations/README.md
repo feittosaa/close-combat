@@ -7,3 +7,5 @@ Este módulo amostra poses do atlas a partir do estado e do frame da simulação
 `CharacterAnimationMap.ts` associa modos e IDs de golpes a chaves visuais. O manifesto pode fornecer `moveClips`; a validação recusa índices/durações inválidos ou cobertura ausente dos golpes antes da partida. Reutilizações provisórias precisam ficar explícitas no manifesto.
 
 Contrato completo, matriz de produção e roteiro de revisão: [`docs/animacao.md`](../../../docs/animacao.md). Arte e animação não alteram dano, hitboxes ou duração de stun.
+
+`CombatantView` aplica `footAnchorY` e correções uniformes de `frameTransforms` ao quadro amostrado. Não aplica tint por fase. Correções visuais não alteram a geometria, e não devem ser confundidas com o ajuste de tempos no livro de golpes.

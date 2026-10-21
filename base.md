@@ -1,7 +1,7 @@
 # Close Combat — Documento Principal de Design
 
 > **Status:** protótipo local; consolidação de animação e punições em andamento
-> **Versão:** 0.2.0 · revisão de 20/10/2026
+> **Versão:** 0.2.1 · revisão de 20/10/2026
 > **Idioma:** português (Brasil)
 > **Título do jogo:** Close Combat
 > **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
@@ -275,7 +275,7 @@ Regra do protótipo: todos os contatos do frame são detectados antes de aplicar
 
 Cada personagem possui seu próprio livro `moves` e perfil `collision`. O livro contém golpes básicos, direcionais, aéreos, especiais, agarrões e regras de cancelamento; nomes e números não são globais nem precisam ser iguais entre personagens. Um golpe define sua hitbox de ataque junto de startup, frames ativos e recuperação. O motor resolve o golpe pelo personagem que o executa, portanto dois livros podem até reutilizar um ID se forem diferentes.
 
-No protótipo, o ritmo-base dos golpes é definido pelo tipo de golpe, não por uma velocidade global do personagem: o soco leve Tester usa 6 frames de startup, 3 ativos e 9 de recuperação; o soco pesado usa 9 de startup, 3 ativos e 16 de recuperação. As poses do ápice ficam visíveis durante os três frames ativos. Variações de outros golpes devem declarar seus próprios frames no livro de golpes, sem alterar a cadência de caminhada do personagem.
+No protótipo, o ritmo-base dos golpes é definido pelo tipo de golpe, não por uma velocidade global do personagem: o soco leve Tester usa 8 frames de startup, 4 ativos e 13 de recuperação; o soco pesado usa 11 de startup, 4 ativos e 20 de recuperação. Nesta revisão de cadência solicitada, os strikes ganham 2 frames de preparo, 1 de atividade e 4 de recuperação em relação ao livro anterior; agarrões mantêm seus valores. O ápice fica sustentado durante a atividade e a recuperação começa ainda perto do contato antes de recolher. Dano, stun e alcance horizontal são preservados: a recuperação maior altera a vantagem e exige revisão de balanceamento, não é apenas uma mudança cosmética. Variações de outros golpes devem declarar seus próprios frames no livro de golpes, sem alterar a cadência de caminhada do personagem.
 
 O perfil de colisão define `bodyWidth` para movimento/contato entre corpos e hurtboxes separadas `standing`, `crouching` e `airborne`. Cada hurtbox usa `offsetX` em relação ao centro horizontal e `offsetY` em relação aos pés, com largura e altura em pixels lógicos. No ar o motor usa sempre `airborne`; no chão escolhe entre em pé e agachada. Hitboxes de ataque usam `forward` medido a partir do centro na direção do oponente, `yOffset` em relação aos pés e dimensões próprias por golpe. Todos os valores podem variar por personagem.
 
@@ -552,13 +552,17 @@ A interface precisa priorizar a leitura da luta e não cobrir os personagens sem
 
 O treino é a ferramenta de desenvolvimento prioritária desta revisão. As funções completas abaixo continuam planejadas; a primeira entrega está delimitada na seção seguinte.
 
-### Primeiro treino local
+### Treino local e separação da interface
 
-O menu oferece partida local (`Enter`) e treino (`T`). No treino, `P` pausa ou retoma a simulação; `.` avança exatamente um frame quando pausado; `F2` reinicia posições, vida, histórico e comandos. `G` alterna entre segundo jogador livre, guarda alta, guarda baixa e repetição do soco `2`. `H` alterna a visualização de hitboxes/hurtboxes; `I` alterna os painéis de entrada.
+O menu oferece partida local (`Enter`) e treino (`T`). A partida mostra vida, tempo, round, cenário e resultado. A geometria de treino usa preenchimento leve e constante, sem pulsação sobre o sprite. Estados, entradas, colisões, dados de golpes e classificações técnicas de contato pertencem exclusivamente ao treino.
 
-O treino começa com distância de 96 unidades entre os centros, usa cronômetro livre e não encerra rounds por vida zero. Dano, stun, geometria e comandos permanecem os da luta. Reiniciar restaura a vida; recuperação automática e gravação livre do adversário ficam para a próxima entrega. Trocar o comportamento do adversário não cancela um golpe em andamento.
+No treino, `P` pausa/retoma; `.` avança exatamente um frame quando pausado; `F2` reinicia posições, vida, histórico e comandos. `G` alterna entre segundo jogador livre, guarda alta, guarda baixa e repetições de soco leve, soco forte ou chute forte. `H` alterna hitboxes/hurtboxes; `I` alterna entradas; `L` alterna velocidade de apresentação entre 100%, 50% e 25%. A lógica continua em 60 Hz e o passo único continua valendo um frame.
 
-O adversário de guarda fica neutro quando não há ataque, assume a direção defensiva durante ataques e permanece sem deslocamento intencional. A repetição usa uma entrada real de botão `2` a cada 120 frames, passando pelo mesmo parser do jogador. Não é uma IA competitiva.
+`F3` alterna recuperação automática de vida (ligada inicialmente): após 90 frames lógicos consecutivos com ambos no chão, sem ataque, agarrão ou stun, restaura apenas a vida. Não limpa comandos, contatos ou estados e não recupera durante um golpe. `F4` alterna distância inicial entre 96, 144 e 220 unidades e faz um reinício completo. `F2` conserva a distância escolhida e as opções de treino. Teclas mantidas no reinício precisam ser soltas antes de comandar novamente; o passo único descarta repetição e reprocessamento do mesmo evento de teclado.
+
+O treino usa cronômetro livre e não encerra rounds por vida zero. Dano, stun, geometria e comandos permanecem os da luta. A interface conserva os dados do último golpe de cada lado e mostra comando, preparo/atividade/recuperação, altura, dano, tempo restante, distância e resultado/recuperação/stun/vantagem do último contato. Esses valores descrevem o contato ocorrido, sem prometer punição garantida.
+
+O adversário de guarda fica neutro quando não há ataque, assume direção defensiva durante ataques e permanece sem deslocamento intencional. As repetições usam uma entrada real a cada 120 frames lógicos e passam pelo parser do jogador. Trocar a opção não cancela ataques. Gravação livre e respostas automáticas de punição continuam pendentes.
 
 ### Contrato de animação
 
@@ -568,6 +572,8 @@ O adversário de guarda fica neutro quando não há ataque, assume a direção d
 - O salto pode declarar poses de subida, ápice e descida, selecionadas pela velocidade vertical. A posição física e a aterrissagem vêm da simulação.
 - Espelhar um clipe não reinicia seu ciclo. O recuo continua usando a caminhada espelhada já solicitada.
 - Novos contatos podem reiniciar a reação sem depender de trocar a chave do clipe. Parar a lógica também para as poses; renderizar mais vezes o mesmo frame não avança animação.
+- O manifesto pode corrigir escala uniforme e âncora vertical por quadro do atlas. São correções autoradas de apresentação, nunca normalização automática por altura da silhueta; agachar reduz a altura do corpo sem ampliar cabeça e membros. Não alteram posição nem colisão da simulação.
+- As fases de ataque não tingem o corpo inteiro: a troca de preparo/contato/recuperação deve preservar as cores da roupa e evitar o efeito de piscar.
 - Pivô nos pés, escala comum, direção original por clipe e cobertura dos golpes são requisitos de entrega. O manifesto é validado antes da partida; clipes provisórios e faltantes precisam ficar registrados na matriz de produção.
 
 O detalhamento de autoria, revisão e cobertura das animações está em [`docs/animacao.md`](./docs/animacao.md).
@@ -748,53 +754,55 @@ Até os personagens e golpes oficiais serem definidos, os botões `1`–`4` disp
 
 | Botão | Startup | Ativo | Recovery | Dano | Nível |
 |---|---:|---:|---:|---:|---|
-| `1` | 4 | 2 | 10 | 45 | alto |
-| `2` | 6 | 3 | 14 | 65 | médio |
-| `3` | 7 | 3 | 16 | 60 | baixo |
-| `4` | 9 | 4 | 19 | 85 | médio |
+| `1` | 8 | 4 | 13 | 45 | alto |
+| `2` | 11 | 4 | 20 | 65 | médio |
+| `3` | 9 | 4 | 20 | 60 | baixo |
+| `4` | 11 | 5 | 23 | 85 | médio |
 
 Tester também tem dois chords provisórios para exercitar o parser; números sem decisão de balanceamento:
 
 | Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
 |---|---|---:|---:|---:|---:|---|
-| `1+2` | soco duplo | 6 | 2 | 14 | 75 | médio |
-| `3+4` | chute duplo | 8 | 3 | 17 | 90 | médio |
+| `1+2` | soco duplo | 8 | 3 | 18 | 75 | médio |
+| `3+4` | chute duplo | 10 | 4 | 21 | 90 | médio |
 
 Comandos direcionais também terão variantes provisórias, reconhecidas no frame em que o botão é pressionado:
 
 | Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
 |---|---|---:|---:|---:|---:|---|
-| `F+1` | soco avançando | 5 | 2 | 12 | 55 | alto |
-| `DF+2` | soco ascendente | 8 | 3 | 17 | 75 | médio |
-| `D+3` | rasteira | 7 | 3 | 18 | 70 | baixo |
-| `UF+4` | chute saltando | 8 | 4 | 20 | 80 | médio |
-| `B+1` | jab recuando | 6 | 2 | 14 | 50 | alto |
-| `DB+2` | cotovelo baixo recuando | 9 | 3 | 18 | 70 | médio |
-| `UB+4` | chute saltando para trás | 9 | 4 | 21 | 78 | médio |
+| `F+1` | soco avançando | 7 | 3 | 16 | 55 | alto |
+| `DF+2` | soco ascendente | 10 | 4 | 21 | 75 | médio |
+| `D+3` | rasteira | 9 | 4 | 22 | 70 | baixo |
+| `UF+4` | chute saltando | 10 | 5 | 24 | 80 | médio |
+| `B+1` | jab recuando | 8 | 3 | 18 | 50 | alto |
+| `DB+2` | cotovelo baixo recuando | 11 | 4 | 22 | 70 | médio |
+| `UB+4` | chute saltando para trás | 11 | 5 | 25 | 78 | médio |
 
 Golpes abaixados são selecionados ao pressionar um botão mantendo a direção exata `D` no chão. As diagonais `DF` e `DB` continuam selecionando suas variantes direcionais (ou bloqueio, quando não há ataque), enquanto o personagem adota postura baixa. `D+3` continua sendo a rasteira já cadastrada:
 
 | Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
 |---|---|---:|---:|---:|---:|---|
-| `D+1` | jab curto agachado | 5 | 2 | 12 | 42 | médio |
-| `D+2` | gancho agachado | 7 | 3 | 16 | 62 | médio |
-| `D+3` | rasteira | 7 | 3 | 18 | 70 | baixo |
-| `D+4` | chute varrido agachado | 8 | 3 | 19 | 72 | baixo |
+| `D+1` | jab curto agachado | 7 | 3 | 16 | 42 | médio |
+| `D+2` | gancho agachado | 9 | 4 | 20 | 62 | médio |
+| `D+3` | rasteira | 9 | 4 | 22 | 70 | baixo |
+| `D+4` | chute varrido agachado | 10 | 4 | 23 | 72 | baixo |
 
 Variantes aéreas provisórias ficam disponíveis ao pressionar um botão enquanto o lutador não está no chão. Elas substituem a variante terrestre para aquele botão; direção horizontal pode ser mantida para controlar deslocamento, sem alterar a escolha do golpe nesta etapa:
 
 | Comando no ar | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
 |---|---|---:|---:|---:|---:|---|
-| `1` | soco aéreo | 5 | 3 | 13 | 50 | alto |
-| `2` | golpe aéreo forte | 7 | 3 | 17 | 68 | médio |
-| `3` | chute aéreo descendente | 6 | 3 | 16 | 62 | médio |
-| `4` | chute aéreo forte | 9 | 4 | 21 | 82 | médio |
+| `1` | soco aéreo | 7 | 4 | 17 | 50 | alto |
+| `2` | golpe aéreo forte | 9 | 4 | 21 | 68 | médio |
+| `3` | chute aéreo descendente | 8 | 4 | 20 | 62 | médio |
+| `4` | chute aéreo forte | 11 | 5 | 25 | 82 | médio |
 
 Os golpes usam hitboxes retangulares de teste e atingem uma vez por execução. `F` e `B` selecionam variantes distintas para os botões 1, 2 e 4; `D+1`, `D+2` e `D+4` selecionam golpes abaixados, e `D+3` é a rasteira. Variantes aéreas substituem a escolha terrestre enquanto o personagem está no ar. Os golpes básicos causam 12–21 frames de hitstun, 10 frames de blockstun e 18 unidades de pushback no acerto/4 no bloqueio. Valores dos demais golpes são provisórios por golpe, não balanceamento final.
 
-A interface identifica os modos neutro, movimento, dash, no ar, agachado, preparo, ativo, recuperação, defesa, atordoado, bloqueio, agarrado e caído. A hitbox visual aparece apenas nos frames ativos e usa a mesma geometria da checagem de acerto.
+Somente no treino, a interface identifica os modos neutro, movimento, dash, no ar, agachado, preparo, ativo, recuperação, defesa, atordoado, bloqueio, agarrado e caído. A hitbox visual aparece apenas nos frames ativos e usa a mesma geometria da checagem de acerto.
 
 Na primeira implementação, um ataque é iniciado por um novo comando reconhecido. `1+2` e `3+4` selecionam os chords de teste de Tester; combinações sem golpe cadastrado são ignoradas, sem virar ataques simples. Comandos de um botão que possam integrar um chord registrado aguardam o fechamento da janela de 3 frames. No chão, `D` seleciona variante abaixada quando existir; as demais direções selecionam a variante exata e por fim o golpe básico. No ar, escolhe o golpe aéreo do botão. Sequências usam direções relativas ao personagem: `F,F+2` exige soltar e pressionar frente novamente; `D,DF+3` aceita a transição direta de baixo para diagonal. Os passos precisam caber em 12 frames; a sequência reconhecida tem prioridade sobre o golpe simples do mesmo botão.
+
+A hitbox do chute forte em pé e do chute duplo começa em `yOffset: -126`, acompanhando o chute alto escolhido no atlas; largura/alcance horizontal, categoria média e demais propriedades permanecem os do livro. Essa altura é um dado autorado do golpe, não uma medição automática da imagem. As poses de rasteira usam correção visual uniforme para manter aproximadamente 95 unidades de altura, próxima da postura baixa.
 
 ### Regras provisórias de round e elenco
 
@@ -806,8 +814,8 @@ O elenco inclui `Tester` e `Dummy` (`dummy`) para validar atributos e associaç�
 
 | Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
 |---|---|---:|---:|---:|---:|---|
-| `F,F+2` | soco de avanço duplo | 8 | 3 | 18 | 80 | médio |
-| `D,DF+3` | chute de entrada diagonal | 7 | 3 | 17 | 68 | médio |
+| `F,F+2` | soco de avanço duplo | 10 | 4 | 22 | 80 | médio |
+| `D,DF+3` | chute de entrada diagonal | 9 | 4 | 21 | 68 | médio |
 
 ---
 

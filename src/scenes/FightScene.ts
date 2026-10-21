@@ -38,6 +38,7 @@ export class FightScene extends Phaser.Scene {
   private training?: TrainingSession;
   private trainingHud?: TrainingHud;
   private readonly trainingListeners = new Map<string, (event: KeyboardEvent) => void>();
+  private readonly handledTrainingEvents = new WeakSet<KeyboardEvent>();
   private readonly trainingKeys: ReadonlyArray<readonly [string, () => void]> = [
     ['keydown-P', () => { if (this.training) this.training.paused = !this.training.paused; }],
     ['keydown-PERIOD', () => {
@@ -48,6 +49,17 @@ export class FightScene extends Phaser.Scene {
     }],
     ['keydown-F2', () => { if (this.training) this.resetFight(); }],
     ['keydown-G', () => { this.training?.cycleDummy(); }],
+    ['keydown-L', () => { this.training?.cycleSpeed(); }],
+    ['keydown-F3', () => {
+      if (!this.training) return;
+      this.training.autoRestore = !this.training.autoRestore;
+      this.simulation?.setTrainingAutoRestore(this.training.autoRestore);
+    }],
+    ['keydown-F4', () => {
+      if (!this.training) return;
+      this.training.cycleDistance();
+      this.resetFight();
+    }],
     ['keydown-H', () => {
       if (!this.training) return;
       this.training.showGeometry = !this.training.showGeometry;
@@ -97,7 +109,8 @@ export class FightScene extends Phaser.Scene {
     config.arena.right += stageLayout.arenaOffsetX;
     this.stageView = new StageView(this, this.selectedStage, stageLayout);
     this.simulation = new Simulation(config, [this.selectedFighter, this.selectedFighter], this.training
-      ? { training: true, initialDistance: 96 } : {});
+      ? { training: true, initialDistance: this.training.initialDistance } : {});
+    this.simulation.setTrainingAutoRestore(this.training?.autoRestore ?? false);
     this.keyboardInputs = [new KeyboardInput(PLAYER_ONE_KEYS), new KeyboardInput(PLAYER_TWO_KEYS)];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
 
@@ -108,18 +121,24 @@ export class FightScene extends Phaser.Scene {
     this.hitboxView = new HitboxView(this);
     this.hitboxView.setVisible(Boolean(this.training));
     this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.selectedFighter.name], this.selectedStage.name, Boolean(this.training));
-    this.inputDisplays = [
-      new PlayerInputDisplay(this, 18, 78, 'P1 · WASD / J K N M', '#ff8c8c'),
-      new PlayerInputDisplay(this, width - 218, 78, 'P2 · SETAS / NUMPAD', '#8cb4ff'),
-    ];
     if (this.training) {
+      this.inputDisplays = [
+        new PlayerInputDisplay(this, 18, 82, 'P1 · WASD / J K N M', '#ff8c8c'),
+        new PlayerInputDisplay(this, width - 218, 82, 'P2 · SETAS / NUMPAD', '#8cb4ff'),
+      ];
       this.trainingHud = new TrainingHud(this, width, height);
       this.trainingKeys.forEach(([key, handler]) => {
-        const listener = (event: KeyboardEvent): void => { if (!event.repeat) handler(); };
+        const listener = (event: KeyboardEvent): void => {
+          // Phaser can revisit a queued DOM event before the queue is cleared.
+          // In particular, a single-step event must never advance twice.
+          if (event.repeat || this.handledTrainingEvents.has(event)) return;
+          this.handledTrainingEvents.add(event);
+          handler();
+        };
         this.trainingListeners.set(key, listener);
         this.input.keyboard?.on(key, listener);
       });
-      this.input.keyboard?.addCapture(['P', 'PERIOD', 'F2', 'G', 'H', 'I']);
+      this.input.keyboard?.addCapture(['P', 'PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
     }
 
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
@@ -131,7 +150,7 @@ export class FightScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     if (!this.simulation) return;
 
-    if (!this.training?.paused) this.simulation.advance(delta, (characters, frame) => this.readInputs(characters, frame));
+    if (!this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame));
     this.syncViewsAndHud();
   }
 
@@ -145,7 +164,9 @@ export class FightScene extends Phaser.Scene {
   }
 
   private resetFight(): void {
-    this.simulation?.resetMatch();
+    this.simulation?.resetMatch(this.training?.initialDistance);
+    this.training?.resetInspection();
+    this.keyboardInputs.forEach((input) => input.clear());
     this.commandBuffers.forEach((buffer) => buffer.clear());
     this.currentInputs = [neutralInput(), neutralInput()];
     this.syncViewsAndHud();
@@ -157,9 +178,12 @@ export class FightScene extends Phaser.Scene {
 
     this.stageView?.sync(snapshot.characters.map((character) => character.x));
     snapshot.characters.forEach((character, index) => this.combatants[index]?.sync(character, snapshot.frame));
-    this.hitboxView?.update(snapshot.activeHitboxes, snapshot.frame, this.training ? snapshot.characters : []);
+    this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.scale.width);
-    if (this.training) this.trainingHud?.update(snapshot, this.training);
+    if (this.training) {
+      this.training.observe(snapshot);
+      this.trainingHud?.update(snapshot, this.training);
+    }
     this.inputDisplays.forEach((display, index) => {
       display.update(this.currentInputs[index] ?? neutralInput(), this.commandBuffers[index]?.snapshot() ?? []);
     });
@@ -170,7 +194,7 @@ export class FightScene extends Phaser.Scene {
     this.input.keyboard?.off('keydown-R', this.handleRestart);
     this.trainingListeners.forEach((listener, key) => this.input.keyboard?.off(key, listener));
     this.trainingListeners.clear();
-    if (this.training) this.input.keyboard?.removeCapture(['P', 'PERIOD', 'F2', 'G', 'H', 'I']);
+    if (this.training) this.input.keyboard?.removeCapture(['P', 'PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
     this.keyboardInputs.forEach((input) => input.destroy());
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());

@@ -12,16 +12,17 @@ export class CombatantView {
   private readonly color: number;
   private readonly clips: ReadonlyMap<string, AnimationClip>;
   private readonly moveClips?: Readonly<Record<string, string>>;
+  private readonly displaySize: { width: number; height: number };
 
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, textureKey: string, manifest?: CharacterAnimationManifest) {
+  constructor(scene: Phaser.Scene, x: number, y: number, color: number, textureKey: string, private readonly manifest?: CharacterAnimationManifest) {
     this.color = color;
     this.clips = new Map(manifest?.clips.map((clip) => [clip.key, clip]));
     this.moveClips = manifest?.moveClips;
+    this.displaySize = manifest?.displaySize ?? manifest?.frameSize ?? { width: 220, height: 220 };
     if (scene.textures.exists(textureKey)) {
       this.sprite = scene.add.sprite(x, y, textureKey).setOrigin(0.5, 1);
       // Keep the source aspect ratio and foot pivot; presentation size belongs to the manifest.
-      const displaySize = manifest?.displaySize ?? manifest?.frameSize ?? { width: 220, height: 220 };
-      this.sprite.setDisplaySize(displaySize.width, displaySize.height);
+      this.sprite.setDisplaySize(this.displaySize.width, this.displaySize.height);
     } else {
       this.placeholder = scene.add.rectangle(x, y, 54, 152, color).setOrigin(0.5, 1);
     }
@@ -82,13 +83,19 @@ export class CombatantView {
 
     const move = state.attack ? getCharacterById(state.fighterId)?.moves.find(({ id }) => id === state.attack?.moveId) : undefined;
     const attackFrame = clip ? getAttackAnimationFrame(state, clip, move) : undefined;
-    if (clip) sprite.setFrame(attackFrame ?? getStateAnimationFrame(state, clip, simulationFrame));
-
-    if (state.hitFlashFrames > 0) sprite.setTint(0xffffff);
-    else if (state.mode === 'active') sprite.setTint(0xffd166);
-    else if (state.mode === 'startup') sprite.setTint(state.attack?.preciseExecution ? 0xffd166 : 0xffa65b);
-    else if (state.mode === 'hitstun') sprite.setTint(0xffb0b0);
-    else sprite.clearTint();
+    if (clip) {
+      const frame = attackFrame ?? getStateAnimationFrame(state, clip, simulationFrame);
+      const transform = this.manifest?.frameTransforms?.[String(frame)];
+      const scale = transform?.scale ?? 1;
+      const frameHeight = this.manifest?.frameSize.height ?? 256;
+      const anchorY = transform?.footAnchorY ?? this.manifest?.footAnchorY ?? frameHeight;
+      sprite.setFrame(frame);
+      sprite.setOrigin(0.5, anchorY / frameHeight);
+      sprite.setDisplaySize(this.displaySize.width * scale, this.displaySize.height * scale);
+    }
+    // Phase changes used to recolor every pixel, producing an apparent blink.
+    // Technical state colors belong to training geometry/HUD, not the costume.
+    sprite.clearTint();
   }
 
   destroy(): void {

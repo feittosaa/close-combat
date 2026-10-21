@@ -3,6 +3,7 @@
 Um manifesto por personagem; o atlas correspondente fica em `../sprites/characters/<id>/`. O contrato completo e a matriz de produção estão em [`docs/animacao.md`](../../../docs/animacao.md).
 
 - Células reais e uniformes em `frameSize`; `displaySize` mantém escala uniforme nos dois eixos.
+- `footAnchorY` define a linha de apoio na célula. `frameTransforms` corrige escala uniforme e âncora por quadro; não inferir tamanho a partir da silhueta em runtime.
 - `start`/`end` inclusivos; `frames` explícito tem precedência e determina a ordem das poses.
 - `frameRate` define cadência padrão; `frameDurations` permite holds em frames lógicos. Em fases de ataque, os valores funcionam como pesos dentro do tempo definido pelo golpe.
 - `repeat: -1` repete; `0` toca uma vez e mantém a pose final. A reprodução depende do frame da simulação, sem temporizador independente do Phaser.

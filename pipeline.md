@@ -1,6 +1,6 @@
 # Close Combat — Pipeline de implementação
 
-> **Raiz:** [`base.md`](./base.md), versão 0.2.0.
+> **Raiz:** [`base.md`](./base.md), versão 0.2.1.
 > **Revisão:** 20/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos, quedas/levantadas e balanceamento continuam pendentes.
@@ -11,7 +11,7 @@
 - A ordem atual é **Etapa 3 → Etapa 4 → Etapa 5 → Etapa 6 → Etapa 7**. Os primeiros instrumentos da Etapa 4 podem apoiar a revisão visual da Etapa 3.
 - Cada checkbox significa implementação concreta. Cobertura automatizada, revisão visual e balanceamento são critérios separados; um build não aprova animação nem justiça de colisão.
 - Registrar regras em `base.md` antes de codificar, usar dados por personagem e manter combate a 60 Hz independente do Phaser.
-- Os números atuais dos golpes são provisórios. Não copiar números de outro jogo nem alterar todos os startups para encobrir problema de animação ou entrada.
+- Os números atuais dos golpes são provisórios. Não copiar números de outro jogo nem alterar tempos para encobrir defeitos de animação ou entrada. A revisão de cadência de 20/10, solicitada pelo usuário, está registrada em base.md: +2F de preparo, +1F ativo e +4F de recuperação nos strikes, sem alterar agarrões; requer revisão posterior de vantagem/balanceamento.
 - Não marcar um sistema inteiro como pronto por existir um clipe ou um rótulo. Registrar limitações e próxima entrega.
 
 ## Referências e decisões
@@ -150,6 +150,9 @@ Preservados da antiga Etapa 3:
 - [x] Startup/atividade/recuperação amostrados dentro da duração real do golpe.
 - [x] Subida/ápice/descida selecionados pela velocidade vertical; sem clipe de salto terminando no meio da trajetória.
 - [x] Validação de quadros, repetições, holds, escala e mapeamento antes da partida.
+- [x] Correções autoradas de escala/âncora por quadro: agachamento a 78%, sem mudar a colisão.
+- [x] Soco aéreo remapeado para punho fechado, chute forte em pé com a sequência escolhida e retorno mais lento.
+- [x] Remover tint por fase e pulsação da geometria que simulavam piscar sobre o personagem.
 - [ ] Verificar equivalência de poses com diferentes FPS de renderização e após pausa/reinício em cobertura automatizada.
 
 ### 3.2 Produção e transições
@@ -184,7 +187,11 @@ Preservados da antiga Etapa 3:
 - [x] Treino no menu, cronômetro livre, distância inicial curta e reinício de vida/posições/comandos.
 - [x] Pausar e avançar exatamente um frame pelo mesmo caminho da simulação.
 - [x] Mostrar fases de golpe, geometria real, distância, recuperação, stun, vantagem e entradas.
-- [x] Adversário manual, guarda alta, guarda baixa e repetição de soco por entrada real.
+- [x] Adversário manual, guarda alta, guarda baixa e repetição de socos 1/2 e chute 4 por entrada real.
+- [x] Interface técnica exclusiva do treino; partida normal sem estados, entradas ou geometria.
+- [x] Câmera lenta em 50%/25%, último golpe persistente, dano/altura e tempo restante.
+- [x] Vida automática configurável após 90 frames sem ação e reinício em distâncias 96/144/220.
+- [x] Passo único com deduplicação de evento e reinício sem carregar teclas mantidas.
 
 ### 4.2 Janela de ação e punição garantida
 
@@ -200,7 +207,8 @@ Preservados da antiga Etapa 3:
 - [ ] Gravar/reproduzir sequências de entradas com direção relativa e reset de cenário.
 - [ ] Adversário que bloqueia e responde no primeiro frame legal, com respostas escolhidas por personagem.
 - [ ] Exercícios guiados de bloqueio, punição de erro, alcance, contra-ataque e quebra de agarrão.
-- [ ] Oferecer recuperação de vida configurável e reinício em posições central/esquerda/direita sem vazamento de comandos.
+- [x] Oferecer recuperação de vida configurável e distância de reinício sem vazamento de comandos.
+- [ ] Acrescentar posições de reinício à esquerda/direita e sincronizá-las com limites da câmera.
 - [ ] Exportar relatório reproduzível de exercício com versão dos dados e sequência de entradas.
 
 **Saída:** é possível explicar uma punição por tempo, estado e distância; o mesmo exercício reproduz o contato ou a falha sem depender do FPS. O treino não altera as regras da partida.
@@ -258,3 +266,7 @@ Preservados da antiga Etapa 3:
 4. Só então avançar para strings, combo aéreo e queda/levantada.
 
 Online, ranking, times, assistentes, medidores e novas modalidades de salto continuam fora da entrega atual.
+
+### Revisão de animações e treino — 20/10/2026
+
+Correções de escala, remapeamento de golpes e cadência, partida sem depuração e expansão do treino estão descritas em [`docs/revisao-animacoes-treino.md`](./docs/revisao-animacoes-treino.md). Isso não encerra a auditoria dos 26 golpes nem aprova o atlas como arte final. A nova recuperação modifica os valores de vantagem: revisar punições e cancelamentos antes de balancear.

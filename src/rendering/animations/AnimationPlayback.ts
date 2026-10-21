@@ -21,6 +21,9 @@ export interface CharacterAnimationManifest {
   clips: readonly AnimationClip[];
   totalFrames?: number;
   displaySize?: { width: number; height: number };
+  /** Coordenada dos pés na célula; correções são autoradas, não inferidas em tempo de execução. */
+  footAnchorY?: number;
+  frameTransforms?: Readonly<Record<string, { scale: number; footAnchorY?: number }>>;
   moveClips?: Readonly<Record<string, string>>;
 }
 
@@ -97,6 +100,16 @@ export function validateAnimationManifest(manifest: CharacterAnimationManifest):
   if (manifest.displaySize && (!positive(manifest.displaySize.width) || !positive(manifest.displaySize.height) ||
       manifest.displaySize.width / manifest.frameSize.width !== manifest.displaySize.height / manifest.frameSize.height)) {
     throw new Error(`Escala de personagem deve ser uniforme: ${manifest.textureKey}`);
+  }
+  const validAnchor = (value: number): boolean => Number.isFinite(value) && value > 0 && value <= manifest.frameSize.height;
+  if (manifest.footAnchorY !== undefined && !validAnchor(manifest.footAnchorY)) {
+    throw new Error(`Âncora dos pés inválida: ${manifest.textureKey}`);
+  }
+  for (const [frame, transform] of Object.entries(manifest.frameTransforms ?? {})) {
+    if (!/^\d+$/.test(frame) || (manifest.totalFrames !== undefined && Number(frame) >= manifest.totalFrames) ||
+        !positive(transform.scale) || (transform.footAnchorY !== undefined && !validAnchor(transform.footAnchorY))) {
+      throw new Error(`Correção de quadro inválida: ${manifest.textureKey}/${frame}`);
+    }
   }
   const keys = new Set<string>();
   for (const clip of manifest.clips) {
