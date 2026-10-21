@@ -1,0 +1,30 @@
+# Dependências instaladas
+node_modules/
+
+# Builds e relatórios gerados
+dist/
+coverage/
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.log
+
+# Configurações locais e segredos
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Cache de ferramentas
+.vite/
+.vitest/
+
+# Arquivos temporários do sistema e editores
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

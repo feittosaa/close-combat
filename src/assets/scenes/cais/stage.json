@@ -1,0 +1,13 @@
+{
+  "id": "cais",
+  "name": "Cais",
+  "referenceSize": { "width": 3168, "height": 1344 },
+  "groundY": 1120,
+  "minimumScale": 0.5,
+  "layers": [
+    { "id": "fundo", "file": "layers/fundo.png", "depth": -300, "parallax": 0.25, "x": 0, "y": 0 },
+    { "id": "chao", "file": "layers/chao.png", "depth": -200, "parallax": 1, "x": 0, "y": 0 },
+    { "id": "caixas", "file": "layers/caixas.png", "depth": -100, "parallax": 1, "x": 0, "y": -120,
+      "contentScale": 0.76, "scaleOrigin": { "x": 1584, "y": 1208 } }
+  ]
+}
