@@ -25,10 +25,10 @@ export class CombatHud {
       scene.add.text(width - this.sidePadding, 18, `P2 · ${fighterNames[1].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }).setOrigin(1, 0),
     ];
     this.healthGraphics = scene.add.graphics();
-    this.modeLabels = training ? [
+    this.modeLabels = [
       scene.add.text(this.sidePadding, 67, 'NEUTRO', { color: '#f4f0e8', fontSize: '12px', fontStyle: 'bold' }),
       scene.add.text(width - this.sidePadding, 67, 'NEUTRO', { color: '#f4f0e8', fontSize: '12px', fontStyle: 'bold' }).setOrigin(1, 0),
-    ] : [];
+    ];
     this.timer = scene.add.text(width / 2, 14, '99', {
       color: '#ffd166',
       fontSize: '32px',
@@ -52,9 +52,10 @@ export class CombatHud {
     const stageLabel = scene.add.text(width / 2, 72, stageName.toUpperCase(), {
       color: '#f4f0e8', fontSize: '11px',
     }).setOrigin(0.5, 0);
+    const pauseHint = scene.add.text(width / 2, scene.scale.height - 18, 'P / ESC · PAUSA', { color: '#c8bdca', fontSize: '10px' }).setOrigin(.5).setVisible(!training);
     this.root = scene.add.container(0, 0, [
       ...this.labels, this.healthGraphics, ...this.modeLabels, this.timer,
-      this.roundLabel, stageLabel, this.hitLabel, this.resultLabel,
+      this.roundLabel, stageLabel, this.hitLabel, this.resultLabel, pauseHint,
     ]).setScrollFactor(0).setDepth(100);
     this.updateBars([], width);
   }
@@ -72,7 +73,7 @@ export class CombatHud {
     } else {
       this.resultLabel.setText('');
     }
-    if (this.training) this.updateTrainingLabels(snapshot);
+    this.updateTrainingLabels(snapshot);
     this.updateBars(snapshot.characters, width);
   }
 
@@ -89,7 +90,11 @@ export class CombatHud {
     this.hitLabel.setText(snapshot.frame - this.lastImpactFrame <= 90 ? this.lastImpactLabel : '');
     snapshot.characters.forEach((character, index) => {
       const modeLabel = character.attack?.preciseExecution ? 'PRECISO · ' : '';
-      this.modeLabels[index]?.setText(`${modeLabel}${MODE_LABELS[character.mode]}`);
+      const power = character.combatRules ? (character.powerFrames ?? 0) > 0
+        ? `FULGOR ${Math.ceil(character.powerFrames! / 60)}s` : character.powerAvailable !== false ? 'FULGOR DISPONÍVEL' : 'FULGOR GASTO' : '';
+      const rage = character.combatRules && !character.rageUsed && character.health <= character.maxHealth * .25 ? ' · R PRONTA' : '';
+      const charged = character.stance === 'charging' ? ' · CARGA' : '';
+      this.modeLabels[index]?.setText(`${this.training ? `${modeLabel}${MODE_LABELS[character.mode]}${power ? ' · ' : ''}` : ''}${power}${rage}${charged}`);
       this.modeLabels[index]?.setColor(character.mode === 'hitstun' ? '#ff7777' : character.mode === 'blockstun' || character.mode === 'blocking' ? '#8cb4ff' : '#f4f0e8');
     });
   }

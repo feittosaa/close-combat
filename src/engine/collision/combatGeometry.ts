@@ -20,7 +20,7 @@ export function createHurtbox(character: CharacterState): Hurtbox {
   const profile = character.collision.hurtboxes;
   const stance = !character.grounded ? 'airborne'
     : character.attack?.hurtboxStance ?? (character.crouching ? 'crouching' : 'standing');
-  const box = profile[stance];
+  const box = (!character.grounded && character.combo ? profile.juggled : undefined) ?? character.attack?.hurtboxOverride ?? (character.mode === 'knockdown' ? profile.knockdown : undefined) ?? profile[stance];
   return {
     ownerId: character.characterId,
     x: character.x + box.offsetX * (character.facing === 'right' ? 1 : -1) - box.width / 2,

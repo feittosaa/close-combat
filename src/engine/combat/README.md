@@ -11,3 +11,7 @@ Regras de ataques, defesa, agarrões, parry, vantagem e combos. `AttackResolver`
 `combatGeometry.ts`, em `engine/collision/`, fornece hitboxes e hurtboxes usadas tanto pelo resolvedor quanto pela inspeção visual. Nenhum collider é inferido dos desenhos.
 
 Recomendação de resposta garantida, buffer ao sair do stun, combos completos e quedas/levantadas continuam pendentes na pipeline.
+
+## Livro contextual opcional
+
+`CombatCommandParser` reconhece o livro contextual por personagem; `strikeTimeline` separa os contatos e intervalos, e `CombatRuntime` aplica recursos, scaling e reações. O resolvedor consome esses dados e mantém compatibilidade com os livros simples. Regras e receitas pertencem à definição do lutador. Fontes e adaptações de Ayla estão em `docs/ayla-combate.md`; não acoplar geometria a sprites.

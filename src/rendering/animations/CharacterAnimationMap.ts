@@ -1,3 +1,4 @@
+import { getCharacterById } from '../../engine/data/characters';
 import type { CharacterState } from '../../engine/characters/CharacterState';
 import testerManifest from '../../assets/animations/tester.json';
 
@@ -23,7 +24,7 @@ const MODE_CLIPS: Partial<Record<CharacterState['mode'], string>> = {
 export function getCharacterAnimationKey(state: CharacterState, moveClips = MOVE_CLIPS[state.fighterId]): string {
   if (state.crouching && (state.mode === 'blocking' || state.mode === 'blockstun')) return `${state.fighterId}-crouch`;
   if (state.attack && (state.mode === 'startup' || state.mode === 'active' || state.mode === 'recovery')) {
-    const clip = moveClips?.[state.attack.moveId] ?? state.attack.moveId;
+    const clip = getCharacterById(state.fighterId)?.moves.find(move => move.id === state.attack?.moveId)?.combat?.animation.clip ?? moveClips?.[state.attack.moveId] ?? state.attack.moveId;
     return `${state.fighterId}-${clip}-${state.mode}`;
   }
 

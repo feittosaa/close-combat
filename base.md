@@ -3,7 +3,7 @@
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
 > **Status:** protótipo em pixel art; direção Tekken 7/Ayla definida; migração mecânica e visual HD pendentes
-> **Versão:** 0.3.0 · revisão de 21/10/2026
+> **Versão:** 0.3.1 · revisão de 21/10/2026
 > **Idioma:** português (Brasil)
 > **Título do jogo:** Close Combat
 > **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
@@ -46,9 +46,21 @@ Construir primeiro um protótipo sólido de combate local entre dois jogadores, 
 #### Fontes e versões
 
 - [TekkenDocs](https://tekkendocs.com/): consulta indicada pelo usuário para listas, comandos e propriedades. É uma base comunitária; conferir versão, notas e evidência reproduzível antes de homologar valores.
-- [Kazuya em Tekken 7](https://tekkendocs.com/t7/kazuya): base mecânica da adaptação de Ayla. Registrar patch/edição da referência por golpe antes de preencher a ficha final. Um valor sem patch confirmado fica pendente, nunca é apresentado como exato.
-- [Kazuya — ficha de Tekken 8 fornecida pelo usuário](https://tekkendocs.com/t8/kazuya/meta): material complementar de organização e identidade de movimentos. Não importar Heat, Tornado nem números de Tekken 8 como se fossem de Tekken 7. Se uma propriedade existir nas duas versões, verificar a versão de Tekken 7 separadamente.
+- [Kazuya em Tekken 7](https://tekkendocs.com/t7/kazuya): referência de comparação para a estrutura mecânica da adaptação de Ayla. Registrar patch/edição da referência por golpe antes de preencher a ficha final. Um valor sem patch confirmado fica pendente, nunca é apresentado como exato.
+- [Kazuya — ficha de Tekken 8 fornecida pelo usuário](https://tekkendocs.com/t8/kazuya/meta): catálogo da entrega executável descrita abaixo, por solicitação posterior do usuário. Não atribuir Heat, Tornado nem números de Tekken 8 a Tekken 7. Se uma propriedade existir nas duas versões, verificar a versão de Tekken 7 separadamente.
 - [Guilty Gear Strive — Arc System Works](https://www.arcsystemworks.com/game/guilty-gear-strive/): referência visual de personagens, cenários, efeitos, HUD e menus. A obra de referência usa gráficos híbridos 2D/3D; nossa escolha é obter aparência semelhante por assets 2D em HD. A semelhança visual não importa automaticamente suas mecânicas.
+
+#### Catálogo executável — atualização de 21/10/2026
+
+A solicitação de implementar todos os movimentos do link T8 amplia a decisão anterior: Ayla agora possui as **135 entradas expostas de Kazuya em Tekken 8**, mais entradas autorais de postura/avanço no plano 2D e **36 receitas** do guia, incluindo alternativas de starter e finalizador. A fonte é identificada como T8, sem atribuir seus números a T7. A estrutura central de combate continua orientada a Tekken 7 em 2D; Tornado é adaptado a Screw único, profundidade a posturas no plano e variantes Heat/Devil a um recurso local de Fulgor. Não há importação implícita de vida recuperável nem de quebras/transições de cenário.
+
+O livro contém múltiplos contatos com caixas e níveis próprios, janelas de strings, posturas FC/WS, execução elétrica precisa, cargas, crush, armadura, low parry e sabaki, sete agarrões, projéteis por contato, launch, juggle, queda e parede. O personagem define suas categorias, receitas, caixas e regras; Gris e Tester mantêm livros independentes. Golpes do protótipo anterior ficam marcados como legado fora do comando de Ayla. As associações visuais provisórias não impedem a execução de uma entrada.
+
+A implementação, conversões de frames, escala de dano e critérios de verificação estão em [`docs/ayla-combate.md`](./docs/ayla-combate.md). A fonte não informa todas as recuperações e contatos de follow-up; esses valores têm estimativas explícitas na ficha e em [`docs/ayla-combate-dados-pendentes.md`](./docs/ayla-combate-dados-pendentes.md). Isso não certifica fidelidade quantitativa final. A produção dos sprites/keyframes faltantes está em [`docs/ayla-combate-animacoes-pendentes.md`](./docs/ayla-combate-animacoes-pendentes.md).
+
+P ou Esc pausa a luta em qualquer modo local. No treino, o pause abre o livro de P1/P2 com busca, categorias, fichas e receitas; é possível fixar o comando ao retomar. Pausar congela simulação, cronômetro, recursos, bot, animações e projéteis; entradas do menu são descartadas ao retomar. O retorno ao menu fica dentro do pause. Passo único continua sendo uma ferramenta explícita do treino.
+
+As especificações históricas de parry universal, cinco especiais antigos de Ayla e lista limitada de protótipo abaixo continuam registradas como legado, não como descrição do livro novo. Animações homologadas e balanceamento por matchup continuam distintos de cobertura funcional do catálogo.
 
 #### Limite estritamente 2D
 
@@ -71,7 +83,7 @@ Ayla será construída primeiro como lutadora de punição, execução precisa, 
 | Launchers, extensores, enders e finalizadores de parede | Rotas de dano, transporte e posicionamento distintas |
 | Agarrões e respostas defensivas | Quebras e recuperação explícitas; não um cancel universal |
 
-A tabela é um escopo de produção, não uma lista pronta nem homologação de valores. Catalogar progressivamente todos os movimentos pertinentes ao plano 2D, suas strings e variantes. Recursos especiais de transformação/Rage dependem de especificação própria; não presumir que toda particularidade do personagem de referência já foi aprovada para Ayla. Os cinco especiais atuais de Ayla são material de teste e não constituem o seu kit final.
+A tabela organiza as famílias do livro executável; não homologa sua arte nem seus valores finais. Manter catalogados todos os movimentos pertinentes ao plano 2D, suas strings e variantes. Recursos especiais de transformação/Rage dependem de especificação própria; não presumir que toda particularidade do personagem de referência já foi aprovada para Ayla. Os cinco especiais anteriores de Ayla são material legado de teste, fora do comando do livro novo.
 
 #### Critério de fidelidade de frames e poses
 

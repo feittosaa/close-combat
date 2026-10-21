@@ -2,7 +2,7 @@
 
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
-> **Raiz:** [`base.md`](./base.md), versão 0.3.0.
+> **Raiz:** [`base.md`](./base.md), versão 0.3.1.
 > **Revisão:** 21/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos, quedas/levantadas e balanceamento continuam pendentes.
@@ -15,6 +15,23 @@
 - Registrar regras em `base.md` antes de codificar, usar dados por personagem e manter combate a 60 Hz independente do Phaser.
 - Os números atuais dos golpes são provisórios. Usar dados de Tekken 7 verificados por versão como base, documentando conversão e adaptações 2D; não alterar tempos para encobrir defeitos de animação ou entrada. A revisão de cadência de 20/10, solicitada pelo usuário, está registrada em base.md: +2F de preparo, +1F ativo e +4F de recuperação nos strikes, sem alterar agarrões; requer revisão posterior de vantagem/balanceamento.
 - Não marcar um sistema inteiro como pronto por existir um clipe ou um rótulo. Registrar limitações e próxima entrega.
+
+## Feature de combate de Ayla — 21/10/2026
+
+Branch: `codex/feature-combate-ayla`. Critérios e limites em [`docs/ayla-combate.md`](./docs/ayla-combate.md).
+
+- [x] Integrar as 135 entradas de referência de Kazuya/T8 com comandos e condições executáveis, sem remover ações por ausência de arte.
+- [x] Modelar por personagem contatos múltiplos, caixas/hurtboxes, fases, strings, posturas, carregados, precisão, crush/armadura e respostas defensivas.
+- [x] Integrar receitas, launch/juggle, deterioração, Screw único, queda, wall carry, splat/bounce e limites de arena.
+- [x] Implementar pause em treino/PvP/arcade e catálogo de treino por personagem com categorias, busca e comando fixado.
+- [x] Registrar por ID as animações/efeitos e os dados da referência que ainda precisam de produção/confirmação.
+- [x] Conferir o pause com Ayla, busca de elétrico, receitas e livro independente do segundo lutador; evidências em `docs/evidence/combat/`.
+
+Validação local: instalação reproduzível, 300 testes, build e checagem de diff aprovados. Inspeção confirmou catálogo, busca, troca de lutador, pause e string aérea de três contatos por avanço de frame; evidências em `docs/evidence/combat/`. Push, CI e integração serão confirmados no remoto.
+
+A revisão visual final é de apresentação funcional com arte provisória. Não homologa os sprites novos nem declara todos os matchups balanceados. Testes/build locais e CI remota são relatados separadamente no PR.
+
+Próxima entrega solicitada: movimento mais lento, ataques distintos em neutro/avanço e animação própria de recuo/backstep mantendo a orientação ao adversário, substituindo o espelhamento da caminhada normal. Será validada após esta entrega de combate.
 
 ## Revisão de direção — Ayla / Tekken 7 / HD 2D
 
@@ -29,9 +46,9 @@ Entregas futuras, ainda não implementadas por esta revisão:
 
 - [ ] Fixar versão/patch e criar ficha comparativa de cada movimento de Ayla, com fontes e desvios 2D.
 - [ ] Homologar parser, startup/contato, posturas FC/WS/WR e variantes normal/elétrica.
-- [ ] Migrar defesa e parry legado, validando baixo/médio/alto e punições com Ayla contra Ayla.
-- [ ] Implementar strings, launcher, juggle, Screw, ender e escalonamento sem infinitos.
-- [ ] Homologar wall carry/splat/bounce e rotas de parede, queda e levantamento.
+- [x] Migrar o modelo de defesa/parry de Ayla para dados próprios, com low parry, sabaki e testes de níveis; homologação quantitativa da referência continua pendente.
+- [x] Implementar strings, launcher, juggle, Screw, ender e escalonamento; replays de rotas e devolução de controle cobertos.
+- [ ] Homologar os números de wall carry/splat/bounce, queda e levantamento contra a referência; a base funcional e um replay de parede estão implementados.
 - [ ] Registrar baseline e calibrar Gris em relação a Ayla antes de ampliar o elenco.
 - [ ] Produzir piloto HD 2D de Ayla e planejar migração integral de personagens, UI, efeitos e cenários.
 

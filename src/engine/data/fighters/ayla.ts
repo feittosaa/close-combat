@@ -1,3 +1,4 @@
+import { aylaCombatMoves, aylaCombatRules, aylaCombos } from '../combat/aylaCombatBook';
 import type { CharacterDefinition } from '../characters';
 import type { MoveDefinition } from '../moves';
 import type { AttackButton } from '../../../input/types';
@@ -10,7 +11,7 @@ const normal = (id: string, button: AttackButton, startup: number, recovery: num
     hitLevel: 'mid', hitbox, ...options,
   });
 
-export const aylaMoves: readonly MoveDefinition[] = [
+export const aylaLegacyMoves: readonly MoveDefinition[] = [
   normal('standing-lp', '1', 6, 12, 38, { forward: 18, yOffset: -116, width: 47, height: 28 }, { hitLevel: 'high', parryable: true }),
   normal('standing-rp', '2', 10, 19, 64, { forward: 22, yOffset: -118, width: 64, height: 38 }),
   normal('standing-lk', '3', 8, 16, 48, { forward: 20, yOffset: -77, width: 68, height: 30 }),
@@ -79,9 +80,13 @@ export const aylaMoves: readonly MoveDefinition[] = [
 export const ayla: CharacterDefinition = {
   id: 'ayla', name: 'Ayla', maxHealth: 950,
   movement: { walkSpeed: 3.6, dashSpeed: 7.2, jumpVelocity: -11.6 },
-  moves: aylaMoves,
+  moves: [...aylaCombatMoves, ...aylaLegacyMoves.map(move => ({ ...move, legacy: true }))],
+  combos: aylaCombos,
+  combatRules: aylaCombatRules,
   collision: {
     bodyWidth: 46, hurtboxes: {
+      juggled: { offsetX: 0, offsetY: -35, width: 86, height: 80 },
+      knockdown: { offsetX: 0, offsetY: -34, width: 98, height: 34 },
       standing: { offsetX: 0, offsetY: -140, width: 46, height: 140 },
       crouching: { offsetX: 0, offsetY: -87, width: 48, height: 87 },
       airborne: { offsetX: 0, offsetY: -132, width: 44, height: 132 },
@@ -89,3 +94,5 @@ export const ayla: CharacterDefinition = {
   },
   assets: { animationManifest: 'animations/ayla.json' },
 };
+
+export const aylaMoves = ayla.moves;
