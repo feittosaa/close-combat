@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { StageDefinition } from './StageDefinition';
 import type { StageLayout } from './stageLayout';
-import { getLayerPlacement, getStageCameraScroll } from './stageLayout';
+import { getLayerPlacement, getStageCameraScroll, getFightZoom } from './stageLayout';
 import { getStageLayerUrl, stageTextureKey } from './stageCatalog';
 
 export function preloadStage(scene: Phaser.Scene, stage: StageDefinition): void {
@@ -13,6 +13,7 @@ export function preloadStage(scene: Phaser.Scene, stage: StageDefinition): void 
 
 /** Decorative layers and camera only. Collision and combat remain in the simulation. */
 export class StageView {
+  private hudCamera?: Phaser.Cameras.Scene2D.Camera;
   private readonly images: Phaser.GameObjects.Image[];
 
   constructor(private readonly scene: Phaser.Scene, stage: StageDefinition, private readonly layout: StageLayout) {
@@ -27,17 +28,32 @@ export class StageView {
         .setScale(placement.scale).setDepth(layer.depth).setScrollFactor(layer.parallax, 0);
     });
     scene.cameras.main.setBounds(0, 0, layout.worldWidth, layout.worldHeight);
+    scene.cameras.main.setOrigin(.5, 1);
     this.sync([]);
   }
 
   sync(fighterPositions: readonly number[]): void {
+    this.scene.cameras.main.setZoom(getFightZoom(this.layout.viewportWidth, fighterPositions));
     this.scene.cameras.main.setScroll(getStageCameraScroll(this.layout, fighterPositions), 0);
+  }
+
+
+  /** A separate unzoomed camera keeps controls/HUD readable while the whole combat world grows together. */
+  syncHudCamera(): void {
+    if (!this.hudCamera) this.hudCamera = this.scene.cameras.add(0, 0, this.scene.scale.width, this.scene.scale.height, false, 'hud');
+    const objects = this.scene.children.list;
+    const isHud = (object: Phaser.GameObjects.GameObject): boolean => 'depth' in object && typeof object.depth === 'number' && object.depth >= 100;
+    this.scene.cameras.main.ignore(objects.filter(isHud));
+    this.hudCamera.ignore(objects.filter(object => !isHud(object)));
   }
 
   destroy(): void {
     this.images.forEach((image) => image.destroy());
     // Phaser may shut down its camera plugin before the scene's cleanup listener.
     const camera = this.scene.cameras?.main;
+    if (this.hudCamera && this.scene.cameras) this.scene.cameras.remove(this.hudCamera);
+    this.hudCamera = undefined;
+    camera?.setZoom(1); camera?.setOrigin(.5,.5);
     camera?.removeBounds();
     camera?.setScroll(0, 0);
   }

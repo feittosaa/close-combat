@@ -17,13 +17,13 @@ function wait(sim: Simulation, until: () => boolean): void {
 function execute(sim: Simulation, move: MoveDefinition): void {
   const cmd = move.combat!.command;
   if (cmd.parentId) {
-    expect(sim.snapshot().characters[0].attack?.moveId, `parent of ${cmd.notation}`).toBe(cmd.parentId);
-    wait(sim, () => (sim.snapshot().characters[0].attack?.elapsedFrames ?? -1) >= cmd.followupWindow!.from - 1);
+    expect((sim.snapshot().characters[0].attack ?? sim.snapshot().characters[0].followup)?.moveId, `parent of ${cmd.notation}`).toBe(cmd.parentId);
+    wait(sim, () => ((sim.snapshot().characters[0].attack ?? sim.snapshot().characters[0].followup)?.elapsedFrames ?? -1) >= cmd.followupWindow!.from - 1);
   } else {
     const self = sim.snapshot().characters[0];
-    const current = ayla.moves.find(other => other.id === self.attack?.moveId);
+    const current = ayla.moves.find(other => other.id === (self.attack ?? self.followup)?.moveId);
     if (current?.combat?.reference?.command === '3,1' && cmd.directions?.[0] === 'F') {
-      wait(sim, () => (sim.snapshot().characters[0].attack?.elapsedFrames ?? -1) >= current.startup + current.activeFrames);
+      wait(sim, () => ((sim.snapshot().characters[0].attack ?? sim.snapshot().characters[0].followup)?.elapsedFrames ?? -1) >= current.startup + current.activeFrames);
       step(sim, input('DF'));
     }
     wait(sim, () => !sim.snapshot().characters[0].attack && !['hitstun', 'blockstun', 'knockdown'].includes(sim.snapshot().characters[0].mode));

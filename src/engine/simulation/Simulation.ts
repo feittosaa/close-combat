@@ -121,6 +121,7 @@ export class Simulation {
       matchWinnerId: this.matchWinnerId,
       characters: this.characters.map((character) => ({
         ...character,
+        followup: character.followup ? { ...character.followup, buttons: [...character.followup.buttons], connectedStrikes: [...(character.followup.connectedStrikes ?? [])] } : undefined,
         attack: character.attack ? { ...character.attack, connectedStrikes: [...(character.attack.connectedStrikes ?? [])] } : undefined,
         combo: character.combo ? { ...character.combo, moveIds: [...character.combo.moveIds] } : undefined,
         lastCombo: character.lastCombo ? { ...character.lastCombo, moveIds: [...character.lastCombo.moveIds] } : undefined,
@@ -202,17 +203,25 @@ export class Simulation {
     // either defender on the same frame regardless of player iteration order.
     const commands = this.characters.map((character, index) => {
       const input = inputs[index] ?? neutralInput();
-      const canControl = canControlAtInput[index];
       const airborneAtInput = !character.grounded;
       character.movementDirection = undefined;
+      if (character.followup) {
+        character.followup.elapsedFrames += 1;
+        const last = character.followup;
+        if (!this.fighterMoves[index].some(move => (move.combat?.command.parentId === last.moveId || move.combat?.command.alternateParentIds?.includes(last.moveId)) && (move.combat.command.followupWindow?.to ?? -1) >= last.elapsedFrames)) character.followup = undefined;
+      }
+      if (isStunned(character)) character.followup = undefined;
       updateCombatState(character, input);
       this.updateStunAndFeedback(character);
+      const canControl = !character.attack && !isStunned(character);
+      canControlAtInput[index] = canControl;
       if (this.fighterMoves[index].some(move => move.combat && !move.legacy)) {
         // Optional string -> crouch-dash transition authored for Ayla's 3,1 family.
-        const current = character.attack ? this.moveFor(character, character.attack.moveId) : undefined;
+        const stringAttack = character.attack ?? character.followup;
+        const current = stringAttack ? this.moveFor(character, stringAttack.moveId) : undefined;
         if (current?.combat?.reference?.command === '3,1' && input.direction === 'DF' &&
-            character.attack && character.attack.elapsedFrames >= current.startup + current.activeFrames) {
-          character.stance = 'crouch-dash'; character.stanceFrames = character.combatRules?.stanceFrames ?? 24; character.attack = undefined;
+            stringAttack && stringAttack.elapsedFrames >= current.startup + current.activeFrames) {
+          character.stance = 'crouch-dash'; character.stanceFrames = character.combatRules?.stanceFrames ?? 24; character.attack = undefined; character.followup = undefined;
         }
         const halfWidth = character.collision.bodyWidth / 2;
         const atWall = character.x - halfWidth <= this.config.arena.left + 12 || character.x + halfWidth >= this.config.arena.right - 12;
@@ -245,14 +254,14 @@ export class Simulation {
         const stationary = guarding || (character.grounded && character.crouching);
         const dashing = this.updateDash(index, horizontal, character.grounded && !stationary);
         const movement = this.fighterDefinitions[index].movement;
-        const speed = dashing
+        const speed = dashing === 'run' ? movement.runSpeed ?? (movement.dashSpeed ?? this.config.movement.dashSpeed) * 1.25 : dashing
           ? (horizontal < 0 ? movement.backdashSpeed : undefined) ?? movement.dashSpeed ?? this.config.movement.dashSpeed
           : (horizontal < 0 ? movement.backwardWalkSpeed : undefined) ?? movement.walkSpeed;
         if (!stationary) nextX[index] += horizontal * facingSign * speed;
         if (guarding) character.mode = 'blocking';
-        else if (dashing) character.mode = 'dashing';
+        else if (dashing) character.mode = dashing === 'run' ? 'running' : 'dashing';
         else if (horizontal !== 0 && character.grounded && !character.crouching) character.mode = 'moving';
-        if (character.mode === 'moving' || character.mode === 'dashing') {
+        if (character.mode === 'moving' || character.mode === 'dashing' || character.mode === 'running') {
           character.movementDirection = horizontal < 0 ? 'backward' : 'forward';
         }
 
@@ -418,7 +427,7 @@ export class Simulation {
         verticalVelocity: 0,
         grounded: true,
         crouching: false,
-        attack: undefined,
+        attack: undefined, followup: undefined,
         grab: undefined,
         hitFlashFrames: 0,
         stance: 'standing', stanceFrames: 0, crouchFrames: 0, risingFrames: 0,
@@ -519,8 +528,8 @@ export class Simulation {
     if (!character.grounded) {
       if ((character.combo?.wallFrames ?? 0) > 0) { character.combo!.wallFrames -= 1; return; }
       const juggleRules = this.fighterDefinitions[1 - index].combatRules;
-      const baseGravity = character.combo && character.combo.hits > 1 ? juggleRules?.juggleBaseGravity ?? this.config.movement.gravity : this.config.movement.gravity;
-      character.verticalVelocity += baseGravity + (character.combo ? character.combo.hits * (juggleRules?.juggleGravity ?? 0) : 0);
+      const baseGravity = character.combo && (character.combo.airHits ?? 0) > 0 ? juggleRules?.juggleBaseGravity ?? this.config.movement.gravity : character.combo ? juggleRules?.launchGravity ?? this.config.movement.gravity : this.config.movement.gravity;
+      character.verticalVelocity += baseGravity + (character.combo ? (character.combo.airHits ?? 0) * (juggleRules?.juggleGravity ?? 0) : 0);
       character.y += character.verticalVelocity;
       if (character.y >= this.config.arena.floorY) {
         character.y = this.config.arena.floorY;
@@ -548,6 +557,7 @@ export class Simulation {
     direction: FrameInput['direction'],
   ): MoveDefinition | undefined {
     if (!move) return undefined;
+    character.followup = undefined;
     const charged = character.stance === 'charging';
     applyCombatAction(character, move);
     if (move.combat && !move.combat.strikes.length && !move.combat.action?.cancelRecovery) { character.attack = undefined; character.mode = character.grounded ? 'neutral' : 'airborne'; character.stateStartedFrame = this.frame; return move; }
@@ -632,14 +642,14 @@ export class Simulation {
       cancelRule.moveIds.includes(nextMove.id);
   }
 
-  private updateDash(index: number, horizontal: number, grounded: boolean): boolean {
+  private updateDash(index: number, horizontal: number, grounded: boolean): 'dash' | 'run' | undefined {
     if (!grounded) {
       this.previousHorizontalAxis[index] = horizontal;
       this.lastTapAxis[index] = 0;
       this.lastTapFrame[index] = Number.NEGATIVE_INFINITY;
       this.dashFramesRemaining[index] = 0;
       this.dashAxis[index] = 0;
-      return false;
+      return undefined;
     }
 
     const wasPressed = this.previousHorizontalAxis[index] !== 0;
@@ -656,13 +666,14 @@ export class Simulation {
 
     this.previousHorizontalAxis[index] = horizontal;
     if (!isPressed || horizontal !== this.dashAxis[index]) {
+      this.dashAxis[index] = 0;
       this.dashFramesRemaining[index] = 0;
-      return false;
+      return undefined;
     }
-    if (this.dashFramesRemaining[index] <= 0) return false;
+    if (this.dashFramesRemaining[index] <= 0) return horizontal > 0 && this.dashAxis[index] === 1 ? 'run' : undefined;
 
     this.dashFramesRemaining[index] -= 1;
-    return true;
+    return 'dash';
   }
 
   private advanceAttacks(): void {
@@ -674,9 +685,10 @@ export class Simulation {
       attack.elapsedFrames += 1;
       const activeStartsAt = move.startup;
       const recoveryStartsAt = move.startup + move.activeFrames;
-      const totalFrames = recoveryStartsAt + recoveryFrames(move, attack.hitOutcome === 'hit' || attack.hitOutcome === 'block');
+      const totalFrames = recoveryStartsAt + recoveryFrames(move, attack.wasBlocked ? 'block' : attack.hitOutcome);
 
       if (attack.elapsedFrames >= totalFrames) {
+        character.followup = move.combat ? attack : undefined;
         character.attack = undefined;
         if (!isStunned(character)) character.mode = 'neutral';
       } else if (attack.elapsedFrames >= recoveryStartsAt) {

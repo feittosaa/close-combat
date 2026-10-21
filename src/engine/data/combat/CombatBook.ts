@@ -72,6 +72,11 @@ export interface ComboRecipe {
   source?: string;
 }
 export interface CombatRules {
+  launchVelocity?: number;
+  launchGravity?: number;
+  juggleHitVelocity?: number;
+  screwVelocity?: number;
+  commandBufferFrames?: number;
   lowParryFrames: number;
   lowParryStunFrames: number;
   stanceFrames: number;

@@ -560,8 +560,8 @@ describe('Simulation movement foundation', () => {
       hitSnapshot = hit.snapshot();
     }
     expect(hitSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'hit', attackerRecoveryFrames: crossMove.activeFrames + crossMove.recovery - 1,
-      defenderStunFrames: crossMove.hitstun, frameAdvantage: crossMove.hitstun - (crossMove.activeFrames + crossMove.recovery - 1),
+      outcome: 'hit', attackerRecoveryFrames: crossMove.activeFrames - 1,
+      defenderStunFrames: crossMove.hitstun, frameAdvantage: crossMove.hitstun - (crossMove.activeFrames - 1),
     });
 
     const negative = new Simulation(config);
@@ -573,8 +573,8 @@ describe('Simulation movement foundation', () => {
       negativeSnapshot = negative.snapshot();
     }
     expect(negativeSnapshot.hitEvents[0]).toMatchObject({
-      outcome: 'hit', attackerRecoveryFrames: jabMove.activeFrames + jabMove.recovery - 1,
-      defenderStunFrames: jabMove.hitstun, frameAdvantage: jabMove.hitstun - (jabMove.activeFrames + jabMove.recovery - 1),
+      outcome: 'hit', attackerRecoveryFrames: jabMove.activeFrames - 1,
+      defenderStunFrames: jabMove.hitstun, frameAdvantage: jabMove.hitstun - (jabMove.activeFrames - 1),
     });
   });
 
