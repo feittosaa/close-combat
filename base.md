@@ -2,8 +2,8 @@
 
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
-> **Status:** protótipo local; consolidação de animação e punições em andamento
-> **Versão:** 0.2.1 · revisão de 21/10/2026
+> **Status:** protótipo em pixel art; direção Tekken 7/Ayla definida; migração mecânica e visual HD pendentes
+> **Versão:** 0.3.0 · revisão de 21/10/2026
 > **Idioma:** português (Brasil)
 > **Título do jogo:** Close Combat
 > **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
@@ -14,17 +14,19 @@
 
 O projeto é um jogo de luta **100% 2D**, com partidas centradas em leitura do oponente, execução de comandos, defesa, agarrões, punições, vantagem de frames e controle de distância.
 
-A direção de arte deve seguir o guia autoral em [`identidade-visual.md`](./identidade-visual.md): ilustração 2D de alta definição, silhuetas marcantes, poses expressivas, animação desenhada em quadros e a leitura imediata de um jogo de luta clássico. Esse guia é a base visual para personagens, cenários, efeitos, interface e materiais promocionais.
+A direção final de arte toma Guilty Gear Strive como referência de apresentação HD com aparência de anime 2D e volume estilizado. Close Combat continua usando assets e combate estritamente 2D; pixel art é a etapa provisória de teste. O detalhamento de produção deve seguir o guia autoral em [`identidade-visual.md`](./identidade-visual.md): ilustração 2D de alta definição, silhuetas marcantes, poses expressivas, animação desenhada em quadros e a leitura imediata de um jogo de luta clássico. Esse guia é a base visual para personagens, cenários, efeitos, interface e materiais promocionais.
 
 **Ayla e Gris, solicitação de 21/10/2026:** manter o pixel art das fichas fornecidas. Cada personagem possui arte, livro de golpes, colisões e velocidades próprios. Os atlas selecionados ficam em `src/assets/sprites/characters/{ayla,gris}/runtime/` e os manifestos em `src/assets/animations/`. Ayla tem cinco especiais, incluindo onda rasteira e erupção; Gris usa uma tesoura gigante dourada empunhada e quatro especiais. Os valores são provisórios. A revisão visual da integração é registrada em [`docs/ayla-gris-progresso.md`](./docs/ayla-gris-progresso.md); geração e cobertura de clipes, isoladamente, não aprovam continuidade.
 
 O combate é um jogo de luta técnico em plano 2D, com quatro botões de ataque, comandos simultâneos, agarrões, defesa, vantagem de frames, punições e golpes de execução precisa. Personagens, nomes, animações, trilha sonora, efeitos, interface e propriedades específicas devem ser originais.
 
-### Direção da revisão atual
+### Direção da revisão atual — decisão de 21/10/2026
 
-A apresentação busca a cadência de poses, leitura de silhueta, espelhamento e continuidade das animações de jogos arcade 2D do início dos anos 2000. O combate prioriza disputa de espaço, altos/médios/baixos, recuperação, punição de bloqueio e punição de golpes que erram, usando os quatro botões por membro já definidos. As referências de pesquisa e o plano executável estão em `pipeline.md`; os guias de arte usam descrições próprias.
+**Tekken 7 é a referência central da estrutura de combate**, incluindo lista de golpes, strings, combos, defesa, parries, punições, comandos, startup, recuperação, counter hit, quedas e jogo de parede. Buscar a maior fidelidade possível ao ritmo e aos keyframes, adaptando somente o que depender de profundidade ou das proporções do nosso mundo 2D. A referência anterior de movimentos de Terry para Ayla fica substituída por Kazuya; o material atual é provisório e permanece disponível durante a migração.
 
-Preservar os comandos, a guarda parada durante ataques adversários, o agachamento imóvel e a caminhada espelhada no recuo já solicitados. Variações de salto, corrida, esquiva, times, assistentes, barras e sistemas de queda não entram automaticamente no jogo por causa das referências; precisam de regra própria antes da implementação. O alvo imediato é uma luta local **1 contra 1**, com um conjunto pequeno e consistente de ações.
+**Ayla é a personagem inicial de referência para o balanceamento**, com movimentos e lógica de combate muito semelhantes aos de Kazuya. Tester permanece ferramenta do motor; Gris permanece disponível, mas suas propriedades serão comparadas à base de Ayla após a homologação desta. Não uniformizar livros, colisões ou velocidades entre personagens.
+
+Esta revisão especifica o destino do projeto. Não altera automaticamente código, dados de golpes, arte, comandos ou balanceamento já implementados. Regras provisórias abaixo descrevem o estado atual e devem ser migradas por entregas testadas; em conflitos de direção futura, esta decisão e §1.3 prevalecem.
 
 ### 1.1 Pilares de design
 
@@ -38,6 +40,56 @@ Preservar os comandos, a guarda parada durante ataques adversários, o agachamen
 ### 1.2 Objetivo da primeira versão jogável
 
 Construir primeiro um protótipo sólido de combate local entre dois jogadores, com personagens de teste, cenário simples, comandos confiáveis e informação de frames. Conteúdo, efeitos e recursos online vêm depois de a base de luta funcionar.
+
+### 1.3 Contrato de referência e adaptação
+
+#### Fontes e versões
+
+- [TekkenDocs](https://tekkendocs.com/): consulta indicada pelo usuário para listas, comandos e propriedades. É uma base comunitária; conferir versão, notas e evidência reproduzível antes de homologar valores.
+- [Kazuya em Tekken 7](https://tekkendocs.com/t7/kazuya): base mecânica da adaptação de Ayla. Registrar patch/edição da referência por golpe antes de preencher a ficha final. Um valor sem patch confirmado fica pendente, nunca é apresentado como exato.
+- [Kazuya — ficha de Tekken 8 fornecida pelo usuário](https://tekkendocs.com/t8/kazuya/meta): material complementar de organização e identidade de movimentos. Não importar Heat, Tornado nem números de Tekken 8 como se fossem de Tekken 7. Se uma propriedade existir nas duas versões, verificar a versão de Tekken 7 separadamente.
+- [Guilty Gear Strive — Arc System Works](https://www.arcsystemworks.com/game/guilty-gear-strive/): referência visual de personagens, cenários, efeitos, HUD e menus. A obra de referência usa gráficos híbridos 2D/3D; nossa escolha é obter aparência semelhante por assets 2D em HD. A semelhança visual não importa automaticamente suas mecânicas.
+
+#### Limite estritamente 2D
+
+O mundo de combate possui somente eixo horizontal e altura. Não há sidestep, sidewalk, rotação de arena, profundidade de colisão ou desvio de eixo. `U`/`D` mantêm significado vertical/agachamento; não ganham uma ação de profundidade. Golpes cuja função depende de sidestep precisam de adaptação própria ou ficam fora da primeira lista. Propriedades homing/tracking não concedem uma vantagem artificial contra um eixo inexistente.
+
+Preservar aproximação, recuo, dash, backdash, crouch dash e transições de postura quando traduzíveis ao plano. Separar movimento, agachamento completo (`FC`), levantar do agachamento (`WS`) e corrida (`WR`) na notação e nos dados; `WS` não significa golpe durante salto. Saltos e ataques aéreos existentes são legado do protótipo e devem ser auditados para não converter o combate em um sistema centrado em air dash ou combos de cancelamento livre.
+
+#### Ayla: núcleo inicial e lista de golpes
+
+Ayla será construída primeiro como lutadora de punição, execução precisa, pressão de aproximação e escolha entre médio e baixo. Sua lista deve aproximar funções, trajetórias, comandos e poses de Kazuya, mantendo identidade, nomes e arte próprios. Não reduzir essa direção a adicionar um especial elétrico ao livro atual.
+
+| Família a especificar para Ayla | Papel na primeira base jogável |
+| --- | --- |
+| Jabs e strings curtas, incluindo equivalente funcional a `1,1,2` | Punição rápida, confirmação e risco na conclusão |
+| Médios, baixos e strings direcionais | Controle de espaço, pressão e escolhas defensivas verificáveis |
+| Ascendente normal e elétrico de execução precisa | Duas versões com comandos, risco, recompensa e keyframes próprios |
+| Crouch dash e repetição de avanço | Acesso ao mix de médio/baixo sem movimentação em profundidade |
+| Rasteira de aproximação e alternativa média | Mix com consequências próprias de bloqueio, queda e distância |
+| Respostas em pé, `FC` e `WS` | Punição correspondente à postura real de recuperação |
+| Launchers, extensores, enders e finalizadores de parede | Rotas de dano, transporte e posicionamento distintas |
+| Agarrões e respostas defensivas | Quebras e recuperação explícitas; não um cancel universal |
+
+A tabela é um escopo de produção, não uma lista pronta nem homologação de valores. Catalogar progressivamente todos os movimentos pertinentes ao plano 2D, suas strings e variantes. Recursos especiais de transformação/Rage dependem de especificação própria; não presumir que toda particularidade do personagem de referência já foi aprovada para Ayla. Os cinco especiais atuais de Ayla são material de teste e não constituem o seu kit final.
+
+#### Critério de fidelidade de frames e poses
+
+Cada golpe precisa de ficha rastreável: ID local, comando, fonte e versão, postura inicial/final, níveis por hit, dano por hit, primeiro frame de contato, intervalos ativos, recuperação, vantagem em bloqueio/acerto/counter hit, deslocamento, pushback, crush/evasão quando aplicável, resultado de queda/launch e propriedades de combo/parede. Usar os valores de Tekken 7 como ponto de partida e manter os compatíveis; qualquer desvio necessário ao 2D fica justificado na ficha. Não aplicar acréscimos globais de startup ou recuperação para tornar sprites mais legíveis.
+
+Distinguir tempo do comando, buffer e startup da ação. Uma referência `i10` identifica o primeiro frame capaz de acertar na convenção da fonte; isso não deve ser copiado cegamente para um campo que conte apenas frames anteriores ao ativo. Documentar e testar a conversão, contato tardio e vantagem resultante. Dados ausentes, como intervalo ativo completo, não devem ser inventados a partir de um único número de startup.
+
+Keyframes incluem antecipação, passagem, primeiro contato, ápice e recolhimento, com peso, trajetória e proporção temporal próximos à referência. Vincular cada pose a frames lógicos e revisar lado a lado em velocidade normal e por passo único. Suavizar um loop não autoriza alongar o ataque; holds de arte não ampliam hitboxes. Hitstop, efeitos e câmera têm especificação separada e nunca mascaram uma divergência temporal. O alvo HD e o pixel art temporário obedecem ao mesmo contrato.
+
+#### Ordem de balanceamento e homologação
+
+1. Fixar convenções de contagem, reconhecimento de comandos e baseline de Ayla contra ela mesma.
+2. Homologar neutro, defesa alto/médio/baixo, punição em pé/agachada, execução normal/precisa e counter hit.
+3. Homologar uma rota simples e outra de maior execução por launcher, com queda/levantada e transporte até a parede.
+4. Homologar interação de parede e rotas de dano versus wall carry; registrar custo, distância e recompensa.
+5. Só então calibrar Gris e ampliar o elenco com referência nessa base. Ajustes em Ayla exigem revalidar os casos que dependem dela.
+
+Medir dano por abertura, número de aberturas por round, risco de bloqueio/erro, alcance, recompensa por execução, distância de carry e vantagem após queda. Vida, escala de dano, dimensões da arena, movimento e gravidade devem ser calibrados em conjunto: não copiar dano isolado de uma escala de vida diferente. A ficha separa valores de referência, adaptação proposta, valor implementado e evidência aprovada. Nenhuma porcentagem de vitória isolada substitui esses critérios.
 
 ---
 
@@ -305,6 +357,8 @@ Defender-se deve ser uma decisão ativa, baseada na direção do adversário e n
 
 ### 8.1 Bloqueio básico
 
+**Alvo Tekken 7:** preservar a relação alto/médio/baixo, defesa em pé/agachada, recuperação e punições por postura. Auditar guarda neutra e transições antes de homologar fidelidade. A regra atual de parar ao segurar `B` enquanto o adversário ataca, independentemente da distância, é uma concessão do protótipo; não deve ser apresentada como reprodução exata de Tekken 7.
+
 - Segurar `B` recua usando a mesma caminhada espelhada. Se o adversário estiver executando um golpe (preparo, atividade ou recuperação), `B` assume a guarda em pé e interrompe a locomoção, independentemente da distância.
 - Segurar `DB` defende baixos e deve ser vulnerável a golpes médios que atinjam personagens agachados.
 - Ataques altos podem ser evitados por agachamento quando suas propriedades permitirem.
@@ -351,6 +405,8 @@ Os valores de alcance, startup, janela de quebra, dano e recuperação serão de
 
 ## 10. Especiais cinematográficos com comandos durante a cena
 
+**Proposta anterior, fora da prioridade atual:** QTEs não integram a base de combate fiel a Tekken 7. O material abaixo fica arquivado como opção futura e não orienta a primeira versão balanceada de Ayla. Uma futura cinemática não implica minijogo de entrada nem altera por si só frames ou dano.
+
 Alguns especiais podem iniciar uma sequência cinematográfica curta. Durante a cena, o jogador executa entradas indicadas na tela — por exemplo, pressionar botões específicos, repetir uma sequência ou confirmar um comando dentro de uma janela de tempo. A ideia é manter a referência de especiais interativos de jogos de luta/ação como Naruto: Ultimate Ninja 5.
 
 ### 10.1 Fluxo recomendado
@@ -378,7 +434,7 @@ No modo local, a sequência pode ser resolvida pela mesma simulação determiní
 
 ## 11. Golpes fortificados por execução precisa (*frame perfect*)
 
-Alguns movimentos terão uma versão reforçada quando o comando é executado numa janela de tempo muito estreita. A referência conceitual é o tipo de recompensa de precisão visto em golpes elétricos como o de Kazuya, sem que isso obrigue a copiar nome, animação, comando ou valores exatos.
+Ayla deve aproximar a execução e o comportamento de um ascendente normal e de sua versão elétrica de Kazuya em Tekken 7. Especificar sequência, neutral, simultaneidade da direção final com o botão, atalhos válidos e falhas de execução com evidência da versão adotada. O exemplo atual de Tester abaixo é uma ferramenta de parser, não a especificação final de Ayla; bônus de dano isolado não reproduz por si só o elétrico.
 
 ### 11.1 Regras
 
@@ -403,7 +459,9 @@ A janela exata precisa ser medida pelo frame de lógica, nunca por uma aproxima�
 
 ## 12. Parry: defesa por leitura e tempo
 
-O sistema terá parries para **golpes específicos**, não uma resposta universal para toda situação. A ideia é recompensar reconhecer um ataque e responder na janela adequada.
+**Direção futura:** reproduzir as funções defensivas de Tekken 7 compatíveis com 2D, distinguindo low parry, reversões e parries específicos por personagem. Especificar low parry via `DF`, janela, ataques elegíveis, falha e consequência de combo conforme a versão adotada. Reversões de membros e parries de personagem não são automaticamente concedidos a Ayla. Não tratar um toque universal em `B` como uma regra de Tekken 7.
+
+**Legado em execução:** as subseções abaixo descrevem o parry universal do protótipo. A janela de um frame e o stun de 18 frames serão substituídos por uma entrega própria, com testes e migração; não são o padrão definitivo do balanceamento.
 
 ### 12.1 Propriedades configuráveis de parry
 
@@ -481,7 +539,9 @@ O feedback inicial distingue contatos reais: **punição de bloqueio** quando um
 
 Cancelamentos são exceções definidas por golpe ou sistema. O motor pode permitir, por exemplo, cancelar um ataque em outro durante uma janela específica quando o primeiro acerta. Não presumir que todo golpe pode ser cancelado.
 
-As rotas de combo precisam respeitar estados, hitstun, alcance e regras de recuperação. A prioridade é evitar loops infinitos ou sequências sem saída. Limites como deterioração de combo, recuperação aérea ou redução de dano são opções de balanceamento, não decisões fechadas nesta versão do documento.
+A base de combos deve seguir a estrutura de Tekken 7: strings com follow-ups e confirmações próprios, launchers, juggle, extensor do tipo Screw/Tailspin e ender. Não substituir essa estrutura por cancelamento livre de normais em especiais. Especificar um uso de Screw por combo como alvo inicial, validando exceções e low parry na referência antes de homologar; não importar Tornado de Tekken 8.
+
+Modelar altura, deslocamento horizontal, gravidade, escalonamento de dano, pushback e reação a hits sucessivos. A rota precisa terminar em queda e devolução previsível do controle, sem loop infinito nem recuperação aérea arbitrária. Definir tech/recovery e opções de levantar coerentes com a referência; números e janelas ainda dependem de ficha e testes. Validar strings verdadeiras versus sequências interrompíveis e rotas por postura, distância e counter hit. Cada combo terá comando completo, starter, dificuldade, dano, carry, consumo do extensor e estado final.
 
 ---
 
@@ -505,6 +565,16 @@ Essas categorias são descrições de design e treino, não limites fixos univer
 ### 14.3 Pushback e posicionamento
 
 Empurrão no contato é configurado por golpe e pode ser diferente no acerto e no bloqueio. A posição na tela, a parede e a velocidade de movimento precisam ser levadas em conta ao determinar se uma sequência realmente alcança. O motor não deve presumir que uma punição possível em curta distância também será possível após grande empurrão.
+
+---
+
+### 14.4 Wall carry, contato com parede e pós-combo
+
+Wall carry é o transporte do oponente durante uma rota de combo até um limite físico da arena; não se confunde com scroll ou zoom da câmera. Arenas devem declarar limites e distância útil em unidades lógicas independentes da resolução dos sprites.
+
+O alvo inclui wall splat, wall combo, wall bounce quando a propriedade do golpe permitir e saídas de parede documentadas. Especificar altura/ângulo 2D de chegada, elegibilidade por estado, reação, duração, dano escalonado e retorno ao chão. Não permitir splats repetidos infinitos ou reativação ilimitada de extensores. Adaptar diferenças de ângulo sem inventar um terceiro eixo.
+
+Rotas de maior dano, maior carry e melhor posição ao levantar são escolhas distintas. Testar ao menos meio da arena, aproximação de parede, contato de parede e parede atrás do atacante. Wall/floor/balcony breaks e transições de cenário não entram automaticamente nessa primeira base; não importar o wall break de Strive por influência visual. Os limites atuais do protótipo não equivalem a um sistema de parede concluído.
 
 ---
 
@@ -538,7 +608,12 @@ Personagens devem ser definidos por dados e componentes reutilizáveis sempre qu
 | `pushback` | Empurrão no acerto e no bloqueio |
 | `properties` | Cancelamento, invulnerabilidade, armadura, parry etc. |
 | `perfectWindow` | Janela de execução precisa, quando aplicável |
-| `cinematic` | Configuração do especial interativo, quando aplicável |
+| `cinematic` | Configuração de cinemática, se aprovada em entrega própria |
+| Referência e versão | URL, patch, convenção de contagem e justificativa de adaptação 2D |
+| Hits e follow-ups | Propriedades por hit, strings, janela de continuação e confirmação |
+| Estados e resultados | FC/WS/WR, normal hit/counter hit, launch, queda e estado final |
+| Combo e parede | Scaling, Screw consumido, carry, splat/bounce e restrições |
+| Linha temporal de poses | Keyframes e respectivos frames lógicos, separados das colisões |
 
 Não é obrigatório que cada golpe use todos os campos; campos opcionais devem ter um padrão seguro e documentado. Os nomes finais podem ser adaptados à implementação, mas precisam manter as mesmas ideias e semântica.
 
@@ -555,7 +630,6 @@ A interface precisa priorizar a leitura da luta e não cobrir os personagens sem
 - identificação dos jogadores;
 - efeitos visuais e sonoros claros para acerto, bloqueio, parry e golpe fortalecido;
 - indicadores de instrução nos especiais cinematográficos;
-
 
 ### Ferramentas de treino planejadas
 
@@ -721,7 +795,7 @@ A ordem executável, as dependências e os checklists estão em [`pipeline.md`](
 | M6 — Fluxo e feedback | Seleção, controles, HUD, áudio, acessibilidade e conteúdo próprio | Menu até resultado/revanche completos e legíveis |
 | M7 — Publicação | Instalação/build reproduzíveis, desempenho e assets revisados | Demo publicável após validação e aprovação |
 
-M1 e M2 aproveitam a fundação já criada. A prioridade desta revisão é M3, apoiada pelo primeiro conjunto de ferramentas de M4. Não ampliar o elenco, os recursos ou os sistemas de combo antes de estabilizar essas duas frentes.
+M1 e M2 aproveitam a fundação já criada. A prioridade passa a ser especificar e homologar Ayla como base Tekken 7 em 2D (§1.3), usando M3 e M4 para conferir fidelidade e evoluindo M5 até combos, parede e levantamento reproduzíveis. Não ampliar o elenco antes dessa baseline. A migração visual HD ocorre depois da validação mecânica em pixel art.
 
 Especiais cinematográficos, times, assistentes, múltiplos saltos, medidores, IA completa e online dependem de decisões explícitas e entregas próprias. Não são pré-requisitos para fechar a primeira luta local.
 
@@ -731,12 +805,12 @@ Especiais cinematográficos, times, assistentes, múltiplos saltos, medidores, I
 
 As decisões abaixo não impedem o início do protótipo. Até serem confirmadas, usar padrões configuráveis e evitar espalhar suposições pelo código. As regras provisórias de rounds, sequências e elenco de teste estão definidas nesta especificação e implementadas na Etapa 2 de `pipeline.md`.
 
-- **Produção final da arte:** arte própria, uniformização do cenário provisório em pixel art com a direção ilustrada, quantidade de desenhos por ação e revisão do atlas. A reprodução em frames lógicos e o pivô nos pés já estão definidos.
-- **Interações da arena:** regras de paredes, quedas e objetos interativos. O sistema visual de cenários em camadas já está definido em §17.
+- **Produção final da arte:** direção fechada em HD 2D com aparência de volume/cel shading inspirada em Strive; definir resolução de autoria, orçamento de quadros e cronograma de migração integral de personagens, menus, HUD, efeitos e cenários. Pixel art continua provisório.
+- **Interações da arena:** wall carry, splat, combos de parede e queda são metas aprovadas; faltam tabelas, durações e limites quantitativos. Quebras de cenário e objetos interativos continuam separados.
 - **Mapeamento físico padrão:** teclas iniciais e prioridade de teclado/controle.
 - **Sistema de recursos:** barra de especial, custo de golpes e recuperação de recurso.
 - **Alcance dos QTEs:** quais especiais os usam, se o defensor também participa e como o desempenho altera o resultado.
-- **Parry:** comandos definitivos, duração, categorias aparáveis e punição por erro.
+- **Parry:** migrar o parry universal legado para low parry e respostas específicas de Tekken 7 adaptadas; confirmar janelas e elegibilidade por versão, sem pressupor parry de personagem para Ayla.
 - **Agarrões:** comandos padrão, tipos, janelas de quebra e diferenças entre personagens.
 - **Movimentos verticais:** conjunto de saltos, evasões e regras de ataques que acertam personagens no ar.
 - **Online:** se fará parte de uma versão futura e qual estratégia de sincronização será usada.
@@ -759,9 +833,9 @@ Os valores abaixo servem apenas para validar movimento e interface na fundação
 
 Reavaliar esses valores ao testar sensação de controle e regras de round; manter a configuração fora da lógica de renderização.
 
-### Primeiro personagem provisório
+### Personagem de referência e personagem de teste
 
-O primeiro personagem de teste é **Tester** (`tester`), preservado como padrão da simulação isolada, adversário de treino e opção do elenco. A tela inicial permite escolher Ayla, Gris ou Tester para P1. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 3 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
+A primeira personagem de balanceamento é **Ayla**, com direção Kazuya definida em §1.3. O personagem técnico de teste é **Tester** (`tester`), preservado como padrão da simulação isolada, adversário de treino e opção do elenco. A tela inicial permite escolher Ayla, Gris ou Tester para P1. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 3 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
 
 Os sprites-fonte de cada personagem ficam em `src/assets/sprites/characters/{id}/`; o manifesto de animações fica em `src/assets/animations/{id}.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. Consulte os READMEs dessas pastas para o formato esperado dos atlas e manifestos. Os dados de combate são independentes da arte: cada definição em `characters.ts` tem seu livro `moves` e perfil `collision`; cada golpe define sua hitbox de ataque, e cada personagem tem hurtboxes em pé, agachada e aérea.
 

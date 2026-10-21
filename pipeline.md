@@ -2,7 +2,7 @@
 
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
-> **Raiz:** [`base.md`](./base.md), versão 0.2.1.
+> **Raiz:** [`base.md`](./base.md), versão 0.3.0.
 > **Revisão:** 21/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos, quedas/levantadas e balanceamento continuam pendentes.
@@ -10,18 +10,41 @@
 ## Como usar
 
 - As Etapas 0–2 preservam o trabalho concluído da pipeline anterior; não devem ser refeitas.
-- A ordem atual é **Etapa 3 → Etapa 4 → Etapa 5 → Etapa 6 → Etapa 7**. Os primeiros instrumentos da Etapa 4 podem apoiar a revisão visual da Etapa 3.
+- A prioridade atual é a baseline Ayla/Tekken 7 em 2D descrita abaixo; ela orienta **Etapa 3 → Etapa 4 → Etapa 5 → Etapa 6 → Etapa 7**. Os primeiros instrumentos da Etapa 4 podem apoiar a revisão visual da Etapa 3.
 - Cada checkbox significa implementação concreta. Cobertura automatizada, revisão visual e balanceamento são critérios separados; um build não aprova animação nem justiça de colisão.
 - Registrar regras em `base.md` antes de codificar, usar dados por personagem e manter combate a 60 Hz independente do Phaser.
-- Os números atuais dos golpes são provisórios. Não copiar números de outro jogo nem alterar tempos para encobrir defeitos de animação ou entrada. A revisão de cadência de 20/10, solicitada pelo usuário, está registrada em base.md: +2F de preparo, +1F ativo e +4F de recuperação nos strikes, sem alterar agarrões; requer revisão posterior de vantagem/balanceamento.
+- Os números atuais dos golpes são provisórios. Usar dados de Tekken 7 verificados por versão como base, documentando conversão e adaptações 2D; não alterar tempos para encobrir defeitos de animação ou entrada. A revisão de cadência de 20/10, solicitada pelo usuário, está registrada em base.md: +2F de preparo, +1F ativo e +4F de recuperação nos strikes, sem alterar agarrões; requer revisão posterior de vantagem/balanceamento.
 - Não marcar um sistema inteiro como pronto por existir um clipe ou um rótulo. Registrar limitações e próxima entrega.
+
+## Revisão de direção — Ayla / Tekken 7 / HD 2D
+
+Objetivo desta branch: atualizar a documentação de design, sem mudar o runtime nem prometer balanceamento ou arte já concluídos.
+
+- [x] Definir Tekken 7 como referência mecânica central e separar a ficha de Tekken 8.
+- [x] Definir Ayla/Kazuya como base inicial, substituindo a direção Terry para seu kit futuro.
+- [x] Especificar metas 2D de lista, keyframes, parry, combos e parede, separando legado e destino.
+- [x] Unificar a direção visual futura HD e preservar pixel art como etapa de teste.
+
+Entregas futuras, ainda não implementadas por esta revisão:
+
+- [ ] Fixar versão/patch e criar ficha comparativa de cada movimento de Ayla, com fontes e desvios 2D.
+- [ ] Homologar parser, startup/contato, posturas FC/WS/WR e variantes normal/elétrica.
+- [ ] Migrar defesa e parry legado, validando baixo/médio/alto e punições com Ayla contra Ayla.
+- [ ] Implementar strings, launcher, juggle, Screw, ender e escalonamento sem infinitos.
+- [ ] Homologar wall carry/splat/bounce e rotas de parede, queda e levantamento.
+- [ ] Registrar baseline e calibrar Gris em relação a Ayla antes de ampliar o elenco.
+- [ ] Produzir piloto HD 2D de Ayla e planejar migração integral de personagens, UI, efeitos e cenários.
+
+Critérios mecânicos e de autoria: `base.md` §1.3, §§12–15 e `identidade-visual.md`. A ordem antiga de próximos passos deve ser lida sob esta prioridade; Tester continua ferramenta, não base de balanceamento.
+
+Validação desta revisão documental: instalação limpa, 138 testes, build e checagem de diff aprovados. Entrega em `codex/feature-direcao-tekken7-ayla`; push/CI e integração por PR serão conferidos no remoto. Não há alteração visual ou funcional que exija nova inspeção da arena.
 
 ## Referências e decisões
 
 | Referência de pesquisa | Aplicação em Close Combat | Limite desta revisão |
 | --- | --- | --- |
-| Apresentação de The King of Fighters 2000/2002 | Cadência de poses desenhadas, silhueta, continuidade entre estados, espelhamento, reações legíveis e cenários em planos | Arte própria; o atlas atual é material provisório de desenvolvimento |
-| Combate técnico de Tekken 7 | Quatro botões por membro, altos/médios/baixos, risco/retorno, vantagem, punição de bloqueio e erro, treino mensurável | Espaço horizontal 2D e regras já acordadas de guarda e movimento |
+| Guilty Gear Strive | Direção visual global HD, cel shading, volume e impacto gráfico | Assets e runtime de combate 2D; pixel art permanece provisório; não importar mecânicas |
+| Tekken 7 / Kazuya | Estrutura central do combate e baseline de Ayla: lista, frames, strings, combos, defesa, execução, wall carry e recuperação | Sem eixo de profundidade; registrar divergências do protótipo e patch de cada ficha |
 | Projeto atual | Parser, golpes locais por personagem, colisões próprias, parry, agarrões e execução precisa | Preservar comportamento existente ao consolidar a apresentação |
 
 As fontes oficiais confirmam que as referências possuem sistemas diferentes: [KOF 2000](https://www.snk-corp.co.jp/kof30th/en/materials/kof00/index.html) destaca assistentes ativos, e o [sistema de KOF 2002](https://www.snk-corp.co.jp/official/kof2002/english/e_kof2002_system.html) descreve times e diferentes saltos. São opções de pesquisa para outra etapa. Times, assistentes, múltiplos saltos, esquivas e barras precisam de decisões próprias antes de entrar no escopo.
