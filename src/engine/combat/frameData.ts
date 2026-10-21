@@ -1,3 +1,4 @@
+import type { MoveDefinition } from '../data/moves';
 import type { CharacterState } from '../characters/CharacterState';
 
 export type HitContext = 'block-punish' | 'whiff-punish' | 'counter-hit';
@@ -15,4 +16,9 @@ export function classifyHitContext(target: CharacterState): HitContext | undefin
   if (!attack.hasHit && target.mode === 'recovery') return 'whiff-punish';
   if (target.mode === 'startup' || target.mode === 'active') return 'counter-hit';
   return undefined;
+}
+
+/** Contact-specific recovery is authored per move, never a global speed adjustment. */
+export function recoveryFrames(move: MoveDefinition, contacted: boolean): number {
+  return contacted ? move.combat?.recoveryOnContact ?? move.recovery : move.recovery;
 }

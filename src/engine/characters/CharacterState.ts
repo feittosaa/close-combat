@@ -1,3 +1,4 @@
+import type { CombatStance, CombatRules } from '../data/combat/CombatBook';
 // src/engine/characters/CharacterState.ts
 import type { AttackButton } from '../../input/types';
 import type { CharacterCollisionProfile } from '../data/characters';
@@ -29,6 +30,10 @@ export interface CharacterAttack {
   hitElapsedFrames?: number;
   hitOutcome?: 'hit' | 'block';
   preciseExecution: boolean;
+  forceCounterHit?: boolean;
+  parryConfirmed?: boolean;
+  connectedStrikes?: number[];
+  hurtboxOverride?: { offsetX: number; offsetY: number; width: number; height: number };
   throwDirection?: 'forward' | 'backward';
 }
 
@@ -57,6 +62,18 @@ export interface CharacterState {
   verticalVelocity: number;
   grounded: boolean;
   crouching: boolean;
+  combatRules?: CombatRules;
+  stance?: CombatStance;
+  stanceFrames?: number;
+  crouchFrames?: number;
+  risingFrames?: number;
+  powerFrames?: number;
+  powerAvailable?: boolean;
+  rageUsed?: boolean;
+  lowParryFrames?: number;
+  lowParryHeld?: boolean;
+  combo?: { attackerId: string; hits: number; damage: number; screwUsed: boolean; wallUsed: boolean; wallFrames: number; moveIds: string[] };
+  lastCombo?: { hits: number; damage: number; moveIds: string[] };
   attack?: CharacterAttack;
   grab?: CharacterGrab;
   hitFlashFrames: number;

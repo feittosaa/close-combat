@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ayla, aylaMoves } from '../engine/data/fighters/ayla';
+import { ayla as currentAyla, aylaLegacyMoves as aylaMoves } from '../engine/data/fighters/ayla';
 import { defaultCharacter, getSpecialMoves, type CharacterDefinition } from '../engine/data/characters';
 import type { MoveDefinition } from '../engine/data/moves';
 import { createGameConfig } from '../engine/data/gameConfig';
@@ -8,6 +8,8 @@ import { projectileHitbox } from '../engine/combat/Projectile';
 import { createHurtbox } from '../engine/collision/combatGeometry';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
+// Preserve the original projectile fixtures independently from Ayla's new combat book.
+const ayla: CharacterDefinition = { ...currentAyla, moves: aylaMoves, combatRules: undefined };
 const input = (direction: Direction = 'N', buttons: AttackButton[] = []): FrameInput => ({ direction, buttons: new Set(buttons) });
 const neutral = input();
 function tick(sim: Simulation, p1 = neutral, p2 = neutral, count = 1): void {

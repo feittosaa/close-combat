@@ -1,3 +1,4 @@
+import { recoveryFrames } from '../../engine/combat/frameData';
 import type { CharacterState } from '../../engine/characters/CharacterState';
 import type { MoveDefinition } from '../../engine/data/moves';
 
@@ -92,7 +93,7 @@ export function getAttackAnimationFrame(
     duration = move.activeFrames;
   } else if (state.mode === 'recovery') {
     elapsed = state.attack.elapsedFrames - move.startup - move.activeFrames;
-    duration = move.recovery;
+    duration = recoveryFrames(move, state.attack.hitOutcome === 'hit' || state.attack.hitOutcome === 'block');
   } else return undefined;
 
   const frames = getClipFrames(clip);
@@ -157,7 +158,7 @@ export function validateAnimationCoverage(manifest: CharacterAnimationManifest, 
   const required = ['idle', 'walk', 'dash', 'jump', 'crouch', 'defense', 'hit', 'blockstun', 'grabbed', 'knockdown', 'throw-recovery']
     .map((suffix) => `${characterId}-${suffix}`);
   for (const move of moves) {
-    const name = manifest.moveClips?.[move.id] ?? move.id;
+    const name = move.combat?.animation.clip ?? manifest.moveClips?.[move.id] ?? move.id;
     for (const phase of ['startup', 'active', 'recovery']) required.push(`${characterId}-${name}-${phase}`);
   }
   const missing = required.filter((key) => !keys.has(key));

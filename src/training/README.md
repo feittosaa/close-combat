@@ -11,3 +11,7 @@ O treino não encerra rounds por KO ou tempo; reset restaura vida e posições. 
 `L` alterna 100%/50%/25% de velocidade de apresentação, sem alterar frames do livro. O passo único descarta reprocessamento de um mesmo evento DOM. `lastMoves` conserva os dados do último golpe para inspeção depois da ação. HUD técnico e entradas só são criados/exibidos no treino.
 
 Gravação, respostas automáticas no primeiro frame legal, buffer de punição, posições nas bordas e exercícios guiados permanecem pendentes na Etapa 4 de `pipeline.md`.
+
+## Pause e catálogo
+
+P/Esc pausa todos os modos locais. No treino, `PauseMenu` lê `fighterMoveList`: categorias disponíveis, busca, escolha de P1/P2, ficha e receita fixada. A UI não força acertos nem despacha strings automaticamente. Ao retomar, limpar teclado e histórico de reconhecimento sem alterar o estado de combate. Novos personagens devem declarar seus próprios livros e receitas.

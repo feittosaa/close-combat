@@ -1,3 +1,4 @@
+import { PauseMenu } from '../ui/PauseMenu';
 // src/scenes/FightScene.ts
 import Phaser from 'phaser';
 import type { CharacterState } from '../engine/characters/CharacterState';
@@ -48,16 +49,13 @@ export class FightScene extends Phaser.Scene {
   private hud?: CombatHud;
   private training?: TrainingSession;
   private trainingHud?: TrainingHud;
+  private paused = false;
+  private pauseMenu?: PauseMenu;
+  private pinnedMove?: Phaser.GameObjects.Text;
   private readonly trainingListeners = new Map<string, (event: KeyboardEvent) => void>();
   private readonly handledTrainingEvents = new WeakSet<KeyboardEvent>();
   private readonly trainingKeys: ReadonlyArray<readonly [string, () => void]> = [
-    ['keydown-P', () => { if (this.training) this.training.paused = !this.training.paused; }],
-    ['keydown-PERIOD', () => {
-      if (!this.training?.paused || !this.simulation) return;
-      const snapshot = this.simulation.snapshot();
-      this.simulation.stepFrame(this.readInputs(snapshot.characters, snapshot.frame));
-      this.syncViewsAndHud();
-    }],
+    ['keydown-PERIOD', () => this.advanceOneFrame()],
     ['keydown-F2', () => { if (this.training) this.resetFight(); }],
     ['keydown-G', () => { this.training?.cycleDummy(); }],
     ['keydown-L', () => { this.training?.cycleSpeed(); }],
@@ -82,7 +80,33 @@ export class FightScene extends Phaser.Scene {
       this.inputDisplays.forEach((display) => display.setVisible(this.training!.showInputs));
     }],
   ];
-  private readonly handleEscape = (): void => { this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }); };
+  private advanceOneFrame(): void {
+    if (!this.training?.paused || !this.simulation) return;
+    const snapshot = this.simulation.snapshot();
+    this.simulation.stepFrame(this.readInputs(snapshot.characters, snapshot.frame));
+    this.syncViewsAndHud();
+  }
+  private readonly handleEscape = (event: KeyboardEvent): void => { this.pauseKey(event); };
+  private readonly handlePause = (event: KeyboardEvent): void => {
+    if (this.pauseMenu?.isEditing()) return;
+    this.pauseKey(event);
+  };
+  private pauseKey(event: KeyboardEvent): void {
+    if (event.repeat || this.handledTrainingEvents.has(event)) return;
+    this.handledTrainingEvents.add(event);
+    this.togglePause();
+  }
+  private togglePause(force?: boolean): void {
+    this.paused = force ?? !this.paused;
+    if (this.training) this.training.paused = this.paused;
+    this.keyboardInputs.forEach(input => input.clear());
+    this.simulation?.clearInputHistory();
+    this.pauseMenu?.setVisible(this.paused);
+    // DOM search must receive text normally, including letters used by training hotkeys.
+    const keys = ['P', 'PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L'];
+    if (this.paused) this.input.keyboard?.removeCapture(keys);
+    else if (this.training) this.input.keyboard?.addCapture(keys);
+  }
   private readonly handleContinue = (): void => {
     const snapshot = this.simulation?.snapshot();
     if (this.mode !== 'arcade' || snapshot?.phase !== 'match-over' || snapshot.matchWinnerId !== 'player-1') return;
@@ -107,6 +131,7 @@ export class FightScene extends Phaser.Scene {
   init(data: FightSetup = {}): void {
     this.selectedFighter = getCharacterById(data.fighterId ?? '') ?? defaultCharacter;
     this.mode = data.mode ?? 'versus';
+    this.paused = false;
     this.arcadeIndex = Math.max(0, Math.trunc(data.arcadeIndex ?? 0));
     this.opponentFighter = this.mode === 'arcade'
       ? opponentFor(this.selectedFighter.id, 'arcade', this.arcadeIndex)
@@ -165,7 +190,7 @@ export class FightScene extends Phaser.Scene {
         const listener = (event: KeyboardEvent): void => {
           // Phaser can revisit a queued DOM event before the queue is cleared.
           // In particular, a single-step event must never advance twice.
-          if (event.repeat || this.handledTrainingEvents.has(event)) return;
+          if (this.pauseMenu?.isEditing() || event.repeat || this.handledTrainingEvents.has(event)) return;
           this.handledTrainingEvents.add(event);
           handler();
         };
@@ -175,6 +200,12 @@ export class FightScene extends Phaser.Scene {
       this.input.keyboard?.addCapture(['P', 'PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
     }
 
+    this.pinnedMove = this.add.text(width / 2, 155, '', { color: '#ffe0ab', backgroundColor: '#15151fdd', fontSize: '12px', wordWrap: { width: width - 80 }, align: 'center' }).setOrigin(.5, 0).setDepth(120).setScrollFactor(0);
+    this.pauseMenu = new PauseMenu([this.selectedFighter, this.opponentFighter], Boolean(this.training),
+      () => this.togglePause(false),
+      () => this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }),
+      entry => { this.pinnedMove?.setText(`TREINAR · ${entry.title}\n${entry.notation}`); this.togglePause(false); }, () => this.advanceOneFrame());
+    this.input.keyboard?.on('keydown-P', this.handlePause);
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
     this.input.keyboard?.on('keydown-R', this.handleRestart);
     this.input.keyboard?.on('keydown-ENTER', this.handleContinue);
@@ -185,7 +216,7 @@ export class FightScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     if (!this.simulation) return;
 
-    if (!this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame));
+    if (!this.paused && !this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame));
     this.syncViewsAndHud();
   }
 
@@ -234,8 +265,8 @@ export class FightScene extends Phaser.Scene {
       let label = `ARCADE · LUTA ${this.arcadeIndex + 1}/${count} · COMPUTADOR`;
       if (snapshot.phase === 'match-over') {
         label = snapshot.matchWinnerId === 'player-1'
-          ? this.arcadeIndex + 1 < count ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'ARCADE CONCLUÍDO · R RECOMEÇAR · ESC MENU'
-          : snapshot.matchWinnerId ? 'FIM DE JOGO · R TENTAR NOVAMENTE · ESC MENU' : 'EMPATE · R REPETIR · ESC MENU';
+          ? this.arcadeIndex + 1 < count ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'ARCADE CONCLUÍDO · R RECOMEÇAR · ESC PAUSA'
+          : snapshot.matchWinnerId ? 'FIM DE JOGO · R TENTAR NOVAMENTE · ESC PAUSA' : 'EMPATE · R REPETIR · ESC PAUSA';
       }
       this.arcadeInfo.setText(label);
     }
@@ -249,7 +280,11 @@ export class FightScene extends Phaser.Scene {
   }
 
   private cleanup(): void {
+    this.input.keyboard?.off('keydown-P', this.handlePause);
     this.input.keyboard?.off('keydown-ESC', this.handleEscape);
+    this.pauseMenu?.destroy(); this.pauseMenu = undefined;
+    this.pinnedMove?.destroy(); this.pinnedMove = undefined;
+    this.paused = false;
     this.input.keyboard?.off('keydown-R', this.handleRestart);
     this.input.keyboard?.off('keydown-ENTER', this.handleContinue);
     this.trainingListeners.forEach((listener, key) => this.input.keyboard?.off(key, listener));

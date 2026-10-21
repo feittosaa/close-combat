@@ -33,27 +33,27 @@ export class ArcadeController {
     if (!threat) this.threatSince = undefined;
     if (self.attack) { this.plan = []; return neutral(); }
     if (self.grounded && this.threatSince !== undefined && frame - this.threatSince >= 10 &&
-      !['hitstun', 'grabbed', 'throwRecovery'].includes(self.mode)) {
+      !['hitstun', 'grabbed', 'throwRecovery', 'knockdown'].includes(self.mode)) {
       const move = incoming ? this.opponent.moves.find((m) => m.id === incoming.moveId) : enemyMove;
       this.plan = [];
       return direction(move?.hitLevel === 'low' ? 'DB' : 'B');
     }
-    if (['hitstun', 'blockstun', 'grabbed', 'throwRecovery'].includes(self.mode)) {
+    if (['hitstun', 'blockstun', 'grabbed', 'throwRecovery', 'knockdown'].includes(self.mode)) {
       this.plan = [];
       return neutral();
     }
     const planned = this.plan.shift();
     if (planned) return planned;
     if (!self.grounded) {
-      const aerial = this.fighter.moves.filter((move) => move.airborne);
+      const aerial = this.fighter.moves.filter((move) => !move.legacy && !move.combat?.command.parentId && !move.combat?.command.stance && !move.combat?.command.requiresPower && !move.combat?.command.requiresRage && (move.combat ? move.combat.strikes.length > 0 : true) && move.airborne);
       if (frame >= this.nextDecisionFrame && distance < 160 && aerial.length) return this.execute(aerial[this.random() % aerial.length], frame);
       return neutral();
     }
-    const ranged = this.fighter.moves.filter((move) => move.projectile && !move.airborne && move.projectile.speed > 0);
+    const ranged = this.fighter.moves.filter((move) => !move.legacy && !move.combat?.command.parentId && !move.combat?.command.stance && !move.combat?.command.requiresPower && !move.combat?.command.requiresRage && (move.combat ? move.combat.strikes.length > 0 : true) && move.projectile && !move.airborne && move.projectile.speed > 0);
     if (frame >= this.nextDecisionFrame && distance > 170 && ranged.length && this.random() % 4 === 0) {
       return this.execute(ranged[this.random() % ranged.length], frame);
     }
-    const candidates = this.fighter.moves.filter((move) => !move.airborne &&
+    const candidates = this.fighter.moves.filter((move) => !move.legacy && !move.combat?.command.parentId && !move.combat?.command.stance && !move.combat?.command.requiresPower && !move.combat?.command.requiresRage && (move.combat ? move.combat.strikes.length > 0 : true) && !move.airborne &&
       (move.throw ? distance <= move.throw.range && !opponent.crouching :
         distance <= move.hitbox.forward + move.hitbox.width + opponent.collision.bodyWidth / 2 + (move.travelSpeed ? 40 : 0)));
     if (frame >= this.nextDecisionFrame && candidates.length) {
@@ -64,7 +64,7 @@ export class ArcadeController {
   }
 
   private execute(move: MoveDefinition, frame: number): FrameInput {
-    const sequence = move.input.sequence ?? [move.input.direction ?? (move.crouching ? 'D' : 'N')];
+    const sequence = move.combat?.command.directions?.length ? move.combat.command.directions : move.input.sequence ?? [move.input.direction ?? (move.crouching ? 'D' : 'N')];
     this.plan = sequence.flatMap((value, index) => {
       const buttons = index === sequence.length - 1 ? move.input.buttons : [];
       return Array.from({ length: 2 }, () => ({ direction: value, buttons: new Set(buttons) }));
