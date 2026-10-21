@@ -45,7 +45,7 @@ export class CombatCommandParser {
         const charged = candidates.some(other => other.combat?.command.holdFrames &&
           other.combat.command.parentId === move.combat!.command.parentId &&
           other.combat.command.buttons.join() === move.combat!.command.buttons.join());
-        this.pending = { move, frame, attack: state.attack, charge: charged };
+        this.pending = { move, frame, attack: this.parentAttack(move.combat!.command, state), charge: charged };
       }
     }
     this.previous = { direction: input.direction, buttons: new Set(input.buttons) };
@@ -53,7 +53,7 @@ export class CombatCommandParser {
     if (!pending) return undefined;
     let move = pending.move;
     let command = move.combat!.command;
-    if (!this.context(command, state, target, atWall) || (command.parentId && state.attack !== pending.attack)) {
+    if (!this.context(command, state, target, atWall) || (command.parentId && this.parentAttack(command, state) !== pending.attack)) {
       this.pending = undefined;
       return undefined;
     }
@@ -66,7 +66,7 @@ export class CombatCommandParser {
       else if (!released) return undefined;
     }
     if (command.parentId) {
-      const attack = state.attack!;
+      const attack = this.parentAttack(command, state)!;
       const window = command.followupWindow!;
       if (attack.elapsedFrames > window.to || (window.onHit && attack.hitOutcome === 'block')) {
         this.pending = undefined;
@@ -81,13 +81,19 @@ export class CombatCommandParser {
     return pending.charge ? { ...move, bufferedStartupFrames: Math.min(Math.max(0, frame - pending.frame), Math.max(0, move.startup - 1)) } : move;
   }
 
+  private parentAttack(command: CombatCommand, state: CharacterState): CharacterState['attack'] {
+    if (!command.parentId) return undefined;
+    return [state.attack,state.followup].find(attack => attack && (attack.moveId === command.parentId || command.alternateParentIds?.includes(attack.moveId)));
+  }
+
   private priority(command: CombatCommand): number {
     return Number(Boolean(command.parentId)) * 1000 + Number(command.requiresPower === true) * 100 +
       Number(Boolean(command.stance)) * 50 + (command.directions?.length ?? 0) * 5 + Number(command.preciseFrames !== undefined) * 2;
   }
 
   private context(command: CombatCommand, state: CharacterState, target: CharacterState, atWall: boolean): boolean {
-    if (command.parentId && state.attack?.moveId !== command.parentId && !command.alternateParentIds?.includes(state.attack?.moveId ?? '')) return false;
+    if (command.parentId && !this.parentAttack(command,state)) return false;
+    if (command.parentId && this.parentAttack(command,state)!.elapsedFrames > (command.followupWindow?.to ?? -1)) return false;
     if (command.notation === '2+3' && (state.powerAvailable === false || (state.powerFrames ?? 0) > 0)) return false;
     if (command.requiresPower && !(state.powerFrames && state.powerFrames > 0)) return false;
     if (command.requiresRage && (state.rageUsed || state.health > state.maxHealth * .25)) return false;

@@ -162,7 +162,7 @@ for i,row in enumerate(rows):
  if c=='1':meta['recoveryOnContact']=17
  if c in ['f,n,d,df:2','f,n,d,df+2']:
   meta['recoveryOnContact']=contact_recovery
-  meta['adaptation']+=' Recuperação 2D no contato: '+str(contact_recovery)+'F; no vazio permanece '+str(recovery)+'F. Sem cancelamento livre.'
+  meta['adaptation']+=' Recuperação 2D se bloqueado: '+str(contact_recovery)+'F. Acerto/erro liberam no fim da atividade; valor-base preservado na referência: '+str(recovery)+'F.'
   meta['animation']['clip']='electric-uppercut' if c.endswith(':2') else 'wind-uppercut'
  if action:meta['action']=action
  m={'id':slug(c),'kind':'throw' if 'throws' in cats else 'special' if 'specials' in cats else 'normal',

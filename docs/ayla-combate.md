@@ -62,3 +62,7 @@ A revisão em `codex/feature-movimento-tecnico` adiciona `f+1` autoral ao catál
 Ayla agora caminha a 2 e recua a 1,5 unidades/frame; dash 4,6 e backdash 3,8. O clipe de recuo utiliza os quadros 24–31 do atlas existente, mantendo a frente voltada ao adversário. A orientação depende do facing e da autoria do asset, nunca do sentido de deslocamento. Os parâmetros são autorais de escala 2D, não uma medição de velocidade de Tekken.
 
 Validação: 305 testes, compilação/build e diff aprovados; inspeção visual do recuo, jab de avanço, string e pause. Os replays anteriores mantêm seus critérios de acerto/vitória; a aproximação leva mais frames, o cruzamento aéreo parte de distância curta e o jogador de replay escolhe guarda alta/baixa conforme a ameaça.
+
+## Regra atual de recuperação
+
+A revisão solicitada de [combos livres](./combos-livres.md) prevalece sobre as recuperações anteriores: strikes recuperam somente após bloqueio; acerto e erro liberam no fim da atividade. Janelas de string permanecem válidas em contexto separado, sem prender o lutador. O lançamento inicial usa arco mais baixo e cerca de 38F de suspensão sem contatos adicionais, seguido de queda de 26F. Esses valores são autorais do protótipo, não homologação dos frames de Kazuya.

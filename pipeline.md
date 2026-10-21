@@ -2,7 +2,7 @@
 
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
-> **Raiz:** [`base.md`](./base.md), versão 0.3.2.
+> **Raiz:** [`base.md`](./base.md), versão 0.3.3.
 > **Revisão:** 21/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos, quedas/levantadas e balanceamento continuam pendentes.
@@ -354,3 +354,15 @@ Branch: `codex/feature-fluidez-corrida-treino`.
 Validação automatizada: 320 testes; build e diff. A conferência visual cobre tamanho, entradas coloridas, remapeamento, catálogo e corrida; evidências em `docs/evidence/fluidez/`. CI e merge devem ser confirmados no remoto na entrega.
 
 Limites: o gancho ainda reutiliza poses existentes; produzir desenho de ascendente próprio. Corrida usa poses de avanço disponíveis em loop acelerado. As demais recuperações continuam sendo dados locais de cada golpe. Detalhes em `docs/fluidez-corrida-treino.md`.
+
+## Combos livres e trajetória — continuação de 21/10/2026
+
+Na mesma branch de fluidez ainda não integrada, a nova solicitação substitui a recuperação anterior, preservada no commit intermediário `54de726`.
+
+- [x] Strikes livres após atividade em acerto/erro; recuperação só no bloqueio, incluindo multihit parcialmente bloqueado.
+- [x] Manter contexto/janela de strings sem manter o lutador em recuperação; validar fraco–fraco–forte seguido de elétrico.
+- [x] Ajustar suspensão, gravidade, manutenção de juggle, Screw, aterrissagem e retorno de controle.
+- [x] Preservar regras próprias de agarrão e os livros individuais.
+- [x] Atualizar fichas/HUD e conferir string, elétrico e queda no treino; evidências em `docs/evidence/combos-livres/`.
+
+Validação: 329 testes, build e diff aprovados; replays mantêm a rota completa de nove contatos, parede e dois elétricos contra os quatro alvos. O lançamento inicial sem novas entradas é medido em 36–40F, altura 80–100 e queda de 26F. Ver `docs/combos-livres.md`. CI remota e integração são confirmadas na entrega do PR.

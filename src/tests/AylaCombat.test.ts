@@ -102,7 +102,8 @@ describe('combate com entradas comuns', () => {
     const sim = setup(distance); tick(sim, input('N', ['1'])); tick(sim, N, N, 10);
     expect(sim.snapshot().recentContacts).toHaveLength(1);
     tick(sim, input('N', ['1'])); tick(sim, N, N, 16);
-    expect(sim.snapshot().characters[0].attack?.moveId).toBe(aylaMove('1,1').id);
+    expect(sim.snapshot().characters[0].followup?.moveId).toBe(aylaMove('1,1').id);
+    expect(sim.snapshot().characters[0].mode).not.toBe('recovery');
     tick(sim, input('N', ['2'])); tick(sim, N, N, 15);
     expect(sim.snapshot().recentContacts.map(contact => contact.event.moveId)).toEqual([aylaMove('1').id, aylaMove('1,1').id, aylaMove('1,1,2').id]);
     expect(sim.snapshot().characters[1].grounded).toBe(false);
@@ -182,7 +183,7 @@ describe('combate com entradas comuns', () => {
     tick(sim, input('N', ['2'])); tick(sim, N, N, 30);
     const before = sim.snapshot().characters[0];
     expect(before.powerFrames).toBeGreaterThan(0);
-    expect(before.attack?.moveId).toBe(aylaMove('db+1,2').id);
+    expect(before.followup?.moveId).toBe(aylaMove('db+1,2').id);
     tick(sim, input('F'));
     const after = sim.snapshot().characters[0];
     expect(after.attack).toBeUndefined(); expect(after.powerFrames).toBe(0);

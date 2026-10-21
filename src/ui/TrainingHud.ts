@@ -50,17 +50,17 @@ export class TrainingHud {
     this.progress.clear();
     snapshot.characters.forEach((character, index) => {
       const move = session.lastMoves[index];
-      const recovery = move ? recoveryFrames(move, Boolean(character.attack?.hitOutcome)) : 0;
-      const recoveryLabel = !character.attack && move?.combat?.recoveryOnContact !== undefined ? `${move.combat.recoveryOnContact}/${move.recovery}` : String(recovery);
+      const recovery = move ? recoveryFrames(move, character.attack?.wasBlocked ? 'block' : character.attack?.hitOutcome) : 0;
+      const recoveryLabel = !character.attack && move?.combat?.recoveryOnContact !== undefined ? `0/${move.combat.recoveryOnContact}` : String(recovery);
       const lockedFrames = move && character.attack
-        ? move.startup + move.activeFrames + recoveryFrames(move, Boolean(character.attack.hitOutcome)) - character.attack.elapsedFrames
+        ? move.startup + move.activeFrames + recoveryFrames(move, character.attack.wasBlocked ? 'block' : character.attack.hitOutcome) - character.attack.elapsedFrames
         : character.remainingStateFrames;
       const levels = { high: 'ALTO', mid: 'MÉDIO', low: 'BAIXO', air: 'AÉREO', throw: 'AGARRÃO', special: 'ESPECIAL' };
       const combo = character.combo ?? character.lastCombo;
       const comboLabel = combo ? ` · COMBO ${combo.hits} / ${combo.damage}` : '';
       const detail = move
         ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${levels[move.hitLevel]} · DANO ${move.damage}`
-        : 'S: preparo · A: ativo · R: recuperação';
+        : 'S: preparo · A: ativo · R: só bloqueio';
       this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]}${comboLabel} · ${character.combo && !character.grounded ? 'JUGGLE · ATÉ ATERRISSAR' : lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);
       const barWidth = this.width / 2 - 42;
@@ -84,7 +84,7 @@ export class TrainingHud {
     const contact = snapshot.recentContacts[snapshot.recentContacts.length - 1]?.event;
     this.contact.setText(contact?.frameAdvantage !== undefined
       ? `${contact.attackerId === 'player-1' ? 'P1' : 'P2'}: DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · STUN ${contact.defenderStunFrames}F · ADV ${signedFrames(contact.frameAdvantage)}`
-      : contact?.reaction === 'launch' ? `DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · REAÇÃO AÉREA` : 'S: preparo · A: ativo · R: recuperação');
+      : contact?.reaction === 'launch' ? `DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · REAÇÃO AÉREA` : 'S: preparo · A: ativo · R: só bloqueio');
   }
 
   destroy(): void {

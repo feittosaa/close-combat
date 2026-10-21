@@ -9961,7 +9961,7 @@
         "counter": "",
         "damage": "23"
       },
-      "adaptation": "Geometria 2D autorada; dano ×4 na escala atual. Recuperação/janelas ausentes são estimativas explícitas; variantes de profundidade usam posturas/comandos 2D. Extensores Tornado adaptados a Screw único; quebras de cenário ficam como splat, sem troca de arena. Recuperação 2D no contato: 18F; no vazio permanece 24F. Sem cancelamento livre. Passo de aproximação próprio do ascendente: 12 unidades.",
+      "adaptation": "Geometria 2D autorada; dano ×4 na escala atual. Recuperação/janelas ausentes são estimativas explícitas; variantes de profundidade usam posturas/comandos 2D. Extensores Tornado adaptados a Screw único; quebras de cenário ficam como splat, sem troca de arena. Recuperação 2D se bloqueado: 18F. Acerto/erro liberam no fim da atividade; valor-base preservado na referência: 24F. Passo de aproximação próprio do ascendente: 12 unidades.",
       "animation": {
         "clip": "electric-uppercut",
         "status": "provisional"
@@ -10223,7 +10223,7 @@
         "counter": "",
         "damage": "20"
       },
-      "adaptation": "Geometria 2D autorada; dano ×4 na escala atual. Recuperação/janelas ausentes são estimativas explícitas; variantes de profundidade usam posturas/comandos 2D. Extensores Tornado adaptados a Screw único; quebras de cenário ficam como splat, sem troca de arena. Recuperação 2D no contato: 21F; no vazio permanece 28F. Sem cancelamento livre. Passo de aproximação próprio do ascendente: 10 unidades.",
+      "adaptation": "Geometria 2D autorada; dano ×4 na escala atual. Recuperação/janelas ausentes são estimativas explícitas; variantes de profundidade usam posturas/comandos 2D. Extensores Tornado adaptados a Screw único; quebras de cenário ficam como splat, sem troca de arena. Recuperação 2D se bloqueado: 21F. Acerto/erro liberam no fim da atividade; valor-base preservado na referência: 28F. Passo de aproximação próprio do ascendente: 10 unidades.",
       "animation": {
         "clip": "wind-uppercut",
         "status": "provisional"

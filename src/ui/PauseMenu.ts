@@ -125,7 +125,7 @@ export class PauseMenu {
       const levels = { high: 'Alto', mid: 'Médio', low: 'Baixo', air: 'Aéreo', throw: 'Agarrão', special: 'Especial' };
       this.details.append(el('p', `${levels[move.hitLevel]} · dano ${move.damage} · ${move.combat ? { punch: 'Soco', kick: 'Chute', knee: 'Joelhada', elbow: 'Cotovelo', weapon: 'Arma', body: 'Corpo' }[move.combat.limb] : 'Golpe'}`));
       const timeline = el('div', undefined, 'pause-timeline');
-      for (const [label, frames, cls] of [['Preparo', move.startup, 'startup'], ['Atividade', move.activeFrames, 'active'], ['Recuperação', move.recovery, 'recovery']] as const) {
+      for (const [label, frames, cls] of [['Preparo', move.startup, 'startup'], ['Atividade', move.activeFrames, 'active'], ['Recuperação no bloqueio', move.combat?.recoveryOnContact ?? move.recovery, 'recovery']] as const) {
         const block = el('span', `${label} ${frames}F`, cls); block.style.flexGrow = String(Math.max(1, frames)); timeline.append(block);
       }
       this.details.append(timeline);
@@ -138,7 +138,7 @@ export class PauseMenu {
           this.details.append(el('p', `Continuação de ${parent ? formatCommand(moveInputLabel(parent),layout) : command.parentId}. Entrada após o contato; janela ${command.followupWindow?.from}–${command.followupWindow?.to}F.${command.followupWindow?.onHit ? ' Exige acerto.' : ''}`));
         }
         if (command.directionAliases?.length) this.details.append(el('p', `Atalhos: ${command.directionAliases.map(sequence => formatCommand(sequence.join(',') + '+' + command.buttons.join('+'),layout)).join(' / ')}`));
-        if (combat.recoveryOnContact !== undefined) this.details.append(el('p', `Recuperação no contato: ${combat.recoveryOnContact}F; ao errar: ${move.recovery}F.`));
+        this.details.append(el('p', `Após acerto ou erro: livre ao fim da atividade. Recuperação se bloqueado: ${combat.recoveryOnContact ?? move.recovery}F.`));
         if (command.stance) this.details.append(el('p', `Postura exigida: ${command.stance}. SS: ${formatCommand('F+1+2+3+4',layout)}; BT: ${formatCommand('B+1+2+3+4',layout)}. WS: soltar agachamento após 6F.`));
         if (command.requiresPower) this.details.append(el('p', `Exige Fulgor: ativar ${formatCommand('2+3',layout)} uma vez por round; 600F.`));
         if (command.requiresRage) this.details.append(el('p', 'Exige vida até 25%; uma execução por round.'));

@@ -87,7 +87,7 @@ export class AttackResolver {
         const blocked = !move.combat?.unblockable && !parried && (target.mode === 'blocking' || target.mode === 'blockstun') && canBlock(move.hitLevel, targetInput);
         const defenderStunFrames = Math.max(target.remainingStateFrames, blocked ? move.blockstun : move.hitstun);
         const currentMove = attacker.attack ? this.resolveMove(attacker.fighterId, attacker.attack.moveId) : undefined;
-        const totalAttackFrames = currentMove ? currentMove.startup + currentMove.activeFrames + recoveryFrames(currentMove, Boolean(attack) || attacker.attack?.hitOutcome === 'hit' || attacker.attack?.hitOutcome === 'block') : 0;
+        const totalAttackFrames = currentMove ? currentMove.startup + currentMove.activeFrames + recoveryFrames(currentMove, blocked || attacker.attack?.wasBlocked ? 'block' : 'hit') : 0;
         // The contact frame has already happened; count only future locked frames.
         const attackerRecoveryFrames = Math.max(0, totalAttackFrames - (attacker.attack?.elapsedFrames ?? 0) - 1);
         pending.push({
@@ -162,6 +162,7 @@ export class AttackResolver {
       if (attack) {
         attack.hasHit = true;
         if (strikeIndex !== undefined) attack.connectedStrikes = [...(attack.connectedStrikes ?? []), strikeIndex];
+        if (event.outcome === 'block') attack.wasBlocked = true;
         attack.hitOutcome = event.outcome === 'hit' || event.outcome === 'block' ? event.outcome : undefined;
         if (event.outcome === 'hit' || event.outcome === 'block' || event.outcome === 'parry') attack.hitElapsedFrames = attack.elapsedFrames;
       }
@@ -221,7 +222,7 @@ export class AttackResolver {
         target.remainingStateFrames = Math.max(target.remainingStateFrames, move.hitstun);
         target.hitFlashFrames = 5;
       }
-      target.attack = undefined;
+      target.attack = undefined; target.followup = undefined;
       if (event.outcome !== 'block') {
         target.crouching = false;
         applyStrikeReaction(attackerState, target, move, strike, event.damage, event.context === 'counter-hit');
