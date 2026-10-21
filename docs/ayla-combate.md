@@ -54,3 +54,11 @@ As poses são amostradas pelo relógio de combate; a arte não determina startup
 O catálogo tem teste parametrizado das 135 entradas e seus requisitos, mais testes de múltiplos contatos, elétrico/atalhos, strings, low parry, carga, recurso, projétil e avanço confirmado. Replays por entradas normais verificam dois elétricos, string após launcher, a primeira rota completa com extensor e ender e combo após splat real. Os casos de regressão de projéteis anteriores usam um fixture separado, preservando sua cobertura independentemente da troca de livro de Ayla.
 
 A cobertura de um conjunto de replays não certifica todas as distâncias e matchups; as receitas do guia permanecem sujeitas ao balanceamento da adaptação 2D. A conferência visual e os resultados finais da CI são registrados na pipeline e na entrega do PR.
+
+## Movimento técnico
+
+A revisão em `codex/feature-movimento-tecnico` adiciona `f+1` autoral ao catálogo: 143 ações ativas e 36 receitas. `1` permanece i10; `f+1` é i12, dano 24 e alcance +10, com avanço 8. Aceita as primeiras continuações de jab, sem permitir cancelamentos livres. Seus keyframes visuais reutilizam provisoriamente `standing-lp`; produzir preparação com passo e extensão própria para `ayla-forward-jab`.
+
+Ayla agora caminha a 2 e recua a 1,5 unidades/frame; dash 4,6 e backdash 3,8. O clipe de recuo utiliza os quadros 24–31 do atlas existente, mantendo a frente voltada ao adversário. A orientação depende do facing e da autoria do asset, nunca do sentido de deslocamento. Os parâmetros são autorais de escala 2D, não uma medição de velocidade de Tekken.
+
+Validação: 305 testes, compilação/build e diff aprovados; inspeção visual do recuo, jab de avanço, string e pause. Os replays anteriores mantêm seus critérios de acerto/vitória; a aproximação leva mais frames, o cruzamento aéreo parte de distância curta e o jogador de replay escolhe guarda alta/baixa conforme a ameaça.

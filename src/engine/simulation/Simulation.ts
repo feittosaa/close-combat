@@ -244,9 +244,10 @@ export class Simulation {
         const guarding = character.stance !== 'charging' && character.grounded && (input.direction === 'B' || input.direction === 'DB') && attacking[1 - index];
         const stationary = guarding || (character.grounded && character.crouching);
         const dashing = this.updateDash(index, horizontal, character.grounded && !stationary);
+        const movement = this.fighterDefinitions[index].movement;
         const speed = dashing
-          ? this.fighterDefinitions[index].movement.dashSpeed ?? this.config.movement.dashSpeed
-          : this.fighterDefinitions[index].movement.walkSpeed;
+          ? (horizontal < 0 ? movement.backdashSpeed : undefined) ?? movement.dashSpeed ?? this.config.movement.dashSpeed
+          : (horizontal < 0 ? movement.backwardWalkSpeed : undefined) ?? movement.walkSpeed;
         if (!stationary) nextX[index] += horizontal * facingSign * speed;
         if (guarding) character.mode = 'blocking';
         else if (dashing) character.mode = 'dashing';
@@ -622,7 +623,7 @@ export class Simulation {
   private canCancel(character: CharacterState, nextMove: MoveDefinition | undefined): boolean {
     const attack = character.attack;
     const currentMove = attack ? this.moveFor(character, attack.moveId) : undefined;
-    if (attack && nextMove?.combat?.command.parentId === attack.moveId) return true;
+    if (attack && (nextMove?.combat?.command.parentId === attack.moveId || nextMove?.combat?.command.alternateParentIds?.includes(attack.moveId))) return true;
     const cancelRule = currentMove?.cancelOnHit;
     if (!attack || !nextMove || attack.hitOutcome !== 'hit' || attack.hitElapsedFrames === undefined || !cancelRule) {
       return false;

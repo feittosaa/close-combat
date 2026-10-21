@@ -36,8 +36,8 @@ export function getClipFrames(clip: AnimationClip): number[] {
   return clip.frames ? [...clip.frames] : Array.from({ length: clip.end - clip.start + 1 }, (_, i) => clip.start + i);
 }
 
-export function shouldFlipAnimation(facing: CharacterState['facing'], clip?: AnimationClip, walkingBackward = false): boolean {
-  return ((facing === 'left') !== (clip?.sourceFacesLeft ?? false)) !== walkingBackward;
+export function shouldFlipAnimation(facing: CharacterState['facing'], clip?: AnimationClip): boolean {
+  return (facing === 'left') !== (clip?.sourceFacesLeft ?? false);
 }
 
 function poseAtTime(frames: readonly number[], durations: readonly number[], time: number): number {

@@ -87,7 +87,7 @@ export class CombatCommandParser {
   }
 
   private context(command: CombatCommand, state: CharacterState, target: CharacterState, atWall: boolean): boolean {
-    if (command.parentId && state.attack?.moveId !== command.parentId) return false;
+    if (command.parentId && state.attack?.moveId !== command.parentId && !command.alternateParentIds?.includes(state.attack?.moveId ?? '')) return false;
     if (command.notation === '2+3' && (state.powerAvailable === false || (state.powerFrames ?? 0) > 0)) return false;
     if (command.requiresPower && !(state.powerFrames && state.powerFrames > 0)) return false;
     if (command.requiresRage && (state.rageUsed || state.health > state.maxHealth * .25)) return false;
