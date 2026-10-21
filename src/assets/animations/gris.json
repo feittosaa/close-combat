@@ -558,12 +558,12 @@
       "repeat": -1,
       "sourceFacesLeft": false,
       "frameDurations": [
-        7,
-        7,
-        7,
-        7,
-        7,
-        7
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
       ]
     },
     {
@@ -1597,7 +1597,7 @@
         5,
         4
       ],
-      "frameRate": 14,
+      "frameRate": 16,
       "repeat": -1,
       "sourceFacesLeft": false,
       "frameDurations": [
@@ -1660,6 +1660,38 @@
       ],
       "frameRate": 12,
       "repeat": -1,
+      "sourceFacesLeft": false
+    },
+    {
+      "key": "gris-walk-backward",
+      "start": 0,
+      "end": 72,
+      "frames": [
+        71,
+        72,
+        1,
+        0,
+        1,
+        72
+      ],
+      "frameRate": 10,
+      "repeat": -1,
+      "sourceFacesLeft": false
+    },
+    {
+      "key": "gris-backdash",
+      "start": 0,
+      "end": 72,
+      "frames": [
+        71,
+        72,
+        1,
+        0,
+        1,
+        72
+      ],
+      "frameRate": 30,
+      "repeat": 0,
       "sourceFacesLeft": false
     }
   ],

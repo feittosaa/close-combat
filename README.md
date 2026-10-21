@@ -31,7 +31,7 @@ Na revisão atual, as cargas foram reduzidas em 24% com apoio preservado no chã
 
 - **Jogador 1:** mover/saltar/agachar com `A`, `D`, `W`, `S`; ataques `1`–`4` em `J`, `K`, `N`, `M`.
 - **Jogador 2:** mover/saltar/agachar com as setas; ataques `1`–`4` no teclado numérico `1`–`4`.
-- `F`/`B` duas vezes rapidamente no chão ativa dash; dash não funciona no ar. O recuo usa a caminhada espelhada. Segurar `B`/`DB` durante um golpe adversário ativa guarda parada a qualquer distância (`B` para altos/médios, `DB` para baixos). Agachar também impede a locomoção. O bloqueio de um golpe do Tester desloca o defensor 4 unidades; um golpe fora de alcance não o desloca.
+- `F`/`B` duas vezes rapidamente no chão ativa dash; dash não funciona no ar. O recuo e o backdash usam clipes próprios mantendo a orientação ao oponente; Ayla diferencia `1` de `f+1` ao avançar. Segurar `B`/`DB` durante um golpe adversário ativa guarda parada a qualquer distância (`B` para altos/médios, `DB` para baixos). Agachar também impede a locomoção. O bloqueio de um golpe do Tester desloca o defensor 4 unidades; um golpe fora de alcance não o desloca.
 - No Tester, `F/B+1`, `DF/DB+2`, `D+3` e `UF/UB+4` executam variantes direcionais. Gris mantém quatro ataques em pé, quatro agachados e quatro aéreos. Ayla usa o novo livro contextual (incluindo FC/WS, strings e elétrico); consulte-o no pause. `P`/`Esc` abre ou fecha o pause.
 - `1+2` e `3+4` executam chords de teste; pressionamentos são agrupados se ocorrerem dentro de 3 frames. Golpes de um botão que possam formar esses chords aguardam o fim da janela; combinações sem golpe cadastrado são ignoradas.
 - `F,F+2` e `D,DF+3` são sequências provisórias de Tester; `R` reinicia a luta depois do resultado final.

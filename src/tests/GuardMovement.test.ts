@@ -26,8 +26,8 @@ describe('guard and grounded movement', () => {
     const after = sim.snapshot().characters;
     expect(after[0]).toMatchObject({ mode: 'moving', movementDirection: 'backward', facing: 'right' });
     expect(after[1]).toMatchObject({ mode: 'moving', movementDirection: 'backward', facing: 'left' });
-    expect(after[0].x).toBe(before[0].x - 3);
-    expect(after[1].x).toBe(before[1].x + 3);
+    expect(after[0].x).toBe(before[0].x - defaultCharacter.movement.backwardWalkSpeed!);
+    expect(after[1].x).toBe(before[1].x + defaultCharacter.movement.backwardWalkSpeed!);
   });
 
   it.each([0, 1])('guards a distant new attack immediately for defender %i and stays still on a whiff', (defenderIndex) => {
@@ -69,7 +69,7 @@ describe('guard and grounded movement', () => {
   it('does not let body contact drag a stationary crouching fighter', () => {
     const sim = new Simulation(config);
     const x = sim.snapshot().characters[1].x;
-    for (let t = 0; t < 220; t += 1) step(sim, [forward, { direction: 'D', buttons: new Set() }]);
+    for (let t = 0; t < 360; t += 1) step(sim, [forward, { direction: 'D', buttons: new Set() }]);
     expect(sim.snapshot().characters[1].x).toBe(x);
     expect(sim.snapshot().characters[1].x - sim.snapshot().characters[0].x).toBe(defaultCharacter.collision.bodyWidth);
   });
@@ -77,7 +77,7 @@ describe('guard and grounded movement', () => {
   it('does not let an advancing attack push the guard through body contact before a hit', () => {
     const advancing = { ...attacker, moves: [{ ...attacker.moves[0], advance: 80 }] };
     const sim = new Simulation(config, [advancing, defaultCharacter]);
-    for (let t = 0; t < 100; t += 1) step(sim, [forward, forward]);
+    for (let t = 0; t < 180; t += 1) step(sim, [forward, forward]);
     const x = sim.snapshot().characters[1].x;
     step(sim, [strike, back]);
     expect(sim.snapshot().characters[1]).toMatchObject({ mode: 'blocking', x });
@@ -96,7 +96,7 @@ describe('guard and grounded movement', () => {
   it.each([0, 1])('applies only a small single displacement on a blocked hit to defender %i', (defenderIndex) => {
     const ai = 1 - defenderIndex;
     const sim = new Simulation(config, defenderIndex === 0 ? [defaultCharacter, attacker] : [attacker, defaultCharacter]);
-    for (let t = 0; t < 100; t += 1) step(sim, [forward, forward]);
+    for (let t = 0; t < 180; t += 1) step(sim, [forward, forward]);
     const x = sim.snapshot().characters[defenderIndex].x;
     const inputs = [back, back]; inputs[ai] = strike;
     step(sim, inputs);

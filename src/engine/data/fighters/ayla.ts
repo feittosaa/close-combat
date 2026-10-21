@@ -79,7 +79,7 @@ export const aylaLegacyMoves: readonly MoveDefinition[] = [
 
 export const ayla: CharacterDefinition = {
   id: 'ayla', name: 'Ayla', maxHealth: 950,
-  movement: { walkSpeed: 3.6, dashSpeed: 7.2, jumpVelocity: -11.6 },
+  movement: { walkSpeed: 2, backwardWalkSpeed: 1.5, dashSpeed: 4.6, backdashSpeed: 3.8, jumpVelocity: -11.6 },
   moves: [...aylaCombatMoves, ...aylaLegacyMoves.map(move => ({ ...move, legacy: true }))],
   combos: aylaCombos,
   combatRules: aylaCombatRules,

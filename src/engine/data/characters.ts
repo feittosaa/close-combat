@@ -30,7 +30,7 @@ export interface CharacterDefinition {
   maxHealth: number;
   /** Lutadores de diagnóstico podem permanecer fora da seleção pública. */
   selectable?: boolean;
-  movement: { walkSpeed: number; jumpVelocity: number; dashSpeed?: number };
+  movement: { walkSpeed: number; backwardWalkSpeed?: number; jumpVelocity: number; dashSpeed?: number; backdashSpeed?: number };
   /** Livro de golpes exclusivo deste personagem; IDs só precisam ser únicos dentro do livro. */
   moves: readonly MoveDefinition[];
   combos?: readonly ComboRecipe[];
@@ -74,7 +74,7 @@ export const characters: readonly CharacterDefinition[] = [
     id: DEFAULT_CHARACTER_ID,
     name: 'Tester',
     maxHealth: 1000,
-    movement: { walkSpeed: 3, dashSpeed: 6, jumpVelocity: -11 },
+    movement: { walkSpeed: 2, backwardWalkSpeed: 1.5, dashSpeed: 4.2, backdashSpeed: 3.4, jumpVelocity: -11 },
     moves: testerMoves,
     collision: testerCollision,
     assets: {
@@ -87,7 +87,7 @@ export const characters: readonly CharacterDefinition[] = [
     name: 'Dummy',
     selectable: false,
     maxHealth: 900,
-    movement: { walkSpeed: 2.5, dashSpeed: 5.5, jumpVelocity: -10.5 },
+    movement: { walkSpeed: 1.5, backwardWalkSpeed: 1.25, dashSpeed: 3.8, backdashSpeed: 3.1, jumpVelocity: -10.5 },
     moves: dummyMoves,
     collision: dummyCollision,
     assets: {

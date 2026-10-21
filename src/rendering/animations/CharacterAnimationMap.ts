@@ -33,6 +33,9 @@ export function getCharacterAnimationKey(state: CharacterState, moveClips = MOVE
   if (state.mode === 'neutral' && !state.grounded) return `${state.fighterId}-jump`;
   if (state.mode === 'neutral' && state.crouching) return `${state.fighterId}-crouch`;
 
+  if (state.movementDirection === 'backward' && state.mode === 'moving') return `${state.fighterId}-walk-backward`;
+  if (state.movementDirection === 'backward' && state.mode === 'dashing') return `${state.fighterId}-backdash`;
+
   const clip = MODE_CLIPS[state.mode] ?? 'idle';
   return `${state.fighterId}-${clip}`;
 }

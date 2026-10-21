@@ -29,8 +29,11 @@ describe('partidas completas contra o arcade', () => {
       let command = input('DB');
       if (snapshot.phase !== 'fight') command = input('N');
       else if (!self.attack && !['hitstun', 'blockstun', 'grabbed', 'throwRecovery'].includes(self.mode)) {
-        if (opponent.attack && opponent.mode !== 'recovery') command = input('DB');
-        else if (Math.abs(self.x - opponent.x) > 100) command = input('F');
+        if (opponent.attack && opponent.mode !== 'recovery') {
+          const threat = enemy.moves.find(move => move.id === opponent.attack!.moveId);
+          command = input(threat?.hitLevel === 'low' ? 'DB' : 'B');
+        }
+        else if (Math.abs(self.x - opponent.x) > 60) command = input('F');
         else if (snapshot.frame - lastAttack > 10) {
           command = input('N', new Set(['1', '2']));
           lastAttack = snapshot.frame;

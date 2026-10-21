@@ -42,7 +42,7 @@ describe('provisional Tester character', () => {
     const simulation = new Simulation(createGameConfig(1024, 576), [defaultCharacter, dummy]);
     const forward = { direction: 'F' as const, buttons: new Set<never>() };
     const neutral = { direction: 'N' as const, buttons: new Set<never>() };
-    for (let frame = 0; frame < 100; frame += 1) simulation.advance(1000 / 60, () => [forward, forward]);
+    for (let frame = 0; frame < 200; frame += 1) simulation.advance(1000 / 60, () => [forward, forward]);
     simulation.advance(1000 / 60, () => [neutral, { direction: 'N', buttons: new Set(['1' as const]) }]);
     let snapshot = simulation.snapshot();
     for (let frame = 0; frame < 24 && snapshot.hitEvents.length === 0; frame += 1) {

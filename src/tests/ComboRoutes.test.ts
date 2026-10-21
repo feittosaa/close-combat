@@ -76,7 +76,7 @@ describe('rotas de combo por entradas normais', () => {
   it('o combo de parede parte de contato real, usa um splat e respeita os limites físicos', () => {
     const config = createGameConfig(1024, 700);
     const sim = new Simulation(config, [ayla, ayla], { training: true, initialDistance: 62 });
-    for (let i = 0; i < 170; i++) sim.stepFrame([input('F'), input('B')]);
+    for (let i = 0; i < 340; i++) sim.stepFrame([input('F'), input('B')]);
     step(sim);
     execute(sim, aylaMove('f,n,d,df:2'));
     step(sim, N, 15);

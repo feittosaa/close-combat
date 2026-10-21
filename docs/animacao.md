@@ -54,7 +54,7 @@ Preservar o arquivo de edição e a origem dos recursos. O atlas atual do Tester
 | `moveClips` | Associação explícita dos IDs de golpes aos clipes |
 | `provisionalMoves` | Registro de golpes com poses aproximadas/reutilizadas; não concede aprovação visual |
 
-Os clipes de estado atuais usam `idle`, `walk`, `dash`, `jump`, `crouch`, `defense`, `hit`, `blockstun`, `grabbed`, `knockdown` e `throw-recovery`. Os ataques usam `{personagem}-{nome-do-clipe}-{startup|active|recovery}`. O recuo usa o mesmo `walk` espelhado, conforme a regra do projeto; não criar outro sistema de caminhada que contrarie esse comportamento.
+Os clipes de estado atuais usam `idle`, `walk`, `dash`, `jump`, `crouch`, `defense`, `hit`, `blockstun`, `grabbed`, `knockdown` e `throw-recovery`. Os ataques usam `{personagem}-{nome-do-clipe}-{startup|active|recovery}`. O recuo usa `walk-backward` e o backdash usa `backdash`, ambos mantendo a frente orientada ao adversário. Ayla usa quadros dedicados de recuo; Gris e Tester usam poses próprias de guarda como solução provisória até a produção de passos completos.
 
 Exemplo de holds: três poses com `frameDurations: [2, 1, 3]` duram dois, um e três frames num clipe de estado. Numa fase de ataque com 12 frames, os mesmos pesos ocupam quatro, dois e seis frames. O golpe continua com a duração de 12 frames registrada no livro.
 
@@ -67,8 +67,8 @@ Em reações com stun, a sequência é distribuída pela duração lógica da re
 | Família | Situação atual | Próxima revisão |
 | --- | --- | --- |
 | Idle/guarda neutra | Loop de poses com holds e espelhamento | Continuidade de cabeça, mãos, respiração e retorno após golpes |
-| Caminhada/avanço/recuo | Mesmo ciclo de seis passos; recuo espelhado | Pés, deslizamento e troca de direção sem salto de fase |
-| Dash | Reutiliza caminhada acelerada | Arte própria de aceleração/freio, se a regra continuar usando dash |
+| Caminhada/avanço/recuo | Clipes distintos de avanço e recuo; sem inverter a frente ao recuar | Pés, deslizamento e troca de direção sem salto de fase |
+| Dash | Avanço e backdash distintos | Arte própria de aceleração/freio, se a regra continuar usando dash |
 | Agachamento | Pose baixa sustentada | Entrada e saída próprias, volume e altura em relação à hurtbox |
 | Salto | Três poses seguem subida/ápice/descida | Preparação, aterrissagem e continuidade dos ataques aéreos |
 | Guarda alta/baixa | Guarda em pé; baixa usa agachamento | Forma de contato por altura e reentrada na guarda |
