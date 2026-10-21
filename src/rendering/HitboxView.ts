@@ -14,16 +14,16 @@ export class HitboxView {
     this.graphics.setDepth(20);
   }
 
-  update(hitboxes: readonly Hitbox[], frame: number, characters: readonly CharacterState[] = []): void {
+  update(hitboxes: readonly Hitbox[], characters: readonly CharacterState[] = []): void {
     this.graphics.clear();
     if (!this.visible) return;
-    const pulse = 0.28 + (frame % 4) * 0.08;
 
     hitboxes.forEach((hitbox) => {
       const color = hitbox.ownerId === 'player-1' ? 0xff4f70 : 0x5bc0ff;
-      this.graphics.fillStyle(color, pulse);
+      // A stable light fill keeps the real geometry visible without flashing over the art.
+      this.graphics.fillStyle(color, 0.12);
       this.graphics.fillRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
-      this.graphics.lineStyle(3, color, 1);
+      this.graphics.lineStyle(2, color, 1);
       this.graphics.strokeRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
     });
     characters.forEach((character) => {

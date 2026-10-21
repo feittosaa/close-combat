@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-Pressione **Enter** para uma partida local ou **T** para o treino. Na cena, **Esc** retorna ao menu. **Tester** é o personagem provisório dos dois jogadores, com atlas e animações próprios. Os botões `1`–`4` executam golpes de teste; direções, botões e sequência recente aparecem nos indicadores de cada jogador. No treino, as hitboxes/hurtboxes mostram a geometria real da simulação e podem ser ocultadas.
+Pressione **Enter** para uma partida local ou **T** para o treino. Na cena, **Esc** retorna ao menu. **Tester** é o personagem provisório dos dois jogadores, com atlas e animações próprios. Os botões `1`–`4` executam golpes de teste; direções, botões e sequência recente aparecem apenas no treino. A partida normal mantém a interface de luta limpa. No treino, as hitboxes/hurtboxes mostram a geometria real da simulação e podem ser ocultadas.
 
 O primeiro cenário é **Cais**, composto de fundo, chão e caixas. A câmera acompanha os lutadores: o fundo se move mais lentamente, enquanto caixas e chão mantêm escala e movimento comuns. O sistema aceita qualquer quantidade de camadas por cenário; estrutura, manifesto e instruções de entrega estão em [`src/assets/scenes/README.md`](./src/assets/scenes/README.md).
 
@@ -33,7 +33,7 @@ Na revisão atual, as cargas foram reduzidas em 24% com apoio preservado no chã
 
 O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas sem variante cadastrada são ignoradas. O parry é testável contra o golpe elegível `test-jab`: pressione `B` no frame do contato para atordoar o atacante por 18 frames; fora da janela, o ataque resolve normalmente.
 
-### Treino inicial
+### Treino
 
 | Tecla | Ação |
 | --- | --- |
@@ -41,13 +41,16 @@ O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](.
 | `P` | Pausar/retomar lógica e animações |
 | `.` | Avançar exatamente um frame enquanto pausado |
 | `F2` | Reiniciar vida, posições, comandos e histórico |
-| `G` | Alternar adversário manual, guarda alta, guarda baixa e repetição de soco `2` |
+| `G` | Alternar adversário manual, guardas e repetição dos socos `1`/`2` ou chute `4` |
 | `H` | Mostrar/ocultar hitboxes, hurtboxes e pivô dos pés |
 | `I` | Mostrar/ocultar painéis de entrada |
+| `L` | Velocidade 100%, 50% ou 25%, preservando a lógica de 60 Hz |
+| `F3` | Alternar vida automática após 90 frames lógicos sem ataque/stun |
+| `F4` | Reiniciar com distância 96, 144 ou 220 |
 
-O treino mostra preparo/atividade/recuperação, distância, stun e vantagem **do atacante**: positivo favorece quem atacou. Contatos reais podem indicar punição de bloqueio, punição de erro ou contra-ataque; o rótulo não acrescenta dano. O treino usa os mesmos dados e regras da partida e não encerra rounds por tempo ou vida zero. `F2` restaura a vida; ainda não há gravação livre de sequências ou recuperação automática.
+O treino mostra preparo/atividade/recuperação, distância, stun e vantagem **do atacante**: positivo favorece quem atacou. Contatos reais podem indicar punição de bloqueio, punição de erro ou contra-ataque; o rótulo não acrescenta dano. O treino usa os mesmos dados e regras da partida e não encerra rounds por tempo ou vida zero. `F2` restaura a vida e conserva as opções. A vida automática começa ligada; não interrompe golpes nem limpa o histórico. O último golpe conserva comando, tempos, altura e dano no painel, mesmo depois de terminar. Ainda não há gravação livre de sequências.
 
-Loops, reações e golpes seguem frames da simulação. O atlas ainda contém poses aproximadas e reutilizações declaradas em `provisionalMoves`; a cobertura de todos os golpes não significa animação final aprovada. Processo e matriz de revisão: [`docs/animacao.md`](./docs/animacao.md).
+O agachamento tem correção uniforme de escala, o chute forte em pé usa o chute alto escolhido e socos aéreos reutilizam um soco de punho fechado. Os strikes têm mais preparo, +1F ativo e recuperação maior; a vantagem muda junto. As cores do corpo e a geometria não pulsam por fase. Loops, reações e golpes seguem frames da simulação. O atlas ainda contém poses aproximadas e reutilizações declaradas em `provisionalMoves`; a cobertura de todos os golpes não significa animação final aprovada. Processo e matriz de revisão: [`docs/animacao.md`](./docs/animacao.md).
 
 ## Comandos
 

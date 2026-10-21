@@ -18,7 +18,7 @@ O relógio de luta é de 60 Hz. A quantidade de desenhos por segundo varia por a
 | Desenhos, sequência, holds, orientação e tamanho de apresentação | Manifesto/atlas do personagem |
 | Câmera e camadas de cenário | Sistema compartilhado de cenários |
 
-O sprite permanece ancorado na posição lógica. Não acrescentar um avanço visual independente para disfarçar falta de alcance; deslocamentos de combate devem estar declarados nos dados. Ajustes de desenho/pivô não podem arrastar o collider.
+O sprite permanece ancorado na posição lógica. Escala por quadro corrige erros de normalização do atlas; não redimensionar cada desenho pela altura total de sua silhueta. No Tester, 393–395 usam 0.78 para manter cabeça/membros próximos do idle e altura baixa de aproximadamente 97 unidades; os pés ficam na âncora 252. Escala e origem são reaplicadas ao trocar de quadro, inclusive ao levantar. Não acrescentar um avanço visual independente para disfarçar falta de alcance; deslocamentos de combate devem estar declarados nos dados. Ajustes de desenho/pivô não podem arrastar o collider.
 
 ## Estrutura de entrega por personagem
 
@@ -41,6 +41,8 @@ Preservar o arquivo de edição e a origem dos recursos. O atlas atual do Tester
 | `frameSize` | Tamanho real e uniforme da célula, sem trim variável |
 | `totalFrames` | Quantidade válida de quadros, excluindo células vazias da última linha |
 | `displaySize` | Tamanho da célula no mundo, mantendo a proporção dos dois eixos |
+| `footAnchorY` | Coordenada vertical da linha de apoio na célula; padrão: altura da célula |
+| `frameTransforms` | Correções autoradas por índice: escala uniforme e âncora vertical opcional; valores finitos e positivos |
 | `clips[].key` | Chave única por ação/fase |
 | `start`, `end` | Intervalo inclusivo; `frames` explícito tem precedência |
 | `frames` | Ordem dos desenhos; permite retorno e holds sem duplicar imagens |
@@ -73,7 +75,7 @@ Em reações com stun, a sequência é distribuída pela duração lógica da re
 | Blockstun | Poses de guarda distribuídas pelo stun | Recuo de impacto sem ajoelhar ou cair |
 | Hitstun comum | 144–145–144, reação em pé | Altura/intensidade distintas; não reutilizar giro/queda |
 | Socos e chutes principais | Fases de preparo/contato/recuperação associadas | Alcance aparente, escala dos membros e retorno à guarda |
-| Socos agachados/aéreos | Sequências aproximadas explicitamente associadas | Autoria de contato e silhueta própria para cada variação |
+| Socos agachados/aéreos | Baixos 255–258; aéreos reutilizam o soco fechado 52–54–56 | Autoria de contato e silhueta própria para cada variação |
 | Direcionais, chords e soco ascendente | Parte reutiliza socos principais | Distinguir as propriedades do livro com poses próprias |
 | Captura/arremesso/recuperação | Alcance das mãos e recuperação provisórios | Sincronizar os dois corpos; evitar teleporte ou giro indevido |
 | Queda/levantada | Material no atlas; sistema completo ainda pendente | Especificar regras antes de conectar novos estados |
@@ -108,6 +110,12 @@ Ferramentas generativas podem apoiar conceitos e poses, mas a sequência final e
 | Reset, round e retorno ao menu | Sem clipe/listener de ação anterior persistindo |
 
 Para cada golpe, registrar pelo menos: dois lados, curta/média distância, contato/erro/bloqueio e entrada no primeiro frame legal após recuperação. Guardar capturas e uma sequência de entradas quando houver defeito reproduzível.
+
+## Cadência revisada
+
+Conforme base.md, os strikes receberam +2F de preparo, +1F ativo e +4F de recuperação a pedido do usuário. Isso muda o combate e a vantagem, não apenas o desenho. O manifesto distribui os desenhos dentro desses tempos: contato sustentado e início de recolhimento próximo do ápice, seguido de retorno progressivo. O chute forte em pé usa 64–57–58 / 69 / 69–58–57–64; o aéreo forte usa 121–122 / 123 / 123–122–121.
+
+O corpo não recebe tint de preparo/atividade/stun; a geometria de treino usa alfa constante. A visibilidade do sprite não é controlada pela existência de uma hitbox.
 
 ## Limites da primeira entrega
 

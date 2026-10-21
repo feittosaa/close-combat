@@ -479,38 +479,71 @@
     },
     {
       "key": "tester-light-punch-startup",
-      "start": 50,
-      "end": 52,
-      "frameRate": 60,
-      "repeat": 0
-    },
-    {
-      "key": "tester-light-punch-active",
-      "start": 53,
-      "end": 55,
-      "frameRate": 60,
-      "repeat": 0
-    },
-    {
-      "key": "tester-light-punch-recovery",
-      "start": 50,
+      "start": 52,
       "end": 56,
       "frameRate": 60,
       "repeat": 0,
       "frames": [
         56,
-        52,
-        51,
-        50
+        52
       ],
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        3,
+        2
+      ]
+    },
+    {
+      "key": "tester-light-punch-active",
+      "start": 53,
+      "end": 54,
+      "frameRate": 60,
+      "repeat": 0,
+      "frames": [
+        53,
+        54
+      ],
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1,
+        3
+      ]
+    },
+    {
+      "key": "tester-light-punch-recovery",
+      "start": 53,
+      "end": 56,
+      "frameRate": 60,
+      "repeat": 0,
+      "frames": [
+        54,
+        53,
+        56
+      ],
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1,
+        2,
+        4
+      ]
     },
     {
       "key": "tester-heavy-punch-startup",
-      "start": 62,
+      "start": 63,
       "end": 64,
       "frameRate": 60,
-      "repeat": 0
+      "repeat": 0,
+      "frames": [
+        64,
+        63,
+        64
+      ],
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        3,
+        2,
+        1
+      ]
     },
     {
       "key": "tester-heavy-punch-active",
@@ -521,42 +554,67 @@
       "frames": [
         67
       ],
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1
+      ]
     },
     {
       "key": "tester-heavy-punch-recovery",
-      "start": 62,
-      "end": 66,
+      "start": 64,
+      "end": 67,
       "frameRate": 60,
       "repeat": 0,
       "frames": [
+        67,
         66,
-        64,
-        63,
-        62
+        64
       ],
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1,
+        3,
+        5
+      ]
     },
     {
       "key": "tester-test-electric-palm-startup",
       "start": 25,
       "end": 27,
       "frameRate": 60,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        1,
+        1
+      ]
     },
     {
       "key": "tester-test-electric-palm-active",
       "start": 28,
       "end": 32,
       "frameRate": 60,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
     },
     {
       "key": "tester-test-electric-palm-recovery",
       "start": 33,
       "end": 36,
       "frameRate": 60,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        2,
+        3,
+        4
+      ]
     },
     {
       "key": "tester-source-row-00",
@@ -792,7 +850,11 @@
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1,
+        1
+      ]
     },
     {
       "key": "tester-light-kick-active",
@@ -803,32 +865,44 @@
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        1
+      ]
     },
     {
       "key": "tester-light-kick-recovery",
       "start": 75,
-      "end": 212,
+      "end": 80,
       "frames": [
         80,
-        75,
-        212
+        75
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        2,
+        4
+      ]
     },
     {
       "key": "tester-heavy-kick-startup",
-      "start": 64,
-      "end": 68,
+      "start": 57,
+      "end": 64,
       "frames": [
         64,
-        68
+        57,
+        58
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        3,
+        2,
+        1
+      ]
     },
     {
       "key": "tester-heavy-kick-active",
@@ -839,20 +913,30 @@
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1
+      ]
     },
     {
       "key": "tester-heavy-kick-recovery",
-      "start": 62,
-      "end": 68,
+      "start": 57,
+      "end": 69,
       "frames": [
-        68,
-        64,
-        62
+        69,
+        58,
+        57,
+        64
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1,
+        2,
+        2,
+        4
+      ]
     },
     {
       "key": "tester-crouch-light-kick-startup",
@@ -864,43 +948,59 @@
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        3,
+        2
+      ]
     },
     {
       "key": "tester-crouch-light-kick-active",
-      "start": 389,
-      "end": 389,
+      "start": 81,
+      "end": 81,
       "frames": [
-        389
+        81
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        1
+      ]
     },
     {
       "key": "tester-crouch-light-kick-recovery",
-      "start": 392,
+      "start": 81,
       "end": 393,
       "frames": [
+        81,
         392,
         393
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        1,
+        3,
+        4
+      ]
     },
     {
       "key": "tester-crouch-heavy-kick-startup",
-      "start": 80,
+      "start": 392,
       "end": 393,
       "frames": [
         393,
-        392,
-        80
+        392
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        3,
+        2
+      ]
     },
     {
       "key": "tester-crouch-heavy-kick-active",
@@ -911,20 +1011,28 @@
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        1
+      ]
     },
     {
       "key": "tester-crouch-heavy-kick-recovery",
-      "start": 80,
+      "start": 81,
       "end": 393,
       "frames": [
-        80,
+        81,
         392,
         393
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": true
+      "sourceFacesLeft": true,
+      "frameDurations": [
+        1,
+        3,
+        4
+      ]
     },
     {
       "key": "tester-air-light-kick-startup",
@@ -936,7 +1044,11 @@
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1,
+        1
+      ]
     },
     {
       "key": "tester-air-light-kick-active",
@@ -947,7 +1059,10 @@
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1
+      ]
     },
     {
       "key": "tester-air-light-kick-recovery",
@@ -959,42 +1074,59 @@
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1,
+        2
+      ]
     },
     {
       "key": "tester-air-heavy-kick-startup",
-      "start": 57,
-      "end": 58,
+      "start": 121,
+      "end": 122,
       "frames": [
-        57,
-        58
+        121,
+        122
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        3,
+        2
+      ]
     },
     {
       "key": "tester-air-heavy-kick-active",
-      "start": 69,
-      "end": 69,
+      "start": 123,
+      "end": 123,
       "frames": [
-        69
+        123
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1
+      ]
     },
     {
       "key": "tester-air-heavy-kick-recovery",
-      "start": 57,
-      "end": 58,
+      "start": 121,
+      "end": 123,
       "frames": [
-        58,
-        57
+        123,
+        122,
+        121
       ],
       "frameRate": 12,
       "repeat": 0,
-      "sourceFacesLeft": false
+      "sourceFacesLeft": false,
+      "frameDurations": [
+        1,
+        3,
+        4
+      ]
     },
     {
       "key": "tester-throw-startup",
@@ -1006,7 +1138,11 @@
       ],
       "sourceFacesLeft": true,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        1
+      ]
     },
     {
       "key": "tester-throw-active",
@@ -1018,7 +1154,11 @@
       ],
       "sourceFacesLeft": true,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        1
+      ]
     },
     {
       "key": "tester-throw-recovery",
@@ -1031,78 +1171,112 @@
       ],
       "sourceFacesLeft": true,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "key": "tester-crouch-punch-startup",
-      "start": 306,
-      "end": 307,
+      "start": 255,
+      "end": 256,
       "frames": [
-        306,
-        307
+        255,
+        256
       ],
       "sourceFacesLeft": true,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        3,
+        2
+      ]
     },
     {
       "key": "tester-crouch-punch-active",
-      "start": 313,
-      "end": 314,
+      "start": 257,
+      "end": 258,
       "frames": [
-        313,
-        314
+        257,
+        258
       ],
       "sourceFacesLeft": true,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        3
+      ]
     },
     {
       "key": "tester-crouch-punch-recovery",
-      "start": 306,
-      "end": 307,
+      "start": 255,
+      "end": 258,
       "frames": [
-        307,
-        306
+        258,
+        256,
+        255
       ],
       "sourceFacesLeft": true,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        3,
+        4
+      ]
     },
     {
       "key": "tester-air-punch-startup",
-      "start": 17,
-      "end": 18,
+      "start": 52,
+      "end": 56,
       "frames": [
-        17,
-        18
+        56,
+        52
       ],
-      "sourceFacesLeft": true,
+      "sourceFacesLeft": false,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        3,
+        2
+      ]
     },
     {
       "key": "tester-air-punch-active",
-      "start": 19,
-      "end": 19,
+      "start": 53,
+      "end": 54,
       "frames": [
-        19
+        53,
+        54
       ],
-      "sourceFacesLeft": true,
+      "sourceFacesLeft": false,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        3
+      ]
     },
     {
       "key": "tester-air-punch-recovery",
-      "start": 17,
-      "end": 20,
+      "start": 53,
+      "end": 56,
       "frames": [
-        20,
-        17
+        54,
+        53,
+        56
       ],
-      "sourceFacesLeft": true,
+      "sourceFacesLeft": false,
       "frameRate": 12,
-      "repeat": 0
+      "repeat": 0,
+      "frameDurations": [
+        1,
+        2,
+        4
+      ]
     }
   ],
   "attackClipKeyPattern": "tester-{moveId}-{phase}",
@@ -1110,7 +1284,7 @@
     "idle": "Faixa 18, quadros 0-6: postura de guarda estável.",
     "walk": "Faixa 18, quadros 7-12: passos curtos visíveis.",
     "defense": "Faixa 21, últimos três quadros: guarda em pé.",
-    "crouch": "Faixa 30, quadros 2-4: agachamento baixo sustentado.",
+    "crouch": "393–395 com escala uniforme 0.78 e âncora dos pés 252: corpo baixo sem ampliar a cabeça. Socos baixos usam 255–258, sem levantar na atividade.",
     "jump": "Quadros 288, 289 e 291 seguem subida, ápice e descida da trajetória lógica; a pose não termina enquanto o personagem ainda está no ar.",
     "hit": "Quadros 144-145-144: reação curta ao impacto em pé, sem giro, inversão ou queda. A sequência de queda permanece exclusiva do knockdown.",
     "attack": "Faixas 4 e 5: sequências de soco, divididas em preparação, contato e recuperação.",
@@ -1118,11 +1292,13 @@
     "grabbed": "Faixa 9, quadros 3-6: sequência curta de corpo no ar antes da queda.",
     "orientation": "A orientação original é declarada por clipe em sourceFacesLeft; idle, caminhada, dash e guarda usam arte voltada à esquerda.",
     "loops": "Idle, guarda e agachamento voltam pelas poses intermediárias sem duplicar extremos. Caminhada mantém a ordem do ciclo de passos, a 10 FPS. As células dos loops têm cabeça e chão alinhados.",
-    "kicks": "Chutes leves/rasteiras: quadros 80-81 e 389; chute forte: 68-69; aéreos: 121-123 e 57-58-69. moveClips associa cada golpe às fases visuais.",
+    "kicks": "Chute forte em pé: 64–57–58 / 69 / 69–58–57–64. Forte aéreo: 121–122 / 123 / 123–122–121. Rasteiras usam 81 com escala 0.90 (altura aproximada 95), permanecendo na altura do agachamento. Preparação/retorno do chute leve vêm de arte à direita; o contato vem de arte à esquerda.",
     "timing": "Todos os clipes são amostrados em frames de simulação; frameDurations controla os holds, e ataques distribuem os pesos dentro de cada fase lógica. A reprodução não usa o relógio do Phaser.",
     "blockstun": "Reação ao bloqueio usa as mesmas poses de guarda em pé (268-270); não usa quadros de ajoelhar ou queda.",
     "provisionalMoves": "Os IDs em provisionalMoves reutilizam poses aproximadas e precisam de autoria/revisão específica. Agora todos os golpes do livro têm associação explícita; um golpe não deve cair silenciosamente no idle.",
-    "throw": "Captura: preparação 12–13, contato 14–15 e recuperação 16–17–12. Poses provisórias de alcance com as mãos; reação e reposicionamento da vítima continuam definidos no motor."
+    "throw": "Captura: preparação 12–13, contato 14–15 e recuperação 16–17–12. Poses provisórias de alcance com as mãos; reação e reposicionamento da vítima continuam definidos no motor.",
+    "airPunch": "Soco aéreo usa punho fechado 52–54–56 sobre a trajetória física, sem a antiga sequência 17–20. Arte aérea própria continua pendente.",
+    "cadence": "Pesos separados por fase: antecipação legível, ápice sustentado e recolhimento gradual. A duração real vem do livro de golpes; não há tint global por fase."
   },
   "moveClips": {
     "test-jab": "light-punch",
@@ -1246,5 +1422,96 @@
     "test-retreating-elbow",
     "test-air-jab",
     "test-air-strong"
-  ]
+  ],
+  "footAnchorY": 253,
+  "frameTransforms": {
+    "392": {
+      "scale": 0.78,
+      "footAnchorY": 252
+    },
+    "393": {
+      "scale": 0.78,
+      "footAnchorY": 252
+    },
+    "394": {
+      "scale": 0.78,
+      "footAnchorY": 252
+    },
+    "395": {
+      "scale": 0.78,
+      "footAnchorY": 252
+    },
+    "255": {
+      "scale": 1.04,
+      "footAnchorY": 252
+    },
+    "256": {
+      "scale": 1.04,
+      "footAnchorY": 252
+    },
+    "257": {
+      "scale": 1.04,
+      "footAnchorY": 252
+    },
+    "258": {
+      "scale": 1.04,
+      "footAnchorY": 252
+    },
+    "259": {
+      "scale": 1.04,
+      "footAnchorY": 252
+    },
+    "52": {
+      "scale": 1,
+      "footAnchorY": 248
+    },
+    "53": {
+      "scale": 1,
+      "footAnchorY": 250
+    },
+    "54": {
+      "scale": 1,
+      "footAnchorY": 250
+    },
+    "56": {
+      "scale": 1,
+      "footAnchorY": 250
+    },
+    "57": {
+      "scale": 1,
+      "footAnchorY": 250
+    },
+    "58": {
+      "scale": 1,
+      "footAnchorY": 250
+    },
+    "64": {
+      "scale": 1,
+      "footAnchorY": 252
+    },
+    "69": {
+      "scale": 1,
+      "footAnchorY": 252
+    },
+    "80": {
+      "scale": 1,
+      "footAnchorY": 237
+    },
+    "121": {
+      "scale": 1,
+      "footAnchorY": 252
+    },
+    "122": {
+      "scale": 1,
+      "footAnchorY": 252
+    },
+    "123": {
+      "scale": 1,
+      "footAnchorY": 252
+    },
+    "81": {
+      "scale": 0.9,
+      "footAnchorY": 250
+    }
+  }
 }

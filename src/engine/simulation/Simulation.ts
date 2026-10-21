@@ -59,6 +59,9 @@ export class Simulation {
   private readonly dashAxis = [0, 0];
   private lastHitEvents: HitEvent[] = [];
   private recentContacts: CombatLogEntry[] = [];
+  private trainingDistance?: number;
+  private trainingAutoRestore = false;
+  private trainingQuietFrames = 0;
 
   constructor(
     private readonly config: GameConfig,
@@ -121,7 +124,10 @@ export class Simulation {
     return this.phase === 'match-over';
   }
 
-  resetMatch(): void {
+  resetMatch(trainingDistance?: number): void {
+    if (this.options.training && trainingDistance !== undefined && Number.isFinite(trainingDistance)) {
+      this.trainingDistance = trainingDistance;
+    }
     this.clock.reset();
     this.frame = 0;
     this.round = 1;
@@ -132,6 +138,13 @@ export class Simulation {
     this.matchWinnerId = undefined;
     this.roundEndFramesRemaining = 0;
     this.resetRoundState();
+  }
+
+  /** Training convenience only; health is restored at a quiet logical boundary. */
+  setTrainingAutoRestore(enabled: boolean): void {
+    if (!this.options.training) return;
+    this.trainingAutoRestore = enabled;
+    this.trainingQuietFrames = 0;
   }
 
   private step(inputs: readonly FrameInput[]): void {
@@ -254,6 +267,7 @@ export class Simulation {
       if (this.characters.some(({ health }) => health === 0)) this.finishRound('knockout');
       else if (this.roundFramesRemaining === 0) this.finishRound('time');
     }
+    this.restoreTrainingHealthIfQuiet();
     this.characters.forEach((character, index) => {
       const previous = previousStates[index];
       const renewedReaction = this.lastHitEvents.some((event) =>
@@ -262,6 +276,16 @@ export class Simulation {
       if (character.mode !== previous.mode || character.attack !== previous.attack ||
           character.crouching !== previous.crouching || renewedReaction) character.stateStartedFrame = this.frame;
     });
+  }
+
+  private restoreTrainingHealthIfQuiet(): void {
+    if (!this.options.training || !this.trainingAutoRestore) return;
+    const quiet = !this.lastHitEvents.length && this.characters.every((character) =>
+      character.grounded && !character.attack && !character.grab && !isStunned(character));
+    this.trainingQuietFrames = quiet ? this.trainingQuietFrames + 1 : 0;
+    if (this.trainingQuietFrames < 90) return;
+    this.characters.forEach((character) => { character.health = character.maxHealth; });
+    this.trainingQuietFrames = 0;
   }
 
   private finishRound(reason: 'knockout' | 'time'): void {
@@ -304,6 +328,7 @@ export class Simulation {
   }
 
   private resetRoundState(): void {
+    this.trainingQuietFrames = 0;
     const positions = this.spawnPositions();
     this.characters.forEach((character, index) => {
       const definition = this.fighterDefinitions[index];
@@ -342,7 +367,7 @@ export class Simulation {
 
   private spawnPositions(): readonly [number, number] {
     const { left, right } = this.config.arena;
-    const initialDistance = this.options.initialDistance;
+    const initialDistance = this.trainingDistance ?? this.options.initialDistance;
     if (initialDistance !== undefined && Number.isFinite(initialDistance)) {
       const halfWidths = this.fighterDefinitions.map((definition) => definition.collision.bodyWidth / 2);
       const minimumDistance = halfWidths[0] + halfWidths[1];

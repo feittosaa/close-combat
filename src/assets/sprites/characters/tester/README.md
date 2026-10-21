@@ -24,6 +24,12 @@ Avanço e recuo usam o mesmo clipe `tester-walk`: a direção de locomoção esp
 
 Todos os 26 golpes têm associação explícita às três fases. `provisionalMoves` registra variações que reutilizam poses aproximadas: chords/direcionais, captura, socos agachados/aéreos e soco ascendente. Isso corrige o fallback silencioso em idle, mas ainda exige revisão e autoria específica.
 
-A captura reutiliza alcance das mãos em 12–16 e recuperação 16–17–12; socos agachados usam 306–307/313–314 e aéreos usam 17–20. A vítima e seu reposicionamento continuam sob controle do motor. Não considerar essa sincronia final de arremesso.
+A captura reutiliza alcance das mãos em 12–16 e recuperação 16–17–12; socos agachados agora usam 255–258 para permanecer baixos; aéreos reutilizam o soco de punho fechado 52–54–56. Os antigos 313–314 levantavam o corpo e 17–20 pareciam outro movimento. A vítima e seu reposicionamento continuam sob controle do motor. Não considerar essa sincronia final de arremesso.
 
 Holds por pose e todas as reações seguem o relógio lógico. Subida, ápice e descida usam poses selecionadas pela velocidade vertical. Processo, limitações e aprovação por ação estão em [`docs/animacao.md`](../../../../../docs/animacao.md).
+
+### Correção de volume e cadência
+
+`footAnchorY` e `frameTransforms` corrigem a apresentação sem editar o PNG: 393–395 e 392 recebem escala 0.78; o contato de rasteira 81 usa 0.90 (aproximadamente 95 unidades de altura); a família baixa 255–259 usa 1.04; algumas poses têm âncora própria para manter apoio. Não aplicar essas escalas às hitboxes nem normalizar desenhos pela caixa delimitadora em tempo de execução. A pose agachada passa de 124 para cerca de 97 unidades de altura.
+
+Chute forte em pé: 64–57–58 / 69 / 69–58–57–64. Forte aéreo: 121–122 / 123 / 123–122–121. Os holds seguram o ápice e recolhem gradualmente. Os golpes continuam provisórios, sobretudo os socos aéreos que compartilham arte terrestre; faltam desenhos próprios de pernas recolhidas e aterrissagem.

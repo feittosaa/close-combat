@@ -93,8 +93,8 @@ describe('character animation playback', () => {
     }
     const recovery = clips.find((clip) => clip.key === 'tester-heavy-kick-recovery')!;
     const begins = move.startup + move.activeFrames;
-    expect(getAttackAnimationFrame(attacking(move.id, 'recovery', begins), recovery, move)).toBe(68);
-    expect(getAttackAnimationFrame(attacking(move.id, 'recovery', begins + move.recovery - 1), recovery, move)).toBe(62);
+    expect(getAttackAnimationFrame(attacking(move.id, 'recovery', begins), recovery, move)).toBe(69);
+    expect(getAttackAnimationFrame(attacking(move.id, 'recovery', begins + move.recovery - 1), recovery, move)).toBe(64);
     expect(getAttackAnimationFrame(fighter, recovery, move)).toBeUndefined();
   });
 

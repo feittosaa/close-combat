@@ -25,10 +25,10 @@ export class CombatHud {
       scene.add.text(width - this.sidePadding, 18, `P2 · ${fighterNames[1].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }).setOrigin(1, 0),
     ];
     this.healthGraphics = scene.add.graphics();
-    this.modeLabels = [
+    this.modeLabels = training ? [
       scene.add.text(this.sidePadding, 67, 'NEUTRO', { color: '#f4f0e8', fontSize: '12px', fontStyle: 'bold' }),
       scene.add.text(width - this.sidePadding, 67, 'NEUTRO', { color: '#f4f0e8', fontSize: '12px', fontStyle: 'bold' }).setOrigin(1, 0),
-    ];
+    ] : [];
     this.timer = scene.add.text(width / 2, 14, '99', {
       color: '#ffd166',
       fontSize: '32px',
@@ -40,9 +40,10 @@ export class CombatHud {
     }).setOrigin(0.5, 0);
     this.hitLabel = scene.add.text(width / 2, 92, '', {
       color: '#ffd166',
-      fontSize: '14px',
+      fontSize: '12px',
       fontStyle: 'bold',
-    }).setOrigin(0.5, 0);
+      align: 'center', wordWrap: { width: 540 },
+    }).setOrigin(0.5, 0).setVisible(training);
     this.resultLabel = scene.add.text(width / 2, 114, '', {
       color: '#f4f0e8',
       fontSize: '14px',
@@ -71,6 +72,11 @@ export class CombatHud {
     } else {
       this.resultLabel.setText('');
     }
+    if (this.training) this.updateTrainingLabels(snapshot);
+    this.updateBars(snapshot.characters, width);
+  }
+
+  private updateTrainingLabels(snapshot: SimulationSnapshot): void {
     const latest = snapshot.recentContacts[snapshot.recentContacts.length - 1];
     if (snapshot.frame < this.lastImpactFrame) {
       this.lastImpactLabel = '';
@@ -86,7 +92,6 @@ export class CombatHud {
       this.modeLabels[index]?.setText(`${modeLabel}${MODE_LABELS[character.mode]}`);
       this.modeLabels[index]?.setColor(character.mode === 'hitstun' ? '#ff7777' : character.mode === 'blockstun' || character.mode === 'blocking' ? '#8cb4ff' : '#f4f0e8');
     });
-    this.updateBars(snapshot.characters, width);
   }
 
   destroy(): void {
