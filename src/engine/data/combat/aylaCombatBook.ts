@@ -47,7 +47,7 @@ export const aylaCombatMoves: readonly MoveDefinition[] = [
   ...sourceWithForwardFollowups, aylaForwardJab, adapter('ayla-sway-2d', 'F', 'sway'), adapter('ayla-turn-2d', 'B', 'backturned'), ...powerDashes,
 ];
 export const aylaCombatRules: CombatRules = {
-  lowParryFrames: 6, lowParryStunFrames: 18, stanceFrames: 24,
+  commandBufferFrames: 8, lowParryFrames: 6, lowParryStunFrames: 18, stanceFrames: 24,
   comboScaling: [1, .7, .6, .5, .4, .3, .25, .2], juggleGravity: .025, juggleBaseGravity: .3,
   knockdownFrames: 32, wallStunFrames: 26, powerFrames: 600,
 };

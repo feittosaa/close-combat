@@ -1,114 +1,39 @@
-// src/ui/PlayerInputDisplay.ts
 import Phaser from 'phaser';
 import type { AttackButton, FrameInput } from '../input/types';
-
-const DIRECTION_KEYS = ['UB', 'U', 'UF', 'B', 'N', 'F', 'DB', 'D', 'DF'] as const;
-const ATTACK_BUTTONS = ['1', '2', '3', '4'] as const;
-
-/** Exibe direção, botões e sequência recente lidos do teclado. */
+import { BUTTON_COLORS, getPlayerLayout, keyLabel } from '../input/controlSettings';
+import type { InputHistoryEntry } from '../training/InputHistory';
+import { DIRECTION_ARROWS, screenDirection } from './commandNotation';
+const directions=['UB','U','UF','B','N','F','DB','D','DF'] as const;
+const buttons=['1','2','3','4'] as const;
 export class PlayerInputDisplay {
-  private readonly root: Phaser.GameObjects.Container;
-  private readonly directionKeys = new Map<string, Phaser.GameObjects.Text>();
-  private readonly attackKeys = new Map<string, Phaser.GameObjects.Text>();
-  private readonly history: Phaser.GameObjects.Text;
-
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    title: string,
-    accent: string,
-  ) {
-    const background = scene.add.rectangle(x + 100, y + 64, 200, 128, 0x17171d, 0.94)
-      .setStrokeStyle(1, 0x57545e, 0.9);
-    const heading = scene.add.text(x + 10, y + 7, title, {
-      color: accent,
-      fontSize: '13px',
-      fontStyle: 'bold',
-    });
-
-    DIRECTION_KEYS.forEach((direction, index) => {
-      const column = index % 3;
-      const row = Math.floor(index / 3);
-      const key = scene.add.text(x + 87 + column * 20, y + 28 + row * 18, direction, {
-        color: '#777680',
-        fontSize: '11px',
-        fontStyle: 'bold',
-        align: 'center',
-        fixedWidth: 20,
-      }).setOrigin(0.5, 0);
-      this.directionKeys.set(direction, key);
-    });
-
-    ATTACK_BUTTONS.forEach((button, index) => {
-      const key = scene.add.text(x + 18 + index * 33, y + 88, button, {
-        color: '#777680',
-        backgroundColor: '#2b2a32',
-        fontSize: '13px',
-        fontStyle: 'bold',
-        align: 'center',
-        fixedWidth: 26,
-        padding: { top: 3, bottom: 3 },
-      }).setOrigin(0, 0);
-      this.attackKeys.set(button, key);
-    });
-
-    this.history = scene.add.text(x + 10, y + 111, 'Entrada: N', {
-      color: '#c4c1cc',
-      fontSize: '9px',
-      fixedWidth: 180,
-      maxLines: 1,
-    });
-    this.root = scene.add.container(0, 0, [
-      background, heading, ...this.directionKeys.values(), ...this.attackKeys.values(), this.history,
-    ]).setScrollFactor(0).setDepth(100);
-  }
-
-  update(input: FrameInput, recentInputs: readonly FrameInput[]): void {
-    const activeDirections = new Set<string>();
-    if (input.direction === 'N') activeDirections.add('N');
-    else {
-      for (const direction of ['U', 'D', 'F', 'B'] as const) {
-        if (input.direction.includes(direction)) activeDirections.add(direction);
-      }
-      activeDirections.add(input.direction);
+  private readonly root:Phaser.GameObjects.Container;
+  private readonly directionKeys=new Map<string,Phaser.GameObjects.Text>();
+  private readonly attackKeys=new Map<AttackButton,Phaser.GameObjects.Text>();
+  private readonly rows: {stamp:Phaser.GameObjects.Text; direction:Phaser.GameObjects.Text; buttons:Phaser.GameObjects.Text[]}[]=[];
+  constructor(scene:Phaser.Scene,x:number,y:number,title:string,accent:string,private readonly playerIndex=0){
+    const background=scene.add.rectangle(x+100,y+139,200,278,0x17171d,.93).setStrokeStyle(1,0x57545e,.9);
+    const heading=scene.add.text(x+10,y+7,title,{color:accent,fontSize:'12px',fontStyle:'bold'});
+    directions.forEach((direction,index)=>this.directionKeys.set(direction,scene.add.text(x+80+(index%3)*23,y+27+Math.floor(index/3)*17,DIRECTION_ARROWS[direction],{color:'#88828e',fontSize:'14px'})));
+    buttons.forEach((button,index)=>this.attackKeys.set(button,scene.add.text(x+12+index*46,y+83,'',{color:BUTTON_COLORS[button],backgroundColor:'#292733',fontSize:'13px',fontStyle:'bold',fixedWidth:40,align:'center',padding:{top:4,bottom:4}})));
+    const historyLabel=scene.add.text(x+10,y+114,'HISTÓRICO · MAIS RECENTE ↑',{color:'#b8b0c5',fontSize:'9px'});
+    for(let row=0;row<10;row++){
+      const yy=y+132+row*14;
+      this.rows.push({stamp:scene.add.text(x+9,yy,'',{fontSize:'9px',color:'#a8a2b4'}),direction:scene.add.text(x+74,yy,'',{fontSize:'12px',color:'#f1e2bf'}),buttons:buttons.map((b,i)=>scene.add.text(x+95+i*24,yy,'',{fontSize:'10px',fontStyle:'bold',color:BUTTON_COLORS[b]}))});
     }
-
-    this.directionKeys.forEach((key, direction) => {
-      key.setColor(activeDirections.has(direction) ? '#ffd166' : '#777680');
+    this.root=scene.add.container(0,0,[background,heading,...this.directionKeys.values(),...this.attackKeys.values(),historyLabel,...this.rows.flatMap(row=>[row.stamp,row.direction,...row.buttons])]).setScrollFactor(0).setDepth(100);
+  }
+  update(input:FrameInput,history:readonly InputHistoryEntry[],facing:'left'|'right'='right'):void {
+    const layout=getPlayerLayout(this.playerIndex);
+    this.directionKeys.forEach((text,dir)=>text.setColor(screenDirection(input.direction,facing)===dir?'#ffe09b':'#88828e'));
+    this.attackKeys.forEach((text,button)=>text.setText(keyLabel(layout.buttons[button])).setBackgroundColor(input.buttons.has(button)?'#65526b':'#292733').setColor(BUTTON_COLORS[button]));
+    const entries=history.slice(-10).reverse();
+    this.rows.forEach((row,index)=>{
+      const entry=entries[index];row.stamp.setText(entry?`${entry.frame} · ${entry.duration}F`:'');
+      const direction=entry ? screenDirection(entry.input.direction,entry.facing) : undefined;
+      row.direction.setText(direction?DIRECTION_ARROWS[direction]:'');
+      row.buttons.forEach((text,i)=>text.setText(entry?.input.buttons.has(buttons[i])?keyLabel(layout.buttons[buttons[i]]):''));
     });
-    this.attackKeys.forEach((key, button) => {
-      const pressed = input.buttons.has(button as AttackButton);
-      key.setColor(pressed ? '#ffffff' : '#777680');
-      key.setBackgroundColor(pressed ? '#a43f52' : '#2b2a32');
-    });
-
-    const sequence = compressInputs(recentInputs).slice(-8).join('  ');
-    const current = formatInput(input);
-    this.history.setText(`Entrada: ${current}   |   ${sequence || '—'}`);
   }
-
-  destroy(): void {
-    this.root.destroy(true);
-    this.directionKeys.clear();
-    this.attackKeys.clear();
-  }
-
-  setVisible(visible: boolean): void {
-    this.root.setVisible(visible);
-  }
-}
-
-function formatInput(input: FrameInput): string {
-  const buttons = [...input.buttons].sort().join('+');
-  return buttons ? `${input.direction}+${buttons}` : input.direction;
-}
-
-function compressInputs(inputs: readonly FrameInput[]): string[] {
-  const sequence: string[] = [];
-  for (const input of inputs) {
-    const token = formatInput(input);
-    if (sequence[sequence.length - 1] !== token) sequence.push(token);
-  }
-  return sequence;
+  destroy():void{this.root.destroy(true);}
+  setVisible(visible:boolean):void{this.root.setVisible(visible);}
 }

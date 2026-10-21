@@ -38,3 +38,9 @@ export function getStageCameraScroll(layout: StageLayout, fighterPositions: read
     : layout.worldWidth / 2;
   return Math.round(Math.max(0, Math.min(layout.worldWidth - layout.viewportWidth, center - layout.viewportWidth / 2)));
 }
+
+/** Close framing grows the whole world, while wide spacing still keeps both fighters in view. */
+export function getFightZoom(viewportWidth: number, fighterPositions: readonly number[]): number {
+  const span = fighterPositions.length > 1 ? Math.max(...fighterPositions) - Math.min(...fighterPositions) : 0;
+  return Math.min(1.55, viewportWidth / Math.max(1, span + 230));
+}

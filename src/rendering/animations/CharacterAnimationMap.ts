@@ -10,6 +10,7 @@ const MODE_CLIPS: Partial<Record<CharacterState['mode'], string>> = {
   neutral: 'idle',
   moving: 'walk',
   dashing: 'dash',
+  running: 'run',
   airborne: 'jump',
   crouching: 'crouch',
   blocking: 'defense',

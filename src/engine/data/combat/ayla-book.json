@@ -9910,8 +9910,8 @@
             "width": 62,
             "height": 30
           },
-          "hitstun": 63,
-          "blockstun": 29,
+          "hitstun": 57,
+          "blockstun": 24,
           "screw": false,
           "wallSplat": true,
           "requiresPriorHit": false,
@@ -9961,12 +9961,14 @@
         "counter": "",
         "damage": "23"
       },
-      "adaptation": "Geometria 2D autorada; dano ×4 na escala atual. Recuperação/janelas ausentes são estimativas explícitas; variantes de profundidade usam posturas/comandos 2D. Extensores Tornado adaptados a Screw único; quebras de cenário ficam como splat, sem troca de arena.",
+      "adaptation": "Geometria 2D autorada; dano ×4 na escala atual. Recuperação/janelas ausentes são estimativas explícitas; variantes de profundidade usam posturas/comandos 2D. Extensores Tornado adaptados a Screw único; quebras de cenário ficam como splat, sem troca de arena. Recuperação 2D no contato: 18F; no vazio permanece 24F. Sem cancelamento livre. Passo de aproximação próprio do ascendente: 12 unidades.",
       "animation": {
-        "clip": "scarlet-rush",
+        "clip": "electric-uppercut",
         "status": "provisional"
-      }
-    }
+      },
+      "recoveryOnContact": 18
+    },
+    "advance": 12
   },
   {
     "id": "ayla-432c5d5e0b",
@@ -10170,8 +10172,8 @@
             "width": 62,
             "height": 30
           },
-          "hitstun": 67,
-          "blockstun": 18,
+          "hitstun": 60,
+          "blockstun": 12,
           "screw": false,
           "wallSplat": true,
           "requiresPriorHit": false,
@@ -10221,12 +10223,14 @@
         "counter": "",
         "damage": "20"
       },
-      "adaptation": "Geometria 2D autorada; dano ×4 na escala atual. Recuperação/janelas ausentes são estimativas explícitas; variantes de profundidade usam posturas/comandos 2D. Extensores Tornado adaptados a Screw único; quebras de cenário ficam como splat, sem troca de arena.",
+      "adaptation": "Geometria 2D autorada; dano ×4 na escala atual. Recuperação/janelas ausentes são estimativas explícitas; variantes de profundidade usam posturas/comandos 2D. Extensores Tornado adaptados a Screw único; quebras de cenário ficam como splat, sem troca de arena. Recuperação 2D no contato: 21F; no vazio permanece 28F. Sem cancelamento livre. Passo de aproximação próprio do ascendente: 10 unidades.",
       "animation": {
-        "clip": "scarlet-rush",
+        "clip": "wind-uppercut",
         "status": "provisional"
-      }
-    }
+      },
+      "recoveryOnContact": 21
+    },
+    "advance": 10
   },
   {
     "id": "ayla-6c8b62d32b",

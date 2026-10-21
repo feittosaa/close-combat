@@ -2,7 +2,7 @@
 
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
-> **Raiz:** [`base.md`](./base.md), versão 0.3.1.
+> **Raiz:** [`base.md`](./base.md), versão 0.3.2.
 > **Revisão:** 21/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos, quedas/levantadas e balanceamento continuam pendentes.
@@ -40,7 +40,7 @@ Combate integrado em `development` pelo PR #3, commit `5549034`, com CI remota a
 - [x] Conectar recuo dedicado de Ayla e manter facing sem espelhar a caminhada normal.
 - [x] Registrar poses provisórias de recuo de Gris/Tester e jab de avanço pendente de arte.
 - [x] Validar 305 testes, build, diff e apresentação no treino/arcade.
-- [ ] Confirmar push, CI e integração do movimento em development.
+- [x] Movimento integrado pelo PR #4, commit `fb6edc9`, com CI remota aprovada.
 
 Evidências: `docs/evidence/combat/ayla-recuo.png` e `ayla-jab-avanco.png`.
 
@@ -339,3 +339,18 @@ Loops com retorno intermediário e holds explícitos; menu e arena respeitam as 
 - [ ] Aplicar proteções de branch no GitHub (configuração remota).
 
 Validação local desta entrega: instalação limpa, 138 testes, build e `git diff --check` aprovados. Integração remota depende da execução da nova CI.
+
+## Fluidez, corrida e leitura dos comandos — 21/10/2026
+
+Branch: `codex/feature-fluidez-corrida-treino`.
+
+- [x] Reduzir recuperação do elétrico/gancho no contato e testar dois elétricos sem cancelamento antecipado, preservando +5 no bloqueio do elétrico.
+- [x] Transicionar dash de avanço para corrida sustentada, com interrupções e velocidades próprias por lutador.
+- [x] Ampliar o combate por enquadramento, mantendo HUD e geometria coerentes.
+- [x] Apresentar setas, teclas configuradas e cores no catálogo e no treino.
+- [x] Implementar configurações persistentes e validar conflitos de teclas.
+- [x] Adicionar histórico de mudanças de entrada, duração, soltura e acordes.
+
+Validação automatizada: 320 testes; build e diff. A conferência visual cobre tamanho, entradas coloridas, remapeamento, catálogo e corrida; evidências em `docs/evidence/fluidez/`. CI e merge devem ser confirmados no remoto na entrega.
+
+Limites: o gancho ainda reutiliza poses existentes; produzir desenho de ascendente próprio. Corrida usa poses de avanço disponíveis em loop acelerado. As demais recuperações continuam sendo dados locais de cada golpe. Detalhes em `docs/fluidez-corrida-treino.md`.

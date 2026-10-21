@@ -7,6 +7,7 @@ export type CharacterMode =
   | 'neutral'
   | 'moving'
   | 'dashing'
+  | 'running'
   | 'airborne'
   | 'crouching'
   | 'startup'

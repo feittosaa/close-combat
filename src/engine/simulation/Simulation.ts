@@ -245,14 +245,14 @@ export class Simulation {
         const stationary = guarding || (character.grounded && character.crouching);
         const dashing = this.updateDash(index, horizontal, character.grounded && !stationary);
         const movement = this.fighterDefinitions[index].movement;
-        const speed = dashing
+        const speed = dashing === 'run' ? movement.runSpeed ?? (movement.dashSpeed ?? this.config.movement.dashSpeed) * 1.25 : dashing
           ? (horizontal < 0 ? movement.backdashSpeed : undefined) ?? movement.dashSpeed ?? this.config.movement.dashSpeed
           : (horizontal < 0 ? movement.backwardWalkSpeed : undefined) ?? movement.walkSpeed;
         if (!stationary) nextX[index] += horizontal * facingSign * speed;
         if (guarding) character.mode = 'blocking';
-        else if (dashing) character.mode = 'dashing';
+        else if (dashing) character.mode = dashing === 'run' ? 'running' : 'dashing';
         else if (horizontal !== 0 && character.grounded && !character.crouching) character.mode = 'moving';
-        if (character.mode === 'moving' || character.mode === 'dashing') {
+        if (character.mode === 'moving' || character.mode === 'dashing' || character.mode === 'running') {
           character.movementDirection = horizontal < 0 ? 'backward' : 'forward';
         }
 
@@ -632,14 +632,14 @@ export class Simulation {
       cancelRule.moveIds.includes(nextMove.id);
   }
 
-  private updateDash(index: number, horizontal: number, grounded: boolean): boolean {
+  private updateDash(index: number, horizontal: number, grounded: boolean): 'dash' | 'run' | undefined {
     if (!grounded) {
       this.previousHorizontalAxis[index] = horizontal;
       this.lastTapAxis[index] = 0;
       this.lastTapFrame[index] = Number.NEGATIVE_INFINITY;
       this.dashFramesRemaining[index] = 0;
       this.dashAxis[index] = 0;
-      return false;
+      return undefined;
     }
 
     const wasPressed = this.previousHorizontalAxis[index] !== 0;
@@ -656,13 +656,14 @@ export class Simulation {
 
     this.previousHorizontalAxis[index] = horizontal;
     if (!isPressed || horizontal !== this.dashAxis[index]) {
+      this.dashAxis[index] = 0;
       this.dashFramesRemaining[index] = 0;
-      return false;
+      return undefined;
     }
-    if (this.dashFramesRemaining[index] <= 0) return false;
+    if (this.dashFramesRemaining[index] <= 0) return horizontal > 0 && this.dashAxis[index] === 1 ? 'run' : undefined;
 
     this.dashFramesRemaining[index] -= 1;
-    return true;
+    return 'dash';
   }
 
   private advanceAttacks(): void {

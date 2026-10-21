@@ -1,3 +1,7 @@
+import { ControlSettings } from '../ui/ControlSettings';
+import { getPlayerLayout } from '../input/controlSettings';
+import { InputHistory } from '../training/InputHistory';
+import { formatCommand, formatMoveTitle } from '../ui/commandNotation';
 import { PauseMenu } from '../ui/PauseMenu';
 // src/scenes/FightScene.ts
 import Phaser from 'phaser';
@@ -8,7 +12,6 @@ import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
-import { PLAYER_ONE_KEYS, PLAYER_TWO_KEYS } from '../input/keyboardLayouts';
 import type { FrameInput } from '../input/types';
 import { CombatantView } from '../rendering/CombatantView';
 import { validateAnimationCoverage, validateAnimationManifest } from '../rendering/animations/AnimationPlayback';
@@ -41,6 +44,7 @@ export class FightScene extends Phaser.Scene {
   private stageView?: StageView;
   private simulation?: Simulation;
   private keyboardInputs: KeyboardInput[] = [];
+  private inputHistories = [new InputHistory(), new InputHistory()];
   private commandBuffers: [CommandBuffer, CommandBuffer] = [new CommandBuffer(), new CommandBuffer()];
   private currentInputs: [FrameInput, FrameInput] = [neutralInput(), neutralInput()];
   private combatants: CombatantView[] = [];
@@ -92,12 +96,16 @@ export class FightScene extends Phaser.Scene {
     this.pauseKey(event);
   };
   private pauseKey(event: KeyboardEvent): void {
-    if (event.repeat || this.handledTrainingEvents.has(event)) return;
+    if (ControlSettings.active || event.repeat || this.handledTrainingEvents.has(event)) return;
     this.handledTrainingEvents.add(event);
     this.togglePause();
   }
   private togglePause(force?: boolean): void {
     this.paused = force ?? !this.paused;
+    if (!this.paused) {
+      this.keyboardInputs.forEach(input => input.destroy());
+      this.keyboardInputs = [new KeyboardInput(getPlayerLayout(0)), new KeyboardInput(getPlayerLayout(1))];
+    }
     if (this.training) this.training.paused = this.paused;
     this.keyboardInputs.forEach(input => input.clear());
     this.simulation?.clearInputHistory();
@@ -166,7 +174,7 @@ export class FightScene extends Phaser.Scene {
     this.simulation = new Simulation(config, [this.selectedFighter, this.opponentFighter], this.training
       ? { training: true, initialDistance: this.training.initialDistance } : {});
     this.simulation.setTrainingAutoRestore(this.training?.autoRestore ?? false);
-    this.keyboardInputs = [new KeyboardInput(PLAYER_ONE_KEYS), new KeyboardInput(PLAYER_TWO_KEYS)];
+    this.keyboardInputs = [new KeyboardInput(getPlayerLayout(0)), new KeyboardInput(getPlayerLayout(1))];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
 
     this.combatants = [
@@ -182,15 +190,15 @@ export class FightScene extends Phaser.Scene {
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(110);
     if (this.training) {
       this.inputDisplays = [
-        new PlayerInputDisplay(this, 18, 82, 'P1 · WASD / J K N M', '#ff8c8c'),
-        new PlayerInputDisplay(this, width - 218, 82, 'P2 · SETAS / NUMPAD', '#8cb4ff'),
+        new PlayerInputDisplay(this, 18, 82, 'P1 · ENTRADAS', '#ff8c8c', 0),
+        new PlayerInputDisplay(this, width - 218, 82, 'P2 · ENTRADAS', '#8cb4ff', 1),
       ];
       this.trainingHud = new TrainingHud(this, width, height);
       this.trainingKeys.forEach(([key, handler]) => {
         const listener = (event: KeyboardEvent): void => {
           // Phaser can revisit a queued DOM event before the queue is cleared.
           // In particular, a single-step event must never advance twice.
-          if (this.pauseMenu?.isEditing() || event.repeat || this.handledTrainingEvents.has(event)) return;
+          if (ControlSettings.active || this.pauseMenu?.isEditing() || event.repeat || this.handledTrainingEvents.has(event)) return;
           this.handledTrainingEvents.add(event);
           handler();
         };
@@ -204,7 +212,7 @@ export class FightScene extends Phaser.Scene {
     this.pauseMenu = new PauseMenu([this.selectedFighter, this.opponentFighter], Boolean(this.training),
       () => this.togglePause(false),
       () => this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }),
-      entry => { this.pinnedMove?.setText(`TREINAR · ${entry.title}\n${entry.notation}`); this.togglePause(false); }, () => this.advanceOneFrame());
+      (entry, playerIndex) => { this.pinnedMove?.setText(`TREINAR · ${formatMoveTitle(entry.title,getPlayerLayout(playerIndex))}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()));
     this.input.keyboard?.on('keydown-P', this.handlePause);
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
     this.input.keyboard?.on('keydown-R', this.handleRestart);
@@ -231,7 +239,10 @@ export class FightScene extends Phaser.Scene {
         ? this.bot.readInput(frame, characters[1], characters[0], snapshot.projectiles) : neutralInput();
     }
     this.currentInputs = inputs as [FrameInput, FrameInput];
-    this.currentInputs.forEach((input, index) => this.commandBuffers[index]?.push(input));
+    this.currentInputs.forEach((input, index) => {
+      this.commandBuffers[index]?.push(input);
+      this.inputHistories[index].push(input, frame, characters[index].facing);
+    });
     return this.currentInputs;
   }
 
@@ -242,6 +253,7 @@ export class FightScene extends Phaser.Scene {
     this.training?.resetInspection();
     this.keyboardInputs.forEach((input) => input.clear());
     this.commandBuffers.forEach((buffer) => buffer.clear());
+    this.inputHistories.forEach(history => history.clear());
     this.currentInputs = [neutralInput(), neutralInput()];
     this.syncViewsAndHud();
   }
@@ -274,8 +286,9 @@ export class FightScene extends Phaser.Scene {
       this.training.observe(snapshot);
       this.trainingHud?.update(snapshot, this.training);
     }
+    this.stageView?.syncHudCamera();
     this.inputDisplays.forEach((display, index) => {
-      display.update(this.currentInputs[index] ?? neutralInput(), this.commandBuffers[index]?.snapshot() ?? []);
+      display.update(this.currentInputs[index] ?? neutralInput(), this.inputHistories[index].snapshot(), snapshot.characters[index].facing);
     });
   }
 
@@ -312,6 +325,7 @@ export class FightScene extends Phaser.Scene {
     this.stageView = undefined;
     this.simulation = undefined;
     this.commandBuffers.forEach((buffer) => buffer.clear());
+    this.inputHistories.forEach(history => history.clear());
   }
 }
 

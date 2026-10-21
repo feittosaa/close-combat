@@ -74,7 +74,7 @@ export class CombatCommandParser {
       }
       if (attack.elapsedFrames < window.from || (window.onHit && attack.hitOutcome !== 'hit')) return undefined;
     } else {
-      if (frame - pending.frame > 6) { this.pending = undefined; return undefined; }
+      if (frame - pending.frame > (state.combatRules?.commandBufferFrames ?? 6)) { this.pending = undefined; return undefined; }
       if (state.attack || ['hitstun', 'blockstun', 'grabbed', 'throwRecovery', 'knockdown'].includes(state.mode)) return undefined;
     }
     this.pending = undefined;

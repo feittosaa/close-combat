@@ -88,9 +88,9 @@ As 135 entradas são executáveis com poses provisórias, não animações homol
 | `ayla-91e667de60` | `f,n,d,DF+4` | `crouching-rk` | antecipação, contato(s), recuperação; validar keyframes e pés |
 | `ayla-74907c9fe5` | `f,n,d,DF+4,1` | `scarlet-rush` | antecipação, contato(s), recuperação; validar keyframes e pés |
 | `ayla-134c236237` | `f,n,d,DF+4,4` | `crouching-rk` | antecipação, contato(s), recuperação; validar keyframes e pés |
-| `ayla-464e45929a` | `f,n,d,df:2` | `scarlet-rush` | antecipação, contato(s), recuperação; validar keyframes e pés |
+| `ayla-464e45929a` | `f,n,d,df:2` | `electric-uppercut` | antecipação, contato(s), recuperação; validar keyframes e pés |
 | `ayla-432c5d5e0b` | `f,n,d,df+1` | `scarlet-rush` | antecipação, contato(s), recuperação; validar keyframes e pés |
-| `ayla-a5c98a02a0` | `f,n,d,df+2` | `scarlet-rush` | antecipação, contato(s), recuperação; validar keyframes e pés |
+| `ayla-a5c98a02a0` | `f,n,d,df+2` | `wind-uppercut` | antecipação, contato(s), recuperação; validar keyframes e pés |
 | `ayla-6c8b62d32b` | `f,n,d,df+3` | `crouching-rk` | antecipação, contato(s), recuperação; validar keyframes e pés |
 | `ayla-753a0347b5` | `f,n,d,df+1+2` | `crouching-rk` | antecipação, contato(s), recuperação; validar keyframes e pés |
 | `ayla-ed5a688fd4` | `uf,n,4` | `standing-rk` | antecipação, contato(s), recuperação; validar keyframes e pés |
@@ -146,6 +146,12 @@ As 135 entradas são executáveis com poses provisórias, não animações homol
 - Wall splat, wall bounce, Screw e queda/levantada: produzir sequências próprias e conferir seus keyframes no treino.
 - Fulgor, carga, transições SS/BT em 2D e avanço confirmado: faltam poses e efeitos específicos.
 - Adaptações do livro e seus IDs adicionais: `src/engine/data/combat/aylaCombatBook.ts`. Nenhum clipe provisório equivale a animação homologada.
+
+## Ascendentes e corrida
+
+- `electric-uppercut` e `wind-uppercut`: poses provisórias de preparação agachada e soco direito em pé; falta desenhar ascendente e efeito elétrico próprios. Não usar investida horizontal como animação final.
+- Reações de juggle de Gris/Tester/Dummy: produzir poses compatíveis com os volumes individuais; hoje reutilizam reação vertical.
+- `run`: loop provisório de avanço acelerado; produzir passada de corrida dedicada por personagem.
 
 ## Extensão de movimento técnico
 
