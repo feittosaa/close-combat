@@ -18,7 +18,8 @@ export function classifyHitContext(target: CharacterState): HitContext | undefin
   return undefined;
 }
 
-/** Contact-specific recovery is authored per move, never a global speed adjustment. */
-export function recoveryFrames(move: MoveDefinition, contacted: boolean): number {
-  return contacted ? move.combat?.recoveryOnContact ?? move.recovery : move.recovery;
+/** Strikes recover only after block. Contact/whiff release after activity; grabs keep their own lock. */
+export function recoveryFrames(move: MoveDefinition, outcome?: 'hit' | 'block'): number {
+  if (move.throw) return move.recovery;
+  return outcome === 'block' ? move.combat?.recoveryOnContact ?? move.recovery : 0;
 }
