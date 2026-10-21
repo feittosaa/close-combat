@@ -7,6 +7,7 @@ export interface ProjectileState {
   ownerId: string;
   fighterId: string;
   moveId: string;
+  strikeIndex?: number;
   x: number;
   y: number;
   previousX: number;

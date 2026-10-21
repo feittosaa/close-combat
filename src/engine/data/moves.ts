@@ -1,3 +1,4 @@
+import type { MoveCombatData } from './combat/CombatBook';
 // src/engine/data/moves.ts
 import type { AttackButton, Direction } from '../../input/types';
 
@@ -5,6 +6,9 @@ export type HitLevel = 'high' | 'mid' | 'low' | 'air' | 'throw' | 'special';
 
 export interface MoveDefinition {
   id: string;
+  combat?: MoveCombatData;
+  /** Preserved only for regression/art review; excluded from the live command book. */
+  legacy?: boolean;
   /** Categoria do livro local; não limita a quantidade nem determina a guarda. */
   kind?: 'normal' | 'special' | 'throw';
   input: { direction?: Direction; sequence?: readonly Direction[]; buttons: readonly AttackButton[] };
@@ -13,6 +17,7 @@ export interface MoveDefinition {
   throw?: {
     range: number;
     breakButtons: readonly AttackButton[];
+    breakAlternatives?: readonly (readonly AttackButton[])[];
     breakFrames: number;
     breakRecovery: number;
     launchDistance: { forward: number; backward: number };

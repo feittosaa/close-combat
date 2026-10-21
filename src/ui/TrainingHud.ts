@@ -1,3 +1,4 @@
+import { recoveryFrames } from '../engine/combat/frameData';
 import Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import type { TrainingSession } from '../training/TrainingSession';
@@ -34,7 +35,7 @@ export class TrainingHud {
     });
     const footerBackground = scene.add.rectangle(width / 2, height - 8, width, 16, 0x14151e, 0.94);
     const footer = scene.add.text(width / 2, height - 8,
-      'P PAUSA · . FRAME · L VELOCIDADE · F2 RESET · F3 VIDA AUTO · F4 DISTÂNCIA · G ADVERSÁRIO · H COLISÕES · I ENTRADAS · ESC MENU', {
+      'P PAUSA · . FRAME · L VELOCIDADE · F2 RESET · F3 VIDA AUTO · F4 DISTÂNCIA · G ADVERSÁRIO · H COLISÕES · I ENTRADAS · ESC PAUSA', {
         color: '#e9e4ee', fontSize: '9px',
       }).setOrigin(0.5);
     this.root = scene.add.container(0, 0, [background, this.status, ...this.fighters,
@@ -47,13 +48,15 @@ export class TrainingHud {
     snapshot.characters.forEach((character, index) => {
       const move = session.lastMoves[index];
       const lockedFrames = move && character.attack
-        ? move.startup + move.activeFrames + move.recovery - character.attack.elapsedFrames
+        ? move.startup + move.activeFrames + recoveryFrames(move, Boolean(character.attack.hitOutcome)) - character.attack.elapsedFrames
         : character.remainingStateFrames;
       const levels = { high: 'ALTO', mid: 'MÉDIO', low: 'BAIXO', air: 'AÉREO', throw: 'AGARRÃO', special: 'ESPECIAL' };
+      const combo = character.combo ?? character.lastCombo;
+      const comboLabel = combo ? ` · COMBO ${combo.hits} / ${combo.damage}` : '';
       const detail = move
         ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${moveInputLabel(move)} · S${move.startup} A${move.activeFrames} R${move.recovery} · ${levels[move.hitLevel]} · DANO ${move.damage}`
         : 'S: preparo · A: ativo · R: recuperação';
-      this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]} · ${lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
+      this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]}${comboLabel} · ${character.combo && !character.grounded ? 'JUGGLE · ATÉ ATERRISSAR' : lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);
       const barWidth = this.width / 2 - 42;
       const barY = this.panelY + 48;
@@ -76,7 +79,7 @@ export class TrainingHud {
     const contact = snapshot.recentContacts[snapshot.recentContacts.length - 1]?.event;
     this.contact.setText(contact?.frameAdvantage !== undefined
       ? `${contact.attackerId === 'player-1' ? 'P1' : 'P2'}: DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · STUN ${contact.defenderStunFrames}F · ADV ${signedFrames(contact.frameAdvantage)}`
-      : 'S: preparo · A: ativo · R: recuperação');
+      : contact?.reaction === 'launch' ? `DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · REAÇÃO AÉREA` : 'S: preparo · A: ativo · R: recuperação');
   }
 
   destroy(): void {
