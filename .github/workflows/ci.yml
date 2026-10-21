@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [development, main, 'codex/**']
+    tags: ['v*']
+  pull_request:
+    branches: [development, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validar projeto
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Conferir whitespace do commit
+        run: git show --format= --check HEAD
+      - name: Testar
+        run: npm test -- --run
+      - name: Gerar build
+        run: npm run build
+      - name: Validar tag de versão
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; const v = JSON.parse(fs.readFileSync("package.json", "utf8")).version; if (!/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(process.env.RELEASE_TAG) || process.env.RELEASE_TAG !== `v${v}`) process.exit(1);'
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - name: Disponibilizar build da versão
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: close-combat-${{ github.ref_name }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30

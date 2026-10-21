@@ -1,5 +1,7 @@
 # Close Combat — Documento Principal de Design
 
+> **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
+
 > **Status:** protótipo local; consolidação de animação e punições em andamento
 > **Versão:** 0.2.1 · revisão de 21/10/2026
 > **Idioma:** português (Brasil)
