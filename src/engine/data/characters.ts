@@ -30,7 +30,7 @@ export interface CharacterDefinition {
   maxHealth: number;
   /** Lutadores de diagnóstico podem permanecer fora da seleção pública. */
   selectable?: boolean;
-  movement: { walkSpeed: number; backwardWalkSpeed?: number; jumpVelocity: number; dashSpeed?: number; backdashSpeed?: number };
+  movement: { walkSpeed: number; backwardWalkSpeed?: number; jumpVelocity: number; dashSpeed?: number; backdashSpeed?: number; runSpeed?: number };
   /** Livro de golpes exclusivo deste personagem; IDs só precisam ser únicos dentro do livro. */
   moves: readonly MoveDefinition[];
   combos?: readonly ComboRecipe[];
@@ -48,6 +48,7 @@ const testerCollision: CharacterCollisionProfile = {
     standing: { offsetX: 0, offsetY: -152, width: 54, height: 152 },
     crouching: { offsetX: 0, offsetY: -96, width: 54, height: 96 },
     airborne: { offsetX: 0, offsetY: -144, width: 54, height: 144 },
+    juggled: { offsetX: 0, offsetY: -38, width: 90, height: 86 },
   },
 };
 
@@ -57,6 +58,7 @@ const dummyCollision: CharacterCollisionProfile = {
     standing: { offsetX: 0, offsetY: -148, width: 60, height: 148 },
     crouching: { offsetX: 0, offsetY: -88, width: 58, height: 88 },
     airborne: { offsetX: 0, offsetY: -136, width: 56, height: 136 },
+    juggled: { offsetX: 0, offsetY: -36, width: 96, height: 82 },
   },
 };
 
@@ -74,7 +76,7 @@ export const characters: readonly CharacterDefinition[] = [
     id: DEFAULT_CHARACTER_ID,
     name: 'Tester',
     maxHealth: 1000,
-    movement: { walkSpeed: 2, backwardWalkSpeed: 1.5, dashSpeed: 4.2, backdashSpeed: 3.4, jumpVelocity: -11 },
+    movement: { walkSpeed: 2, backwardWalkSpeed: 1.5, dashSpeed: 4.2, backdashSpeed: 3.4, runSpeed: 5.4, jumpVelocity: -11 },
     moves: testerMoves,
     collision: testerCollision,
     assets: {
@@ -87,7 +89,7 @@ export const characters: readonly CharacterDefinition[] = [
     name: 'Dummy',
     selectable: false,
     maxHealth: 900,
-    movement: { walkSpeed: 1.5, backwardWalkSpeed: 1.25, dashSpeed: 3.8, backdashSpeed: 3.1, jumpVelocity: -10.5 },
+    movement: { walkSpeed: 1.5, backwardWalkSpeed: 1.25, dashSpeed: 3.8, backdashSpeed: 3.1, runSpeed: 4.9, jumpVelocity: -10.5 },
     moves: dummyMoves,
     collision: dummyCollision,
     assets: {

@@ -27,6 +27,7 @@ function execute(sim: Simulation, move: MoveDefinition): void {
       step(sim, input('DF'));
     }
     wait(sim, () => !sim.snapshot().characters[0].attack && !['hitstun', 'blockstun', 'knockdown'].includes(sim.snapshot().characters[0].mode));
+    if (current?.combat?.command.notation === 'f,n,d,df:2' && cmd.notation !== 'f,n,d,df:2') step(sim, N, 6);
     if (cmd.stance === 'rising') { step(sim, input('D'), 6); step(sim); }
     if (cmd.stance === 'crouching') step(sim, input('D'), 6);
     if (cmd.stance === 'sway') { step(sim, input('F', ['1', '2', '3', '4'])); step(sim); }

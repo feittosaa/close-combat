@@ -3,7 +3,7 @@
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
 > **Status:** protótipo em pixel art; direção Tekken 7/Ayla definida; migração mecânica e visual HD pendentes
-> **Versão:** 0.3.1 · revisão de 21/10/2026
+> **Versão:** 0.3.2 · revisão de 21/10/2026
 > **Idioma:** português (Brasil)
 > **Título do jogo:** Close Combat
 > **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
@@ -944,3 +944,13 @@ Um jogo de luta 2D para navegador, distribuído pelo GitHub, com visual que comb
 ### Movimento técnico — revisão de 21/10/2026
 
 Ayla diferencia `1` em neutro de `f+1` durante avanço. O segundo é uma variante autoral 2D (i12, dano 24, alcance +10, avanço 8, recuperação 20 no vazio/18 no contato) e admite as continuações de `1,1` e `1,2`. A entrada direcional seleciona o movimento; velocidade de caminhada não acelera seus keyframes. A referência original de Kazuya permanece preservada no catálogo. Cada personagem define suas próprias variantes e continuações; não se adiciona esse jab aos demais lutadores.
+
+### Fluidez, corrida e controles — 21/10/2026
+
+- Ayla: elétrico recupera em 18F no contato e 24F no vazio; gancho normal usa 21F/24F. O elétrico avança 12 unidades e o gancho normal 10, mantendo alcance próprio de aproximação. O elétrico mantém +5F no primeiro contato bloqueado. A janela de preparação de um comando completo no fim da recuperação é de 8F para Ayla; não cancela a ação anterior, não repete botão mantido e entradas antecipadas expiram. É uma adaptação de execução 2D, não reprodução do impedimento de buffer do crouch dash de referência. Não reduzir recuperações globalmente.
+- Após completar os 12F do dash para frente, continuar segurando avanço inicia `running`. Soltar, inverter direção, agachar, defender, saltar, atacar, receber golpe ou reiniciar interrompe corrida. Backdash não vira corrida. Velocidades próprias: Ayla 5,8, Gris 5,4, Tester 5,4 e Dummy 4,9 unidades/frame. Corrida usa clipe próprio de loop, provisoriamente derivado do avanço acelerado.
+- O enquadramento aproxima a câmera até 1,55× no combate próximo e afasta conforme a distância para conservar ambos os lutadores na tela. Personagens, cenário, projéteis e caixas crescem juntos; a geometria lógica e os tempos não mudam. HUD usa câmera separada sem zoom.
+- Motor e dados mantêm direções relativas e botões 1–4. A apresentação usa setas e as teclas configuradas de cada jogador; padrão P1 J/K/N/M, nas cores azul/rosa/verde/amarelo. Configurações e pause permitem remapear direções/ataques e salvar localmente, sem duplicar uma tecla entre ações/jogadores nem reutilizar atalhos reservados.
+- O treino conserva 24 mudanças de entrada por jogador e mostra as 10 recentes com direção física, teclas coloridas, frame inicial e duração. Inclui soltura/neutro e acordes, conserva entradas durante pausa e limpa no reset. O histórico é somente leitura; não participa do reconhecimento dos comandos.
+
+A revisão de fluidez também atribui volumes de juggle individuais a Gris (88×90, offsetY −40), Tester (90×86, −38) e Dummy (96×82, −36). Antes eles reutilizavam a hurtbox vertical de salto, o que fazia a sequência falhar nesses alvos. Os volumes em pé e salto livre permanecem próprios; reações desenhadas compatíveis ainda precisam de produção. O teste do elétrico cobre os quatro alvos a distância 96.

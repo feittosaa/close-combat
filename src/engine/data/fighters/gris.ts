@@ -66,13 +66,14 @@ export const grisMoves: readonly MoveDefinition[] = [
 
 export const gris: CharacterDefinition = {
   id: 'gris', name: 'Gris', maxHealth: 1000,
-  movement: { walkSpeed: 1.85, backwardWalkSpeed: 1.4, dashSpeed: 4.3, backdashSpeed: 3.5, jumpVelocity: -12.2 },
+  movement: { walkSpeed: 1.85, backwardWalkSpeed: 1.4, dashSpeed: 4.3, backdashSpeed: 3.5, runSpeed: 5.4, jumpVelocity: -12.2 },
   moves: grisMoves,
   collision: {
     bodyWidth: 44, hurtboxes: {
       standing: { offsetX: 0, offsetY: -152, width: 44, height: 152 },
       crouching: { offsetX: 0, offsetY: -91, width: 46, height: 91 },
       airborne: { offsetX: 0, offsetY: -139, width: 43, height: 139 },
+      juggled: { offsetX: 0, offsetY: -40, width: 88, height: 90 },
     }
   },
   assets: { animationManifest: 'animations/gris.json' },

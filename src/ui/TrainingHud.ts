@@ -1,3 +1,6 @@
+import type { AttackButton } from '../input/types';
+import { formatCommand } from './commandNotation';
+import { getPlayerLayout, keyLabel } from '../input/controlSettings';
 import { recoveryFrames } from '../engine/combat/frameData';
 import Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
@@ -43,10 +46,12 @@ export class TrainingHud {
   }
 
   update(snapshot: SimulationSnapshot, session: TrainingSession): void {
-    this.status.setText(`TREINO · ${session.paused ? 'PAUSADO' : 'EM CURSO'} · ${session.speed * 100}% · ${DUMMY_LABELS[session.dummyMode]} · VIDA AUTO ${session.autoRestore ? 'ON' : 'OFF'} · RESET ${session.initialDistance}`);
+    this.status.setText(`TREINO · ${session.paused ? 'PAUSADO' : 'EM CURSO'} · ${session.speed * 100}% · ${DUMMY_LABELS[session.dummyMode].replace(/\b[1-4]\b/g,button=>keyLabel(getPlayerLayout(1).buttons[button as AttackButton]))} · VIDA AUTO ${session.autoRestore ? 'ON' : 'OFF'} · RESET ${session.initialDistance}`);
     this.progress.clear();
     snapshot.characters.forEach((character, index) => {
       const move = session.lastMoves[index];
+      const recovery = move ? recoveryFrames(move, Boolean(character.attack?.hitOutcome)) : 0;
+      const recoveryLabel = !character.attack && move?.combat?.recoveryOnContact !== undefined ? `${move.combat.recoveryOnContact}/${move.recovery}` : String(recovery);
       const lockedFrames = move && character.attack
         ? move.startup + move.activeFrames + recoveryFrames(move, Boolean(character.attack.hitOutcome)) - character.attack.elapsedFrames
         : character.remainingStateFrames;
@@ -54,7 +59,7 @@ export class TrainingHud {
       const combo = character.combo ?? character.lastCombo;
       const comboLabel = combo ? ` · COMBO ${combo.hits} / ${combo.damage}` : '';
       const detail = move
-        ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${moveInputLabel(move)} · S${move.startup} A${move.activeFrames} R${move.recovery} · ${levels[move.hitLevel]} · DANO ${move.damage}`
+        ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${levels[move.hitLevel]} · DANO ${move.damage}`
         : 'S: preparo · A: ativo · R: recuperação';
       this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]}${comboLabel} · ${character.combo && !character.grounded ? 'JUGGLE · ATÉ ATERRISSAR' : lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);
@@ -62,9 +67,9 @@ export class TrainingHud {
       const barY = this.panelY + 48;
       this.progress.fillStyle(0x34313f).fillRect(left, barY, barWidth, 5);
       if (!move) return;
-      const total = move.startup + move.activeFrames + move.recovery;
+      const total = move.startup + move.activeFrames + recovery;
       let offset = 0;
-      for (const [duration, color] of [[move.startup, 0xffb454], [move.activeFrames, 0xff687d], [move.recovery, 0x76b8e7]]) {
+      for (const [duration, color] of [[move.startup, 0xffb454], [move.activeFrames, 0xff687d], [recovery, 0x76b8e7]]) {
         const width = duration / total * barWidth;
         this.progress.fillStyle(color).fillRect(left + offset, barY, width, 5);
         offset += width;

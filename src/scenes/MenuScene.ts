@@ -1,3 +1,4 @@
+import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
 import { playableCharacters, getCharacterById } from '../engine/data/characters';
 import type { CharacterDefinition } from '../engine/data/characters';
@@ -11,7 +12,7 @@ const MODES = [
   { id: 'arcade', title: 'ARCADE', hint: 'Enfrente o computador em uma sequência de lutas.', tag: '1 JOGADOR' },
   { id: 'versus', title: 'LUTA PVP', hint: 'Dois jogadores no mesmo teclado.', tag: '2 JOGADORES' },
   { id: 'training', title: 'MODO TREINO', hint: 'Pratique comandos, alcances e punições.', tag: 'PRÁTICA LIVRE' },
-  { id: 'settings', title: 'CONFIGURAÇÕES', hint: 'Ajustes do jogo. Em breve.', tag: 'OPÇÕES' },
+  { id: 'settings', title: 'CONFIGURAÇÕES', hint: 'Teclas e controles dos dois jogadores.', tag: 'OPÇÕES' },
 ] as const;
 const STYLES: Record<string, string> = {
   ayla: 'Ágil · Pressão e energia', gris: 'Alcance · Cortes e mobilidade', tester: 'Equilibrado · Lutador de teste',
@@ -31,7 +32,7 @@ export class MenuScene extends Phaser.Scene {
   private readonly handleKey = (event: KeyboardEvent): void => {
     // A fila do Phaser pode revisitar o mesmo evento antes de ser esvaziada.
     // Uma confirmação deve avançar somente uma página, mesmo nesse caso.
-    if (event.repeat || this.transitioning || this.handledKeyEvents.has(event)) return;
+    if (ControlSettings.active || event.repeat || this.transitioning || this.handledKeyEvents.has(event)) return;
     this.handledKeyEvents.add(event);
     const key = event.key;
     if (this.page === 'home') {
@@ -157,14 +158,14 @@ export class MenuScene extends Phaser.Scene {
       this.text(56, height - 25, 'ENTER  COMEÇAR     ESC  VOLTAR', 11, '#a899a3');
     } else {
       this.text(56, 144, 'CONFIGURAÇÕES', 26);
-      this.text(56, 204, 'Em breve.', 18, '#c4b8c0');
+      this.text(56, 204, 'Configure as teclas no painel de controles.', 18, '#c4b8c0');
       this.button(56, 288, 180, 'VOLTAR', () => this.back());
       this.text(56, height - 25, 'ESC  VOLTAR AO MENU', 11, '#a899a3');
     }
   }
   private chooseMode(index: number): void {
     this.modeIndex = index; const id = MODES[index].id;
-    if (id === 'settings') this.page = 'settings'; else { this.mode = id; this.page = 'fighter'; } this.render();
+    if (id === 'settings') { this.page = 'settings'; new ControlSettings(() => { this.page = 'home'; this.render(); }); } else { this.mode = id; this.page = 'fighter'; } this.render();
   }
   private back(): void {
     this.page = this.page === 'stage' ? 'fighter' : 'home'; this.render();

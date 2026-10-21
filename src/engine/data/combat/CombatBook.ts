@@ -72,6 +72,7 @@ export interface ComboRecipe {
   source?: string;
 }
 export interface CombatRules {
+  commandBufferFrames?: number;
   lowParryFrames: number;
   lowParryStunFrames: number;
   stanceFrames: number;

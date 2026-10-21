@@ -105,11 +105,11 @@ for i,row in enumerate(rows):
  active=(strikes[-1]['to']-startup+1) if strikes else 1
  recovery=max(1,digits(row['Recovery'],24))
  # Missing recovery stays an authored 2D estimate, recorded below, not a verified source number.
- contact_recovery=17 if c=='1' else recovery # Jab: source distinguishes contact from whiff.
+ contact_recovery=17 if c=='1' else 18 if c=='f,n,d,df:2' else 21 if c=='f,n,d,df+2' else recovery # Jab: source distinguishes contact from whiff.
  block=digits(row['Block frame']);hit=digits(row['Hit frame'],8)
  for strike in strikes:
   strike['hitstun']=max(1,contact_recovery+hit)
-  strike['blockstun']=max(1,contact_recovery+block)
+  strike['blockstun']=max(1,contact_recovery+block+(active-1 if c in ['f,n,d,df:2','f,n,d,df+2'] else 0))
   if strike.get('reaction')=='launch':strike['hitstun']=max(26,strike['hitstun'])
  if parent:
   parentlast=next((m for m in moves if m['id']==slug(parent)),None)
@@ -160,6 +160,10 @@ for i,row in enumerate(rows):
  if strikes and any(not re.search(r'\d',startparts[j] if j<len(startparts) else '') for j in range(len(damage))):estimates.append('tempo de contato de continuação')
  if estimates:meta['estimatedFields']=estimates
  if c=='1':meta['recoveryOnContact']=17
+ if c in ['f,n,d,df:2','f,n,d,df+2']:
+  meta['recoveryOnContact']=contact_recovery
+  meta['adaptation']+=' Recuperação 2D no contato: '+str(contact_recovery)+'F; no vazio permanece '+str(recovery)+'F. Sem cancelamento livre.'
+  meta['animation']['clip']='electric-uppercut' if c.endswith(':2') else 'wind-uppercut'
  if action:meta['action']=action
  m={'id':slug(c),'kind':'throw' if 'throws' in cats else 'special' if 'specials' in cats else 'normal',
     'input':{'buttons':buttons},'startup':startup,'activeFrames':active,'recovery':recovery,
@@ -179,6 +183,10 @@ for i,row in enumerate(rows):
   for authored in meta['hurtboxes']:authored['box']={'offsetX':0,'offsetY':-87,'width':48,'height':87}
  moves.append(m)
 # Repair parent windows independent of source row ordering (charged and conditional variants).
+for m in moves:
+ if m['combat']['command']['notation'] in ['f,n,d,df:2','f,n,d,df+2']:
+  m['advance']=12 if m['combat']['command']['notation'].endswith(':2') else 10
+  m['combat']['adaptation']+=' Passo de aproximação próprio do ascendente: '+str(m['advance'])+' unidades.'
 byid={m['id']:m for m in moves}
 for m in moves:
  cmd=m['combat']['command']; parent=byid.get(cmd.get('parentId',''))
@@ -200,7 +208,7 @@ for m in moves:
  if any(strike.get('projectile') for strike in m['combat']['strikes']):production+='; efeito de projétil próprio (atual: fx-crimson-wave provisório)'
  lines.append(f"| `{m['id']}` | `{m['combat']['command']['notation']}` | `{m['combat']['animation']['clip']}` | {production} |")
 lines += ['', '## Reações e posturas adicionais', '', '- Juggle: reação horizontal compatível com a hurtbox individual `juggled` (86 × 80); o sprite atual é provisório.', '- Wall splat, wall bounce, Screw e queda/levantada: produzir sequências próprias e conferir seus keyframes no treino.', '- Fulgor, carga, transições SS/BT em 2D e avanço confirmado: faltam poses e efeitos específicos.', '- Adaptações do livro e seus IDs adicionais: `src/engine/data/combat/aylaCombatBook.ts`. Nenhum clipe provisório equivale a animação homologada.']
-lines += ['', '## Extensão de movimento técnico\n\n- `ayla-forward-jab` (`f+1`): produzir passo de preparação e jab estendido com contato i12; fallback atual `standing-lp`.\n- Ayla `walk-backward`/`backdash`: conectados aos quadros dedicados 24–31 do atlas existente; conferir refinamento de apoio/continuidade na arte final.\n- Gris e Tester `walk-backward`/`backdash`: sequência provisória de guarda própria, mantendo facing; faltam quadros dedicados de pés e transferência de peso. Não usam caminhada espelhada.']
+lines += ['', '## Ascendentes e corrida', '', '- `electric-uppercut` e `wind-uppercut`: poses provisórias de preparação agachada e soco direito em pé; falta desenhar ascendente e efeito elétrico próprios. Não usar investida horizontal como animação final.', '- Reações de juggle de Gris/Tester/Dummy: produzir poses compatíveis com os volumes individuais; hoje reutilizam reação vertical.', '- `run`: loop provisório de avanço acelerado; produzir passada de corrida dedicada por personagem.', '', '## Extensão de movimento técnico\n\n- `ayla-forward-jab` (`f+1`): produzir passo de preparação e jab estendido com contato i12; fallback atual `standing-lp`.\n- Ayla `walk-backward`/`backdash`: conectados aos quadros dedicados 24–31 do atlas existente; conferir refinamento de apoio/continuidade na arte final.\n- Gris e Tester `walk-backward`/`backdash`: sequência provisória de guarda própria, mantendo facing; faltam quadros dedicados de pés e transferência de peso. Não usam caminhada espelhada.']
 (ROOT/'docs/ayla-combate-animacoes-pendentes.md').write_text('\n'.join(lines)+'\n')
 print(f'{len(moves)} reference entries generated')
 
