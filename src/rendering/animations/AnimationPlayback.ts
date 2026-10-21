@@ -25,6 +25,9 @@ export interface CharacterAnimationManifest {
   footAnchorY?: number;
   frameTransforms?: Readonly<Record<string, { scale: number; footAnchorY?: number }>>;
   moveClips?: Readonly<Record<string, string>>;
+  /** Atlas múltiplos mantêm índices lógicos únicos sem refazer os PNGs. */
+  textureSources?: readonly { key: string; image: string; atlas: string }[];
+  frameTextures?: Readonly<Record<string, string>>;
 }
 
 /** Explicit sequences can return through intermediate poses without duplicating the endpoints. */
@@ -45,6 +48,16 @@ function poseAtTime(frames: readonly number[], durations: readonly number[], tim
   return frames[frames.length - 1];
 }
 
+/** Shared by arena states and menu previews so authored holds have the same cadence. */
+export function getTimedAnimationFrame(clip: AnimationClip, elapsedFrames: number): number {
+  const frames = getClipFrames(clip);
+  const durations = clip.frameDurations ?? frames.map(() => 60 / clip.frameRate);
+  const cycle = durations.reduce((sum, duration) => sum + duration, 0);
+  const elapsed = Math.max(0, elapsedFrames);
+  if (clip.repeat !== -1 && elapsed >= cycle * (clip.repeat + 1)) return frames[frames.length - 1];
+  return poseAtTime(frames, durations, elapsed % cycle);
+}
+
 /** Sample the exact logical frame. Pausing or changing display FPS cannot advance a pose. */
 export function getStateAnimationFrame(state: CharacterState, clip: AnimationClip, simulationFrame: number): number {
   if (!state.grounded && clip.airbornePoses) {
@@ -59,8 +72,7 @@ export function getStateAnimationFrame(state: CharacterState, clip: AnimationCli
   if (['hitstun', 'blockstun', 'grabbed', 'throwRecovery'].includes(state.mode) && state.remainingStateFrames > 0) {
     return poseAtTime(frames, durations, elapsed * cycle / (elapsed + state.remainingStateFrames));
   }
-  if (clip.repeat !== -1 && elapsed >= cycle * (clip.repeat + 1)) return frames[frames.length - 1];
-  return poseAtTime(frames, durations, elapsed % cycle);
+  return getTimedAnimationFrame(clip, elapsed);
 }
 
 /** Spread the drawn poses across the actual combat phase; visual playback never changes combat timing. */
@@ -112,6 +124,17 @@ export function validateAnimationManifest(manifest: CharacterAnimationManifest):
     }
   }
   const keys = new Set<string>();
+  if (manifest.textureSources) {
+    const textures = new Set(manifest.textureSources.map((source) => source.key));
+    if (textures.size !== manifest.textureSources.length || !textures.has(manifest.textureKey)) {
+      throw new Error(`Texturas inválidas: ${manifest.textureKey}`);
+    }
+    for (let frame = 0; frame < (manifest.totalFrames ?? 0); frame += 1) {
+      if (!textures.has(manifest.frameTextures?.[String(frame)] ?? '')) {
+        throw new Error(`Quadro sem textura: ${manifest.textureKey}/${frame}`);
+      }
+    }
+  }
   for (const clip of manifest.clips) {
     const frames = getClipFrames(clip);
     if (keys.has(clip.key) || !clip.key || !Number.isInteger(clip.start) || !Number.isInteger(clip.end) || clip.start > clip.end ||

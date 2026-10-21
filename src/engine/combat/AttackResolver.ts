@@ -6,6 +6,7 @@ import type { Hitbox } from '../collision/types';
 import { createHitbox, createHurtbox } from '../collision/combatGeometry';
 import type { AttackButton, FrameInput } from '../../input/types';
 import { classifyHitContext, frameAdvantage } from './frameData';
+import { projectileHitbox, type ProjectileState } from './Projectile';
 import type { HitContext } from './frameData';
 
 export interface HitEvent {
@@ -22,6 +23,8 @@ export interface HitEvent {
   breakButtons?: readonly AttackButton[];
   targetOffsetFromAttacker?: number;
   context?: HitContext;
+  projectileId?: number;
+  direction?: 'left' | 'right';
 }
 
 /** Resolve contatos da simulação e fornece a geometria exata para a visualização. */
@@ -33,7 +36,7 @@ export class AttackResolver {
   activeHitboxes(characters: readonly CharacterState[]): Hitbox[] {
     return characters.flatMap((character) => {
       const move = character.attack ? this.resolveMove(character.fighterId, character.attack.moveId) : undefined;
-      if (!move || !isActive(character, move)) return [];
+      if (!move || !isActive(character, move) || (move.projectile && !move.projectile.melee)) return [];
       return [createHitbox(character, move)];
     });
   }
@@ -43,13 +46,51 @@ export class AttackResolver {
     inputs: readonly FrameInput[],
     freshlyPressed: readonly [ReadonlySet<AttackButton>, ReadonlySet<AttackButton>],
     freshBack: readonly [boolean, boolean],
+    projectiles: readonly ProjectileState[] = [],
   ): HitEvent[] {
     const resolvedThrows = this.resolveGrabStates(characters, freshlyPressed);
     const pending: Array<{
       event: HitEvent;
-      attack: NonNullable<CharacterState['attack']>;
+      attack?: NonNullable<CharacterState['attack']>;
+      projectile?: ProjectileState;
       target: CharacterState;
     }> = [];
+
+    const queueStrike = (attacker: CharacterState, target: CharacterState, targetIndex: number,
+      move: MoveDefinition, hitbox: Hitbox, attack?: CharacterState['attack'], projectile?: ProjectileState): void => {
+      if (this.isStrikeInvulnerable(target)) return;
+      if (move.hitLevel === 'high' && (target.crouching || (target.grounded && target.attack?.hurtboxStance === 'crouching'))) return;
+      if (intersects(hitbox, createHurtbox(target))) {
+        const targetInput = inputs[targetIndex];
+        const parried = move.parryable === true && freshBack[targetIndex] === true;
+        const blocked = !parried && (target.mode === 'blocking' || target.mode === 'blockstun') && canBlock(move.hitLevel, targetInput);
+        const defenderStunFrames = Math.max(target.remainingStateFrames, blocked ? move.blockstun : move.hitstun);
+        const currentMove = attacker.attack ? this.resolveMove(attacker.fighterId, attacker.attack.moveId) : undefined;
+        const totalAttackFrames = currentMove ? currentMove.startup + currentMove.activeFrames + currentMove.recovery : 0;
+        // The contact frame has already happened; count only future locked frames.
+        const attackerRecoveryFrames = Math.max(0, totalAttackFrames - (attacker.attack?.elapsedFrames ?? 0) - 1);
+        pending.push({
+          event: {
+            attackerId: attacker.characterId,
+            targetId: target.characterId,
+            moveId: move.id,
+            projectileId: projectile?.id,
+            direction: projectile?.facing,
+            damage: blocked || parried ? 0 : move.damage,
+            outcome: parried ? 'parry' : blocked ? 'block' : 'hit',
+            pushback: parried ? 0 : blocked ? move.pushback.block : move.pushback.hit,
+            attackerRecoveryFrames: parried ? undefined : attackerRecoveryFrames,
+            defenderStunFrames: parried ? undefined : defenderStunFrames,
+            attackerStunFrames: parried && !projectile ? PARRY_STUN_FRAMES : undefined,
+            frameAdvantage: parried ? undefined : frameAdvantage(attackerRecoveryFrames, defenderStunFrames),
+            context: !blocked && !parried ? classifyHitContext(target) : undefined,
+          },
+          attack,
+          projectile,
+          target,
+        });
+      }
+    };
 
     characters.forEach((attacker, attackerIndex) => {
       const attack = attacker.attack;
@@ -72,48 +113,33 @@ export class AttackResolver {
         });
         return;
       }
-      if (this.isStrikeInvulnerable(target)) return;
-      if (move.hitLevel === 'high' && target.crouching) return;
-      if (intersects(hitbox, createHurtbox(target))) {
-        const targetInput = inputs[1 - attackerIndex];
-        const parried = move.parryable === true && freshBack[1 - attackerIndex] === true;
-        const blocked = !parried && target.mode === 'blocking' && canBlock(move.hitLevel, targetInput);
-        const defenderStunFrames = Math.max(target.remainingStateFrames, blocked ? move.blockstun : move.hitstun);
-        const totalAttackFrames = move.startup + move.activeFrames + move.recovery;
-        // The contact frame has already happened; count only future locked frames.
-        const attackerRecoveryFrames = Math.max(0, totalAttackFrames - attack.elapsedFrames - 1);
-        pending.push({
-          event: {
-            attackerId: attacker.characterId,
-            targetId: target.characterId,
-            moveId: move.id,
-            damage: blocked || parried ? 0 : move.damage,
-            outcome: parried ? 'parry' : blocked ? 'block' : 'hit',
-            pushback: parried ? 0 : blocked ? move.pushback.block : move.pushback.hit,
-            attackerRecoveryFrames: parried ? undefined : attackerRecoveryFrames,
-            defenderStunFrames: parried ? undefined : defenderStunFrames,
-            attackerStunFrames: parried ? PARRY_STUN_FRAMES : undefined,
-            frameAdvantage: parried ? undefined : frameAdvantage(attackerRecoveryFrames, defenderStunFrames),
-            context: !blocked && !parried ? classifyHitContext(target) : undefined,
-          },
-          attack,
-          target,
-        });
-      }
+      if (!move.projectile || move.projectile.melee) queueStrike(attacker, target, 1 - attackerIndex, move, hitbox, attack);
     });
 
+    for (const projectile of projectiles) {
+      if (projectile.hasHit) continue;
+      const attacker = characters.find((character) => character.characterId === projectile.ownerId);
+      const targetIndex = characters.findIndex((character) => character.characterId !== projectile.ownerId);
+      const target = characters[targetIndex];
+      const move = this.resolveMove(projectile.fighterId, projectile.moveId);
+      if (attacker && target && move) queueStrike(attacker, target, targetIndex, move, projectileHitbox(projectile, true), undefined, projectile);
+    }
+
     // Calcular todos os contatos antes de aplicar efeitos permite trades determinísticos.
-    pending.forEach(({ event, attack, target }) => {
+    pending.forEach(({ event, attack, projectile, target }) => {
       const attackerState = characters.find((character) => character.characterId === event.attackerId);
       const move = attackerState ? this.resolveMove(attackerState.fighterId, event.moveId) : undefined;
       if (!move) return;
-      attack.hasHit = true;
-      attack.hitOutcome = event.outcome === 'hit' || event.outcome === 'block' ? event.outcome : undefined;
-      if (event.outcome === 'hit' || event.outcome === 'block' || event.outcome === 'parry') attack.hitElapsedFrames = attack.elapsedFrames;
+      if (projectile) projectile.hasHit = true;
+      if (attack) {
+        attack.hasHit = true;
+        attack.hitOutcome = event.outcome === 'hit' || event.outcome === 'block' ? event.outcome : undefined;
+        if (event.outcome === 'hit' || event.outcome === 'block' || event.outcome === 'parry') attack.hitElapsedFrames = attack.elapsedFrames;
+      }
       if (event.outcome === 'throw-start' || event.outcome === 'throw-break') {
         const attacker = characters.find((character) => character.characterId === event.attackerId);
         const throwMove = move.throw;
-        if (!attacker || !throwMove) return;
+        if (!attacker || !throwMove || !attack) return;
         attacker.attack = undefined;
         attacker.mode = 'throwRecovery';
         attacker.remainingStateFrames = event.outcome === 'throw-break'
@@ -138,6 +164,7 @@ export class AttackResolver {
         return;
       }
       if (event.outcome === 'parry') {
+        if (projectile) return;
         const attacker = characters.find((character) => character.characterId === event.attackerId);
         if (attacker) {
           attacker.attack = undefined;

@@ -1,7 +1,7 @@
 # Close Combat — Documento Principal de Design
 
 > **Status:** protótipo local; consolidação de animação e punições em andamento
-> **Versão:** 0.2.1 · revisão de 20/10/2026
+> **Versão:** 0.2.1 · revisão de 21/10/2026
 > **Idioma:** português (Brasil)
 > **Título do jogo:** Close Combat
 > **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
@@ -13,6 +13,8 @@
 O projeto é um jogo de luta **100% 2D**, com partidas centradas em leitura do oponente, execução de comandos, defesa, agarrões, punições, vantagem de frames e controle de distância.
 
 A direção de arte deve seguir o guia autoral em [`identidade-visual.md`](./identidade-visual.md): ilustração 2D de alta definição, silhuetas marcantes, poses expressivas, animação desenhada em quadros e a leitura imediata de um jogo de luta clássico. Esse guia é a base visual para personagens, cenários, efeitos, interface e materiais promocionais.
+
+**Ayla e Gris, solicitação de 21/10/2026:** manter o pixel art das fichas fornecidas. Cada personagem possui arte, livro de golpes, colisões e velocidades próprios. Os atlas selecionados ficam em `src/assets/sprites/characters/{ayla,gris}/runtime/` e os manifestos em `src/assets/animations/`. Ayla tem cinco especiais, incluindo onda rasteira e erupção; Gris usa uma tesoura gigante dourada empunhada e quatro especiais. Os valores são provisórios. A revisão visual da integração é registrada em [`docs/ayla-gris-progresso.md`](./docs/ayla-gris-progresso.md); geração e cobertura de clipes, isoladamente, não aprovam continuidade.
 
 O combate é um jogo de luta técnico em plano 2D, com quatro botões de ataque, comandos simultâneos, agarrões, defesa, vantagem de frames, punições e golpes de execução precisa. Personagens, nomes, animações, trilha sonora, efeitos, interface e propriedades específicas devem ser originais.
 
@@ -182,9 +184,9 @@ As cores acima são exemplos iniciais. Os nomes devem vir acompanhados de amostr
 
 1. Tela inicial.
 2. Escolha do modo de jogo.
-3. Seleção dos personagens de cada jogador.
-4. Carregamento do cenário.
-5. Contagem regressiva e início da luta.
+3. Seleção do personagem de P1; nesta versão P2 é definido pelo modo.
+4. Seleção do cenário, com apenas Cais disponível nesta entrega.
+5. Carregamento e início da luta.
 6. Fim do round por condição de vitória ou tempo, se houver limite configurado.
 7. Tela de resultado, revanche ou retorno ao menu.
 
@@ -192,7 +194,13 @@ As cores acima são exemplos iniciais. Os nomes devem vir acompanhados de amostr
 
 **MVP obrigatório:** dois jogadores locais no mesmo computador (teclado e/ou controle, conforme suporte implementado) contra um adversário humano.
 
-**Ferramenta de desenvolvimento prioritária:** treino local com pausa, avanço de um frame, reinício rápido, dados de combate e adversário controlável. O treino usa as mesmas regras e livros de golpes da partida; não altera a vantagem para facilitar punições. Depois do MVP, avaliar IA de partida. Multijogador online é uma etapa futura e não deve ser anunciado como funcional antes de existir sincronização e testes reais.
+**Treino:** pausa, avanço de um frame, reinício rápido, dados de combate e adversário manual, em guarda ou repetindo golpes. P2 usa Tester; o treino usa as mesmas regras e livros da partida e não altera vantagem para facilitar punições.
+
+**PvP:** dois jogadores no mesmo teclado; P1 escolhe seu lutador, e P2 recebe automaticamente outro lutador do elenco, com os controles do segundo jogador.
+
+**Arcade PvE:** P1 enfrenta os outros lutadores selecionáveis, começando por Tester. O computador produz direções e botões pelo mesmo parser da partida, com reação de dez frames à ameaça e decisões reproduzíveis. Não recebe acertos, dano, teleporte ou invulnerabilidade por fora do motor. Após vencer a luta, Enter avança ao próximo adversário; ao concluir o arcade, R reinicia a sequência. Derrota ou empate permitem repetir a luta. Não há IA no PvP nem seleção de P2 pelo usuário nesta etapa.
+
+**Configurações:** entrada própria com página vazia de opções e retorno ao menu, conforme solicitado. Navegação por setas/Enter/Esc e por clique. Multijogador online continua como etapa futura.
 
 ### 5.3 Regras de vitória
 
@@ -272,6 +280,14 @@ A resolução de dois golpes que se conectam no mesmo frame precisa seguir uma r
 Regra do protótipo: todos os contatos do frame são detectados antes de aplicar dano, então dois strikes válidos podem trocar golpes (*trade*) mesmo que cada um cause hitstun no outro. A ordem de resolução é agarrão, invulnerabilidade contra strikes, parry, bloqueio e acerto. Invulnerabilidade é declarada no golpe por número de frames e categoria; `strikeInvulnerableStartupFrames` protege apenas durante os primeiros frames do startup contra golpes normais, sem cancelar nem causar dano ao atacante. O `test-rising-punch` tem 5 frames dessa propriedade para servir de exemplo. Agarrões não são strikes e não são evitados por essa propriedade; armadura não está implementada e não altera esta regra.
 
 ### 7.5 Dados específicos por personagem
+
+**Revisão de 21/10/2026 — Ayla e Gris:** cada livro `moves` aceita de zero a N especiais, sem slots ou quantidade compartilhada. `kind: special` identifica a família sem substituir o nível de bloqueio. Hitbox, preparo, atividade, recuperação, dano, deslocamento e comando pertencem a cada golpe. Corpo, hurtboxes em pé/agachado/no ar, caminhada, dash e salto pertencem a cada personagem.
+
+Projéteis são entidades da simulação a 60 Hz: cada golpe define quadro de emissão, posição relativa ao atacante, velocidade, vida útil, hitbox própria e limite de emissões simultâneas. A direção fica fixada no disparo. O projétil não é uma hitbox presa ao atacante; continua após a recuperação ou interrupção dele, acerta/bloqueia uma vez e desaparece ao contato, ao sair da arena, expirar ou colidir com outro projétil compatível. Reset e troca de round removem todos os projéteis. Não há dano residual no bloqueio nesta revisão. A defesa considera projéteis adversários mesmo quando o emissor já está neutro. Imagens e efeitos não determinam a colisão.
+
+Comandos da Ayla: `D,DF,F+1` emite a Onda Carmesim rasteira; `D,DF,F+2` executa a Investida Escarlate; `D,DB,B+3` executa o Giro Ascendente; `D,DB,B+4` executa o Chute de Avanço; `D,DF,F+1+2` emite a Erupção Rubra à frente. As sequências são relativas ao adversário; preservam o parser e a janela de simultaneidade existentes. Erupção é um especial sem medidor nesta etapa. Seus números são provisórios e não são copiados das referências.
+
+Ayla tem cinco especiais e Gris tem quatro. Gris usa uma tesoura gigante dourada que permanece empunhada; o projétil é energia de corte, não a arma física arremessada. Seus comandos são `D,DF,F+1` (Arco Dourado), `D,DB,B+3` (Tesoura Ascendente), `D,DF,F+2` (Passo de Seda) e `D,DB,B+4` (Corte Régio). Seus alcances e caixas pertencem ao seu livro. Partes da tesoura fora do corpo não ampliam automaticamente a hurtbox corporal. A postura de hurtbox pode mudar por fase de golpe, sempre selecionando o perfil individual declarado; não é inferida dos pixels.
 
 Cada personagem possui seu próprio livro `moves` e perfil `collision`. O livro contém golpes básicos, direcionais, aéreos, especiais, agarrões e regras de cancelamento; nomes e números não são globais nem precisam ser iguais entre personagens. Um golpe define sua hitbox de ataque junto de startup, frames ativos e recuperação. O motor resolve o golpe pelo personagem que o executa, portanto dois livros podem até reutilizar um ID se forem diferentes.
 
@@ -554,7 +570,7 @@ O treino é a ferramenta de desenvolvimento prioritária desta revisão. As fun�
 
 ### Treino local e separação da interface
 
-O menu oferece partida local (`Enter`) e treino (`T`). A partida mostra vida, tempo, round, cenário e resultado. A geometria de treino usa preenchimento leve e constante, sem pulsação sobre o sprite. Estados, entradas, colisões, dados de golpes e classificações técnicas de contato pertencem exclusivamente ao treino.
+O menu oferece arcade (`A`), PvP (`V`), treino (`T`) e configurações (`C`), também acessíveis por clique ou setas/Enter. Depois vêm a seleção de P1 e a confirmação do Cais. A partida mostra vida, tempo, round, cenário e resultado. A geometria de treino usa preenchimento leve e constante, sem pulsação sobre o sprite. Estados, entradas, colisões, dados de golpes e classificações técnicas de contato pertencem exclusivamente ao treino.
 
 No treino, `P` pausa/retoma; `.` avança exatamente um frame quando pausado; `F2` reinicia posições, vida, histórico e comandos. `G` alterna entre segundo jogador livre, guarda alta, guarda baixa e repetições de soco leve, soco forte ou chute forte. `H` alterna hitboxes/hurtboxes; `I` alterna entradas; `L` alterna velocidade de apresentação entre 100%, 50% e 25%. A lógica continua em 60 Hz e o passo único continua valendo um frame.
 
@@ -568,6 +584,7 @@ O adversário de guarda fica neutro quando não há ataque, assume direção def
 
 - Cada estado registra seu frame lógico de entrada. Loops e reações amostram poses usando esse tempo, sem relógio independente de renderização.
 - O manifesto pode declarar `frameDurations` para segurar poses por durações distintas. Em ataques, esses números são pesos distribuídos dentro da fase lógica; a soma não muda startup, atividade ou recuperação.
+- Revisão da cadência de Gris (21/10/2026): loops de guarda/locomoção retornam pelas poses intermediárias e usam holds explícitos, inclusive no menu. Os cortes sustentam uma pose legível durante a atividade e mostram o seguimento da tesoura no começo da recuperação antes de recolher. Uma pose de seguimento na recuperação não mantém a hitbox ativa nem aplica um segundo contato; tempos de combate, dano, stun e caixas continuam definidos pelo livro do personagem.
 - Startup, atividade e recuperação de cada golpe têm clipes próprios; a pose de contato deve ocupar os frames em que a hitbox realmente está ativa.
 - O salto pode declarar poses de subida, ápice e descida, selecionadas pela velocidade vertical. A posição física e a aterrissagem vêm da simulação.
 - Espelhar um clipe não reinicia seu ciclo. O recuo continua usando a caminhada espelhada já solicitada.
@@ -742,7 +759,7 @@ Reavaliar esses valores ao testar sensação de controle e regras de round; mant
 
 ### Primeiro personagem provisório
 
-O primeiro personagem de teste é **Tester** (`tester`), personagem principal e padrão temporário para os dois lados da luta. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 3 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
+O primeiro personagem de teste é **Tester** (`tester`), preservado como padrão da simulação isolada, adversário de treino e opção do elenco. A tela inicial permite escolher Ayla, Gris ou Tester para P1. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 3 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
 
 Os sprites-fonte de cada personagem ficam em `src/assets/sprites/characters/{id}/`; o manifesto de animações fica em `src/assets/animations/{id}.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. Consulte os READMEs dessas pastas para o formato esperado dos atlas e manifestos. Os dados de combate são independentes da arte: cada definição em `characters.ts` tem seu livro `moves` e perfil `collision`; cada golpe define sua hitbox de ataque, e cada personagem tem hurtboxes em pé, agachada e aérea.
 

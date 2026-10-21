@@ -1,6 +1,8 @@
 // src/engine/data/characters.ts
 import { testerMoves } from './moves';
 import type { MoveDefinition } from './moves';
+import { ayla } from './fighters/ayla';
+import { gris } from './fighters/gris';
 
 export interface CharacterHurtbox {
   /** Deslocamento relativo ao centro horizontal e aos pés do personagem. */
@@ -23,7 +25,9 @@ export interface CharacterDefinition {
   id: string;
   name: string;
   maxHealth: number;
-  movement: { walkSpeed: number; jumpVelocity: number };
+  /** Lutadores de diagnóstico podem permanecer fora da seleção pública. */
+  selectable?: boolean;
+  movement: { walkSpeed: number; jumpVelocity: number; dashSpeed?: number };
   /** Livro de golpes exclusivo deste personagem; IDs só precisam ser únicos dentro do livro. */
   moves: readonly MoveDefinition[];
   collision: CharacterCollisionProfile;
@@ -57,13 +61,15 @@ const dummyMoves: readonly MoveDefinition[] = testerMoves
     ? { ...move, id: 'dummy-jab', damage: 38, hitbox: { forward: 30, yOffset: -112, width: 48, height: 30 } }
     : move);
 
-/** Primeiro personagem provisório; ambos os lados o usam até existir seleção. */
+/** Registro público e personagens internos; cada entrada mantém seu próprio livro. */
 export const characters: readonly CharacterDefinition[] = [
+  ayla,
+  gris,
   {
     id: DEFAULT_CHARACTER_ID,
     name: 'Tester',
     maxHealth: 1000,
-    movement: { walkSpeed: 3, jumpVelocity: -11 },
+    movement: { walkSpeed: 3, dashSpeed: 6, jumpVelocity: -11 },
     moves: testerMoves,
     collision: testerCollision,
     assets: {
@@ -74,8 +80,9 @@ export const characters: readonly CharacterDefinition[] = [
   {
     id: SECOND_TEST_CHARACTER_ID,
     name: 'Dummy',
+    selectable: false,
     maxHealth: 900,
-    movement: { walkSpeed: 2.5, jumpVelocity: -10.5 },
+    movement: { walkSpeed: 2.5, dashSpeed: 5.5, jumpVelocity: -10.5 },
     moves: dummyMoves,
     collision: dummyCollision,
     assets: {
@@ -90,3 +97,9 @@ export function getCharacterById(characterId: string): CharacterDefinition | und
 }
 
 export const defaultCharacter = getCharacterById(DEFAULT_CHARACTER_ID)!;
+export const playableCharacters = characters.filter((character) => character.selectable !== false);
+
+/** A quantidade de especiais é derivada do livro, nunca de um catálogo global. */
+export function getSpecialMoves(character: CharacterDefinition): readonly MoveDefinition[] {
+  return character.moves.filter((move) => move.kind === 'special' || move.hitLevel === 'special' || move.projectile);
+}

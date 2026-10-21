@@ -23,6 +23,7 @@ export interface CharacterAttack {
   buttons: readonly AttackButton[];
   airborne?: boolean;
   crouching?: boolean;
+  hurtboxStance?: 'standing' | 'crouching' | 'airborne';
   elapsedFrames: number;
   hasHit: boolean;
   hitElapsedFrames?: number;

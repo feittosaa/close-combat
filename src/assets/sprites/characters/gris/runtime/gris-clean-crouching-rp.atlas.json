@@ -1,0 +1,93 @@
+{
+  "frames": {
+    "90": {
+      "frame": {
+        "x": 47,
+        "y": 105,
+        "w": 471,
+        "h": 480
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 792,
+        "y": 1120,
+        "w": 471,
+        "h": 480
+      },
+      "sourceSize": {
+        "w": 2048,
+        "h": 2048
+      }
+    },
+    "91": {
+      "frame": {
+        "x": 592,
+        "y": 230,
+        "w": 639,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 793,
+        "y": 1240,
+        "w": 639,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 2048,
+        "h": 2048
+      }
+    },
+    "92": {
+      "frame": {
+        "x": 40,
+        "y": 772,
+        "w": 723,
+        "h": 353
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 770,
+        "y": 1247,
+        "w": 723,
+        "h": 353
+      },
+      "sourceSize": {
+        "w": 2048,
+        "h": 2048
+      }
+    },
+    "93": {
+      "frame": {
+        "x": 785,
+        "y": 683,
+        "w": 406,
+        "h": 457
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 810,
+        "y": 1143,
+        "w": 406,
+        "h": 457
+      },
+      "sourceSize": {
+        "w": 2048,
+        "h": 2048
+      }
+    }
+  },
+  "meta": {
+    "image": "gris-clean-crouching-rp.png",
+    "size": {
+      "w": 1254,
+      "h": 1254
+    },
+    "format": "RGBA8888",
+    "scale": "1"
+  }
+}

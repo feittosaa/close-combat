@@ -16,3 +16,5 @@ Estados atuais: `idle`, `walk`, `dash`, `jump`, `crouch`, `defense`, `hit`, `blo
 O Tester preserva 31 faixas de origem como `tester-source-row-00` a `tester-source-row-30`, com 399 quadros válidos. Esses clipes servem à revisão e não são escolhidos aleatoriamente durante a luta. O Dummy possui apenas dados mínimos de desenvolvimento; sua arte e sua seleção no menu ainda não estão integradas.
 
 Tempo de combate, dano, hitboxes, hurtboxes, deslocamento e regras de stun pertencem ao motor, nunca a este manifesto.
+
+Ayla usa múltiplos atlas com recortes explícitos: `textureSources` declara imagens/atlas e `frameTextures` associa cada índice lógico à textura que o contém. Todos os quadros usam o mesmo canvas lógico preenchido por metadados de trim. O carregador valida cobertura de estados, fases e texturas antes de iniciar. `CombatantView` troca textura e quadro juntos; os índices não são offsets de uma grade presumida. Os efeitos de projéteis são clipes separados, reproduzidos por `ProjectileView` a partir da entidade lógica.

@@ -5,6 +5,8 @@ export type HitLevel = 'high' | 'mid' | 'low' | 'air' | 'throw' | 'special';
 
 export interface MoveDefinition {
   id: string;
+  /** Categoria do livro local; não limita a quantidade nem determina a guarda. */
+  kind?: 'normal' | 'special' | 'throw';
   input: { direction?: Direction; sequence?: readonly Direction[]; buttons: readonly AttackButton[] };
   precisionWindowFrames?: number;
   cancelOnHit?: { moveIds: readonly string[]; windowFrames: number };
@@ -20,6 +22,8 @@ export interface MoveDefinition {
   strikeInvulnerableStartupFrames?: number;
   airborne?: boolean;
   crouching?: boolean;
+  /** Poses de ataque podem usar outra hurtbox do perfil individual sem mudar o comando. */
+  hurtboxStances?: Partial<Record<'startup' | 'active' | 'recovery', 'standing' | 'crouching' | 'airborne'>>;
   startup: number;
   activeFrames: number;
   recovery: number;
@@ -28,8 +32,27 @@ export interface MoveDefinition {
   blockstun: number;
   pushback: { hit: number; block: number };
   advance?: number;
+  /** Deslocamento por frame ativo, relativo à direção atual do golpe. */
+  travelSpeed?: number;
+  /** Impulso inicial de golpes que começam no chão e sobem. */
+  launchVelocity?: number;
+  projectile?: ProjectileDefinition;
   hitLevel: HitLevel;
   hitbox: { forward: number; yOffset: number; width: number; height: number };
+}
+
+export interface ProjectileDefinition {
+  spawnFrame?: number;
+  forward: number;
+  yOffset: number;
+  speed: number;
+  lifetimeFrames: number;
+  hitbox: MoveDefinition['hitbox'];
+  animationId: string;
+  maxActive?: number;
+  /** Um golpe emissor só causa contato corporal se declarar esta opção. */
+  melee?: boolean;
+  clash?: boolean;
 }
 
 /** Valores de protótipo; correspondem à tabela provisória em base.md. */
