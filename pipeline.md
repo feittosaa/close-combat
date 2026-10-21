@@ -1,5 +1,7 @@
 # Close Combat — Pipeline de implementação
 
+> **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
+
 > **Raiz:** [`base.md`](./base.md), versão 0.2.1.
 > **Revisão:** 21/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
@@ -276,3 +278,13 @@ Correções de escala, remapeamento de golpes e cadência, partida sem depuraç�
 ### Cadência da Gris — 21/10/2026
 
 Loops com retorno intermediário e holds explícitos; menu e arena respeitam as mesmas durações. Cortes fortes e especiais mantêm o seguimento da tesoura na recuperação, sem mudar tempos lógicos, dano ou caixas. Conferido no treino; 138 testes e build aprovados. Detalhes e evidências em `docs/ayla-gris-progresso.md`.
+
+## Fluxo de CI/CD — 21/10/2026
+
+- [x] Documentar branches, critérios de conclusão, push, integração e releases em `docs/ci-cd.md`.
+- [x] Registrar instruções persistentes do repositório em `AGENTS.md`.
+- [x] Criar workflow para testes/build em branches, PRs e tags; validar versão e origem da tag em `main`.
+- [ ] Confirmar primeira execução remota da CI e integração desta entrega em `development`.
+- [ ] Aplicar proteções de branch no GitHub (configuração remota).
+
+Validação local desta entrega: instalação limpa, 138 testes, build e `git diff --check` aprovados. Integração remota depende da execução da nova CI.
