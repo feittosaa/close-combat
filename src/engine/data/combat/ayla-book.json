@@ -15,7 +15,7 @@
     "hitstun": 32,
     "blockstun": 31,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -132,7 +132,7 @@
     "hitstun": 35,
     "blockstun": 21,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -287,7 +287,7 @@
     "hitstun": 39,
     "blockstun": 21,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -405,7 +405,7 @@
     "hitstun": 27,
     "blockstun": 20,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -514,7 +514,7 @@
     "hitstun": 40,
     "blockstun": 33,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -629,7 +629,7 @@
     "hitstun": 56,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -744,7 +744,7 @@
     "hitstun": 24,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
@@ -867,7 +867,7 @@
     "hitstun": 29,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
@@ -993,7 +993,7 @@
     "hitstun": 40,
     "blockstun": 29,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -1108,7 +1108,7 @@
     "hitstun": 35,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -1223,7 +1223,7 @@
     "hitstun": 37,
     "blockstun": 22,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -1336,7 +1336,7 @@
     "hitstun": 29,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -1451,7 +1451,7 @@
     "hitstun": 45,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -1572,7 +1572,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -1680,7 +1680,7 @@
     "hitstun": 36,
     "blockstun": 21,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -1797,7 +1797,7 @@
     "hitstun": 30,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -1905,7 +1905,7 @@
     "hitstun": 27,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -2020,7 +2020,7 @@
     "hitstun": 31,
     "blockstun": 17,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -2136,7 +2136,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "high",
@@ -2246,7 +2246,7 @@
     "hitstun": 27,
     "blockstun": 17,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -2384,7 +2384,7 @@
     "hitstun": 45,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -2513,7 +2513,7 @@
     "hitstun": 45,
     "blockstun": 20,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -2629,7 +2629,7 @@
     "hitstun": 36,
     "blockstun": 18,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -2741,7 +2741,7 @@
     "hitstun": 29,
     "blockstun": 26,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -2853,7 +2853,7 @@
     "hitstun": 44,
     "blockstun": 24,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -2982,7 +2982,7 @@
     "hitstun": 34,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -3093,7 +3093,7 @@
     "hitstun": 36,
     "blockstun": 27,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -3211,7 +3211,7 @@
     "hitstun": 72,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "high",
@@ -3328,7 +3328,7 @@
     "hitstun": 49,
     "blockstun": 23,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -3447,7 +3447,7 @@
     "hitstun": 37,
     "blockstun": 20,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -3559,7 +3559,7 @@
     "hitstun": 34,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -3669,7 +3669,7 @@
     "hitstun": 42,
     "blockstun": 21,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -3784,7 +3784,7 @@
     "hitstun": 35,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -3899,7 +3899,7 @@
     "hitstun": 45,
     "blockstun": 23,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4016,7 +4016,7 @@
     "hitstun": 44,
     "blockstun": 45,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4134,7 +4134,7 @@
     "hitstun": 29,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4244,7 +4244,7 @@
     "hitstun": 33,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4360,7 +4360,7 @@
     "hitstun": 26,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4490,7 +4490,7 @@
     "hitstun": 31,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4605,7 +4605,7 @@
     "hitstun": 48,
     "blockstun": 22,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4754,7 +4754,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4870,7 +4870,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -4986,7 +4986,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -5102,7 +5102,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -5219,7 +5219,7 @@
     "hitstun": 36,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "low",
@@ -5338,7 +5338,7 @@
     "hitstun": 31,
     "blockstun": 21,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -5448,7 +5448,7 @@
     "hitstun": 48,
     "blockstun": 20,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -5586,7 +5586,7 @@
     "hitstun": 40,
     "blockstun": 29,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -5697,7 +5697,7 @@
     "hitstun": 29,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -5811,7 +5811,7 @@
     "hitstun": 34,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -5921,7 +5921,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -6031,7 +6031,7 @@
     "hitstun": 33,
     "blockstun": 10,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -6149,7 +6149,7 @@
     "hitstun": 28,
     "blockstun": 16,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -6263,7 +6263,7 @@
     "hitstun": 25,
     "blockstun": 14,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -6382,7 +6382,7 @@
     "hitstun": 62,
     "blockstun": 16,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -6502,7 +6502,7 @@
     "hitstun": 32,
     "blockstun": 21,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -6620,7 +6620,7 @@
     "hitstun": 35,
     "blockstun": 10,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -6740,7 +6740,7 @@
     "hitstun": 27,
     "blockstun": 16,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -6853,7 +6853,7 @@
     "hitstun": 30,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -6971,7 +6971,7 @@
     "hitstun": 31,
     "blockstun": 14,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -7089,7 +7089,7 @@
     "hitstun": 39,
     "blockstun": 10,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -7210,7 +7210,7 @@
     "hitstun": 25,
     "blockstun": 11,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -7329,7 +7329,7 @@
     "hitstun": 45,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -7443,7 +7443,7 @@
     "hitstun": 29,
     "blockstun": 16,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -7561,7 +7561,7 @@
     "hitstun": 44,
     "blockstun": 24,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -7677,7 +7677,7 @@
     "hitstun": 23,
     "blockstun": 12,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -7791,7 +7791,7 @@
     "hitstun": 17,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -7905,7 +7905,7 @@
     "hitstun": 27,
     "blockstun": 17,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -8018,7 +8018,7 @@
     "hitstun": 50,
     "blockstun": 24,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -8144,7 +8144,7 @@
     "hitstun": 33,
     "blockstun": 12,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -8257,7 +8257,7 @@
     "hitstun": 41,
     "blockstun": 15,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -8374,7 +8374,7 @@
     "hitstun": 23,
     "blockstun": 12,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -8491,7 +8491,7 @@
     "hitstun": 53,
     "blockstun": 1,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "low",
@@ -8612,7 +8612,7 @@
     "hitstun": 41,
     "blockstun": 1,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "low",
@@ -8733,7 +8733,7 @@
     "hitstun": 43,
     "blockstun": 7,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -8857,7 +8857,7 @@
     "hitstun": 32,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -8953,7 +8953,7 @@
     "hitstun": 48,
     "blockstun": 26,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -9069,7 +9069,7 @@
     "hitstun": 74,
     "blockstun": 25,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -9184,7 +9184,7 @@
     "hitstun": 34,
     "blockstun": 20,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -9297,7 +9297,7 @@
     "hitstun": 32,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -9391,7 +9391,7 @@
     "hitstun": 9,
     "blockstun": 1,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -9488,7 +9488,7 @@
     "hitstun": 38,
     "blockstun": 18,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "low",
@@ -9616,7 +9616,7 @@
     "hitstun": 50,
     "blockstun": 18,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -9733,7 +9733,7 @@
     "hitstun": 49,
     "blockstun": 23,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "high",
@@ -9854,7 +9854,7 @@
     "hitstun": 63,
     "blockstun": 29,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "high",
@@ -9985,7 +9985,7 @@
     "hitstun": 62,
     "blockstun": 17,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -10117,7 +10117,7 @@
     "hitstun": 67,
     "blockstun": 18,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "high",
@@ -10247,7 +10247,7 @@
     "hitstun": 40,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "high",
@@ -10380,7 +10380,7 @@
     "hitstun": 55,
     "blockstun": 35,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -10510,7 +10510,7 @@
     "hitstun": 56,
     "blockstun": 11,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -10631,7 +10631,7 @@
     "hitstun": 47,
     "blockstun": 40,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -10750,7 +10750,7 @@
     "hitstun": 29,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -10860,7 +10860,7 @@
     "hitstun": 103,
     "blockstun": 18,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -10978,7 +10978,7 @@
     "hitstun": 94,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -11090,7 +11090,7 @@
     "hitstun": 48,
     "blockstun": 23,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -11202,7 +11202,7 @@
     "hitstun": 29,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -11312,7 +11312,7 @@
     "hitstun": 33,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -11429,7 +11429,7 @@
     "hitstun": 36,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -11542,7 +11542,7 @@
     "hitstun": 45,
     "blockstun": 22,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -11655,7 +11655,7 @@
     "hitstun": 30,
     "blockstun": 20,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -11765,7 +11765,7 @@
     "hitstun": 54,
     "blockstun": 20,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -11883,7 +11883,7 @@
     "hitstun": 54,
     "blockstun": 33,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -11995,7 +11995,7 @@
     "hitstun": 50,
     "blockstun": 28,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -12113,7 +12113,7 @@
     "hitstun": 69,
     "blockstun": 23,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -12231,7 +12231,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -12341,7 +12341,7 @@
     "hitstun": 35,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -12451,7 +12451,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -12567,7 +12567,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -12683,7 +12683,7 @@
     "hitstun": 50,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -12802,7 +12802,7 @@
     "hitstun": 31,
     "blockstun": 19,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -12923,7 +12923,7 @@
     "hitstun": 18,
     "blockstun": 67,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -13042,7 +13042,7 @@
     "hitstun": 40,
     "blockstun": 14,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "low",
@@ -13163,7 +13163,7 @@
     "hitstun": 114,
     "blockstun": 23,
     "pushback": {
-      "hit": 28,
+      "hit": 14,
       "block": 7
     },
     "hitLevel": "mid",
@@ -13281,7 +13281,7 @@
     "hitstun": 40,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -13411,7 +13411,7 @@
     "hitstun": 35,
     "blockstun": 26,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -13550,7 +13550,7 @@
     "hitstun": 28,
     "blockstun": 17,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -13694,7 +13694,7 @@
     "hitstun": 24,
     "blockstun": 22,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "high",
@@ -13839,7 +13839,7 @@
     "hitstun": 33,
     "blockstun": 45,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -13956,7 +13956,7 @@
     "hitstun": 16,
     "blockstun": 8,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -14073,7 +14073,7 @@
     "hitstun": 23,
     "blockstun": 12,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -14187,7 +14187,7 @@
     "hitstun": 32,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -14281,7 +14281,7 @@
     "hitstun": 32,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -14377,7 +14377,7 @@
     "hitstun": 31,
     "blockstun": 17,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -14521,7 +14521,7 @@
     "hitstun": 62,
     "blockstun": 17,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -14624,7 +14624,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -14739,7 +14739,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "mid",
@@ -14854,7 +14854,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -14969,7 +14969,7 @@
     "hitstun": 30,
     "blockstun": 19,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "low",
@@ -15085,7 +15085,7 @@
     "hitstun": 33,
     "blockstun": 31,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
@@ -15216,7 +15216,7 @@
     "hitstun": 31,
     "blockstun": 31,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
@@ -15347,7 +15347,7 @@
     "hitstun": 27,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
@@ -15473,7 +15473,7 @@
     "hitstun": 21,
     "blockstun": 18,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
@@ -15605,7 +15605,7 @@
     "hitstun": 24,
     "blockstun": 21,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
@@ -15733,7 +15733,7 @@
     "hitstun": 20,
     "blockstun": 21,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
@@ -15861,7 +15861,7 @@
     "hitstun": 50,
     "blockstun": 24,
     "pushback": {
-      "hit": 12,
+      "hit": 6,
       "block": 7
     },
     "hitLevel": "throw",
