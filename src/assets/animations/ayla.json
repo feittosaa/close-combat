@@ -2467,6 +2467,20 @@
       "frameRate": 12,
       "repeat": 0,
       "sourceFacesLeft": false
+    },
+    {
+      "key": "ayla-juggle",
+      "start": 192,
+      "end": 192,
+      "frames": [
+        192
+      ],
+      "frameRate": 8,
+      "repeat": -1,
+      "bodyAnchor": {
+        "x": 1040.5,
+        "y": 1817.5
+      }
     }
   ],
   "mappingNotes": {

@@ -10,6 +10,8 @@ export interface AnimationClip {
   frameRate: number;
   repeat: number;
   sourceFacesLeft?: boolean;
+  /** Pivô visual da pose aérea, em pixels da célula, alinhado ao centro da hurtbox. */
+  bodyAnchor?: { x: number; y: number };
   /** Duração de cada pose em frames lógicos; em ataques funciona como peso dentro da fase. */
   frameDurations?: readonly number[];
   /** Poses de salto escolhidas pela trajetória, sem terminar o clipe antes da aterrissagem. */
@@ -138,6 +140,9 @@ export function validateAnimationManifest(manifest: CharacterAnimationManifest):
   }
   for (const clip of manifest.clips) {
     const frames = getClipFrames(clip);
+    if (clip.bodyAnchor && (!Number.isFinite(clip.bodyAnchor.x) || clip.bodyAnchor.x < 0 || clip.bodyAnchor.x > manifest.frameSize.width || !Number.isFinite(clip.bodyAnchor.y) || clip.bodyAnchor.y < 0 || clip.bodyAnchor.y > manifest.frameSize.height)) {
+      throw new Error(`Pivô corporal inválido: ${clip.key}`);
+    }
     if (keys.has(clip.key) || !clip.key || !Number.isInteger(clip.start) || !Number.isInteger(clip.end) || clip.start > clip.end ||
         !frames.length || frames.some((frame) => !Number.isInteger(frame) || frame < 0 ||
           (manifest.totalFrames !== undefined && frame >= manifest.totalFrames)) ||
