@@ -5,7 +5,7 @@ import type { AttackButton } from '../../../input/types';
 const strike = (id: string, button: AttackButton, startup: number, recovery: number, damage: number,
   hitbox: MoveDefinition['hitbox'], options: Partial<MoveDefinition> = {}): MoveDefinition => ({
     id, kind: 'normal', input: { buttons: [button] }, startup, activeFrames: 4, recovery,
-    damage, hitstun: 19, blockstun: 12, pushback: { hit: 22, block: 7 }, hitLevel: 'mid', hitbox, ...options,
+    damage, hitstun: 19, blockstun: 12, pushback: { hit: 11, block: 7 }, hitLevel: 'mid', hitbox, ...options,
   });
 
 /** Alcances da arma e movimento são autorados para Gris, sem clonar o livro de outro lutador. */
@@ -25,7 +25,7 @@ export const grisMoves: readonly MoveDefinition[] = [
   {
     id: 'golden-arc', kind: 'special', input: { sequence: ['D', 'DF', 'F'], buttons: ['1'] },
     startup: 18, activeFrames: 3, recovery: 28, damage: 79, hitstun: 24, blockstun: 16,
-    hitLevel: 'mid', pushback: { hit: 25, block: 10 },
+    hitLevel: 'mid', pushback: { hit: 12.5, block: 10 },
     hitbox: { forward: 22, yOffset: -110, width: 108, height: 48 },
     projectile: {
       forward: 58, yOffset: -68, speed: 7.4, lifetimeFrames: 100,
@@ -35,21 +35,21 @@ export const grisMoves: readonly MoveDefinition[] = [
   {
     id: 'rising-shear', kind: 'special', input: { sequence: ['D', 'DB', 'B'], buttons: ['3'] },
     startup: 11, activeFrames: 9, recovery: 32, damage: 93, hitstun: 26, blockstun: 14,
-    hitLevel: 'mid', pushback: { hit: 26, block: 9 }, launchVelocity: -10,
+    hitLevel: 'mid', pushback: { hit: 13, block: 9 }, launchVelocity: -10,
     strikeInvulnerableStartupFrames: 2,
     hitbox: { forward: 8, yOffset: -266, width: 72, height: 180 },
   },
   {
     id: 'silk-step', kind: 'special', input: { sequence: ['D', 'DF', 'F'], buttons: ['2'] },
     startup: 15, activeFrames: 9, recovery: 28, damage: 88, hitstun: 24, blockstun: 14,
-    hitLevel: 'mid', pushback: { hit: 30, block: 11 }, travelSpeed: 4.4,
+    hitLevel: 'mid', pushback: { hit: 15, block: 11 }, travelSpeed: 4.4,
     hurtboxStances: { startup: 'standing', active: 'crouching', recovery: 'standing' },
     hitbox: { forward: 22, yOffset: -105, width: 118, height: 58 },
   },
   {
     id: 'royal-cleave', kind: 'special', input: { sequence: ['D', 'DB', 'B'], buttons: ['4'] },
     startup: 20, activeFrames: 6, recovery: 34, damage: 108, hitstun: 29, blockstun: 17,
-    hitLevel: 'mid', pushback: { hit: 33, block: 12 },
+    hitLevel: 'mid', pushback: { hit: 16.5, block: 12 },
     hitbox: { forward: 18, yOffset: -132, width: 130, height: 80 },
   },
   {

@@ -390,3 +390,14 @@ Branch: `codex/fix-alinhamento-juggle`.
 - [x] Preservar integralmente simulação, caixas, gravidade e limite de levantamentos.
 
 Poses aéreas sustentadas são provisórias; animações dedicadas continuam pendentes. Testes/build/diff e CI remota são conferidos na entrega.
+
+## Recuo menor nos acertos — 22/10/2026
+
+Branch: `codex/fix-recuo-acertos`.
+
+- [x] Reduzir pela metade o pushback de acertos nos livros atuais e no importador de Ayla.
+- [x] Preservar bloqueio, agarrões, avanço, caixas, gravidade e limite de levantamentos.
+- [x] Conferir dois elétricos no treino: distância final 89, antes 117, no frame 30 com distância inicial 96; evidência em `docs/evidence/recuo-acertos/`.
+- [x] Verificar regressões de combos, parede e proteções: 341 testes aprovados.
+
+Build, instalação limpa, diff e CI remota são confirmados na entrega; integração em development após aprovação.
