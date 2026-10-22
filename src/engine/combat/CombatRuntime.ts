@@ -45,7 +45,7 @@ export function strikeDamage(attacker: CharacterState, target: CharacterState, d
 
 export function applyStrikeReaction(attacker: CharacterState, target: CharacterState, move: MoveDefinition,
   strike: StrikeFrame | undefined, damage: number, counter: boolean): void {
-  if (!attacker.combatRules || !move.combat) return;
+  if (!attacker.combatRules || !move.combat || target.combo?.forcedFall) return;
   if (move.combat.action?.power === 'activate-on-hit' && attacker.powerAvailable !== false) {
     attacker.powerFrames = attacker.combatRules.powerFrames; attacker.powerAvailable = false;
   }
@@ -59,15 +59,30 @@ export function applyStrikeReaction(attacker: CharacterState, target: CharacterS
   combo.moveIds.push(move.id);
   combo.moveIds = combo.moveIds.slice(-60);
   const reaction = counter ? strike?.counterReaction ?? strike?.reaction : strike?.reaction;
-  const screw = strike?.screw && !target.grounded && !combo.screwUsed;
-  if (screw) combo.screwUsed = true;
-  if ((reaction === 'launch' && target.grounded) || screw) {
+  const aerial = !target.grounded;
+  const lift = reaction === 'launch' || Boolean(strike?.screw && aerial);
+  const screw = Boolean(strike?.screw && aerial && !combo.screwUsed);
+  if (lift) {
+    combo.launches = (combo.launches ?? 0) + 1;
+    if (combo.launches > (attacker.combatRules.maxLaunches ?? 2)) {
+      combo.forcedFall = true;
+      combo.wallFrames = 0;
+      target.verticalVelocity = target.grounded ? 0 : Math.max(attacker.combatRules.forcedFallSpeed ?? 8, target.verticalVelocity);
+      target.mode = target.grounded ? 'knockdown' : 'hitstun';
+      target.remainingStateFrames = attacker.combatRules.knockdownFrames;
+      target.attack = undefined; target.followup = undefined;
+      return;
+    }
+    if (screw) combo.screwUsed = true;
     target.grounded = false;
     target.y -= target.y === attacker.y ? 2 : 0;
-    target.verticalVelocity = screw ? attacker.combatRules.screwVelocity ?? -8.5 : attacker.combatRules.launchVelocity ?? -9.6;
+    target.verticalVelocity = aerial
+      ? screw ? attacker.combatRules.screwVelocity ?? -3.2 : attacker.combatRules.aerialLaunchVelocity ?? -3.2
+      : attacker.combatRules.launchVelocity ?? -6.8;
     target.remainingStateFrames = Math.max(target.remainingStateFrames, 28);
-  } else if (!target.grounded) {
-    target.verticalVelocity = Math.min(target.verticalVelocity, Math.min(-1, (attacker.combatRules.juggleHitVelocity ?? -4.6) + combo.hits * .12));
+  } else if (aerial) {
+    // Each aerial hit uses a smaller lift, including when the victim was still rising quickly.
+    target.verticalVelocity = Math.min(-.4, (attacker.combatRules.juggleHitVelocity ?? -2.8) + (combo.airHits ?? 0) * .025);
     target.remainingStateFrames = Math.max(target.remainingStateFrames, 18);
   } else if (reaction === 'knockdown') {
     target.mode = 'knockdown';

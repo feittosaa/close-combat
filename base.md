@@ -3,7 +3,7 @@
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
 > **Status:** protótipo em pixel art; direção Tekken 7/Ayla definida; migração mecânica e visual HD pendentes
-> **Versão:** 0.3.3 · revisão de 21/10/2026
+> **Versão:** 0.3.4 · revisão de 21/10/2026
 > **Idioma:** português (Brasil)
 > **Título do jogo:** Close Combat
 > **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
@@ -961,4 +961,8 @@ Esta solicitação do usuário substitui as recuperações de contato/erro descr
 
 A janela da string é independente do bloqueio de controle: guardar o último golpe elegível e seu relógio permite continuar `1,1,2` mesmo após ficar livre. O contexto não bloqueia movimento nem outro golpe raiz, expira no fim da janela e é descartado por nova ação, dano ou reset. Fichas e HUD indicam recuperação somente no bloqueio. Golpes multihit conservam essa recuperação se qualquer contato tiver sido bloqueado.
 
-Ayla usa lançamento inicial −9,6 unidades/frame e gravidade inicial 0,5, produzindo aproximadamente 38F de voo sem novos contatos e altura de 85–100 unidades. Golpes aéreos usam gravidade base 0,385 com acréscimo 0,025 por contato no ar, impulso de manutenção −5,4 com deterioração por quantidade de hits, Screw único com impulso −8,5 e queda de 26F após aterrissar. Os socos anteriores no chão não alteram a gravidade do lançamento inicial. Parâmetros são dados próprios da personagem e adaptações 2D; acertos renovam a trajetória sem congelar o alvo no ar indefinidamente.
+Ayla usa lançamento inicial −6,8 unidades/frame e gravidade inicial 0,24, produzindo aproximadamente 56F de voo sem novos contatos e altura de 80–100 unidades. No juggle, gravidade base 0,2 com acréscimo 0,012 por contato aéreo; acertos comuns aplicam impulso −2,8 com deterioração de 0,025 por contato (limite −0,4). Levantamento aéreo usa −4 e Screw −4,5, inferiores ao impulso inicial. O salto livre não muda.
+
+### Limite de levantamentos — 21/10/2026
+
+Cada combo permite dois levantamentos: o inicial e um aéreo. Launchers, inclusive em counter hit, e tentativas aéreas de Screw contam nesse orçamento; acertos comuns não. O terceiro levantamento causa dano e força descida imediata, com velocidade mínima 8 e gravidade 0,8. A vítima fica imune a golpes, projéteis e agarrões durante essa descida e os 26F de queda no chão. Parede não interrompe a queda protegida. A imunidade termina ao levantar ou reiniciar; um novo combo recebe orçamento novo. O treino exibe levantamentos e “QUEDA FORÇADA · IMUNE”. Parâmetros pertencem ao livro da personagem; ver `docs/limite-levantamentos.md`.

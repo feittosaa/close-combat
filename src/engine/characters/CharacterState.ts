@@ -74,7 +74,7 @@ export interface CharacterState {
   rageUsed?: boolean;
   lowParryFrames?: number;
   lowParryHeld?: boolean;
-  combo?: { airHits?: number; attackerId: string; hits: number; damage: number; screwUsed: boolean; wallUsed: boolean; wallFrames: number; moveIds: string[] };
+  combo?: { launches?: number; forcedFall?: boolean; airHits?: number; attackerId: string; hits: number; damage: number; screwUsed: boolean; wallUsed: boolean; wallFrames: number; moveIds: string[] };
   lastCombo?: { hits: number; damage: number; moveIds: string[] };
   attack?: CharacterAttack;
   /** String continuation context; never prevents movement or a fresh root command. */

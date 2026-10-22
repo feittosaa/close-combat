@@ -22,6 +22,7 @@ export function moveInputLabel(move: MoveDefinition): string {
 
 export function contactLabel(hit: HitEvent): string {
   const attacker = hit.attackerId === 'player-1' ? 'P1' : 'P2';
+  if (hit.forcedFall) return `${attacker} · LIMITE DE LEVANTAMENTOS · QUEDA IMUNE`;
   if (hit.outcome === 'throw-start') return `${attacker} AGARRÃO · QUEBRA ${hit.breakButtons?.map(button=>keyLabel(getPlayerLayout(hit.targetId === 'player-1' ? 0 : 1).buttons[button])).join('+') ?? '—'}`;
   if (hit.outcome === 'throw-break') return 'AGARRÃO QUEBRADO';
   if (hit.outcome === 'parry' && hit.lowParry) return 'LOW PARRY · ALVO LANÇADO';

@@ -32,6 +32,7 @@ export interface HitEvent {
   lowParry?: boolean;
   strikeIndex?: number;
   reaction?: 'launch' | 'knockdown';
+  forcedFall?: boolean;
 }
 
 /** Resolve contatos da simulação e fornece a geometria exata para a visualização. */
@@ -154,10 +155,12 @@ export class AttackResolver {
       }
     }
 
+    const accepted: HitEvent[] = [];
     // Calcular todos os contatos antes de aplicar efeitos permite trades determinísticos.
     pending.forEach(({ event, attack, projectile, target, resolvedMove: move, strike, strikeIndex }) => {
       const attackerState = characters.find((character) => character.characterId === event.attackerId);
-      if (!attackerState) return;
+      if (!attackerState || target.combo?.forcedFall) return;
+      accepted.push(event);
       if (projectile) projectile.hasHit = true;
       if (attack) {
         attack.hasHit = true;
@@ -207,7 +210,7 @@ export class AttackResolver {
             attacker.grounded = false;
             attacker.y -= 2;
             attacker.verticalVelocity = -4;
-            attacker.combo = { attackerId: target.characterId, hits: 0, damage: 0, screwUsed: true, wallUsed: false, wallFrames: 0, moveIds: [] };
+            attacker.combo = { attackerId: target.characterId, hits: 0, damage: 0, launches: 1, screwUsed: true, wallUsed: false, wallFrames: 0, moveIds: [] };
           }
         }
         return;
@@ -227,13 +230,14 @@ export class AttackResolver {
         target.crouching = false;
         applyStrikeReaction(attackerState, target, move, strike, event.damage, event.context === 'counter-hit');
       }
-      event.reaction = target.combo && !target.grounded ? 'launch' : (target as CharacterState).mode === 'knockdown' ? 'knockdown' : undefined;
+      event.forcedFall = target.combo?.forcedFall || undefined;
+      event.reaction = target.combo?.forcedFall ? 'knockdown' : target.combo && !target.grounded ? 'launch' : (target as CharacterState).mode === 'knockdown' ? 'knockdown' : undefined;
       // Launch advantage is settled by trajectory/landing, not by adding an 'a' table suffix to hitstun.
-      event.defenderStunFrames = event.reaction === 'launch' ? undefined : target.remainingStateFrames;
+      event.defenderStunFrames = event.reaction === 'launch' || event.forcedFall ? undefined : target.remainingStateFrames;
       event.frameAdvantage = event.defenderStunFrames === undefined ? undefined : frameAdvantage(event.attackerRecoveryFrames ?? 0, event.defenderStunFrames);
     });
 
-    return [...resolvedThrows, ...pending.map(({ event }) => event)];
+    return [...resolvedThrows, ...accepted];
   }
 
   private resolveGrabStates(
@@ -293,6 +297,7 @@ export class AttackResolver {
   }
 
   private isStrikeInvulnerable(character: CharacterState): boolean {
+    if (character.combo?.forcedFall) return true;
     const attack = character.attack;
     const move = attack ? this.resolveMove(character.fighterId, attack.moveId) : undefined;
     return Boolean(
@@ -315,7 +320,7 @@ function matchesButtons(pressed: ReadonlySet<AttackButton>, required: readonly A
 }
 
 function canGrab(attacker: CharacterState, target: CharacterState, move: MoveDefinition): boolean {
-  if (!move.throw || !attacker.grounded || !target.grounded || target.crouching || target.attack) return false;
+  if (target.combo?.forcedFall || !move.throw || !attacker.grounded || !target.grounded || target.crouching || target.attack) return false;
   if (!['neutral', 'moving', 'blocking'].includes(target.mode)) return false;
   const direction = attacker.facing === 'right' ? 1 : -1;
   const distance = (target.x - attacker.x) * direction;
