@@ -379,3 +379,14 @@ Branch: `codex/feature-limite-levantamentos`, criada de `origin/development` ap�
 - [x] Validar 340 testes, build e diff; documentar a nova regra em `base.md` e `docs/limite-levantamentos.md`.
 
 Evidências: `docs/evidence/limite-levantamentos/`. Receitas históricas com três elétricos são truncadas pela regra nova; comandos permanecem disponíveis. CI e integração devem ser confirmadas no remoto na entrega.
+
+## Alinhamento visual do juggle — 21/10/2026
+
+Branch: `codex/fix-alinhamento-juggle`.
+
+- [x] Substituir reação em pé por pose aérea própria em Ayla, Gris e Tester.
+- [x] Alinhar pivô corporal de cada clipe à hurtbox existente, inclusive no espelhamento; manter salto livre e chão.
+- [x] Conferir no treino com dois elétricos contra Tester: corpo horizontal sobre a região atingível; evidência em `docs/evidence/alinhamento-juggle/`.
+- [x] Preservar integralmente simulação, caixas, gravidade e limite de levantamentos.
+
+Poses aéreas sustentadas são provisórias; animações dedicadas continuam pendentes. Testes/build/diff e CI remota são conferidos na entrega.

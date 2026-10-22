@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { createHurtbox } from '../engine/collision/combatGeometry';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { getCharacterAnimationKey } from './animations/CharacterAnimationMap';
 import { getCharacterById } from '../engine/data/characters';
@@ -69,6 +70,10 @@ export class CombatantView {
       body.setFillStyle(this.color);
       body.setDisplaySize(54, state.crouching ? 96 : 152);
     }
+    if (!state.grounded && state.combo) {
+      const box = createHurtbox(state);
+      body.setPosition(box.x + box.width / 2, box.y + box.height).setDisplaySize(box.width, box.height);
+    }
   }
 
   private syncSprite(state: CharacterState, x: number, simulationFrame: number, presentation?: 'victory' | 'knockdown'): void {
@@ -91,7 +96,11 @@ export class CombatantView {
       const texture = this.manifest?.frameTextures?.[String(frame)] ?? this.manifest?.textureKey;
       if (texture) sprite.setTexture(texture, frame);
       else sprite.setFrame(frame);
-      sprite.setOrigin(0.5, anchorY / frameHeight);
+      if (clip.bodyAnchor) {
+        const box = createHurtbox(state);
+        sprite.setOrigin(clip.bodyAnchor.x / (this.manifest?.frameSize.width ?? 256), clip.bodyAnchor.y / frameHeight);
+        sprite.setPosition(box.x + box.width / 2, box.y + box.height / 2);
+      } else sprite.setOrigin(0.5, anchorY / frameHeight);
       sprite.setDisplaySize(this.displaySize.width * scale, this.displaySize.height * scale);
     }
     // Phase changes used to recolor every pixel, producing an apparent blink.
