@@ -317,7 +317,7 @@ export class Simulation {
         this.config.arena.right - target.collision.bodyWidth / 2);
       const move = this.moveFor(attacker, event.moveId);
       const strike = move?.combat?.strikes[event.strikeIndex ?? 0];
-      if (event.outcome === 'hit' && target.combo && !target.combo.wallUsed &&
+      if (event.outcome === 'hit' && target.combo && !target.combo.forcedFall && !target.combo.wallUsed &&
           !target.grounded && target.x !== displacedX && strike?.wallSplat) {
         target.combo.wallUsed = true;
         target.combo.wallFrames = attacker.combatRules?.wallStunFrames ?? 22;
@@ -529,7 +529,7 @@ export class Simulation {
       if ((character.combo?.wallFrames ?? 0) > 0) { character.combo!.wallFrames -= 1; return; }
       const juggleRules = this.fighterDefinitions[1 - index].combatRules;
       const baseGravity = character.combo && (character.combo.airHits ?? 0) > 0 ? juggleRules?.juggleBaseGravity ?? this.config.movement.gravity : character.combo ? juggleRules?.launchGravity ?? this.config.movement.gravity : this.config.movement.gravity;
-      character.verticalVelocity += baseGravity + (character.combo ? (character.combo.airHits ?? 0) * (juggleRules?.juggleGravity ?? 0) : 0);
+      character.verticalVelocity += character.combo?.forcedFall ? .8 : baseGravity + (character.combo ? (character.combo.airHits ?? 0) * (juggleRules?.juggleGravity ?? 0) : 0);
       character.y += character.verticalVelocity;
       if (character.y >= this.config.arena.floorY) {
         character.y = this.config.arena.floorY;

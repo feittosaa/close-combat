@@ -366,3 +366,16 @@ Na mesma branch de fluidez ainda não integrada, a nova solicitação substitui 
 - [x] Atualizar fichas/HUD e conferir string, elétrico e queda no treino; evidências em `docs/evidence/combos-livres/`.
 
 Validação: 329 testes, build e diff aprovados; replays mantêm a rota completa de nove contatos, parede e dois elétricos contra os quatro alvos. O lançamento inicial sem novas entradas é medido em 36–40F, altura 80–100 e queda de 26F. Ver `docs/combos-livres.md`. CI remota e integração são confirmadas na entrega do PR.
+
+## Suspensão e limite de levantamentos — 21/10/2026
+
+Branch: `codex/feature-limite-levantamentos`, criada de `origin/development` após integração do PR #5.
+
+- [x] Aumentar suspensão inicial para aproximadamente 56F e suavizar a gravidade.
+- [x] Reduzir impulso de acertos aéreos e segundo levantamento.
+- [x] Compartilhar orçamento de dois levantamentos entre launchers e Screw; terceiro força queda protegida.
+- [x] Proteger descida e recuperação no chão contra strikes, projéteis e agarrões; impedir interrupção por parede.
+- [x] Mostrar limite/imunidade no treino e conferir terceiro elétrico, aterrissagem e retorno ao neutro no jogo.
+- [x] Validar 340 testes, build e diff; documentar a nova regra em `base.md` e `docs/limite-levantamentos.md`.
+
+Evidências: `docs/evidence/limite-levantamentos/`. Receitas históricas com três elétricos são truncadas pela regra nova; comandos permanecem disponíveis. CI e integração devem ser confirmadas no remoto na entrega.
