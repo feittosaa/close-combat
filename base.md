@@ -970,3 +970,7 @@ Cada combo permite dois levantamentos: o inicial e um aéreo. Launchers, inclusi
 ### Alinhamento visual do juggle — 21/10/2026
 
 Durante o juggle, a reação visual usa pose aérea própria, com pivô corporal autorado no manifesto alinhado ao centro da hurtbox. Ayla, Gris e Tester deixam de reutilizar a reação em pé ancorada pelos pés. São poses provisórias sustentadas até produção das animações dedicadas. Esta correção é somente de apresentação: não muda posições lógicas, caixas, salto livre, gravidade ou orçamento de levantamentos.
+
+### Recuo nos acertos — 22/10/2026
+
+O recuo horizontal de strikes acertados foi reduzido em 50% nos livros atuais de Ayla, Gris, Tester e Dummy (que deriva seus golpes de Tester), tanto no chão quanto no ar e em projéteis. Exemplo: starters importados de Ayla passam de 28 para 14 unidades, demais strikes importados de 12 para 6. Os valores continuam individuais por golpe; não há multiplicador global no motor. Recuo no bloqueio, deslocamento de agarrões, avanço do atacante e trajetória vertical permanecem iguais. O importador offline gera os novos valores para não desfazer o ajuste.

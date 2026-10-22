@@ -168,7 +168,7 @@ for i,row in enumerate(rows):
  m={'id':slug(c),'kind':'throw' if 'throws' in cats else 'special' if 'specials' in cats else 'normal',
     'input':{'buttons':buttons},'startup':startup,'activeFrames':active,'recovery':recovery,
     'damage':sum(x['damage'] for x in strikes),'hitstun':max(1,recovery+hit),'blockstun':max(1,recovery+block),
-    'pushback':{'hit':28 if 'starters' in cats else 12,'block':7},'hitLevel':strikes[0]['hitLevel'] if strikes else 'mid',
+    'pushback':{'hit':14 if 'starters' in cats else 6,'block':7},'hitLevel':strikes[0]['hitLevel'] if strikes else 'mid',
     'hitbox':strikes[0]['hitbox'] if strikes else {'forward':0,'yOffset':0,'width':1,'height':1},'combat':meta}
  if 'th(' in row['Hit level']:
   note=row['Notes'].lower();br=['1','2'] if '1+2' in note else ['1'] if 'break: 1' in note else ['2'] if 'break: 2' in note else []

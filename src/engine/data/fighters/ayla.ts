@@ -7,7 +7,7 @@ import type { AttackButton } from '../../../input/types';
 const normal = (id: string, button: AttackButton, startup: number, recovery: number,
   damage: number, hitbox: MoveDefinition['hitbox'], options: Partial<MoveDefinition> = {}): MoveDefinition => ({
     id, kind: 'normal', input: { buttons: [button] }, startup, activeFrames: 3, recovery,
-    damage, hitstun: 16, blockstun: 10, pushback: { hit: 16, block: 5 },
+    damage, hitstun: 16, blockstun: 10, pushback: { hit: 8, block: 5 },
     hitLevel: 'mid', hitbox, ...options,
   });
 
@@ -28,7 +28,7 @@ export const aylaLegacyMoves: readonly MoveDefinition[] = [
     id: 'crimson-wave', kind: 'special', input: { sequence: ['D', 'DF', 'F'], buttons: ['1'] },
     hurtboxStances: { startup: 'standing', active: 'crouching', recovery: 'standing' },
     startup: 16, activeFrames: 3, recovery: 26, damage: 72, hitstun: 23, blockstun: 15,
-    hitLevel: 'low', pushback: { hit: 24, block: 9 },
+    hitLevel: 'low', pushback: { hit: 12, block: 9 },
     hitbox: { forward: 22, yOffset: -32, width: 40, height: 28 },
     projectile: {
       forward: 48, yOffset: 0, speed: 6, lifetimeFrames: 120,
@@ -38,27 +38,27 @@ export const aylaLegacyMoves: readonly MoveDefinition[] = [
   {
     id: 'scarlet-rush', kind: 'special', input: { sequence: ['D', 'DF', 'F'], buttons: ['2'] },
     startup: 12, activeFrames: 8, recovery: 25, damage: 85, hitstun: 24, blockstun: 14,
-    hitLevel: 'mid', pushback: { hit: 34, block: 10 }, travelSpeed: 4,
+    hitLevel: 'mid', pushback: { hit: 17, block: 10 }, travelSpeed: 4,
     hitbox: { forward: 22, yOffset: -111, width: 74, height: 41 },
   },
   {
     id: 'rising-kick', kind: 'special', input: { sequence: ['D', 'DB', 'B'], buttons: ['3'] },
     startup: 9, activeFrames: 9, recovery: 30, damage: 88, hitstun: 25, blockstun: 13,
-    hitLevel: 'mid', pushback: { hit: 25, block: 8 }, launchVelocity: -9,
+    hitLevel: 'mid', pushback: { hit: 12.5, block: 8 }, launchVelocity: -9,
     strikeInvulnerableStartupFrames: 3,
     hitbox: { forward: -35, yOffset: -185, width: 120, height: 137 },
   },
   {
     id: 'leaping-kick', kind: 'special', input: { sequence: ['D', 'DB', 'B'], buttons: ['4'] },
     startup: 14, activeFrames: 8, recovery: 24, damage: 82, hitstun: 22, blockstun: 12,
-    hitLevel: 'mid', pushback: { hit: 26, block: 10 }, launchVelocity: -6, travelSpeed: 3,
+    hitLevel: 'mid', pushback: { hit: 13, block: 10 }, launchVelocity: -6, travelSpeed: 3,
     hitbox: { forward: 20, yOffset: -151, width: 82, height: 70 },
   },
   {
     id: 'ruby-eruption', kind: 'special', input: { sequence: ['D', 'DF', 'F'], buttons: ['1', '2'] },
     hurtboxStances: { startup: 'standing', active: 'crouching', recovery: 'standing' },
     startup: 24, activeFrames: 3, recovery: 38, damage: 120, hitstun: 30, blockstun: 20,
-    hitLevel: 'mid', pushback: { hit: 30, block: 12 },
+    hitLevel: 'mid', pushback: { hit: 15, block: 12 },
     hitbox: { forward: 20, yOffset: -40, width: 42, height: 34 },
     projectile: {
       forward: 90, yOffset: 0, speed: 0, lifetimeFrames: 18,
