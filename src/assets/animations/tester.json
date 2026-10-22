@@ -1349,6 +1349,21 @@
         3,
         3
       ]
+    },
+    {
+      "key": "tester-juggle",
+      "start": 108,
+      "end": 108,
+      "frames": [
+        108
+      ],
+      "frameRate": 8,
+      "repeat": -1,
+      "bodyAnchor": {
+        "x": 128.0,
+        "y": 215.5
+      },
+      "sourceFacesLeft": true
     }
   ],
   "attackClipKeyPattern": "tester-{moveId}-{phase}",

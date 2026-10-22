@@ -111,3 +111,14 @@ describe('character animation playback', () => {
     expect(getClipFrames({ key: 'range', start: 2, end: 4, frameRate: 8, repeat: 0 })).toEqual([2, 3, 4]);
   });
 });
+
+describe('juggle visual', () => {
+  it('selects a dedicated reaction only while the victim is airborne', () => {
+    const state: CharacterState = { ...fighter, mode: 'hitstun', grounded: false,
+      combo: { attackerId: 'player-2', hits: 1, damage: 10, screwUsed: false, wallUsed: false, wallFrames: 0, moveIds: [] } };
+    expect(getCharacterAnimationKey(state)).toBe('tester-juggle');
+    expect(getCharacterAnimationKey({ ...state, grounded: true })).toBe('tester-hit');
+    expect(getCharacterAnimationKey({ ...state, combo: undefined })).toBe('tester-hit');
+    expect(getCharacterAnimationKey({ ...state, mode: 'airborne', combo: undefined })).toBe('tester-jump');
+  });
+});

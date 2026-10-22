@@ -9,3 +9,5 @@ Este módulo amostra poses do atlas a partir do estado e do frame da simulação
 Contrato completo, matriz de produção e roteiro de revisão: [`docs/animacao.md`](../../../docs/animacao.md). Arte e animação não alteram dano, hitboxes ou duração de stun.
 
 `CombatantView` aplica `footAnchorY` e correções uniformes de `frameTransforms` ao quadro amostrado. Não aplica tint por fase. Correções visuais não alteram a geometria, e não devem ser confundidas com o ajuste de tempos no livro de golpes.
+
+Reações de juggle usam clipe `*-juggle` enquanto a vítima está no ar em hitstun. Seu `bodyAnchor` é um pivô autorado na célula, alinhado visualmente ao centro da hurtbox existente, com origem X/Y respeitada após espelhamento. Ayla usa a pose recolhida 192, Gris a pose de tombo 59 e Tester a pose horizontal 108. São poses provisórias sustentadas; substituir por animações dedicadas preservando o pivô. O salto livre e reações no chão continuam com suas âncoras anteriores. A renderização lê a caixa, nunca a modifica.
