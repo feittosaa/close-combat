@@ -66,11 +66,11 @@ describe('liberdade após atividade e preservação das strings',()=>{
   });
 });
 describe('tempo de suspensão e queda',()=>{
-  it.each(['electric','string'] as const)('%s tem arco baixo, queda contínua e retorno de controle finito',command=>{
+  it.each(['electric','string'] as const)('%s tem suspensão prolongada, queda contínua e retorno de controle finito',command=>{
     const sim=new Simulation(createGameConfig(1800,700),[ayla,ayla],{training:true,initialDistance:62});launch(sim,command);
     const floor=sim.snapshot().characters[0].y;let minY=floor;let airFrames=0;let apex=false;
     while(!sim.snapshot().characters[1].grounded && airFrames<100){const target=sim.snapshot().characters[1];minY=Math.min(minY,target.y);if(target.verticalVelocity>=0)apex=true;step(sim);airFrames++;}
-    expect(airFrames).toBeGreaterThanOrEqual(36);expect(airFrames).toBeLessThanOrEqual(40);
+    expect(airFrames).toBeGreaterThanOrEqual(54);expect(airFrames).toBeLessThanOrEqual(58);
     expect(floor-minY).toBeGreaterThan(80);expect(floor-minY).toBeLessThan(100);expect(apex).toBe(true);
     expect(sim.snapshot().characters[1]).toMatchObject({mode:'knockdown',y:floor,verticalVelocity:0});
     for(let f=0;f<25;f++){sim.stepFrame([N,input('F')]);expect(sim.snapshot().characters[1].mode).toBe('knockdown');}

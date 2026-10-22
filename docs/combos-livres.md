@@ -10,6 +10,8 @@ O contexto de continuação guarda o golpe anterior e seu relógio sem conservar
 
 A sequência `J,J,K` continua formando o launcher; após a atividade, Ayla pode iniciar o elétrico. Dois elétricos consecutivos funcionam contra Ayla, Gris, Tester e Dummy na distância inicial 96, com até 16F entre contatos na execução testada. Botão mantido não repete o golpe. Se o primeiro for bloqueado, a mesma tentativa não ignora a recuperação. O avanço de Fulgor e a transição de `3,1` para crouch dash também reconhecem o contexto livre.
 
+> Trajetória e limite de levantamentos atualizados posteriormente em [limite-levantamentos.md](./limite-levantamentos.md); os valores históricos abaixo foram substituídos.
+
 ## Suspensão, juggle e queda
 
 Parâmetros de Ayla: velocidade inicial −9,6, gravidade de lançamento 0,5; manutenção de juggle −5,4 com deterioração, gravidade aérea base 0,385 + 0,025 por contato aéreo; Screw −8,5, uma renovação por combo; queda 26F. Hits no chão anteriores ao launcher não contam como contatos aéreos para a gravidade inicial.

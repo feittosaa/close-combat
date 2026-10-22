@@ -57,11 +57,11 @@ export class TrainingHud {
         : character.remainingStateFrames;
       const levels = { high: 'ALTO', mid: 'MÉDIO', low: 'BAIXO', air: 'AÉREO', throw: 'AGARRÃO', special: 'ESPECIAL' };
       const combo = character.combo ?? character.lastCombo;
-      const comboLabel = combo ? ` · COMBO ${combo.hits} / ${combo.damage}` : '';
+      const comboLabel = combo ? ` · COMBO ${combo.hits} / ${combo.damage}${character.combo ? ` · LEV ${Math.min(character.combo.launches ?? 0,2)}/2` : ''}` : '';
       const detail = move
         ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${levels[move.hitLevel]} · DANO ${move.damage}`
         : 'S: preparo · A: ativo · R: só bloqueio';
-      this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]}${comboLabel} · ${character.combo && !character.grounded ? 'JUGGLE · ATÉ ATERRISSAR' : lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
+      this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]}${comboLabel} · ${character.combo?.forcedFall ? 'QUEDA FORÇADA · IMUNE' : character.combo && !character.grounded ? 'JUGGLE · ATÉ ATERRISSAR' : lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);
       const barWidth = this.width / 2 - 42;
       const barY = this.panelY + 48;
@@ -82,7 +82,7 @@ export class TrainingHud {
     const distance = Math.round(Math.abs(snapshot.characters[0].x - snapshot.characters[1].x));
     this.distance.setText(`FRAME ${snapshot.frame} · DISTÂNCIA ${distance} · COLISÕES ${session.showGeometry ? 'VISÍVEIS' : 'OCULTAS'}`);
     const contact = snapshot.recentContacts[snapshot.recentContacts.length - 1]?.event;
-    this.contact.setText(contact?.frameAdvantage !== undefined
+    this.contact.setText(contact?.forcedFall ? 'TERCEIRO LEVANTAMENTO · QUEDA FORÇADA · IMUNE' : contact?.frameAdvantage !== undefined
       ? `${contact.attackerId === 'player-1' ? 'P1' : 'P2'}: DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · STUN ${contact.defenderStunFrames}F · ADV ${signedFrames(contact.frameAdvantage)}`
       : contact?.reaction === 'launch' ? `DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · REAÇÃO AÉREA` : 'S: preparo · A: ativo · R: só bloqueio');
   }
