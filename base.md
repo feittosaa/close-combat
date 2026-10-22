@@ -966,3 +966,7 @@ Ayla usa lançamento inicial −6,8 unidades/frame e gravidade inicial 0,24, pro
 ### Limite de levantamentos — 21/10/2026
 
 Cada combo permite dois levantamentos: o inicial e um aéreo. Launchers, inclusive em counter hit, e tentativas aéreas de Screw contam nesse orçamento; acertos comuns não. O terceiro levantamento causa dano e força descida imediata, com velocidade mínima 8 e gravidade 0,8. A vítima fica imune a golpes, projéteis e agarrões durante essa descida e os 26F de queda no chão. Parede não interrompe a queda protegida. A imunidade termina ao levantar ou reiniciar; um novo combo recebe orçamento novo. O treino exibe levantamentos e “QUEDA FORÇADA · IMUNE”. Parâmetros pertencem ao livro da personagem; ver `docs/limite-levantamentos.md`.
+
+### Alinhamento visual do juggle — 21/10/2026
+
+Durante o juggle, a reação visual usa pose aérea própria, com pivô corporal autorado no manifesto alinhado ao centro da hurtbox. Ayla, Gris e Tester deixam de reutilizar a reação em pé ancorada pelos pés. São poses provisórias sustentadas até produção das animações dedicadas. Esta correção é somente de apresentação: não muda posições lógicas, caixas, salto livre, gravidade ou orçamento de levantamentos.

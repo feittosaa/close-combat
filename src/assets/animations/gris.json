@@ -1717,6 +1717,20 @@
         3,
         3
       ]
+    },
+    {
+      "key": "gris-juggle",
+      "start": 59,
+      "end": 59,
+      "frames": [
+        59
+      ],
+      "frameRate": 8,
+      "repeat": -1,
+      "bodyAnchor": {
+        "x": 1028.0,
+        "y": 1506.0
+      }
     }
   ],
   "moveClips": {
