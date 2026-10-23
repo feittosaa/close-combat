@@ -7,6 +7,13 @@
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos e homologação final de balanceamento continuam pendentes.
 
+## Correção de câmera vertical por distância — 22/10/2026
+
+- [x] Calcular o scroll vertical em relação ao centro da viewport para preservar o `floorY` na tela durante o zoom.
+- [x] Adicionar regressão de enquadramento em zoom próximo, normal e distante; conferir os pés no jogo em distâncias 96, 144 e 220.
+
+Validação local: 345 testes, build e `git diff --check` aprovados. A CI remota e integração serão registradas na entrega.
+
 ## Levantada manual, balanceamento Gris/Noctis, comandos e chão — 22/10/2026
 
 Branch: `codex/feature-gris-recovery-floor-controls`; commit `112f94a`, PR #9 integrado em `development` pelo merge `61bfd52`.
