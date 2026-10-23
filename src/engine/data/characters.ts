@@ -75,6 +75,7 @@ export const characters: readonly CharacterDefinition[] = [
   {
     id: DEFAULT_CHARACTER_ID,
     name: 'Tester',
+    selectable: false,
     maxHealth: 1000,
     movement: { walkSpeed: 2, backwardWalkSpeed: 1.5, dashSpeed: 4.2, backdashSpeed: 3.4, runSpeed: 5.4, jumpVelocity: -11 },
     moves: testerMoves,

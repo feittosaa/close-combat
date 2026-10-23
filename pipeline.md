@@ -16,13 +16,13 @@ Branch: `codex/feature-combate-organico`. Objetivo: substituir a cópia direta d
 - [x] Integrar livros autorais de Ayla/Gris: seis ataques por postura, mesmo golpe andando para frente/trás, seis launchers, quatro especiais por lutadora e projétil.
 - [x] Adicionar dois agarrões com quebras distintas e troca de lado; ultimate bloqueável e limitada por round/vida.
 - [x] Criar tutorial básico e tutorial progressivo das duas receitas iniciais por entradas reais.
-- [x] Validar `npm ci`, 388 testes, build TypeScript/Vite e `git diff --check`.
-- [ ] Concluir a revisão visual dentro dos tutoriais: o menu com seis modos foi conferido, mas o navegador de inspeção deixou de responder antes de validar luta e progressão.
+- [x] Validar `npm ci`, 389 testes, build TypeScript/Vite e `git diff --check`.
+- [x] Concluir a revisão visual: onze lições básicas de Ayla, as duas receitas com Ayla/Gris, avanço, reset e pausa/retorno. Evidências em `docs/evidence/combat/` e roteiro em `docs/combate-organico-validacao.md`.
 - [ ] Integrar em `development` apenas após revisão visual completa e CI verde do commit atual. Push/CI da branch são relatados na entrega, separados dos checks locais.
 
 Verificação automatizada inclui os seis básicos nas três posturas, identidade em avanço/recuo, tolerância dos acordes, seis starters por lutadora, projéteis à distância, dois agarrões e quebras, ultimate/limite por round, duas receitas contra Ayla/Gris/Tester e conclusão das onze lições básicas por entradas comuns. Os testes anteriores de livros importados continuam com fixtures históricos explícitos, sem remover sua cobertura.
 
-Pendência de ambiente: após o primeiro menu renderizado, a API de inspeção deixou de responder a foco, navegação e captura, inclusive em abas novas. O servidor local continua respondendo HTTP 200. Não declarar revisão visual completa nem integrar a feature com base apenas na suíte verde.
+Conferência de 23/10/2026 concluída após recuperar a sessão do navegador e reiniciar o servidor encerrado. Foram removidos rótulos de Fulgor do HUD autoral, simplificada a legenda e confirmada a pausa por Esc. Tester fica fora da seleção pública, preservado como alvo de treino e NPC de abertura do arcade; Ayla e Gris são as opções autorais de P1.
 
 Limites: arte reaproveitada/provisória; a ficha de 80 entradas é base de autoria, não balanceamento final nem 80 animações únicas. Outras receitas para extensor/postura/carry serão adicionadas ao tutorial conforme homologação. Tester/Dummy e fixtures históricos preservam regressões; seus comandos não governam o elenco autoral. Não promover `main` sem marco de release.
 

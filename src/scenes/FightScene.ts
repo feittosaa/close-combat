@@ -100,7 +100,7 @@ export class FightScene extends Phaser.Scene {
     this.pauseKey(event);
   };
   private pauseKey(event: KeyboardEvent): void {
-    if (event.code !== getSystemControls().pause) return;
+    if (event.code !== getSystemControls().pause && event.code !== 'Escape') return;
     if (ControlSettings.active || event.repeat || this.handledTrainingEvents.has(event)) return;
     this.handledTrainingEvents.add(event);
     this.togglePause();
@@ -200,7 +200,7 @@ export class FightScene extends Phaser.Scene {
     this.hitboxView = new HitboxView(this);
     this.hitboxView.setVisible(this.training?.showGeometry ?? false);
     this.projectileView = new ProjectileView(this);
-    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name], this.selectedStage.name, Boolean(this.training));
+    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name], this.selectedStage.name, Boolean(this.training), this.mode === 'tutorial' ? 'TUTORIAL BÁSICO' : this.mode === 'combo-tutorial' ? 'TUTORIAL DE COMBOS' : 'TREINO LIVRE');
     if (this.mode === 'arcade') this.arcadeInfo = this.add.text(width / 2, 91, '', {
       color: '#f2d299', fontSize: '13px', align: 'center', fontStyle: 'bold',
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(110);
@@ -252,7 +252,7 @@ export class FightScene extends Phaser.Scene {
     if (dummyInput) inputs[1] = dummyInput;
     if (this.tutorial && snapshot) {
       this.tutorial.observe(snapshot, this.currentInputs[0]);
-      inputs[1] = this.tutorial.lesson.guard && frame % 90 === 0 ? { direction: 'N', buttons: new Set(['1']) } : neutralInput();
+      inputs[1] = !this.tutorial.passed && this.tutorial.lesson.guard && frame % 90 === 0 ? { direction: 'N', buttons: new Set(['1']) } : neutralInput();
       if (this.tutorial.passed) inputs[0] = neutralInput();
     }
     if (this.bot && snapshot) {

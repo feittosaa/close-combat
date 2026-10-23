@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ayla } from '../engine/data/fighters/ayla';
 import { gris } from '../engine/data/fighters/gris';
-import { getSpecialMoves, defaultCharacter } from '../engine/data/characters';
+import { getSpecialMoves, defaultCharacter, playableCharacters } from '../engine/data/characters';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { TutorialSession } from '../training/TutorialSession';
@@ -219,4 +219,17 @@ describe('starters do elenco autoral', () => {
       expect(launched, `${fighter.id}/${starter.combat!.command.notation}`).toBe(true);
     }
   });
+});
+
+
+it('mantém os comandos legados de diagnóstico fora da seleção pública', () => {
+  expect(playableCharacters.map(fighter => fighter.id)).toEqual(['ayla', 'gris']);
+  for (const fighter of playableCharacters) {
+    const moves = fighter.moves.filter(move => !move.legacy);
+    expect(moves.filter(move => move.combat?.categories.includes('basics'))).toHaveLength(18);
+    expect(moves.every(move => move.combat?.command.horizontalNeutral)).toBe(true);
+    expect(moves.filter(move => move.combat?.role === 'launcher')).toHaveLength(6);
+    expect(getSpecialMoves(fighter)).toHaveLength(4);
+    expect(moves.filter(move => move.throw)).toHaveLength(2);
+  }
 });

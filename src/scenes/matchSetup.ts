@@ -11,8 +11,8 @@ export interface FightSetup {
 
 /** P1 escolhe; o adversário de P2 é determinado pelo modo. */
 export function arcadeOpponents(playerId: string) {
-  return playableCharacters.filter((fighter) => fighter.id !== playerId)
-    .sort((left, right) => Number(right.id === 'tester') - Number(left.id === 'tester'));
+  return [getCharacterById('tester')!, ...playableCharacters.filter(fighter => fighter.id !== 'tester')]
+    .filter(fighter => fighter.id !== playerId);
 }
 
 export function opponentFor(playerId: string, mode: MatchMode, arcadeIndex = 0) {
