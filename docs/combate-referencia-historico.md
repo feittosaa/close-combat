@@ -69,4 +69,3 @@ Keyframes incluem antecipação, passagem, primeiro contato, ápice e recolhimen
 5. Só então calibrar Gris e ampliar o elenco com referência nessa base. Ajustes em Ayla exigem revalidar os casos que dependem dela.
 
 Medir dano por abertura, número de aberturas por round, risco de bloqueio/erro, alcance, recompensa por execução, distância de carry e vantagem após queda. Vida, escala de dano, dimensões da arena, movimento e gravidade devem ser calibrados em conjunto: não copiar dano isolado de uma escala de vida diferente. A ficha separa valores de referência, adaptação proposta, valor implementado e evidência aprovada. Nenhuma porcentagem de vitória isolada substitui esses critérios.
-
