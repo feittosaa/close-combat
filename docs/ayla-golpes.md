@@ -100,7 +100,7 @@ Cada linha pressupõe o prefixo indicado pelo próprio comando. Só o último to
 - Elos e conclusões comuns avançam 5 unidades e empurram 2 no acerto; carry avança 22 e empurra 19. Bloqueio empurra 7. A geometria inicial das strings tem faixa vertical −134..−22 e alcance individual derivado do golpe correspondente; revisar contra pose e corpo reais.
 - Levantamentos: `1,1,2`, `2,1,1+2`, `3,2,3+4`, `4,1,1+2`, `1+2,2,3+4`. O sexto é o especial Ascensão rubra.
 - Extensores: `2,2,1+2` e `3,1,1+2`; renovam o ar dentro do orçamento, sem gerar infinitos.
-- Posturas: conclusões `…,4,3+4` recolhem 14 unidades, com evasão alta do frame 4 ao fim da atividade e postura indicada por 30F. Não criam outro catálogo de botões nem mudam `1` para outro golpe.
+- Posturas: conclusões `…,4,3+4` recuam 9 unidades líquidas (recolhimento 14 menos avanço base 5), com evasão alta do frame 4 ao fim da atividade e postura indicada por 30F. Não criam outro catálogo de botões nem mudam `1` para outro golpe.
 - Dano alto acelera a descida com velocidade mínima 4. Carry pode causar splat elegível na borda. Esses resultados dependem de contato, altura e posição reais.
 - Não classificar uma string como ininterruptível ou segura apenas por estar nesta tabela. Medir risco/defesa nos dados e replays.
 
