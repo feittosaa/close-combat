@@ -3,24 +3,30 @@
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
 > **Raiz:** [`base.md`](./base.md), versão 0.3.3.
-> **Revisão:** 21/10/2026.
+> **Revisão:** 22/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos e homologação final de balanceamento continuam pendentes.
+
+## Regressão dos cenários — 22/10/2026
+
+- [x] Descobrir todos os cenários pelo catálogo real e exigir piso fixo, enquadramento progressivo, limites da imagem, visibilidade dos lutadores e troca de lados em quatro resoluções.
+- [x] Conferir a integração de `StageView`: zoom uniforme, scroll vertical compartilhado pelas camadas e limpeza da câmera ao sair da luta.
+- A matriz automatizada protege geometria e configuração. A perspectiva/legibilidade de novas artes ainda exige revisão visual.
 
 ## Câmera uniforme e chão compartilhado — 22/10/2026
 
 Zoom uniforme nos dois eixos, piso projetado na altura fixa `floorY`, chão e lutadores com o mesmo scroll vertical. Limites horizontais consideram a largura visível após zoom; o zoom mínimo impede exibir fora da imagem do cenário. Substitui as correções anteriores de câmera.
 
-Validação: 345 testes, build e diff aprovados. Revisão no jogo com distância 96 e afastamento real até 815: proporções preservadas, pés na mesma linha do chão e abertura do enquadramento. CI e integração serão confirmadas na entrega.
+Validação: 345 testes, build e diff aprovados. Revisão no jogo com distância 96 e afastamento real até 815: proporções preservadas, pés na mesma linha do chão e abertura do enquadramento. Integração confirmada pelo PR #13, merge `e6ac9f2`, CI do push (#37), PR (#38) e merge (#39) aprovadas.
 
-## Remoção do zoom vertical da câmera — 22/10/2026
+## Histórico substituído: remoção do zoom vertical — 22/10/2026
 
 - [x] Limitar o zoom dinâmico ao eixo horizontal; manter zoom vertical em `1` e posição Y central fixa.
 - [x] Cobrir por teste que distâncias próximas e longas variam apenas o enquadramento horizontal; revisar no jogo.
 
 Validação local: 345 testes, build e `git diff --check` aprovados. No treino, os pés permaneceram alinhados à linha do cenário em distâncias 96 e 220; a câmera altera o enquadramento horizontal e não escala no eixo vertical. CI remota e integração serão registradas na entrega.
 
-## Correção de câmera vertical por distância — 22/10/2026
+## Histórico substituído: compensação vertical — 22/10/2026
 
 - [x] Calcular o scroll vertical em relação ao centro da viewport para preservar o `floorY` na tela durante o zoom.
 - [x] Adicionar regressão de enquadramento em zoom próximo, normal e distante; conferir os pés no jogo em distâncias 96, 144 e 220.
