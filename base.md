@@ -24,9 +24,13 @@ O combate é um jogo de luta técnico em plano 2D, com quatro botões de ataque,
 
 **Tekken 7 é a referência central da estrutura de combate**, incluindo lista de golpes, strings, combos, defesa, parries, punições, comandos, startup, recuperação, counter hit, quedas e jogo de parede. Buscar a maior fidelidade possível ao ritmo e aos keyframes, adaptando somente o que depender de profundidade ou das proporções do nosso mundo 2D. A referência anterior de movimentos de Terry para Ayla fica substituída por Kazuya; o material atual é provisório e permanece disponível durante a migração.
 
-**Ayla é a personagem inicial de referência para o balanceamento**, com movimentos e lógica de combate muito semelhantes aos de Kazuya. Tester permanece ferramenta do motor; Gris permanece disponível, mas suas propriedades serão comparadas à base de Ayla após a homologação desta. Não uniformizar livros, colisões ou velocidades entre personagens.
+**Ayla é a personagem inicial de referência para o balanceamento**, com movimentos e lógica de combate muito semelhantes aos de Kazuya. Tester permanece ferramenta do motor. Gris mantém livro independente; sua calibração usa as famílias de espada de Noctis como referência funcional, adaptadas à tesoura e às dimensões 2D. Não uniformizar livros, colisões ou velocidades entre personagens.
 
 Esta revisão especifica o destino do projeto. Não altera automaticamente código, dados de golpes, arte, comandos ou balanceamento já implementados. Regras provisórias abaixo descrevem o estado atual e devem ser migradas por entregas testadas; em conflitos de direção futura, esta decisão e §1.3 prevalecem.
+
+**Queda e levantada manual:** após aterrissar em `floorY` em knockdown comum, a personagem permanece no chão até nova entrada do jogador. `1`/`2` levantam atacando com o soco correspondente; `F` levanta avançando; `B` levanta recuando em guarda; neutro mantém a pose caída. A queda forçada pelo limite de juggle conserva sua recuperação protegida já definida em §§12–13. A escolha é individual por jogador e não aciona a ação do oponente.
+
+**Controles adicionais:** as configurações devem cobrir comandos de sistema além dos quatro botões de ataque e direções: pausa da luta e reinício do treino são remapeáveis, persistidos e exclusivos dos controles dos jogadores e entre si. Os atalhos de treino permanecem reservados enquanto não houver uma tela dedicada para remapeá-los.
 
 ### 1.1 Pilares de design
 
@@ -48,6 +52,8 @@ Construir primeiro um protótipo sólido de combate local entre dois jogadores, 
 - [TekkenDocs](https://tekkendocs.com/): consulta indicada pelo usuário para listas, comandos e propriedades. É uma base comunitária; conferir versão, notas e evidência reproduzível antes de homologar valores.
 - [Kazuya em Tekken 7](https://tekkendocs.com/t7/kazuya): referência de comparação para a estrutura mecânica da adaptação de Ayla. Registrar patch/edição da referência por golpe antes de preencher a ficha final. Um valor sem patch confirmado fica pendente, nunca é apresentado como exato.
 - [Kazuya — ficha de Tekken 8 fornecida pelo usuário](https://tekkendocs.com/t8/kazuya/meta): catálogo da entrega executável descrita abaixo, por solicitação posterior do usuário. Não atribuir Heat, Tornado nem números de Tekken 8 a Tekken 7. Se uma propriedade existir nas duas versões, verificar a versão de Tekken 7 separadamente.
+- [Tekken Frame Data API (theneosloth)](https://github.com/theneosloth/tekken-api): fonte comunitária de comandos e propriedades de golpes de Tekken 7 em JSON. Usar como referência de balanceamento e famílias de golpes; conferir versão/patch e validar dados incompletos na ficha local antes de homologar.
+- [Noctis — dados JSON da API](https://github.com/theneosloth/tekken-api/blob/main/data/json/noctis.json): referência de repertório com espada para orientar as famílias, cadência, alcance e funções dos golpes da Gris, reinterpretadas como tesoura. Não copiar nomes, identidade, arte ou valores crus de frame/dano sem adaptação e rastreabilidade.
 - [Guilty Gear Strive — Arc System Works](https://www.arcsystemworks.com/game/guilty-gear-strive/): referência visual de personagens, cenários, efeitos, HUD e menus. A obra de referência usa gráficos híbridos 2D/3D; nossa escolha é obter aparência semelhante por assets 2D em HD. A semelhança visual não importa automaticamente suas mecânicas.
 
 #### Catálogo executável — atualização de 21/10/2026
@@ -63,6 +69,10 @@ P ou Esc pausa a luta em qualquer modo local. No treino, o pause abre o livro de
 As especificações históricas de parry universal, cinco especiais antigos de Ayla e lista limitada de protótipo abaixo continuam registradas como legado, não como descrição do livro novo. Animações homologadas e balanceamento por matchup continuam distintos de cobertura funcional do catálogo.
 
 #### Limite estritamente 2D
+
+**Gris — calibração de espada em tesoura:** cada movimento de Gris registra em `MoveDefinition.balanceReference` a ficha Noctis consultada, comando, startup, dano, vantagem em bloqueio/acerto/counter hit e a conversão local. O mapeamento atual cobre `1/2/3/4`, `FC+1/2/3/4`, quatro ataques durante salto, strings `1,2`, espada arremessada `f,f+1+2`, avanço/teleporte `f+2`, launcher `d/f+2`, launcher aéreo da família `u/f+4` e a conversão local do agarrão. A string `standing-lp → standing-rp` é confirmável após acerto. Esses dados guiam os valores de startup/dano e os papéis do repertório, mas não são copiados crus: frames são convertidos à convenção local, dano é reescalado, caixas/altura/avanço são específicos da tesoura e os clipes continuam os assets disponíveis da Gris. A API não informa geometria 2D nem todos os campos de recuperação/contato necessários; eles permanecem adaptações locais e requerem revisão visual e por matchup antes da homologação final.
+
+**Queda e levantada manual:** após aterrissar em `floorY` em estado de queda, a personagem permanece no chão até nova entrada do jogador. `1`/`2` levantam atacando com o soco correspondente; `F` levanta avançando; `B` levanta recuando em guarda; neutro mantém a pose caída. A seleção é individual por jogador e o comando de levantar não dispara a ação do oponente.
 
 O mundo de combate possui somente eixo horizontal e altura. Não há sidestep, sidewalk, rotação de arena, profundidade de colisão ou desvio de eixo. `U`/`D` mantêm significado vertical/agachamento; não ganham uma ação de profundidade. Golpes cuja função depende de sidestep precisam de adaptação própria ou ficam fora da primeira lista. Propriedades homing/tracking não concedem uma vantagem artificial contra um eixo inexistente.
 
@@ -204,7 +214,7 @@ Como a luta é 2D, as diagonais **não criam um segundo eixo de profundidade**. 
 
 ### 3.4 Controles físicos e remapeamento
 
-A notação de luta é independente da tecla física. O jogador poderá usar teclado e, quando implementado, controle compatível com a API Gamepad do navegador. A interface deve exibir o mapeamento atual e permitir remapeamento dos quatro ataques e das direções.
+A notação de luta é independente da tecla física. O jogador poderá usar teclado e, quando implementado, controle compatível com a API Gamepad do navegador. A interface deve exibir o mapeamento atual e permitir remapeamento dos quatro ataques, das direções, da pausa e do reinício do treino. Comandos administrativos não podem conflitar com ações dos jogadores.
 
 O jogo não deve exigir que o usuário tenha um layout de teclado específico. A configuração padrão será definida no protótipo e documentada no README.
 

@@ -1,11 +1,12 @@
-import { getPlayerLayout, keyLabel, resetControls, saveControls, type ControlLayouts, BUTTON_COLORS } from '../input/controlSettings';
+import { getPlayerLayout, getSystemControls, keyLabel, resetControls, saveControls, saveSystemControls, validateSystemControls, type ControlLayouts, type SystemControlLayout, BUTTON_COLORS } from '../input/controlSettings';
 import type { AttackButton } from '../input/types';
 const actions = [['directions','left','← Esquerda'],['directions','right','→ Direita'],['directions','up','↑ Cima'],['directions','down','↓ Baixo'],['buttons','1','Soco esquerdo'],['buttons','2','Soco direito'],['buttons','3','Chute esquerdo'],['buttons','4','Chute direito']] as const;
 export class ControlSettings {
   static active = false;
   private readonly root = document.createElement('section');
   private draft: ControlLayouts = [getPlayerLayout(0),getPlayerLayout(1)];
-  private capture?: { player: number; group: 'directions'|'buttons'; action: string; button: HTMLButtonElement };
+  private systemDraft: SystemControlLayout = getSystemControls();
+  private capture?: { player?: number; group?: 'directions'|'buttons'; action: string; system?: true; button: HTMLButtonElement };
   private readonly status = document.createElement('p');
   private readonly previousFocus = document.activeElement as HTMLElement | null;
   constructor(private readonly close: () => void) {
@@ -23,12 +24,15 @@ export class ControlSettings {
         const row = document.createElement('div'); const caption = document.createElement('span'); caption.textContent = label;
         const button = document.createElement('button'); button.textContent = keyLabel((layout[kind] as Record<string,string>)[action]); button.setAttribute('aria-label',`P${player+1} ${label}: ${button.textContent}`);
         if (kind==='buttons') button.style.color = BUTTON_COLORS[action as AttackButton];
-        button.onclick=()=> { if (this.capture) this.capture.button.textContent=keyLabel((this.draft[this.capture.player][this.capture.group] as Record<string,string>)[this.capture.action]); this.capture={player,group:kind,action,button}; button.textContent='Pressione…'; this.status.textContent='Esc cancela a captura. P, R, G, H, I, L, Enter e teclas de treino são reservadas.'; };
+        button.onclick=()=> { if (this.capture) this.capture.button.textContent=''; this.capture={player,group:kind,action,button}; button.textContent='Pressione…'; this.status.textContent='Esc cancela a captura. Atalhos do treino aparecem na tela de treino.'; };
         row.append(caption,button); group.append(row);
       }); grid.append(group);
-    }); panel.append(grid); this.status.setAttribute('role','status'); panel.append(this.status);
+    }); panel.append(grid);
+    const systemHeading=document.createElement('h2');systemHeading.textContent='Comandos da luta';panel.append(systemHeading);
+    ( [['pause','Pausar luta'],['reset','Reiniciar treino']] as const).forEach(([action,label])=>{const row=document.createElement('div');row.className='control-system-row';const caption=document.createElement('span');caption.textContent=label;const button=document.createElement('button');button.textContent=keyLabel(this.systemDraft[action]);button.onclick=()=>{this.capture={action,system:true,button};button.textContent='Pressione…';this.status.textContent='Esc cancela a captura. Atalhos do treino aparecem na tela de treino.';};row.append(caption,button);panel.append(row);});
+    this.status.setAttribute('role','status'); panel.append(this.status);
     const actionsRow = document.createElement('footer');
-    for (const [text,action] of [['Restaurar padrão',()=>{resetControls();this.draft=[getPlayerLayout(0),getPlayerLayout(1)];this.capture=undefined;this.status.textContent='Padrão restaurado.';this.render();}],['Salvar e voltar',()=>{if(saveControls(this.draft))this.destroy();else this.status.textContent='Escolha teclas válidas, sem repetição nem atalhos reservados.';}]] as const) {
+    for (const [text,action] of [['Restaurar padrão',()=>{resetControls();this.draft=[getPlayerLayout(0),getPlayerLayout(1)];this.systemDraft={pause:'KeyP',reset:'KeyR'};this.capture=undefined;this.status.textContent='Padrão restaurado.';this.render();}],['Salvar e voltar',()=>{if(saveSystemControls(this.systemDraft)&&saveControls(this.draft))this.destroy();else this.status.textContent='Escolha teclas válidas, sem repetição nem atalhos reservados.';}]] as const) {
       const button=document.createElement('button');button.textContent=text;button.onclick=action;actionsRow.append(button);
     } panel.append(actionsRow);this.root.append(panel);this.root.querySelector('button')?.focus();
   }
@@ -41,6 +45,8 @@ export class ControlSettings {
     if(event.code==='Escape'){event.preventDefault(); if(this.capture){this.capture=undefined;this.render();}else this.destroy();return;}
     if(!this.capture || event.repeat)return;
     event.preventDefault(); const {player,group,action}=this.capture;
+    if(this.capture.system){const candidate={...this.systemDraft,[action]:event.code};const gameKeys=new Set(this.draft.flatMap(layout=>[...Object.values(layout.directions),...Object.values(layout.buttons)]));const trainingKeys=new Set(['Period','F2','F3','F4','KeyG','KeyH','KeyI','KeyL']);if(!validateSystemControls(candidate)||gameKeys.has(event.code)||trainingKeys.has(event.code)){this.status.textContent='Tecla repetida, reservada ou não suportada. Escolha outra.';return;}this.systemDraft=candidate;this.capture=undefined;this.status.textContent='Comando alterado. Salve para aplicar.';this.render();return;}
+    if(player===undefined||group===undefined)return;
     const candidate=structuredClone(this.draft);(candidate[player][group] as Record<string,string>)[action]=event.code;
     // Validation is pure; saving happens only on explicit Save.
     if(!validate(candidate)){this.status.textContent='Tecla repetida, reservada ou não suportada. Escolha outra.';return;}
