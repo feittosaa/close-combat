@@ -140,17 +140,47 @@ describe('combate com entradas comuns', () => {
     expect(sim.snapshot().characters[0].health).toBe(ayla.maxHealth);
   });
 
-  it('Screw só é renovado uma vez e o combo devolve o controle após a aterrissagem', () => {
+  it('Screw só é renovado uma vez e a queda comum aguarda uma entrada de levantada', () => {
     const sim = setup(); command(sim, ['F', 'N', 'D', 'DF'], '2', true); tick(sim, N, N, 15);
     expect(sim.snapshot().characters[1].combo?.hits).toBe(1);
     expect(sim.snapshot().characters[1].grounded).toBe(false);
     tick(sim, N, N, 180);
-    expect(sim.snapshot().characters[1].mode).toBe('neutral'); expect(sim.snapshot().characters[1].combo).toBeUndefined();
+    expect(sim.snapshot().characters[1].mode).toBe('knockdown');
+    expect(sim.snapshot().characters[1].combo).toBeUndefined();
+    tick(sim, N, N, 30);
+    expect(sim.snapshot().characters[1].mode).toBe('knockdown');
+    tick(sim, N, input('N', ['1']));
+    expect(sim.snapshot().characters[1].mode).toBe('startup');
+    expect(sim.snapshot().characters[1].attack?.moveId).toBe('standing-lp');
     const [attacker, target] = setup().snapshot().characters as CharacterState[];
     target.grounded = false; const move = aylaMove('f+2'); const strike = move.combat!.strikes[0];
     applyStrikeReaction(attacker, target, move, strike, 10, false); expect(target.combo?.screwUsed).toBe(true);
     target.verticalVelocity = 3; applyStrikeReaction(attacker, target, move, strike, 10, false);
     expect(target.verticalVelocity).toBeGreaterThan(-8);
+  });
+
+  it('levanta com soco pesado ou recua em guarda conforme a entrada escolhida', () => {
+    const knockdown = (): Simulation => {
+      const sim = setup(62);
+      command(sim, ['F', 'N', 'D', 'DF'], '2', true);
+      for (let frame = 0; frame < 180 && sim.snapshot().characters[1].mode !== 'knockdown'; frame += 1) tick(sim);
+      expect(sim.snapshot().characters[1].mode).toBe('knockdown');
+      return sim;
+    };
+    const heavy = knockdown();
+    tick(heavy, N, input('N', ['2']));
+    expect(heavy.snapshot().characters[1].mode).toBe('startup');
+    expect(heavy.snapshot().characters[1].attack?.moveId).toBe('standing-rp');
+
+    const guard = knockdown();
+    const before = guard.snapshot().characters[1].x;
+    tick(guard, N, input('B'));
+    expect(guard.snapshot().characters[1].mode).toBe('blocking');
+    expect(guard.snapshot().characters[1].x).toBeGreaterThan(before);
+    const next = guard.snapshot().characters[1].x;
+    tick(guard, N, input('B'));
+    expect(guard.snapshot().characters[1].mode).toBe('blocking');
+    expect(guard.snapshot().characters[1].x).toBeGreaterThan(next);
   });
 
   it('o override de hurtbox espelha por fase e não depende da pose provisória', () => {

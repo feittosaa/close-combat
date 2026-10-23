@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { StageDefinition } from './StageDefinition';
 import type { StageLayout } from './stageLayout';
-import { getLayerPlacement, getStageCameraScroll, getFightZoom } from './stageLayout';
+import { getLayerPlacement, getStageCameraScroll, getFightCameraScrollY, getFightZoom } from './stageLayout';
 import { getStageLayerUrl, stageTextureKey } from './stageCatalog';
 
 export function preloadStage(scene: Phaser.Scene, stage: StageDefinition): void {
@@ -34,7 +34,8 @@ export class StageView {
 
   sync(fighterPositions: readonly number[]): void {
     this.scene.cameras.main.setZoom(getFightZoom(this.layout.viewportWidth, fighterPositions));
-    this.scene.cameras.main.setScroll(getStageCameraScroll(this.layout, fighterPositions), 0);
+    this.scene.cameras.main.setScroll(getStageCameraScroll(this.layout, fighterPositions),
+      getFightCameraScrollY(this.layout.worldHeight, this.layout.floorY, getFightZoom(this.layout.viewportWidth, fighterPositions)));
   }
 
 

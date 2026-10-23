@@ -28,10 +28,11 @@ describe('limite de dois levantamentos por combo',()=>{
     const health=broken.health;let falling=0;
     while(!sim.snapshot().characters[1].grounded && falling<30){step(sim);falling++;expect(sim.snapshot().characters[1].health).toBe(health);}
     expect(falling).toBeLessThan(20);expect(sim.snapshot().characters[1].mode).toBe('knockdown');expect(sim.snapshot().characters[1].combo?.forcedFall).toBe(true);
-    step(sim,N,25);expect(sim.snapshot().characters[1].combo?.forcedFall).toBe(true);step(sim);expect(sim.snapshot().characters[1].combo).toBeUndefined();
-    for(let f=0;f<100 && Math.abs(sim.snapshot().characters[0].x-sim.snapshot().characters[1].x)>75;f++)step(sim,input('F'));
-    step(sim);launch(sim);wait(sim,()=>sim.snapshot().recentContacts.length===4);expect(sim.snapshot().characters[1].combo?.launches).toBe(1);
-    sim.resetMatch();expect(sim.snapshot().characters[1].combo).toBeUndefined();
+    step(sim,N,25);expect(sim.snapshot().characters[1].combo?.forcedFall).toBe(true);step(sim);
+    expect(sim.snapshot().characters[1].combo).toBeUndefined();expect(sim.snapshot().characters[1].mode).toBe('knockdown');
+    sim.stepFrame([N,{direction:'N',buttons:new Set(['1'])}]);expect(sim.snapshot().characters[1].mode).toBe('startup');
+    sim.resetMatch();
+    expect(sim.snapshot().characters[1].combo).toBeUndefined();
   });
   it('Screw compartilha o limite e acerto aéreo normal tem impulso menor',()=>{
     const [attacker,target]=game().snapshot().characters as CharacterState[];

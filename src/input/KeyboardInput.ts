@@ -1,5 +1,6 @@
 // src/input/KeyboardInput.ts
 import type { AttackButton, Direction, FrameInput } from './types';
+import { getSystemControls } from './controlSettings';
 
 export interface KeyboardLayout {
   directions: { left: string; right: string; up: string; down: string };
@@ -47,6 +48,8 @@ export class KeyboardInput {
     }
     return { direction, buttons };
   }
+
+  isSystemPressed(action: 'pause' | 'reset'): boolean { return this.pressed.has(getSystemControls()[action]); }
 
   /** Reset must not carry a held attack/direction into a new exercise. */
   clear(): void {
