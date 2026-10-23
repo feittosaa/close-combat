@@ -11,6 +11,8 @@
 
 Cobertura integrada da simulação e apresentação por personagem: a mesma entrada lógica deve exibir o mesmo quadro, textura, posição, pivô, escala e orientação em 30/60/120/144 FPS. Renderizações durante pausa mantêm a pose e reset reproduz o início. O roteiro passa por preparo, atividade, recuperação após bloqueio, salto, agachamento e recuo. A auditoria artística dos golpes da Etapa 3.2 permanece pendente.
 
+Validação local: 362 testes, build e diff aprovados após instalação offline com scripts desativados. Entrega em `codex/test-animation-fps-pause-reset`, acompanhada no PR #15; a CI desse PR executa instalação padrão e validação completa.
+
 ## Regressão dos cenários — 22/10/2026
 
 - [x] Descobrir todos os cenários pelo catálogo real e exigir piso fixo, enquadramento progressivo, limites da imagem, visibilidade dos lutadores e troca de lados em quatro resoluções.
