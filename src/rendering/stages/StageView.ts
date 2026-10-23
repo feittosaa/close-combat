@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { StageDefinition } from './StageDefinition';
 import type { StageLayout } from './stageLayout';
-import { getLayerPlacement, getStageCameraScroll, getFightCameraZoom } from './stageLayout';
+import { getLayerPlacement, getFightCameraFrame } from './stageLayout';
 import { getStageLayerUrl, stageTextureKey } from './stageCatalog';
 
 export function preloadStage(scene: Phaser.Scene, stage: StageDefinition): void {
@@ -25,18 +25,18 @@ export class StageView {
       }
       const placement = getLayerPlacement(layer, layout);
       return scene.add.image(placement.x, placement.y, key).setOrigin(0, 0)
-        .setScale(placement.scale).setDepth(layer.depth).setScrollFactor(layer.parallax, 0);
+        .setScale(placement.scale).setDepth(layer.depth).setScrollFactor(layer.parallax, 1);
     });
-    scene.cameras.main.setBounds(0, 0, layout.worldWidth, layout.worldHeight);
-    scene.cameras.main.setOrigin(.5, 1);
+    // Bounds are calculated with zoom in getFightCameraFrame; Phaser must not clamp Y afterwards.
+    scene.cameras.main.removeBounds();
+    scene.cameras.main.setOrigin(.5, .5);
     this.sync([]);
   }
 
   sync(fighterPositions: readonly number[]): void {
-    // Distance changes only the horizontal framing; vertical scale and floor projection stay fixed.
-    const zoom = getFightCameraZoom(this.layout.viewportWidth, fighterPositions);
-    this.scene.cameras.main.setZoom(zoom.x, zoom.y);
-    this.scene.cameras.main.setScroll(getStageCameraScroll(this.layout, fighterPositions), this.layout.worldHeight / 2);
+    const frame = getFightCameraFrame(this.layout, fighterPositions);
+    this.scene.cameras.main.setZoom(frame.zoom);
+    this.scene.cameras.main.setScroll(frame.scrollX, frame.scrollY);
   }
 
 

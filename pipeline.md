@@ -7,6 +7,12 @@
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos e homologação final de balanceamento continuam pendentes.
 
+## Câmera uniforme e chão compartilhado — 22/10/2026
+
+Zoom uniforme nos dois eixos, piso projetado na altura fixa `floorY`, chão e lutadores com o mesmo scroll vertical. Limites horizontais consideram a largura visível após zoom; o zoom mínimo impede exibir fora da imagem do cenário. Substitui as correções anteriores de câmera.
+
+Validação: 345 testes, build e diff aprovados. Revisão no jogo com distância 96 e afastamento real até 815: proporções preservadas, pés na mesma linha do chão e abertura do enquadramento. CI e integração serão confirmadas na entrega.
+
 ## Remoção do zoom vertical da câmera — 22/10/2026
 
 - [x] Limitar o zoom dinâmico ao eixo horizontal; manter zoom vertical em `1` e posição Y central fixa.

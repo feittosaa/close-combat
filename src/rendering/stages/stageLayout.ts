@@ -8,6 +8,7 @@ export interface StageLayout {
   floorY: number;
   originY: number;
   arenaOffsetX: number;
+  minimumZoom: number;
 }
 
 /** One uniform scale preserves the proportions of every layer and fills the viewport around the floor. */
@@ -19,6 +20,8 @@ export function createStageLayout(stage: StageDefinition, width: number, height:
     scale, worldWidth, worldHeight: height, viewportWidth: width, floorY,
     originY: floorY - stage.groundY * scale,
     arenaOffsetX: (worldWidth - width) / 2,
+    minimumZoom: Math.max(width / worldWidth, floorY / (stage.groundY * scale),
+      (height - floorY) / ((stage.referenceSize.height - stage.groundY) * scale)),
   };
 }
 
@@ -46,7 +49,18 @@ export function getFightZoom(viewportWidth: number, fighterPositions: readonly n
   return Math.min(1.55, viewportWidth / Math.max(1, span + 230));
 }
 
-/** Distance-based framing is horizontal only; vertical scale stays at the simulation baseline. */
-export function getFightCameraZoom(viewportWidth: number, fighterPositions: readonly number[]): { x: number; y: 1 } {
-  return { x: getFightZoom(viewportWidth, fighterPositions), y: 1 };
+/** Uniform projection shared by fighters and scenery. Bounds apply to the visible world rectangle. */
+export function getFightCameraFrame(layout: StageLayout, fighterPositions: readonly number[]): { zoom: number; scrollX: number; scrollY: number } {
+  const zoom = Math.max(layout.minimumZoom, getFightZoom(layout.viewportWidth, fighterPositions));
+  const halfVisibleWidth = layout.viewportWidth / (2 * zoom);
+  const target = fighterPositions.length
+    ? (Math.min(...fighterPositions) + Math.max(...fighterPositions)) / 2
+    : layout.worldWidth / 2;
+  const centerX = Math.max(halfVisibleWidth, Math.min(layout.worldWidth - halfVisibleWidth, target));
+  // Phaser zooms around the viewport center: screenY = centerY + (worldY - scrollY - centerY) * zoom.
+  return {
+    zoom,
+    scrollX: centerX - layout.viewportWidth / 2,
+    scrollY: (layout.floorY - layout.worldHeight / 2) * (1 - 1 / zoom),
+  };
 }
