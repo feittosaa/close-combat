@@ -7,11 +7,17 @@
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos e homologação final de balanceamento continuam pendentes.
 
+## Continuação da Etapa 3.1 — equivalência de reprodução
+
+Cobertura integrada da simulação e apresentação por personagem: a mesma entrada lógica deve exibir o mesmo quadro, textura, posição, pivô, escala e orientação em 30/60/120/144 FPS. Renderizações durante pausa mantêm a pose e reset reproduz o início. O roteiro passa por preparo, atividade, recuperação após bloqueio, salto, agachamento e recuo. A auditoria artística dos golpes da Etapa 3.2 permanece pendente.
+
 ## Regressão dos cenários — 22/10/2026
 
 - [x] Descobrir todos os cenários pelo catálogo real e exigir piso fixo, enquadramento progressivo, limites da imagem, visibilidade dos lutadores e troca de lados em quatro resoluções.
 - [x] Conferir a integração de `StageView`: zoom uniforme, scroll vertical compartilhado pelas camadas e limpeza da câmera ao sair da luta.
 - A matriz automatizada protege geometria e configuração. A perspectiva/legibilidade de novas artes ainda exige revisão visual.
+
+Entregue pelo PR #14, merge `d8c57c2`; 350 testes/build/diff locais aprovados; CI do push (#40), PR (#41) e merge (#42) aprovadas.
 
 ## Câmera uniforme e chão compartilhado — 22/10/2026
 
@@ -252,7 +258,7 @@ Preservados da antiga Etapa 3:
 - [x] Correções autoradas de escala/âncora por quadro: agachamento a 78%, sem mudar a colisão.
 - [x] Soco aéreo remapeado para punho fechado, chute forte em pé com a sequência escolhida e retorno mais lento.
 - [x] Remover tint por fase e pulsação da geometria que simulavam piscar sobre o personagem.
-- [ ] Verificar equivalência de poses com diferentes FPS de renderização e após pausa/reinício em cobertura automatizada.
+- [x] Verificar equivalência de poses com diferentes FPS de renderização e após pausa/reinício em cobertura automatizada. `AnimationDeterminism.test.ts` compara a saída de `CombatantView` em 30/60/120/144 FPS para Tester, Ayla e Gris; cobre pausa de dois segundos e replay após reset.
 
 ### 3.2 Produção e transições
 
