@@ -2,7 +2,7 @@ import { getCharacterById } from '../engine/data/characters';
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { ayla } from '../engine/data/fighters/ayla';
+import { ayla } from './fixtures/referenceFighters';
 import { aylaMove } from '../engine/data/combat/aylaCombatBook';
 import { recoveryFrames } from '../engine/combat/frameData';
 import type { Direction, FrameInput } from '../input/types';

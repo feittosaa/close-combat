@@ -20,3 +20,6 @@ P/Esc pausa todos os modos locais. No treino, `PauseMenu` lê `fighterMoveList`:
 ## Histórico de entradas
 
 `InputHistory` conserva até 24 mudanças por jogador; a UI mostra 10, mais recente primeiro. Cada mudança guarda frame inicial, duração, direção, conjunto de botões e facing. A grade e histórico mostram direção física; o catálogo usa setas relativas ao oponente. Solturas/neutros e acordes ficam explícitos. O relógio parado não cria entradas; reset limpa o histórico. Cores seguem a ação, teclas seguem o layout configurado.
+
+
+`TutorialSession.ts` define as lições básicas e desafios por personagem. Observa frames lógicos, entradas e contatos reais; aprova uma receita somente na ordem e no mesmo combo. A interface em `TutorialHud` apenas apresenta o progresso. R reinicia a tentativa; Enter avança após sucesso. Progresso não é persistido entre sessões.

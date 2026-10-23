@@ -1,6 +1,6 @@
 import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
-import { playableCharacters, getCharacterById } from '../engine/data/characters';
+import { playableCharacters } from '../engine/data/characters';
 import type { CharacterDefinition } from '../engine/data/characters';
 import { getAnimationManifest, preloadCharacter } from '../rendering/animations/characterAssets';
 import { getClipFrames, getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
@@ -12,6 +12,8 @@ const MODES = [
   { id: 'arcade', title: 'ARCADE', hint: 'Enfrente o computador em uma sequência de lutas.', tag: '1 JOGADOR' },
   { id: 'versus', title: 'LUTA PVP', hint: 'Dois jogadores no mesmo teclado.', tag: '2 JOGADORES' },
   { id: 'training', title: 'MODO TREINO', hint: 'Pratique comandos, alcances e punições.', tag: 'PRÁTICA LIVRE' },
+  { id: 'tutorial', title: 'TUTORIAL BÁSICO', hint: 'Aprenda ataques, defesa, especiais e agarrões.', tag: 'PASSO A PASSO' },
+  { id: 'combo-tutorial', title: 'TUTORIAL DE COMBOS', hint: 'Conecte sequências e avance pelos desafios.', tag: 'COMBOS' },
   { id: 'settings', title: 'CONFIGURAÇÕES', hint: 'Teclas e controles dos dois jogadores.', tag: 'OPÇÕES' },
 ] as const;
 const STYLES: Record<string, string> = {
@@ -38,25 +40,29 @@ export class MenuScene extends Phaser.Scene {
     if (this.page === 'home') {
       if (key === 'ArrowDown' || key === 'ArrowUp') { this.modeIndex = (this.modeIndex + (key === 'ArrowDown' ? 1 : -1) + MODES.length) % MODES.length; this.render(); }
       else if (key === 'Enter') this.chooseMode(this.modeIndex);
-      else { const i = ['a', 'v', 't', 'c'].indexOf(key.toLowerCase()); if (i >= 0) this.chooseMode(i); }
+      else { const i = ['a', 'v', 't', 'b', 'o', 'c'].indexOf(key.toLowerCase()); if (i >= 0) this.chooseMode(i); }
     } else if (key === 'Escape') this.back();
     else if (this.page === 'fighter') {
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) {
-        this.fighterIndex = (this.fighterIndex + (['ArrowLeft', 'ArrowUp'].includes(key) ? -1 : 1) + playableCharacters.length) % playableCharacters.length; this.render();
+        this.fighterIndex = (this.fighterIndex + (['ArrowLeft', 'ArrowUp'].includes(key) ? -1 : 1) + this.fighters.length) % this.fighters.length; this.render();
       } else if (key === 'Enter') { this.page = 'stage'; this.render(); }
     } else if (this.page === 'stage' && key === 'Enter') this.startFight();
   };
 
+  private get fighters() {
+    return this.mode === 'tutorial' || this.mode === 'combo-tutorial' ? playableCharacters.filter(fighter => fighter.combos?.length) : playableCharacters;
+  }
+
   constructor() { super('MenuScene'); }
   init(data: { fighterId?: string } = {}): void {
-    this.page = 'home'; this.transitioning = false;
-    const index = playableCharacters.findIndex(f => f.id === data.fighterId);
+    this.page = 'home'; this.mode = 'arcade'; this.transitioning = false;
+    const index = this.fighters.findIndex(f => f.id === data.fighterId);
     if (index >= 0) this.fighterIndex = index;
   }
   preload(): void {
     this.loading = this.add.text(this.scale.width / 2, this.scale.height / 2, 'PREPARANDO A ARENA…', { fontSize: '18px', color: '#e6c78d' }).setOrigin(.5);
     preloadStage(this, defaultStage);
-    playableCharacters.forEach(f => preloadCharacter(this, f.id, true));
+    this.fighters.forEach(f => preloadCharacter(this, f.id, true));
   }
   create(): void {
     this.loading?.destroy(); this.loading = undefined;
@@ -113,24 +119,24 @@ export class MenuScene extends Phaser.Scene {
     if (this.page === 'home') {
       this.text(56, 123, 'COMO VOCÊ QUER JOGAR?', 21);
       MODES.forEach((mode, i) => {
-        const y = 171 + i * 77, selected = this.modeIndex === i;
-        const card = this.box(56, y, 526, 66, selected ? 0x3a2532 : 0x1a1a23, .96).setStrokeStyle(1, selected ? 0xce6373 : 0x403440).setInteractive({ useHandCursor: true });
-        if (selected) this.box(56, y, 4, 66, 0xe37988);
-        this.text(75, y + 10, mode.title, 18, selected ? '#fff1d8' : '#f0e5e7');
-        this.text(75, y + 36, mode.hint, 12, '#b8aab2');
+        const y = 158 + i * 56, selected = this.modeIndex === i;
+        const card = this.box(56, y, 526, 50, selected ? 0x3a2532 : 0x1a1a23, .96).setStrokeStyle(1, selected ? 0xce6373 : 0x403440).setInteractive({ useHandCursor: true });
+        if (selected) this.box(56, y, 4, 50, 0xe37988);
+        this.text(75, y + 10, mode.title, 16, selected ? '#fff1d8' : '#f0e5e7');
+        this.text(75, y + 30, mode.hint, 12, '#b8aab2');
         this.text(566, y + 13, mode.tag, 9, '#d4b47d').setOrigin(1, 0);
         card.on('pointerover', () => card.setStrokeStyle(1, 0xe37988)).on('pointerout', () => card.setStrokeStyle(1, selected ? 0xce6373 : 0x403440)).on('pointerdown', () => this.chooseMode(i));
       });
       this.box(645, 147, 323, 337, 0x191823, .72).setStrokeStyle(1, 0x493442);
       this.text(667, 168, 'NA ARENA', 12, '#ddbd8b');
-      this.preview(playableCharacters[this.fighterIndex], 807, 446, 1.55);
-      this.text(807, 457, playableCharacters[this.fighterIndex].name.toUpperCase(), 16, '#e9c98e').setOrigin(.5, 0);
-      this.text(56, height - 29, '↑ ↓  ESCOLHER     ENTER  CONFIRMAR     A  ARCADE · V  PVP · T  TREINO · C  CONFIGURAÇÕES', 11, '#a899a3');
+      this.preview(this.fighters[this.fighterIndex], 807, 446, 1.55);
+      this.text(807, 457, this.fighters[this.fighterIndex].name.toUpperCase(), 16, '#e9c98e').setOrigin(.5, 0);
+      this.text(56, height - 29, '↑ ↓  ESCOLHER     ENTER  CONFIRMAR     A ARCADE · V PVP · T TREINO · B BÁSICO · O COMBOS · C OPÇÕES', 11, '#a899a3');
     } else if (this.page === 'fighter') {
       this.text(56, 117, 'QUEM ENTRA NA LUTA?', 23);
       this.text(56, 149, 'Somente P1 escolhe. O adversário de P2 é definido pelo modo.', 12, '#b8aab2');
-      const gap = 18, w = (width - 112 - gap * (playableCharacters.length - 1)) / playableCharacters.length;
-      playableCharacters.forEach((fighter, i) => {
+      const gap = 18, w = (width - 112 - gap * (this.fighters.length - 1)) / this.fighters.length;
+      this.fighters.forEach((fighter, i) => {
         const x = 56 + i * (w + gap), selected = i === this.fighterIndex;
         const card = this.box(x, 181, w, 291, selected ? 0x3a2532 : 0x1a1a23, .97).setStrokeStyle(2, selected ? 0xda7580 : 0x4a3946).setInteractive({ useHandCursor: true });
         this.text(x + 18, 196, fighter.name.toUpperCase(), 23, selected ? '#ffe5b3' : '#f0e5e7');
@@ -138,8 +144,8 @@ export class MenuScene extends Phaser.Scene {
         this.preview(fighter, x + w / 2, 444, 1.04);
         card.on('pointerover', () => card.setStrokeStyle(2, 0xda7580)).on('pointerout', () => card.setStrokeStyle(2, selected ? 0xda7580 : 0x4a3946)).on('pointerdown', () => { this.fighterIndex = i; this.render(); });
       });
-      const opponent = opponentFor(playableCharacters[this.fighterIndex].id, this.mode);
-      this.text(56, 490, `${this.mode === 'arcade' ? 'PRIMEIRO ADVERSÁRIO' : 'P2'} · ${opponent.name.toUpperCase()}${this.mode === 'arcade' ? ' · COMPUTADOR' : this.mode === 'training' ? ' · ADVERSÁRIO DE TREINO' : ' · SEGUNDO JOGADOR'}`, 12, '#d4b47d');
+      const opponent = opponentFor(this.fighters[this.fighterIndex].id, this.mode);
+      this.text(56, 490, `${this.mode === 'arcade' ? 'PRIMEIRO ADVERSÁRIO' : 'P2'} · ${opponent.name.toUpperCase()}${this.mode === 'arcade' ? ' · COMPUTADOR' : this.mode === 'training' || this.mode === 'tutorial' || this.mode === 'combo-tutorial' ? ' · ADVERSÁRIO DE TREINO' : ' · SEGUNDO JOGADOR'}`, 12, '#d4b47d');
       this.button(width - 282, 488, 226, 'CONFIRMAR PERSONAGEM', () => { this.page = 'stage'; this.render(); });
       this.text(56, height - 25, '← →  ESCOLHER     ENTER  CONFIRMAR     ESC  VOLTAR', 11, '#a899a3');
     } else if (this.page === 'stage') {
@@ -153,7 +159,7 @@ export class MenuScene extends Phaser.Scene {
       this.box(x, y + 245, w, 54, 0x101019, .90);
       this.text(x + 20, y + 258, 'CAIS', 23, '#f3d49e');
       this.text(x + w - 20, y + 267, 'CENÁRIO SELECIONADO', 11, '#c4b8c0').setOrigin(1, 0);
-      this.text(160, 490, `${playableCharacters[this.fighterIndex].name.toUpperCase()} · ${MODES.find(m => m.id === this.mode)!.title}`, 14, '#d4b47d');
+      this.text(160, 490, `${this.fighters[this.fighterIndex].name.toUpperCase()} · ${MODES.find(m => m.id === this.mode)!.title}`, 14, '#d4b47d');
       this.button(630, 486, 234, 'COMEÇAR LUTA', () => this.startFight());
       this.text(56, height - 25, 'ENTER  COMEÇAR     ESC  VOLTAR', 11, '#a899a3');
     } else {
@@ -165,14 +171,14 @@ export class MenuScene extends Phaser.Scene {
   }
   private chooseMode(index: number): void {
     this.modeIndex = index; const id = MODES[index].id;
-    if (id === 'settings') { this.page = 'settings'; new ControlSettings(() => { this.page = 'home'; this.render(); }); } else { this.mode = id; this.page = 'fighter'; } this.render();
+    if (id === 'settings') { this.page = 'settings'; new ControlSettings(() => { this.page = 'home'; this.render(); }); } else { this.mode = id; this.page = 'fighter'; if (id === 'tutorial' || id === 'combo-tutorial') this.fighterIndex = 0; } this.render();
   }
   private back(): void {
     this.page = this.page === 'stage' ? 'fighter' : 'home'; this.render();
   }
   private startFight(): void {
     if (this.transitioning) return; this.transitioning = true;
-    const fighter = playableCharacters[this.fighterIndex] ?? getCharacterById('ayla')!;
+    const fighter = this.fighters[this.fighterIndex];
     this.scene.start('FightScene', { fighterId: fighter.id, opponentId: opponentFor(fighter.id, this.mode).id, stageId: defaultStage.id, mode: this.mode, arcadeIndex: 0 });
   }
 }

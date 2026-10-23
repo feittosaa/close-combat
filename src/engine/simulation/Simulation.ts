@@ -165,6 +165,13 @@ export class Simulation {
     this.resetRoundState();
   }
 
+  /** Explicit tutorial setup; cannot alter health in a match. */
+  setTrainingHealthRatio(playerIndex: 0 | 1, ratio: number): void {
+    if (!this.options.training || !Number.isFinite(ratio)) return;
+    const fighter = this.characters[playerIndex];
+    fighter.health = Math.max(1, Math.min(fighter.maxHealth, Math.floor(fighter.maxHealth * ratio)));
+  }
+
   /** Training convenience only; health is restored at a quiet logical boundary. */
   setTrainingAutoRestore(enabled: boolean): void {
     if (!this.options.training) return;
@@ -366,7 +373,7 @@ export class Simulation {
         target.remainingStateFrames = Math.max(target.remainingStateFrames, target.combo.wallFrames + 12);
         if (strike.wallBounce) { target.combo.wallFrames = 0; target.verticalVelocity = -5; target.x -= direction * 75; }
       }
-      if (event.outcome === 'hit' && move?.combat?.action?.sideSwitch) {
+      if ((event.outcome === 'hit' || event.outcome === 'throw') && move?.combat?.action?.sideSwitch) {
         const oldX = attacker.x; attacker.x = target.x; target.x = oldX;
       }
     });
@@ -627,7 +634,7 @@ export class Simulation {
       forceCounterHit: charged,
       hurtboxOverride: move.combat?.hurtboxes.find(box => box.from <= 0 && box.to >= 0)?.box,
       throwDirection: move.throw
-        ? isBackwardDirection(direction) ? 'backward' : 'forward'
+        ? move.combat?.command.horizontalNeutral ? 'forward' : isBackwardDirection(direction) ? 'backward' : 'forward'
         : undefined,
     };
     if (charged) { character.stance = 'standing'; character.stanceFrames = 0; }

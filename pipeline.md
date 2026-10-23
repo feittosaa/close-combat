@@ -2,10 +2,31 @@
 
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
-> **Raiz:** [`base.md`](./base.md), versão 0.3.3.
-> **Revisão:** 22/10/2026.
+> **Raiz:** [`base.md`](./base.md), revisão de design 0.4.0.
+> **Revisão:** 23/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos e homologação final de balanceamento continuam pendentes.
+
+## Combate orgânico autoral e tutoriais — 23/10/2026
+
+Branch: `codex/feature-combate-organico`. Objetivo: substituir a cópia direta dos livros externos por comandos acessíveis e escolhas de combo, com catálogo inicial editável de Ayla.
+
+- [x] Registrar em `base.md` a nova precedência autoral e arquivar o contrato anterior.
+- [x] Criar `docs/ayla-golpes.md` com 80 entradas contáveis: 18 bases, 55 etapas de string, quatro especiais, dois agarrões, ultimate.
+- [x] Integrar livros autorais de Ayla/Gris: seis ataques por postura, mesmo golpe andando para frente/trás, seis launchers, quatro especiais por lutadora e projétil.
+- [x] Adicionar dois agarrões com quebras distintas e troca de lado; ultimate bloqueável e limitada por round/vida.
+- [x] Criar tutorial básico e tutorial progressivo das duas receitas iniciais por entradas reais.
+- [x] Validar `npm ci`, 388 testes, build TypeScript/Vite e `git diff --check`.
+- [ ] Concluir a revisão visual dentro dos tutoriais: o menu com seis modos foi conferido, mas o navegador de inspeção deixou de responder antes de validar luta e progressão.
+- [ ] Integrar em `development` apenas após revisão visual completa e CI verde do commit atual. Push/CI da branch são relatados na entrega, separados dos checks locais.
+
+Verificação automatizada inclui os seis básicos nas três posturas, identidade em avanço/recuo, tolerância dos acordes, seis starters por lutadora, projéteis à distância, dois agarrões e quebras, ultimate/limite por round, duas receitas contra Ayla/Gris/Tester e conclusão das onze lições básicas por entradas comuns. Os testes anteriores de livros importados continuam com fixtures históricos explícitos, sem remover sua cobertura.
+
+Pendência de ambiente: após o primeiro menu renderizado, a API de inspeção deixou de responder a foco, navegação e captura, inclusive em abas novas. O servidor local continua respondendo HTTP 200. Não declarar revisão visual completa nem integrar a feature com base apenas na suíte verde.
+
+Limites: arte reaproveitada/provisória; a ficha de 80 entradas é base de autoria, não balanceamento final nem 80 animações únicas. Outras receitas para extensor/postura/carry serão adicionadas ao tutorial conforme homologação. Tester/Dummy e fixtures históricos preservam regressões; seus comandos não governam o elenco autoral. Não promover `main` sem marco de release.
+
+O histórico abaixo permanece rastreável. Menções a prioridade Ayla/Tekken e variantes direcionais estão substituídas por esta entrega e `base.md` §1.3.
 
 ## Continuação da Etapa 3.1 — equivalência de reprodução
 
@@ -62,7 +83,7 @@ Revisão no navegador em 22/10/2026: o marcador de chão e os pés das duas pers
 ## Como usar
 
 - As Etapas 0–2 preservam o trabalho concluído da pipeline anterior; não devem ser refeitas.
-- A prioridade atual é a baseline Ayla/Tekken 7 em 2D descrita abaixo; ela orienta **Etapa 3 → Etapa 4 → Etapa 5 → Etapa 6 → Etapa 7**. Os primeiros instrumentos da Etapa 4 podem apoiar a revisão visual da Etapa 3.
+- A prioridade atual é a baseline autoral Ayla de 23/10/2026; o plano histórico abaixo ela orienta **Etapa 3 → Etapa 4 → Etapa 5 → Etapa 6 → Etapa 7**. Os primeiros instrumentos da Etapa 4 podem apoiar a revisão visual da Etapa 3.
 - Cada checkbox significa implementação concreta. Cobertura automatizada, revisão visual e balanceamento são critérios separados; um build não aprova animação nem justiça de colisão.
 - Registrar regras em `base.md` antes de codificar, usar dados por personagem e manter combate a 60 Hz independente do Phaser.
 - Os números atuais dos golpes são provisórios. Usar dados de Tekken 7 verificados por versão como base, documentando conversão e adaptações 2D; não alterar tempos para encobrir defeitos de animação ou entrada. A revisão de cadência de 20/10, solicitada pelo usuário, está registrada em base.md: +2F de preparo, +1F ativo e +4F de recuperação nos strikes, sem alterar agarrões; requer revisão posterior de vantagem/balanceamento.

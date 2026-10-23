@@ -1,3 +1,6 @@
+import { createOrganicBook } from '../combat/organicBook';
+import { grisStrings } from '../combat/grisStrings';
+import type { CombatRules } from '../combat/CombatBook';
 import type { CharacterDefinition } from '../characters';
 import type { MoveDefinition } from '../moves';
 import type { AttackButton } from '../../../input/types';
@@ -16,7 +19,7 @@ const strike = (id: string, button: AttackButton, startup: number, recovery: num
   });
 
 /** Livro da Gris orientado pelas famílias de espada de Noctis; comandos, frames e dano são adaptação local para uma tesoura. */
-export const grisMoves: readonly MoveDefinition[] = [
+export const grisLegacyMoves: readonly MoveDefinition[] = [
   strike('standing-lp', '1', 10, 14, 35, { forward: 18, yOffset: -119, width: 57, height: 28 }, {
     hitLevel: 'high', parryable: true, cancelOnHit: { moveIds: ['standing-rp'], windowFrames: 8 },
     balanceReference: noctisRef('1', '10', '7', '+1', '+8', '+8', 'Tesourada curta de punição; dano escalado à vida local.'),
@@ -105,10 +108,33 @@ export const grisMoves: readonly MoveDefinition[] = [
   },
 ];
 
+export const grisCombatRules: CombatRules = {
+  maxLaunches: 2, aerialLaunchVelocity: -3.8, forcedFallSpeed: 8,
+  launchVelocity: -6.6, launchGravity: .24, juggleHitVelocity: -2.7, screwVelocity: -4.3,
+  commandBufferFrames: 8, lowParryFrames: 0, lowParryStunFrames: 18, stanceFrames: 30,
+  comboScaling: [1, .7, .6, .5, .4, .3, .25, .2], juggleGravity: .012, juggleBaseGravity: .2,
+  knockdownFrames: 26, wallStunFrames: 24, powerFrames: 0,
+};
+export const grisOrganicBook = createOrganicBook({
+  limb: 'weapon',
+  id: 'gris', seeds: grisLegacyMoves, strings: grisStrings,
+  heavyNames: ['Fecho real', 'Arco cruzado', 'Fecho baixo', 'Renda rasteira', 'Corte suspenso', 'Cruz aérea'],
+  throwNames: ['Laço dourado', 'Reverso real'], ultimateName: 'Corte soberano',
+  specials: [
+    { id: 'golden-arc', command: '1+4', name: 'Arco dourado', role: 'carry' },
+    { id: 'silk-step', command: '2+3', name: 'Passo de seda', role: 'carry' },
+    { id: 'rising-shear', command: '1+2+3', name: 'Tesoura ascendente', role: 'launcher' },
+    { id: 'royal-cleave', command: '2+3+4', name: 'Talho real', role: 'damage' },
+  ],
+});
+export const grisMoves = grisOrganicBook.moves;
+
 export const gris: CharacterDefinition = {
   id: 'gris', name: 'Gris', maxHealth: 1000,
   movement: { walkSpeed: 1.85, backwardWalkSpeed: 1.4, dashSpeed: 4.3, backdashSpeed: 3.5, runSpeed: 5.4, jumpVelocity: -12.2 },
   moves: grisMoves,
+  combos: grisOrganicBook.combos,
+  combatRules: grisCombatRules,
   collision: {
     bodyWidth: 44, hurtboxes: {
       standing: { offsetX: 0, offsetY: -152, width: 44, height: 152 },

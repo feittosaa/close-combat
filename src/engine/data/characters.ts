@@ -108,5 +108,5 @@ export const playableCharacters = characters.filter((character) => character.sel
 
 /** A quantidade de especiais é derivada do livro, nunca de um catálogo global. */
 export function getSpecialMoves(character: CharacterDefinition): readonly MoveDefinition[] {
-  return character.moves.filter((move) => !move.legacy && (move.kind === 'special' || move.hitLevel === 'special' || move.projectile));
+  return character.moves.filter((move) => !move.legacy && !move.combat?.categories.includes('ultimate') && (move.kind === 'special' || move.hitLevel === 'special' || move.projectile));
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { ayla } from '../engine/data/fighters/ayla';
+import { ayla } from './fixtures/referenceFighters';
 import { gris } from '../engine/data/fighters/gris';
 import type { Direction, FrameInput } from '../input/types';
 import { getCharacterAnimationKey } from '../rendering/animations/CharacterAnimationMap';

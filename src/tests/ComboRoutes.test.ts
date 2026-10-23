@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ayla } from '../engine/data/fighters/ayla';
+import { ayla } from './fixtures/referenceFighters';
 import { aylaMove, aylaCombos } from '../engine/data/combat/aylaCombatBook';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';

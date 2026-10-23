@@ -5,7 +5,7 @@ import { CATEGORY_LABELS } from '../engine/data/combat/CombatBook';
 import { fighterMoveList, filterMoveList, type MoveListCategory, type MoveListEntry } from '../training/MoveList';
 import { moveInputLabel } from './combatLabels';
 
-const labels: Record<MoveListCategory, string> = { all: 'Todos', basics: CATEGORY_LABELS.basics, strings: CATEGORY_LABELS.strings, combos: 'Combos', specials: CATEGORY_LABELS.specials, throws: CATEGORY_LABELS.throws, starters: CATEGORY_LABELS.starters, crouching: CATEGORY_LABELS.crouching, rising: CATEGORY_LABELS.rising, stances: CATEGORY_LABELS.stances, defense: CATEGORY_LABELS.defense, wall: CATEGORY_LABELS.wall };
+const labels: Record<MoveListCategory, string> = { all: 'Todos', basics: CATEGORY_LABELS.basics, strings: CATEGORY_LABELS.strings, combos: 'Combos', specials: CATEGORY_LABELS.specials, throws: CATEGORY_LABELS.throws, starters: CATEGORY_LABELS.starters, crouching: CATEGORY_LABELS.crouching, rising: CATEGORY_LABELS.rising, stances: CATEGORY_LABELS.stances, defense: CATEGORY_LABELS.defense, wall: CATEGORY_LABELS.wall, ultimate: CATEGORY_LABELS.ultimate };
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string): HTMLElementTagNameMap[K] => {
   const node = document.createElement(tag); if (text) node.textContent = text; if (className) node.className = className; return node;
 };
