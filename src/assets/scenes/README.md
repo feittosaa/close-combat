@@ -53,7 +53,7 @@ Use profundidades negativas para o cenário atrás dos lutadores. Camadas de pri
 
 ## Câmera e parallax compartilhados
 
-- A câmera acompanha o centro entre os dois lutadores, limitada à largura do cenário. Não há zoom nem movimento vertical.
+- A câmera acompanha o centro entre os dois lutadores, limitada à largura do cenário. O zoom é uniforme nos dois eixos, abre com a distância e respeita a área visível do cenário; a linha dos pés permanece fixa na tela. Chão e lutadores compartilham o scroll vertical. Os testes em `src/tests/StageCamera.test.ts` incluem automaticamente os cenários cadastrados.
 - `parallax: 1` acompanha o chão: a imagem se desloca um pixel na tela para cada pixel de movimento da câmera.
 - `parallax: 0.25` se desloca apenas um quarto dessa distância e parece mais distante. `0` mantém uma camada fixa na tela.
 - Chão e objetos apoiados nele usam `1`; outros planos recebem valores menores conforme a distância. Preserve largura de imagem suficiente para não expor bordas durante o movimento.
