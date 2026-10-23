@@ -21,7 +21,7 @@ Branch: `codex/feature-gris-recovery-floor-controls`; commit `112f94a`, PR #9 in
 - [x] Conferir no jogo a linha dos pés em treino nas distâncias 96, 144 e 220, alternando o zoom, e confirmar a tela de controles com pausa/reinício remapeáveis.
 - [x] Commitar e enviar a branch; CI do push (#24) e do PR (#25) aprovadas; integrar em `development` e confirmar CI do merge (#26) aprovada.
 
-API comunitária voltada a frame data de Tekken 7; Noctis é base funcional de espada, sem copiar identidade ou dados crus. A ficha individual existe em `balanceReference` para todo movimento da Gris; startup/dano foram adaptados, enquanto recovery, hitboxes, vantagens reais e continuidade dos clipes ainda dependem de homologação visual e por matchup. CI remota e integração estão pendentes.
+API comunitária voltada a frame data de Tekken 7; Noctis é base funcional de espada, sem copiar identidade ou dados crus. A ficha individual existe em `balanceReference` para todo movimento da Gris; startup/dano foram adaptados, enquanto recovery, hitboxes, vantagens reais e continuidade dos clipes ainda dependem de homologação visual e por matchup. As CI do push, do PR e do merge em `development` passaram; integração confirmada em `61bfd52`.
 
 Revisão no navegador em 22/10/2026: o marcador de chão e os pés das duas personagens permaneceram na mesma linha de tela no treino em 96/144/220; a tela `CONTROLES` exibiu movimentos de P1/P2, pausa `P` e reinício `R`. Um ataque real da Gris foi executado e confirmado no HUD. As quatro respostas de knockdown têm cobertura automatizada; não foi isolada captura visual de cada levantada. Balanceamento quantitativo e homologação das propriedades adaptadas seguem como trabalho futuro.
 
