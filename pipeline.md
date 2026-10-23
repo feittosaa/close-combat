@@ -9,7 +9,7 @@
 
 ## Levantada manual, balanceamento Gris/Noctis, comandos e chão — 22/10/2026
 
-Branch: `codex/feature-gris-recovery-floor-controls` (criada após autorização de escrita; commit, push e integração ainda pendentes).
+Branch: `codex/feature-gris-recovery-floor-controls`; commit `112f94a`, PR #9 integrado em `development` pelo merge `61bfd52`.
 
 - [x] Documentar a API Tekken e a ficha do Noctis como referências, com limites de adaptação em `base.md`.
 - [x] Implementar espera manual no chão e levantada com `1`/`2` (ataque) ou `F`/`B` (andar/guardar); quedas forçadas mantêm a janela de proteção e continuam caídas depois dela.
@@ -19,11 +19,11 @@ Branch: `codex/feature-gris-recovery-floor-controls` (criada após autorização
 - [x] Manter os pés no mesmo ponto da tela durante o reenquadramento de zoom da luta.
 - [x] Validar testes automatizados (344/344), build e diff.
 - [x] Conferir no jogo a linha dos pés em treino nas distâncias 96, 144 e 220, alternando o zoom, e confirmar a tela de controles com pausa/reinício remapeáveis.
-- [ ] Commitar, enviar branch, confirmar CI e integrar em `development` depois de autorizar escrita em `.git` e acesso ao remoto.
+- [x] Commitar e enviar a branch; CI do push (#24) e do PR (#25) aprovadas; integrar em `development` e confirmar CI do merge (#26) aprovada.
 
-API comunitária voltada a frame data de Tekken 7; Noctis é base funcional de espada, sem copiar identidade ou dados crus. A ficha individual existe em `balanceReference` para todo movimento da Gris; startup/dano foram adaptados, enquanto recovery, hitboxes, vantagens reais e continuidade dos clipes ainda dependem de homologação visual e por matchup. CI remota e integração estão pendentes.
+API comunitária voltada a frame data de Tekken 7; Noctis é base funcional de espada, sem copiar identidade ou dados crus. A ficha individual existe em `balanceReference` para todo movimento da Gris; startup/dano foram adaptados, enquanto recovery, hitboxes, vantagens reais e continuidade dos clipes ainda dependem de homologação visual e por matchup. As CI do push, do PR e do merge em `development` passaram; integração confirmada em `61bfd52`.
 
-Revisão no navegador em 22/10/2026: o marcador de chão e os pés das duas personagens permaneceram na mesma linha de tela no treino em 96/144/220; a tela `CONTROLES` exibiu movimentos de P1/P2, pausa `P` e reinício `R`. Um ataque real da Gris foi executado e confirmado no HUD. As rotas automatizadas cobrem as quatro respostas de knockdown; o teste visual específico de queda e cada levantada ainda não foi isolado nesta revisão.
+Revisão no navegador em 22/10/2026: o marcador de chão e os pés das duas personagens permaneceram na mesma linha de tela no treino em 96/144/220; a tela `CONTROLES` exibiu movimentos de P1/P2, pausa `P` e reinício `R`. Um ataque real da Gris foi executado e confirmado no HUD. As quatro respostas de knockdown têm cobertura automatizada; não foi isolada captura visual de cada levantada. Balanceamento quantitativo e homologação das propriedades adaptadas seguem como trabalho futuro.
 
 ## Como usar
 
