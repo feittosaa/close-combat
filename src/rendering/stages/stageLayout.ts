@@ -40,9 +40,10 @@ export function getStageCameraScroll(layout: StageLayout, fighterPositions: read
   return Math.round(Math.max(0, Math.min(layout.worldWidth - layout.viewportWidth, center - layout.viewportWidth / 2)));
 }
 
-/** Keep the arena floor at a fixed screen coordinate while zoom changes. */
+/** Keep the arena floor at its simulation screen coordinate while zoom changes. */
 export function getFightCameraScrollY(viewportHeight: number, floorY: number, zoom: number): number {
-  return Math.round(floorY - viewportHeight / zoom);
+  const viewportCenterY = viewportHeight / 2;
+  return Math.round(floorY - (floorY - viewportCenterY) / zoom);
 }
 
 /** Close framing grows the whole world, while wide spacing still keeps both fighters in view. */
