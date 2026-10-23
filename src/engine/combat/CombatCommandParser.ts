@@ -9,6 +9,9 @@ export type CombatCommandResult = MoveDefinition & { bufferedStartupFrames?: num
 export class CombatCommandParser {
   private previous: FrameInput = { direction: 'N', buttons: new Set() };
   private directions: { direction: Direction; frame: number }[] = [];
+  private physicalButtons = new Set<string>();
+  private chord?: { frame: number; direction: FrameInput['direction']; buttons: Set<import('../../input/types').AttackButton> };
+  private previousPosture: 'standing' | 'crouching' = 'standing';
   private held = new Map<string, number>();
   private pending?: { move: MoveDefinition; frame: number; attack?: CharacterState['attack']; charge?: boolean };
 
@@ -16,11 +19,14 @@ export class CombatCommandParser {
     this.previous = { direction: 'N', buttons: new Set() };
     this.directions = [];
     this.held.clear();
+    this.physicalButtons.clear(); this.chord = undefined;
     this.pending = undefined;
   }
 
   update(input: FrameInput, frame: number, state: CharacterState, target: CharacterState,
     moves: readonly MoveDefinition[], atWall: boolean): CombatCommandResult | undefined {
+    if (moves.some(move => !move.legacy && move.combat?.command.horizontalNeutral)) input = this.sampleChord(input, frame);
+    this.previousPosture = input.direction.startsWith('D') ? 'crouching' : 'standing';
     const directionEdge = input.direction !== this.previous.direction;
     if (directionEdge) this.directions.push({ direction: input.direction, frame });
     this.directions = this.directions.filter(edge => frame - edge.frame <= 24);
@@ -81,6 +87,20 @@ export class CombatCommandParser {
     return pending.charge ? { ...move, bufferedStartupFrames: Math.min(Math.max(0, frame - pending.frame), Math.max(0, move.startup - 1)) } : move;
   }
 
+  private sampleChord(input: FrameInput, frame: number): FrameInput {
+    const pressed = [...input.buttons].filter(button => !this.physicalButtons.has(button));
+    this.physicalButtons = new Set(input.buttons);
+    if (pressed.length) {
+      if (!this.chord) this.chord = { frame, direction: input.direction, buttons: new Set() };
+      pressed.forEach(button => this.chord!.buttons.add(button));
+    }
+    if (this.chord && frame - this.chord.frame >= 3) {
+      const chord = this.chord; this.chord = undefined;
+      return { direction: chord.direction, buttons: chord.buttons };
+    }
+    return { direction: input.direction, buttons: new Set() };
+  }
+
   private parentAttack(command: CombatCommand, state: CharacterState): CharacterState['attack'] {
     if (!command.parentId) return undefined;
     return [state.attack,state.followup].find(attack => attack && (attack.moveId === command.parentId || command.alternateParentIds?.includes(attack.moveId)));
@@ -92,6 +112,10 @@ export class CombatCommandParser {
   }
 
   private context(command: CombatCommand, state: CharacterState, target: CharacterState, atWall: boolean): boolean {
+    if (command.posture) {
+      const posture = !state.grounded ? 'air' : this.previousPosture;
+      if (posture !== command.posture) return false;
+    }
     if (command.parentId && !this.parentAttack(command,state)) return false;
     if (command.parentId && this.parentAttack(command,state)!.elapsedFrames > (command.followupWindow?.to ?? -1)) return false;
     if (command.notation === '2+3' && (state.powerAvailable === false || (state.powerFrames ?? 0) > 0)) return false;
@@ -102,7 +126,7 @@ export class CombatCommandParser {
     if (command.stance === 'crouching' && (state.crouchFrames ?? 0) < 6) return false;
     if (command.stance === 'rising' && (state.risingFrames ?? 0) <= 0) return false;
     if (command.stance && !['crouching', 'rising', 'standing'].includes(command.stance) && state.stance !== command.stance) return false;
-    return state.grounded || Boolean(command.parentId) || Boolean(command.directions?.some(direction => direction.startsWith('U')));
+    return state.grounded || command.posture === 'air' || Boolean(command.parentId) || Boolean(command.directions?.some(direction => direction.startsWith('U')));
   }
 
   private matchesDirections(command: CombatCommand, input: FrameInput, frame: number, state: CharacterState): boolean {
@@ -110,6 +134,7 @@ export class CombatCommandParser {
   }
 
   private matchesSequence(sequence: readonly Direction[], command: CombatCommand, input: FrameInput, frame: number, state: CharacterState): boolean {
+    if (!sequence.length && command.horizontalNeutral) return true;
     if (!sequence.length) return input.direction === 'N' || Boolean(command.parentId) || Boolean(command.stance);
     if (input.direction !== sequence[sequence.length - 1]) return false;
     if (sequence.length === 1) return true;

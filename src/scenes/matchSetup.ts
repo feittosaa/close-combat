@@ -1,6 +1,6 @@
 import { playableCharacters, getCharacterById } from '../engine/data/characters';
 
-export type MatchMode = 'versus' | 'training' | 'arcade';
+export type MatchMode = 'versus' | 'training' | 'arcade' | 'tutorial' | 'combo-tutorial';
 export interface FightSetup {
   fighterId?: string;
   opponentId?: string;
@@ -16,7 +16,7 @@ export function arcadeOpponents(playerId: string) {
 }
 
 export function opponentFor(playerId: string, mode: MatchMode, arcadeIndex = 0) {
-  if (mode === 'training') return getCharacterById('tester')!;
+  if (mode === 'training' || mode === 'tutorial' || mode === 'combo-tutorial') return getCharacterById('tester')!;
   const ladder = arcadeOpponents(playerId);
   if (mode === 'versus') return playableCharacters.find((fighter) => fighter.id !== playerId && fighter.id !== 'tester') ?? ladder[0];
   return ladder[Math.min(ladder.length - 1, Math.max(0, Math.trunc(arcadeIndex)))];

@@ -1,3 +1,5 @@
+> **Histórico substituído em 23/10/2026:** o elenco público usa o [catálogo autoral de 80 entradas](./ayla-golpes.md) e `base.md` §1.3. O texto abaixo descreve a importação anterior e seus testes históricos, não os comandos atuais.
+
 # Combate por personagem — Ayla
 
 ## Entrega

@@ -1,4 +1,6 @@
-import { aylaCombatMoves, aylaCombatRules, aylaCombos } from '../combat/aylaCombatBook';
+import { createOrganicBook } from '../combat/organicBook';
+import { aylaStrings } from '../combat/aylaStrings';
+import { aylaCombatMoves, aylaCombatRules } from '../combat/aylaCombatBook';
 import type { CharacterDefinition } from '../characters';
 import type { MoveDefinition } from '../moves';
 import type { AttackButton } from '../../../input/types';
@@ -77,12 +79,26 @@ export const aylaLegacyMoves: readonly MoveDefinition[] = [
   },
 ];
 
+export const aylaOrganicBook = createOrganicBook({
+  animationAliases: { 'air-lp': 'air-punch', 'air-rp': 'air-punch', 'air-lk': 'air-kick', 'air-rk': 'air-kick' },
+  id: 'ayla', seeds: aylaLegacyMoves, strings: aylaStrings,
+  heavyNames: ['Quebra-rubi', 'Arco duplo', 'Martelo baixo', 'Varredura dupla', 'Queda rubra', 'Tesoura aérea'],
+  throwNames: ['Laço rubro', 'Virada escarlate'], ultimateName: 'Coração incandescente',
+  specials: [
+    { id: 'crimson-wave', command: '1+4', name: 'Onda rubra', role: 'carry' },
+    { id: 'scarlet-rush', command: '2+3', name: 'Investida escarlate', role: 'carry' },
+    { id: 'rising-kick', command: '1+2+3', name: 'Ascensão rubra', role: 'launcher' },
+    { id: 'leaping-kick', command: '2+3+4', name: 'Queda escarlate', role: 'damage' },
+  ],
+});
+
 export const ayla: CharacterDefinition = {
   id: 'ayla', name: 'Ayla', maxHealth: 950,
   movement: { walkSpeed: 2, backwardWalkSpeed: 1.5, dashSpeed: 4.6, backdashSpeed: 3.8, runSpeed: 5.8, jumpVelocity: -11.6 },
-  moves: [...aylaCombatMoves, ...aylaLegacyMoves.map(move => ({ ...move, legacy: true }))],
-  combos: aylaCombos,
-  combatRules: aylaCombatRules,
+  moves: [...aylaOrganicBook.moves, ...[...aylaCombatMoves, ...aylaLegacyMoves]
+    .filter(move => !aylaOrganicBook.moves.some(current => current.id === move.id)).map(move => ({ ...move, legacy: true }))],
+  combos: aylaOrganicBook.combos,
+  combatRules: { ...aylaCombatRules, lowParryFrames: 0, powerFrames: 0 },
   collision: {
     bodyWidth: 46, hurtboxes: {
       juggled: { offsetX: 0, offsetY: -35, width: 86, height: 80 },

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ayla, aylaLegacyMoves } from '../engine/data/fighters/ayla';
-import { gris } from '../engine/data/fighters/gris';
+import { ayla } from './fixtures/referenceFighters';
+import { aylaLegacyMoves } from '../engine/data/fighters/ayla';
+import { gris } from './fixtures/referenceFighters';
 import { defaultCharacter } from '../engine/data/characters';
 import { aylaReferenceMoves, aylaMove, aylaCombos } from '../engine/data/combat/aylaCombatBook';
 import reference from '../engine/data/reference/kazuya.json';

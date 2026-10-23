@@ -80,6 +80,9 @@ export function applyStrikeReaction(attacker: CharacterState, target: CharacterS
       ? screw ? attacker.combatRules.screwVelocity ?? -3.2 : attacker.combatRules.aerialLaunchVelocity ?? -3.2
       : attacker.combatRules.launchVelocity ?? -6.8;
     target.remainingStateFrames = Math.max(target.remainingStateFrames, 28);
+  } else if (aerial && strike?.ender) {
+    target.verticalVelocity = Math.max(4, target.verticalVelocity);
+    target.remainingStateFrames = Math.max(target.remainingStateFrames, 18);
   } else if (aerial) {
     // Each aerial hit uses a smaller lift, including when the victim was still rising quickly.
     target.verticalVelocity = Math.min(-.4, (attacker.combatRules.juggleHitVelocity ?? -2.8) + (combo.airHits ?? 0) * .025);

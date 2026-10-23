@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import manifest from '../assets/animations/gris.json';
 import catalog from '../assets/sprites/characters/gris/runtime/frame-catalog.json';
-import { gris } from '../engine/data/fighters/gris';
-import { ayla } from '../engine/data/fighters/ayla';
+import { gris } from './fixtures/referenceFighters';
+import { ayla } from './fixtures/referenceFighters';
 import { getSpecialMoves } from '../engine/data/characters';
 import { getAnimationManifest } from '../rendering/animations/characterAssets';
 import { getAttackAnimationFrame, getClipFrames, getStateAnimationFrame, getTimedAnimationFrame, validateAnimationCoverage, validateAnimationManifest } from '../rendering/animations/AnimationPlayback';

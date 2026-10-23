@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { characters, getCharacterById } from '../engine/data/characters';
-import { ayla } from '../engine/data/fighters/ayla';
+import { ayla } from './fixtures/referenceFighters';
 import { aylaMove } from '../engine/data/combat/aylaCombatBook';
 import { recoveryFrames } from '../engine/combat/frameData';
 import { Simulation } from '../engine/simulation/Simulation';

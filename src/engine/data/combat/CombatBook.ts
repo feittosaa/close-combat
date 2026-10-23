@@ -1,14 +1,17 @@
 import type { AttackButton, Direction } from '../../../input/types';
 import type { MoveDefinition } from '../moves';
 
-export type MoveCategory = 'basics' | 'strings' | 'specials' | 'throws' | 'starters' | 'crouching' | 'rising' | 'stances' | 'defense' | 'wall';
+export type MoveCategory = 'basics' | 'strings' | 'specials' | 'throws' | 'starters' | 'crouching' | 'rising' | 'stances' | 'defense' | 'wall' | 'ultimate';
 export const CATEGORY_LABELS: Record<MoveCategory, string> = {
   basics: 'Básicos', strings: 'Strings', specials: 'Especiais', throws: 'Agarrões', starters: 'Starters',
-  crouching: 'Agachados', rising: 'Ao levantar', stances: 'Posturas', defense: 'Defesa', wall: 'Parede',
+  crouching: 'Agachados', rising: 'Ao levantar', stances: 'Posturas', defense: 'Defesa', wall: 'Parede', ultimate: 'Ultimate',
 };
 export type CombatStance = 'standing' | 'crouching' | 'rising' | 'crouch-dash' | 'sway' | 'backturned' | 'charging';
 export interface CombatCommand {
   notation: string;
+  /** New authorial books select posture independently from horizontal motion. */
+  posture?: 'standing' | 'crouching' | 'air';
+  horizontalNeutral?: boolean;
   directions?: readonly Direction[];
   directionAliases?: readonly (readonly Direction[])[];
   buttons: readonly AttackButton[];
@@ -34,6 +37,7 @@ export interface StrikeFrame {
   reaction?: 'launch' | 'knockdown';
   counterReaction?: 'launch' | 'knockdown';
   screw?: boolean;
+  ender?: boolean;
   wallSplat?: boolean;
   wallBounce?: boolean;
   canHitGround?: boolean;
@@ -42,6 +46,7 @@ export interface StrikeFrame {
 }
 export interface MoveCombatData {
   name: string;
+  role?: 'link' | 'launcher' | 'damage' | 'extender' | 'stance' | 'carry';
   categories: readonly MoveCategory[];
   command: CombatCommand;
   strikes: readonly StrikeFrame[];
