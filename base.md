@@ -32,6 +32,8 @@ Esta revisão especifica o destino do projeto. Não altera automaticamente códi
 
 **Controles adicionais:** as configurações devem cobrir comandos de sistema além dos quatro botões de ataque e direções: pausa da luta e reinício do treino são remapeáveis, persistidos e exclusivos dos controles dos jogadores e entre si. Os atalhos de treino permanecem reservados enquanto não houver uma tela dedicada para remapeá-los.
 
+**Câmera da luta:** usar a mesma escala nos dois eixos. A distância abre o enquadramento até os limites visuais do cenário; a linha do chão permanece em altura fixa na tela. Chão e personagens compartilham a transformação vertical, preservando o contato dos pés durante movimento no solo.
+
 ### 1.1 Pilares de design
 
 1. **Combate técnico, mas legível:** os jogadores devem conseguir entender por que um golpe acertou, foi defendido, foi punido ou perdeu a disputa.

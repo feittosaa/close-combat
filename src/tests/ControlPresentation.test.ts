@@ -1,4 +1,4 @@
-import { getFightCameraZoom, getFightZoom } from '../rendering/stages/stageLayout';
+import { createStageLayout, getFightCameraFrame, getFightZoom } from '../rendering/stages/stageLayout';
 import { afterEach, describe, expect, it } from 'vitest';
 import { getPlayerLayout, getSystemControls, keyLabel, loadControls, resetControls, saveControls, saveSystemControls, validateLayouts, validateSystemControls, BUTTON_COLORS } from '../input/controlSettings';
 import { commandTokens, formatCommand, screenDirection, formatCommandProse } from '../ui/commandNotation';
@@ -62,8 +62,20 @@ it('enquadra lutadores maiores de perto sem cortar as extremidades quando se afa
   const far=getFightZoom(1024,[100,950]);expect(far).toBeLessThan(1.55);expect((850+230)*far).toBeLessThanOrEqual(1024);
 });
 
-it('mantém o enquadramento horizontal por distância sem alterar a escala vertical',()=>{
-  const near=getFightCameraZoom(1024,[450,550]);
-  const far=getFightCameraZoom(1024,[100,950]);
-  expect(near).toEqual({x:1.55,y:1});expect(far.x).toBeLessThan(near.x);expect(far.y).toBe(1);
+it('preserva proporção, piso projetado e limites do cenário do contato até as extremidades',()=>{
+  const layout=createStageLayout({minimumScale:.5,referenceSize:{width:3168,height:1344},groundY:1120} as Parameters<typeof createStageLayout>[0],1024,576,488);
+  let previousZoom=2;
+  for(const positions of [[744,840],[304,1280],[0,96],[1488,1584]]){
+    const frame=getFightCameraFrame(layout,positions);
+    const projectY=(worldY:number)=>288+(worldY-frame.scrollY-288)*frame.zoom;
+    expect(projectY(488)).toBeCloseTo(488,8);
+    expect(projectY(layout.originY+1120*layout.scale)).toBeCloseTo(projectY(488),8);
+    const left=frame.scrollX+512-512/frame.zoom;
+    const right=frame.scrollX+512+512/frame.zoom;
+    expect(left).toBeGreaterThanOrEqual(-1e-8);expect(right).toBeLessThanOrEqual(layout.worldWidth+1e-8);
+    expect(projectY(layout.originY)).toBeLessThanOrEqual(1e-8);
+    expect(projectY(layout.originY+1344*layout.scale)).toBeGreaterThanOrEqual(576-1e-8);
+    if(positions[0]===304)expect(frame.zoom).toBeLessThan(previousZoom);
+    previousZoom=frame.zoom;
+  }
 });
