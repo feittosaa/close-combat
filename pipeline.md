@@ -7,6 +7,13 @@
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos e homologação final de balanceamento continuam pendentes.
 
+## Remoção do zoom vertical da câmera — 22/10/2026
+
+- [x] Limitar o zoom dinâmico ao eixo horizontal; manter zoom vertical em `1` e posição Y central fixa.
+- [x] Cobrir por teste que distâncias próximas e longas variam apenas o enquadramento horizontal; revisar no jogo.
+
+Validação local: 345 testes, build e `git diff --check` aprovados. No treino, os pés permaneceram alinhados à linha do cenário em distâncias 96 e 220; a câmera altera o enquadramento horizontal e não escala no eixo vertical. CI remota e integração serão registradas na entrega.
+
 ## Correção de câmera vertical por distância — 22/10/2026
 
 - [x] Calcular o scroll vertical em relação ao centro da viewport para preservar o `floorY` na tela durante o zoom.
