@@ -58,6 +58,7 @@ export class Simulation {
   private readonly commandParsers: [CommandParser, CommandParser] = [new CommandParser(), new CommandParser()];
   private readonly combatParsers = [new CombatCommandParser(), new CombatCommandParser()];
   private readonly jumpHeld = [false, false];
+  private readonly wakeGuardHeld = [false, false];
   private readonly previousInputButtons: [Set<AttackButton>, Set<AttackButton>] = [new Set(), new Set()];
   private readonly previousDirections: [FrameInput['direction'], FrameInput['direction']] = ['N', 'N'];
   private readonly previousHorizontalAxis = [0, 0];
@@ -191,12 +192,14 @@ export class Simulation {
     const freshlyPressed: [ReadonlySet<AttackButton>, ReadonlySet<AttackButton>] = [
       freshlyPressedFor(0), freshlyPressedFor(1),
     ];
-    const freshBack: [boolean, boolean] = [0, 1].map((index) => {
+    const freshDirection: [boolean, boolean] = [0, 1].map((index) => {
       const direction = inputs[index]?.direction ?? 'N';
-      const pressed = direction === 'B' && this.previousDirections[index] !== 'B';
+      const pressed = direction !== 'N' && this.previousDirections[index] !== direction;
       this.previousDirections[index] = direction;
       return pressed;
     }) as [boolean, boolean];
+    const freshBack: [boolean, boolean] = [0, 1].map((index) =>
+      (inputs[index]?.direction ?? 'N') === 'B' && freshDirection[index]) as [boolean, boolean];
 
     const canControlAtInput = this.characters.map((character) => !character.attack && !isStunned(character));
     // Read both commands before deciding guard, so a new attack is visible to
@@ -243,15 +246,52 @@ export class Simulation {
       Boolean(commands[index] && (canControlAtInput[index] || this.canCancel(character, commands[index]))));
 
     this.characters.forEach((character, index) => {
+      const wasKnockedDown = character.mode === 'knockdown';
       const input = inputs[index] ?? neutralInput();
       const canControl = canControlAtInput[index];
       const moveCommand = commands[index];
 
+      if (character.mode === 'knockdown') {
+        this.previousHorizontalAxis[index] = 0;
+        this.dashFramesRemaining[index] = 0;
+        const pressed = freshlyPressed[index];
+        if (character.attack || character.grab || character.remainingStateFrames > 0) return;
+
+        const wakeButton = pressed.has('1') ? '1' : pressed.has('2') ? '2' : undefined;
+        if (wakeButton) {
+          character.mode = 'neutral';
+          character.remainingStateFrames = 0;
+          finishCombo(character);
+          const preferredId = wakeButton === '1' ? 'standing-lp' : 'standing-rp';
+          const move = this.fighterMoves[index].find(candidate => candidate.id === preferredId) ??
+            this.fighterMoves[index].find(candidate => candidate.kind !== 'throw' && candidate.input.buttons.length === 1 &&
+              candidate.input.buttons[0] === wakeButton && !candidate.input.direction && !candidate.input.sequence &&
+              !candidate.crouching && !candidate.airborne);
+          if (move) this.startAttack(character, move, 'N');
+        } else if (freshDirection[index] && (input.direction === 'F' || input.direction === 'B')) {
+          character.mode = input.direction === 'F' ? 'moving' : 'blocking';
+          character.movementDirection = input.direction === 'F' ? 'forward' : 'backward';
+          this.wakeGuardHeld[index] = input.direction === 'B';
+          character.remainingStateFrames = 0;
+          finishCombo(character);
+          if (input.direction === 'F') {
+            nextX[index] += (character.facing === 'right' ? 1 : -1) * this.fighterDefinitions[index].movement.walkSpeed;
+          } else {
+            nextX[index] -= (character.facing === 'right' ? 1 : -1) * (this.fighterDefinitions[index].movement.backwardWalkSpeed ?? this.config.movement.walkSpeed);
+          }
+        }
+        return;
+      }
+
+      if (wasKnockedDown) return;
+
       if (canControl) {
         const horizontal = horizontalAxis(input.direction);
         const facingSign = character.facing === 'right' ? 1 : -1;
-        const guarding = character.stance !== 'charging' && character.grounded && (input.direction === 'B' || input.direction === 'DB') && attacking[1 - index];
-        const stationary = guarding || (character.grounded && character.crouching);
+        const wakingBackwardGuard = this.wakeGuardHeld[index] && input.direction === 'B';
+        if (input.direction !== 'B') this.wakeGuardHeld[index] = false;
+        const guarding = character.stance !== 'charging' && character.grounded && (input.direction === 'B' || input.direction === 'DB') && (attacking[1 - index] || wakingBackwardGuard);
+        const stationary = (guarding && !wakingBackwardGuard) || (character.grounded && character.crouching);
         const dashing = this.updateDash(index, horizontal, character.grounded && !stationary);
         const movement = this.fighterDefinitions[index].movement;
         const speed = dashing === 'run' ? movement.runSpeed ?? (movement.dashSpeed ?? this.config.movement.dashSpeed) * 1.25 : dashing
@@ -439,6 +479,7 @@ export class Simulation {
       this.previousInputButtons[index]?.clear();
       this.previousDirections[index] = 'N';
       this.jumpHeld[index] = false;
+      this.wakeGuardHeld[index] = false;
       this.previousHorizontalAxis[index] = 0;
       this.lastTapAxis[index] = 0;
       this.lastTapFrame[index] = Number.NEGATIVE_INFINITY;
@@ -499,6 +540,15 @@ export class Simulation {
   private updateStunAndFeedback(character: CharacterState): void {
     if (character.hitFlashFrames > 0) character.hitFlashFrames -= 1;
     if (character.mode === 'grabbed') return;
+    if (character.mode === 'knockdown') {
+      if (character.remainingStateFrames > 0) {
+        character.remainingStateFrames -= 1;
+        if (character.remainingStateFrames === 0) finishCombo(character);
+      } else {
+        finishCombo(character);
+      }
+      return;
+    }
     if (!isStunned(character)) return;
 
     if (!character.grounded && character.combo) { character.remainingStateFrames = Math.max(1, character.remainingStateFrames - 1); return; }
@@ -537,7 +587,9 @@ export class Simulation {
         character.grounded = true;
         if (character.combo && character.mode === 'hitstun') {
           character.mode = 'knockdown';
-          character.remainingStateFrames = this.fighterDefinitions[1 - index].combatRules?.knockdownFrames ?? 32;
+          character.remainingStateFrames = character.combo.forcedFall
+            ? this.fighterDefinitions[1 - index].combatRules?.knockdownFrames ?? 32
+            : 0;
         }
       }
     }

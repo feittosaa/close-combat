@@ -1,5 +1,5 @@
 import { ControlSettings } from '../ui/ControlSettings';
-import { getPlayerLayout } from '../input/controlSettings';
+import { getPlayerLayout, getSystemControls } from '../input/controlSettings';
 import { InputHistory } from '../training/InputHistory';
 import { formatCommand, formatMoveTitle } from '../ui/commandNotation';
 import { PauseMenu } from '../ui/PauseMenu';
@@ -96,6 +96,7 @@ export class FightScene extends Phaser.Scene {
     this.pauseKey(event);
   };
   private pauseKey(event: KeyboardEvent): void {
+    if (event.code !== getSystemControls().pause) return;
     if (ControlSettings.active || event.repeat || this.handledTrainingEvents.has(event)) return;
     this.handledTrainingEvents.add(event);
     this.togglePause();
@@ -111,7 +112,7 @@ export class FightScene extends Phaser.Scene {
     this.simulation?.clearInputHistory();
     this.pauseMenu?.setVisible(this.paused);
     // DOM search must receive text normally, including letters used by training hotkeys.
-    const keys = ['P', 'PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L'];
+    const keys = ['PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L'];
     if (this.paused) this.input.keyboard?.removeCapture(keys);
     else if (this.training) this.input.keyboard?.addCapture(keys);
   }
@@ -122,8 +123,16 @@ export class FightScene extends Phaser.Scene {
     this.scene.restart({ fighterId: this.selectedFighter.id, stageId: this.selectedStage.id,
       mode: 'arcade', arcadeIndex: this.arcadeIndex + 1 });
   };
-  private readonly handleRestart = (): void => {
-    if (!this.simulation?.isMatchOver()) return;
+  private readonly handleRestart = (event: KeyboardEvent): void => {
+    if (event.code !== getSystemControls().reset) return;
+    if (!this.simulation) return;
+    if (ControlSettings.active || event.repeat) return;
+    event.preventDefault();
+    this.handledTrainingEvents.add(event);
+    if (this.training) {
+      this.resetFight();
+      return;
+    }
     if (this.mode === 'arcade' && this.simulation.snapshot().matchWinnerId === 'player-1' &&
         this.arcadeIndex + 1 >= arcadeOpponents(this.selectedFighter.id).length) {
       this.scene.restart({ fighterId: this.selectedFighter.id, stageId: this.selectedStage.id, mode: 'arcade', arcadeIndex: 0 });
@@ -205,7 +214,7 @@ export class FightScene extends Phaser.Scene {
         this.trainingListeners.set(key, listener);
         this.input.keyboard?.on(key, listener);
       });
-      this.input.keyboard?.addCapture(['P', 'PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
+      this.input.keyboard?.addCapture(['PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
     }
 
     this.pinnedMove = this.add.text(width / 2, 155, '', { color: '#ffe0ab', backgroundColor: '#15151fdd', fontSize: '12px', wordWrap: { width: width - 80 }, align: 'center' }).setOrigin(.5, 0).setDepth(120).setScrollFactor(0);
@@ -213,9 +222,9 @@ export class FightScene extends Phaser.Scene {
       () => this.togglePause(false),
       () => this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }),
       (entry, playerIndex) => { this.pinnedMove?.setText(`TREINAR · ${formatMoveTitle(entry.title,getPlayerLayout(playerIndex))}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()));
-    this.input.keyboard?.on('keydown-P', this.handlePause);
+    window.addEventListener('keydown', this.handlePause);
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
-    this.input.keyboard?.on('keydown-R', this.handleRestart);
+    window.addEventListener('keydown', this.handleRestart);
     this.input.keyboard?.on('keydown-ENTER', this.handleContinue);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup, this);
     this.syncViewsAndHud();
@@ -293,16 +302,16 @@ export class FightScene extends Phaser.Scene {
   }
 
   private cleanup(): void {
-    this.input.keyboard?.off('keydown-P', this.handlePause);
+    window.removeEventListener('keydown', this.handlePause);
     this.input.keyboard?.off('keydown-ESC', this.handleEscape);
     this.pauseMenu?.destroy(); this.pauseMenu = undefined;
     this.pinnedMove?.destroy(); this.pinnedMove = undefined;
     this.paused = false;
-    this.input.keyboard?.off('keydown-R', this.handleRestart);
+    window.removeEventListener('keydown', this.handleRestart);
     this.input.keyboard?.off('keydown-ENTER', this.handleContinue);
     this.trainingListeners.forEach((listener, key) => this.input.keyboard?.off(key, listener));
     this.trainingListeners.clear();
-    if (this.training) this.input.keyboard?.removeCapture(['P', 'PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
+    if (this.training) this.input.keyboard?.removeCapture(['PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
     this.keyboardInputs.forEach((input) => input.destroy());
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());

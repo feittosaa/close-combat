@@ -67,6 +67,20 @@ describe('Gris e seleção por modo', () => {
     expect(gris.collision).not.toEqual(ayla.collision);
     expect(new Set(gris.moves.map(m => m.id)).size).toBe(gris.moves.length);
     for (const move of gris.moves) expect(move.hitbox.width * move.hitbox.height).toBeGreaterThan(0);
+    for (const move of gris.moves) {
+      expect(move.balanceReference, move.id).toMatchObject({ game: 'Tekken 7', character: 'Noctis' });
+      expect(move.balanceReference?.url).toContain('/data/json/noctis.json');
+      expect(move.balanceReference?.adaptation.length).toBeGreaterThan(20);
+    }
+  });
+  it('confirma a string local 1,2 inspirada na string de Noctis', () => {
+    const sim = new Simulation(createGameConfig(1024, 576), [gris, ayla], { training: true, initialDistance: 45 });
+    const neutral: FrameInput = { direction: 'N', buttons: new Set() };
+    sim.stepFrame([{ direction: 'N', buttons: new Set(['1']) }, neutral]);
+    for (let frame = 0; frame < 30 && sim.snapshot().recentContacts.length === 0; frame += 1) sim.stepFrame([neutral, neutral]);
+    expect(sim.snapshot().recentContacts[0]?.event.moveId).toBe('standing-lp');
+    sim.stepFrame([{ direction: 'N', buttons: new Set(['2']) }, neutral]);
+    expect(sim.snapshot().characters[0].attack?.moveId).toBe('standing-rp');
   });
   it('cobre todos os estados e as três fases de todos os golpes', () => {
     expect(getAnimationManifest('gris')).toEqual(manifest);

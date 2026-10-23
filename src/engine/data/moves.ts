@@ -6,6 +6,19 @@ export type HitLevel = 'high' | 'mid' | 'low' | 'air' | 'throw' | 'special';
 
 export interface MoveDefinition {
   id: string;
+  /** Fonte de balanceamento externa, separada do MoveCombatData executável de personagens catalogados. */
+  balanceReference?: {
+    game: 'Tekken 7';
+    character: 'Noctis';
+    url: string;
+    command: string;
+    startup: string;
+    damage: string;
+    block: string;
+    hit: string;
+    counterHit: string;
+    adaptation: string;
+  };
   combat?: MoveCombatData;
   /** Preserved only for regression/art review; excluded from the live command book. */
   legacy?: boolean;

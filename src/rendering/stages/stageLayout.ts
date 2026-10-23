@@ -5,6 +5,7 @@ export interface StageLayout {
   worldWidth: number;
   worldHeight: number;
   viewportWidth: number;
+  floorY: number;
   originY: number;
   arenaOffsetX: number;
 }
@@ -15,7 +16,7 @@ export function createStageLayout(stage: StageDefinition, width: number, height:
     floorY / stage.groundY, (height - floorY) / (stage.referenceSize.height - stage.groundY));
   const worldWidth = stage.referenceSize.width * scale;
   return {
-    scale, worldWidth, worldHeight: height, viewportWidth: width,
+    scale, worldWidth, worldHeight: height, viewportWidth: width, floorY,
     originY: floorY - stage.groundY * scale,
     arenaOffsetX: (worldWidth - width) / 2,
   };
@@ -37,6 +38,11 @@ export function getStageCameraScroll(layout: StageLayout, fighterPositions: read
     ? (Math.min(...fighterPositions) + Math.max(...fighterPositions)) / 2
     : layout.worldWidth / 2;
   return Math.round(Math.max(0, Math.min(layout.worldWidth - layout.viewportWidth, center - layout.viewportWidth / 2)));
+}
+
+/** Keep the arena floor at a fixed screen coordinate while zoom changes. */
+export function getFightCameraScrollY(viewportHeight: number, floorY: number, zoom: number): number {
+  return Math.round(floorY - viewportHeight / zoom);
 }
 
 /** Close framing grows the whole world, while wide spacing still keeps both fighters in view. */

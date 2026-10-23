@@ -5,7 +5,25 @@
 > **Raiz:** [`base.md`](./base.md), versão 0.3.3.
 > **Revisão:** 21/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
-> **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos, quedas/levantadas e balanceamento continuam pendentes.
+> **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos e homologação final de balanceamento continuam pendentes.
+
+## Levantada manual, balanceamento Gris/Noctis, comandos e chão — 22/10/2026
+
+Branch: `codex/feature-gris-recovery-floor-controls` (criada após autorização de escrita; commit, push e integração ainda pendentes).
+
+- [x] Documentar a API Tekken e a ficha do Noctis como referências, com limites de adaptação em `base.md`.
+- [x] Implementar espera manual no chão e levantada com `1`/`2` (ataque) ou `F`/`B` (andar/guardar); quedas forçadas mantêm a janela de proteção e continuam caídas depois dela.
+- [x] Ajustar startup, recuperação e dano dos golpes normais, agachados, aéreos, especiais e agarrão da Gris, mantendo tesoura, hitboxes e livro próprios.
+- [x] Registrar fonte, comando, startup, dano/vantagens e adaptação em cada movimento da Gris; implementar e validar a string local `1,2` inspirada na de Noctis.
+- [x] Ampliar configurações com teclas editáveis de pausa e reinício de treino, sem conflito com comandos dos jogadores ou atalhos de treino.
+- [x] Manter os pés no mesmo ponto da tela durante o reenquadramento de zoom da luta.
+- [x] Validar testes automatizados (344/344), build e diff.
+- [x] Conferir no jogo a linha dos pés em treino nas distâncias 96, 144 e 220, alternando o zoom, e confirmar a tela de controles com pausa/reinício remapeáveis.
+- [ ] Commitar, enviar branch, confirmar CI e integrar em `development` depois de autorizar escrita em `.git` e acesso ao remoto.
+
+API comunitária voltada a frame data de Tekken 7; Noctis é base funcional de espada, sem copiar identidade ou dados crus. A ficha individual existe em `balanceReference` para todo movimento da Gris; startup/dano foram adaptados, enquanto recovery, hitboxes, vantagens reais e continuidade dos clipes ainda dependem de homologação visual e por matchup. CI remota e integração estão pendentes.
+
+Revisão no navegador em 22/10/2026: o marcador de chão e os pés das duas personagens permaneceram na mesma linha de tela no treino em 96/144/220; a tela `CONTROLES` exibiu movimentos de P1/P2, pausa `P` e reinício `R`. Um ataque real da Gris foi executado e confirmado no HUD. As rotas automatizadas cobrem as quatro respostas de knockdown; o teste visual específico de queda e cada levantada ainda não foi isolado nesta revisão.
 
 ## Como usar
 
