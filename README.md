@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Escolha **Arcade**, **Luta PvP**, **Modo Treino**, **Tutorial Básico**, **Tutorial de Combos** ou **Configurações**. Use clique ou setas/Enter; atalhos do menu: `A`, `V`, `T`, `B`, `O`, `C`. Depois escolha **Ayla**, **Gris** ou **Tester** para P1 e confirme o cenário **Cais**. P2 é definido pelo modo. Nos menus, **Esc** retorna à tela anterior. Durante a luta, **P** ou **Esc** abre o pause; o retorno ao menu fica dentro dele.
+Escolha **Arcade**, **Luta PvP**, **Modo Treino**, **Tutorial Básico**, **Tutorial de Combos** ou **Configurações**. Use clique ou setas/Enter; atalhos do menu: `A`, `V`, `T`, `B`, `O`, `C`. Depois escolha **Ayla** ou **Gris** para P1 e confirme o cenário **Cais**. P2 é definido pelo modo. Nos menus, **Esc** retorna à tela anterior. Durante a luta, **P** ou **Esc** abre o pause; o retorno ao menu fica dentro dele.
 
 No **PvP**, P2 usa os controles do segundo jogador. No **Arcade**, o computador enfrenta P1 com comandos normais do próprio livro de golpes; vencer libera o próximo adversário com Enter. O **Treino** mantém pausa, avanço por frame, dados de golpes e adversário controlável. **Configurações** possui uma página reservada, ainda sem opções, como solicitado. Direções, sequência de entradas e colisões aparecem apenas no treino.
 
@@ -38,7 +38,7 @@ Na revisão atual, as cargas foram reduzidas em 24% com apoio preservado no chã
 - Acordes agrupam pressionamentos separados por até 3F; botão mantido não repete; combinações sem cadastro são ignoradas.
 - `1+3` agarra à frente e quebra com `1`; `2+4` troca os lados e quebra com `2`. A janela de quebra é 14F. Direção mantida não muda o agarrão.
 - Ultimate: `1+2+3+4`, com até 25% de vida e uma tentativa por round. Bloqueável, sem QTE.
-- Tester preserva variantes e comandos históricos como ferramenta de diagnóstico, fora da baseline autoral.
+- Tester preserva variantes e comandos históricos como ferramenta interna de diagnóstico e NPC de treino/arcade, fora da seleção pública.
 O mapeamento, os golpes e seus valores são provisórios, conforme [`base.md`](./base.md). Combinações simultâneas sem variante cadastrada são ignoradas. O parry é testável contra o golpe elegível `test-jab`: pressione `B` no frame do contato para atordoar o atacante por 18 frames; fora da janela, o ataque resolve normalmente.
 
 ### Especiais de Ayla e Gris

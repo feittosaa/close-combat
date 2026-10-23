@@ -62,7 +62,7 @@ export class PauseMenu {
       this.search.oninput = () => this.renderRows(); tools.append(this.search, this.count); panel.append(tools);
       this.categories.setAttribute('aria-label', 'Categorias de golpes'); this.rows.setAttribute('aria-label', 'Lista de golpes');
       this.body.append(this.categories, this.rows, this.details); panel.append(this.body);
-      panel.append(el('p', 'Setas relativas ao oponente · • neutro · teclas coloridas conforme seus controles · WS: ao levantar · FC: agachado · “:” execução precisa · ~ ligação rápida · * segurar · SS: esquiva 2D · DVK/H: Fulgor.', 'pause-legend'));
+      panel.append(el('p', 'Setas relativas ao oponente · + simultâneo · vírgula: próximo golpe · → próxima ação do combo · AG: agachado · AR: no ar · teclas conforme seus controles.', 'pause-legend'));
       this.loadFighter();
     } else panel.append(el('p', 'A luta, o cronômetro e os projéteis estão pausados.', 'pause-legend'));
     this.root.append(panel); this.root.hidden = true; document.body.append(this.root);

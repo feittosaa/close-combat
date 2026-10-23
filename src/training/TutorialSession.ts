@@ -25,17 +25,17 @@ export class TutorialSession {
   constructor(fighter: CharacterDefinition, kind: 'tutorial' | 'combo-tutorial') {
     const launch = fighter.combos![0].moveIds.slice(0, 3);
     this.lessons = kind === 'combo-tutorial' ? fighter.combos!.map((combo, i) => ({
-      title: combo.name, instruction: i === 0 ? 'Conecte os três golpes do levantamento e finalize com os dois socos.' :
-        'Repita o levantamento. Depois, conecte dois socos leves e finalize com os dois socos.',
+      title: combo.name, instruction: i === 0 ? 'Solte entre os toques. Conecte o levantamento e finalize com os dois socos.' :
+        'Solte entre os toques. Repita o levantamento, dois socos leves e os dois socos juntos.',
       notation: combo.notation, moves: combo.moveIds, distance: 62,
     })) : [
-      { title: 'Mover e escolher a distância', instruction: 'Ande para frente ou para trás por 20 frames. O soco será o mesmo nas duas direções.', notation: 'F / B', distance: 110, movement: true },
+      { title: 'Mover e escolher a distância', instruction: 'Ande um pouco para frente ou para trás. O soco será o mesmo nas duas direções.', notation: 'F / B', distance: 110, movement: true },
       { title: 'Soco leve', instruction: 'Aproxime-se e acerte um soco leve. Solte a tecla antes de atacar outra vez.', notation: '1', moves: ['standing-lp'], distance: 62 },
       { title: 'Agachar e atacar', instruction: 'Segure baixo e acerte o chute leve. As diagonais baixas usam a mesma postura.', notation: 'AG 3', moves: ['crouching-lk'], distance: 62 },
       { title: 'Ataque aéreo', instruction: 'Salte, depois pressione o chute leve durante o salto.', notation: 'U → AR 3', airborne: true, distance: 62 },
       { title: 'Dois socos juntos', instruction: 'Acerte pressionando os dois socos juntos. + significa simultâneo; vírgula indica sequência.', notation: '1+2', moves: ['standing-pp'], distance: 62 },
       { title: 'Defender', instruction: 'Segure trás e bloqueie o soco do adversário. Baixos exigem baixo + trás.', notation: 'B', guard: true, distance: 62 },
-      { title: 'String e levantamento', instruction: 'Conecte a sequência no ritmo: soco leve, soco leve, soco forte. O último lança o alvo.', notation: '1,1,2', moves: launch, distance: 62 },
+      { title: 'String e levantamento', instruction: 'Toque e solte: soco leve, soco leve, soco forte. O último lança o alvo.', notation: '1,1,2', moves: launch, distance: 62 },
       { title: 'Especial à distância', instruction: 'Acerte o projétil com soco leve + chute forte. Nenhum movimento de direção é necessário.', notation: '1+4', moves: [fighter.moves.find(move => !move.legacy && move.projectile)!.id], distance: 220 },
       { title: 'Agarrão frontal', instruction: 'Perto do alvo, pressione soco leve + chute leve. O defensor pode escapar com 1 durante a captura.', notation: '1+3', moves: ['forward-throw'], distance: 58 },
       { title: 'Agarrão com troca de lado', instruction: 'Pressione soco forte + chute forte. Este agarrão troca os lados; a quebra usa 2.', notation: '2+4', moves: ['reverse-throw'], distance: 58 },

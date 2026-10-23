@@ -19,7 +19,7 @@ export class CombatHud {
   private readonly barHeight = 22;
   private readonly sidePadding = 28;
 
-  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string, string] = ['JOGADOR 1', 'JOGADOR 2'], stageName = '', private readonly training = false) {
+  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string, string] = ['JOGADOR 1', 'JOGADOR 2'], stageName = '', private readonly training = false, private readonly practiceLabel = 'TREINO LIVRE') {
     this.labels = [
       scene.add.text(this.sidePadding, 18, `P1 · ${fighterNames[0].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }),
       scene.add.text(width - this.sidePadding, 18, `P2 · ${fighterNames[1].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }).setOrigin(1, 0),
@@ -62,7 +62,7 @@ export class CombatHud {
 
   update(snapshot: SimulationSnapshot, width: number): void {
     this.timer.setText(this.training ? '∞' : String(Math.ceil(snapshot.roundFramesRemaining / 60)).padStart(2, '0'));
-    this.roundLabel.setText(this.training ? 'TREINO LIVRE' : `ROUND ${snapshot.round}`);
+    this.roundLabel.setText(this.training ? this.practiceLabel : `ROUND ${snapshot.round}`);
     const winnerIndex = snapshot.characters.findIndex(({ characterId }) => characterId === snapshot.roundWinnerId);
     const matchWinnerIndex = snapshot.characters.findIndex(({ characterId }) => characterId === snapshot.matchWinnerId);
     if (snapshot.phase === 'match-over') {
@@ -90,9 +90,9 @@ export class CombatHud {
     this.hitLabel.setText(snapshot.frame - this.lastImpactFrame <= 90 ? this.lastImpactLabel : '');
     snapshot.characters.forEach((character, index) => {
       const modeLabel = character.attack?.preciseExecution ? 'PRECISO · ' : '';
-      const power = character.combatRules ? (character.powerFrames ?? 0) > 0
+      const power = (character.combatRules?.powerFrames ?? 0) > 0 ? (character.powerFrames ?? 0) > 0
         ? `FULGOR ${Math.ceil(character.powerFrames! / 60)}s` : character.powerAvailable !== false ? 'FULGOR DISPONÍVEL' : 'FULGOR GASTO' : '';
-      const rage = character.combatRules && !character.rageUsed && character.health <= character.maxHealth * .25 ? ' · R PRONTA' : '';
+      const rage = character.combatRules && !character.rageUsed && character.health <= character.maxHealth * .25 ? ' · ULTIMATE PRONTA' : '';
       const charged = character.stance === 'charging' ? ' · CARGA' : '';
       this.modeLabels[index]?.setText(`${this.training ? `${modeLabel}${MODE_LABELS[character.mode]}${power ? ' · ' : ''}` : ''}${power}${rage}${charged}`);
       this.modeLabels[index]?.setColor(character.mode === 'hitstun' ? '#ff7777' : character.mode === 'blockstun' || character.mode === 'blocking' ? '#8cb4ff' : '#f4f0e8');
