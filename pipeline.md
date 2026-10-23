@@ -5,7 +5,7 @@
 > **Raiz:** [`base.md`](./base.md), revisão de design 0.4.0.
 > **Revisão:** 23/10/2026.
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
-> **Estado:** fundação e núcleo preservados; primeira entrega da consolidação de animações e treino implementada. Combos completos e homologação final de balanceamento continuam pendentes.
+> **Estado:** combate autoral e tutoriais integrados; fundação preservada. Arte e balanceamento finais continuam em homologação, a partir do catálogo inicial de Ayla.
 
 ## Combate orgânico autoral e tutoriais — 23/10/2026
 
@@ -18,7 +18,9 @@ Branch: `codex/feature-combate-organico`. Objetivo: substituir a cópia direta d
 - [x] Criar tutorial básico e tutorial progressivo das duas receitas iniciais por entradas reais.
 - [x] Validar `npm ci`, 389 testes, build TypeScript/Vite e `git diff --check`.
 - [x] Concluir a revisão visual: onze lições básicas de Ayla, as duas receitas com Ayla/Gris, avanço, reset e pausa/retorno. Evidências em `docs/evidence/combat/` e roteiro em `docs/combate-organico-validacao.md`.
-- [ ] Integrar em `development` apenas após revisão visual completa e CI verde do commit atual. Push/CI da branch são relatados na entrega, separados dos checks locais.
+- [x] Integrar em `development` após revisão visual completa e CI verde. Entrega funcional em `e60a27d`; CI da branch e da integração aprovadas no remoto.
+
+Integração funcional confirmada por fast-forward em `e60a27d8f31e5e8e8f170449b6dbf7bec770dfac`, preservando a branch e o histórico. CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40040475555) e de [development](https://github.com/feittosaa/close-combat/actions/runs/40040652577) aprovadas. Este registro documental de fechamento segue o mesmo fluxo de push/CI/integração, sem mudança adicional de comportamento. Não houve promoção de release.
 
 Verificação automatizada inclui os seis básicos nas três posturas, identidade em avanço/recuo, tolerância dos acordes, seis starters por lutadora, projéteis à distância, dois agarrões e quebras, ultimate/limite por round, duas receitas contra Ayla/Gris/Tester e conclusão das onze lições básicas por entradas comuns. Os testes anteriores de livros importados continuam com fixtures históricos explícitos, sem remover sua cobertura.
 

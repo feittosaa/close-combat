@@ -2,7 +2,7 @@
 
 > **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
 
-> **Status:** protótipo em pixel art; combate autoral acessível; catálogo inicial de Ayla e tutoriais em implantação
+> **Status:** protótipo em pixel art; combate autoral acessível; catálogo inicial de Ayla e tutoriais integrados; arte e balanceamento provisórios
 > **Versão:** 0.4.0 de design · revisão de 23/10/2026 (não é release do pacote)
 > **Idioma:** português (Brasil)
 > **Título do jogo:** Close Combat
