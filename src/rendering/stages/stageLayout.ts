@@ -40,14 +40,13 @@ export function getStageCameraScroll(layout: StageLayout, fighterPositions: read
   return Math.round(Math.max(0, Math.min(layout.worldWidth - layout.viewportWidth, center - layout.viewportWidth / 2)));
 }
 
-/** Keep the arena floor at its simulation screen coordinate while zoom changes. */
-export function getFightCameraScrollY(viewportHeight: number, floorY: number, zoom: number): number {
-  const viewportCenterY = viewportHeight / 2;
-  return Math.round(floorY - (floorY - viewportCenterY) / zoom);
-}
-
 /** Close framing grows the whole world, while wide spacing still keeps both fighters in view. */
 export function getFightZoom(viewportWidth: number, fighterPositions: readonly number[]): number {
   const span = fighterPositions.length > 1 ? Math.max(...fighterPositions) - Math.min(...fighterPositions) : 0;
   return Math.min(1.55, viewportWidth / Math.max(1, span + 230));
+}
+
+/** Distance-based framing is horizontal only; vertical scale stays at the simulation baseline. */
+export function getFightCameraZoom(viewportWidth: number, fighterPositions: readonly number[]): { x: number; y: 1 } {
+  return { x: getFightZoom(viewportWidth, fighterPositions), y: 1 };
 }

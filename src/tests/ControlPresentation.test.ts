@@ -1,4 +1,4 @@
-import { getFightCameraScrollY, getFightZoom } from '../rendering/stages/stageLayout';
+import { getFightCameraZoom, getFightZoom } from '../rendering/stages/stageLayout';
 import { afterEach, describe, expect, it } from 'vitest';
 import { getPlayerLayout, getSystemControls, keyLabel, loadControls, resetControls, saveControls, saveSystemControls, validateLayouts, validateSystemControls, BUTTON_COLORS } from '../input/controlSettings';
 import { commandTokens, formatCommand, screenDirection, formatCommandProse } from '../ui/commandNotation';
@@ -62,11 +62,8 @@ it('enquadra lutadores maiores de perto sem cortar as extremidades quando se afa
   const far=getFightZoom(1024,[100,950]);expect(far).toBeLessThan(1.55);expect((850+230)*far).toBeLessThanOrEqual(1024);
 });
 
-it('mantém os pés no floorY da tela ao mudar o zoom da câmera',()=>{
-  const viewportHeight=576;const floorY=488;
-  for(const zoom of [1.55,1,.9]){
-    const scrollY=getFightCameraScrollY(viewportHeight,floorY,zoom);
-    const screenY=(floorY-scrollY)*zoom+viewportHeight/2;
-    expect(screenY).toBeCloseTo(floorY,0);
-  }
+it('mantém o enquadramento horizontal por distância sem alterar a escala vertical',()=>{
+  const near=getFightCameraZoom(1024,[450,550]);
+  const far=getFightCameraZoom(1024,[100,950]);
+  expect(near).toEqual({x:1.55,y:1});expect(far.x).toBeLessThan(near.x);expect(far.y).toBe(1);
 });

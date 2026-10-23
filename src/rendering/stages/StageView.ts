@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { StageDefinition } from './StageDefinition';
 import type { StageLayout } from './stageLayout';
-import { getLayerPlacement, getStageCameraScroll, getFightCameraScrollY, getFightZoom } from './stageLayout';
+import { getLayerPlacement, getStageCameraScroll, getFightCameraZoom } from './stageLayout';
 import { getStageLayerUrl, stageTextureKey } from './stageCatalog';
 
 export function preloadStage(scene: Phaser.Scene, stage: StageDefinition): void {
@@ -33,9 +33,10 @@ export class StageView {
   }
 
   sync(fighterPositions: readonly number[]): void {
-    this.scene.cameras.main.setZoom(getFightZoom(this.layout.viewportWidth, fighterPositions));
-    this.scene.cameras.main.setScroll(getStageCameraScroll(this.layout, fighterPositions),
-      getFightCameraScrollY(this.layout.worldHeight, this.layout.floorY, getFightZoom(this.layout.viewportWidth, fighterPositions)));
+    // Distance changes only the horizontal framing; vertical scale and floor projection stay fixed.
+    const zoom = getFightCameraZoom(this.layout.viewportWidth, fighterPositions);
+    this.scene.cameras.main.setZoom(zoom.x, zoom.y);
+    this.scene.cameras.main.setScroll(getStageCameraScroll(this.layout, fighterPositions), this.layout.worldHeight / 2);
   }
 
 
