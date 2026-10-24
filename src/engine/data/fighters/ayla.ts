@@ -98,7 +98,8 @@ export const ayla: CharacterDefinition = {
   moves: [...aylaOrganicBook.moves, ...[...aylaCombatMoves, ...aylaLegacyMoves]
     .filter(move => !aylaOrganicBook.moves.some(current => current.id === move.id)).map(move => ({ ...move, legacy: true }))],
   combos: aylaOrganicBook.combos,
-  combatRules: { ...aylaCombatRules, lowParryFrames: 0, powerFrames: 0 },
+  combatRules: { ...aylaCombatRules, lowParryFrames: 0, powerFrames: 0,
+    launchVelocity: -10.2, launchGravity: .34, juggleBaseGravity: .34, juggleGravity: .055, fallGravityMultiplier: 1.6 },
   collision: {
     bodyWidth: 46, hurtboxes: {
       juggled: { offsetX: 0, offsetY: -35, width: 86, height: 80 },

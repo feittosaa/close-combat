@@ -586,7 +586,9 @@ export class Simulation {
       if ((character.combo?.wallFrames ?? 0) > 0) { character.combo!.wallFrames -= 1; return; }
       const juggleRules = this.fighterDefinitions[1 - index].combatRules;
       const baseGravity = character.combo && (character.combo.airHits ?? 0) > 0 ? juggleRules?.juggleBaseGravity ?? this.config.movement.gravity : character.combo ? juggleRules?.launchGravity ?? this.config.movement.gravity : this.config.movement.gravity;
-      character.verticalVelocity += character.combo?.forcedFall ? .8 : baseGravity + (character.combo ? (character.combo.airHits ?? 0) * (juggleRules?.juggleGravity ?? 0) : 0);
+      const hitGravity = character.combo ? (character.combo.airHits ?? 0) * (juggleRules?.juggleGravity ?? 0) : 0;
+      const fallMultiplier = character.combo && character.verticalVelocity >= 0 ? juggleRules?.fallGravityMultiplier ?? 1 : 1;
+      character.verticalVelocity += character.combo?.forcedFall ? .8 : (baseGravity + hitGravity) * fallMultiplier;
       character.y += character.verticalVelocity;
       if (character.y >= this.config.arena.floorY) {
         character.y = this.config.arena.floorY;

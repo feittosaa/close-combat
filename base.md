@@ -76,7 +76,7 @@ Complexidade nasce de confirmar acerto, interromper uma string, escolher dano/po
 
 A regra de fluidez vigente é mantida: strikes recuperam somente após bloqueio; acerto/erro liberam no fim da atividade. Startup e atividade continuam obrigatórios. Agarrões conservam recuperação própria. Manter baixa separação nos elos e avanços pequenos por golpe, sem teleporte corretivo, magnetismo ou acertos forçados. Medir abuso de erro sem recuperação antes de homologar o balanceamento.
 
-O juggle permite levantamento inicial e uma renovação aérea; o terceiro levantamento força descida imune e queda protegida de 26F. Um extensor bem-sucedido consome o orçamento aéreo. Há escala decrescente de dano, gravidade crescente e no máximo um splat por combo. Todas as regras são determinadas pela simulação, nunca pelos pixels ou FPS. Não exigir paredes para as duas primeiras receitas.
+O juggle permite levantamento inicial e uma renovação aérea; o terceiro levantamento força descida imune e queda protegida de 26F. Um extensor bem-sucedido consome o orçamento aéreo. Há escala decrescente de dano, gravidade crescente a cada contato aéreo e no máximo um splat por combo. O levantamento sobe mais alto, mas a descida recebe aceleração adicional; contatos não zeram a gravidade acumulada (valores na revisão de trajetória abaixo). Todas as regras são determinadas pela simulação, nunca pelos pixels ou FPS. Não exigir paredes para as duas primeiras receitas.
 
 #### Agarrões, projétil e ultimate
 
@@ -949,7 +949,7 @@ Esta solicitação do usuário substitui as recuperações de contato/erro descr
 
 A janela da string é independente do bloqueio de controle: guardar o último golpe elegível e seu relógio permite continuar `1,1,2` mesmo após ficar livre. O contexto não bloqueia movimento nem outro golpe raiz, expira no fim da janela e é descartado por nova ação, dano ou reset. Fichas e HUD indicam recuperação somente no bloqueio. Golpes multihit conservam essa recuperação se qualquer contato tiver sido bloqueado.
 
-Ayla usa lançamento inicial −6,8 unidades/frame e gravidade inicial 0,24, produzindo aproximadamente 56F de voo sem novos contatos e altura de 80–100 unidades. No juggle, gravidade base 0,2 com acréscimo 0,012 por contato aéreo; acertos comuns aplicam impulso −2,8 com deterioração de 0,025 por contato (limite −0,4). Levantamento aéreo usa −4 e Screw −4,5, inferiores ao impulso inicial. O salto livre não muda.
+Revisão de 23/10/2026: Ayla usa impulso inicial −10,2 e Gris −9,9 unidades/frame. Ambas usam gravidade inicial/base de juggle 0,34, com acréscimo de 0,055 por contato recebido no ar. Na descida, a gravidade acumulada é multiplicada por 1,6; na subida, não. O primeiro contato aéreo nunca reduz a gravidade inicial, e novos contatos não reiniciam o contador. Sem contatos adicionais, Ayla sobe cerca de 150 unidades e fica 54F no ar (24F de descida); Gris sobe 141 unidades em 52F (23F de descida). Antes: aproximadamente 95/89 unidades, 56/55F totais e 28F de descida. Os acertos comuns conservam seus pequenos impulsos e deterioração existentes; o acúmulo de gravidade encerra o juggle mesmo com contatos repetidos sem novo launcher. Levantamentos aéreos/extensores continuam usando os impulsos menores e orçamento existentes. O terceiro levantamento conserva descida protegida de gravidade 0,8 e queda de 26F. O salto livre não muda. Parâmetros pertencem ao livro de cada lutadora, determinados pelo atacante do combo; os livros históricos preservados não governam este ajuste.
 
 ### Limite de levantamentos — 21/10/2026
 

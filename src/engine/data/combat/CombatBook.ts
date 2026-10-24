@@ -82,6 +82,8 @@ export interface CombatRules {
   forcedFallSpeed?: number;
   launchVelocity?: number;
   launchGravity?: number;
+  /** Extra acceleration on descent only; free jumps keep their own gravity. */
+  fallGravityMultiplier?: number;
   juggleHitVelocity?: number;
   screwVelocity?: number;
   commandBufferFrames?: number;
