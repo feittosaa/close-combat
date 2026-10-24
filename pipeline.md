@@ -16,7 +16,7 @@ Branch: `codex/fix-retorno-idle-queda`. Continuação da correção: a tela do u
 - [x] Terminar o clipe de queda de Tester no chão, conservando a espera manual quando escolhida.
 - [x] Verificar idle, fim do combo/proteção e dano de um novo golpe após recuperar; incluir novo launcher após queda protegida no Arcade.
 - [x] Instalação limpa, 411 testes (seis novos), build e diff aprovados. No jogo: alvo padrão no idle, novo jab com dano 38 e retorno ao idle; modo manual conservando pose no chão. Evidências em `docs/evidence/retorno-idle/`.
-- [ ] Enviar branch e integrar em `development` com CI aprovada.
+- [x] Correção integrada por fast-forward em `development`, commit `6c82b0a3bf0603f6b8bb4ecf2c92b706ab63f5fe`; CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40050653010) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40050712321) aprovadas. O fechamento documental segue o mesmo fluxo de CI/integração, sem promoção para `main`.
 
 A validação anterior conferia modos automáticos, mas não o treino na configuração padrão nem um novo acerto após voltar ao idle. Esta continuação cobre essas lacunas. A simulação continua responsável pela proteção e levantada; não foi adicionada invulnerabilidade nem removida a proteção do terceiro levantamento.
 
