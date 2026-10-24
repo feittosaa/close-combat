@@ -23,3 +23,5 @@ P/Esc pausa todos os modos locais. No treino, `PauseMenu` lê `fighterMoveList`:
 
 
 `TutorialSession.ts` define as lições básicas e desafios por personagem. Observa frames lógicos, entradas e contatos reais; aprova uma receita somente na ordem e no mesmo combo. A interface em `TutorialHud` apenas apresenta o progresso. R reinicia a tentativa; Enter avança após sucesso. Progresso não é persistido entre sessões.
+
+Depois de uma queda, todos os comportamentos automáticos enviam uma nova entrada de `B` para levantar em guarda, respeitando a proteção da simulação. Soltam a direção entre tentativas para não depender de uma guarda já mantida. Retomam guarda/repetição após levantar. O modo segundo jogador permanece manual.

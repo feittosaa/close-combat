@@ -52,6 +52,12 @@ export class TrainingSession {
 
   dummyInput(frame: number, characters: readonly CharacterState[], projectiles: SimulationSnapshot['projectiles'] = []): FrameInput | undefined {
     if (this.dummyMode === 'manual') return undefined;
+    const self = characters[1];
+    if (self?.mode === 'knockdown') {
+      // Automated practice partners must explicitly choose a manual wake-up.
+      // Alternate release/press to recover even if guard was held on landing.
+      return { direction: self.grounded && self.remainingStateFrames <= 1 && frame % 2 === 1 ? 'B' : 'N', buttons: new Set() };
+    }
     if (this.dummyMode.startsWith('repeat-')) {
       const button = this.dummyMode === 'repeat-jab' ? '1' : this.dummyMode === 'repeat-kick' ? '4' : '2';
       return { direction: 'N', buttons: new Set<AttackButton>(frame % 120 === 30 ? [button] : []) };
