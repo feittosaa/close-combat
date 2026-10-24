@@ -16,7 +16,7 @@ Branch: `codex/feature-gravidade-juggle`. Objetivo: aumentar a altura do lançam
 - [x] Medir altura e duração em simulação; Ayla: 95 → 150 unidades e 28 → 24F de descida; Gris: 89 → 141 e 28 → 23F.
 - [x] Cobrir gravidade crescente, aterrissagem sob contato a cada frame sem terceiro launcher e equivalência do salto livre. Preservar as duas receitas iniciais de tutorial.
 - [x] Instalação limpa, 419 testes (oito novos), build e diff aprovados. Conferidos no jogo: altura maior e as duas receitas do tutorial com Ayla e Gris; evidências em `docs/evidence/gravidade-juggle/`.
-- [ ] Enviar branch e integrar em `development` após CI aprovada.
+- [x] Ajuste integrado por fast-forward em `development`, commit `f57c55e82865616d5b771d7a3504589431b09ecf`; CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40051433725) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40051512096) aprovadas. Este fechamento documental segue o mesmo fluxo de CI/integração; sem promoção para `main`.
 
 O teste de estresse usa um golpe sintético com alcance/altura garantidos, sem recuo e um contato por frame: verifica a gravidade sem depender de erro por distância, morte ou limite de launchers. Não representa um golpe novo do elenco.
 
