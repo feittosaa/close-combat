@@ -16,7 +16,7 @@ Branch: `codex/fix-recuperacao-queda`. Objetivo: impedir que adversários autom�
 - [x] Preservar a levantada manual de P1/P2 e o tempo protegido; nenhuma alteração em gravidade, colisão ou duração de stun.
 - [x] Cobrir queda, retomada, neutralização posterior e as quatro escolhas manuais, incluindo Ayla, Gris e Tester.
 - [x] Instalação limpa, 405 testes (16 novos), build e diff aprovados; jogo conferido em Arcade e treino em guarda alta/baixa. Evidências em `docs/evidence/recuperacao-queda/`.
-- [ ] Enviar a branch, conferir CI e integrar em `development`.
+- [x] Correção enviada e integrada por fast-forward em `development`, commit `24fd89c8f2f51032ee32215612a35c47cccb9cbb`; CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40047094862) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40047157710) aprovadas. Este fechamento documental segue o mesmo fluxo de CI e integração; sem promoção para `main`.
 
 O teste novo falhou antes da correção nos três adversários do Arcade e nos modos de guarda/repetição de chute. Repetições de soco já levantavam por emitir `1`/`2`; agora todos os modos automáticos têm recuperação consistente. O neutro manual continua mantendo o personagem caído.
 
