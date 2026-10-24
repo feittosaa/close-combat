@@ -5,6 +5,8 @@ import { ayla } from './fixtures/referenceFighters';
 import { getCharacterById } from '../engine/data/characters';
 import { aylaMove } from '../engine/data/combat/aylaCombatBook';
 import { applyStrikeReaction } from '../engine/combat/CombatRuntime';
+import { ArcadeController } from '../engine/combat/ArcadeController';
+import { getCharacterAnimationKey } from '../rendering/animations/CharacterAnimationMap';
 import { AttackResolver } from '../engine/combat/AttackResolver';
 import type { Direction, FrameInput } from '../input/types';
 import type { CharacterState } from '../engine/characters/CharacterState';
@@ -72,4 +74,30 @@ describe('limite de dois levantamentos por combo',()=>{
     const unprotected=resolver.resolve([attacker,target],[N,N],[new Set(),new Set()],[false,false],kind==='projectile'?[projectile]:[]);
     expect(unprotected.length).toBeGreaterThan(0);
   });
+  it('o Arcade encerra a queda protegida, volta ao idle e pode receber um novo launcher', () => {
+    const sim = game();
+    const fighter = getCharacterById('ayla')!;
+    const controller = new ArcadeController(fighter, ayla);
+    for (let count = 1; count <= 3; count++) {
+      launch(sim);
+      wait(sim, () => sim.snapshot().recentContacts.length >= count);
+    }
+    expect(sim.snapshot().characters[1].combo?.forcedFall).toBe(true);
+    wait(sim, () => sim.snapshot().characters[1].grounded);
+    for (let frame = 0; frame < 60 && sim.snapshot().characters[1].mode === 'knockdown'; frame++) {
+      const snapshot = sim.snapshot();
+      sim.stepFrame([N, controller.readInput(snapshot.frame, snapshot.characters[1], snapshot.characters[0], snapshot.projectiles)]);
+    }
+    step(sim, N, 2);
+    const recovered = sim.snapshot().characters[1];
+    expect(recovered.mode).toBe('neutral');
+    expect(getCharacterAnimationKey(recovered)).toBe('ayla-idle');
+    expect(recovered.combo).toBeUndefined();
+    const health = recovered.health;
+    launch(sim);
+    wait(sim, () => sim.snapshot().characters[1].health < health);
+    expect(sim.snapshot().characters[1].combo?.launches).toBe(1);
+    expect(sim.snapshot().characters[1].combo?.forcedFall).not.toBe(true);
+  });
+
 });

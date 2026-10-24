@@ -4,10 +4,11 @@ import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { getCharacterById } from '../engine/data/characters';
 import type { MoveDefinition } from '../engine/data/moves';
 
-export const DUMMY_MODES = ['manual', 'guard-high', 'guard-low', 'repeat-cross', 'repeat-jab', 'repeat-kick'] as const;
+export const DUMMY_MODES = ['idle', 'guard-high', 'guard-low', 'repeat-cross', 'repeat-jab', 'repeat-kick', 'manual'] as const;
 export type DummyMode = typeof DUMMY_MODES[number];
 
 export const DUMMY_LABELS: Record<DummyMode, string> = {
+  idle: 'PARADO · RECUPERAÇÃO AUTOMÁTICA',
   manual: 'SEGUNDO JOGADOR',
   'guard-high': 'GUARDA ALTA',
   'guard-low': 'GUARDA BAIXA',
@@ -21,7 +22,7 @@ export class TrainingSession {
   paused = false;
   showGeometry = true;
   showInputs = true;
-  dummyMode: DummyMode = 'manual';
+  dummyMode: DummyMode = 'idle';
   speed: 1 | 0.5 | 0.25 = 1;
   autoRestore = true;
   initialDistance = 96;
@@ -58,6 +59,7 @@ export class TrainingSession {
       // Alternate release/press to recover even if guard was held on landing.
       return { direction: self.grounded && self.remainingStateFrames <= 1 && frame % 2 === 1 ? 'B' : 'N', buttons: new Set() };
     }
+    if (this.dummyMode === 'idle') return { direction: 'N', buttons: new Set() };
     if (this.dummyMode.startsWith('repeat-')) {
       const button = this.dummyMode === 'repeat-jab' ? '1' : this.dummyMode === 'repeat-kick' ? '4' : '2';
       return { direction: 'N', buttons: new Set<AttackButton>(frame % 120 === 30 ? [button] : []) };

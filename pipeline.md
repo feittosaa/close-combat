@@ -7,6 +7,19 @@
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** combate autoral e tutoriais integrados; fundação preservada. Arte e balanceamento finais continuam em homologação, a partir do catálogo inicial de Ayla.
 
+## Retorno ao idle e vulnerabilidade após queda — 23/10/2026
+
+Branch: `codex/fix-retorno-idle-queda`. Continuação da correção: a tela do usuário mostrou treino em “Segundo jogador”, estado CAÍDO e pose de levantada. O treino padrão permanecia manual; o clipe de Tester terminava em pé sem sair do estado lógico de queda.
+
+- [x] Reproduzir o caso real no navegador e em quatro testes que falharam antes da correção: alvo padrão de Tester/Ayla/Gris sem retorno ao neutro e clipe de queda terminando no quadro de levantada.
+- [x] Iniciar treino com alvo parado e recuperação automática; manter P2 manual como escolha explícita por `G`.
+- [x] Terminar o clipe de queda de Tester no chão, conservando a espera manual quando escolhida.
+- [x] Verificar idle, fim do combo/proteção e dano de um novo golpe após recuperar; incluir novo launcher após queda protegida no Arcade.
+- [x] Instalação limpa, 411 testes (seis novos), build e diff aprovados. No jogo: alvo padrão no idle, novo jab com dano 38 e retorno ao idle; modo manual conservando pose no chão. Evidências em `docs/evidence/retorno-idle/`.
+- [ ] Enviar branch e integrar em `development` com CI aprovada.
+
+A validação anterior conferia modos automáticos, mas não o treino na configuração padrão nem um novo acerto após voltar ao idle. Esta continuação cobre essas lacunas. A simulação continua responsável pela proteção e levantada; não foi adicionada invulnerabilidade nem removida a proteção do terceiro levantamento.
+
 ## Correção da recuperação após queda — 23/10/2026
 
 Branch: `codex/fix-recuperacao-queda`. Objetivo: impedir que adversários automáticos permaneçam caídos sem enviar uma escolha de levantada.
