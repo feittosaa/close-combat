@@ -32,7 +32,7 @@ O catálogo inicial de Ayla tem **80 entradas autorais**, descritas em [`docs/ay
 
 **Precedência:** esta revisão e §1.3 substituem as decisões de cópia fiel de Tekken, livros importados, variantes direcionais, comandos complexos, Fulgor e execução elétrica obrigatória. O registro anterior está em [`docs/combate-referencia-historico.md`](./docs/combate-referencia-historico.md) e nos documentos históricos de integração. Código e testes antigos preservados não voltam a autorizar essas regras no elenco público.
 
-Queda e levantada manual, simulação a 60 Hz, controles remapeáveis, pausa, câmera uniforme e piso compartilhado continuam válidos. `1`/`2` levantam atacando; `F` levanta avançando e `B` recuando em guarda. A escolha é individual; queda protegida conserva seu orçamento de segurança.
+Queda e levantada manual, simulação a 60 Hz, controles remapeáveis, pausa, câmera uniforme e piso compartilhado continuam válidos. `1`/`2` levantam atacando; `F` levanta avançando e `B` recuando em guarda. A escolha é individual; queda protegida conserva seu orçamento de segurança. Adversários controlados pela IA do Arcade e comportamentos automáticos do treino enviam uma nova entrada de recuo para levantar quando a recuperação permite; depois retomam seu comportamento. O modo segundo jogador continua manual.
 
 ### 1.1 Pilares de design
 

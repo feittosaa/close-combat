@@ -32,6 +32,12 @@ export class ArcadeController {
     if (threat && this.threatSince === undefined) this.threatSince = frame;
     if (!threat) this.threatSince = undefined;
     if (self.attack) { this.plan = []; return neutral(); }
+    if (self.mode === 'knockdown') {
+      this.plan = [];
+      // A new direction edge wakes the fighter. Pulse it so a guard held before
+      // landing cannot swallow recovery; the simulation still owns the lock.
+      return direction(self.grounded && self.remainingStateFrames <= 1 && frame % 2 === 1 ? 'B' : 'N');
+    }
     if (self.grounded && this.threatSince !== undefined && frame - this.threatSince >= 10 &&
       !['hitstun', 'grabbed', 'throwRecovery', 'knockdown'].includes(self.mode)) {
       const move = incoming ? this.opponent.moves.find((m) => m.id === incoming.moveId) : enemyMove;

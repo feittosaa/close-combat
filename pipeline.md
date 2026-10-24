@@ -7,6 +7,19 @@
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** combate autoral e tutoriais integrados; fundação preservada. Arte e balanceamento finais continuam em homologação, a partir do catálogo inicial de Ayla.
 
+## Correção da recuperação após queda — 23/10/2026
+
+Branch: `codex/fix-recuperacao-queda`. Objetivo: impedir que adversários automáticos permaneçam caídos sem enviar uma escolha de levantada.
+
+- [x] Reproduzir por golpe real: Arcade e treino em guarda alta/baixa ou repetição de chute permaneciam caídos indefinidamente.
+- [x] Fazer a IA e os comportamentos automáticos de treino gerarem nova entrada de `B`, com soltura entre tentativas e respeito ao bloqueio de recuperação.
+- [x] Preservar a levantada manual de P1/P2 e o tempo protegido; nenhuma alteração em gravidade, colisão ou duração de stun.
+- [x] Cobrir queda, retomada, neutralização posterior e as quatro escolhas manuais, incluindo Ayla, Gris e Tester.
+- [x] Instalação limpa, 405 testes (16 novos), build e diff aprovados; jogo conferido em Arcade e treino em guarda alta/baixa. Evidências em `docs/evidence/recuperacao-queda/`.
+- [ ] Enviar a branch, conferir CI e integrar em `development`.
+
+O teste novo falhou antes da correção nos três adversários do Arcade e nos modos de guarda/repetição de chute. Repetições de soco já levantavam por emitir `1`/`2`; agora todos os modos automáticos têm recuperação consistente. O neutro manual continua mantendo o personagem caído.
+
 ## Combate orgânico autoral e tutoriais — 23/10/2026
 
 Branch: `codex/feature-combate-organico`. Objetivo: substituir a cópia direta dos livros externos por comandos acessíveis e escolhas de combo, com catálogo inicial editável de Ayla.
