@@ -489,7 +489,7 @@
     {
       "key": "tester-knockdown",
       "start": 105,
-      "end": 110,
+      "end": 108,
       "frameRate": 10,
       "repeat": 0
     },

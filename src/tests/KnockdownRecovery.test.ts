@@ -6,6 +6,9 @@ import { gris } from '../engine/data/fighters/gris';
 import { defaultCharacter } from '../engine/data/characters';
 import { ArcadeController } from '../engine/combat/ArcadeController';
 import { TrainingSession, DUMMY_MODES } from '../training/TrainingSession';
+import testerManifest from '../assets/animations/tester.json';
+import { getCharacterAnimationKey } from '../rendering/animations/CharacterAnimationMap';
+import { getStateAnimationFrame } from '../rendering/animations/AnimationPlayback';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
@@ -47,6 +50,7 @@ describe('retorno após queda', () => {
   it.each([defaultCharacter, ayla, gris])('preserva a espera manual de $name e recupera com um novo soco', fighter => {
     const sim = knockDown(fighter);
     const session = new TrainingSession();
+    session.dummyMode = 'manual';
     for (let frame = 0; frame < 180; frame++) {
       const snapshot = sim.snapshot();
       expect(session.dummyInput(snapshot.frame, snapshot.characters)).toBeUndefined();
@@ -88,4 +92,33 @@ describe('retorno após queda', () => {
     expect(bot.readInput(27, target, characters[0], []).direction).toBe('B');
     expect(training.dummyInput(27, characters)!.direction).toBe('B');
   });
+
+  it.each([defaultCharacter, ayla, gris])('o alvo padrão $name volta ao idle e recebe novos golpes', fighter => {
+    const sim = knockDown(fighter);
+    const session = new TrainingSession();
+    for (let frame = 0; frame < 90; frame++) {
+      const snapshot = sim.snapshot();
+      sim.stepFrame([neutral, session.dummyInput(snapshot.frame, snapshot.characters, snapshot.projectiles) ?? neutral]);
+    }
+    const recovered = sim.snapshot().characters[1];
+    expect(recovered).toMatchObject({ mode: 'neutral', grounded: true, remainingStateFrames: 0 });
+    expect(recovered.combo).toBeUndefined();
+    expect(getCharacterAnimationKey(recovered)).toBe(`${fighter.id}-idle`);
+    const health = recovered.health;
+    sim.stepFrame([{ direction: 'N', buttons: new Set(['1']) }, neutral]);
+    for (let frame = 0; frame < 20; frame++) sim.stepFrame([neutral, neutral]);
+    expect(sim.snapshot().characters[1].health).toBeLessThan(health);
+    const contacts = sim.snapshot().recentContacts;
+    expect(contacts[contacts.length - 1]?.event).toMatchObject({ outcome: 'hit', targetId: 'player-2' });
+  });
+
+  it('a pose de queda de Tester não reproduz a levantada enquanto o estado ainda é caído', () => {
+    const sim = knockDown();
+    const state = sim.snapshot().characters[1];
+    const clip = testerManifest.clips.find(clip => clip.key === 'tester-knockdown')!;
+    // Frame 108 is the final prone pose. 109 onward already depicts getting up.
+    expect(getStateAnimationFrame(state, clip, sim.snapshot().frame + 180)).toBe(108);
+    expect(getCharacterAnimationKey(state)).toBe('tester-knockdown');
+  });
+
 });
