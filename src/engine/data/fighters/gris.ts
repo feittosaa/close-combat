@@ -110,9 +110,9 @@ export const grisLegacyMoves: readonly MoveDefinition[] = [
 
 export const grisCombatRules: CombatRules = {
   maxLaunches: 2, aerialLaunchVelocity: -3.8, forcedFallSpeed: 8,
-  launchVelocity: -6.6, launchGravity: .24, juggleHitVelocity: -2.7, screwVelocity: -4.3,
+  launchVelocity: -9.9, launchGravity: .34, fallGravityMultiplier: 1.6, juggleHitVelocity: -2.7, screwVelocity: -4.3,
   commandBufferFrames: 8, lowParryFrames: 0, lowParryStunFrames: 18, stanceFrames: 30,
-  comboScaling: [1, .7, .6, .5, .4, .3, .25, .2], juggleGravity: .012, juggleBaseGravity: .2,
+  comboScaling: [1, .7, .6, .5, .4, .3, .25, .2], juggleGravity: .055, juggleBaseGravity: .34,
   knockdownFrames: 26, wallStunFrames: 24, powerFrames: 0,
 };
 export const grisOrganicBook = createOrganicBook({

@@ -7,6 +7,19 @@
 > **Alvo:** luta local 1 contra 1, apresentação arcade 2D em poses desenhadas e combate técnico com espaço, recuperação e punições.
 > **Estado:** combate autoral e tutoriais integrados; fundação preservada. Arte e balanceamento finais continuam em homologação, a partir do catálogo inicial de Ayla.
 
+## Levantamento alto e gravidade progressiva — 23/10/2026
+
+Branch: `codex/feature-gravidade-juggle`. Objetivo: aumentar a altura do lançamento, acelerar a descida e encurtar a sustentação por contatos sucessivos.
+
+- [x] Ajustar os parâmetros próprios de Ayla/Gris: impulsos −10,2/−9,9; gravidade base 0,34; incremento 0,055 por contato aéreo; multiplicador de descida 1,6.
+- [x] Manter o salto livre, o limite de dois levantamentos, finalizadores e a queda protegida existentes.
+- [x] Medir altura e duração em simulação; Ayla: 95 → 150 unidades e 28 → 24F de descida; Gris: 89 → 141 e 28 → 23F.
+- [x] Cobrir gravidade crescente, aterrissagem sob contato a cada frame sem terceiro launcher e equivalência do salto livre. Preservar as duas receitas iniciais de tutorial.
+- [x] Instalação limpa, 419 testes (oito novos), build e diff aprovados. Conferidos no jogo: altura maior e as duas receitas do tutorial com Ayla e Gris; evidências em `docs/evidence/gravidade-juggle/`.
+- [ ] Enviar branch e integrar em `development` após CI aprovada.
+
+O teste de estresse usa um golpe sintético com alcance/altura garantidos, sem recuo e um contato por frame: verifica a gravidade sem depender de erro por distância, morte ou limite de launchers. Não representa um golpe novo do elenco.
+
 ## Retorno ao idle e vulnerabilidade após queda — 23/10/2026
 
 Branch: `codex/fix-retorno-idle-queda`. Continuação da correção: a tela do usuário mostrou treino em “Segundo jogador”, estado CAÍDO e pose de levantada. O treino padrão permanecia manual; o clipe de Tester terminava em pé sem sair do estado lógico de queda.
