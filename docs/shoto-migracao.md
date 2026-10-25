@@ -43,4 +43,4 @@ Evidências em [evidence/shoto-inicial/](./evidence/shoto-inicial/): `soco-fraco
 
 ## Entrega
 
-Validação local aprovada: `npm ci`, `npm test -- --run` (109 testes / 13 arquivos), `npm run build`, links dos documentos ativos e `git diff --check`. Build conserva o aviso de chunk acima de 500 kB. CI remota e integração: pendentes do envio desta branch. Nenhuma promoção para `main` ou tag prevista.
+Validação local aprovada: `npm ci`, `npm test -- --run` (109 testes / 13 arquivos), `npm run build`, links dos documentos ativos e `git diff --check`. Build conserva o aviso de chunk acima de 500 kB. Implementação integrada por fast-forward em `development`, commit `7a60ea985d34a79fa422af17d9a4cd9f4a765a93`. CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40204017166) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40204102774) aprovadas. Este fechamento documental segue o mesmo fluxo de CI/integração; sem promoção para `main` ou tag.
