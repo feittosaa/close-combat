@@ -1,3 +1,5 @@
+> **Transição de design — 25/10/2026.** Este README descreve o protótipo ainda presente no código/assets. Referências a elenco, combos, balanceamento, parry e etapas antigas não definem o novo design. Seguir [base.md](../../../../../base.md) e [pipeline.md](../../../../../pipeline.md); preservar infraestrutura útil, retirar o conteúdo anterior e não produzir novos assets para o elenco removido.
+
 # Ayla — pixel art
 
 Entrega de arte solicitada em 21/10/2026, com movimento e famílias de especiais baseados nas referências fornecidas pelo usuário, preservando o figurino da Ayla. A decisão específica de usar pixel art está registrada em `base.md`.

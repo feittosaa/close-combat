@@ -1,3 +1,5 @@
+> **Transição de design — 25/10/2026.** Este README descreve o protótipo ainda presente no código/assets. Referências a elenco, combos, balanceamento, parry e etapas antigas não definem o novo design. Seguir [base.md](../../../../../base.md) e [pipeline.md](../../../../../pipeline.md); preservar infraestrutura útil, retirar o conteúdo anterior e não produzir novos assets para o elenco removido.
+
 # Dummy — entrega de sprites
 
 Coloque aqui `dummy-atlas-v01.png` (spritesheet PNG RGBA transparente, com células fixas e sem trim/padding automático) e `dummy-source.*` (arquivo editável `.aseprite`, `.kra`, `.psd` ou equivalente). Mantenha escala única, personagem voltado para a direita, pés alinhados na mesma base e quadros ordenados da esquerda para a direita e de cima para baixo. Registre dimensões reais e índices inclusivos dos clipes em `src/assets/animations/dummy.json`; remova todos os `null` ao entregar a folha.

@@ -1,3 +1,5 @@
+> **Histórico do protótipo anterior — substituído em 25/10/2026.** Este registro preserva evidências e decisões antigas; elenco, combos, números e tarefas abaixo não são especificação ativa. Consulte [base.md](../base.md), [pipeline.md](../pipeline.md) e [identidade-visual.md](../identidade-visual.md). Referências de seções/etapas abaixo pertencem às versões antigas, recuperáveis no Git. Não continuar a produção do elenco retirado.
+
 # Suspensão e limite de levantamentos
 
 Ayla mantém o alvo no ar por aproximadamente 56F sem novos contatos (antes, cerca de 38F), preservando altura de 80–100 unidades. Lançamento −6,8 e gravidade 0,24; no juggle, gravidade 0,2 + 0,012 por contato aéreo. O salto livre não muda. Acertos aéreos comuns substituem o impulso por −2,8 + 0,025 por contato, até −0,4; segundo launcher −4, Screw −4,5. Todos levantam menos que o lançamento inicial.

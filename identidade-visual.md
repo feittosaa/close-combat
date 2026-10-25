@@ -1,112 +1,39 @@
 # Identidade visual — Close Combat
 
-Este guia define a linguagem visual de todo o jogo: personagens, animações, cenários, efeitos, interface, retratos e materiais promocionais. Deve orientar a criação de arte original e manter as partes do projeto visualmente coesas.
+> Revisão de 25/10/2026. Escopo e regras em [base.md](./base.md); execução em [pipeline.md](./pipeline.md).
 
-## Referência e etapa de produção — 21/10/2026
+## Direção
 
-A referência visual global é Guilty Gear Strive: personagens, retratos, cenários, efeitos, HUD, tipografia e menus. Traduzir essa direção em linguagem e assets próprios, com contornos fortes, sombras de cel shading, volume sugerido, poses expressivas e impacto gráfico em alta definição. A referência usa técnica híbrida 2D/3D; Close Combat adota assets 2D e não exige modelos 3D no runtime. Uma eventual ferramenta 3D de apoio à autoria não ganha autoridade sobre colisões, movimento ou tempo de combate.
+A referência estética passa a ser **Hades**, traduzida em arte original: ilustração 2D expressiva, contornos marcantes, sombras recortadas, contraste forte e textura pictórica controlada. Essa decisão substitui Guilty Gear Strive como referência visual global. **Guilty Gear Xrd Rev 2 é a referência de ritmo e balanceamento do combate.**
 
-Por enquanto, manter pixel art para testes, sem gerar nem substituir o elenco nesta revisão documental. A passagem a HD será uma migração coordenada de todos os sistemas visuais, preservando IDs, âncoras e keyframes lógicos. Não ampliar sprites com filtro e chamá-los de arte HD final. Validar primeiro uma ação completa de Ayla em resolução de autoria definida e somente depois ampliar a produção.
+A linguagem deve unir personalidade visual e leitura imediata em um jogo de luta. Personagens, cenários, retratos, interface e efeitos precisam parecer parte do mesmo universo, com desenho próprio, sem reproduzir personagens, figurinos, logotipos ou interfaces das referências.
 
-## Direção em uma frase
+## Etapa atual
 
-Um jogo de luta 2D de ritmo clássico, apresentado com ilustração de alta definição, personagens de traço anime adulto, poses fortes e efeitos de impacto gráficos. A imagem deve combinar acabamento detalhado com leitura instantânea durante a luta.
+O único personagem a desenvolver primeiro é um shoto **sem nome, aparência, características ou animações definidos**. A anotação temática hitman/John Wick não aprova seu figurino, arma ou identidade. Não produzir arte final nesta revisão documental.
 
-## Princípios visuais
+Todo o elenco anterior está retirado do novo design. Seus sprites, retratos e manifestos ainda existentes pertencem ao protótipo a remover; não são modelos para o novo personagem. A bancada inicial deve usar representação neutra para inspeção de regras. Pixel art antiga não é a direção final nem uma obrigação para a nova produção.
 
-1. **Leitura antes do detalhe:** silhueta, direção, altura e intenção do movimento são reconhecidas em um instante, mesmo em tamanho reduzido.
-2. **Desenho original e expressivo:** proporções estilizadas, rostos marcantes, gestos amplos e atitudes distintas. Cada personagem tem uma forma própria de ocupar o espaço.
-3. **Acabamento HD, ritmo clássico:** contornos e pintura têm detalhe e resolução altos; a animação permanece feita de poses desenhadas em quadros, com aceleração, pausas e impacto claramente ritmados.
-4. **Contraste com propósito:** cor, luz, composição e efeitos guiam o olhar para os lutadores e para o instante importante do combate.
-5. **Consistência entre sistemas:** retratos, sprites, tela de seleção, HUD, cenários e efeitos pertencem ao mesmo universo visual.
+## Princípios de produção
 
-## Personagens
+- Silhuetas e poses que comuniquem ação, direção, altura e peso no tamanho real da luta.
+- Contorno com variação de espessura, sombras em massas gráficas e cor de destaque com propósito.
+- Textura e detalhe concentrados onde não disputem atenção com contato, guarda e recursos.
+- Cenário com profundidade sugerida por camadas, faixa de luta limpa e contraste favorável aos lutadores.
+- HUD legível, com tipografia simples para números/comandos e ornamentos contidos nas bordas.
+- Feedback distinto para acerto, bloqueio, combo breaker, drive rush, rage e rage art quando suas regras forem aprovadas. Parry não terá efeito ou indicador novo.
+- Estados comunicados por forma/texto além de cor; evitar flashes prolongados e efeitos que escondam o defensor.
 
-- Desenhar cada lutador com uma silhueta identificável em preto sólido, sem depender de cor ou acessórios pequenos.
-- Usar proporções estilizadas, anatomia convincente e poses que comuniquem personalidade, peso e intenção. Evitar corpos genéricos com apenas roupa ou cor diferente.
-- Construir figurinos em camadas de formas grandes e médias; reservar pequenos detalhes para close-ups e retratos.
-- Separar valores de luz entre cabeça, tronco, braços e pernas. Mãos, pés e extremidades devem continuar legíveis durante golpes rápidos.
-- Definir uma paleta curta e característica por personagem. As cores de identificação devem manter contraste com os cenários e entre os dois jogadores.
-- Criar retratos com o mesmo desenho, contorno e tratamento de luz dos sprites. Expressões intensas são bem-vindas; texto ou símbolos não devem carregar a identidade sozinhos.
+## Animação e contrato técnico
 
-## Linha, cor e luz
+A animação acompanha a simulação de 60 Hz. Startup, contato e recuperação precisam de poses legíveis; pausa e passo único devem manter correspondência com o frame lógico. Desenhos não definem dano, colisão ou duração de estado.
 
-- Usar contornos desenhados e firmes, com variação de espessura para separar planos e enfatizar a pose. Evitar contorno uniforme excessivamente fino.
-- Aplicar sombras em blocos de cel shading, com formas gráficas claras; usar textura pictórica com moderação para dar profundidade sem sujar a leitura.
-- Reservar brilhos especulares e cores luminosas para materiais, energia e momentos de impacto. O brilho não deve apagar a forma do personagem.
-- Trabalhar com paletas saturadas e valores bem separados. Cenários podem ser mais contidos para dar prioridade aos lutadores.
-- Manter iluminação e direção de sombra coerentes dentro de cada personagem e cenário. Um golpe pode acrescentar luz própria, sem alterar a iluminação de forma arbitrária.
+Entregar PNG RGBA com células uniformes, enquadramento fixo, pés e pivô alinhados; preservar fontes editáveis. Documentar tamanho, intervalos, holds, orientação, escala, clipes e limitações no manifesto. Conferir os dois lados e o espelhamento de acessórios/assimetrias. Não embutir hitboxes, HUD ou fundo nos sprites.
 
-## Animação e apresentação do combate
+Produzir uma ação completa e revisá-la antes de ampliar o conjunto. Fallbacks devem ser explícitos e nunca confundidos com animações finais aprovadas. A matriz antiga de Tester não é uma lista de produção do shoto.
 
-- Animar em poses desenhadas quadro a quadro, com preparação, antecipação, contato e recuperação distintos.
-- Dar aos golpes fortes uma pose de preparação legível, um quadro de contato marcante e uma saída clara. A duração visual deve acompanhar os frames de combate configurados; a arte nunca pode mudar a regra do golpe.
-- Usar deformação e exagero em poucos quadros para acelerar, frear ou acentuar um impacto. Preservar a identidade da silhueta em todas as poses.
-- Evitar movimento contínuo sem acentos. Pausas curtas ajudam o jogador a ler a decisão, o contato e a recuperação.
-- Espelhar horizontalmente a animação quando apropriado. Desenhar a pose base voltada para a direita e verificar que acessórios, letras e assimetrias não ficam invertidos de forma incorreta.
-- Separar os clipes por personagem e por ação. Golpes devem ter poses/trechos correspondentes a preparação, frames ativos e recuperação; estados sem arte podem continuar usando o placeholder.
-- Distribuir o tempo entre as poses com holds, antecipações e retornos próprios. Loops, reações e trajetórias aéreas devem seguir o frame lógico, para que a pose permaneça estável durante pausa e avanço de um frame.
-- Tratar o fallback como material provisório declarado, sem apresentar uma pose de parado como se fosse a animação de um golpe. A matriz de produção e o processo de aprovação por ação estão em `docs/animacao.md`.
+## Aprovação visual
 
-## Cenários e composição
+Conferir no jogo em velocidade normal, câmera lenta e passo único: silhueta, contato, contraste, escala, apoio dos pés, transições, espelhamento, câmera e correspondência com caixas. Revisar sobre fundos claros/escuros e nos extremos da arena.
 
-- Usar arenas 2D com profundidade sugerida por planos, perspectiva, escala e iluminação, sem criar um plano de movimento lateral.
-- Dar prioridade visual aos lutadores: conferir altura aparente e volume de caixas, portas e outras referências de tamanho. Ajustes de props preservam seu apoio e não mudam o enquadramento ou o collider do personagem por acidente.
-- Criar cenários estilizados com arquitetura e objetos de formas reconhecíveis, atmosfera forte e detalhes que não se confundam com os lutadores.
-- Manter a faixa de luta limpa: nenhum objeto importante deve cobrir corpos, pés ou efeitos de contato.
-- Organizar elementos em primeiro plano, plano de luta e fundo. O primeiro plano deve ser discreto; o fundo pode ter movimento lento, desde que não concorra com a ação.
-- Reservar áreas relativamente escuras ou uniformes atrás das barras de vida e de outros elementos de interface.
-
-## Impactos e efeitos
-
-- Desenhar efeitos em formas gráficas direcionais: arcos, riscos, faíscas, poeira, ondas e fragmentos abstratos.
-- Usar poucos quadros de alto contraste para o contato, com cor distinta para acerto, bloqueio, parry e golpe preciso.
-- Manter os efeitos próximos ao ponto de contato e curtos o suficiente para não esconder a pose nem a hitbox real.
-- Associar cada família de efeitos a uma paleta e forma recorrentes. Efeitos de personagens podem ter assinatura própria, mas devem continuar legíveis em fundos diferentes.
-- Evitar ruído visual constante, partículas excessivas, flashes longos e tremor de câmera que prejudique a leitura ou o conforto.
-
-## Interface e tipografia
-
-- Tratar o HUD como parte de uma apresentação competitiva: estrutura firme, hierarquia nítida e ornamentos concentrados nas bordas.
-- Usar tipografia de impacto nos títulos e uma fonte simples e muito legível para vida, tempo, comandos e frames.
-- Exibir estados do combate com texto, símbolo ou forma além da cor. Manter números e informações importantes separados dos efeitos de fundo.
-- Usar textura, desgaste e ângulos como detalhes de acabamento, sem sacrificar alinhamento, contraste, escala ou leitura em telas pequenas.
-- As cores do HUD não substituem feedback sonoro ou visual de combate e não devem ser a única forma de distinguir estados.
-
-## Especificação para criação de sprites
-
-- Entregar uma spritesheet PNG RGBA de alta resolução por personagem e preservar o arquivo-fonte editável.
-- Organizar os quadros em grade uniforme, sem trim automático e sem padding variável. Registrar largura e altura exatas de cada célula no manifesto do personagem.
-- Manter escala, proporção, ponto de pivô e base dos pés consistentes em todas as poses.
-- Ordenar quadros por clipe e documentar os intervalos inclusivos, FPS e repetição no manifesto em `src/assets/animations/`.
-- Fornecer poses de idle, caminhada, dash, salto, agachamento, bloqueio, hitstun, blockstun, agarrado, queda e cada golpe do livro do personagem.
-- Não desenhar hitboxes, hurtboxes, HUD, fundo de cenário ou marcas de alinhamento dentro da arte final. Colisores e dados de combate são definidos no motor.
-- Verificar cada pose sobre fundo claro e escuro, em escala de luta e na escala nativa do arquivo, antes de considerar a spritesheet pronta.
-
-## Controle de qualidade
-
-Antes de aprovar qualquer recurso visual, verificar:
-
-- a silhueta identifica a ação e o personagem sem cor;
-- a pose e o ponto de contato continuam legíveis no tamanho real da luta;
-- pés, escala e pivô permanecem estáveis entre quadros;
-- o contraste separa personagem, adversário, cenário e efeitos;
-- os detalhes não introduzem informação de combate falsa;
-- a animação corresponde ao clipe registrado e não altera a duração lógica;
-- o arquivo é original, editável quando possível e está guardado na pasta correta.
-
-## O que evitar
-
-- Reprodução de personagens, figurinos, logotipos, poses, cenários, efeitos ou layouts reconhecíveis de outras obras.
-- Acabamento pixelado de baixa resolução como aparência final; a linguagem é ilustrada em alta definição, mesmo mantendo ritmo e organização de quadros clássicos.
-- Realismo fotográfico, materiais uniformemente brilhantes ou excesso de textura que apague o desenho.
-- Animações que escondam antecipação, contato, recuperação ou estado do oponente.
-- Cenários, interface e efeitos mais chamativos do que os personagens durante a luta.
-
-## Material provisório existente
-
-O atlas do Tester e o Cais permitem desenvolver a apresentação e revisar movimentos. O Cais atual usa pixel art; essa base não muda a direção final de ilustração em alta definição. A harmonização de cenário, personagens e efeitos, a revisão de proporções e a substituição das aproximações de animação são entregas da pipeline. Não tratar o material provisório como identidade final aprovada.
-
-## Regra de precedência
-
-Este documento é a referência para decisões de identidade e acabamento visual. `base.md` continua sendo a raiz das regras e do escopo do projeto; quando a implementação ou um asset de arte tratar de apresentação, deve seguir este guia. Se uma nova decisão mudar a identidade visual, atualize este arquivo e registre a relação em `base.md`.
+Registrar evidência por ação. Testes de manifesto, build e associações de clipes não substituem essa conferência. Nome, visual e personalidade serão definidos posteriormente com o usuário.
