@@ -12,7 +12,7 @@ export interface GameConfig {
   match: { maxHealth: number; roundDurationFrames: number; roundCount: number; roundEndPauseFrames: number };
 }
 
-/** Valores temporários de protótipo documentados em base.md §20. */
+/** Configuração técnica de arena e rounds; valores provisórios, separados do kit do Shoto. */
 export function createGameConfig(width: number, height: number): GameConfig {
   const arenaInset = 24;
   return {

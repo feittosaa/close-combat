@@ -1,87 +1,27 @@
 import type { CharacterDefinition } from '../data/characters';
 import type { CharacterState } from '../characters/CharacterState';
-import type { MoveDefinition } from '../data/moves';
-import type { ProjectileState } from './Projectile';
-import type { Direction, FrameInput } from '../../input/types';
-
+import type { FrameInput } from '../../input/types';
 const neutral = (): FrameInput => ({ direction: 'N', buttons: new Set() });
-const direction = (value: Direction): FrameInput => ({ direction: value, buttons: new Set() });
 
-/** Adversário do arcade: gera entradas comuns, sem forçar golpes, acertos ou teleporte. */
+/** IA determinística que usa somente entradas e os quatro golpes do livro local. */
 export class ArcadeController {
-  private plan: FrameInput[] = [];
-  private threatSince?: number;
   private nextDecisionFrame = 0;
   private seed = 1;
-
   constructor(private readonly fighter: CharacterDefinition, private readonly opponent: CharacterDefinition) { this.reset(); }
-
-  reset(): void {
-    this.plan = [];
-    this.threatSince = undefined;
-    this.nextDecisionFrame = 0;
-    this.seed = [...this.fighter.id].reduce((seed, char) => (seed * 31 + char.charCodeAt(0)) >>> 0, 173);
-  }
-
-  readInput(frame: number, self: CharacterState, opponent: CharacterState, projectiles: readonly ProjectileState[]): FrameInput {
+  reset(): void { this.nextDecisionFrame = 0; this.seed = 173; }
+  readInput(frame: number, self: CharacterState, opponent: CharacterState): FrameInput {
+    if (self.attack || !self.grounded || self.mode === 'hitstun') return neutral();
     const distance = Math.abs(self.x - opponent.x);
-    const incoming = projectiles.find((p) => p.ownerId !== self.characterId && Math.abs(p.x - self.x) < 300 &&
-      (p.definition.speed === 0 || (p.facing === 'right' ? p.x <= self.x : p.x >= self.x)));
-    const enemyMove = opponent.attack ? this.opponent.moves.find((move) => move.id === opponent.attack?.moveId) : undefined;
-    const threat = incoming || (distance < 210 ? enemyMove : undefined);
-    if (threat && this.threatSince === undefined) this.threatSince = frame;
-    if (!threat) this.threatSince = undefined;
-    if (self.attack) { this.plan = []; return neutral(); }
-    if (self.mode === 'knockdown') {
-      this.plan = [];
-      // A new direction edge wakes the fighter. Pulse it so a guard held before
-      // landing cannot swallow recovery; the simulation still owns the lock.
-      return direction(self.grounded && self.remainingStateFrames <= 1 && frame % 2 === 1 ? 'B' : 'N');
+    const threat = this.opponent.moves.find(move => move.id === opponent.attack?.moveId);
+    if (threat && distance < 140 && (opponent.attack?.elapsedFrames ?? 0) >= 4) return { direction: 'B', buttons: new Set() };
+    if (self.mode === 'blockstun') return neutral();
+    const candidates = this.fighter.moves.filter(move => distance <= move.hitbox.forward + move.hitbox.width + opponent.collision.bodyWidth / 2);
+    if (candidates.length && frame >= this.nextDecisionFrame) {
+      this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
+      const move = candidates[this.seed % candidates.length];
+      this.nextDecisionFrame = frame + move.startup + move.activeFrames + move.recovery + 12;
+      return { direction: 'N', buttons: new Set(move.input.buttons) };
     }
-    if (self.grounded && this.threatSince !== undefined && frame - this.threatSince >= 10 &&
-      !['hitstun', 'grabbed', 'throwRecovery', 'knockdown'].includes(self.mode)) {
-      const move = incoming ? this.opponent.moves.find((m) => m.id === incoming.moveId) : enemyMove;
-      this.plan = [];
-      return direction(move?.hitLevel === 'low' ? 'DB' : 'B');
-    }
-    if (['hitstun', 'blockstun', 'grabbed', 'throwRecovery', 'knockdown'].includes(self.mode)) {
-      this.plan = [];
-      return neutral();
-    }
-    const planned = this.plan.shift();
-    if (planned) return planned;
-    if (!self.grounded) {
-      const aerial = this.fighter.moves.filter((move) => !move.legacy && !move.combat?.command.parentId && !move.combat?.command.stance && !move.combat?.command.requiresPower && !move.combat?.command.requiresRage && (move.combat ? move.combat.strikes.length > 0 : true) && move.airborne);
-      if (frame >= this.nextDecisionFrame && distance < 160 && aerial.length) return this.execute(aerial[this.random() % aerial.length], frame);
-      return neutral();
-    }
-    const ranged = this.fighter.moves.filter((move) => !move.legacy && !move.combat?.command.parentId && !move.combat?.command.stance && !move.combat?.command.requiresPower && !move.combat?.command.requiresRage && (move.combat ? move.combat.strikes.length > 0 : true) && move.projectile && !move.airborne && move.projectile.speed > 0);
-    if (frame >= this.nextDecisionFrame && distance > 170 && ranged.length && this.random() % 4 === 0) {
-      return this.execute(ranged[this.random() % ranged.length], frame);
-    }
-    const candidates = this.fighter.moves.filter((move) => !move.legacy && !move.combat?.command.parentId && !move.combat?.command.stance && !move.combat?.command.requiresPower && !move.combat?.command.requiresRage && (move.combat ? move.combat.strikes.length > 0 : true) && !move.airborne &&
-      (move.throw ? distance <= move.throw.range && !opponent.crouching :
-        distance <= move.hitbox.forward + move.hitbox.width + opponent.collision.bodyWidth / 2 + (move.travelSpeed ? 40 : 0)));
-    if (frame >= this.nextDecisionFrame && candidates.length) {
-      return this.execute(candidates[this.random() % candidates.length], frame);
-    }
-    if (distance > 80) return direction('F');
-    return neutral();
-  }
-
-  private execute(move: MoveDefinition, frame: number): FrameInput {
-    const sequence = move.combat?.command.directions?.length ? move.combat.command.directions : move.input.sequence ?? [move.input.direction ?? (move.crouching ? 'D' : 'N')];
-    this.plan = sequence.flatMap((value, index) => {
-      const buttons = index === sequence.length - 1 ? move.input.buttons : [];
-      return Array.from({ length: 2 }, () => ({ direction: value, buttons: new Set(buttons) }));
-    });
-    this.plan.push(...Array.from({ length: 5 }, neutral));
-    this.nextDecisionFrame = frame + move.startup + move.activeFrames + move.recovery + 10;
-    return this.plan.shift() ?? neutral();
-  }
-
-  private random(): number {
-    this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
-    return this.seed;
+    return { direction: distance > 64 ? 'F' : 'N', buttons: new Set() };
   }
 }

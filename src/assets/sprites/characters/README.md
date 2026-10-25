@@ -1,5 +1,5 @@
-> **Transição de design — 25/10/2026.** Este README descreve o protótipo ainda presente no código/assets. Referências a elenco, combos, balanceamento, parry e etapas antigas não definem o novo design. Seguir [base.md](../../../../base.md) e [pipeline.md](../../../../pipeline.md); preservar infraestrutura útil, retirar o conteúdo anterior e não produzir novos assets para o elenco removido.
+# Sprites futuros de personagens
 
-# Sprites de personagens
+Os assets do elenco anterior foram removidos. Shoto usa representação geométrica neutra e ainda não tem desenho ou animação final. Não gerar arte até definir sua identidade com o usuário. Futura entrega deve ter pasta própria, fonte editável, PNG RGBA, grade fixa, pés/pivô alinhados, manifesto e README de origem/exportação conforme `identidade-visual.md`.
 
-Spritesheets originais dos lutadores. Separe por personagem e mantenha consistente a escala, o alinhamento dos pés e o ponto de pivô entre poses.
+Raiz de regras: [base.md](../../../../base.md).

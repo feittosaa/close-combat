@@ -9,9 +9,9 @@ const neutral: FrameInput = { direction: 'N', buttons: new Set() };
 const back: FrameInput = { direction: 'B', buttons: new Set() };
 const forward: FrameInput = { direction: 'F', buttons: new Set() };
 const strike: FrameInput = { direction: 'N', buttons: new Set(['2']) };
-const cross = defaultCharacter.moves.find(({ id }) => id === 'test-cross')!;
+const cross = defaultCharacter.moves.find(({ id }) => id === 'heavy-punch')!;
 const attacker = { ...defaultCharacter, id: 'guard-test-attacker', moves: [
-  { ...cross, id: 'guard-test-strike', startup: 4, activeFrames: 3, recovery: 8 },
+  { ...cross, id: 'guard-test-strike', startup: 4, activeFrames: 3, recovery: 8, pushback: { hit: 6, block: 4 } },
 ] };
 
 function step(sim: Simulation, inputs: readonly FrameInput[]): void {
@@ -74,8 +74,8 @@ describe('guard and grounded movement', () => {
     expect(sim.snapshot().characters[1].x - sim.snapshot().characters[0].x).toBe(defaultCharacter.collision.bodyWidth);
   });
 
-  it('does not let an advancing attack push the guard through body contact before a hit', () => {
-    const advancing = { ...attacker, moves: [{ ...attacker.moves[0], advance: 80 }] };
+  it('does not drag guard during startup at body contact', () => {
+    const advancing = attacker;
     const sim = new Simulation(config, [advancing, defaultCharacter]);
     for (let t = 0; t < 180; t += 1) step(sim, [forward, forward]);
     const x = sim.snapshot().characters[1].x;
@@ -84,12 +84,12 @@ describe('guard and grounded movement', () => {
     expect(sim.snapshot().hitEvents).toHaveLength(0);
   });
 
-  it('does not apply a crouching move advance while crouched', () => {
+  it('does not create an attack or movement while crouched', () => {
     const sim = new Simulation(config);
     const x = sim.snapshot().characters[0].x;
     step(sim, [{ direction: 'D', buttons: new Set(['2']) }, neutral]);
     for (let t = 0; t < 10; t += 1) step(sim, [{ direction: 'D', buttons: new Set() }, neutral]);
-    expect(sim.snapshot().characters[0].attack?.moveId).toBe('test-crouching-hook');
+    expect(sim.snapshot().characters[0].attack).toBeUndefined();
     expect(sim.snapshot().characters[0].x).toBe(x);
   });
 

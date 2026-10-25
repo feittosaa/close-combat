@@ -1,11 +1,9 @@
-import { getPlayerLayout, keyLabel } from '../input/controlSettings';
-import { commandNode, formatCommand, formatMoveTitle, formatCommandProse } from './commandNotation';
+import { getPlayerLayout } from '../input/controlSettings';
+import { commandNode, formatCommand, formatMoveTitle } from './commandNotation';
 import type { CharacterDefinition } from '../engine/data/characters';
-import { CATEGORY_LABELS } from '../engine/data/combat/CombatBook';
 import { fighterMoveList, filterMoveList, type MoveListCategory, type MoveListEntry } from '../training/MoveList';
-import { moveInputLabel } from './combatLabels';
 
-const labels: Record<MoveListCategory, string> = { all: 'Todos', basics: CATEGORY_LABELS.basics, strings: CATEGORY_LABELS.strings, combos: 'Combos', specials: CATEGORY_LABELS.specials, throws: CATEGORY_LABELS.throws, starters: CATEGORY_LABELS.starters, crouching: CATEGORY_LABELS.crouching, rising: CATEGORY_LABELS.rising, stances: CATEGORY_LABELS.stances, defense: CATEGORY_LABELS.defense, wall: CATEGORY_LABELS.wall, ultimate: CATEGORY_LABELS.ultimate };
+const labels: Record<MoveListCategory, string> = { all: 'Todos', basics: 'Básicos', combos: 'Combos' };
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string): HTMLElementTagNameMap[K] => {
   const node = document.createElement(tag); if (text) node.textContent = text; if (className) node.className = className; return node;
 };
@@ -62,9 +60,9 @@ export class PauseMenu {
       this.search.oninput = () => this.renderRows(); tools.append(this.search, this.count); panel.append(tools);
       this.categories.setAttribute('aria-label', 'Categorias de golpes'); this.rows.setAttribute('aria-label', 'Lista de golpes');
       this.body.append(this.categories, this.rows, this.details); panel.append(this.body);
-      panel.append(el('p', 'Setas relativas ao oponente · + simultâneo · vírgula: próximo golpe · → próxima ação do combo · AG: agachado · AR: no ar · teclas conforme seus controles.', 'pause-legend'));
+      panel.append(el('p', 'Quatro golpes básicos em pé · Um botão por golpe · Teclas conforme seus controles.', 'pause-legend'));
       this.loadFighter();
-    } else panel.append(el('p', 'A luta, o cronômetro e os projéteis estão pausados.', 'pause-legend'));
+    } else panel.append(el('p', 'A luta e o cronômetro estão pausados.', 'pause-legend'));
     this.root.append(panel); this.root.hidden = true; document.body.append(this.root);
     this.root.addEventListener('keydown', this.onKey);
   }
@@ -109,7 +107,6 @@ export class PauseMenu {
       const button = el('button', undefined, 'pause-move');
       const command = el('strong'); command.append(commandNode(entry.notation,layout));
       button.append(command, el('span', formatMoveTitle(entry.title,layout)));
-      if (entry.move?.combat?.animation.status === 'provisional') button.append(el('small', 'Arte provisória'));
       button.onclick = () => this.showDetails(entry); this.rows.append(button);
     }
     if (!entries.length) { this.rows.append(el('p', 'Nenhum golpe encontrado.')); this.details.replaceChildren(); }
@@ -123,35 +120,14 @@ export class PauseMenu {
     if (entry.move) {
       const move = entry.move;
       const levels = { high: 'Alto', mid: 'Médio', low: 'Baixo', air: 'Aéreo', throw: 'Agarrão', special: 'Especial' };
-      this.details.append(el('p', `${levels[move.hitLevel]} · dano ${move.damage} · ${move.combat ? { punch: 'Soco', kick: 'Chute', knee: 'Joelhada', elbow: 'Cotovelo', weapon: 'Arma', body: 'Corpo' }[move.combat.limb] : 'Golpe'}`));
+      this.details.append(el('p', `${levels[move.hitLevel]} · dano ${move.damage}`));
       const timeline = el('div', undefined, 'pause-timeline');
-      for (const [label, frames, cls] of [['Preparo', move.startup, 'startup'], ['Atividade', move.activeFrames, 'active'], ['Recuperação no bloqueio', move.combat?.recoveryOnContact ?? move.recovery, 'recovery']] as const) {
-        const block = el('span', `${label} ${frames}F`, cls); block.style.flexGrow = String(Math.max(1, frames)); timeline.append(block);
+      for (const [label, frames, cls] of [['Preparo', move.startup, 'startup'], ['Atividade', move.activeFrames, 'active'], ['Recuperação', move.recovery, 'recovery']] as const) {
+        const block = el('span', `${label} ${frames}F`, cls); block.style.flexGrow = String(frames); timeline.append(block);
       }
-      this.details.append(timeline);
-      if (move.combat) {
-        const combat = move.combat;
-        this.details.append(el('p', `Contato(s): ${combat.strikes.map(strike => `${strike.from + 1}–${strike.to + 1}F`).join(' / ') || 'Postura, sem hitbox'}`));
-        const command = combat.command;
-        if (command.parentId) {
-          const parent = this.fighters[this.fighterIndex].moves.find(other => other.id === command.parentId);
-          this.details.append(el('p', `Continuação de ${parent ? formatCommand(moveInputLabel(parent),layout) : command.parentId}. Entrada após o contato; janela ${command.followupWindow?.from}–${command.followupWindow?.to}F.${command.followupWindow?.onHit ? ' Exige acerto.' : ''}`));
-        }
-        if (command.directionAliases?.length) this.details.append(el('p', `Atalhos: ${command.directionAliases.map(sequence => formatCommand(sequence.join(',') + '+' + command.buttons.join('+'),layout)).join(' / ')}`));
-        this.details.append(el('p', `Após acerto ou erro: livre ao fim da atividade. Recuperação se bloqueado: ${combat.recoveryOnContact ?? move.recovery}F.`));
-        if (command.stance) this.details.append(el('p', `Postura exigida: ${command.stance}. SS: ${formatCommand('F+1+2+3+4',layout)}; BT: ${formatCommand('B+1+2+3+4',layout)}. WS: soltar agachamento após 6F.`));
-        if (command.requiresPower) this.details.append(el('p', `Exige Fulgor: ativar ${formatCommand('2+3',layout)} uma vez por round; 600F.`));
-        if (command.requiresRage) this.details.append(el('p', 'Exige vida até 25%; uma execução por round.'));
-        if (command.holdFrames) this.details.append(el('p', `Segurar o botão por ${command.holdFrames}F; soltar antes produz a variante normal.`));
-        if (combat.reference) this.details.append(el('p', `Referência T8: ${combat.reference.startup} · bloqueio ${combat.reference.block || '—'} · acerto ${combat.reference.hit || '—'}`));
-        if (combat.estimatedFields?.length) this.details.append(el('p', `Dados a confirmar: ${combat.estimatedFields.join(', ')}. Os valores exibidos são provisórios.`, 'pause-note'));
-        this.details.append(el('p', 'Caixas e tempos são dados de combate; os desenhos atuais apenas representam as fases. Arte provisória pendente de geração.', 'pause-note'));
-      }
-      if (move.throw) this.details.append(el('p', `Quebra: ${move.throw.breakAlternatives?.map(buttons => buttons.map(button=>keyLabel(layout.buttons[button])).join('+')).join(' ou ') ?? (move.throw.breakButtons.map(button=>keyLabel(layout.buttons[button])).join('+') || 'sem quebra')} · janela ${move.throw.breakFrames}F`));
+      this.details.append(timeline, el('p', 'Recuperação após acerto, erro e bloqueio. Sem cancelamentos. Valores provisórios.', 'pause-note'));
     }
-    if (entry.combo) {
-      this.details.append(el('p', (entry.combo.condition ? formatCommandProse(entry.combo.condition,layout) : undefined) ?? 'Executar os comandos, respeitando contato, altura e distância.'), el('p', 'Rotas de referência adaptadas: não há execução automática. Ajustes de posição e timing fazem parte do treino; quebras de cenário usam parede fixa 2D.', 'pause-note'));
-    }
+    if (entry.combo) this.details.append(el('p', 'Receita manual aprovada pelo usuário.'));
     const pin = el('button', 'Fixar comando no treino'); pin.onclick = () => this.pin(entry,this.fighterIndex); this.details.append(pin);
   }
 }

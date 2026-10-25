@@ -10,9 +10,9 @@ A linguagem deve unir personalidade visual e leitura imediata em um jogo de luta
 
 ## Etapa atual
 
-O único personagem a desenvolver primeiro é um shoto **sem nome, aparência, características ou animações definidos**. A anotação temática hitman/John Wick não aprova seu figurino, arma ou identidade. Não produzir arte final nesta revisão documental.
+O único personagem a desenvolver primeiro é um shoto de nome provisório **Shoto**, sem aparência, características ou animações finais definidas. A anotação temática hitman/John Wick não aprova seu figurino, arma ou identidade. Não produzir arte final nesta revisão documental.
 
-Todo o elenco anterior está retirado do novo design. Seus sprites, retratos e manifestos ainda existentes pertencem ao protótipo a remover; não são modelos para o novo personagem. A bancada inicial deve usar representação neutra para inspeção de regras. Pixel art antiga não é a direção final nem uma obrigação para a nova produção.
+Todo o elenco anterior está retirado do novo design. Seus sprites, retratos e manifestos foram removidos do runtime e dos assets nesta migração; não são modelos para o novo personagem. A bancada inicial deve usar representação neutra para inspeção de regras. Pixel art antiga não é a direção final nem uma obrigação para a nova produção.
 
 ## Princípios de produção
 
@@ -36,4 +36,4 @@ Produzir uma ação completa e revisá-la antes de ampliar o conjunto. Fallbacks
 
 Conferir no jogo em velocidade normal, câmera lenta e passo único: silhueta, contato, contraste, escala, apoio dos pés, transições, espelhamento, câmera e correspondência com caixas. Revisar sobre fundos claros/escuros e nos extremos da arena.
 
-Registrar evidência por ação. Testes de manifesto, build e associações de clipes não substituem essa conferência. Nome, visual e personalidade serão definidos posteriormente com o usuário.
+Registrar evidência por ação. Testes de manifesto, build e associações de clipes não substituem essa conferência. Nome definitivo, visual e personalidade serão definidos posteriormente com o usuário.

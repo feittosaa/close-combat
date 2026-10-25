@@ -5,7 +5,7 @@ import { recoveryFrames } from '../engine/combat/frameData';
 import Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import type { TrainingSession } from '../training/TrainingSession';
-import { DUMMY_LABELS } from '../training/TrainingSession';
+import { OPPONENT_LABELS } from '../training/TrainingSession';
 import { MODE_LABELS, moveInputLabel, signedFrames } from './combatLabels';
 
 /** Read-only training instrumentation, kept below the feet to leave jumps unobstructed. */
@@ -46,22 +46,20 @@ export class TrainingHud {
   }
 
   update(snapshot: SimulationSnapshot, session: TrainingSession): void {
-    this.status.setText(`TREINO · ${session.paused ? 'PAUSADO' : 'EM CURSO'} · ${session.speed * 100}% · ${DUMMY_LABELS[session.dummyMode].replace(/\b[1-4]\b/g,button=>keyLabel(getPlayerLayout(1).buttons[button as AttackButton]))} · VIDA AUTO ${session.autoRestore ? 'ON' : 'OFF'} · RESET ${session.initialDistance}`);
+    this.status.setText(`TREINO · ${session.paused ? 'PAUSADO' : 'EM CURSO'} · ${session.speed * 100}% · ${OPPONENT_LABELS[session.opponentMode].replace(/\b[1-4]\b/g,button=>keyLabel(getPlayerLayout(1).buttons[button as AttackButton]))} · VIDA AUTO ${session.autoRestore ? 'ON' : 'OFF'} · RESET ${session.initialDistance}`);
     this.progress.clear();
     snapshot.characters.forEach((character, index) => {
       const move = session.lastMoves[index];
-      const recovery = move ? recoveryFrames(move, character.attack?.wasBlocked ? 'block' : character.attack?.hitOutcome) : 0;
-      const recoveryLabel = !character.attack && move?.combat?.recoveryOnContact !== undefined ? `0/${move.combat.recoveryOnContact}` : String(recovery);
+      const recovery = move ? recoveryFrames(move) : 0;
+      const recoveryLabel = String(recovery);
       const lockedFrames = move && character.attack
-        ? move.startup + move.activeFrames + recoveryFrames(move, character.attack.wasBlocked ? 'block' : character.attack.hitOutcome) - character.attack.elapsedFrames
+        ? move.startup + move.activeFrames + recoveryFrames(move) - character.attack.elapsedFrames
         : character.remainingStateFrames;
       const levels = { high: 'ALTO', mid: 'MÉDIO', low: 'BAIXO', air: 'AÉREO', throw: 'AGARRÃO', special: 'ESPECIAL' };
-      const combo = character.combo ?? character.lastCombo;
-      const comboLabel = combo ? ` · COMBO ${combo.hits} / ${combo.damage}${character.combo ? ` · LEV ${Math.min(character.combo.launches ?? 0,2)}/2` : ''}` : '';
       const detail = move
         ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${levels[move.hitLevel]} · DANO ${move.damage}`
-        : 'S: preparo · A: ativo · R: só bloqueio';
-      this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]}${comboLabel} · ${character.combo?.forcedFall ? 'QUEDA FORÇADA · IMUNE' : character.combo && !character.grounded ? 'JUGGLE · ATÉ ATERRISSAR' : lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
+        : 'S: preparo · A: ativo · R: recuperação';
+      this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]} · ${lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);
       const barWidth = this.width / 2 - 42;
       const barY = this.panelY + 48;
@@ -82,9 +80,9 @@ export class TrainingHud {
     const distance = Math.round(Math.abs(snapshot.characters[0].x - snapshot.characters[1].x));
     this.distance.setText(`FRAME ${snapshot.frame} · DISTÂNCIA ${distance} · COLISÕES ${session.showGeometry ? 'VISÍVEIS' : 'OCULTAS'}`);
     const contact = snapshot.recentContacts[snapshot.recentContacts.length - 1]?.event;
-    this.contact.setText(contact?.forcedFall ? 'TERCEIRO LEVANTAMENTO · QUEDA FORÇADA · IMUNE' : contact?.frameAdvantage !== undefined
+    this.contact.setText(contact
       ? `${contact.attackerId === 'player-1' ? 'P1' : 'P2'}: DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · STUN ${contact.defenderStunFrames}F · ADV ${signedFrames(contact.frameAdvantage)}`
-      : contact?.reaction === 'launch' ? `DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · REAÇÃO AÉREA` : 'S: preparo · A: ativo · R: só bloqueio');
+      : 'S: preparo · A: ativo · R: recuperação');
   }
 
   destroy(): void {

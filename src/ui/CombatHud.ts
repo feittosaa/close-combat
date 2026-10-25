@@ -89,12 +89,7 @@ export class CombatHud {
     }
     this.hitLabel.setText(snapshot.frame - this.lastImpactFrame <= 90 ? this.lastImpactLabel : '');
     snapshot.characters.forEach((character, index) => {
-      const modeLabel = character.attack?.preciseExecution ? 'PRECISO · ' : '';
-      const power = (character.combatRules?.powerFrames ?? 0) > 0 ? (character.powerFrames ?? 0) > 0
-        ? `FULGOR ${Math.ceil(character.powerFrames! / 60)}s` : character.powerAvailable !== false ? 'FULGOR DISPONÍVEL' : 'FULGOR GASTO' : '';
-      const rage = character.combatRules && !character.rageUsed && character.health <= character.maxHealth * .25 ? ' · ULTIMATE PRONTA' : '';
-      const charged = character.stance === 'charging' ? ' · CARGA' : '';
-      this.modeLabels[index]?.setText(`${this.training ? `${modeLabel}${MODE_LABELS[character.mode]}${power ? ' · ' : ''}` : ''}${power}${rage}${charged}`);
+      this.modeLabels[index]?.setText(this.training ? MODE_LABELS[character.mode] : '');
       this.modeLabels[index]?.setColor(character.mode === 'hitstun' ? '#ff7777' : character.mode === 'blockstun' || character.mode === 'blocking' ? '#8cb4ff' : '#f4f0e8');
     });
   }

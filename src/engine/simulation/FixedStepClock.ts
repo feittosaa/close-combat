@@ -9,8 +9,9 @@ export class FixedStepClock {
 
   advance(deltaMs: number, step: () => void): void {
     this.accumulatorMs += Math.min(Math.max(deltaMs, 0), FIXED_STEP_MS * this.maxCatchUpSteps);
-    while (this.accumulatorMs >= FIXED_STEP_MS) {
-      this.accumulatorMs -= FIXED_STEP_MS;
+    // Soma de deltas fracionários (por exemplo 144 Hz) pode ficar poucos ulps abaixo do passo.
+    while (this.accumulatorMs + 1e-9 >= FIXED_STEP_MS) {
+      this.accumulatorMs = Math.max(0, this.accumulatorMs - FIXED_STEP_MS);
       step();
     }
   }

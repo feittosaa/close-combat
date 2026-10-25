@@ -1,5 +1,5 @@
-> **Transição de design — 25/10/2026.** Este README descreve o protótipo ainda presente no código/assets. Referências a elenco, combos, balanceamento, parry e etapas antigas não definem o novo design. Seguir [base.md](../../base.md) e [pipeline.md](../../pipeline.md); preservar infraestrutura útil, retirar o conteúdo anterior e não produzir novos assets para o elenco removido.
+# Renderização
 
-<!-- src/rendering/README.md -->
+`CombatantView` desenha Shoto com geometria neutra: corpo ancorado aos pés, marcador de frente, alcance durante atividade e indicador de defesa. Não carrega sprites do elenco retirado nem muda corpo por fase. `HitboxView` usa as mesmas caixas do resolvedor. Cenário e câmera continuam em `stages/`; HUD fica fixo. A simulação decide acertos, dano e tempo.
 
-Camada visual Phaser: sprites, animações, câmera, efeitos e áudio. Não tomar decisões de acerto/defesa; a simulação é a autoridade conforme `base.md`.
+Raiz de regras: [base.md](../../base.md).

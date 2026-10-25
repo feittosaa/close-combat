@@ -1,12 +1,12 @@
 # Close Combat — Documento principal de design
 
-> **Design 0.5.0 · 25/10/2026.** Revisão documental, sem alteração da versão do pacote.
+> **Design 0.5.1 · 25/10/2026.** Shoto inicial, sem alteração da versão do pacote.
 > **Raiz de regras e escopo.** Execução em [pipeline.md](./pipeline.md), arte em [identidade-visual.md](./identidade-visual.md) e entrega em [docs/ci-cd.md](./docs/ci-cd.md).
-> **Estado real:** nova direção aprovada; o runtime ainda contém o protótipo anterior. Remoções e novas mecânicas estão pendentes de implementação.
+> **Estado real:** elenco anterior removido do código e dos assets; Shoto provisório jogável com quatro básicos. Combo breaker, drive rush, rage e rage art permanecem pendentes.
 
 ## 1. Reinício do projeto de combate
 
-Close Combat é um jogo de luta 100% 2D para navegador. O foco atual é construir e equilibrar um único personagem do arquétipo **shoto**, usando-o como referência para os demais. Ele não tem nome, aparência, personalidade, arma ou animações definidos. O shoto de balanceamento não está automaticamente identificado com o protagonista da história futura.
+Close Combat é um jogo de luta 100% 2D para navegador. O foco atual é construir e equilibrar um único personagem do arquétipo **shoto**, usando-o como referência para os demais. Seu nome provisório é **Shoto**; aparência, personalidade, arma e animações finais continuam indefinidas. O shoto de balanceamento não está automaticamente identificado com o protagonista da história futura.
 
 O ritmo e o balanceamento têm como referência conceitual um **anime fighter, especialmente Guilty Gear Xrd Rev 2**. A direção de arte tem como referência **Hades**, traduzida em desenho original. São referências de intenção, sem adoção automática de números, comandos, personagens ou sistemas completos dessas obras.
 
@@ -20,7 +20,7 @@ Esta decisão substitui o design anterior e suas tarefas de conteúdo:
 - Não herdar como requisitos os 18 ataques base, 80 entradas, seis levantamentos, quatro especiais, comandos de ultimate, janelas, dano, gravidade, limite de levantamentos, Screw, wall splat, recuperação somente no bloqueio ou versões de execução precisa. Essas escolhas pertencem ao protótipo descartado e precisam de nova definição quando relevantes.
 - Cancelar a produção de arte e o balanceamento pendentes para o elenco anterior. Assets e evidências existentes não representam a identidade futura.
 
-A remoção no código será uma entrega própria. Documentos anteriores em `docs/` estão identificados como históricos; seus números, checklists e aprovações não homologam o novo design. O Git preserva as versões anteriores dos documentos principais.
+A remoção foi implementada na entrega `codex/feature-shoto-inicial`, incluindo dados, importadores, assets, parry, strings, recursos e reações experimentais anteriores. Documentos anteriores em `docs/` estão identificados como históricos; seus números, checklists e aprovações não homologam o novo design. O Git preserva as versões anteriores dos documentos principais.
 
 ## 2. Prioridades e modos
 
@@ -56,7 +56,7 @@ O usuário criará os combos **manualmente, um por um**. Não gerar um catálogo
 
 As notas `1,1,1`, `2,2,2` e `3,3,3` exemplificam **combos fechados** a especificar. Não são três receitas implementadas, aprovadas ou necessariamente garantidas no bloqueio. “etc.” não autoriza gerar outras sequências. Cada passo exige sua entrada; a nota não autoriza executar o combo inteiro com um botão.
 
-A notação numérica continua útil para conversar: vírgula indica sequência e `+` simultaneidade. O significado final dos botões, os comandos, as posturas e o número de golpes do novo shoto ainda serão definidos; não herdar a associação antiga de cada número a um membro.
+A notação numérica continua útil para conversar: vírgula indica sequência e `+` simultaneidade. A decisão de 25/10/2026 define `1` como soco fraco, `2` soco forte, `3` chute fraco e `4` chute forte. O kit inicial contém somente esses quatro golpes em pé; `F` e `B` não mudam o golpe. Não há versões agachadas/aéreas, acordes, especiais ou agarrões cadastrados.
 
 ### Processo de aprovação de uma receita
 
@@ -67,7 +67,7 @@ A notação numérica continua útil para conversar: vírgula indica sequência 
 5. Testar ambos os lados, centro e canto quando aplicável, defesa, erro, interrupção e interação com recursos já especificados.
 6. Conferir no treino e registrar a decisão: proposta, em ajuste ou homologada. Somente então usar como referência para a próxima receita.
 
-Não há receitas homologadas nem ficha numérica nova nesta revisão. A bancada está em [docs/shoto-balanceamento.md](./docs/shoto-balanceamento.md).
+Não há receitas homologadas. A ficha numérica inicial serve somente para operar a bancada, sem homologação de balanceamento. A bancada está em [docs/shoto-balanceamento.md](./docs/shoto-balanceamento.md).
 
 ## 5. Sistemas de combate da nova direção
 
@@ -87,7 +87,7 @@ Não adotar automaticamente o limite antigo de 25% de vida, uma tentativa por ro
 
 Manter movimento, ataque, defesa, distância, vantagem e punição como dimensões de combate. Reavaliar startup, atividade, recuperação em acerto/erro/bloqueio, hitstun, blockstun, cancelamentos, knockdown, juggle, escala de dano e canto para servir à nova direção. Valores e regras de combate do protótipo não equivalem a aprovação para o shoto.
 
-A levantada manual pode ser preservada como comportamento de interação: neutro mantém o personagem caído, com escolhas por entrada. Seus golpes, comandos definitivos, proteção e tempos serão revistos junto do novo kit. Treino e IA precisam recuperar controle sem depender dos livros removidos.
+O kit inicial não derruba nem lança o adversário; não há knockdown, juggle ou levantada implementados nesta base. A preferência por recuperação manual fica registrada para quando quedas forem novamente especificadas, sem reintroduzir seus golpes e tempos antigos.
 
 O objetivo é pressão, rotas e respostas defensivas legíveis, com limites verificáveis contra loops e retorno de controle definido. Medir cada escolha antes de afirmar que o balanceamento se aproxima da referência desejada.
 
@@ -108,22 +108,41 @@ Preservar infraestrutura útil não preserva o conteúdo antigo. Adaptar seletor
 
 Seguir [identidade-visual.md](./identidade-visual.md): ilustração 2D original com referência estética em Hades, contornos expressivos, sombras gráficas, cores e texturas pictóricas controladas, silhuetas fortes e leitura em movimento.
 
-Guilty Gear Xrd Rev 2 orienta o combate; Hades orienta a arte. A antiga referência visual global em Guilty Gear Strive foi substituída. Não produzir nome, figurino, arma, retrato ou animação final do shoto agora. Usar representação neutra de diagnóstico quando a implementação começar; não reaproveitar identidade de um personagem retirado como identidade aprovada.
+Guilty Gear Xrd Rev 2 orienta o combate; Hades orienta a arte. A antiga referência visual global em Guilty Gear Strive foi substituída. O nome técnico provisório é Shoto. Não produzir figurino, arma, retrato ou animação final agora. Usar representação neutra de diagnóstico quando a implementação começar; não reaproveitar identidade de um personagem retirado como identidade aprovada.
 
 ## 8. Qualidade e entrega
 
 Seguir [docs/ci-cd.md](./docs/ci-cd.md): uma branch por objetivo, validação antes do push, CI remota confirmada antes da integração em `development`. `main` e tags pertencem a marcos de release próprios.
 
-A revisão documental não remove código nem aprova o novo combate. Na migração, atualizar testes de conteúdo com rastreabilidade da regra substituída; não apagar ou enfraquecer testes para mascarar regressões. Preservar cobertura de determinismo, input, colisão, treino e fluxo. Acrescentar testes de novas regras conforme forem definidas, incluindo consumo de recursos, retorno de controle e prevenção de loops.
+A revisão documental anterior não removia código; esta implementação remove o conteúdo antigo e entrega uma bancada funcional, sem aprovar o balanceamento final. Na migração, atualizar testes de conteúdo com rastreabilidade da regra substituída; não apagar ou enfraquecer testes para mascarar regressões. Preservar cobertura de determinismo, input, colisão, treino e fluxo. Acrescentar testes de novas regras conforme forem definidas, incluindo consumo de recursos, retorno de controle e prevenção de loops.
 
 Toda entrega exige instalação reproduzível, testes, build e checagem de diff. Alterações visuais/de controle exigem conferência no jogo. Registrar validação local e CI remota separadamente na pipeline.
 
 ## 9. Decisões abertas
 
-- Kit inicial e significado dos botões do shoto; primeira receita manual a receber.
+- Primeira receita manual a receber; expansão do kit somente conforme novas instruções.
 - Números de vida, dano, movimento, frames, recuperação, cancelamentos e regras aéreas.
 - Regras de combo breaker, drive rush, rage e rage art, inclusive relação entre recursos.
 - Critérios mensuráveis para homologar o shoto antes de abrir o próximo arquétipo.
 - Identidade visual e narrativa do elenco, sem fechar conceitos apenas pelas referências das notas.
 
 Essas lacunas são trabalho futuro explícito. Não preenchê-las copiando o protótipo ou fichas de outros jogos.
+
+## 10. Shoto inicial — contrato executável de 25/10/2026
+
+| Entrada | Golpe | Preparo / atividade / recuperação | Dano | Hitstun / blockstun | Altura |
+| --- | --- | --- | --- | --- | --- |
+| `1` | Soco fraco | 6 / 2 / 12F | 20 | 10 / 6F | Alto |
+| `2` | Soco forte | 10 / 3 / 18F | 35 | 14 / 8F | Alto |
+| `3` | Chute fraco | 8 / 3 / 15F | 25 | 12 / 7F | Médio |
+| `4` | Chute forte | 13 / 4 / 22F | 45 | 16 / 9F | Médio |
+
+Vida: 1000. Valores novos e provisórios, definidos para testar os quatro comandos autorizados; não são o balanceamento anime fighter final. Fonte executável: `src/engine/data/fighters/shoto.ts`. Alcance, caixas, velocidades e pushback estão registrados também na bancada do shoto.
+
+Um toque inicia um golpe, segurar não repete; é preciso soltar e pressionar novamente. Cada ataque tem um contato e recupera integralmente após **acerto, erro e bloqueio**. Não há cancelamentos, continuação contextual, buffer de saída de stun ou combos pré-cadastrados. Entradas durante um golpe ou stun são descartadas; acordes não cadastrados não executam outro ataque por acidente.
+
+Os quatro básicos só começam em pé e no chão. Agachar ou saltar não cria golpes extras. Altos passam sobre alvo agachado; médios atingem em pé/agachado. Segurar `B` ou `DB` bloqueia altos/médios quando a geometria permite o contato; `DB` também cobrirá baixos se forem cadastrados futuramente. Defesa não causa dano nem atordoa o atacante como parry. Um ataque fora de alcance não desloca o alvo. Contatos simultâneos são trades.
+
+Movimento técnico preservado: andar frente 2,4 e trás 1,8 unidades/frame; dash frente 4,6 e trás 3,6 por 12F, corrida 5,2 mantendo avanço após dash; salto inicial −10 e gravidade 0,55. Agachar mantém posição. Dash/corrida são locomoção comum, sem implementar drive rush. Arena, câmera, rounds (99s, duas vitórias) e remapeamento continuam disponíveis. Todos os números continuam provisórios.
+
+PvP e treino usam Shoto espelhado. Arcade tem uma luta espelhada com IA por entradas legais até haver novo elenco. O tutorial básico possui seis lições: movimento, os quatro golpes e defesa. O treino de combos mantém a estrutura e mostra mensagem de espera porque não há receitas. Renderização geométrica neutra distingue jogadores por cor e orientação e representa o alcance apenas na fase ativa; não é arte ou animação final.

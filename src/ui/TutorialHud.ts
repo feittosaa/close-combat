@@ -13,6 +13,7 @@ export class TutorialHud {
   }
   update(): void {
     const session = this.session, lesson = session.lesson;
+    if (!lesson) { this.panel.setText('TREINO DE COMBOS\nNenhuma receita cadastrada. Aguardando seus combos manuais.\nESC abre o menu'); return; }
     this.panel.setText(`${session.index + 1}/${session.lessons.length} · ${lesson.title}\n${lesson.instruction}\n${lesson.notation} · ${formatCommand(lesson.notation, getPlayerLayout(0))}\n${session.complete ? 'TUTORIAL CONCLUÍDO · ESC abre o menu' : session.passed ? 'CONCLUÍDO · ENTER ou clique para avançar' : `Execute para avançar · ${keyLabel(getSystemControls().reset)} reinicia esta tentativa`}`);
   }
   destroy(): void { this.panel.destroy(); }
