@@ -18,7 +18,7 @@ Branch: `codex/chore-reinicio-design-shoto`.
 - [x] Separar ideias futuras de história/roguelike do escopo PvP/PvE/treino.
 - [x] Atualizar README e indicar o caráter histórico dos documentos auxiliares anteriores.
 - [x] Validar instalação, testes, build, links locais e diff desta revisão documental.
-- [ ] Enviar branch, confirmar CI e integrar em `development`; registrar estado real abaixo.
+- [x] Enviar branch, confirmar CI e integrar em `development`; registrar estado real abaixo.
 
 **Critério de conclusão deste objetivo:** documentação coerente, sem apresentar migrações como implementadas, validada e entregue pelo manifesto. Não envolve alteração visual no jogo nem produção de assets.
 
@@ -90,4 +90,4 @@ Composite e história/roguelike não pertencem a esta etapa. Consultar [docs/ide
 
 As pipelines anteriores, números de testes e aprovações de Ayla/Gris/Tester ficam no histórico do Git e nos registros auxiliares identificados como históricos. Não indicam avanço nas etapas novas. Infraestrutura existente poderá ser aproveitada após verificação; não reabrir automaticamente tarefas antigas de arte ou combos.
 
-Validação local: `npm ci`, 419 testes em 24 arquivos, `npm run build`, links locais dos seis documentos ativos e `git diff --check` aprovados. Nenhum código de jogo ou teste foi alterado. Conferência visual no jogo não se aplica a esta entrega exclusivamente documental. Estado remoto: pendente de envio e consulta. Sem promoção para `main` ou tag nesta entrega.
+Validação local: `npm ci`, 419 testes em 24 arquivos, `npm run build`, links locais dos seis documentos ativos e `git diff --check` aprovados. Nenhum código de jogo ou teste foi alterado. Conferência visual no jogo não se aplica a esta entrega exclusivamente documental. Entrega integrada por fast-forward em `development`: commit `3ebb4097a96747056794a3780708ff6413f6d7f7`. CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40199645834) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40199715568) aprovadas. O fechamento deste registro documental segue o mesmo fluxo de CI e integração. Sem promoção para `main` ou tag nesta entrega.
