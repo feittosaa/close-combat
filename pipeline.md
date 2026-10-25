@@ -76,11 +76,13 @@ Branch: `codex/feature-artes-tela-inicial`. Objetivo: produzir duas propostas de
 - [x] Gerar e inspecionar Arena de Brasa e Pátio de Jade, com área de baixo contraste à esquerda para as seis opções.
 - [x] Salvar PNGs originais, dimensões, prompts e orientação de uso em [assets/art/menu/README.md](./assets/art/menu/README.md).
 - [x] Validar instalação, 109 testes em 13 arquivos, build e diff.
-- [ ] Enviar branch, confirmar CI e integrar o pacote de propostas em `development`.
+- [x] Enviar branch, confirmar CI e integrar o pacote de propostas em `development`.
 
 Critério artístico desta entrega: duas alternativas originais sem texto incorporado ou personagens, disponíveis para avaliação. Não equivale à aplicação do guia no jogo. Seleção de fundo, integração e revisão visual no menu continuam pendentes; as imagens foram inspecionadas isoladamente.
 
-Validação local aprovada com `npm ci`, `npm test -- --run`, `npm run build` e `git diff --check`. Ambas as imagens são PNG RGB de 1672 × 941. Nenhuma mudança no runtime: revisão dentro do jogo não se aplica ao pacote de alternativas, mas permanece obrigatória para sua integração visual futura. Estado remoto registrado após o envio abaixo.
+Validação local aprovada com `npm ci`, `npm test -- --run`, `npm run build` e `git diff --check`. Ambas as imagens são PNG RGB de 1672 × 941. Nenhuma mudança no runtime: revisão dentro do jogo não se aplica ao pacote de alternativas, mas permanece obrigatória para sua integração visual futura.
+
+Pacote integrado por fast-forward em `development`, commit `ed802341655d6d8a7a959ecd37ed167013d4fb6d`. CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40208532085) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40208596497) aprovadas. A primeira execução identificou uma linha vazia ao fim do guia, corrigida antes da integração. Este fechamento documental segue o mesmo fluxo de CI e integração. Sem promoção para `main` ou tag.
 
 ### Consolidação funcional
 
