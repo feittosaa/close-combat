@@ -1,3 +1,5 @@
+> **Histórico do protótipo anterior — substituído em 25/10/2026.** Este registro preserva evidências e decisões antigas; elenco, combos, números e tarefas abaixo não são especificação ativa. Consulte [base.md](../base.md), [pipeline.md](../pipeline.md) e [identidade-visual.md](../identidade-visual.md). Referências de seções/etapas abaixo pertencem às versões antigas, recuperáveis no Git. Não continuar a produção do elenco retirado.
+
 > **Histórico substituído em 23/10/2026:** o elenco público usa o [catálogo autoral de 80 entradas](./ayla-golpes.md) e `base.md` §1.3. O texto abaixo descreve a importação anterior e seus testes históricos, não os comandos atuais.
 
 # Combate por personagem — Ayla

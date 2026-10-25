@@ -1,964 +1,129 @@
-# Close Combat — Documento Principal de Design
+# Close Combat — Documento principal de design
 
-> **Entrega e versionamento:** seguir o [manifesto de CI/CD](./docs/ci-cd.md): branches por objetivo, testes antes do push, integração em `development` e releases posteriores em `main` com tags.
+> **Design 0.5.0 · 25/10/2026.** Revisão documental, sem alteração da versão do pacote.
+> **Raiz de regras e escopo.** Execução em [pipeline.md](./pipeline.md), arte em [identidade-visual.md](./identidade-visual.md) e entrega em [docs/ci-cd.md](./docs/ci-cd.md).
+> **Estado real:** nova direção aprovada; o runtime ainda contém o protótipo anterior. Remoções e novas mecânicas estão pendentes de implementação.
 
-> **Status:** protótipo em pixel art; combate autoral acessível; catálogo inicial de Ayla e tutoriais integrados; arte e balanceamento provisórios
-> **Versão:** 0.4.0 de design · revisão de 23/10/2026 (não é release do pacote)
-> **Idioma:** português (Brasil)
-> **Título do jogo:** Close Combat
-> **Objetivo deste arquivo:** ser a referência central de design e implementação. Quando uma regra mudar, atualizar este documento para evitar que o código, os personagens e os sistemas sigam interpretações diferentes.
+## 1. Reinício do projeto de combate
 
----
+Close Combat é um jogo de luta 100% 2D para navegador. O foco atual é construir e equilibrar um único personagem do arquétipo **shoto**, usando-o como referência para os demais. Ele não tem nome, aparência, personalidade, arma ou animações definidos. O shoto de balanceamento não está automaticamente identificado com o protagonista da história futura.
 
-## 1. Visão geral
+O ritmo e o balanceamento têm como referência conceitual um **anime fighter, especialmente Guilty Gear Xrd Rev 2**. A direção de arte tem como referência **Hades**, traduzida em desenho original. São referências de intenção, sem adoção automática de números, comandos, personagens ou sistemas completos dessas obras.
 
-O projeto é um jogo de luta **100% 2D**, com partidas centradas em leitura do oponente, execução de comandos, defesa, agarrões, punições, vantagem de frames e controle de distância.
+### Precedência e descarte
 
-A direção final de arte toma Guilty Gear Strive como referência de apresentação HD com aparência de anime 2D e volume estilizado. Close Combat continua usando assets e combate estritamente 2D; pixel art é a etapa provisória de teste. O detalhamento de produção deve seguir o guia autoral em [`identidade-visual.md`](./identidade-visual.md): ilustração 2D de alta definição, silhuetas marcantes, poses expressivas, animação desenhada em quadros e a leitura imediata de um jogo de luta clássico. Esse guia é a base visual para personagens, cenários, efeitos, interface e materiais promocionais.
+Esta decisão substitui o design anterior e suas tarefas de conteúdo:
 
-**Ayla e Gris, solicitação de 21/10/2026:** manter o pixel art das fichas fornecidas. Cada personagem possui arte, livro de golpes, colisões e velocidades próprios. Os atlas selecionados ficam em `src/assets/sprites/characters/{ayla,gris}/runtime/` e os manifestos em `src/assets/animations/`. Ayla passa a quatro especiais diretos, incluindo onda rasteira; Gris usa uma tesoura gigante dourada empunhada e quatro especiais. Os valores são provisórios. A revisão visual da integração é registrada em [`docs/ayla-gris-progresso.md`](./docs/ayla-gris-progresso.md); geração e cobertura de clipes, isoladamente, não aprovam continuidade.
+- Retirar **todos os personagens existentes**, incluindo Ayla, Gris, Tester e Dummy, de seleção, adversários, treino, tutoriais, catálogos e referências ativas. Nenhum permanece como exceção de elenco ou base de balanceamento. Um alvo de treino futuro deve usar a nova base neutra.
+- Descartar o balanceamento, livros de golpes, strings, combos, receitas de tutorial e adaptações/importações anteriores, inclusive as referências Tekken/Kazuya/Noctis. Não converter automaticamente o catálogo de Ayla em catálogo do shoto.
+- Retirar o **parry**. A nova mecânica de saída de combos será o **combo breaker**; não é apenas renomear o parry.
+- Não herdar como requisitos os 18 ataques base, 80 entradas, seis levantamentos, quatro especiais, comandos de ultimate, janelas, dano, gravidade, limite de levantamentos, Screw, wall splat, recuperação somente no bloqueio ou versões de execução precisa. Essas escolhas pertencem ao protótipo descartado e precisam de nova definição quando relevantes.
+- Cancelar a produção de arte e o balanceamento pendentes para o elenco anterior. Assets e evidências existentes não representam a identidade futura.
 
-O combate é um jogo de luta técnico em plano 2D, com quatro botões de ataque, comandos simultâneos, agarrões, defesa, vantagem de frames, punições e golpes de execução precisa. Personagens, nomes, animações, trilha sonora, efeitos, interface e propriedades específicas devem ser originais.
+A remoção no código será uma entrega própria. Documentos anteriores em `docs/` estão identificados como históricos; seus números, checklists e aprovações não homologam o novo design. O Git preserva as versões anteriores dos documentos principais.
 
-### Direção atual — decisão de 23/10/2026
+## 2. Prioridades e modos
 
-**Close Combat passa a ter um sistema autoral, simples de executar e profundo nas escolhas.** Não copiar integralmente listas, comandos, poses ou balanceamento de Tekken/Kazuya/Noctis. A inspiração de tutorial progressivo permanece como formato de aprendizado. Ayla é a primeira base de autoria e balanceamento; Gris mantém identidade, alcance, colisões e velocidades próprios.
+1. **Treino:** bancada principal para definir golpes, testar cada combo e medir o combate.
+2. **PvP:** luta local 1 contra 1 como primeiro ambiente de comparação, inicialmente shoto contra shoto. Online não está incluído nesta etapa.
+3. **Arcade PvE:** manter o formato de partidas contra IA, adaptando adversários à nova base sem exigir novos personagens antes da homologação do shoto.
 
-A regra atual é **18 ataques base por personagem**: seis em pé, seis agachados e seis aéreos. Frente e trás movimentam/defendem, mas nunca trocam o golpe: `1`, `F+1` e `B+1` selecionam o mesmo soco em pé. `D`, `DF` e `DB` selecionam os mesmos agachados; no ar, o contexto aéreo prevalece. As direções continuam relativas ao adversário. Não existem novos ataques exclusivos de corrida, WS, crouch dash ou direção. Tester e Dummy são ferramentas históricas de diagnóstico, fora da seleção pública e da homologação do elenco autoral. Tester continua como alvo de treino e adversário de abertura do arcade.
+O sistema de treino/tutorial de combos pode permanecer como ferramenta. Seu conteúdo antigo deve sair: novos exercícios usam somente receitas enviadas pelo usuário e aprovadas individualmente. O tutorial básico, se preservado, também precisa abandonar personagens e lições incompatíveis, especialmente parry.
 
-Cada lutador jogável tem **cinco ou seis opções de levantamento**, **cerca de quatro especiais**, **dois agarrões distintos** e **pelo menos um ataque de distância**, preferencialmente projétil. O catálogo não é global: comandos são familiares, mas propriedades, animações, rotas e balanceamento pertencem ao personagem.
+História, roguelike, cartas, bênçãos, trinkets e missões estão fora da implementação atual. As ideias ficam em [docs/ideias-futuras.md](./docs/ideias-futuras.md).
 
-O catálogo inicial de Ayla tem **80 entradas autorais**, descritas em [`docs/ayla-golpes.md`](./docs/ayla-golpes.md): 18 bases + 55 etapas de strings + quatro especiais + dois agarrões + uma ultimate. As 55 etapas incluem elos e conclusões; não são 55 receitas inteiras nem 80 animações finalizadas. Esse documento é a bancada inicial para o usuário moldar comportamento, combos e números.
+## 3. Nove arquétipos e sequência de elenco
 
-**Precedência:** esta revisão e §1.3 substituem as decisões de cópia fiel de Tekken, livros importados, variantes direcionais, comandos complexos, Fulgor e execução elétrica obrigatória. O registro anterior está em [`docs/combate-referencia-historico.md`](./docs/combate-referencia-historico.md) e nos documentos históricos de integração. Código e testes antigos preservados não voltam a autorizar essas regras no elenco público.
-
-Queda e levantada manual, simulação a 60 Hz, controles remapeáveis, pausa, câmera uniforme e piso compartilhado continuam válidos. `1`/`2` levantam atacando; `F` levanta avançando e `B` recuando em guarda. A escolha é individual; queda protegida conserva seu orçamento de segurança. Adversários controlados pela IA do Arcade e comportamentos automáticos do treino enviam uma nova entrada de recuo para levantar quando a recuperação permite; depois retomam seu comportamento. O treino inicia com alvo parado e recuperação automática: volta ao idle, encerra a proteção de queda e pode receber novos golpes. `G` permite escolher explicitamente “Segundo jogador”, que continua manual. A animação de queda deve sustentar a pose no chão enquanto o estado lógico for caído, sem mostrar uma levantada antecipada.
-
-### 1.1 Pilares de design
-
-1. **Combate técnico, mas legível:** os jogadores devem conseguir entender por que um golpe acertou, foi defendido, foi punido ou perdeu a disputa.
-2. **Poucos botões, muitas possibilidades:** quatro botões de ataque, direções, comandos simultâneos, sequências e decisões de tempo criam profundidade sem exigir uma lista enorme de botões.
-3. **Precisão recompensada:** comandos executados no momento certo podem gerar versões superiores dos golpes, com risco e recompensa claros.
-4. **Defesa ativa:** bloquear é importante, mas parries, esquivas verticais, quebras de agarrão e leitura do adversário devem criar decisões interessantes.
-5. **2D de verdade:** não existe movimentação lateral de profundidade nem sidestep 3D. Distância, altura dos ataques, avanço, recuo, salto e agachamento formam o espaço de combate.
-6. **Acesso fácil:** o jogo deve abrir em navegadores modernos e o código-fonte deve estar disponível no GitHub.
-
-### 1.2 Objetivo da primeira versão jogável
-
-Construir primeiro um protótipo sólido de combate local entre dois jogadores, com personagens de teste, cenário simples, comandos confiáveis e informação de frames. Conteúdo, efeitos e recursos online vêm depois de a base de luta funcionar.
-
-### 1.3 Contrato autoral de combate e aprendizado
-
-#### Vocabulário de entrada
-
-| Contexto | Seis ataques base |
-| --- | --- |
-| Em pé | `1`, `2`, `3`, `4`, `1+2`, `3+4` |
-| Agachado (`AG`) | `AG 1`, `AG 2`, `AG 3`, `AG 4`, `AG 1+2`, `AG 3+4` |
-| Aéreo (`AR`) | `AR 1`, `AR 2`, `AR 3`, `AR 4`, `AR 1+2`, `AR 3+4` |
-
-`1` = soco leve; `2` = soco forte; `3` = chute leve; `4` = chute forte. `+` é simultâneo (até três frames de diferença); vírgula é próximo contato da string; `→` separa ações/strings de uma rota. `AG`/`AR` são contextos, não novas teclas. No salto, apertar cima primeiro e atacar depois; um comando já iniciado no chão não se converte silenciosamente em aéreo.
-
-O parser do livro autoral aguarda três frames para fechar o acorde, consume o conjunto exato e ignora combinações sem cadastro. Botão mantido não repete ataque. A continuação contextual tem prioridade sobre um ataque raiz com o mesmo botão; expire o contexto após a janela ou inicie uma ação raiz incompatível para recomeçar. Menu, pausa e reset limpam entradas pendentes. Buffer de saída de stun: oito frames. São parâmetros locais revisáveis, não requisitos de precisão extrema.
-
-#### Strings, rotas e fluidez
-
-Um golpe pode abrir várias strings. Cada etapa exige uma nova entrada e só troca a ação quando a anterior terminou sua atividade. Janela inicial de continuação: fim da atividade até 24 frames depois. É possível parar, atrasar ou escolher outra conclusão; nunca executar uma string inteira com um toque. As strings autorais iniciais partem dos seis básicos em pé; os seis agachados e seis aéreos são bases independentes e podem receber strings próprias em revisões do catálogo.
-
-Cada conclusão informa seu propósito: **levantamento/starter**, **dano alto**, **extensor**, **postura** ou **wall carry**. Elos apenas conectam essas escolhas. Não tratar toda sequência como verdadeira no bloqueio: startup, stun, distância e risco definem interrupção/punição. O levantamento abre uma rota; dano encerra o ar com descida; extensor renova uma vez a trajetória; postura recolhe o corpo com curto recuo e evasão alta durante os frames declarados; carry troca dano por transporte horizontal real.
-
-Exemplos de entrada acessível:
-
-1. `1,1,2` (levantamento) `→ 1+2` (porradão).
-2. `1,1,2` (levantamento) `→ 1,1,1+2` (dois toques e porradão no final).
-
-Complexidade nasce de confirmar acerto, interromper uma string, escolher dano/posição/postura, variar starter, administrar altura e distância e responder à defesa. Não nasce de mudar o soco porque o jogador estava andando. Especiais têm acordes diretos: `1+4`, `2+3`, `1+2+3`, `2+3+4`, com funções próprias por personagem; não exigir meia-lua nem just frame. Uma eventual opção de acessibilidade para acordes de três/quatro botões fica para uma entrega própria de remapeamento.
-
-A regra de fluidez vigente é mantida: strikes recuperam somente após bloqueio; acerto/erro liberam no fim da atividade. Startup e atividade continuam obrigatórios. Agarrões conservam recuperação própria. Manter baixa separação nos elos e avanços pequenos por golpe, sem teleporte corretivo, magnetismo ou acertos forçados. Medir abuso de erro sem recuperação antes de homologar o balanceamento.
-
-O juggle permite levantamento inicial e uma renovação aérea; o terceiro levantamento força descida imune e queda protegida de 26F. Um extensor bem-sucedido consome o orçamento aéreo. Há escala decrescente de dano, gravidade crescente a cada contato aéreo e no máximo um splat por combo. O levantamento sobe mais alto, mas a descida recebe aceleração adicional; contatos não zeram a gravidade acumulada (valores na revisão de trajetória abaixo). Todas as regras são determinadas pela simulação, nunca pelos pixels ou FPS. Não exigir paredes para as duas primeiras receitas.
-
-#### Agarrões, projétil e ultimate
-
-- `1+3`: agarrão frontal, quebra com novo toque em `1` durante 14F da captura.
-- `2+4`: segundo agarrão com troca de lado, quebra com novo toque em `2` durante 14F. Direção mantida não troca a identidade ou o resultado do agarrão.
-- Ambos exigem proximidade e alvo em pé/no chão; defesa não evita captura, agachamento/salto/afastamento evitam. Alcance, dano e recuperação são individuais.
-- O projétil é independente do atacante, tem velocidade, vida útil, caixa e no máximo uma emissão ativa por golpe. Bloqueia, colide e desaparece conforme §§7 e 14, sem dano residual no bloqueio.
-- `1+2+3+4`: ultimate bloqueável, disponível com até 25% de vida, uma tentativa por round (consome ao iniciar, inclusive erro/bloqueio). Aplica escala de combo; não tem QTE. É separada dos quatro especiais e não aumenta a conta de ataques base.
-
-#### Tutorial básico e tutorial de combos
-
-O menu oferece os dois modos separados, com Ayla e Gris. As mesmas entradas, caixas, dano e trajetórias da luta são usadas nos exercícios. Dummy fica neutro, exceto nas lições que pedem ataque/defesa. Mostrar comando numérico/teclas remapeadas, instrução curta, progresso, sucesso e ação para avançar. Reset repete a lição; pausa interrompe o relógio; sair retorna ao menu.
-
-O básico ensina movimento, botão leve, agachado, aéreo, simultaneidade, bloqueio, string/levantamento, projétil, dois agarrões e ultimate. O tutorial de combos começa nas duas receitas acima e avança para extensores, postura e carry conforme as rotas forem homologadas. Só concluir um desafio de combo quando todos os contatos da receita acertarem na ordem, no **mesmo combo**; digitar, errar alcance, bloquear ou somar tentativas não basta. Progresso é da sessão; persistência entre partidas não é requisito desta versão.
-
-#### Autoria, balanceamento e arte
-
-Ayla deve ser moldada primeiro contra ela mesma e contra os corpos de Gris/Tester. Conferir seis levantamentos por personagem, rotas de entrada, altura, alcance, risco em bloqueio, dano por abertura, carry e devolução de controle. Manter dados próprios por golpe e personagem; nenhuma ficha estrangeira tem prioridade sobre a regra autoral. Número sem medição é provisório, nunca homologado.
-
-As animações atuais são reaproveitadas como placeholders declarados. Ter comando executável e clipe associado não significa ter 80 animações únicas prontas. Documentar movimentos que compartilham pose, produzir silhuetas/contatos próprios e conferir no jogo em velocidade normal e passo único antes de homologar a arte.
-
----
-
-## 2. Plataforma e direção técnica
-
-### 2.1 Alvos
-
-- **Plataforma principal:** navegador de computador moderno.
-- **Distribuição pública:** repositório GitHub com código-fonte, instruções de execução e versões marcadas por release.
-- **Demo hospedada:** build estático que possa ser publicado, por exemplo, no GitHub Pages.
-- **Uso offline:** planejar suporte a PWA/cache offline depois que o fluxo principal estiver estável. O comportamento offline deve ser testado; não presumir que abrir `index.html` diretamente via `file://` funcionará em todos os navegadores.
-- **Desktop nativo:** empacotamento futuro opcional, por exemplo com Tauri, caso passe a existir uma necessidade real de executável instalado.
-
-### 2.2 Stack inicial sugerida
-
-- **TypeScript** para tipos claros e manutenção do sistema de combate.
-- **Vite** para desenvolvimento local e geração do build web.
-- **Phaser** para renderização, cenas, animações, áudio e entrada de controles.
-- **Motor de combate próprio**, separado do renderizador, para comandos, colisões de luta, hitboxes, hurtboxes, frames e resolução de ataques.
-- **Vitest** ou ferramenta equivalente para testes unitários da lógica pura.
-
-Phaser não deve decidir sozinho se um golpe acertou. A física genérica de um motor de jogo não substitui as regras específicas de um jogo de luta.
-
-### 2.3 Regras técnicas fundamentais
-
-- A simulação de combate usa **60 frames de lógica por segundo** como padrão inicial: um frame equivale a aproximadamente **16,67 ms**.
-- A renderização pode variar conforme o dispositivo, mas a lógica de luta deve avançar em passos fixos e não depender da taxa de atualização do monitor.
-- Separar claramente **simulação**, **renderização**, **entrada**, **dados dos personagens** e **interface**.
-- As regras centrais devem poder ser testadas sem abrir o navegador ou renderizar sprites.
-- A ordem de resolução dentro de cada frame deve ser determinística: ler entradas, atualizar estados, avançar animações de combate, verificar colisões, resolver hit/guard/parry/throw, aplicar stun e atualizar recursos.
-- Nenhuma regra de vantagem ou execução deve depender apenas de temporizadores visuais em milissegundos; ela deve usar frames da simulação.
-
-### 2.4 Distribuição pelo GitHub
-
-O repositório deve conter o código-fonte e um README com os requisitos, comandos e controles. O fluxo inicial previsto é:
-
-- `npm install` — instalar dependências.
-- `npm run dev` — iniciar o servidor de desenvolvimento.
-- `npm run test` — executar os testes.
-- `npm run build` — gerar a versão web de produção.
-- `npm run preview` — testar localmente o build produzido.
-
-Os scripts acima são a interface desejada do projeto e precisam ser configurados no `package.json` quando o código for criado. Os releases podem disponibilizar um arquivo compactado de uma versão específica. O lançamento em navegador e o download do código-fonte são requisitos iniciais; instalador nativo é uma etapa opcional posterior.
-
----
-
-## 3. Convenções de controle
-
-### 3.1 Botões de ataque
-
-O jogo usa a notação numérica popularizada por jogos de luta da família Tekken. Os números representam **botões**, não direções.
-
-| Notação | Nome em inglês | Nome em português | Sigla |
-|---|---|---|---|
-| `1` | Left Punch | Soco fraco / esquerdo | `LP` |
-| `2` | Right Punch | Soco forte / direito | `RP` |
-| `3` | Left Kick | Chute fraco / esquerdo | `LK` |
-| `4` | Right Kick | Chute forte / direito | `RK` |
-
-Combinações simultâneas são representadas com `+`:
-
-- `1+2`: pressionar os dois socos ao mesmo tempo.
-- `3+4`: pressionar os dois chutes ao mesmo tempo.
-- `1+3` e `2+4`: combinações que podem ser usadas para agarrões ou golpes especiais, conforme o personagem.
-- `1, 2, 4`: pressionar uma sequência em ordem, não simultaneamente.
-
-**Regra de leitura:** `+` significa simultâneo dentro de uma janela de tolerância configurável; a vírgula significa sequência. No protótipo, o buffer guarda 30 frames e considera simultâneos pressionamentos separados por até 3 frames, inclusive. Esses valores são provisórios.
-
-Se um botão puder formar um chord registrado, seu golpe simples aguarda o fechamento dessa janela. Um chord registrado corresponde ao conjunto exato de botões e tem prioridade sobre golpes simples. Uma combinação sem golpe cadastrado dentro da janela é consumida e ignorada; seus botões não viram ataques simples acidentais.
-
-### 3.2 Direções
-
-As direções são relativas ao adversário, e não fixas à tela. `F` e `B` trocam de lado quando o personagem troca de posição em relação ao oponente.
-
-| Símbolo | Significado |
-|---|---|
-| `F` | Frente, na direção do adversário |
-| `B` | Trás, afastando-se do adversário |
-| `U` | Cima |
-| `D` | Baixo |
-| `DF` | Baixo + frente |
-| `DB` | Baixo + trás |
-| `UF` | Cima + frente |
-| `UB` | Cima + trás |
-| `N` | Neutro, sem direção pressionada |
-
-Direções comandam movimento, guarda e postura. Não cadastram variantes de ataque: `F+1` e `B+1` usam o mesmo `1`; `D+1`, `DF+1` e `DB+1` usam `AG 1`.
-
-### 3.3 Semidireções e diagonais
-
-O jogo aceita entradas diagonais. `UF`, por exemplo, significa cima + frente no mesmo instante ou dentro da janela de combinação. Elas podem ser usadas para:
-
-- saltos direcionais e saltos para trás;
-- locomoção, agachamento e guarda baixa;
-- controle horizontal de ataques aéreos, sem trocar o golpe.
-
-Como a luta é 2D, as diagonais **não criam um segundo eixo de profundidade**. Elas combinam altura e direção horizontal. O motor deve preservar a entrada diagonal na memória de comandos para que um `DF` não seja interpretado apenas como `D` ou apenas como `F`.
-
-### 3.4 Controles físicos e remapeamento
-
-A notação de luta é independente da tecla física. O jogador poderá usar teclado e, quando implementado, controle compatível com a API Gamepad do navegador. A interface deve exibir o mapeamento atual e permitir remapeamento dos quatro ataques, das direções, da pausa e do reinício do treino. Comandos administrativos não podem conflitar com ações dos jogadores.
-
-O jogo não deve exigir que o usuário tenha um layout de teclado específico. A configuração padrão será definida no protótipo e documentada no README.
-
-### 3.5 Mapeamento provisório do protótipo local
-
-Para viabilizar os primeiros testes locais de dois jogadores no mesmo teclado, o protótipo usará temporariamente:
-
-| Ação | Jogador 1 | Jogador 2 |
-|---|---|---|
-| Direita / esquerda / cima / baixo | `D` / `A` / `W` / `S` | setas `→` / `←` / `↑` / `↓` |
-| Botões `1`, `2`, `3`, `4` | `J`, `K`, `N`, `M` | `NumPad 1`, `NumPad 2`, `NumPad 3`, `NumPad 4` |
-
-Esse mapeamento existe para o protótipo e deverá ser remapeável antes de ser tratado como configuração final. Direções horizontais são convertidas para frente/trás relativamente ao lado atual do oponente; cima e baixo permanecem direções verticais.
-
----
-
-## 4. Personalização das cores dos botões
-
-No primeiro login, cada jogador poderá escolher um esquema de cores para identificar visualmente os quatro botões de ataque. A cor é uma preferência de interface e **não altera o dano, os frames ou qualquer propriedade de combate**.
-
-### 4.1 Exemplos de paletas
-
-| Paleta | `1 / LP` | `2 / RP` | `3 / LK` | `4 / RK` |
-|---|---|---|---|---|
-| **Paleta A** | Rosa | Verde | Azul | Vermelho |
-| **Paleta B** | Azul | Amarelo | Verde | Rosa |
-
-As cores acima são exemplos iniciais. Os nomes devem vir acompanhados de amostras visuais e rótulos acessíveis; a cor nunca deve ser o único indicador de um botão.
-
-### 4.2 Regras de interface
-
-- Seleção de paleta, com prévia dos quatro botões.
-- Identificar sempre o botão pelo número e pela sigla, além da cor.
-- Manter contraste adequado e evitar depender apenas da distinção cromática.
-- Guardar a preferência localmente no navegador quando isso for implementado.
-- A personalização de cor não pode confundir os indicadores de jogador 1 e jogador 2; aplicar uma borda, marca ou rótulo de jogador independente da paleta.
-
----
-
-## 5. Estrutura de uma partida
-
-### 5.1 Fluxo inicial
-
-1. Tela inicial.
-2. Escolha do modo de jogo.
-3. Seleção do personagem de P1; nesta versão P2 é definido pelo modo.
-4. Seleção do cenário, com apenas Cais disponível nesta entrega.
-5. Carregamento e início da luta.
-6. Fim do round por condição de vitória ou tempo, se houver limite configurado.
-7. Tela de resultado, revanche ou retorno ao menu.
-
-### 5.2 Escopo dos primeiros modos
-
-**MVP obrigatório:** dois jogadores locais no mesmo computador (teclado e/ou controle, conforme suporte implementado) contra um adversário humano.
-
-**Treino:** pausa, avanço de um frame, reinício rápido, dados de combate e adversário manual, em guarda ou repetindo golpes. P2 usa Tester; o treino usa as mesmas regras e livros da partida e não altera vantagem para facilitar punições.
-
-**PvP:** dois jogadores no mesmo teclado; P1 escolhe seu lutador, e P2 recebe automaticamente outro lutador do elenco, com os controles do segundo jogador.
-
-**Arcade PvE:** P1 enfrenta os outros lutadores selecionáveis, começando por Tester. O computador produz direções e botões pelo mesmo parser da partida, com reação de dez frames à ameaça e decisões reproduzíveis. Não recebe acertos, dano, teleporte ou invulnerabilidade por fora do motor. Após vencer a luta, Enter avança ao próximo adversário; ao concluir o arcade, R reinicia a sequência. Derrota ou empate permitem repetir a luta. Não há IA no PvP nem seleção de P2 pelo usuário nesta etapa.
-
-**Configurações:** entrada própria com página vazia de opções e retorno ao menu, conforme solicitado. Navegação por setas/Enter/Esc e por clique. Multijogador online continua como etapa futura.
-
-### 5.3 Regras de vitória
-
-A estrutura deverá permitir partidas por rounds, vida e cronômetro. Os valores iniciais (quantidade de rounds, duração e vida) serão ajustáveis em configuração, não espalhados como números fixos pelo código. Empates e interrupções precisam ter comportamento definido antes de a partida ranqueada ou online existir.
-
----
-
-## 6. Movimento 2D
-
-O combate acontece em um único plano horizontal. Os personagens podem se aproximar e se afastar, saltar, agachar e usar movimentos especiais, mas não podem atravessar o cenário em profundidade.
-
-### 6.1 Movimentos básicos
-
-- Andar para frente e para trás.
-- Saltar verticalmente ou em diagonal, caso o personagem permita.
-- Agachar.
-- Permanecer neutro.
-- Recuperar-se após ataques, bloqueios, quedas e outros estados.
-- Avançar ou recuar durante golpes cuja animação mova o personagem.
-
-A aceleração, velocidade e distância de salto podem variar por personagem, desde que os dados sejam explícitos e testáveis.
-
-### 6.1.1 Comandos direcionais provisórios
-
-Na primeira versão local, segurar `F`/`B` anda; tocar duas vezes na mesma direção no chão dentro de 12 frames inicia um dash de até 12 frames enquanto a direção continuar pressionada. Dash não pode iniciar nem continuar no ar; os toques feitos durante o salto não contam para um dash após aterrissar. Na revisão de movimento técnico, Ayla usa caminhada 2, recuo 1,5, dash 4,6 e backdash 3,8 unidades por frame. Gris usa 1,85 / 1,4 / 4,3 / 3,5; Tester usa 2 / 1,5 / 4,2 / 3,4. Esses parâmetros pertencem a cada personagem, com fallback de motor 2 / 4,2 para caminhada/dash. Enquanto agachado, o personagem permanece no mesmo lugar, inclusive com `DF` ou `DB`; esses comandos não iniciam nem mantêm dash. Golpes do livro de combate podem declarar seu próprio avanço, inclusive agachados; a imobilidade continua sendo regra da locomoção agachada e dos golpes legados. Durante golpes aéreos, a direção horizontal continua controlando a trajetória e a gravidade continua atuando. Os valores são configuráveis e provisórios. As direções continuam relativas ao oponente.
-
-### 6.2 Espaçamento entre personagens
-
-- Os personagens não devem atravessar um ao outro livremente quando estiverem em estados que exigem colisão corporal.
-- Um personagem no ar pode cruzar sobre o oponente quando a diferença vertical entre as posições de chão dos dois for pelo menos a largura corporal configurada. No chão, a colisão continua impedindo a passagem. Depois da troca, `F`/`B` acompanham o novo lado do oponente.
-- Ataques podem mover o atacante e aplicar empurrão no oponente.
-- O empurrão após acerto e bloqueio é uma propriedade do golpe.
-- O posicionamento perto da parede pode limitar recuo e criar situações de pressão, desde que a regra de parede seja consistente.
-- Não há sidestep de profundidade. Evasões devem ocorrer por movimento horizontal, salto, agachamento, invulnerabilidade específica ou mecânica expressamente definida.
-
----
-
-## 7. Modelo de ataque e colisão
-
-Cada golpe deve ser definido como dados, em vez de depender de regras particulares escondidas na animação.
-
-### 7.1 Fases do golpe
-
-- **Startup (inicialização):** frames antes de o golpe poder acertar.
-- **Active (ativo):** frames em que a hitbox causa contato.
-- **Recovery (recuperação):** frames depois da atividade em que o atacante ainda não pode agir normalmente.
-
-Um golpe pode ter vários segmentos ativos, movimentação durante a animação, propriedades aéreas, cancelamentos e efeitos especiais. Cada exceção precisa estar registrada nos dados ou em uma habilidade bem delimitada.
-
-### 7.2 Hitboxes e hurtboxes
-
-- **Hitbox:** região que pode atingir o oponente.
-- **Hurtbox:** região vulnerável do personagem.
-- **Throw box:** região usada para detectar agarrões.
-- **Parry window / região ou condição de parry:** janela de tempo e regras que permitem aparar ataques específicos.
-
-A arte e a colisão não precisam ocupar exatamente o mesmo espaço, mas precisam corresponder visualmente o bastante para parecer justas. O modo de treino deve, no futuro, permitir visualizar hitboxes e hurtboxes.
-
-### 7.3 Categorias de ataque
-
-O motor deve suportar, no mínimo:
-
-- alto;
-- médio;
-- baixo;
-- aéreo;
-- agarrão;
-- especial;
-- ataque desbloqueável, caso esse tipo seja adotado depois.
-
-Categorias definem interação com defesa e movimentação. O comportamento exato de cada categoria deve ser configurável por golpe, sem presumir que todos os personagens obedecem a uma única animação ou alcance.
-
-### 7.4 Prioridade e colisões simultâneas
-
-A resolução de dois golpes que se conectam no mesmo frame precisa seguir uma regra estável. O projeto deve considerar: troca de golpes (*trade*), cancelamento de ataques por hit, invulnerabilidade, armadura e interrupção por agarrão. O resultado não pode variar conforme a ordem de renderização dos sprites.
-
-Regra do protótipo: todos os contatos do frame são detectados antes de aplicar dano, então dois strikes válidos podem trocar golpes (*trade*) mesmo que cada um cause hitstun no outro. A ordem de resolução é agarrão, invulnerabilidade contra strikes, parry, bloqueio e acerto. Invulnerabilidade é declarada no golpe por número de frames e categoria; `strikeInvulnerableStartupFrames` protege apenas durante os primeiros frames do startup contra golpes normais, sem cancelar nem causar dano ao atacante. O `test-rising-punch` tem 5 frames dessa propriedade para servir de exemplo. Agarrões não são strikes e não são evitados por essa propriedade; armadura não está implementada e não altera esta regra.
-
-### 7.5 Dados específicos por personagem
-
-**Revisão de 21/10/2026 — Ayla e Gris:** cada livro `moves` aceita de zero a N especiais, sem slots ou quantidade compartilhada. `kind: special` identifica a família sem substituir o nível de bloqueio. Hitbox, preparo, atividade, recuperação, dano, deslocamento e comando pertencem a cada golpe. Corpo, hurtboxes em pé/agachado/no ar, caminhada, dash e salto pertencem a cada personagem.
-
-Projéteis são entidades da simulação a 60 Hz: cada golpe define quadro de emissão, posição relativa ao atacante, velocidade, vida útil, hitbox própria e limite de emissões simultâneas. A direção fica fixada no disparo. O projétil não é uma hitbox presa ao atacante; continua após a recuperação ou interrupção dele, acerta/bloqueia uma vez e desaparece ao contato, ao sair da arena, expirar ou colidir com outro projétil compatível. Reset e troca de round removem todos os projéteis. Não há dano residual no bloqueio nesta revisão. A defesa considera projéteis adversários mesmo quando o emissor já está neutro. Imagens e efeitos não determinam a colisão.
-
-Ayla e Gris usam os quatro acordes especiais de §1.3. Os livros novos são autorais; importações antigas e variantes direcionais ficam fora da seleção de comandos de Ayla. Gris usa tesoura gigante dourada empunhada e energia de corte como projétil; a arma não amplia automaticamente a hurtbox do corpo. Hitboxes, fases, deslocamento e velocidades continuam individuais. O motor resolve sempre `(fighterId, moveId)`.
-
-No protótipo, o ritmo-base dos golpes é definido pelo tipo de golpe, não por uma velocidade global do personagem: o soco leve Tester usa 8 frames de startup, 4 ativos e 13 de recuperação; o soco pesado usa 11 de startup, 4 ativos e 20 de recuperação. Nesta revisão de cadência solicitada, os strikes ganham 2 frames de preparo, 1 de atividade e 4 de recuperação em relação ao livro anterior; agarrões mantêm seus valores. O ápice fica sustentado durante a atividade e a recuperação começa ainda perto do contato antes de recolher. Dano, stun e alcance horizontal são preservados: a recuperação maior altera a vantagem e exige revisão de balanceamento, não é apenas uma mudança cosmética. Variações de outros golpes devem declarar seus próprios frames no livro de golpes, sem alterar a cadência de caminhada do personagem.
-
-O perfil de colisão define `bodyWidth` para movimento/contato entre corpos e hurtboxes separadas `standing`, `crouching` e `airborne`. Cada hurtbox usa `offsetX` em relação ao centro horizontal e `offsetY` em relação aos pés, com largura e altura em pixels lógicos. No ar o motor usa sempre `airborne`; no chão escolhe entre em pé e agachada. Hitboxes de ataque usam `forward` medido a partir do centro na direção do oponente, `yOffset` em relação aos pés e dimensões próprias por golpe. Todos os valores podem variar por personagem.
-
----
-
-## 8. Defesa
-
-Defender-se deve ser uma decisão ativa, baseada na direção do adversário e na leitura da categoria do ataque.
-
-### 8.1 Bloqueio básico
-
-**Defesa autoral:** guarda alta/baixa, punição por tempo e alcance e troca de lado legível. A defesa permanece explícita em `B`/`DB`.
-
-- Segurar `B` recua com clipe próprio de passos para trás, mantendo a frente orientada ao adversário. O backdash usa outro clipe, sem inverter a orientação da caminhada. Se o adversário estiver executando um golpe (preparo, atividade ou recuperação), `B` assume a guarda em pé e interrompe a locomoção, independentemente da distância.
-- Segurar `DB` defende baixos e deve ser vulnerável a golpes médios que atinjam personagens agachados.
-- Ataques altos podem ser evitados por agachamento quando suas propriedades permitirem.
-- A defesa e o agachamento permanecem parados, inclusive quando o adversário pressiona a colisão corporal. Um contato bloqueado produz **blockstun** e um pequeno empurrão para trás, definido no golpe; um golpe que não alcança o defensor não o desloca.
-- Certos ataques podem ser desbloqueáveis ou exigir uma defesa específica; isso deve ficar claro pela animação, pelo efeito ou por um indicador de treino.
-
-O jogo deve evitar situações em que a defesa falha por uma direção confusa. A direção defensiva é sempre relativa ao oponente, mesmo após troca de lado.
-
-Para o protótipo: `B` bloqueia ataques altos e médios quando o personagem está em pé; `DB` bloqueia baixos; um ataque alto é evitado ao agachar; ataques médios acertam `DB`; baixos acertam `B`. A guarda exige `B`/`DB` e um golpe em execução pelo adversário; não é automática em neutro. Os comandos dos dois jogadores são considerados antes da escolha da defesa no frame. Um bloqueio bem-sucedido entra em blockstun e aplica o pushback definido no golpe (4 unidades nos strikes atuais do Tester). Os tempos e distâncias iniciais são provisórios.
-
-### 8.2 Stun e recuperação
-
-- **Hitstun:** tempo em que o personagem não pode agir depois de ser atingido.
-- **Blockstun:** tempo em que não pode agir enquanto se recupera do bloqueio.
-- **Knockdown:** estado de queda no qual as ações disponíveis são específicas.
-- **Recovery:** período de recuperação de ataque, esquiva, agarrão ou ação especial.
-
-Ações defensivas não devem poder cancelar qualquer estado arbitrariamente. Regras como recuperação rápida, tech roll, invulnerabilidade ao levantar e reversões precisam ser definidas por sistema ou personagem.
-
----
-
-## 9. Agarrões
-
-Agarrões são uma ferramenta de curta distância para enfrentar adversários que bloqueiam com frequência. Eles seguem a lógica de leitura e resposta comum a jogos de luta técnicos, adaptada ao formato 2D.
-
-### 9.1 Comandos
-
-`1+3` e `2+4` são os dois comandos de agarrão do elenco autoral; as quebras e resultados estão em §1.3. Um comando simultâneo não pode ser tratado como dois ataques independentes se houver um agarrão válido configurado para aquela combinação.
-
-### 9.2 Regras de interação
-
-- Os agarrões comuns exigem proximidade suficiente.
-- Bloquear não deve neutralizar um agarrão comum válido.
-- Agachar, escapar do alcance, possuir uma propriedade específica ou quebrar o agarrão podem ser respostas possíveis, conforme a classe de agarrão.
-- Alguns agarrões podem ter comandos de quebra diferentes, como pressionar `1`, `2`, `1+2` ou outra combinação indicada pelo tipo de agarrão.
-- A janela de quebra precisa ser consistente e legível; não deve ser decidida aleatoriamente.
-- Um agarrão que falha deve ter recuperação para que a tentativa possa ser punida.
-
-Os valores de alcance, startup, janela de quebra, dano e recuperação serão definidos golpe a golpe. Não implementar todos os agarrões como uma animação sem regras próprias.
-
-**Legado exclusivo de diagnóstico, não regra do elenco autoral:** Tester tem agarrão frontal `1+3` e agarrão forte `2+4`. Ambos só alcançam um alvo em pé, no chão, à frente do atacante e a até 76 unidades; bloqueio não os impede, mas agachar, estar no ar ou já estar em ataque/stun evita o agarrão. A direção mantida quando o comando é reconhecido escolhe o arremesso: `F`/`DF`/`UF` lança à frente, `B`/`DB`/`UB` lança para trás; sem direção, usa frente. Cada golpe configura a distância lançada nas duas direções, relativa ao atacante e ao seu facing. Um arremesso para trás pode cruzar o alvo por cima do atacante e inverter os lados; o facing relativo é atualizado após o lançamento. Após conectar, o defensor tem 6 frames para pressionar o chord oposto (`2+4` quebra `1+3`, e vice-versa). A quebra não causa dano e deixa o atacante em 12 frames de recuperação. Sem quebra, o agarrão causa dano e hitstun dos dados do golpe; se errar o alcance, usa a recuperação normal. Os números são provisórios.
-
----
-
-## 10. Especiais cinematográficos com comandos durante a cena
-
-**Proposta arquivada:** QTEs não integram a base autoral; ultimate usa o contrato de §1.3. O material abaixo fica arquivado como opção futura e não orienta a primeira versão balanceada de Ayla. Uma futura cinemática não implica minijogo de entrada nem altera por si só frames ou dano.
-
-Alguns especiais podem iniciar uma sequência cinematográfica curta. Durante a cena, o jogador executa entradas indicadas na tela — por exemplo, pressionar botões específicos, repetir uma sequência ou confirmar um comando dentro de uma janela de tempo. A ideia é manter a referência de especiais interativos de jogos de luta/ação como Naruto: Ultimate Ninja 5.
-
-### 10.1 Fluxo recomendado
-
-1. O especial é ativado ao cumprir seu comando, requisito de recurso e condição de combate.
-2. A animação cinematográfica começa e a interface mostra claramente a sequência ou o ritmo esperado.
-3. O jogador executa os comandos durante janelas definidas em frames.
-4. O resultado dos inputs altera a qualidade ou os efeitos do especial dentro de limites balanceados.
-5. O especial termina e os dois personagens retornam a estados válidos de combate.
-
-### 10.2 Evitar que o QTE decida tudo
-
-- O especial precisa ter um resultado-base definido antes do minijogo de inputs.
-- Executar melhor a sequência pode aumentar dano, recuperar menos recurso, acrescentar um efeito ou melhorar uma propriedade específica; não precisa aumentar tudo ao mesmo tempo.
-- O ganho por acerto deve ter um limite máximo.
-- Erros não devem tornar a cena interminável nem bloquear a partida sem razão.
-- Instruções, contagem de tempo e feedback precisam ser legíveis.
-- Deve existir uma opção de acessibilidade para reduzir efeitos visuais e, se necessário, simplificar ou desativar a sequência de inputs sem tornar o sistema obrigatório para todo tipo de partida.
-
-### 10.3 Multiplayer e equidade
-
-No modo local, a sequência pode ser resolvida pela mesma simulação determinística. Para um eventual modo online, a mecânica precisará ser testada com latência e diferenças de dispositivos. A cena não deve congelar a comunicação ou conceder vantagem por um comportamento de entrada que só funcione em uma máquina específica.
-
----
-
-## 11. Proposta histórica de execução precisa (fora do catálogo autoral)
-
-A especificação anterior de ascendente/elétrico foi substituída pelo catálogo autoral. Os mecanismos abaixo permanecem como referência de engenharia para Tester; não criam requisito de execução precisa para Ayla ou Gris.
-
-### 11.1 Regras
-
-- A versão normal deve funcionar mesmo quando o tempo não é perfeito, se o comando-base tiver sido reconhecido.
-- A versão reforçada só é ativada dentro de uma janela específica, definida em frames.
-- A janela deve ser configurável por golpe, mas curta o bastante para recompensar consistência e não mero apertar repetido.
-- A versão reforçada deve ter uma propriedade observável e balanceável: por exemplo, startup menor, vantagem diferente, efeito visual/sonoro, dano ou capacidade de combo alterada.
-- A melhoria não deve conceder todas as vantagens simultaneamente por padrão.
-- O feedback visual/sonoro deve confirmar a execução correta sem depender apenas de um indicador textual.
-
-**Padrão provisório de comando:** o especial de teste de Tester usa `F,N,DF+2`. O parser registra também a soltura para neutro. A variante precisa é reconhecida se `2` for pressionado no mesmo frame de `DF` ou no frame lógico seguinte; fora dessa janela, o comando ainda executa a variante normal. A variante precisa aumenta apenas o dano em 20 pontos. Como cancel de teste, `test-jab` pode cancelar para o soco ascendente ou para esse especial somente depois de acertar, até 8 frames após o contato; bloqueio e erro não abrem cancel. Os valores servem à validação do sistema.
-
-### 11.2 Exemplo conceitual de definição
-
-Um golpe pode aceitar o comando `F`, depois `N`, depois `DF+2`. Se `2` for reconhecido no intervalo de frame configurado após a última direção, o motor cria a versão reforçada; caso contrário, executa a versão normal ou não executa o golpe, conforme o desenho daquele personagem. Isso é apenas um exemplo de comando: o comando e a janela finais serão definidos personagem por personagem.
-
-### 11.3 Repetibilidade e treino
-
-A janela exata precisa ser medida pelo frame de lógica, nunca por uma aproximação variável de milissegundos. O modo de treino deverá ajudar a identificar se o comando foi executado no tempo correto, quando esse modo for implementado.
-
----
-
-## 12. Parry: defesa por leitura e tempo
-
-**Direção autoral:** parries específicos podem ser avaliados como opção futura, com comando e risco próprios. Não são necessários ao núcleo acessível nem vêm automaticamente de outra obra. Low parry por `DF` fica desativado nos livros públicos de Ayla/Gris nesta revisão; Tester conserva o fixture de diagnóstico.
-
-**Legado em execução:** as subseções abaixo descrevem o parry universal do protótipo. A janela de um frame e o stun de 18 frames serão substituídos por uma entrega própria, com testes e migração; não são o padrão definitivo do balanceamento.
-
-### 12.1 Propriedades configuráveis de parry
-
-O parry usa sempre o mesmo comando defensivo: **pressionar `B` no frame exato em que o golpe toca**. A direção é relativa ao oponente e precisa ser um novo pressionamento naquele frame; manter `B` pressionado continua sendo bloqueio comum e não prolonga a janela de parry. A janela universal é de um frame de lógica e não varia por personagem ou por golpe.
-
-Cada golpe declara apenas se pode ser aparado (`parryable`). Um ataque sem essa propriedade nunca sofre parry, embora ainda possa ser bloqueado pelas regras normais. Categorias e casos especiais podem restringir essa elegibilidade nos dados do golpe, sem mudar o comando ou a janela global. No protótipo, o sucesso cancela o golpe e deixa o atacante em hitstun por 18 frames, abrindo uma janela para punição; o defensor não recebe dano nem empurrão. O parry só é reconhecido por um novo pressionamento de `B` no frame exato do contato. Um pressionamento fora desse frame não produz parry: o ataque segue sua resolução normal, então o defensor recebe o golpe se não estiver bloqueando. Manter `B` antes e durante o contato continua sendo bloqueio comum.
-
-### 12.2 Regras de equilíbrio
-
-- Um parry bem-sucedido cancela o ataque aparado e atordoa o atacante por 18 frames para permitir punição.
-- Um parry fora do frame exato falha; o ataque resolve normalmente e acerta o defensor, a menos que ele esteja em bloqueio comum válido.
-- Um parry não deve funcionar contra toda categoria de ataque a menos que seja uma habilidade rara, explícita e balanceada.
-- Golpes com vários hits precisam definir se o parry evita um hit, a sequência completa ou apenas uma parte.
-- A janela não deve ser tão ampla que substitua o bloqueio como defesa padrão.
-- O estado de parry não pode ser acionado retroativamente depois que o golpe já acertou.
-
-As primeiras implementações devem testar parry contra um conjunto pequeno de movimentos, antes de ampliar para todo o elenco.
-
----
-
-## 13. Sistema de frames e vantagem
-
-O combate usa frames como unidade oficial de tempo. Startup, atividade, recuperação, hitstun, blockstun, janela de parry e janelas de execução precisam ser mensuráveis em frames.
-
-### 13.1 Números de frames
-
-Cada golpe deve expor no mínimo:
-
-- startup;
-- duração ativa;
-- recovery;
-- hitstun causado;
-- blockstun causado;
-- empurrão no acerto e no bloqueio;
-- alcance;
-- categorias de acerto e propriedades especiais.
-
-Esses valores iniciais serão ajustados com testes. Não preencher a lista inteira de golpes com números arbitrários apresentados como balanceamento final.
-
-### 13.2 Vantagem no acerto e no bloqueio
-
-A vantagem indica qual personagem pode agir primeiro depois que um golpe é acertado ou bloqueado.
-
-Como convenção de documentação, calcular a vantagem no evento de contato assim:
-
-`Vantagem do atacante = stun restante do defensor − recuperação restante do atacante`
-
-- Resultado **positivo**: o atacante recupera-se antes e tem vantagem.
-- Resultado **zero**: ambos voltam a poder agir no mesmo momento.
-- Resultado **negativo**: o atacante se recupera depois e está em desvantagem.
-
-Exemplo hipotético: se o atacante ainda precisa de 12 frames para recuperar-se e o defensor fica em stun por 17 frames, o atacante tem `+5`. Se o atacante precisa de 20 frames e o defensor fica em stun por 15, o atacante tem `−5`.
-
-Essa convenção deve ser usada de modo consistente no código, nos dados de golpes e na interface de treino. A implementação precisa testar casos de borda para não haver diferença de um frame causada por contar ou não o frame do impacto.
-
-O frame de contato já ocorreu e não entra nas duas contagens. `+5` sempre significa que o **atacante** poderá agir cinco frames antes do defensor. O sinal invertido presente na primeira versão do protótipo é um defeito a corrigir, sem alterar artificialmente startup ou stun para compensá-lo.
-
-O stun informado no evento corresponde ao bloqueio efetivo restante: se um novo acerto mantém um stun anterior mais longo, usar esse valor maior. A vantagem no contato considera a conclusão normal do golpe; um cancelamento legal pode mudar a sequência posterior e não transforma esse dado isolado em promessa de punição.
-
-### 13.3 Punições
-
-Um golpe com recuperação negativa pode ser punido se o adversário tiver um ataque cujo startup, alcance e estado permitam acertar antes de o atacante voltar a agir. A punição depende de **vantagem e distância**, e não apenas do número de frames.
-
-O jogo deve suportar situações como:
-
-- seguro ao bloquear;
-- punível por um golpe rápido;
-- punível somente por um golpe de maior alcance;
-- risco de whiff punish quando o ataque erra;
-- recompensa por bloquear uma opção arriscada.
-
-O feedback inicial distingue contatos reais: **punição de bloqueio** quando um strike acerta o adversário ainda preso ao golpe que foi bloqueado; **punição de erro** quando acerta a recuperação de um golpe que não tocou; **contra-ataque** quando interrompe preparo ou atividade, sem bônus de dano implícito. O rótulo só nasce de um acerto real, nunca apenas de vantagem negativa. Treino e interface não devem prometer punição garantida sem conferir estado, distância, categoria, pushback, janela de entrada e frame efetivo do contato.
-
-### 13.4 Cancelamentos e combos
-
-Cancelamentos são exceções definidas por golpe ou sistema. O motor pode permitir, por exemplo, cancelar um ataque em outro durante uma janela específica quando o primeiro acerta. Não presumir que todo golpe pode ser cancelado.
-
-A base autoral segue §1.3: strings curtas, levantamento, juggle, um extensor e finalizadores por função. O nome interno `screw` representa renovação aérea local; não exige fidelidade a outro jogo. Sem cancelamento livre durante a atividade do golpe.
-
-Modelar altura, deslocamento horizontal, gravidade, escalonamento de dano, pushback e reação a hits sucessivos. A rota precisa terminar em queda e devolução previsível do controle, sem loop infinito nem recuperação aérea arbitrária. Definir tech/recovery e opções de levantar coerentes com a referência; números e janelas ainda dependem de ficha e testes. Validar strings verdadeiras versus sequências interrompíveis e rotas por postura, distância e counter hit. Cada combo terá comando completo, starter, dificuldade, dano, carry, consumo do extensor e estado final.
-
----
-
-## 14. Distância, alcance e controle de espaço
-
-A distância afeta se ataques acertam, se um agarrão alcança, se a pressão pode continuar e se um erro pode ser punido.
-
-### 14.1 Medição
-
-O motor deve usar unidades de mundo consistentes, sem atrelar todas as regras ao tamanho físico de pixels na tela. O alcance efetivo de um ataque resulta da posição e do formato da hitbox em relação à hurtbox do oponente.
-
-### 14.2 Conceitos de distância
-
-- **Curta:** região em que agarrões e golpes rápidos de curto alcance são ameaças reais.
-- **Média:** região em que os jogadores disputam aproximação, pokes e controle de espaço.
-- **Longa:** região em que a maior parte dos golpes curtos não alcança; avançar, esperar ou usar um movimento de longo alcance pode ser melhor.
-- **Fora de alcance:** o ataque não toca o oponente e pode deixar o atacante vulnerável à punição por erro (*whiff punish*).
-
-Essas categorias são descrições de design e treino, não limites fixos universais. Personagens e golpes podem usar alcances diferentes.
-
-### 14.3 Pushback e posicionamento
-
-Empurrão no contato é configurado por golpe e pode ser diferente no acerto e no bloqueio. A posição na tela, a parede e a velocidade de movimento precisam ser levadas em conta ao determinar se uma sequência realmente alcança. O motor não deve presumir que uma punição possível em curta distância também será possível após grande empurrão.
-
----
-
-### 14.4 Wall carry, contato com parede e pós-combo
-
-Wall carry é o transporte do oponente durante uma rota de combo até um limite físico da arena; não se confunde com scroll ou zoom da câmera. Arenas devem declarar limites e distância útil em unidades lógicas independentes da resolução dos sprites.
-
-O alvo inclui wall splat, wall combo, wall bounce quando a propriedade do golpe permitir e saídas de parede documentadas. Especificar altura/ângulo 2D de chegada, elegibilidade por estado, reação, duração, dano escalonado e retorno ao chão. Não permitir splats repetidos infinitos ou reativação ilimitada de extensores. Adaptar diferenças de ângulo sem inventar um terceiro eixo.
-
-Rotas de maior dano, maior carry e melhor posição ao levantar são escolhas distintas. Testar ao menos meio da arena, aproximação de parede, contato de parede e parede atrás do atacante. Wall/floor/balcony breaks e transições de cenário não entram automaticamente nessa primeira base; não importar o wall break de Strive por influência visual. Os limites atuais do protótipo não equivalem a um sistema de parede concluído.
-
----
-
-## 15. Dados de personagens e golpes
-
-Personagens devem ser definidos por dados e componentes reutilizáveis sempre que possível. O primeiro protótipo precisa de pelo menos dois personagens de teste para validar confronto, lado, defesa, alcance e comandos.
-
-### 15.1 Dados mínimos por personagem
-
-- identificador estável e nome;
-- atributos básicos, como vida e velocidade de movimento;
-- referências aos sprites, animações, sons e efeitos;
-- estado inicial e estados suportados;
-- lista de golpes e comandos;
-- propriedades especiais, recursos e regras próprias;
-- configuração de colisão corporal e hurtboxes por estado/animação.
-
-### 15.2 Dados mínimos por golpe
-
-| Campo | Descrição |
-|---|---|
-| `id` | Identificador estável do golpe |
-| `input` | Comando reconhecido, incluindo direções, botões e janelas |
-| `startup` | Frames até o golpe poder acertar |
-| `active` | Um ou mais intervalos ativos |
-| `recovery` | Frames de recuperação |
-| `hitstun` | Stun causado no acerto |
-| `blockstun` | Stun causado no bloqueio |
-| `hitLevel` | Alto, médio, baixo, aéreo, agarrão ou outra categoria |
-| `range` | Alcance / configuração das hitboxes |
-| `pushback` | Empurrão no acerto e no bloqueio |
-| `properties` | Cancelamento, invulnerabilidade, armadura, parry etc. |
-| `perfectWindow` | Janela de execução precisa, quando aplicável |
-| `cinematic` | Configuração de cinemática, se aprovada em entrega própria |
-| Referência e versão | URL, patch, convenção de contagem e justificativa de adaptação 2D |
-| Hits e follow-ups | Propriedades por hit, strings, janela de continuação e confirmação |
-| Estados e resultados | FC/WS/WR, normal hit/counter hit, launch, queda e estado final |
-| Combo e parede | Scaling, Screw consumido, carry, splat/bounce e restrições |
-| Linha temporal de poses | Keyframes e respectivos frames lógicos, separados das colisões |
-
-Não é obrigatório que cada golpe use todos os campos; campos opcionais devem ter um padrão seguro e documentado. Os nomes finais podem ser adaptados à implementação, mas precisam manter as mesmas ideias e semântica.
-
----
-
-## 16. Interface e feedback de combate
-
-A interface precisa priorizar a leitura da luta e não cobrir os personagens sem necessidade.
-
-### Elementos de partida
-
-- barras de vida;
-- temporizador e marcador de round;
-- identificação dos jogadores;
-- efeitos visuais e sonoros claros para acerto, bloqueio, parry e golpe fortalecido;
-- indicadores de instrução nos especiais cinematográficos;
-
-### Ferramentas de treino planejadas
-
-- exibir startup, active e recovery do golpe recente;
-- mostrar vantagem de frames no acerto e no bloqueio;
-- alternar visualização de hitboxes e hurtboxes;
-- reiniciar rapidamente posições e vida;
-- permitir que o adversário de treino repita ataques;
-- indicar a sequência de comandos detectada pelo parser de inputs.
-- historico de botoes pressionados.
-- sinalização das paletas de controle escolhidas.
-
-O treino é a ferramenta de desenvolvimento prioritária desta revisão. As funções completas abaixo continuam planejadas; a primeira entrega está delimitada na seção seguinte.
-
-### Treino local e separação da interface
-
-O menu oferece arcade (`A`), PvP (`V`), treino (`T`) e configurações (`C`), também acessíveis por clique ou setas/Enter. Depois vêm a seleção de P1 e a confirmação do Cais. A partida mostra vida, tempo, round, cenário e resultado. A geometria de treino usa preenchimento leve e constante, sem pulsação sobre o sprite. Estados, entradas, colisões, dados de golpes e classificações técnicas de contato pertencem exclusivamente ao treino.
-
-No treino, `P` pausa/retoma; `.` avança exatamente um frame quando pausado; `F2` reinicia posições, vida, histórico e comandos. `G` alterna entre segundo jogador livre, guarda alta, guarda baixa e repetições de soco leve, soco forte ou chute forte. `H` alterna hitboxes/hurtboxes; `I` alterna entradas; `L` alterna velocidade de apresentação entre 100%, 50% e 25%. A lógica continua em 60 Hz e o passo único continua valendo um frame.
-
-`F3` alterna recuperação automática de vida (ligada inicialmente): após 90 frames lógicos consecutivos com ambos no chão, sem ataque, agarrão ou stun, restaura apenas a vida. Não limpa comandos, contatos ou estados e não recupera durante um golpe. `F4` alterna distância inicial entre 96, 144 e 220 unidades e faz um reinício completo. `F2` conserva a distância escolhida e as opções de treino. Teclas mantidas no reinício precisam ser soltas antes de comandar novamente; o passo único descarta repetição e reprocessamento do mesmo evento de teclado.
-
-O treino usa cronômetro livre e não encerra rounds por vida zero. Dano, stun, geometria e comandos permanecem os da luta. A interface conserva os dados do último golpe de cada lado e mostra comando, preparo/atividade/recuperação, altura, dano, tempo restante, distância e resultado/recuperação/stun/vantagem do último contato. Esses valores descrevem o contato ocorrido, sem prometer punição garantida.
-
-O adversário de guarda fica neutro quando não há ataque, assume direção defensiva durante ataques e permanece sem deslocamento intencional. As repetições usam uma entrada real a cada 120 frames lógicos e passam pelo parser do jogador. Trocar a opção não cancela ataques. Gravação livre e respostas automáticas de punição continuam pendentes.
-
-### Contrato de animação
-
-- Cada estado registra seu frame lógico de entrada. Loops e reações amostram poses usando esse tempo, sem relógio independente de renderização.
-- O manifesto pode declarar `frameDurations` para segurar poses por durações distintas. Em ataques, esses números são pesos distribuídos dentro da fase lógica; a soma não muda startup, atividade ou recuperação.
-- Revisão da cadência de Gris (21/10/2026): loops de guarda/locomoção retornam pelas poses intermediárias e usam holds explícitos, inclusive no menu. Os cortes sustentam uma pose legível durante a atividade e mostram o seguimento da tesoura no começo da recuperação antes de recolher. Uma pose de seguimento na recuperação não mantém a hitbox ativa nem aplica um segundo contato; tempos de combate, dano, stun e caixas continuam definidos pelo livro do personagem.
-- Startup, atividade e recuperação de cada golpe têm clipes próprios; a pose de contato deve ocupar os frames em que a hitbox realmente está ativa.
-- O salto pode declarar poses de subida, ápice e descida, selecionadas pela velocidade vertical. A posição física e a aterrissagem vêm da simulação.
-- A orientação visual segue o lado do adversário e a orientação autorada no asset. Recuo e backdash têm clipes próprios; recuar não inverte a caminhada normal.
-- Novos contatos podem reiniciar a reação sem depender de trocar a chave do clipe. Parar a lógica também para as poses; renderizar mais vezes o mesmo frame não avança animação.
-- O manifesto pode corrigir escala uniforme e âncora vertical por quadro do atlas. São correções autoradas de apresentação, nunca normalização automática por altura da silhueta; agachar reduz a altura do corpo sem ampliar cabeça e membros. Não alteram posição nem colisão da simulação.
-- As fases de ataque não tingem o corpo inteiro: a troca de preparo/contato/recuperação deve preservar as cores da roupa e evitar o efeito de piscar.
-- Pivô nos pés, escala comum, direção original por clipe e cobertura dos golpes são requisitos de entrega. O manifesto é validado antes da partida; clipes provisórios e faltantes precisam ficar registrados na matriz de produção.
-
-O detalhamento de autoria, revisão e cobertura das animações está em [`docs/animacao.md`](./docs/animacao.md).
-
----
-
-## 17. Arquitetura lógica sugerida
-
-Uma organização possível, sujeita à estrutura real do repositório:
-
-```text
-src/
-  app/              # entrada do app, rotas/telas e configuração
-  scenes/            # menu, seleção, partida e resultado
-  rendering/         # apresentação Phaser: sprites, animações, efeitos e câmera
-    animations/      # mapeamento dos modos lógicos para animações visuais
-    stages/          # catálogo, composição de camadas e câmera com parallax
-  input/             # teclado, gamepad, remapeamento e buffer de comandos
-  engine/
-    simulation/      # relógio fixo e ordem de atualização
-    combat/          # estados, golpes, defesa, agarrões, parry e combos
-    collision/       # hitboxes, hurtboxes, throws e checagem de contato
-    characters/      # estado e comportamento dos personagens
-    data/            # tipos e definições de personagens/golpes
-  ui/                # HUD, seleção de paleta e menus
-  assets/
-    animations/      # sequências/exportações de animação
-    sprites/         # spritesheets e imagens-fonte por categoria
-    scenes/          # fundos, props e arte dos cenários/arenas
-  tests/             # testes automatizados de regras
-```
-
-Essa árvore é uma orientação, não uma exigência de criar todos os diretórios antecipadamente. A divisão importante é manter a lógica de combate desacoplada da representação visual.
-
-No projeto atual, os arquivos de arte carregáveis ficam em `src/assets/animations/`, `src/assets/sprites/` e `src/assets/scenes/`. As classes Phaser de menu e luta ficam em `src/scenes/`; os adaptadores de animação Phaser ficam em `src/rendering/animations/`. Sprite sheets devem manter os quadros de um personagem juntos quando compartilharem escala e ponto de pivô. Arte e nomes devem ser originais; não colocar código de cena ou regras de combate dentro dos diretórios de imagens.
-
-### Cenários em camadas
-
-Cada cenário usa `src/assets/scenes/<id>/stage.json`, imagens prontas em `layers/`, originais em `sources/` e README de entrega. O catálogo descobre os manifestos e permite qualquer quantidade de camadas, sem ramificações específicas por cenário. As regras detalhadas de entrega estão em [`src/assets/scenes/README.md`](./src/assets/scenes/README.md).
-
-As camadas compartilham dimensões de referência e escala uniforme; `groundY` alinha a linha dos pés ao piso lógico. `depth` define a ordem de desenho, `x`/`y` ajustam o encaixe e `parallax` define a fração do deslocamento horizontal da câmera. Chão e objetos apoiados nele usam o mesmo fator `1`; planos distantes usam fatores menores. Áreas vazias devem ser transparentes, sem cor de chroma visível.
-
-Props podem declarar `contentScale` e `scaleOrigin` para corrigir seu tamanho dentro da composição, sempre com escala uniforme nos dois eixos e um ponto de apoio explícito. A escala comum do cenário e o fator de parallax continuam compartilhados. No Cais, as cargas usam `contentScale: 0.76`, ancoradas no centro horizontal e na base da arte, preservando o apoio no chão. O Tester usa uma célula visual de 256 × 256 em vez de 220 × 220, aproximando a altura desenhada em idle (cerca de 153 unidades) da hurtbox em pé (152). Essa correção de apresentação não muda os dados de combate.
-
-A câmera acompanha horizontalmente o centro dos lutadores, limitada ao cenário, sem zoom ou movimento vertical. A interface fica fixa na tela. Centralizar a arena no espaço visual não muda sua largura jogável, os comandos, o relógio de 60 Hz ou as regras de colisão. Imagens de cenário não definem obstáculos.
-
-O cenário inicial é **Cais**, com três camadas: fundo (`0.25`), chão (`1`) e caixas (`1`). Caixas e chão mantêm a mesma proporção e deslocamento; a posição das cargas é ajustada no manifesto para apoiá-las visualmente atrás dos lutadores. Novos cenários podem ter quatro, cinco ou mais camadas com o mesmo sistema.
-
-### 17.1 Parser de comandos
-
-O parser mantém um buffer curto de entradas com direções e botões por frame. Deve reconhecer:
-
-- toques e comandos simultâneos;
-- sequências com direções anteriores;
-- tempo máximo entre partes de um comando;
-- troca correta de `F` e `B` conforme o lado;
-- tolerância configurável para entradas simultâneas;
-- prioridade de reconhecimento quando um comando também corresponde a um golpe mais simples.
-
-A prioridade de comando precisa ser previsível. Uma entrada `1+3`, por exemplo, não deve às vezes acionar um agarrão e às vezes dois ataques sem uma regra explícita.
-
-Prioridade provisória no protótipo: primeiro o comando com mais botões que corresponda exatamente à entrada; depois a variante com direção explícita; por fim o comando genérico. Em empate, manter a ordem declarada nos dados dos golpes. O buffer retém os últimos 30 frames e a janela de simultaneidade é de 3 frames, incluindo o frame inicial e final.
-
-### 17.2 Máquina de estados
-
-Cada personagem deve ter estados claros, como neutro, movimento, startup, ativo, recuperação, bloqueio, hitstun, blockstun, agarrado, agarrando, queda, levantando, parry e especial cinematográfico. Ações incompatíveis não devem ser ativadas ao mesmo tempo sem uma regra específica de cancelamento ou interrupção.
-
-### 17.3 Ordem de resolução de um frame
-
-A ordem final será confirmada por testes, mas deve ser explícita e estável. Uma sugestão inicial:
-
-1. Capturar as entradas do frame.
-2. Atualizar o buffer e reconhecer comandos.
-3. Aplicar movimento e transições autorizadas de estado.
-4. Atualizar as fases dos golpes e posições de hitboxes/hurtboxes.
-5. Detectar contatos entre ataques, corpos e agarrões.
-6. Resolver regras de invulnerabilidade, parry, defesa, agarrão e acerto conforme prioridade definida.
-7. Aplicar dano, stun, empurrão, cancelamentos e consumo de recursos.
-8. Avançar timers e determinar quem volta a poder agir.
-9. Emitir eventos para a camada visual/sonora.
-
-A lista é uma proposta; o importante é que a ordem seja documentada, testada e nunca dependa do acaso ou da taxa de quadros de renderização.
-
----
-
-## 18. Testes e critérios de qualidade
-
-O projeto deve crescer com testes pequenos e reproduzíveis. No mínimo, criar testes para:
-
-- `F` e `B` mudando corretamente quando os personagens trocam de lado;
-- reconhecimento de `1`, `2`, `3`, `4` e combinações simultâneas;
-- comandos diagonais;
-- startup, janela ativa e recovery;
-- acerto versus bloqueio;
-- bloqueio alto/baixo e categorias de ataque;
-- agarrões, alcance e quebra;
-- parry bem-sucedido, falho e incompatível com uma categoria;
-- janela frame-perfect, incluindo o último frame válido e o primeiro inválido;
-- vantagem positiva, neutra e negativa;
-- distância, empurrão e whiff punish;
-- golpes que se acertam simultaneamente;
-- sequência cinematográfica e seus limites de sucesso;
-- a mesma sequência de inputs produzindo o mesmo resultado na mesma versão da simulação.
-
-### Critérios mínimos de qualidade
-
-- Nenhum ataque muda de resultado só porque a renderização caiu de 60 FPS para menos.
-- Toda propriedade especial possui uma regra escrita e um teste representativo.
-- O jogador recebe feedback consistente quando um comando é reconhecido ou falha.
-- Os golpes não usam valores de frame duplicados e contraditórios em vários arquivos.
-- É possível ajustar o balanceamento alterando dados, sem reescrever toda a lógica.
-
----
-
-## 19. Plano de desenvolvimento
-
-A ordem executável, as dependências e os checklists estão em [`pipeline.md`](./pipeline.md). Os marcos abaixo resumem o produto esperado sem duplicar o registro de progresso.
-
-| Marco | Produto esperado | Critério de saída |
+| Arquétipo | Papel de design | Ideia temática futura, sem identidade aprovada |
 | --- | --- | --- |
-| M1 — Fundação | Luta local, simulação fixa, entradas e movimento | Lados, chão e limites corretos, sem dependência do FPS |
-| M2 — Núcleo | Golpes, defesa, colisões, stun, rounds e comandos por personagem | Contatos e estados reproduzíveis, sem autoridade da arte sobre o combate |
-| M3 — Animação coerente | Matriz de ações, fases visuais, loops, escala e cenários em camadas | Ações legíveis nos dois lados, pés estáveis e contato/recuperação sincronizados |
-| M4 — Punições e treino | Vantagem correta, instrumentos de treino e respostas por estado/alcance | Explicar e reproduzir punição, atraso e falha por distância |
-| M5 — Combos e recuperação | Strings, cancelamentos, aéreo, queda e levantada documentados por personagem | Rotas com início/fim e devolução previsível do controle, sem loops infinitos |
-| M6 — Fluxo e feedback | Seleção, controles, HUD, áudio, acessibilidade e conteúdo próprio | Menu até resultado/revanche completos e legíveis |
-| M7 — Publicação | Instalação/build reproduzíveis, desempenho e assets revisados | Demo publicável após validação e aprovação |
+| Shoto | Base versátil para comparação dos demais | Hitman / John Wick como anotação conceitual |
+| Grappler | Proximidade e ameaça de agarrões | Personagem grande cyberpunk |
+| Stance | Alternância entre posturas | Kung fu chinês |
+| Puppet | Controle de personagem e entidade auxiliar | Mafioso demoníaco / Constantine como anotação |
+| Rushdown | Aproximação e pressão ofensiva | Viking berserker |
+| Zoner | Controle de espaço e distância | Cowboy |
+| Mix-up | Variação de ameaças e respostas defensivas | Samurai |
+| Gimmick | Regra particular que define suas decisões | Pirata de sorte, nota de nome “Nimbus” |
+| Set play | Preparação de situações e pressão planejada | Caçador de bruxas / médico da peste |
 
-M1 e M2 aproveitam a fundação já criada. A prioridade é homologar o livro autoral de Ayla (§1.3), usando M3 e M4 para conferir apresentação e evoluindo M5 até combos, parede e levantamento reproduzíveis. Não ampliar o elenco antes dessa baseline. A migração visual HD ocorre depois da validação mecânica em pixel art.
+Essas descrições orientam diferenças de jogo; não são catálogos ou regras fechadas. As referências nominais são notas criativas, não instruções para reproduzir personagens. **Nenhuma delas define o visual do shoto inicial.** Composite é uma décima ideia exploratória, fora dos nove arquétipos principais e sem produção prevista.
 
-Especiais cinematográficos, times, assistentes, múltiplos saltos, medidores, IA completa e online dependem de decisões explícitas e entregas próprias. Não são pré-requisitos para fechar a primeira luta local.
+Primeiro definir e equilibrar o shoto. Só depois criar e balancear os outros personagens em relação a essa referência, um por vez. Não fabricar nove kits em paralelo nem fixar confrontos antes de existir a base.
 
----
+## 4. Golpes e combos de autoria manual
 
-## 20. Decisões em aberto
+O usuário criará os combos **manualmente, um por um**. Não gerar um catálogo, preencher combinações possíveis, restaurar receitas antigas ou assumir rotas com base apenas no arquétipo.
 
-As decisões abaixo não impedem o início do protótipo. Até serem confirmadas, usar padrões configuráveis e evitar espalhar suposições pelo código. As regras provisórias de rounds, sequências e elenco de teste estão definidas nesta especificação e implementadas na Etapa 2 de `pipeline.md`.
+As notas `1,1,1`, `2,2,2` e `3,3,3` exemplificam **combos fechados** a especificar. Não são três receitas implementadas, aprovadas ou necessariamente garantidas no bloqueio. “etc.” não autoriza gerar outras sequências. Cada passo exige sua entrada; a nota não autoriza executar o combo inteiro com um botão.
 
-- **Produção final da arte:** direção fechada em HD 2D com aparência de volume/cel shading inspirada em Strive; definir resolução de autoria, orçamento de quadros e cronograma de migração integral de personagens, menus, HUD, efeitos e cenários. Pixel art continua provisório.
-- **Interações da arena:** wall carry, splat, combos de parede e queda são metas aprovadas; faltam tabelas, durações e limites quantitativos. Quebras de cenário e objetos interativos continuam separados.
-- **Mapeamento físico padrão:** teclas iniciais e prioridade de teclado/controle.
-- **Sistema de recursos:** barra de especial, custo de golpes e recuperação de recurso.
-- **Alcance dos QTEs:** quais especiais os usam, se o defensor também participa e como o desempenho altera o resultado.
-- **Parry:** decidir respostas autorais opcionais; não exigir low parry ou consulta externa para aprender o núcleo simples.
-- **Agarrões:** comandos padrão, tipos, janelas de quebra e diferenças entre personagens.
-- **Movimentos verticais:** conjunto de saltos, evasões e regras de ataques que acertam personagens no ar.
-- **Online:** se fará parte de uma versão futura e qual estratégia de sincronização será usada.
-- **Acessibilidade:** opções de simplificação de QTE, remapeamento, contraste, redução de efeitos e leitura sem cor.
+A notação numérica continua útil para conversar: vírgula indica sequência e `+` simultaneidade. O significado final dos botões, os comandos, as posturas e o número de golpes do novo shoto ainda serão definidos; não herdar a associação antiga de cada número a um membro.
 
-### Valores provisórios do primeiro protótipo
+### Processo de aprovação de uma receita
 
-Os valores abaixo servem apenas para validar movimento e interface na fundação. São configuráveis e não representam decisões de balanceamento:
+1. Receber do usuário a sequência e a intenção do combo.
+2. Registrar starter, passos, contexto, condição de acerto, conclusão e comportamento esperado em erro ou bloqueio.
+3. Definir com o usuário as propriedades que faltarem, sem preencher um catálogo inteiro por suposição.
+4. Implementar a receita no livro próprio do shoto; medir dano, duração, alcance, risco, transporte e devolução de controle.
+5. Testar ambos os lados, centro e canto quando aplicável, defesa, erro, interrupção e interação com recursos já especificados.
+6. Conferir no treino e registrar a decisão: proposta, em ajuste ou homologada. Somente então usar como referência para a próxima receita.
 
-- velocidade horizontal: `3` unidades de mundo por frame;
-- impulso inicial do salto: `-11` unidades por frame;
-- gravidade: `0,55` unidades por frame²;
-- largura corporal por personagem: Tester `54` e Dummy `60` unidades (provisório; definida no perfil `collision`);
-- vida inicial: `1000`;
-- duração provisória do round: `99` segundos;
-- quantidade inicial de rounds: `2`;
-- pausa após o resultado do round: `90` frames.
+Não há receitas homologadas nem ficha numérica nova nesta revisão. A bancada está em [docs/shoto-balanceamento.md](./docs/shoto-balanceamento.md).
 
-`match.maxHealth` configura o teto de vida do protótipo; a vida de cada personagem não pode exceder esse teto.
+## 5. Sistemas de combate da nova direção
 
-Reavaliar esses valores ao testar sensação de controle e regras de round; manter a configuração fora da lógica de renderização.
+| Sistema | Decisão | Definições necessárias antes de implementar |
+| --- | --- | --- |
+| Parry | Removido do design | Retirar lógica, input, feedback e lições dependentes na migração |
+| Combo breaker | Incluir uma saída de combos | Comando, elegibilidade, custo, disponibilidade, janela, efeito, risco, imunidade e retorno ao controle |
+| Drive rush | Incluir como mecânica de avanço/pressão | Ativação, custo, velocidade, duração, cancelamentos, vulnerabilidade e interação com defesa |
+| Rage | Incluir como estado/recurso | Gatilho, duração, ganho/consumo, efeitos, persistência e relação com drive rush |
+| Rage art | Ultimate da nova direção | Comando, condição, custo, uso por round, defesa, erro, dano e apresentação |
 
-### Personagem de referência e personagem de teste
+A fala “rage (drive rush)” deixa a relação entre esses dois sistemas aberta. Registrar ambos sem presumir que compartilham barra, que um ativa o outro ou que sejam nomes intercambiáveis. Rage art é a ultimate; não criar uma segunda ultimate paralela.
 
-A primeira personagem de balanceamento é **Ayla**, com catálogo autoral definido em §1.3 e `docs/ayla-golpes.md`. O personagem técnico de teste é **Tester** (`tester`), preservado como padrão da simulação isolada, adversário de treino e adversário de abertura do arcade. A tela inicial permite escolher Ayla ou Gris para P1; Tester não é uma opção pública de personagem. Seus atributos iniciais são 1000 de vida, velocidade de caminhada 2 e impulso de salto -11. Ele usa os golpes básicos, direcionais, abaixados e aéreos listados abaixo. Esses dados servem à validação do motor, não definem balanceamento nem identidade final.
+Não adotar automaticamente o limite antigo de 25% de vida, uma tentativa por round, quatro botões simultâneos ou qualquer outra regra de ultimate do protótipo. Também não presumir air dash, Roman Cancel ou outras mecânicas por causa da referência anime fighter.
 
-Os sprites-fonte de cada personagem ficam em `src/assets/sprites/characters/{id}/`; o manifesto de animações fica em `src/assets/animations/{id}.json`; o mapeamento entre modos de combate, golpes e nomes de animação fica em `src/rendering/animations/`. Consulte os READMEs dessas pastas para o formato esperado dos atlas e manifestos. Os dados de combate são independentes da arte: cada definição em `characters.ts` tem seu livro `moves` e perfil `collision`; cada golpe define sua hitbox de ataque, e cada personagem tem hurtboxes em pé, agachada e aérea.
+### Fundamentos a especificar e medir
 
-O manifesto pode declarar sequências explícitas de quadros, holds, poses aéreas, tamanho visual, orientação original por clipe e associação entre IDs de golpes e clipes. Todos os 26 golpes precisam de cobertura das três fases; reutilizações aproximadas são registradas em `provisionalMoves`. A apresentação espelha cada clipe para acompanhar o adversário e distribui suas poses pelo startup, atividade e recuperação já definidos no livro de golpes; não modifica os tempos lógicos para acomodar a arte. Loops preservam escala, pivô e linha de chão entre quadros.
+Manter movimento, ataque, defesa, distância, vantagem e punição como dimensões de combate. Reavaliar startup, atividade, recuperação em acerto/erro/bloqueio, hitstun, blockstun, cancelamentos, knockdown, juggle, escala de dano e canto para servir à nova direção. Valores e regras de combate do protótipo não equivalem a aprovação para o shoto.
 
-### Golpes provisórios de Tester para validar teclado e hitboxes (diagnóstico histórico)
+A levantada manual pode ser preservada como comportamento de interação: neutro mantém o personagem caído, com escolhas por entrada. Seus golpes, comandos definitivos, proteção e tempos serão revistos junto do novo kit. Treino e IA precisam recuperar controle sem depender dos livros removidos.
 
-Até os personagens e golpes oficiais serem definidos, os botões `1`–`4` disparam ataques básicos de teste. Estes parâmetros são exclusivamente provisórios:
+O objetivo é pressão, rotas e respostas defensivas legíveis, com limites verificáveis contra loops e retorno de controle definido. Medir cada escolha antes de afirmar que o balanceamento se aproxima da referência desejada.
 
-| Botão | Startup | Ativo | Recovery | Dano | Nível |
-|---|---:|---:|---:|---:|---|
-| `1` | 8 | 4 | 13 | 45 | alto |
-| `2` | 11 | 4 | 20 | 65 | médio |
-| `3` | 9 | 4 | 20 | 60 | baixo |
-| `4` | 11 | 5 | 23 | 85 | médio |
+## 6. Fundação técnica preservada
 
-Tester também tem dois chords provisórios para exercitar o parser; números sem decisão de balanceamento:
+- TypeScript, Vite, Phaser e Vitest; navegador de computador como plataforma atual.
+- Simulação determinística em **60 Hz**, independente do FPS de renderização.
+- Separação entre entrada, simulação, colisão, dados, renderização e interface.
+- Hitboxes, hurtboxes, corpo, dano e frames definidos pelo motor; sprites não decidem contato.
+- Livros de golpes e perfis de colisão por personagem, sem impor catálogo universal aos nove arquétipos.
+- Controles remapeáveis, limpeza de entradas em pausa/reset/transições e direções relativas ao oponente.
+- Câmera com escala uniforme, piso compartilhado e cenários em camadas, sujeitos à conferência visual.
+- Treino com pausa, passo por frame, reset, visualização de caixas, histórico de entradas e dados de contato.
 
-| Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
-|---|---|---:|---:|---:|---:|---|
-| `1+2` | soco duplo | 8 | 3 | 18 | 75 | médio |
-| `3+4` | chute duplo | 10 | 4 | 21 | 90 | médio |
+Preservar infraestrutura útil não preserva o conteúdo antigo. Adaptar seletores, IA, treino, tutoriais, HUD, animações e testes às novas definições. Nenhum recurso de rage/breaker pode existir apenas na interface ou alterar regras somente no treino.
 
-Comandos direcionais também terão variantes provisórias, reconhecidas no frame em que o botão é pressionado:
+## 7. Arte e apresentação
 
-| Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
-|---|---|---:|---:|---:|---:|---|
-| `F+1` | soco avançando | 7 | 3 | 16 | 55 | alto |
-| `DF+2` | soco ascendente | 10 | 4 | 21 | 75 | médio |
-| `D+3` | rasteira | 9 | 4 | 22 | 70 | baixo |
-| `UF+4` | chute saltando | 10 | 5 | 24 | 80 | médio |
-| `B+1` | jab recuando | 8 | 3 | 18 | 50 | alto |
-| `DB+2` | cotovelo baixo recuando | 11 | 4 | 22 | 70 | médio |
-| `UB+4` | chute saltando para trás | 11 | 5 | 25 | 78 | médio |
+Seguir [identidade-visual.md](./identidade-visual.md): ilustração 2D original com referência estética em Hades, contornos expressivos, sombras gráficas, cores e texturas pictóricas controladas, silhuetas fortes e leitura em movimento.
 
-Golpes abaixados são selecionados ao pressionar um botão mantendo a direção exata `D` no chão. As diagonais `DF` e `DB` continuam selecionando suas variantes direcionais (ou bloqueio, quando não há ataque), enquanto o personagem adota postura baixa. `D+3` continua sendo a rasteira já cadastrada:
+Guilty Gear Xrd Rev 2 orienta o combate; Hades orienta a arte. A antiga referência visual global em Guilty Gear Strive foi substituída. Não produzir nome, figurino, arma, retrato ou animação final do shoto agora. Usar representação neutra de diagnóstico quando a implementação começar; não reaproveitar identidade de um personagem retirado como identidade aprovada.
 
-| Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
-|---|---|---:|---:|---:|---:|---|
-| `D+1` | jab curto agachado | 7 | 3 | 16 | 42 | médio |
-| `D+2` | gancho agachado | 9 | 4 | 20 | 62 | médio |
-| `D+3` | rasteira | 9 | 4 | 22 | 70 | baixo |
-| `D+4` | chute varrido agachado | 10 | 4 | 23 | 72 | baixo |
+## 8. Qualidade e entrega
 
-Variantes aéreas provisórias ficam disponíveis ao pressionar um botão enquanto o lutador não está no chão. Elas substituem a variante terrestre para aquele botão; direção horizontal pode ser mantida para controlar deslocamento, sem alterar a escolha do golpe nesta etapa:
+Seguir [docs/ci-cd.md](./docs/ci-cd.md): uma branch por objetivo, validação antes do push, CI remota confirmada antes da integração em `development`. `main` e tags pertencem a marcos de release próprios.
 
-| Comando no ar | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
-|---|---|---:|---:|---:|---:|---|
-| `1` | soco aéreo | 7 | 4 | 17 | 50 | alto |
-| `2` | golpe aéreo forte | 9 | 4 | 21 | 68 | médio |
-| `3` | chute aéreo descendente | 8 | 4 | 20 | 62 | médio |
-| `4` | chute aéreo forte | 11 | 5 | 25 | 82 | médio |
+A revisão documental não remove código nem aprova o novo combate. Na migração, atualizar testes de conteúdo com rastreabilidade da regra substituída; não apagar ou enfraquecer testes para mascarar regressões. Preservar cobertura de determinismo, input, colisão, treino e fluxo. Acrescentar testes de novas regras conforme forem definidas, incluindo consumo de recursos, retorno de controle e prevenção de loops.
 
-Os golpes usam hitboxes retangulares de teste e atingem uma vez por execução. `F` e `B` selecionam variantes distintas para os botões 1, 2 e 4; `D+1`, `D+2` e `D+4` selecionam golpes abaixados, e `D+3` é a rasteira. Variantes aéreas substituem a escolha terrestre enquanto o personagem está no ar. Os golpes básicos causam 12–21 frames de hitstun, 10 frames de blockstun e 18 unidades de pushback no acerto/4 no bloqueio. Valores dos demais golpes são provisórios por golpe, não balanceamento final.
+Toda entrega exige instalação reproduzível, testes, build e checagem de diff. Alterações visuais/de controle exigem conferência no jogo. Registrar validação local e CI remota separadamente na pipeline.
 
-Somente no treino, a interface identifica os modos neutro, movimento, dash, no ar, agachado, preparo, ativo, recuperação, defesa, atordoado, bloqueio, agarrado e caído. A hitbox visual aparece apenas nos frames ativos e usa a mesma geometria da checagem de acerto.
+## 9. Decisões abertas
 
-Na primeira implementação, um ataque é iniciado por um novo comando reconhecido. `1+2` e `3+4` selecionam os chords de teste de Tester; combinações sem golpe cadastrado são ignoradas, sem virar ataques simples. Comandos de um botão que possam integrar um chord registrado aguardam o fechamento da janela de 3 frames. No chão, `D` seleciona variante abaixada quando existir; as demais direções selecionam a variante exata e por fim o golpe básico. No ar, escolhe o golpe aéreo do botão. Sequências usam direções relativas ao personagem: `F,F+2` exige soltar e pressionar frente novamente; `D,DF+3` aceita a transição direta de baixo para diagonal. Os passos precisam caber em 12 frames; a sequência reconhecida tem prioridade sobre o golpe simples do mesmo botão.
+- Kit inicial e significado dos botões do shoto; primeira receita manual a receber.
+- Números de vida, dano, movimento, frames, recuperação, cancelamentos e regras aéreas.
+- Regras de combo breaker, drive rush, rage e rage art, inclusive relação entre recursos.
+- Critérios mensuráveis para homologar o shoto antes de abrir o próximo arquétipo.
+- Identidade visual e narrativa do elenco, sem fechar conceitos apenas pelas referências das notas.
 
-A hitbox do chute forte em pé e do chute duplo começa em `yOffset: -126`, acompanhando o chute alto escolhido no atlas; largura/alcance horizontal, categoria média e demais propriedades permanecem os do livro. Essa altura é um dado autorado do golpe, não uma medição automática da imagem. As poses de rasteira usam correção visual uniforme para manter aproximadamente 95 unidades de altura, próxima da postura baixa.
-
-### Regras provisórias de round e elenco
-
-`roundCount` indica o número exato de rounds da luta local. Cada round termina por nocaute (vida chega a zero) ou tempo; no tempo, vence quem tiver mais vida. Vida igual ou nocaute duplo gera empate e não concede ponto. A luta mostra o resultado por 90 frames antes de iniciar o próximo round. Depois do último round, vence quem ganhou mais rounds; igualdade gera empate. `R` reinicia a luta completa usando os valores atuais da configuração. O round reiniciado limpa vida, posições, golpes, stun, dash, buffer e marcador de rounds.
-
-O elenco inclui `Tester` e `Dummy` (`dummy`) para validar atributos e associação de golpes por personagem. Dummy é apenas um segundo conjunto mínimo de dados, não um personagem final.
-
-### Comandos de sequência provisórios de Tester
-
-| Comando | Variante de teste | Startup | Ativo | Recovery | Dano | Nível |
-|---|---|---:|---:|---:|---:|---|
-| `F,F+2` | soco de avanço duplo | 10 | 4 | 22 | 80 | médio |
-| `D,DF+3` | chute de entrada diagonal | 9 | 4 | 21 | 68 | médio |
-
----
-
-## 21. Princípios para futuras contribuições
-
-1. Este arquivo é a referência inicial para regras e decisões do jogo.
-2. Não introduzir uma mecânica nova sem descrever seu propósito, entradas, estados, condições de sucesso/falha e interação com defesa.
-3. Toda regra temporal deve usar frames da simulação, salvo quando for explicitamente uma regra de interface.
-4. Toda propriedade de golpe deve ser fácil de inspecionar e ajustar.
-5. Não misturar animação visual com a autoridade da lógica de combate.
-6. Não reutilizar personagens, sprites, sons, nomes de golpes ou outros recursos protegidos dos jogos de referência. Criar uma identidade original baseada nas características gerais que inspiram o projeto.
-7. Priorizar primeiro uma luta pequena e consistente; expandir elenco e conteúdo depois que os sistemas forem confiáveis.
-8. Quando o comportamento implementado divergir deste documento, atualizar o código ou registrar e documentar conscientemente a decisão de design — não deixar divergências acidentais.
-
----
-
-## Resumo da proposta
-
-Um jogo de luta 2D para navegador com quatro botões e seis ações por postura, execução acessível e profundidade em strings, confirmação, levantamento, dano, extensão, postura e transporte. A simulação é própria, determinística e testável. O catálogo autoral de Ayla e os tutoriais orientam a próxima rodada de comportamento e balanceamento.
-
-### Histórico de movimento técnico — 21/10/2026 (variantes direcionais substituídas por §1.3)
-
-Registro substituído: o jab de avanço anterior está arquivado; `1` é o mesmo golpe em neutro, avanço e recuo, conforme §1.3.
-
-### Fluidez, corrida e controles — 21/10/2026
-
-- Após completar os 12F do dash para frente, continuar segurando avanço inicia `running`. Soltar, inverter direção, agachar, defender, saltar, atacar, receber golpe ou reiniciar interrompe corrida. Backdash não vira corrida. Velocidades próprias: Ayla 5,8, Gris 5,4, Tester 5,4 e Dummy 4,9 unidades/frame. Corrida usa clipe próprio de loop, provisoriamente derivado do avanço acelerado.
-- O enquadramento aproxima a câmera até 1,55× no combate próximo e afasta conforme a distância para conservar ambos os lutadores na tela. Personagens, cenário, projéteis e caixas crescem juntos; a geometria lógica e os tempos não mudam. HUD usa câmera separada sem zoom.
-- Motor e dados mantêm direções relativas e botões 1–4. A apresentação usa setas e as teclas configuradas de cada jogador; padrão P1 J/K/N/M, nas cores azul/rosa/verde/amarelo. Configurações e pause permitem remapear direções/ataques e salvar localmente, sem duplicar uma tecla entre ações/jogadores nem reutilizar atalhos reservados.
-- O treino conserva 24 mudanças de entrada por jogador e mostra as 10 recentes com direção física, teclas coloridas, frame inicial e duração. Inclui soltura/neutro e acordes, conserva entradas durante pausa e limpa no reset. O histórico é somente leitura; não participa do reconhecimento dos comandos.
-
-A revisão de fluidez também atribui volumes de juggle individuais a Gris (88×90, offsetY −40), Tester (90×86, −38) e Dummy (96×82, −36). Antes eles reutilizavam a hurtbox vertical de salto, o que fazia a sequência falhar nesses alvos. Os volumes em pé e salto livre permanecem próprios; reações desenhadas compatíveis ainda precisam de produção.
-
-### Regra revisada de combos livres — 21/10/2026
-
-Esta solicitação do usuário substitui as recuperações de contato/erro descritas nas revisões anteriores: **strikes só entram em recuperação quando algum contato é bloqueado**. Acerto ou erro liberam o lutador ao fim da atividade; startup e frames ativos continuam sendo executados. Não repetir ataque por botão mantido. Agarrões continuam com sua captura, quebra e `throwRecovery` próprios. Esta é a regra autoral atual do protótipo; não afirmar que reproduz a recuperação real de todos os golpes de Tekken.
-
-A janela da string é independente do bloqueio de controle: guardar o último golpe elegível e seu relógio permite continuar `1,1,2` mesmo após ficar livre. O contexto não bloqueia movimento nem outro golpe raiz, expira no fim da janela e é descartado por nova ação, dano ou reset. Fichas e HUD indicam recuperação somente no bloqueio. Golpes multihit conservam essa recuperação se qualquer contato tiver sido bloqueado.
-
-Revisão de 23/10/2026: Ayla usa impulso inicial −10,2 e Gris −9,9 unidades/frame. Ambas usam gravidade inicial/base de juggle 0,34, com acréscimo de 0,055 por contato recebido no ar. Na descida, a gravidade acumulada é multiplicada por 1,6; na subida, não. O primeiro contato aéreo nunca reduz a gravidade inicial, e novos contatos não reiniciam o contador. Sem contatos adicionais, Ayla sobe cerca de 150 unidades e fica 54F no ar (24F de descida); Gris sobe 141 unidades em 52F (23F de descida). Antes: aproximadamente 95/89 unidades, 56/55F totais e 28F de descida. Os acertos comuns conservam seus pequenos impulsos e deterioração existentes; o acúmulo de gravidade encerra o juggle mesmo com contatos repetidos sem novo launcher. Levantamentos aéreos/extensores continuam usando os impulsos menores e orçamento existentes. O terceiro levantamento conserva descida protegida de gravidade 0,8 e queda de 26F. O salto livre não muda. Parâmetros pertencem ao livro de cada lutadora, determinados pelo atacante do combo; os livros históricos preservados não governam este ajuste.
-
-### Limite de levantamentos — 21/10/2026
-
-Cada combo permite dois levantamentos: o inicial e um aéreo. Launchers, inclusive em counter hit, e tentativas aéreas de Screw contam nesse orçamento; acertos comuns não. O terceiro levantamento causa dano e força descida imediata, com velocidade mínima 8 e gravidade 0,8. A vítima fica imune a golpes, projéteis e agarrões durante essa descida e os 26F de queda no chão. Parede não interrompe a queda protegida. A imunidade termina ao levantar ou reiniciar; um novo combo recebe orçamento novo. O treino exibe levantamentos e “QUEDA FORÇADA · IMUNE”. Parâmetros pertencem ao livro da personagem; ver `docs/limite-levantamentos.md`.
-
-### Alinhamento visual do juggle — 21/10/2026
-
-Durante o juggle, a reação visual usa pose aérea própria, com pivô corporal autorado no manifesto alinhado ao centro da hurtbox. Ayla, Gris e Tester deixam de reutilizar a reação em pé ancorada pelos pés. São poses provisórias sustentadas até produção das animações dedicadas. Esta correção é somente de apresentação: não muda posições lógicas, caixas, salto livre, gravidade ou orçamento de levantamentos.
-
-### Recuo nos acertos — 22/10/2026
-
-O recuo horizontal de strikes acertados foi reduzido em 50% nos livros atuais de Ayla, Gris, Tester e Dummy (que deriva seus golpes de Tester), tanto no chão quanto no ar e em projéteis. Exemplo: starters importados de Ayla passam de 28 para 14 unidades, demais strikes importados de 12 para 6. Os valores continuam individuais por golpe; não há multiplicador global no motor. Recuo no bloqueio, deslocamento de agarrões, avanço do atacante e trajetória vertical permanecem iguais. O importador offline gera os novos valores para não desfazer o ajuste.
+Essas lacunas são trabalho futuro explícito. Não preenchê-las copiando o protótipo ou fichas de outros jogos.

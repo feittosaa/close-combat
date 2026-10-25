@@ -1,3 +1,5 @@
+> **Histórico do protótipo anterior — substituído em 25/10/2026.** Este registro preserva evidências e decisões antigas; elenco, combos, números e tarefas abaixo não são especificação ativa. Consulte [base.md](../base.md), [pipeline.md](../pipeline.md) e [identidade-visual.md](../identidade-visual.md). Referências de seções/etapas abaixo pertencem às versões antigas, recuperáveis no Git. Não continuar a produção do elenco retirado.
+
 # Ayla — animações faltantes do livro de combate
 
 As 135 entradas são executáveis com poses provisórias, não animações homologadas de Kazuya. Produzir arte própria, preservando os frames lógicos e caixas. Referência: TekkenDocs / RBNorway; snapshot em `src/engine/data/reference/kazuya.json`.

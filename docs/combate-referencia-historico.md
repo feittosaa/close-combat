@@ -1,3 +1,5 @@
+> **Histórico do protótipo anterior — substituído em 25/10/2026.** Este registro preserva evidências e decisões antigas; elenco, combos, números e tarefas abaixo não são especificação ativa. Consulte [base.md](../base.md), [pipeline.md](../pipeline.md) e [identidade-visual.md](../identidade-visual.md). Referências de seções/etapas abaixo pertencem às versões antigas, recuperáveis no Git. Não continuar a produção do elenco retirado.
+
 # Histórico de referência — substituído em 23/10/2026
 
 Arquivo de rastreabilidade. Estas diretrizes não governam o catálogo autoral atual; consultar `../base.md` e `ayla-golpes.md`. Testes de referência permanecem com fixtures explícitos para proteger funcionalidades do motor.

@@ -1,3 +1,5 @@
+> **Histórico do protótipo anterior — substituído em 25/10/2026.** Este registro preserva evidências e decisões antigas; elenco, combos, números e tarefas abaixo não são especificação ativa. Consulte [base.md](../base.md), [pipeline.md](../pipeline.md) e [identidade-visual.md](../identidade-visual.md). Referências de seções/etapas abaixo pertencem às versões antigas, recuperáveis no Git. Não continuar a produção do elenco retirado.
+
 # Ayla — dados de referência incompletos
 
 A tabela pública não fornece todos os intervalos/recuperações. Estes campos têm estimativas executáveis, não valores homologados. Geometria, escala de dano e dinâmica de juggle são adaptações 2D autoradas em todos os golpes. Conferir também o patch da referência antes do balanceamento final.

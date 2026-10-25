@@ -1,3 +1,5 @@
+> **Histórico do protótipo anterior — substituído em 25/10/2026.** Este registro preserva evidências e decisões antigas; elenco, combos, números e tarefas abaixo não são especificação ativa. Consulte [base.md](../base.md), [pipeline.md](../pipeline.md) e [identidade-visual.md](../identidade-visual.md). Referências de seções/etapas abaixo pertencem às versões antigas, recuperáveis no Git. Não continuar a produção do elenco retirado.
+
 # Fluidez, corrida e leitura do treino
 
 > A continuação em [combos livres](./combos-livres.md) substitui os tempos de recuperação de acerto/erro desta revisão: agora há recuperação somente no bloqueio. Corrida, controles, histórico e enquadramento permanecem válidos.
