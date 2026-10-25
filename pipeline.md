@@ -93,11 +93,14 @@ Branch: `codex/feature-menu-diurno`. Aval manual recebido para aplicar a primeir
 - [x] Registrar em `base.md` e `identidade-visual.md` o padrão de desenho e liberdade de paleta; exigir aval manual para novas imagens exploratórias.
 - [x] Validar instalação, 109 testes em 13 arquivos, build e diff.
 - [ ] Conferir no jogo os modos, configurações, retorno e animação.
-- [ ] Enviar branch, confirmar CI e integrar em `development`.
+- [x] Enviar implementação na branch e confirmar CI remota.
+- [ ] Integrar em `development` após conferência visual.
 
 Critérios: arte correta, opções legíveis, foco claro, movimento discreto, navegação preservada. O personagem continua com representação neutra.
 
 Validação local: `npm ci`, `npm test -- --run`, `npm run build` e `git diff --check` aprovados. Conferência visual bloqueada: o navegador de inspeção reconhece as páginas locais, mas navegação, foco e captura de tela expiram, inclusive em aba nova. Servidor local restrito a `127.0.0.1:5174`. Não há captura ou homologação visual desta alteração; manter a feature fora de `development` até conferir o jogo. O movimento usa ciclo suave de 36 segundos com margem de 4,5% e nove partículas discretas, sem alterar a simulação de combate.
+
+Estado remoto: implementação enviada no commit `473239ba86a15dab887b032efc695831280c1f80`; [CI da branch aprovada](https://github.com/feittosaa/close-combat/actions/runs/40212901225). Sem integração, promoção ou tag. Este registro documental acompanha a branch e não substitui a revisão visual pendente.
 
 
 ### Consolidação funcional
