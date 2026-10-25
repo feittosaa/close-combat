@@ -69,14 +69,14 @@ canvas {
 .combat-pause.inspection button { padding: 8px; font-size: 12px; }
 .command-notation { font-family: Arial, sans-serif; font-size: 1.1em; line-height: 1.65; }
 .command-button { display: inline-block; min-width: 1.35em; padding: 0 .17em; margin: 0 .1em; text-align: center; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; background: #10101a; }
-.control-settings { position: fixed; inset: 0; z-index: 200; background: #080912ed; display: grid; place-items: center; padding: 20px; color: #eee9f2; }
-.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: #1b1927; border: 1px solid #8e748c; padding: 24px; }
-.controls-panel h1 { margin: 0; color: #ffe0a4; letter-spacing: .08em; }
+.control-settings { position: fixed; inset: 0; z-index: 200; background: #100e12df; display: grid; place-items: center; padding: 20px; color: #eee9f2; }
+.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: linear-gradient(135deg, #282024, #17151b); border: 2px solid #b7905c; box-shadow: 0 0 0 5px #171219, 0 24px 80px #000b; padding: 24px; }
+.controls-panel h1 { margin: 0; font-family: Georgia, serif; color: #ffe0a4; letter-spacing: .08em; }
 .controls-panel p { font-size: 13px; color: #c4bbc9; min-height: 1.5em; }
 .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .controls-grid h2 { font-size: 17px; }
 .controls-grid > div > div { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 14px; }
-.controls-panel button { color: #fff1da; background: #302a40; border: 1px solid #8b7393; border-radius: 4px; padding: 9px 14px; cursor: pointer; min-width: 100px; font: inherit; }
+.controls-panel button { color: #fff1da; background: #48302b; border: 1px solid #b7905c; border-radius: 0; padding: 9px 14px; cursor: pointer; min-width: 100px; font: inherit; }
 .controls-panel button:focus-visible { outline: 2px solid #ffd68b; }
 .controls-panel footer { display: flex; justify-content: flex-end; gap: 12px; }
 @media(max-width:600px) { .controls-grid {grid-template-columns:1fr;} }
@@ -84,3 +84,6 @@ canvas {
 .pause-move .command-notation > span { font-size: inherit; color: inherit; }
 .pause-command .command-notation { font-size: 21px; }
 .command-direction { font-weight: 700; letter-spacing: .08em; }
+
+.controls-panel button:hover { background: #793f32; border-color: #f0c68a; }
+.controls-panel h2 { color: #ead3ad; font-family: Georgia, serif; }
