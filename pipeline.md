@@ -69,6 +69,21 @@ Pode ser documentada antes da migração; a implementação depende da base limp
 
 ## Etapa 4 — consolidar modos e apresentação
 
+### Artes para tela inicial — 25/10/2026
+
+Branch: `codex/feature-artes-tela-inicial`. Objetivo: produzir duas propostas de fundo para o menu atual com contorno expressivo, sombras gráficas e textura controlada. Escopo: artes estáticas, sem integração da interface ou definição visual do Shoto.
+
+- [x] Gerar e inspecionar Arena de Brasa e Pátio de Jade, com área de baixo contraste à esquerda para as seis opções.
+- [x] Salvar PNGs originais, dimensões, prompts e orientação de uso em [assets/art/menu/README.md](./assets/art/menu/README.md).
+- [x] Validar instalação, 109 testes em 13 arquivos, build e diff.
+- [ ] Enviar branch, confirmar CI e integrar o pacote de propostas em `development`.
+
+Critério artístico desta entrega: duas alternativas originais sem texto incorporado ou personagens, disponíveis para avaliação. Não equivale à aplicação do guia no jogo. Seleção de fundo, integração e revisão visual no menu continuam pendentes; as imagens foram inspecionadas isoladamente.
+
+Validação local aprovada com `npm ci`, `npm test -- --run`, `npm run build` e `git diff --check`. Ambas as imagens são PNG RGB de 1672 × 941. Nenhuma mudança no runtime: revisão dentro do jogo não se aplica ao pacote de alternativas, mas permanece obrigatória para sua integração visual futura. Estado remoto registrado após o envio abaixo.
+
+### Consolidação funcional
+
 Manter os modos utilizáveis nas etapas anteriores; consolidar aqui o conjunto homologado.
 
 - [ ] PvP local: espelhamento, rounds, vitória, revanche e retorno ao menu.
