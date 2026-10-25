@@ -1,10 +1,10 @@
 # Close Combat — Pipeline de implementação
 
-> **Raiz:** [base.md](./base.md), design 0.5.0 · revisão de 25/10/2026.
+> **Raiz:** [base.md](./base.md), design 0.5.1 · revisão de 25/10/2026.
 > **Entrega:** [docs/ci-cd.md](./docs/ci-cd.md).
-> **Estado:** reinício documental; runtime ainda anterior. Nenhum personagem novo ou sistema novo foi implementado nesta revisão.
+> **Estado:** Shoto inicial implementado; apenas quatro básicos, com representação neutra e modos adaptados. Novos recursos e combos manuais continuam pendentes.
 
-## Objetivo atual — redefinir o design
+## Revisão documental anterior — redefinir o design
 
 Branch: `codex/chore-reinicio-design-shoto`.
 
@@ -24,23 +24,26 @@ Branch: `codex/chore-reinicio-design-shoto`.
 
 ## Etapa 1 — retirar o protótipo de conteúdo
 
-Próxima entrega de implementação, em branch própria.
+Branch: `codex/feature-shoto-inicial`. Objetivo autorizado em 25/10/2026: remover o código anterior e criar Shoto com socos/chutes fracos e fortes. Valores técnicos provisórios estão em `base.md` §10; não criar combos ou mecânicas ainda indefinidas.
 
-- [ ] Inventariar dependências de Ayla, Gris, Tester e Dummy em dados, assets, seleção, Arcade, treino, tutoriais, renderização, ferramentas e testes.
-- [ ] Remover todos do runtime e do conteúdo ativo, incluindo importadores e catálogos antigos. Não manter Tester como exceção de treino ou Arcade.
-- [ ] Remover combos, strings, receitas e balanceamento antigos; definir com o usuário o mínimo necessário para a bancada neutra, sem gerar combos.
-- [ ] Retirar parry, comandos, dados, feedback e exercícios associados.
-- [ ] Disponibilizar uma única base neutra de shoto sem nome/identidade/animação final; permitir confronto espelhado e alvo de treino sem restaurar personagens antigos.
-- [ ] Adaptar PvP local, Arcade PvE, treino e estrutura do treino de combos. Não oferecer lições antigas como conteúdo novo.
-- [ ] Atualizar testes de conteúdo conforme a regra revogada, preservando cobertura técnica; conferir menu → modo → luta/treino → saída.
+- [x] Inventariar dependências de Ayla, Gris, Tester e Dummy em dados, assets, seleção, Arcade, treino, tutoriais, renderização, ferramentas e testes.
+- [x] Remover todos do runtime e do conteúdo ativo, incluindo importadores e catálogos antigos. Não manter Tester como exceção de treino ou Arcade.
+- [x] Remover combos, strings, receitas e balanceamento antigos; definir com o usuário o mínimo necessário para a bancada neutra, sem gerar combos.
+- [x] Retirar parry, comandos, dados, feedback e exercícios associados.
+- [x] Disponibilizar uma única base neutra com nome provisório Shoto, sem identidade/animação final; permitir confronto espelhado e alvo de treino sem restaurar personagens antigos.
+- [x] Adaptar PvP local, Arcade PvE, treino e estrutura do treino de combos. Não oferecer lições antigas como conteúdo novo.
+- [x] Atualizar testes de conteúdo conforme a regra revogada, preservando cobertura técnica; conferir menu → modo → luta/treino → saída.
 
 **Saída:** nenhum personagem ou receita anterior acessível; modos executáveis com a nova base; nenhuma dependência residual de parry. Mudança visual e de controles exige revisão no jogo.
+
+Validação local concluída: `npm ci`, 109 testes em 13 arquivos, build, links locais e diff aprovados. Conferidos no jogo os quatro golpes, guarda sem dano, catálogo com quatro entradas, PvP, Arcade, tutorial básico completo e estado vazio do treino de combos. No build de produção, verificados pausa e avanço único do frame 3 para o 4, sem erros de console. Evidências e rastreabilidade dos testes em [docs/shoto-migracao.md](./docs/shoto-migracao.md). CI remota e integração desta implementação: pendentes do envio da branch.
 
 ## Etapa 2 — especificar sistemas e kit mínimo
 
 Pode ser documentada antes da migração; a implementação depende da base limpa.
 
-- [ ] Receber o kit inicial e a primeira receita manual do usuário.
+- [x] Receber e implementar o kit mínimo de quatro básicos.
+- [ ] Receber a primeira receita manual do usuário.
 - [ ] Definir comandos, vida, movimento, ataque, guarda, agarrões e recuperação do shoto, sem herdar números antigos como aprovados.
 - [ ] Especificar combo breaker: comando, estados elegíveis, janela, custo, efeito, risco e retorno ao controle.
 - [ ] Especificar drive rush: ativação, avanço, custo, cancelamentos, risco e defesa.
@@ -86,7 +89,7 @@ Manter os modos utilizáveis nas etapas anteriores; consolidar aqui o conjunto h
 
 Composite e história/roguelike não pertencem a esta etapa. Consultar [docs/ideias-futuras.md](./docs/ideias-futuras.md), sem iniciar implementação.
 
-## Validação e histórico
+## Validação da revisão documental anterior e histórico
 
 As pipelines anteriores, números de testes e aprovações de Ayla/Gris/Tester ficam no histórico do Git e nos registros auxiliares identificados como históricos. Não indicam avanço nas etapas novas. Infraestrutura existente poderá ser aproveitada após verificação; não reabrir automaticamente tarefas antigas de arte ou combos.
 

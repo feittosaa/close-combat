@@ -51,3 +51,17 @@ describe('KeyboardInput', () => {
     input.destroy();
   });
 });
+
+it('requires a fresh release after reset even if the browser repeats a held attack key', () => {
+  const target = new EventTarget() as Window;
+  const input = new KeyboardInput(PLAYER_ONE_KEYS, target);
+  dispatchKey(target, 'keydown', 'KeyJ');
+  expect(input.read().buttons.has('1')).toBe(true);
+  input.clear();
+  dispatchKey(target, 'keydown', 'KeyJ');
+  expect(input.read().buttons.size).toBe(0);
+  dispatchKey(target, 'keyup', 'KeyJ');
+  dispatchKey(target, 'keydown', 'KeyJ');
+  expect(input.read().buttons.has('1')).toBe(true);
+  input.destroy();
+});

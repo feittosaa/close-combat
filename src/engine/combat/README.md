@@ -1,19 +1,7 @@
-> **Transição de design — 25/10/2026.** Este README descreve o protótipo ainda presente no código/assets. Referências a elenco, combos, balanceamento, parry e etapas antigas não definem o novo design. Seguir [base.md](../../../base.md) e [pipeline.md](../../../pipeline.md); preservar infraestrutura útil, retirar o conteúdo anterior e não produzir novos assets para o elenco removido.
-
 # Combate
 
-Regras de ataques, defesa, agarrões, parry, vantagem e combos. `AttackResolver` resolve contatos e mantém a ordem determinística por frame. Consultar `base.md` antes de alterar semânticas.
+`AttackResolver` resolve um contato por golpe, guarda e trades com geometria compartilhada com a visualização. Não contém parry, agarrões, projéteis, recursos ou reações do elenco anterior. Contatos são coletados antes de alterar os dois jogadores.
 
-## Frames e contexto
+`frameData.ts` calcula vantagem como stun do defensor menos frames futuros de ataque, excluindo o contato. Recuperação é integral em acerto, erro e bloqueio. Punição/contra-ataque exige colisão real; rótulos não alteram dano. `ArcadeController` gera entradas legais do livro do Shoto, sem acerto forçado.
 
-`frameData.ts` define a vantagem **do atacante** como `stun do defensor - recuperação restante do atacante`, excluindo o frame de contato das duas contagens. Positivo significa vantagem de quem atacou. A mesma convenção vale para bloqueios, acertos e arremessos.
-
-`classifyHitContext` inspeciona o adversário antes de aplicar o acerto: golpe bloqueado ainda em atividade/recuperação, golpe que errou ainda em recuperação ou golpe em preparo/atividade. Só um strike que realmente colidiu pode receber os rótulos de punição/contra-ataque; esses rótulos não mudam o dano.
-
-`combatGeometry.ts`, em `engine/collision/`, fornece hitboxes e hurtboxes usadas tanto pelo resolvedor quanto pela inspeção visual. Nenhum collider é inferido dos desenhos.
-
-Recomendação de resposta garantida, buffer ao sair do stun, combos completos e quedas/levantadas continuam pendentes na pipeline.
-
-## Livro contextual opcional
-
-`CombatCommandParser` reconhece o livro contextual por personagem; `strikeTimeline` separa os contatos e intervalos, e `CombatRuntime` aplica recursos, scaling e reações. O resolvedor consome esses dados e mantém compatibilidade com os livros simples. Regras e receitas pertencem à definição do lutador. Fontes e adaptações de Ayla estão em `docs/ayla-combate.md`; não acoplar geometria a sprites.
+Raiz de regras: [base.md](../../../base.md).

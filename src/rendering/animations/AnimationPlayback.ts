@@ -72,7 +72,7 @@ export function getStateAnimationFrame(state: CharacterState, clip: AnimationCli
   const durations = clip.frameDurations ?? frames.map(() => 60 / clip.frameRate);
   const cycle = durations.reduce((sum, duration) => sum + duration, 0);
   const elapsed = Math.max(0, simulationFrame - state.stateStartedFrame);
-  if (['hitstun', 'blockstun', 'grabbed', 'throwRecovery'].includes(state.mode) && state.remainingStateFrames > 0) {
+  if (['hitstun', 'blockstun'].includes(state.mode) && state.remainingStateFrames > 0) {
     return poseAtTime(frames, durations, elapsed * cycle / (elapsed + state.remainingStateFrames));
   }
   return getTimedAnimationFrame(clip, elapsed);
@@ -95,7 +95,7 @@ export function getAttackAnimationFrame(
     duration = move.activeFrames;
   } else if (state.mode === 'recovery') {
     elapsed = state.attack.elapsedFrames - move.startup - move.activeFrames;
-    duration = recoveryFrames(move, state.attack.wasBlocked ? 'block' : state.attack.hitOutcome);
+    duration = recoveryFrames(move);
   } else return undefined;
 
   const frames = getClipFrames(clip);
@@ -160,10 +160,10 @@ export function validateAnimationManifest(manifest: CharacterAnimationManifest):
 
 export function validateAnimationCoverage(manifest: CharacterAnimationManifest, characterId: string, moves: readonly MoveDefinition[]): void {
   const keys = new Set(manifest.clips.map(({ key }) => key));
-  const required = ['idle', 'walk', 'dash', 'jump', 'crouch', 'defense', 'hit', 'blockstun', 'grabbed', 'knockdown', 'throw-recovery']
+  const required = ['idle', 'walk', 'dash', 'jump', 'crouch', 'defense', 'hit', 'blockstun']
     .map((suffix) => `${characterId}-${suffix}`);
   for (const move of moves) {
-    const name = move.combat?.animation.clip ?? manifest.moveClips?.[move.id] ?? move.id;
+    const name = manifest.moveClips?.[move.id] ?? move.id;
     for (const phase of ['startup', 'active', 'recovery']) required.push(`${characterId}-${name}-${phase}`);
   }
   const missing = required.filter((key) => !keys.has(key));

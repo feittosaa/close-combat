@@ -1,5 +1,7 @@
-> **Transição de design — 25/10/2026.** Este README descreve o protótipo ainda presente no código/assets. Referências a elenco, combos, balanceamento, parry e etapas antigas não definem o novo design. Seguir [base.md](../../base.md) e [pipeline.md](../../pipeline.md); preservar infraestrutura útil, retirar o conteúdo anterior e não produzir novos assets para o elenco removido.
+# Testes
 
-<!-- src/tests/README.md -->
+Cobertura da base atual do Shoto, independente do navegador: dados/seleção, input, geometria, ataque e recuperação, guarda, trades, movimento, rounds, treino, tutorial vazio e IA. Controles e câmera usam os contratos preservados; animação genérica usa dados sintéticos sem sprites do elenco retirado.
 
-Testes automatizados da lógica pura, sem abrir navegador nem renderizar sprites. Priorizar as regras listadas em `base.md` §18.
+A rastreabilidade dos testes substituídos com a retirada das regras está em `docs/shoto-migracao.md`. Executar `npm test -- --run`, build e diff antes da entrega. Conferência visual no jogo é separada da cobertura automatizada.
+
+Raiz de regras: [base.md](../../base.md).

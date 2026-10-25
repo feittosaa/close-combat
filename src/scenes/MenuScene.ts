@@ -2,23 +2,19 @@ import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
 import { playableCharacters } from '../engine/data/characters';
 import type { CharacterDefinition } from '../engine/data/characters';
-import { getAnimationManifest, preloadCharacter } from '../rendering/animations/characterAssets';
-import { getClipFrames, getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
 import { defaultStage, stageTextureKey } from '../rendering/stages/stageCatalog';
 import { preloadStage } from '../rendering/stages/StageView';
 import { opponentFor, type MatchMode } from './matchSetup';
 
 const MODES = [
-  { id: 'arcade', title: 'ARCADE', hint: 'Enfrente o computador em uma sequência de lutas.', tag: '1 JOGADOR' },
+  { id: 'arcade', title: 'ARCADE', hint: 'Enfrente o Shoto controlado pelo computador.', tag: '1 JOGADOR' },
   { id: 'versus', title: 'LUTA PVP', hint: 'Dois jogadores no mesmo teclado.', tag: '2 JOGADORES' },
   { id: 'training', title: 'MODO TREINO', hint: 'Pratique comandos, alcances e punições.', tag: 'PRÁTICA LIVRE' },
-  { id: 'tutorial', title: 'TUTORIAL BÁSICO', hint: 'Aprenda ataques, defesa, especiais e agarrões.', tag: 'PASSO A PASSO' },
-  { id: 'combo-tutorial', title: 'TUTORIAL DE COMBOS', hint: 'Conecte sequências e avance pelos desafios.', tag: 'COMBOS' },
+  { id: 'tutorial', title: 'TUTORIAL BÁSICO', hint: 'Aprenda movimento, quatro básicos e defesa.', tag: 'PASSO A PASSO' },
+  { id: 'combo-tutorial', title: 'TUTORIAL DE COMBOS', hint: 'Aguardando suas receitas manuais.', tag: 'COMBOS' },
   { id: 'settings', title: 'CONFIGURAÇÕES', hint: 'Teclas e controles dos dois jogadores.', tag: 'OPÇÕES' },
 ] as const;
-const STYLES: Record<string, string> = {
-  ayla: 'Ágil · Pressão e energia', gris: 'Alcance · Cortes e mobilidade', tester: 'Equilibrado · Lutador de teste',
-};
+const STYLES: Record<string, string> = { shoto: 'Base provisória · Quatro golpes básicos' };
 
 /** Fluxo público: modo → personagem de P1 → cenário → luta. */
 export class MenuScene extends Phaser.Scene {
@@ -28,7 +24,6 @@ export class MenuScene extends Phaser.Scene {
   private fighterIndex = 0;
   private root?: Phaser.GameObjects.Container;
   private loading?: Phaser.GameObjects.Text;
-  private previews: { sprite: Phaser.GameObjects.Sprite; fighter: CharacterDefinition; zoom: number }[] = [];
   private transitioning = false;
   private readonly handledKeyEvents = new WeakSet<KeyboardEvent>();
   private readonly handleKey = (event: KeyboardEvent): void => {
@@ -50,7 +45,7 @@ export class MenuScene extends Phaser.Scene {
   };
 
   private get fighters() {
-    return this.mode === 'tutorial' || this.mode === 'combo-tutorial' ? playableCharacters.filter(fighter => fighter.combos?.length) : playableCharacters;
+    return playableCharacters;
   }
 
   constructor() { super('MenuScene'); }
@@ -62,7 +57,6 @@ export class MenuScene extends Phaser.Scene {
   preload(): void {
     this.loading = this.add.text(this.scale.width / 2, this.scale.height / 2, 'PREPARANDO A ARENA…', { fontSize: '18px', color: '#e6c78d' }).setOrigin(.5);
     preloadStage(this, defaultStage);
-    this.fighters.forEach(f => preloadCharacter(this, f.id, true));
   }
   create(): void {
     this.loading?.destroy(); this.loading = undefined;
@@ -79,20 +73,8 @@ export class MenuScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.keyboard?.off('keydown', this.handleKey);
       this.input.keyboard?.removeCapture(['UP', 'DOWN', 'LEFT', 'RIGHT', 'ENTER', 'ESC']);
-      this.previews = []; this.root = undefined;
+      this.root = undefined;
     });
-  }
-  update(time: number): void {
-    for (const preview of this.previews) {
-      const manifest = getAnimationManifest(preview.fighter.id), clip = manifest.clips.find(c => c.key === `${preview.fighter.id}-idle`)!;
-      const frame = getTimedAnimationFrame(clip, Math.floor(time * 60 / 1000));
-      const scale = (manifest.frameTransforms?.[String(frame)]?.scale ?? 1) * preview.zoom;
-      const size = manifest.displaySize ?? manifest.frameSize;
-      const anchor = manifest.frameTransforms?.[String(frame)]?.footAnchorY ?? manifest.footAnchorY ?? manifest.frameSize.height;
-      preview.sprite.setTexture(manifest.frameTextures?.[String(frame)] ?? manifest.textureKey, frame)
-        .setOrigin(.5, anchor / manifest.frameSize.height).setDisplaySize(size.width * scale, size.height * scale)
-        .setFlipX(clip.sourceFacesLeft ?? false);
-    }
   }
   private text(x: number, y: number, label: string, size = 16, color = '#f8f0e4') {
     const text = this.add.text(x, y, label, { fontSize: `${size}px`, fontFamily: 'Arial, sans-serif', color }); this.root!.add(text); return text;
@@ -105,14 +87,12 @@ export class MenuScene extends Phaser.Scene {
     this.text(x + w / 2, y + 12, label, 14).setOrigin(.5, 0);
     rect.on('pointerover', () => rect.setFillStyle(0xc24b60)).on('pointerout', () => rect.setFillStyle(0xa63c50)).on('pointerdown', action);
   }
-  private preview(fighter: CharacterDefinition, x: number, y: number, zoom: number) {
-    const manifest = getAnimationManifest(fighter.id), clip = manifest.clips.find(c => c.key === `${fighter.id}-idle`)!;
-    const frame = getClipFrames(clip)[0];
-    const sprite = this.add.sprite(x, y, manifest.frameTextures?.[String(frame)] ?? manifest.textureKey, frame);
-    this.root!.add(sprite); this.previews.push({ sprite, fighter, zoom });
+  private preview(_fighter: CharacterDefinition, x: number, y: number, zoom: number) {
+    this.box(x - 24 * zoom, y - 144 * zoom, 48 * zoom, 144 * zoom, 0xb7aabf).setStrokeStyle(2, 0xf1dfc4);
+    this.box(x + 12 * zoom, y - 128 * zoom, 6 * zoom, 6 * zoom, 0xffffff);
   }
   private render(): void {
-    const root = this.root; if (!root) return; root.removeAll(true); this.previews = [];
+    const root = this.root; if (!root) return; root.removeAll(true);
     const { width, height } = this.scale;
     const titles = { home: '01 / MODOS', fighter: '02 / PERSONAGEM', stage: '03 / CENÁRIO', settings: 'CONFIGURAÇÕES' };
     this.text(width - 42, 40, titles[this.page], 13, '#d9bd8d').setOrigin(1, 0);
