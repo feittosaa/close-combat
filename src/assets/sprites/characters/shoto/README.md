@@ -22,7 +22,7 @@ Corrida removida. Quatro básicos e guardas agachada/aérea usam clipes próprio
 - `source/*-magenta.png`: fontes aprovadas preservadas.
 - `source/*-auburn.png`: edições pelo `image_gen` embutido, uma por folha, alterando apenas o cabelo para vermelho acobreado escuro. As poses, vestuário e composição foram preservados. Prompts e origem em `source/auburn-edits.json`.
 - `alignment.json`: raízes X/Y e escala autoradas por folha/quadro. O ponto de apoio do agachado foi corrigido; não usar centro da silhueta para alinhar braços ou abas móveis.
-- `*.png`/`*.atlas.json`: 116 quadros RGBA, 21 faixas de uma linha, sem trim. Locomoção/guardas: células 768 × 768, raiz 384/720. Ataques: 1152 × 768, raiz 576/720. Largura máxima 6912 pixels, mesma escala uniforme por altura em todos os clipes.
+- `*.png`/`*.atlas.json`: 120 quadros RGBA, 21 faixas de uma linha, sem trim. Locomoção/guardas: células 768 × 768, raiz 384/720. Ataques: 1152 × 768, raiz 576/720. Largura máxima 6912 pixels, mesma escala uniforme por altura em todos os clipes.
 - `preparation.json`: medidas da transformação executada. `verification.json`: limites opacos e medição independente do pé plantado.
 
 Reproduzir da raiz do repositório com Python, Pillow, NumPy e SciPy:
@@ -62,11 +62,21 @@ Fontes, células 768 × 768, alpha e raiz 384/720 permanecem. Desenho exibido un
 | heavy-punch | 90–95 | Mesma distribuição pelas fases reais do soco forte |
 | light-kick | 96–101 | Mesma distribuição pelas fases reais do chute fraco |
 | heavy-kick | 102–107 | Mesma distribuição pelas fases reais do chute forte |
-| crouch-defense | 108–111 | 0,1,2,3,2,1 a 6 FPS, sempre agachado |
-| air-defense | 112–115 | 0,1,2,3,2,1 a 6 FPS, guarda aérea fechada |
+| crouch-defense | 108–113 | 108/109 entrada/saída; ciclo 110,111,112,113,112,111 a 6 FPS |
+| air-defense | 114–119 | 114/115 entrada/saída; ciclo 116,117,118,119,118,117 a 6 FPS |
 
 Fontes magenta originais `source/*-combat.png`, prompts integrais e referências em `source/combat-generation.json`, gerados pela ferramenta embutida image_gen. A preparação usa chromakey balanceado nestas seis folhas para preservar vinho/pele. `alignment.json` registra raízes e escala por folha; a guarda aérea usa uma raiz virtual abaixo dos pés para não somar uma segunda trajetória ao salto físico. Os quatro atlas mais largos mantêm o centro como raiz e não mudam a altura/escala do personagem. A correção RGB recebe a largura real da célula, inclusive 1152, preservando sombras e alpha sem quantização.
 
 `shotoCombatSprites.ts` consulta os dados reais do golpe e `elapsedFrames`: nenhum relógio paralelo nem mudança de balanceamento. As poses ativas coincidem com os frames ativos; o desenho não define a hitbox. Guardas são escolhidas antes da locomoção conforme grounded/crouching. `B`/`DB` durante ameaça permite guarda aérea contra altos/médios, com gravidade e movimento aéreo preservados; baixo exige chão. Não há golpes aéreos ou agachados novos.
 
 Conferência desta entrega: `docs/evidence/shoto-golpes-guardas/`. A branch é mantida para revisão; qualquer merge em development exige pedido explícito do usuário.
+
+## Autoridade de identidade e revisão canônica
+
+Referência principal obrigatória: `assets/art/characters/shoto/turnaround.png`, original reenviado pelo usuário. Preservar rosto maduro estreito, bigode e cavanhaque pontudo, coque/mecha, corpo esguio, proporção cabeça/tronco, pele morena, cabelo castanho discreto e couro castanho muito escuro. Em todo personagem futuro, usar seu próprio turnaround aprovado. Nunca usar apenas uma animação derivada para gerar a próxima.
+
+Fontes atuais: `source/*-canonical-v2.png`, editadas pela ferramenta embutida image_gen com turnaround + idle/postura existente + ação anterior. Prompts integrais, referências e origem em `source/canonical-generation.json`; fontes anteriores preservadas como histórico. Repreparar as seis folhas pelo script com os nomes dos clipes ou executar preparação completa. `alignment.json` contém raízes/escala autoradas; corpo em pé parte dos mesmos 631 pixels de altura do idle, sem aumentar a escala de renderização. O verificador limita aumento de altura nos ataques e mede deriva do pé da guarda baixa (até 3 pixels); isso não mede nem homologa identidade facial.
+
+Cada guarda recebeu duas intermediárias adicionais, totalizando seis poses por folha e 120 desenhos no conjunto. Entrada/saída dos braços usa 4F; o ciclo fechado usa as quatro poses finais, inclusive em blockstun. Ao começar guarda baixa em pé, a descida usa 64–67 em 4F; ao levantar da guarda, reverte esse conector. Impactos podem fechar a guarda imediatamente. A entrada dos golpes usa 72/73 dentro dos dois primeiros frames de startup; o jab usa 73/72 nos dois últimos frames de recovery, sem alterar tempos de combate. Os demais golpes terminam com suas poses de retorno autoradas. Todas as poses continuam opacas.
+
+`airborneStartedFrame` guarda o início lógico do salto durante mudanças de guarda/stun, sem alterar física: ao soltar a guarda aérea, o salto não reinicia a sequência de subida. Conferência desta revisão em `docs/evidence/shoto-identidade-canonica/`.

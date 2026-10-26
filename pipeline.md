@@ -298,3 +298,16 @@ Regra persistente atualizada em AGENTS.md, docs/ci-cd.md e base.md: commits/push
 - [x] Auditoria final: nenhuma integração em development, branch mantida.
 
 Validação local desta branch: npm ci, 164 testes/22 arquivos, build, verificador dos 116 frames e diff aprovados. Revisão no jogo dos seis clipes em ambos os lados, com impactos, bloqueios reais, retorno e reset. Evidências em docs/evidence/shoto-golpes-guardas. Os ataques usam células 1152×768 com a mesma altura/escala; guardas 768×768. Novo módulo amostra as fases reais; guarda aérea passa a ser alcançável com B/DB, sem suspender gravidade, sem novos golpes ou mudança dos básicos. Código/arte enviados em `4b6eeebe97b4416919df5dc6bdafab60ee973bb4`, com [CI da feature 40351472690](https://github.com/feittosaa/close-combat/actions/runs/40351472690) aprovada. Branch local/remota mantida para revisão; development permanece `a5930d901654feb419570ff642acc6025d20daed` e main `77a4c939c9ccdf028eed5f334132f65368dbae30`. Nenhum merge, promoção ou tag. Este fechamento altera apenas o registro documental e terá a própria CI verificada antes da conclusão; resultado do commit final no relato ao usuário.
+
+### Revisão de identidade dos seis clipes — mesma branch
+
+Feedback do usuário: rosto/traço divergentes do turnaround, cabeça/corpo maiores nos socos, pele mais vermelha e sapatos mudando de tom. Revisar socos/chutes fraco/forte e guardas agachada/aérea usando o turnaround original como autoridade; comparar à locomoção e preservar transições. Pedido explícito para continuar em `codex/feature-shoto-golpes-guardas`, sem merge.
+
+- [x] Preservar turnaround no projeto e registrar regra permanente por personagem em AGENTS.md/base.md.
+- [x] Corrigir seis fontes com a referência canônica e preservar prompts/proveniência.
+- [x] Repreparar raízes/escala; conferir identidade, cores e continuidade no jogo.
+- [ ] Validar testes/build/diff/verificador e enviar a mesma branch, conferindo CI sem merge.
+
+Revisão local concluída: seis fontes canônicas v2 preservadas, 120 quadros em 21 atlas, mesma escala corporal. Guardas recebem duas intermediárias adicionais; ligação de postura reaproveita conectores autorados, ataques usam fechamento/reabertura sem atrasar contatos. Corrigido relógio visual do salto para sobreviver à guarda/stun. 167 testes/22 arquivos, build, diff e verificador aprovados; seis clipes conferidos nos dois lados e evidências em docs/evidence/shoto-identidade-canonica. Sem novo filtro rígido de cor, sem física/balanceamento alterados. Envio/CI da revisão pendentes; desenvolvimento permanece na mesma branch sem merge.
+
+Regressão adicional: interromper a guarda após um único frame usa somente a profundidade alcançada; mantém a descida se D continuar, sem saltar para braços fechados.

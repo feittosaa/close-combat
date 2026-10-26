@@ -8,3 +8,5 @@
 - Atualizar a documentação e relatar o estado real do remoto. Não confundir validação local com CI remota aprovada.
 
 - Após merge e CI aprovada em `development`, encerrar a branch finalizada local e remotamente, verificando ancestralidade e ausência de trabalho ativo. Preservar branches com trabalho pendente, `main`, `development` e tags.
+
+- Arte de personagens: usar sempre o turnaround canônico do personagem como referência primária em geração, edição e revisão de qualquer animação, junto às poses existentes para continuidade. Para Shoto: `assets/art/characters/shoto/turnaround.png`. Não usar uma animação derivada como única referência de identidade. Conferir rosto/cavanhaque, proporção cabeça-corpo, silhueta, pele, cabelo, roupa e sapatos em todos os quadros; incluir transições autoradas e revisar no jogo antes de entregar. Vale para todos os personagens futuros com sua própria referência aprovada.

@@ -8,10 +8,10 @@ const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{
 vi.mock('phaser', () => ({ default: {} }));
 const initial = () => new Simulation(createGameConfig(1024,576)).snapshot().characters[0];
 
-it('entrega 116 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
+it('entrega 120 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
   const frames = Object.assign({},...Object.values(atlasFiles).map(a=>a.frames));
-  expect(Object.keys(frames)).toHaveLength(116);
-  for (let i=0;i<116;i++) {
+  expect(Object.keys(frames)).toHaveLength(120);
+  for (let i=0;i<120;i++) {
     const f = frames[String(i) as keyof typeof frames];
     expect(f).toBeDefined();
     expect(f.trimmed).toBe(false);
