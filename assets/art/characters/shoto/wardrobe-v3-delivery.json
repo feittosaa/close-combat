@@ -1,0 +1,117 @@
+{
+  "tool": "image_gen built-in",
+  "identity": "turnaround.png",
+  "wardrobe": "turnaround-costume-v3.png",
+  "acceptedSources": {
+    "idle": {
+      "source": "idle-wardrobe-v3.png",
+      "sha256": "62321b046806abc928a840c468573961c0775eea5c0826a90e708c934c6e41a5",
+      "frames": 8
+    },
+    "walk": {
+      "source": "walk-wardrobe-v3.png",
+      "sha256": "9fec9ea77248493265f6cdee449992d691d31fd5ac9708cb82829976266bb3b6",
+      "frames": 8
+    },
+    "crouch": {
+      "source": "crouch-wardrobe-v3.png",
+      "sha256": "ea2c68b3fd95a17c468ec9fb84c1b427dd0135a8088d8c33bdee2ef16ab96186",
+      "frames": 6
+    },
+    "jump": {
+      "source": "jump-wardrobe-v3.png",
+      "sha256": "8638578a59ccb119e4d1628360e23b99499b401a6ede6dbaf86e573dd4763676",
+      "frames": 8
+    },
+    "defense": {
+      "source": "defense-wardrobe-v3.png",
+      "sha256": "426c266772524f2b1ba1a3af4f83c699ded82db14f138fc2a51f6b1697071048",
+      "frames": 6
+    },
+    "walk-backward": {
+      "source": "walk-backward-wardrobe-v3.png",
+      "sha256": "6cad12d75357f79dc69a7e1f9cca884ac616ac171db6eed37e7dd515be06cf69",
+      "frames": 8
+    },
+    "dash": {
+      "source": "dash-wardrobe-v3.png",
+      "sha256": "298f26d86ebfa879d5f7a65d6ea5de5dea522d222b54302ea5793dff23fd127e",
+      "frames": 6
+    },
+    "backstep": {
+      "source": "backstep-wardrobe-v3.png",
+      "sha256": "05ebf8c4939b291c5e4d5ae37e6f6b0670e8e8b8375e5dd6f2377105d46d3407",
+      "frames": 6
+    },
+    "enter-walk": {
+      "source": "enter-walk-wardrobe-v3.png",
+      "sha256": "00d5fb45c7ca6765c22e4a6ab796585f3e66efd60fa814631898a74961a407a2",
+      "frames": 4
+    },
+    "enter-backward": {
+      "source": "enter-backward-wardrobe-v3.png",
+      "sha256": "a2b17de95588952ae2346136cc1dd6c05e6ecef160cfd94999082da6db941775",
+      "frames": 4
+    },
+    "enter-crouch": {
+      "source": "enter-crouch-wardrobe-v3.png",
+      "sha256": "e8b6daa2aad607278fda39b522cdd7f773e0081c7c300b53587da1d0d6e42432",
+      "frames": 4
+    },
+    "enter-jump": {
+      "source": "enter-jump-wardrobe-v3.png",
+      "sha256": "cef3c52869c24c5d32b58abdf6e23d19c09fa20838f55b65c4663b0aa3f5bc33",
+      "frames": 4
+    },
+    "enter-defense": {
+      "source": "enter-defense-wardrobe-v3.png",
+      "sha256": "d7e79561d9a847f59615c07472f041771514d7e65ab1b39aac07f62fb576eea4",
+      "frames": 4
+    },
+    "enter-dash": {
+      "source": "enter-dash-wardrobe-v3.png",
+      "sha256": "72754343c71feea2f699621b693eeeff44b7443452b8b12b320c33afab959bf1",
+      "frames": 4
+    },
+    "enter-backstep": {
+      "source": "enter-backstep-wardrobe-v3.png",
+      "sha256": "1c273bc93443340dc54c2831f9fc3c3fe00e34e15a86fa1f2e74c21f16cc73ff",
+      "frames": 4
+    },
+    "light-punch": {
+      "source": "light-punch-wardrobe-v3.png",
+      "sha256": "c6834520c66a72105648a8fb5a875591830aa2beccda0336e8fe05c4a40d9c76",
+      "frames": 6
+    },
+    "heavy-punch": {
+      "source": "heavy-punch-wardrobe-v3.png",
+      "sha256": "3ea80c190c177b01dfef42942979b143acd0bd67cd7c889a799d95051cf3e2de",
+      "frames": 6
+    },
+    "light-kick": {
+      "source": "light-kick-wardrobe-v3.png",
+      "sha256": "bb19c9fce19e8ded4b2ee3298277549a75afde5153f635efec6fd7c9731cfe2b",
+      "frames": 6
+    },
+    "heavy-kick": {
+      "source": "heavy-kick-wardrobe-v3.png",
+      "sha256": "ad3dfc9073226a871f185e8a2b51f597545ed8dd60a3485aa10cf86aa2e43525",
+      "frames": 6
+    },
+    "crouch-defense": {
+      "source": "crouch-defense-wardrobe-v3.png",
+      "sha256": "223bba86bf72a89983a0172bb0b44d3a70ad698616cac0264577fee1c13c651d",
+      "frames": 6
+    },
+    "air-defense": {
+      "source": "air-defense-wardrobe-v3.png",
+      "sha256": "47665d13d1641df033fc130413fecc0c538b5e7d691dd4d5eee6be144866e897",
+      "frames": 6
+    },
+    "walk-inbetweens": {
+      "source": "walk-inbetweens-wardrobe-v3.png",
+      "sha256": "54b3aba0be1b4bbc6f3b978d04cd4c7056b8bb5f46b47cc99df3d9a3c861e94b",
+      "frames": 8
+    }
+  }
+}

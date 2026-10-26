@@ -8,10 +8,10 @@ const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{
 vi.mock('phaser', () => ({ default: {} }));
 const initial = () => new Simulation(createGameConfig(1024,576)).snapshot().characters[0];
 
-it('entrega 120 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
+it('entrega 128 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
   const frames = Object.assign({},...Object.values(atlasFiles).map(a=>a.frames));
-  expect(Object.keys(frames)).toHaveLength(120);
-  for (let i=0;i<120;i++) {
+  expect(Object.keys(frames)).toHaveLength(128);
+  for (let i=0;i<128;i++) {
     const f = frames[String(i) as keyof typeof frames];
     expect(f).toBeDefined();
     expect(f.trimmed).toBe(false);
@@ -34,6 +34,17 @@ it('seleciona idle, ida, recuo e agachado; não mascara estados sem arte', () =>
   expect(getShotoSpritePose({...state,mode:'blocking'},0)?.texture).toBe('shoto-defense');
   expect(getShotoSpritePose({...state,mode:'dashing',movementDirection:'forward'},0)?.texture).toBe('shoto-dash');
   expect(getShotoSpritePose({...state,mode:'dashing',movementDirection:'backward'},0)?.texture).toBe('shoto-backstep');
+});
+it('percorre dezesseis desenhos de caminhada em 48 frames lógicos sem alterar o ritmo do passo',()=>{
+  const state={...initial(),mode:'moving' as const,movementDirection:'forward' as const};
+  const expected=[8,120,9,121,10,122,11,123,12,124,13,125,14,126,15,127];
+  expect(Array.from({length:16},(_,i)=>getShotoSpritePose(state,i*3)!.frame)).toEqual(expected);
+  for(let f=0;f<144;f++){
+    const pose=getShotoSpritePose(state,f)!;
+    expect(pose.texture).toBe(pose.frame>=120?'shoto-walk-inbetweens':'shoto-walk');
+    expect(getShotoSpritePose(state,f+48)).toEqual(pose);
+    expect(getShotoSpritePose(state,f)).toEqual(pose);
+  }
 });
 describe.each([30,60,120,144])('renderização de sprites em %i FPS', fps => {
   it('preserva pose lógica e pausa, troca de textura e retorno à geometria sem modificar estado', () => {

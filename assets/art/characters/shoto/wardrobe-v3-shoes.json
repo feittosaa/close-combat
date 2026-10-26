@@ -1,0 +1,10 @@
+{
+  "tool": "image_gen built-in",
+  "name": "light-kick",
+  "prompt": "Localized color correction ONLY on SHOES in image 1. Match the very dark chocolate-brown leather shoes in image 2 (idle reference). All shoes in all six poses must use the SAME deep dark-brown leather, dark near-black shadows and subdued warm brown highlights. The raised shoe in the fully extended kick must NOT become reddish, burgundy, pink or brighter than the other shoes. Preserve the exact boot shape, every pose, anatomy, small head, one LEFT dark watch/right bare wrist, three-quarter sleeves, all other colors, pure magenta backdrop and layout. Change no other region.",
+  "refs": [
+    "src/assets/sprites/characters/shoto/source/light-kick-wardrobe-v3.png",
+    "src/assets/sprites/characters/shoto/source/idle-wardrobe-v3.png"
+  ],
+  "generatedPath": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-6af7911c-7d95-4a9f-8aa1-48d91967feee.png"
+}

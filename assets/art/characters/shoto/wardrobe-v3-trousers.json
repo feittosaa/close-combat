@@ -1,0 +1,22 @@
+[
+  {
+    "name": "crouch",
+    "path": "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/crouch-wardrobe-v3.png",
+    "prompt": "Image 1 is the edit target. Image 2 is the precise material/color reference (idle). Correct ONLY the TROUSERS in ALL SIX poses of image 1: currently too olive-green and too light. Use the SAME NEAR-BLACK NEUTRAL CHARCOAL fabric as image 2, deep charcoal almost black base, near-black shadows and restrained dark gray fold highlights. No green/khaki cast, no brighter trousers in crouch, no belt/buckle. Keep the exact drawings, shapes, six poses, face, skin, one LEFT dark watch with RIGHT wrist bare, three-quarter folded sleeves, shirt, jacket, shoes, magenta backdrop and layout unchanged. Preserve ink and cel-shading structure; this is material color correction only.",
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/crouch-wardrobe-v3.png",
+      "src/assets/sprites/characters/shoto/source/idle-wardrobe-v3.png"
+    ],
+    "generatedPath": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-6f09ba5b-e32e-4589-b0fa-f17502cda918.png"
+  },
+  {
+    "name": "crouch-defense",
+    "path": "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/crouch-defense-wardrobe-v3.png",
+    "prompt": "Image 1 is the edit target. Image 2 is the precise material/color reference (idle). Correct ONLY the TROUSERS in ALL SIX poses of image 1: currently too olive-green and too light. Use the SAME NEAR-BLACK NEUTRAL CHARCOAL fabric as image 2, deep charcoal almost black base, near-black shadows and restrained dark gray fold highlights. No green/khaki cast, no brighter trousers in crouch, no belt/buckle. Keep the exact drawings, shapes, six poses, face, skin, one LEFT dark watch with RIGHT wrist bare, three-quarter folded sleeves, shirt, jacket, shoes, magenta backdrop and layout unchanged. Preserve ink and cel-shading structure; this is material color correction only.",
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/crouch-defense-wardrobe-v3.png",
+      "src/assets/sprites/characters/shoto/source/idle-wardrobe-v3.png"
+    ],
+    "generatedPath": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-28dd23b3-95d2-4f14-a482-c4e78ae70d20.png"
+  }
+]
