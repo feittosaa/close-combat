@@ -45,3 +45,5 @@ Auditoria solicitada pelo usuário: branches finalizadas devem ser encerradas ap
 Branch `codex/feature-shoto-animacoes-alinhadas` encerrada local/remotamente após integração de `de97cce4085d921e69906b0b8e0e45b7925c95be`, CI de development 40265888943 aprovada: total de 26 branches encerradas até esse ponto.
 
 Sala de treino (`72cc275`) e dash/transições (`1d0e555` mais fechamento de evidências) foram reunidos preservando os commits de cada objetivo. Após CI do fechamento e da integração em development, encerrar ambas verificando ancestralidade e ausência de checkout ativo. Manter main/development.
+
+Integração conjunta efetivada: `5026ec3180b40ae1576ef5f49e4e7cfb41ea52e4` em development, CI da feature 40271546638 aprovada; CI da integração 40271628696 aprovada. As referências `codex/feature-sala-treino` e `codex/feature-dash-transicoes` estão totalmente absorvidas; remover após a CI final deste fechamento documental. Com essas duas remoções, o total será 28 branches encerradas, restando somente main/development.
