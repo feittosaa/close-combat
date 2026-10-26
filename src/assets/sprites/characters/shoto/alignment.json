@@ -188,6 +188,109 @@
       ],
       "offset": 80,
       "scale": 0.981
+    },
+    "light-punch": {
+      "roots": [
+        166.77,
+        529.52,
+        890.77,
+        1276.02,
+        1640.52,
+        2015.77
+      ],
+      "offset": 84,
+      "scale": 1.513189,
+      "source": "light-punch-combat.png",
+      "key": "balanced",
+      "cell": [
+        1152,
+        768
+      ]
+    },
+    "heavy-punch": {
+      "roots": [
+        180.43,
+        525.43,
+        882.93,
+        1284.18,
+        1666.93,
+        2021.18
+      ],
+      "offset": 90,
+      "scale": 1.345416,
+      "source": "heavy-punch-combat.png",
+      "key": "balanced",
+      "cell": [
+        1152,
+        768
+      ]
+    },
+    "light-kick": {
+      "roots": [
+        182.76,
+        503.26,
+        824.01,
+        1283.01,
+        1622.26,
+        2003.26
+      ],
+      "offset": 96,
+      "scale": 1.464037,
+      "source": "light-kick-combat.png",
+      "key": "balanced",
+      "cell": [
+        1152,
+        768
+      ]
+    },
+    "heavy-kick": {
+      "roots": [
+        179.94,
+        488.94,
+        823.69,
+        1323.69,
+        1696.94,
+        2023.44
+      ],
+      "offset": 102,
+      "scale": 1.477752,
+      "source": "heavy-kick-combat.png",
+      "key": "balanced",
+      "cell": [
+        1152,
+        768
+      ]
+    },
+    "crouch-defense": {
+      "roots": [
+        277.06,
+        819.56,
+        1362.56,
+        1906.31
+      ],
+      "offset": 108,
+      "scale": 1.066667,
+      "source": "crouch-defense-combat.png",
+      "key": "balanced"
+    },
+    "air-defense": {
+      "roots": [
+        236.16,
+        765.12,
+        1324.33,
+        1893.9
+      ],
+      "offset": 112,
+      "scale": 1.035533,
+      "source": "air-defense-combat.png",
+      "key": "balanced",
+      "rootY": [
+        777.11,
+        777.11,
+        776.11,
+        777.11
+      ],
+      "airborne": true
     }
   }
 }

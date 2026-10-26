@@ -1,3 +1,4 @@
+import { shotoCombatSources, shotoCombatClips, getShotoCombatPose } from './shotoCombatSprites';
 import { prepareShotoPalette } from './prepareShotoPalette';
 import { shotoTransitionSources, transitionClips, transitionByAction } from './shotoTransitions';
 import type Phaser from 'phaser';
@@ -20,9 +21,9 @@ import backwardAtlas from '../../assets/sprites/characters/shoto/walk-backward.a
 import dashAtlas from '../../assets/sprites/characters/shoto/dash.atlas.json';
 import backstepAtlas from '../../assets/sprites/characters/shoto/backstep.atlas.json';
 
-/** Approved locomotion/guard art only. Roots and scale are baked into fixed atlas cells. */
+/** Approved locomotion, four basics and posture guards. Roots and body scale are atlas-authored. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
-  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:84,
+  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:116,
   footAnchorY:720,displaySize:{width:172.8*1.03,height:172.8*1.03},
   clips:[
     {key:'shoto-idle',start:0,end:7,frameRate:6,repeat:-1},
@@ -34,6 +35,7 @@ export const shotoSpriteManifest: CharacterAnimationManifest = {
     {key:'shoto-dash',start:44,end:49,frameDurations:[3,4,4,4,3,2],frameRate:18,repeat:0},
     {key:'shoto-backstep',start:50,end:55,frameDurations:[3,4,4,4,3,2],frameRate:18,repeat:0},
     ...transitionClips,
+    ...shotoCombatClips,
   ],
 };
 validateAnimationManifest(shotoSpriteManifest);
@@ -47,6 +49,7 @@ const sources=[
   {key:'shoto-dash',image:dashImage,atlas:dashAtlas},
   {key:'shoto-backstep',image:backstepImage,atlas:backstepAtlas},
   ...shotoTransitionSources,
+  ...shotoCombatSources,
 ];
 export function prepareShotoSprites(scene:Phaser.Scene):void{
   prepareShotoPalette(scene,sources.map(source=>source.key));
@@ -64,7 +67,10 @@ function transitionFor(action:ReturnType<typeof actionFor>){
   return action && action!=='idle'?transitionByAction[action]:undefined;
 }
 export function getShotoSpritePose(state:CharacterState,frame:number){
-  if(state.fighterId!=='shoto'||state.attack||state.mode==='hitstun')return undefined;
+  if(state.fighterId!=='shoto'||state.mode==='hitstun')return undefined;
+  const combat=getShotoCombatPose(state,frame);
+  if(combat)return combat;
+  if(state.attack)return undefined;
   const action=actionFor(state);
   if(!action)return undefined;
   const transition=state.animationTransition;

@@ -149,8 +149,11 @@ export class Simulation {
       } else if (!wasLocked) {
         character.crouching = character.grounded && input.direction.startsWith('D');
         const threatening = Boolean(attackingAtInput[1 - index] || opponent.attack || commands[1 - index]);
-        const guard = character.grounded && threatening && (input.direction === 'B' || input.direction === 'DB');
-        if (guard) { character.mode = 'blocking'; this.dashFrames[index] = 0; }
+        const guard = threatening && (input.direction === 'B' || input.direction === 'DB');
+        if (guard) {
+          if(!character.grounded)this.moveCharacter(character,input,index);
+          character.mode = 'blocking'; this.dashFrames[index] = 0;
+        }
         else this.moveCharacter(character, input, index);
       } else this.dashFrames[index] = 0;
       const up = input.direction.startsWith('U');
@@ -164,7 +167,7 @@ export class Simulation {
         character.verticalVelocity += this.config.movement.gravity;
         if (character.y >= this.config.arena.floorY) {
           character.y = this.config.arena.floorY; character.grounded = true; character.verticalVelocity = 0;
-          if (!locked(character) && !character.attack) character.mode = 'neutral';
+          if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';
         }
       }
       if (character.attack || wasLocked || character.mode === 'blocking' || !character.grounded) this.previousAxis[index] = axis(input);
