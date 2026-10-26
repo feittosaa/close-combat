@@ -18,7 +18,7 @@ import type { FrameInput } from '../input/types';
 import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
-import { defaultStage, getStageById } from '../rendering/stages/stageCatalog';
+import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createStageLayout } from '../rendering/stages/stageLayout';
 import { preloadStage, StageView } from '../rendering/stages/StageView';
 import { CombatHud } from '../ui/CombatHud';
@@ -26,7 +26,7 @@ import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
 import { ArcadeController } from '../engine/combat/ArcadeController';
-import { arcadeOpponents, opponentFor, type FightSetup, type MatchMode } from './matchSetup';
+import { arcadeOpponents, opponentFor, stageForMatch, type FightSetup, type MatchMode } from './matchSetup';
 
 export class FightScene extends Phaser.Scene {
   private selectedFighter = defaultCharacter;
@@ -152,7 +152,7 @@ export class FightScene extends Phaser.Scene {
     this.opponentFighter = this.mode === 'arcade'
       ? opponentFor(this.selectedFighter.id, 'arcade', this.arcadeIndex)
       : getCharacterById(data.opponentId ?? '') ?? opponentFor(this.selectedFighter.id, this.mode);
-    this.selectedStage = getStageById(data.stageId ?? '') ?? defaultStage;
+    this.selectedStage = stageForMatch(this.mode,data.stageId);
     this.tutorial = this.mode === 'tutorial' || this.mode === 'combo-tutorial' ? new TutorialSession(this.selectedFighter, this.mode) : undefined;
     this.training = data.mode === 'training' || this.tutorial ? new TrainingSession() : undefined;
     if (this.tutorial) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.training!.showGeometry = false; this.training!.autoRestore = false; }
