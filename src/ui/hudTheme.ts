@@ -8,7 +8,7 @@ export const HUD = {
 } as const;
 
 export function hudText(size: number, title = false, color: string = HUD.ivory): Phaser.Types.GameObjects.Text.TextStyle {
-  return { fontFamily: title ? 'Georgia, serif' : 'Arial, sans-serif', fontSize: `${size}px`, color, resolution: 2 };
+  return { fontFamily: title ? 'Georgia, serif' : 'Arial, sans-serif', fontSize: `${size}px`, color, resolution: 2, shadow: { offsetX: 0, offsetY: 1, color: '#100e12', blur: 2, fill: true } };
 }
 export function drawHudPanel(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, accent: number = HUD.gold, alpha = .94): void {
   const c = 6;

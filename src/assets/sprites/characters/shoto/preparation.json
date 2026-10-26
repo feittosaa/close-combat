@@ -1,6 +1,6 @@
 {
   "cell": [
-    512,
+    768,
     768
   ],
   "footAnchorY": 720,
@@ -14,17 +14,23 @@
           689
         ],
         "sourceRootX": 167,
-        "scale": 1.0
+        "sourceRootY": 689,
+        "scale": 1,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           307,
           58,
-          574,
+          575,
           689
         ],
-        "sourceRootX": 437,
-        "scale": 1.0
+        "sourceRootX": 439,
+        "sourceRootY": 689,
+        "scale": 1,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
@@ -34,37 +40,49 @@
           689
         ],
         "sourceRootX": 707,
-        "scale": 1.0
+        "sourceRootY": 689,
+        "scale": 1,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           839,
-          57,
+          58,
           1096,
           689
         ],
-        "sourceRootX": 960,
-        "scale": 1.0
+        "sourceRootX": 971,
+        "sourceRootY": 689,
+        "scale": 1,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           1104,
-          60,
+          59,
           1376,
           689
         ],
-        "sourceRootX": 1226,
-        "scale": 1.0
+        "sourceRootX": 1236,
+        "sourceRootY": 689,
+        "scale": 1,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           1369,
-          58,
+          59,
           1626,
           689
         ],
-        "sourceRootX": 1490,
-        "scale": 1.0
+        "sourceRootX": 1501,
+        "sourceRootY": 689,
+        "scale": 1,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
@@ -73,8 +91,11 @@
           1904,
           689
         ],
-        "sourceRootX": 1753,
-        "scale": 1.0
+        "sourceRootX": 1764,
+        "sourceRootY": 689,
+        "scale": 1,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
@@ -83,8 +104,11 @@
           2159,
           689
         ],
-        "sourceRootX": 2019,
-        "scale": 1.0
+        "sourceRootX": 2026,
+        "sourceRootY": 689,
+        "scale": 1,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       }
     ],
     "walk": [
@@ -92,143 +116,637 @@
         "sourceBounds": [
           18,
           41,
-          398,
-          660
+          397,
+          659
         ],
         "sourceRootX": 207,
-        "scale": 1.025
+        "sourceRootY": 659,
+        "scale": 1.025,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           348,
           41,
-          525,
-          659
+          526,
+          658
         ],
         "sourceRootX": 460,
-        "scale": 1.025
+        "sourceRootY": 658,
+        "scale": 1.025,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           573,
-          41,
+          42,
           815,
-          660
+          658
         ],
         "sourceRootX": 720,
-        "scale": 1.025
+        "sourceRootY": 658,
+        "scale": 1.025,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           822,
           41,
           1111,
-          661
+          660
         ],
         "sourceRootX": 983,
-        "scale": 1.025
+        "sourceRootY": 660,
+        "scale": 1.025,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           1089,
           41,
-          1425,
-          659
+          1424,
+          658
         ],
         "sourceRootX": 1244,
-        "scale": 1.025
+        "sourceRootY": 658,
+        "scale": 1.025,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           1385,
-          41,
+          42,
           1558,
-          660
+          659
         ],
         "sourceRootX": 1499,
-        "scale": 1.025
+        "sourceRootY": 659,
+        "scale": 1.025,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           1620,
-          41,
+          42,
           1849,
-          660
+          659
         ],
         "sourceRootX": 1755,
-        "scale": 1.025
+        "sourceRootY": 659,
+        "scale": 1.025,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           1845,
-          41,
+          42,
           2169,
-          660
+          658
         ],
         "sourceRootX": 2011,
-        "scale": 1.025
+        "sourceRootY": 658,
+        "scale": 1.025,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       }
     ],
     "crouch": [
       {
         "sourceBounds": [
           16,
-          235,
-          384,
-          679
+          236,
+          388,
+          677
         ],
         "sourceRootX": 178,
-        "scale": 1.0
+        "sourceRootY": 677,
+        "scale": 0.9,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          389,
-          238,
+          388,
+          239,
           748,
-          679
+          677
         ],
-        "sourceRootX": 553,
-        "scale": 1.0
+        "sourceRootX": 537,
+        "sourceRootY": 677,
+        "scale": 0.9,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          751,
-          252,
+          750,
+          251,
           1103,
-          679
+          677
         ],
-        "sourceRootX": 918,
-        "scale": 1.0
+        "sourceRootX": 899,
+        "sourceRootY": 677,
+        "scale": 0.9,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
           1101,
           260,
           1447,
-          679
+          677
         ],
-        "sourceRootX": 1280,
-        "scale": 1.0
+        "sourceRootX": 1250,
+        "sourceRootY": 677,
+        "scale": 0.9,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1459,
+          1458,
           237,
           1800,
-          679
+          678
         ],
-        "sourceRootX": 1642,
-        "scale": 1.0
+        "sourceRootX": 1605,
+        "sourceRootY": 678,
+        "scale": 0.9,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1804,
-          255,
+          1803,
+          256,
           2161,
-          679
+          677
         ],
-        "sourceRootX": 2004,
-        "scale": 1.0
+        "sourceRootX": 1953,
+        "sourceRootY": 677,
+        "scale": 0.9,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      }
+    ],
+    "jump": [
+      {
+        "sourceBounds": [
+          28,
+          179,
+          274,
+          682
+        ],
+        "sourceRootX": 160,
+        "sourceRootY": 682,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          297,
+          88,
+          534,
+          646
+        ],
+        "sourceRootX": 430,
+        "sourceRootY": 625,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          562,
+          39,
+          816,
+          542
+        ],
+        "sourceRootX": 690,
+        "sourceRootY": 595,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          844,
+          25,
+          1081,
+          383
+        ],
+        "sourceRootX": 960,
+        "sourceRootY": 585,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1110,
+          78,
+          1352,
+          626
+        ],
+        "sourceRootX": 1230,
+        "sourceRootY": 640,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1379,
+          115,
+          1607,
+          663
+        ],
+        "sourceRootX": 1510,
+        "sourceRootY": 675,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1623,
+          220,
+          1894,
+          682
+        ],
+        "sourceRootX": 1770,
+        "sourceRootY": 682,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1908,
+          128,
+          2159,
+          682
+        ],
+        "sourceRootX": 2040,
+        "sourceRootY": 682,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      }
+    ],
+    "defense": [
+      {
+        "sourceBounds": [
+          19,
+          17,
+          358,
+          637
+        ],
+        "sourceRootX": 178,
+        "sourceRootY": 637,
+        "scale": 1.02,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          396,
+          17,
+          733,
+          637
+        ],
+        "sourceRootX": 554,
+        "sourceRootY": 637,
+        "scale": 1.02,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          762,
+          19,
+          1098,
+          637
+        ],
+        "sourceRootX": 919,
+        "sourceRootY": 637,
+        "scale": 1.02,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1137,
+          22,
+          1448,
+          637
+        ],
+        "sourceRootX": 1287,
+        "sourceRootY": 637,
+        "scale": 1.02,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1465,
+          18,
+          1796,
+          638
+        ],
+        "sourceRootX": 1619,
+        "sourceRootY": 638,
+        "scale": 1.02,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1832,
+          20,
+          2161,
+          637
+        ],
+        "sourceRootX": 1989,
+        "sourceRootY": 637,
+        "scale": 1.02,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      }
+    ],
+    "walk-backward": [
+      {
+        "sourceBounds": [
+          13,
+          78,
+          307,
+          627
+        ],
+        "sourceRootX": 185,
+        "sourceRootY": 627,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          320,
+          79,
+          570,
+          627
+        ],
+        "sourceRootX": 460,
+        "sourceRootY": 627,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          595,
+          79,
+          866,
+          630
+        ],
+        "sourceRootX": 730,
+        "sourceRootY": 630,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          860,
+          76,
+          1095,
+          627
+        ],
+        "sourceRootX": 1000,
+        "sourceRootY": 627,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1113,
+          77,
+          1370,
+          629
+        ],
+        "sourceRootX": 1275,
+        "sourceRootY": 629,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1400,
+          77,
+          1653,
+          631
+        ],
+        "sourceRootX": 1550,
+        "sourceRootY": 631,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1674,
+          77,
+          1913,
+          632
+        ],
+        "sourceRootX": 1800,
+        "sourceRootY": 632,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1918,
+          77,
+          2168,
+          638
+        ],
+        "sourceRootX": 2070,
+        "sourceRootY": 638,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      }
+    ],
+    "dash": [
+      {
+        "sourceBounds": [
+          16,
+          132,
+          344,
+          640
+        ],
+        "sourceRootX": 175,
+        "sourceRootY": 640,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          366,
+          189,
+          712,
+          631
+        ],
+        "sourceRootX": 555,
+        "sourceRootY": 631,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          699,
+          170,
+          1319,
+          632
+        ],
+        "sourceRootX": 1030,
+        "sourceRootY": 632,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1250,
+          166,
+          1530,
+          623
+        ],
+        "sourceRootX": 1400,
+        "sourceRootY": 623,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1545,
+          137,
+          1895,
+          637
+        ],
+        "sourceRootX": 1760,
+        "sourceRootY": 637,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1911,
+          88,
+          2166,
+          643
+        ],
+        "sourceRootX": 2035,
+        "sourceRootY": 643,
+        "scale": 1.14,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      }
+    ],
+    "backstep": [
+      {
+        "sourceBounds": [
+          31,
+          63,
+          353,
+          664
+        ],
+        "sourceRootX": 185,
+        "sourceRootY": 664,
+        "scale": 1.05,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          404,
+          82,
+          636,
+          657
+        ],
+        "sourceRootX": 542,
+        "sourceRootY": 657,
+        "scale": 1.05,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          636,
+          122,
+          1125,
+          659
+        ],
+        "sourceRootX": 940,
+        "sourceRootY": 659,
+        "scale": 1.05,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1171,
+          88,
+          1397,
+          659
+        ],
+        "sourceRootX": 1292,
+        "sourceRootY": 659,
+        "scale": 1.05,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1494,
+          119,
+          1802,
+          651
+        ],
+        "sourceRootX": 1655,
+        "sourceRootY": 651,
+        "scale": 1.05,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1840,
+          63,
+          2161,
+          665
+        ],
+        "sourceRootX": 1993,
+        "sourceRootY": 665,
+        "scale": 1.05,
+        "preparedRootX": 384,
+        "preparedRootY": 720
       }
     ]
   }

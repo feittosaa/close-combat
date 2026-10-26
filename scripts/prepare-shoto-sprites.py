@@ -8,13 +8,10 @@ from scipy.ndimage import label
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1] / 'src/assets/sprites/characters/shoto'
-CELL = (512, 768)
-FOOT = 720
-SPECS = {
-    'idle': ([167, 437, 707, 960, 1226, 1490, 1753, 2019], 0, 1.0),
-    'walk': ([207, 460, 720, 983, 1244, 1499, 1755, 2011], 8, 1.025),
-    'crouch': ([178, 553, 918, 1280, 1642, 2004], 16, 1.0),
-}
+CONFIG = json.loads((ROOT/'alignment.json').read_text())
+CELL = tuple(CONFIG['cell'])
+FOOT = CONFIG['footAnchorY']
+SPECS = CONFIG['clips']
 
 
 def seam(mask, center, foot_center=None):
@@ -45,9 +42,9 @@ def seam(mask, center, foot_center=None):
     return result
 
 report = {}
-for name, (anchors, offset, scale) in SPECS.items():
-    rgb = np.array(Image.open(ROOT/'source'/f'{name}-magenta.png').convert('RGB')).astype(float)
-    # Key distance separates even antialiased pink edges from the warm character palette.
+for name, spec in SPECS.items():
+    anchors, offset, scale = spec['roots'], spec['offset'], spec['scale']
+    rgb = np.array(Image.open(ROOT/'source'/f'{name}-auburn.png').convert('RGB')).astype(float)
     chroma = np.minimum(rgb[:, :, 0], rgb[:, :, 2])-rgb[:, :, 1]
     keyed = (chroma>12) & (np.minimum(rgb[:,:,0],rgb[:,:,2]) > rgb[:,:,1]*1.5)
     alpha = np.ones(chroma.shape)
@@ -55,35 +52,53 @@ for name, (anchors, offset, scale) in SPECS.items():
     rgba = np.dstack((rgb, np.round(alpha*255))).astype('uint8')
     mask = alpha>.5
     h,w = mask.shape
-    foot_seams = [400,550,812,1115,1420,1590,1850] if name=='walk' else [None]*(len(anchors)-1)
-    upper_seams = [335,558,819,1080,1380,1590,1860] if name=='walk' else [(a+b)/2 for a,b in zip(anchors,anchors[1:])]
-    seams = [np.zeros(h,dtype=int)] + [seam(mask,c,f) for c,f in zip(upper_seams,foot_seams)] + [np.full(h,w,dtype=int)]
+    components,count = label(mask)
+    sizes = np.bincount(components.ravel()); sizes[0]=0
+    # Only walking drawings touch. Other strips have one independent body per pose.
+    bodies=[]
+    if name!='walk':
+        for component in np.where(sizes>30000)[0]:
+            ys,xs=np.where(components==component)
+            bodies.append((float(xs.mean()),component))
+        bodies.sort()
+        if len(bodies)!=len(anchors): raise ValueError((name,'unexpected body count',len(bodies)))
+    else:
+        foot_seams=[400,550,812,1115,1420,1590,1850]
+        upper_seams=[335,558,819,1080,1380,1590,1860]
+        seams=[np.zeros(h,dtype=int)]+[seam(mask,c,f) for c,f in zip(upper_seams,foot_seams)]+[np.full(h,w,dtype=int)]
     strip = Image.new('RGBA',(CELL[0]*len(anchors),CELL[1]))
     frames = {}
     metrics = []
     for i,anchor in enumerate(anchors):
-        selected = (np.arange(w)[None,:]>=seams[i][:,None]) & (np.arange(w)[None,:]<seams[i+1][:,None])
-        frame = rgba.copy(); frame[:,:,3][~selected]=0
-        components,count = label(frame[:,:,3]>25)
-        sizes = np.bincount(components.ravel()); sizes[0]=0
-        frame[:,:,3][components!=sizes.argmax()] = 0
+        frame = rgba.copy()
+        if name=='walk':
+            selected=(np.arange(w)[None,:]>=seams[i][:,None]) & (np.arange(w)[None,:]<seams[i+1][:,None])
+            frame[:,:,3][~selected]=0
+            pieces,_=label(frame[:,:,3]>25)
+            piece_sizes=np.bincount(pieces.ravel());piece_sizes[0]=0
+            frame[:,:,3][pieces!=piece_sizes.argmax()]=0
+        else:
+            from scipy.ndimage import binary_dilation
+            selected=binary_dilation(components==bodies[i][1],iterations=2)
+            frame[:,:,3][~selected]=0
         ys,xs = np.where((frame[:,:,3]>128))
         left,right,top,bottom = int(xs.min()),int(xs.max())+1,int(ys.min()),int(ys.max())+1
         crop = Image.fromarray(frame).crop((left,top,right,bottom))
         crop = crop.resize((round(crop.width*scale),round(crop.height*scale)),Image.Resampling.LANCZOS)
         x = CELL[0]//2-round((anchor-left)*scale)
-        y = FOOT-crop.height
+        root_y=spec.get('rootY',[bottom]*len(anchors))[i]
+        y = FOOT-round((root_y-top)*scale)
         if x<0 or x+crop.width>CELL[0] or y<0:
             raise ValueError((name,i,'frame outside fixed cell',x,y,crop.size))
         strip.alpha_composite(crop,(i*CELL[0]+x,y))
         frames[str(offset+i)] = {'frame':{'x':i*CELL[0],'y':0,'w':CELL[0],'h':CELL[1]},'rotated':False,'trimmed':False,'spriteSourceSize':{'x':0,'y':0,'w':CELL[0],'h':CELL[1]},'sourceSize':{'w':CELL[0],'h':CELL[1]}}
-        metrics.append({'sourceBounds':[left,top,right,bottom],'sourceRootX':anchor,'scale':scale})
+        metrics.append({'sourceBounds':[left,top,right,bottom],'sourceRootX':anchor,'sourceRootY':root_y,'scale':scale,'preparedRootX':CELL[0]//2,'preparedRootY':FOOT})
     for i in range(len(anchors)):
         cell = np.array(strip)[:,i*CELL[0]:(i+1)*CELL[0]]
         ys,xs = np.where(cell[:,:,3]>128)
-        assert xs.min()>0 and xs.max()<CELL[0]-1 and ys.max()==FOOT-1, (name,i,'clipping or foot drift')
+        assert xs.min()>0 and xs.max()<CELL[0]-1 and ys.max()<CELL[1], (name,i,'clipping or foot drift')
     strip.save(ROOT/f'{name}.png')
     (ROOT/f'{name}.atlas.json').write_text(json.dumps({'frames':frames,'meta':{'image':f'{name}.png','size':{'w':strip.width,'h':strip.height},'scale':'1'}},indent=2)+'\n')
     report[name] = metrics
 (ROOT/'preparation.json').write_text(json.dumps({'cell':CELL,'footAnchorY':FOOT,'clips':report},indent=2)+'\n')
-print('Prepared 8 idle, 8 walk and 6 crouch RGBA frames in fixed 512x768 cells.')
+print('Prepared 56 RGBA frames in fixed 768x768 cells; authored roots, no runtime pixel inference.')

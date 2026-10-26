@@ -4,16 +4,14 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { getShotoSpritePose, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { CombatantView } from '../rendering/CombatantView';
-import idleAtlas from '../assets/sprites/characters/shoto/idle.atlas.json';
-import walkAtlas from '../assets/sprites/characters/shoto/walk.atlas.json';
-import crouchAtlas from '../assets/sprites/characters/shoto/crouch.atlas.json';
+const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{w:number;h:number}}>}>('../assets/sprites/characters/shoto/*.atlas.json',{eager:true,import:'default'});
 vi.mock('phaser', () => ({ default: {} }));
 const initial = () => new Simulation(createGameConfig(1024,576)).snapshot().characters[0];
 
-it('entrega 22 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
-  const frames = {...idleAtlas.frames,...walkAtlas.frames,...crouchAtlas.frames};
-  expect(Object.keys(frames)).toHaveLength(22);
-  for (let i=0;i<22;i++) {
+it('entrega 56 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
+  const frames = Object.assign({},...Object.values(atlasFiles).map(a=>a.frames));
+  expect(Object.keys(frames)).toHaveLength(56);
+  for (let i=0;i<56;i++) {
     const f = frames[String(i) as keyof typeof frames];
     expect(f).toBeDefined();
     expect(f.trimmed).toBe(false);
@@ -21,18 +19,21 @@ it('entrega 22 células fixas sem trim e com pivô/escala compartilhados entre a
     expect(f.frame.h).toBe(shotoSpriteManifest.frameSize.height);
   }
   expect(shotoSpriteManifest.footAnchorY).toBe(720);
-  expect(shotoSpriteManifest.displaySize!.width/512).toBe(shotoSpriteManifest.displaySize!.height/768);
+  expect(shotoSpriteManifest.displaySize!.width/768).toBe(shotoSpriteManifest.displaySize!.height/768);
 });
 it('seleciona idle, ida, recuo e agachado; não mascara estados sem arte', () => {
   const state=initial();
   expect(getShotoSpritePose(state,0)).toMatchObject({texture:'shoto-idle',frame:0,flipX:false});
   expect(getShotoSpritePose({...state,facing:'left'},0)?.flipX).toBe(true);
   expect(getShotoSpritePose({...state,mode:'moving',movementDirection:'forward'},0)?.frame).toBe(8);
-  expect(getShotoSpritePose({...state,mode:'moving',movementDirection:'backward'},0)?.frame).toBe(15);
+  expect(getShotoSpritePose({...state,mode:'moving',movementDirection:'backward'},0)?.frame).toBe(36);
   for (let f=0;f<60;f++) expect(getShotoSpritePose({...state,mode:'crouching',crouching:true},f)!.frame).toBeGreaterThanOrEqual(16);
-  for(const mode of ['startup','active','recovery','hitstun','blockstun','blocking','airborne','dashing','running'] as const)
+  for(const mode of ['startup','active','recovery','hitstun'] as const)
     expect(getShotoSpritePose({...state,mode},30)).toBeUndefined();
-  expect(getShotoSpritePose({...state,grounded:false},30)).toBeUndefined();
+  expect(getShotoSpritePose({...state,grounded:false,mode:'airborne'},18)?.texture).toBe('shoto-jump');
+  expect(getShotoSpritePose({...state,mode:'blocking'},0)?.texture).toBe('shoto-defense');
+  expect(getShotoSpritePose({...state,mode:'dashing',movementDirection:'forward'},0)?.texture).toBe('shoto-dash');
+  expect(getShotoSpritePose({...state,mode:'dashing',movementDirection:'backward'},0)?.texture).toBe('shoto-backstep');
 });
 describe.each([30,60,120,144])('renderização de sprites em %i FPS', fps => {
   it('preserva pose lógica e pausa, troca de textura e retorno à geometria sem modificar estado', () => {
@@ -65,14 +66,53 @@ describe.each([30,60,120,144])('renderização de sprites em %i FPS', fps => {
   });
 });
 
-it('reduz somente o agachado em escala uniforme sem mudar o pivô dos pés ou as caixas',()=>{
+it('preserva a escala uniforme e os pés comuns; proporção do agachado já preparada no atlas',()=>{
   const state=initial(),original=structuredClone(state);
   expect(getShotoSpritePose(state,0)?.scale).toBe(1);
   for(let frame=0;frame<60;frame++){
     const pose=getShotoSpritePose({...state,mode:'crouching',crouching:true},frame)!;
-    expect(pose.scale).toBe(.9);
+    expect(pose.scale).toBe(1);
     expect(shotoSpriteManifest.footAnchorY).toBe(720);
   }
   expect(getShotoSpritePose({...state,mode:'moving'},0)?.scale).toBe(1);
   expect(state).toEqual(original);
+});
+
+it('fecha o ciclo agachado por poses vizinhas e não reinicia a entrada de guarda a cada volta',()=>{
+  const state=initial();
+  const crouched={...state,mode:'crouching' as const,crouching:true};
+  let previous=getShotoSpritePose(crouched,0)!.frame;
+  for(let frame=1;frame<240;frame++){
+    const pose=getShotoSpritePose(crouched,frame)!;
+    expect(Math.abs(pose.frame-previous)).toBeLessThanOrEqual(1);
+    previous=pose.frame;
+  }
+  const guard={...state,mode:'blocking' as const};
+  expect(getShotoSpritePose(guard,0)?.frame).toBe(30);
+  expect(getShotoSpritePose(guard,2)?.frame).toBe(31);
+  for(let frame=4;frame<240;frame++)expect(getShotoSpritePose(guard,frame)!.frame).toBeGreaterThanOrEqual(32);
+});
+it('seleciona os oito quadros de salto sem repetir o clipe no ar',()=>{
+  const state={...initial(),grounded:false,mode:'airborne' as const};
+  const frames=new Set(Array.from({length:38},(_,frame)=>getShotoSpritePose(state,frame)!.frame));
+  expect([...frames]).toEqual([22,23,24,25,26,27,28,29]);
+  expect(getShotoSpritePose(state,80)?.frame).toBe(29);
+});
+
+it('espelha todos os clipes e mantém guarda fechada durante o impacto bloqueado',()=>{
+  const state=initial();
+  const states=[state,{...state,mode:'moving' as const,movementDirection:'forward' as const},
+    {...state,mode:'moving' as const,movementDirection:'backward' as const},
+    {...state,mode:'crouching' as const,crouching:true},
+    {...state,mode:'dashing' as const,movementDirection:'forward' as const},
+    {...state,mode:'dashing' as const,movementDirection:'backward' as const},
+    {...state,mode:'running' as const}, {...state,mode:'blocking' as const},
+    {...state,mode:'airborne' as const,grounded:false}];
+  for(const pose of states){
+    const right=getShotoSpritePose({...pose,facing:'right'},18)!;
+    const left=getShotoSpritePose({...pose,facing:'left'},18)!;
+    expect(left).toEqual({...right,flipX:true});
+    expect(right.flipX).toBe(false);
+  }
+  expect(getShotoSpritePose({...state,mode:'blockstun',remainingStateFrames:10},0)!.frame).toBeGreaterThanOrEqual(32);
 });

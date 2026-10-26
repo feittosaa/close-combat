@@ -70,7 +70,7 @@ it('preserva proporção, piso projetado e limites do cenário do contato até a
     expect(left).toBeGreaterThanOrEqual(-1e-8);expect(right).toBeLessThanOrEqual(layout.worldWidth+1e-8);
     expect(projectY(layout.originY)).toBeLessThanOrEqual(1e-8);
     expect(projectY(layout.originY+1344*layout.scale)).toBeGreaterThanOrEqual(576-1e-8);
-    expect(frame.zoom).toBe(1);
-    expect(frame.scrollY).toBe(0);
+    expect(frame.zoom).toBe(1.6);
+    expect(frame.scrollY).toBeCloseTo(75);
   }
 });

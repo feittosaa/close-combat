@@ -1,0 +1,475 @@
+{
+  "crouchFootDriftPixels": 1.5,
+  "frames": {
+    "idle": [
+      {
+        "opaqueBounds": [
+          252,
+          89,
+          522,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          89,
+          520,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          83,
+          511,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          89,
+          509,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          90,
+          524,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          90,
+          509,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          251,
+          91,
+          524,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          249,
+          89,
+          517,
+          720
+        ]
+      }
+    ],
+    "walk": [
+      {
+        "opaqueBounds": [
+          190,
+          87,
+          578,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          269,
+          88,
+          451,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          233,
+          89,
+          481,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          219,
+          86,
+          515,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          225,
+          88,
+          568,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          267,
+          88,
+          444,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          246,
+          88,
+          481,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          214,
+          89,
+          546,
+          720
+        ]
+      }
+    ],
+    "crouch": [
+      {
+        "opaqueBounds": [
+          238,
+          323,
+          573,
+          720
+        ],
+        "plantedFootX": 291.5
+      },
+      {
+        "opaqueBounds": [
+          250,
+          326,
+          574,
+          720
+        ],
+        "plantedFootX": 291.5
+      },
+      {
+        "opaqueBounds": [
+          250,
+          338,
+          568,
+          720
+        ],
+        "plantedFootX": 291.0
+      },
+      {
+        "opaqueBounds": [
+          250,
+          345,
+          561,
+          720
+        ],
+        "plantedFootX": 292.0
+      },
+      {
+        "opaqueBounds": [
+          252,
+          323,
+          560,
+          720
+        ],
+        "plantedFootX": 290.5
+      },
+      {
+        "opaqueBounds": [
+          249,
+          341,
+          571,
+          720
+        ],
+        "plantedFootX": 291.0
+      }
+    ],
+    "jump": [
+      {
+        "opaqueBounds": [
+          234,
+          147,
+          514,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          232,
+          108,
+          502,
+          744
+        ]
+      },
+      {
+        "opaqueBounds": [
+          238,
+          86,
+          528,
+          659
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          82,
+          522,
+          490
+        ]
+      },
+      {
+        "opaqueBounds": [
+          247,
+          79,
+          523,
+          704
+        ]
+      },
+      {
+        "opaqueBounds": [
+          235,
+          82,
+          495,
+          707
+        ]
+      },
+      {
+        "opaqueBounds": [
+          216,
+          193,
+          525,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          234,
+          88,
+          520,
+          720
+        ]
+      }
+    ],
+    "defense": [
+      {
+        "opaqueBounds": [
+          222,
+          88,
+          568,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          223,
+          88,
+          567,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          90,
+          567,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          231,
+          93,
+          548,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          227,
+          88,
+          565,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          91,
+          560,
+          720
+        ]
+      }
+    ],
+    "walk-backward": [
+      {
+        "opaqueBounds": [
+          188,
+          94,
+          523,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          95,
+          509,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          230,
+          92,
+          539,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          92,
+          492,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          199,
+          91,
+          492,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          213,
+          88,
+          501,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          240,
+          87,
+          512,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          211,
+          80,
+          496,
+          720
+        ]
+      }
+    ],
+    "dash": [
+      {
+        "opaqueBounds": [
+          203,
+          141,
+          577,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          169,
+          216,
+          563,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          7,
+          193,
+          714,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          213,
+          199,
+          532,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          139,
+          150,
+          538,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          243,
+          87,
+          534,
+          720
+        ]
+      }
+    ],
+    "backstep": [
+      {
+        "opaqueBounds": [
+          222,
+          89,
+          560,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          239,
+          116,
+          483,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          65,
+          156,
+          578,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          257,
+          121,
+          494,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          215,
+          161,
+          538,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          223,
+          88,
+          560,
+          720
+        ]
+      }
+    ]
+  }
+}

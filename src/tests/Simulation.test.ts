@@ -104,7 +104,9 @@ describe('quatro básicos do Shoto', () => {
 
 describe('fundação da simulação', () => {
   it('mantém os corpos na arena e não atravessa em aproximação', () => {
-    const sim = practice(200); advance(sim, 300, [input('F'), input('F')]);
+    // Isolate physical stage walls; shared viewport edges have their own integration coverage.
+    const sim = new Simulation({...config,arena:{...config.arena,maxSeparation:undefined}},[shoto,shoto],{training:true,initialDistance:200});
+    advance(sim, 300, [input('F'), input('F')]);
     const [a, b] = sim.snapshot().characters;
     expect(b.x - a.x).toBeGreaterThanOrEqual(shoto.collision.bodyWidth);
     advance(sim, 400, [input('B'), input('B')]);

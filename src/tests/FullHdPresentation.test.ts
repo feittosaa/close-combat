@@ -1,3 +1,4 @@
+import { FIGHT_WORLD_SCALE } from '../engine/data/fightFraming';
 import { Simulation } from '../engine/simulation/Simulation';
 import { expect, it, vi } from 'vitest';
 import { LOGICAL_VIEW, RENDER_SIZE, configureUiCamera, projectCameraToOutput } from '../rendering/presentation';
@@ -19,16 +20,16 @@ it('mantém escala fixa e o piso em Full HD', () => {
   const logical=getFightCameraFrame(layout,[750,850]);
   const f=projectCameraToOutput(logical,LOGICAL_VIEW,RENDER_SIZE);
   const y=(v:number)=>540+(v-f.scrollY-540)*f.zoom;
-  expect(logical.zoom).toBe(1);
+  expect(logical.zoom).toBe(FIGHT_WORLD_SCALE);
   expect(y(config.arena.floorY)).toBeCloseTo(915);
   expect(y(config.arena.floorY-144)).toBeGreaterThan(220);
-  expect(y(config.arena.floorY)-y(config.arena.floorY-144)).toBeCloseTo(270);
-  expect(config.arena).toEqual({left:24,right:1000,floorY:488});
+  expect(y(config.arena.floorY)-y(config.arena.floorY-144)).toBeCloseTo(432);
+  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:512});
 });
 it('mantém ambos os lados visíveis ao afastar e trocar lutadores de lado em 1080p',()=>{
   const layout=createStageLayout(defaultStage,1024,576,488);
   const left=24+layout.arenaOffsetX,right=1000+layout.arenaOffsetX;
-  for(const positions of [[left,left+40],[left,right],[right-40,right],[right,left]]){
+  for(const positions of [[left,left+40],[left,left+512],[right-512,right],[right,right-512]]){
     const f=projectCameraToOutput(getFightCameraFrame(layout,positions),LOGICAL_VIEW,RENDER_SIZE);
     for(const p of positions){
       const x=960+(p-f.scrollX-960)*f.zoom;
@@ -51,9 +52,9 @@ it('mantém escala e altura constantes no contato, afastamento e troca de lados'
   const layout=createStageLayout(defaultStage,1024,576,488);
   for(const positions of [[750,850],[304,1280],[1280,304],[400,500]]) {
     const frame=getFightCameraFrame(layout,positions);
-    expect(frame.zoom).toBe(1);
-    expect(frame.scrollY).toBe(0);
-    const headAtApex=488-110-144;
+    expect(frame.zoom).toBe(FIGHT_WORLD_SCALE);
+    expect(frame.scrollY).toBeCloseTo(75);
+    const headAtApex=488-(110+144)*frame.zoom;
     expect(headAtApex).toBeGreaterThan(78);
   }
   expect(getFightCameraFrame(layout,[400,500]).scrollX).not.toBe(getFightCameraFrame(layout,[900,1000]).scrollX);
@@ -69,10 +70,11 @@ it('contém todo o salto real sem alterar a câmera entre decolagem e aterrissag
     sim.stepFrame([{...neutral,direction:frame===0?'U':'N'},neutral]);
     const snapshot=sim.snapshot();
     const camera=getFightCameraFrame(layout,snapshot.characters.map(c=>c.x));
-    expect(camera.zoom).toBe(1);
-    expect(camera.scrollY).toBe(0);
+    expect(camera.zoom).toBe(FIGHT_WORLD_SCALE);
+    expect(camera.scrollY).toBeCloseTo(75);
     for(const fighter of snapshot.characters){
-      expect(fighter.y-144).toBeGreaterThan(78);
+      const head=288+(fighter.y-144-camera.scrollY-288)*camera.zoom;
+      expect(head).toBeGreaterThan(78);
       expect(fighter.y).toBeLessThanOrEqual(488);
       airborne ||= !fighter.grounded;
     }
