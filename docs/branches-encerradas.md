@@ -39,3 +39,9 @@ Auditoria solicitada pelo usuário: branches finalizadas devem ser encerradas ap
 ## Integração confirmada da apresentação
 
 `a35e1bafc4e71baa2182bff8c02e94ce5afbe0e5` integrado em development, CI 40263559525 aprovada. As cinco branches de apresentação/HUD/menu/sprites/gravidade listadas acima foram encerradas no remoto e localmente após a conferência. O commit histórico de gravidade foi preservado por merge sem alteração de árvore; conteúdo do protótipo não foi restaurado. Permanecem main/development e somente a nova branch ativa de animações.
+
+## Animações alinhadas e fechamento seguinte
+
+Branch `codex/feature-shoto-animacoes-alinhadas` encerrada local/remotamente após integração de `de97cce4085d921e69906b0b8e0e45b7925c95be`, CI de development 40265888943 aprovada: total de 26 branches encerradas até esse ponto.
+
+Sala de treino (`72cc275`) e dash/transições (`1d0e555` mais fechamento de evidências) foram reunidos preservando os commits de cada objetivo. Após CI do fechamento e da integração em development, encerrar ambas verificando ancestralidade e ausência de checkout ativo. Manter main/development.

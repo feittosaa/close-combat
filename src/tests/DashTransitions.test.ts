@@ -79,3 +79,12 @@ it('camadas de transição são determinísticas em 30/60/120/144 FPS e permanec
   };
   const reference=run(60);for(const fps of [30,120,144])expect(run(fps)).toEqual(reference);
 });
+
+it('preserva o relógio do stun quando a direção de movimento anterior é limpa',()=>{
+  const sim=new Simulation(createGameConfig(1024,576),undefined,{training:true,initialDistance:64});
+  sim.stepFrame([{...N,buttons:new Set(['1'])},input('F')]);
+  while(sim.snapshot().characters[1].mode!=='hitstun'&&sim.snapshot().frame<15)sim.stepFrame([N,input('F')]);
+  const hit=sim.snapshot().characters[1];expect(hit.mode).toBe('hitstun');
+  sim.stepFrame([N,N]);
+  expect(sim.snapshot().characters[1].stateStartedFrame).toBe(hit.stateStartedFrame);
+});

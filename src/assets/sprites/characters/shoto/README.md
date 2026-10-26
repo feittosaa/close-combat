@@ -32,7 +32,7 @@ python3 scripts/prepare-shoto-sprites.py
 python3 scripts/verify-shoto-sprites.py
 ```
 
-A preparação remove magenta, separa corpos, usa as raízes autoradas e empacota atlas. Não redesenha nem recolore. O salto usa raízes Y autoradas para que o movimento ilustrado não duplique a trajetória da física. A proporção agachada é preparada no PNG, sem alteração de caixas ou escala variável no runtime. O pé de apoio agachado varia 1,5 pixel no atlas (menos de um pixel na saída Full HD com escala fixa 1,6).
+A preparação remove magenta, separa corpos, usa as raízes autoradas e empacota atlas. Não redesenha nem recolore. O salto usa raízes Y autoradas para que o movimento ilustrado não duplique a trajetória da física. A proporção agachada é preparada no PNG, sem alteração de caixas ou escala variável no runtime. O pé de apoio agachado varia 1,5 pixel no atlas (cerca de um pixel na saída Full HD com escala fixa 1,6).
 
 ## Runtime e conferência
 

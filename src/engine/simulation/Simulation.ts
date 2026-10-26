@@ -181,8 +181,10 @@ export class Simulation {
     this.resolveBodies(); this.resolveScreenEdges(previousX);
     this.characters.forEach((character,index)=>{
       const previous=previousAnimationStates[index];
-      if(character.mode!==previous.mode || character.grounded!==previous.grounded || character.crouching!==previous.crouching || character.movementDirection!==previous.movementDirection){
-        character.stateStartedFrame=this.frame;
+      if(character.mode!==previous.mode)character.stateStartedFrame=this.frame;
+      const directionalPose=['moving','dashing','running'].includes(character.mode);
+      if(character.mode!==previous.mode || character.grounded!==previous.grounded || character.crouching!==previous.crouching ||
+        (directionalPose && character.movementDirection!==previous.movementDirection)){
         character.animationTransition={startedFrame:this.frame+1,from:previous,previous:previousTransitions[index]};
       }
     });
