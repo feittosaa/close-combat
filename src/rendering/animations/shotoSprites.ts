@@ -11,6 +11,7 @@ import crouchAtlas from '../../assets/sprites/characters/shoto/crouch.atlas.json
 /** Only the three manually approved actions have art. No move/physics data lives here. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
   textureKey: 'shoto-idle', frameSize: { width: 512, height: 768 }, totalFrames: 22,
+  frameTransforms: Object.fromEntries(Array.from({length:6},(_,i)=>[String(16+i),{scale:.9}])),
   footAnchorY: 720, displaySize: { width: 115.2, height: 172.8 },
   clips: [
     { key: 'shoto-idle', start: 0, end: 7, frameRate: 6, repeat: -1 },
@@ -36,6 +37,7 @@ export function getShotoSpritePose(state: CharacterState, frame: number) {
     : state.mode === 'moving' ? (state.movementDirection === 'backward' ? 'walk-backward' : 'walk') : undefined;
   if (!action) return undefined;
   const clip = shotoSpriteManifest.clips.find(clip => clip.key === `shoto-${action}`)!;
-  return { texture: action.startsWith('walk') ? 'shoto-walk' : `shoto-${action}`,
-    frame: getStateAnimationFrame(state, clip, frame), flipX: shouldFlipAnimation(state.facing, clip) };
+  const sampledFrame = getStateAnimationFrame(state, clip, frame);
+  return { scale: shotoSpriteManifest.frameTransforms?.[String(sampledFrame)]?.scale ?? 1, texture: action.startsWith('walk') ? 'shoto-walk' : `shoto-${action}`,
+    frame: sampledFrame, flipX: shouldFlipAnimation(state.facing, clip) };
 }

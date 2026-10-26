@@ -64,3 +64,15 @@ describe.each([30,60,120,144])('renderização de sprites em %i FPS', fps => {
     view.destroy();
   });
 });
+
+it('reduz somente o agachado em escala uniforme sem mudar o pivô dos pés ou as caixas',()=>{
+  const state=initial(),original=structuredClone(state);
+  expect(getShotoSpritePose(state,0)?.scale).toBe(1);
+  for(let frame=0;frame<60;frame++){
+    const pose=getShotoSpritePose({...state,mode:'crouching',crouching:true},frame)!;
+    expect(pose.scale).toBe(.9);
+    expect(shotoSpriteManifest.footAnchorY).toBe(720);
+  }
+  expect(getShotoSpritePose({...state,mode:'moving'},0)?.scale).toBe(1);
+  expect(state).toEqual(original);
+});

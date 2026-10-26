@@ -23,6 +23,8 @@ Este manifesto rege a entrega de mudanças. `base.md` continua sendo a raiz das 
 7. Aguardar a CI do commit enviado. Se falhar, corrigir na mesma branch, repetir verificações e enviar novamente. Nunca declarar CI remota aprovada com base apenas nos testes locais.
 8. Integrar a feature em `development` por PR preferencialmente, preservando rastreabilidade do objetivo. A integração exige a CI verde do commit atual e todos os critérios concluídos. Se a base mudar, atualizar a branch e validar novamente. Atualizar e enviar `development`; conferir a CI da integração antes de declarar a entrega encerrada.
 
+9. Após confirmar a integração e a CI de `development`, encerrar a branch finalizada: verificar ancestralidade no remoto atualizado e ausência de checkout/trabalho ativo, remover a referência remota e usar `git branch -d` para a local. Conferir a remoção no remoto. Não apagar `development`, `main`, tags ou branches com trabalho pendente. Branches dependentes absorvidas pela mesma integração também devem ser encerradas. Se uma branch antiga tiver commit único ainda não integrado, auditar e preservar seu histórico antes de removê-la; nunca fazer force push nem descartar código por inferência.
+
 A autorização do usuário para esse fluxo vale para os próximos objetivos deste projeto: concluir, testar, commitar, enviar a branch e integrar features prontas em `development`. Não repetir pedidos de confirmação para essas ações rotineiras. Restrições reais do remoto devem ser respeitadas e reportadas.
 
 ## Promoção de versão

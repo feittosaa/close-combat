@@ -1,4 +1,4 @@
-import { createStageLayout, getFightCameraFrame, getFightZoom } from '../rendering/stages/stageLayout';
+import { createStageLayout, getFightCameraFrame } from '../rendering/stages/stageLayout';
 import { afterEach, describe, expect, it } from 'vitest';
 import { getPlayerLayout, getSystemControls, keyLabel, loadControls, resetControls, saveControls, saveSystemControls, validateLayouts, validateSystemControls, BUTTON_COLORS } from '../input/controlSettings';
 import { commandTokens, formatCommand, screenDirection, formatCommandProse } from '../ui/commandNotation';
@@ -57,14 +57,9 @@ describe('histórico de mudanças de entrada',()=>{
   });
 });
 
-it('enquadra lutadores maiores de perto sem cortar as extremidades quando se afastam',()=>{
-  expect(getFightZoom(1024,[450,550])).toBe(1.95);
-  const far=getFightZoom(1024,[100,950]);expect(far).toBeLessThan(1.95);expect((850+230)*far).toBeLessThanOrEqual(1024);
-});
-
 it('preserva proporção, piso projetado e limites do cenário do contato até as extremidades',()=>{
   const layout=createStageLayout({minimumScale:.5,referenceSize:{width:3168,height:1344},groundY:1120} as Parameters<typeof createStageLayout>[0],1024,576,488);
-  let previousZoom=2;
+
   for(const positions of [[744,840],[304,1280],[0,96],[1488,1584]]){
     const frame=getFightCameraFrame(layout,positions);
     const projectY=(worldY:number)=>288+(worldY-frame.scrollY-288)*frame.zoom;
@@ -75,7 +70,7 @@ it('preserva proporção, piso projetado e limites do cenário do contato até a
     expect(left).toBeGreaterThanOrEqual(-1e-8);expect(right).toBeLessThanOrEqual(layout.worldWidth+1e-8);
     expect(projectY(layout.originY)).toBeLessThanOrEqual(1e-8);
     expect(projectY(layout.originY+1344*layout.scale)).toBeGreaterThanOrEqual(576-1e-8);
-    if(positions[0]===304)expect(frame.zoom).toBeLessThan(previousZoom);
-    previousZoom=frame.zoom;
+    expect(frame.zoom).toBe(1);
+    expect(frame.scrollY).toBe(0);
   }
 });

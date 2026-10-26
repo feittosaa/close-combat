@@ -43,15 +43,9 @@ export function getStageCameraScroll(layout: StageLayout, fighterPositions: read
   return Math.round(Math.max(0, Math.min(layout.worldWidth - layout.viewportWidth, center - layout.viewportWidth / 2)));
 }
 
-/** Close framing grows the whole world, while wide spacing still keeps both fighters in view. */
-export function getFightZoom(viewportWidth: number, fighterPositions: readonly number[]): number {
-  const span = fighterPositions.length > 1 ? Math.max(...fighterPositions) - Math.min(...fighterPositions) : 0;
-  return Math.min(1.95, viewportWidth / Math.max(1, span + 230));
-}
-
-/** Uniform projection shared by fighters and scenery. Bounds apply to the visible world rectangle. */
+/** Fixed world scale: only horizontal tracking changes during a fight. */
 export function getFightCameraFrame(layout: StageLayout, fighterPositions: readonly number[]): { zoom: number; scrollX: number; scrollY: number } {
-  const zoom = Math.max(layout.minimumZoom, getFightZoom(layout.viewportWidth, fighterPositions));
+  const zoom = 1;
   const halfVisibleWidth = layout.viewportWidth / (2 * zoom);
   const target = fighterPositions.length
     ? (Math.min(...fighterPositions) + Math.max(...fighterPositions)) / 2
