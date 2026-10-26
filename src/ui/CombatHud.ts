@@ -1,3 +1,4 @@
+import { LOGICAL_VIEW } from '../rendering/presentation';
 // src/ui/CombatHud.ts
 import Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
@@ -52,7 +53,7 @@ export class CombatHud {
     const stageLabel = scene.add.text(width / 2, 72, stageName.toUpperCase(), {
       color: '#f4f0e8', fontSize: '11px',
     }).setOrigin(0.5, 0);
-    const pauseHint = scene.add.text(width / 2, scene.scale.height - 18, 'P / ESC · PAUSA', { color: '#c8bdca', fontSize: '10px' }).setOrigin(.5).setVisible(!training);
+    const pauseHint = scene.add.text(width / 2, LOGICAL_VIEW.height - 18, 'P / ESC · PAUSA', { color: '#c8bdca', fontSize: '10px' }).setOrigin(.5).setVisible(!training);
     this.root = scene.add.container(0, 0, [
       ...this.labels, this.healthGraphics, ...this.modeLabels, this.timer,
       this.roundLabel, stageLabel, this.hitLabel, this.resultLabel, pauseHint,

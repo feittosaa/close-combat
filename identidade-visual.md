@@ -18,7 +18,7 @@ Imagens exploratórias só entram no projeto após aval manual. A autorização 
 
 O único personagem em desenvolvimento é o shoto de nome provisório **Shoto**. O usuário escolheu a proposta 5, “Anfitrião”: homem alto e esguio, cabelo castanho-avermelhado preso com mecha solta, bigode e cavanhaque, paletó marfim, camisa vinho, calça preta e botas marrons. O nome de conceito não altera seu nome no jogo.
 
-O aval posterior autoriza integrar somente idle, caminhada e idle agachado das folhas wide aprovadas. PNGs magenta originais ficam preservados; cópias RGBA preparadas usam células fixas, pés/pivô comuns e escala uniforme. A branch `codex/feature-shoto-sprites` permanece sem integração enquanto a revisão no jogo estiver pendente. Arte de ataques, saltos, dash/corrida, guarda/reação e transições ainda não foi produzida; esses estados usam a representação técnica explícita. Espelhamento também espelha o relógio e outras assimetrias; versões direcionais independentes não foram entregues. Novas propostas exploratórias dependem de aval manual para inclusão no projeto.
+O aval posterior autoriza integrar somente idle, caminhada e idle agachado das folhas wide aprovadas. PNGs magenta originais ficam preservados; cópias RGBA preparadas usam células fixas, pés/pivô comuns e escala uniforme. A branch conjunta `codex/feature-apresentacao-1080p` reúne sprites e menu aprovado e permanece sem integração enquanto a revisão no jogo estiver pendente. Arte de ataques, saltos, dash/corrida, guarda/reação e transições ainda não foi produzida; esses estados usam a representação técnica explícita. Espelhamento também espelha o relógio e outras assimetrias; versões direcionais independentes não foram entregues. Novas propostas exploratórias dependem de aval manual para inclusão no projeto.
 
 Todo o elenco anterior está retirado do novo design. Seus sprites, retratos e manifestos foram removidos do runtime e dos assets nesta migração; não são modelos para o novo personagem. A geometria neutra permanece para estados sem arte e inspeção de regras. Pixel art antiga não é a direção final nem uma obrigação para a nova produção.
 
@@ -31,6 +31,10 @@ Todo o elenco anterior está retirado do novo design. Seus sprites, retratos e m
 - HUD legível, com tipografia simples para números/comandos e ornamentos contidos nas bordas.
 - Feedback distinto para acerto, bloqueio, combo breaker, drive rush, rage e rage art quando suas regras forem aprovadas. Parry não terá efeito ou indicador novo.
 - Estados comunicados por forma/texto além de cor; evitar flashes prolongados e efeitos que escondam o defensor.
+
+## Resolução de apresentação
+
+Canvas Full HD 1920 × 1080 com composição lógica 1024 × 576 e escala uniforme de câmera. Zoom próximo 1,95 para aumentar a presença do personagem; câmera abre por distância. Texto rasterizado em resolução 2 e filtragem linear para a ilustração. O menu usa a arte diurna aprovada com movimento lento, respeitando movimento reduzido, e interface com serifas, sombras escuras e acentos quentes.
 
 ## Animação e contrato técnico
 

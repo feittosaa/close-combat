@@ -1,3 +1,4 @@
+import { configureUiCamera, projectCameraToOutput, sharpenSceneText } from '../presentation';
 import Phaser from 'phaser';
 import type { StageDefinition } from './StageDefinition';
 import type { StageLayout } from './stageLayout';
@@ -34,7 +35,10 @@ export class StageView {
   }
 
   sync(fighterPositions: readonly number[]): void {
-    const frame = getFightCameraFrame(this.layout, fighterPositions);
+    const logicalFrame = getFightCameraFrame(this.layout, fighterPositions);
+    const frame = projectCameraToOutput(logicalFrame,
+      { width: this.layout.viewportWidth, height: this.layout.worldHeight },
+      this.scene.scale ?? { width: this.layout.viewportWidth, height: this.layout.worldHeight });
     this.scene.cameras.main.setZoom(frame.zoom);
     this.scene.cameras.main.setScroll(frame.scrollX, frame.scrollY);
   }
@@ -43,6 +47,8 @@ export class StageView {
   /** A separate unzoomed camera keeps controls/HUD readable while the whole combat world grows together. */
   syncHudCamera(): void {
     if (!this.hudCamera) this.hudCamera = this.scene.cameras.add(0, 0, this.scene.scale.width, this.scene.scale.height, false, 'hud');
+    configureUiCamera(this.hudCamera, this.scene.scale);
+    sharpenSceneText(this.scene);
     const objects = this.scene.children.list;
     const isHud = (object: Phaser.GameObjects.GameObject): boolean => 'depth' in object && typeof object.depth === 'number' && object.depth >= 100;
     this.scene.cameras.main.ignore(objects.filter(isHud));
