@@ -1,6 +1,6 @@
 {
   "crouchFootDriftPixels": 1.5,
-  "crouchDefenseFootDriftPixels": 1.0,
+  "crouchDefenseFootDriftPixels": 1.5,
   "frames": {
     "idle": [
       {
@@ -9,85 +9,93 @@
           89,
           522,
           720
-        ],
-        "upperHeadWidth": 100
-      },
-      {
-        "opaqueBounds": [
-          252,
-          88,
-          521,
-          720
-        ],
-        "upperHeadWidth": 99
-      },
-      {
-        "opaqueBounds": [
-          252,
-          82,
-          512,
-          720
-        ],
-        "upperHeadWidth": 91
-      },
-      {
-        "opaqueBounds": [
-          252,
-          88,
-          510,
-          720
-        ],
-        "upperHeadWidth": 99
+        ]
       },
       {
         "opaqueBounds": [
           252,
           89,
-          525,
-          720
-        ],
-        "upperHeadWidth": 100
-      },
-      {
-        "opaqueBounds": [
-          252,
-          89,
-          510,
-          720
-        ],
-        "upperHeadWidth": 102
-      },
-      {
-        "opaqueBounds": [
-          251,
-          90,
-          525,
-          720
-        ],
-        "upperHeadWidth": 100
-      },
-      {
-        "opaqueBounds": [
-          249,
-          88,
-          517,
-          720
-        ],
-        "upperHeadWidth": 100
-      }
-    ],
-    "walk": [
-      {
-        "opaqueBounds": [
-          245,
-          87,
-          532,
+          520,
           720
         ]
       },
       {
         "opaqueBounds": [
-          255,
+          252,
+          83,
+          511,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          89,
+          509,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          90,
+          524,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          90,
+          509,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          251,
+          91,
+          524,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          249,
+          89,
+          517,
+          720
+        ]
+      }
+    ],
+    "walk": [
+      {
+        "opaqueBounds": [
+          190,
+          87,
+          578,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          269,
+          88,
+          451,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          233,
+          89,
+          481,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          219,
           86,
           515,
           720
@@ -95,49 +103,33 @@
       },
       {
         "opaqueBounds": [
-          264,
-          87,
-          534,
-          721
-        ]
-      },
-      {
-        "opaqueBounds": [
-          259,
-          86,
-          513,
-          720
-        ]
-      },
-      {
-        "opaqueBounds": [
-          237,
-          87,
-          528,
-          720
-        ]
-      },
-      {
-        "opaqueBounds": [
-          265,
-          86,
-          512,
+          225,
+          88,
+          568,
           720
         ]
       },
       {
         "opaqueBounds": [
           267,
-          87,
-          527,
+          88,
+          444,
           720
         ]
       },
       {
         "opaqueBounds": [
-          247,
-          85,
-          522,
+          246,
+          88,
+          481,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          214,
+          89,
+          546,
           720
         ]
       }
@@ -145,57 +137,57 @@
     "crouch": [
       {
         "opaqueBounds": [
-          220,
-          322,
-          506,
-          720
-        ],
-        "plantedFootX": 250.0
-      },
-      {
-        "opaqueBounds": [
-          227,
-          321,
-          506,
-          720
-        ],
-        "plantedFootX": 249.0
-      },
-      {
-        "opaqueBounds": [
-          228,
-          324,
-          480,
-          720
-        ],
-        "plantedFootX": 249.5
-      },
-      {
-        "opaqueBounds": [
-          228,
+          238,
           323,
-          504,
-          721
+          573,
+          720
         ],
-        "plantedFootX": 249.5
+        "plantedFootX": 291.5
       },
       {
         "opaqueBounds": [
-          229,
-          325,
-          512,
+          250,
+          326,
+          574,
           720
         ],
-        "plantedFootX": 250.5
+        "plantedFootX": 291.5
       },
       {
         "opaqueBounds": [
-          228,
-          324,
-          491,
+          250,
+          338,
+          568,
           720
         ],
-        "plantedFootX": 250.0
+        "plantedFootX": 291.0
+      },
+      {
+        "opaqueBounds": [
+          250,
+          345,
+          561,
+          720
+        ],
+        "plantedFootX": 292.0
+      },
+      {
+        "opaqueBounds": [
+          252,
+          323,
+          560,
+          720
+        ],
+        "plantedFootX": 290.5
+      },
+      {
+        "opaqueBounds": [
+          249,
+          341,
+          571,
+          720
+        ],
+        "plantedFootX": 291.0
       }
     ],
     "jump": [
@@ -203,7 +195,7 @@
         "opaqueBounds": [
           234,
           147,
-          521,
+          514,
           720
         ]
       },
@@ -211,23 +203,23 @@
         "opaqueBounds": [
           232,
           108,
-          498,
-          738
+          502,
+          744
         ]
       },
       {
         "opaqueBounds": [
           238,
           86,
-          527,
-          658
+          528,
+          659
         ]
       },
       {
         "opaqueBounds": [
           252,
           82,
-          521,
+          522,
           490
         ]
       },
@@ -235,32 +227,32 @@
         "opaqueBounds": [
           247,
           79,
-          519,
-          700
+          523,
+          704
         ]
       },
       {
         "opaqueBounds": [
           235,
           82,
-          500,
-          702
+          495,
+          707
         ]
       },
       {
         "opaqueBounds": [
           216,
           193,
-          519,
-          719
+          525,
+          720
         ]
       },
       {
         "opaqueBounds": [
           234,
           88,
-          522,
-          716
+          520,
+          720
         ]
       }
     ],
@@ -269,47 +261,47 @@
         "opaqueBounds": [
           222,
           88,
-          570,
+          568,
           720
         ]
       },
       {
         "opaqueBounds": [
           223,
-          87,
-          572,
+          88,
+          567,
           720
         ]
       },
       {
         "opaqueBounds": [
           224,
-          87,
-          577,
+          90,
+          567,
           720
         ]
       },
       {
         "opaqueBounds": [
           231,
-          88,
-          560,
+          93,
+          548,
           720
         ]
       },
       {
         "opaqueBounds": [
           227,
-          86,
-          561,
+          88,
+          565,
           720
         ]
       },
       {
         "opaqueBounds": [
           224,
-          87,
-          542,
+          91,
+          560,
           720
         ]
       }
@@ -327,7 +319,7 @@
         "opaqueBounds": [
           224,
           95,
-          503,
+          509,
           720
         ]
       },
@@ -335,38 +327,38 @@
         "opaqueBounds": [
           230,
           92,
-          533,
+          539,
           720
         ]
       },
       {
         "opaqueBounds": [
           224,
-          94,
-          489,
+          92,
+          492,
           720
         ]
       },
       {
         "opaqueBounds": [
-          198,
-          93,
-          489,
+          199,
+          91,
+          492,
           720
         ]
       },
       {
         "opaqueBounds": [
           213,
-          91,
-          500,
+          88,
+          501,
           720
         ]
       },
       {
         "opaqueBounds": [
           240,
-          89,
+          87,
           512,
           720
         ]
@@ -374,8 +366,8 @@
       {
         "opaqueBounds": [
           211,
-          83,
-          494,
+          80,
+          496,
           720
         ]
       }
@@ -392,16 +384,16 @@
       {
         "opaqueBounds": [
           169,
-          218,
-          569,
+          216,
+          563,
           720
         ]
       },
       {
         "opaqueBounds": [
           7,
-          196,
-          715,
+          193,
+          714,
           720
         ]
       },
@@ -409,15 +401,15 @@
         "opaqueBounds": [
           213,
           199,
-          530,
-          721
+          532,
+          720
         ]
       },
       {
         "opaqueBounds": [
           139,
           150,
-          541,
+          538,
           720
         ]
       },
@@ -425,7 +417,7 @@
         "opaqueBounds": [
           243,
           87,
-          537,
+          534,
           720
         ]
       }
@@ -435,15 +427,15 @@
         "opaqueBounds": [
           222,
           89,
-          557,
-          721
+          560,
+          720
         ]
       },
       {
         "opaqueBounds": [
           239,
-          117,
-          485,
+          116,
+          483,
           720
         ]
       },
@@ -459,14 +451,14 @@
         "opaqueBounds": [
           257,
           121,
-          497,
+          494,
           720
         ]
       },
       {
         "opaqueBounds": [
           215,
-          162,
+          161,
           538,
           720
         ]
@@ -475,7 +467,7 @@
         "opaqueBounds": [
           223,
           88,
-          559,
+          560,
           720
         ]
       }
@@ -484,32 +476,32 @@
       {
         "opaqueBounds": [
           249,
-          86,
-          537,
-          721
+          87,
+          532,
+          720
         ]
       },
       {
         "opaqueBounds": [
           237,
-          88,
-          542,
+          91,
+          537,
           720
         ]
       },
       {
         "opaqueBounds": [
           232,
-          99,
-          598,
+          103,
+          589,
           720
         ]
       },
       {
         "opaqueBounds": [
           217,
-          99,
-          595,
+          100,
+          590,
           720
         ]
       }
@@ -518,8 +510,8 @@
       {
         "opaqueBounds": [
           241,
-          87,
-          542,
+          88,
+          538,
           720
         ]
       },
@@ -527,14 +519,14 @@
         "opaqueBounds": [
           236,
           88,
-          542,
+          539,
           720
         ]
       },
       {
         "opaqueBounds": [
           224,
-          105,
+          106,
           547,
           720
         ]
@@ -542,8 +534,8 @@
       {
         "opaqueBounds": [
           191,
-          115,
-          544,
+          118,
+          533,
           720
         ]
       }
@@ -552,23 +544,23 @@
       {
         "opaqueBounds": [
           248,
-          87,
-          561,
-          721
+          88,
+          559,
+          720
         ]
       },
       {
         "opaqueBounds": [
           251,
           122,
-          575,
+          573,
           720
         ]
       },
       {
         "opaqueBounds": [
           248,
-          215,
+          217,
           593,
           720
         ]
@@ -587,7 +579,7 @@
         "opaqueBounds": [
           245,
           89,
-          542,
+          540,
           720
         ]
       },
@@ -595,15 +587,15 @@
         "opaqueBounds": [
           245,
           141,
-          518,
+          521,
           720
         ]
       },
       {
         "opaqueBounds": [
           205,
-          211,
-          511,
+          210,
+          523,
           720
         ]
       },
@@ -611,8 +603,8 @@
         "opaqueBounds": [
           242,
           92,
-          545,
-          721
+          547,
+          720
         ]
       }
     ],
@@ -621,49 +613,49 @@
         "opaqueBounds": [
           243,
           88,
-          552,
+          556,
           720
         ]
       },
       {
         "opaqueBounds": [
           232,
-          88,
-          543,
+          87,
+          542,
           720
         ]
       },
       {
         "opaqueBounds": [
           222,
-          89,
-          550,
+          91,
+          553,
           720
         ]
       },
       {
         "opaqueBounds": [
           219,
-          91,
-          556,
-          721
+          92,
+          557,
+          720
         ]
       }
     ],
     "enter-dash": [
       {
         "opaqueBounds": [
-          253,
+          254,
           88,
-          534,
+          528,
           720
         ]
       },
       {
         "opaqueBounds": [
           226,
-          111,
-          587,
+          112,
+          585,
           720
         ]
       },
@@ -671,15 +663,15 @@
         "opaqueBounds": [
           175,
           197,
-          601,
+          598,
           720
         ]
       },
       {
         "opaqueBounds": [
           69,
-          207,
-          737,
+          211,
+          736,
           720
         ]
       }
@@ -687,83 +679,83 @@
     "enter-backstep": [
       {
         "opaqueBounds": [
-          241,
+          242,
           89,
-          546,
+          547,
           720
         ]
       },
       {
         "opaqueBounds": [
           216,
-          91,
-          561,
-          721
+          90,
+          560,
+          720
         ]
       },
       {
         "opaqueBounds": [
           231,
-          118,
-          512,
-          721
+          120,
+          513,
+          720
         ]
       },
       {
         "opaqueBounds": [
           275,
-          115,
+          114,
           546,
-          721
+          720
         ]
       }
     ],
     "light-punch": [
       {
         "opaqueBounds": [
-          435,
+          436,
           89,
-          721,
+          724,
           720
         ]
       },
       {
         "opaqueBounds": [
           429,
-          89,
-          832,
+          91,
+          816,
           720
         ]
       },
       {
         "opaqueBounds": [
           422,
-          89,
-          887,
+          90,
+          894,
           720
         ]
       },
       {
         "opaqueBounds": [
           431,
-          89,
-          722,
+          91,
+          728,
           720
         ]
       },
       {
         "opaqueBounds": [
           433,
-          89,
-          722,
+          91,
+          727,
           720
         ]
       },
       {
         "opaqueBounds": [
           433,
-          89,
-          723,
+          90,
+          725,
           720
         ]
       }
@@ -771,105 +763,99 @@
     "heavy-punch": [
       {
         "opaqueBounds": [
-          434,
+          413,
           89,
-          707,
+          750,
           720
-        ],
-        "upperHeadWidth": 100
+        ]
       },
       {
         "opaqueBounds": [
-          401,
-          94,
-          730,
+          391,
+          88,
+          770,
           720
-        ],
-        "upperHeadWidth": 103
+        ]
+      },
+      {
+        "opaqueBounds": [
+          381,
+          86,
+          917,
+          720
+        ]
       },
       {
         "opaqueBounds": [
           382,
-          95,
-          840,
+          90,
+          780,
           720
-        ],
-        "upperHeadWidth": 105
+        ]
       },
       {
         "opaqueBounds": [
-          395,
-          93,
-          735,
+          403,
+          88,
+          759,
           720
-        ],
-        "upperHeadWidth": 101
+        ]
       },
       {
         "opaqueBounds": [
-          435,
-          89,
-          702,
+          423,
+          88,
+          739,
           720
-        ],
-        "upperHeadWidth": 100
-      },
-      {
-        "opaqueBounds": [
-          434,
-          89,
-          705,
-          720
-        ],
-        "upperHeadWidth": 100
+        ]
       }
     ],
     "light-kick": [
       {
         "opaqueBounds": [
           428,
-          88,
-          733,
+          89,
+          731,
           720
         ]
       },
       {
         "opaqueBounds": [
           547,
-          97,
-          815,
+          98,
+          810,
           720
         ]
       },
       {
         "opaqueBounds": [
           539,
-          96,
-          1062,
+          98,
+          1066,
           720
         ]
       },
       {
         "opaqueBounds": [
           545,
-          97,
-          806,
+          99,
+          801,
           720
         ]
       },
       {
         "opaqueBounds": [
           559,
-          97,
-          881,
-          721
+          99,
+          876,
+          720
         ]
       },
       {
         "opaqueBounds": [
           433,
-          89,
-          734,
+          90,
+          722,
           720
         ]
       }
@@ -877,113 +863,107 @@
     "heavy-kick": [
       {
         "opaqueBounds": [
-          434,
+          430,
           89,
-          696,
+          732,
           720
-        ],
-        "upperHeadWidth": 101
+        ]
       },
       {
         "opaqueBounds": [
-          568,
+          516,
           89,
-          839,
+          816,
           720
-        ],
-        "upperHeadWidth": 99
+        ]
       },
       {
         "opaqueBounds": [
-          552,
-          97,
-          1132,
-          720
-        ],
-        "upperHeadWidth": 97
-      },
-      {
-        "opaqueBounds": [
-          528,
-          102,
-          769,
-          720
-        ],
-        "upperHeadWidth": 98
-      },
-      {
-        "opaqueBounds": [
-          488,
-          101,
-          715,
-          720
-        ],
-        "upperHeadWidth": 98
-      },
-      {
-        "opaqueBounds": [
-          435,
+          513,
           89,
-          696,
+          1147,
           720
-        ],
-        "upperHeadWidth": 100
+        ]
+      },
+      {
+        "opaqueBounds": [
+          535,
+          89,
+          884,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          537,
+          88,
+          853,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          436,
+          85,
+          730,
+          720
+        ]
       }
     ],
     "crouch-defense": [
       {
         "opaqueBounds": [
-          214,
+          237,
           320,
-          610,
+          626,
           720
         ],
-        "plantedFootX": 250.0
+        "plantedFootX": 274.5
       },
       {
         "opaqueBounds": [
-          219,
+          242,
           316,
-          526,
+          547,
           720
         ],
-        "plantedFootX": 250.0
+        "plantedFootX": 274.0
       },
       {
         "opaqueBounds": [
-          219,
-          318,
-          523,
+          242,
+          319,
+          540,
           720
         ],
-        "plantedFootX": 250.5
+        "plantedFootX": 273.0
       },
       {
         "opaqueBounds": [
-          221,
-          318,
-          523,
+          242,
+          319,
+          543,
           720
         ],
-        "plantedFootX": 249.5
+        "plantedFootX": 274.0
       },
       {
         "opaqueBounds": [
-          216,
+          240,
           317,
-          521,
+          539,
           720
         ],
-        "plantedFootX": 250.0
+        "plantedFootX": 274.0
       },
       {
         "opaqueBounds": [
-          218,
-          318,
-          523,
+          239,
+          319,
+          542,
           720
         ],
-        "plantedFootX": 250.0
+        "plantedFootX": 273.0
       }
     ],
     "air-defense": [
@@ -991,7 +971,7 @@
         "opaqueBounds": [
           257,
           82,
-          526,
+          522,
           490
         ]
       },
@@ -999,7 +979,7 @@
         "opaqueBounds": [
           268,
           82,
-          504,
+          514,
           492
         ]
       },
@@ -1007,98 +987,32 @@
         "opaqueBounds": [
           271,
           82,
-          496,
-          492
+          511,
+          493
         ]
       },
       {
         "opaqueBounds": [
           273,
           82,
-          497,
+          515,
           492
         ]
       },
       {
         "opaqueBounds": [
           275,
-          81,
-          503,
-          492
-        ]
-      },
-      {
-        "opaqueBounds": [
-          272,
-          81,
-          500,
-          492
-        ]
-      }
-    ],
-    "walk-inbetweens": [
-      {
-        "opaqueBounds": [
-          246,
-          86,
-          524,
-          720
-        ]
-      },
-      {
-        "opaqueBounds": [
-          262,
-          86,
-          530,
-          721
-        ]
-      },
-      {
-        "opaqueBounds": [
-          255,
-          87,
-          503,
-          721
-        ]
-      },
-      {
-        "opaqueBounds": [
-          272,
-          84,
-          507,
-          720
-        ]
-      },
-      {
-        "opaqueBounds": [
-          243,
-          84,
+          82,
           518,
-          720
+          490
         ]
       },
       {
         "opaqueBounds": [
-          269,
-          87,
-          523,
-          721
-        ]
-      },
-      {
-        "opaqueBounds": [
-          241,
-          86,
-          519,
-          721
-        ]
-      },
-      {
-        "opaqueBounds": [
-          254,
-          92,
-          529,
-          721
+          272,
+          81,
+          514,
+          492
         ]
       }
     ]
