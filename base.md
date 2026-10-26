@@ -170,7 +170,7 @@ As cinco propostas adicionais receberam aval manual para integração após ajus
 
 ### Cenário de treino permanente
 
-O Cais foi retirado do catálogo e dos assets ativos. Sala de Treino é uma sala neutra de parede/piso quadriculados, eixos de medição e textura pintada no traço ilustrado do projeto. É fixa nos modos Treino, Tutorial Básico e Tutorial de Combos; esses modos pulam a escolha de cenário. Temporariamente é também a única opção geral de PvP e Arcade. Quando novos cenários forem produzidos, retirar a sala das opções gerais e mantê-la restrita aos modos de treinamento. A política dos modos de treino deve continuar explícita, independente do default geral. Sala em uma camada opaca, parallax 1, escala uniforme e câmera lateral fixa; imagens não mudam colisões.
+O Cais foi retirado do catálogo e dos assets ativos. Sala de Treino é uma sala neutra de parede/piso quadriculados, eixos de medição e textura pintada no traço ilustrado do projeto. É fixa nos modos Treino, Tutorial Básico e Tutorial de Combos; esses modos pulam a escolha de cenário. Bar ao Anoitecer é o primeiro cenário geral de PvP e Arcade; Sala de Treino fica restrita aos modos de treinamento. O bar reúne arquitetura e piso em uma pintura contínua, com caixa, vaso e banco pequenos em assets separados. Objetos são decorativos por enquanto; interação futura não está implementada. A política dos modos de treino deve continuar explícita, independente do default geral. Sala em uma camada opaca, parallax 1, escala uniforme e câmera lateral fixa; imagens não mudam colisões.
 
 ### Paleta de materiais do Shoto — 26/10/2026
 
