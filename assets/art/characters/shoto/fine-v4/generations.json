@@ -1,0 +1,330 @@
+[
+  {
+    "name": "walk",
+    "file": "walk-auburn.png",
+    "count": 8,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/walk-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 8 poses of the EXISTING walk action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "walk-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-8d57c91c-e02f-4e88-b3f4-c6756a8520a5.png"
+  },
+  {
+    "name": "crouch",
+    "file": "crouch-auburn.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/crouch-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING crouch action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "crouch-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-294eb75a-9a4d-4c8c-802f-b274a70cf41a.png"
+  },
+  {
+    "name": "jump",
+    "file": "jump-auburn.png",
+    "count": 8,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/jump-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 8 poses of the EXISTING jump action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "jump-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-26e5d936-e632-4097-8cef-3af5c7fc2c31.png"
+  },
+  {
+    "name": "defense",
+    "file": "defense-auburn.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/defense-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING defense action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "defense-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-f5f28ead-ce12-4919-b567-9f17c81740df.png"
+  },
+  {
+    "name": "walk-backward",
+    "file": "walk-backward-auburn.png",
+    "count": 8,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/walk-backward-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 8 poses of the EXISTING walk-backward action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "walk-backward-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-8161a7d9-8f48-41c2-800c-d9fd43f35a76.png"
+  },
+  {
+    "name": "dash",
+    "file": "dash-auburn.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/dash-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING dash action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "dash-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-ae141904-3d6d-4bc2-9379-33c57bc5be19.png"
+  },
+  {
+    "name": "backstep",
+    "file": "backstep-auburn.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/backstep-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING backstep action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "backstep-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-16a2dad3-b3cc-4cca-b08a-57cf18c66db8.png"
+  },
+  {
+    "name": "enter-walk",
+    "file": "enter-walk-auburn.png",
+    "count": 4,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/enter-walk-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 4 poses of the EXISTING enter-walk action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "enter-walk-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-64038332-d9d4-4a76-b4fb-f4a3d870033f.png"
+  },
+  {
+    "name": "enter-backward",
+    "file": "enter-backward-auburn.png",
+    "count": 4,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/enter-backward-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 4 poses of the EXISTING enter-backward action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "enter-backward-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-30c5d652-087e-4453-abda-bf636bc5390c.png"
+  },
+  {
+    "name": "enter-crouch",
+    "file": "enter-crouch-auburn.png",
+    "count": 4,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/enter-crouch-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 4 poses of the EXISTING enter-crouch action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "enter-crouch-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-41ef2110-e734-4597-8000-25d952b421b8.png"
+  },
+  {
+    "name": "enter-jump",
+    "file": "enter-jump-auburn.png",
+    "count": 4,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/enter-jump-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 4 poses of the EXISTING enter-jump action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "enter-jump-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-f904a913-5d22-43bc-807d-5b5ce6d453a7.png"
+  },
+  {
+    "name": "enter-defense",
+    "file": "enter-defense-auburn.png",
+    "count": 4,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/enter-defense-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 4 poses of the EXISTING enter-defense action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "enter-defense-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-3199d19c-6384-4efc-b997-e911535eb5c1.png"
+  },
+  {
+    "name": "enter-dash",
+    "file": "enter-dash-auburn.png",
+    "count": 4,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/enter-dash-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 4 poses of the EXISTING enter-dash action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "enter-dash-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-6a096d4a-15c0-4680-a23e-b43ed35d2374.png"
+  },
+  {
+    "name": "enter-backstep",
+    "file": "enter-backstep-auburn.png",
+    "count": 4,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/enter-backstep-auburn.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 4 poses of the EXISTING enter-backstep action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "enter-backstep-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-a9024c86-b174-43b7-a304-66ca97eed5bf.png"
+  },
+  {
+    "name": "light-punch",
+    "file": "light-punch-canonical-v2.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/light-punch-canonical-v2.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING light-punch action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "light-punch-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-d312dca2-59d2-4f77-a405-94fb75662477.png"
+  },
+  {
+    "name": "heavy-punch",
+    "file": "heavy-punch-canonical-v2.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/heavy-punch-canonical-v2.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING heavy-punch action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "heavy-punch-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-b6d5e870-aa11-4c72-8d93-26492f1d556f.png"
+  },
+  {
+    "name": "light-kick",
+    "file": "light-kick-canonical-v2.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/light-kick-canonical-v2.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING light-kick action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "light-kick-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-f895bb5f-d6ba-4f8d-b808-a4de6743e2f9.png"
+  },
+  {
+    "name": "heavy-kick",
+    "file": "heavy-kick-canonical-v2.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/heavy-kick-canonical-v2.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING heavy-kick action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "heavy-kick-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-620b2c07-5b89-4c9e-ae32-8f33ebd69b52.png"
+  },
+  {
+    "name": "crouch-defense",
+    "file": "crouch-defense-canonical-v2.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/crouch-defense-canonical-v2.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING crouch-defense action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "crouch-defense-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-5aa6ad82-8719-40c5-bbbe-2b785bc814f2.png"
+  },
+  {
+    "name": "air-defense",
+    "file": "air-defense-canonical-v2.png",
+    "count": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/src/assets/sprites/characters/shoto/source/air-defense-canonical-v2.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Make a precise LOCAL RETOUCH of image 1 (EDIT TARGET), not a new character sheet. Image 2 is the original identity reference ONLY, not a redesign instruction. Preserve EXACT existing drawings, pose order, limb placement, head/face dimensions, hair shape/color, cream blazer shading/color, shirt, skin, fingers, shoes, body proportions, silhouette, positions, canvas and spacing. Change ONLY four details in EVERY figure: erase belt/buckle while keeping a plain tailored waistband; replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist (two bangles total, no watch faces, gold #C59A4B with restrained darker shading); recolor existing moustache/goatee strokes DARK BROWN #50372B without changing their shape; recolor trousers VERY DARK NEUTRAL CHARCOAL GRAY base #242526, near-black shadows and restrained dark-gray fold highlights, same cloth/cut/folds, no olive or lighter fabric. Do not change blazer to white, recolor hands/hair, change sleeve length, redraw anatomy or invent poses. Keep pure #FF00FF background, one horizontal row, exact same complete bodies and identical placement. No pink fingertips, ground shadows, labels, new costume or camera. Keep exactly 6 poses of the EXISTING air-defense action. Do not regenerate or respace them. This request changes accessories/waistband/beard/trouser colors ONLY.",
+    "source": "air-defense-fine-v4.png",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-274e457f-2ceb-497a-8a4c-2cf78f0c1a44.png"
+  },
+  {
+    "index": 0,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-0.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-1.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: rear heel lifts as the trailing knee bends, front support foot remains planted. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
+    "name": "walk-between-0",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-dfe6aa1b-5304-424e-9648-40e8be5e14c0.png"
+  },
+  {
+    "index": 1,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-1.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-2.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: trailing foot continues its passing swing without changing which leg is supporting. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
+    "name": "walk-between-1",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-873594e7-c57e-4302-866d-43e30ad9ae3a.png"
+  },
+  {
+    "index": 2,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-2.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-3.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: swinging leg extends forward toward contact, support foot rolls naturally. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
+    "name": "walk-between-2",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-a479506b-6e2e-4838-a8bb-3ecf1284184d.png"
+  },
+  {
+    "index": 3,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-3.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-4.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: forward heel settles toward flat contact while the rear leg extends. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
+    "name": "walk-between-3",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-c9750334-130b-4e0a-b653-374ce1c79b5d.png"
+  },
+  {
+    "index": 4,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-4.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-5.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: opposite trailing heel lifts and that knee bends, opposite front foot supports. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
+    "name": "walk-between-4",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-534d35eb-60bf-4dc6-ba9a-3770f77de0dc.png"
+  },
+  {
+    "index": 5,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-5.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-6.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: opposite trailing foot continues its passing swing, support leg unchanged. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
+    "name": "walk-between-5",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-98fc8f78-f23a-4b5f-90a9-ca32f70c8e75.png"
+  },
+  {
+    "index": 6,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-6.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-7.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: opposite swinging leg extends toward forward contact. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
+    "name": "walk-between-6",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-fe87654c-cf58-478f-8c72-e83de4a2e9f2.png"
+  },
+  {
+    "index": 7,
+    "refs": [
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-7.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/fine-v4/walk-keys/key-0.png",
+      "/home/feit/Documents/programming/close-combat/assets/art/characters/shoto/turnaround.png"
+    ],
+    "prompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: swinging heel settles into the original starting contact to close the loop. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
+    "name": "walk-between-7",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-32fd75e5-187c-4868-bbce-d575b5329d58.png"
+  }
+]

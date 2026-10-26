@@ -335,3 +335,22 @@ O usuário reprovou a v3: dedos rosados, relógio intermitente, marcha incoerent
 Objetivo desta recuperação: voltar à base anterior, sem nova geração ou tentativa de corrigir todas as folhas ao mesmo tempo. Os ajustes artísticos solicitados continuam pendentes e serão tratados pontualmente; não declarar que a restauração os resolveu.
 
 Restauração local conferida: 44 arquivos ativos idênticos byte a byte a 61ccbf9 (imagens, atlas, raízes e reprodução), 120 desenhos/21 atlas, sem as intermediárias rejeitadas. npm ci, 168 testes/22 arquivos, build, verificador e diff aprovados. Capturas/relatório em docs/evidence/shoto-restauracao-v3. Nenhuma arte nova gerada. Restauração enviada em `b05c86c52503f70bfb83275112ee93e17ead9072`, com [CI 40388103035](https://github.com/feittosaa/close-combat/actions/runs/40388103035) aprovada. Nenhuma integração; a aprovação técnica comprova a execução da recuperação, não os ajustes artísticos pendentes. Este fechamento documental terá a própria CI conferida antes do relato final.
+
+
+### Ajustes localizados v4 nas folhas existentes
+
+Pedido atual: remover cinto/fivela de todas as folhas, uma pulseira de ouro em cada braço, cavanhaque marrom igual ao cabelo e calça no cinza mais escuro. Preservar desenhos existentes, rosto, blazer creme, pele, sapatos, altura e alinhamento. Somente caminhada frontal recebe novas intermediárias entre as poses atuais; chute forte deve preparar, estender, recolher e pousar a mesma perna. Não usar a v3 rejeitada. Mesma branch, sem merge.
+
+- [x] Editar e comparar uma primeira folha, sem trocar os desenhos que já funcionam.
+- [x] Aplicar somente os detalhes pedidos às demais folhas e conectores, conferindo poses/cores/acessórios.
+- [x] Criar intermediárias da caminhada entre pares dos oito desenhos existentes, mantendo as chaves; corrigir continuidade da perna no chute forte.
+- [x] Preparar sem deformar/recolorir os desenhos, conferir ciclos no jogo, testes/build/diff e registrar estado real do remoto.
+
+O pedido atual inclui trazer o Bar ao Anoitecer da conversa «Gerar três imagens de cenário» para ESTA mesma branch. Arte e implementação de 254b6af reaproveitadas, com chão reduzido, Arcade/PvP no bar e treino/tutoriais na sala. Não altera câmera nem escala dos personagens. A validação conjunta será refeita com as animações v4.
+
+
+Revisão v4 concluída localmente: 21 folhas existentes retocadas e oito intermediárias individuais, total 128 quadros em 22 atlas. Os oito desenhos antigos de caminhada continuam presentes; somente o quinto desenho do chute forte muda a perna de retorno para manter a continuidade. Figurino vigente documentado (sem cinto, duas pulseiras, cavanhaque marrom e calça carvão). Preparo técnico sem repintura/quantização; câmera, escala de exibição, física e tempos de golpes mantidos. Fontes/prompts e comparação de silhueta preservados.
+
+Bar ao Anoitecer trazido de 254b6af para esta mesma branch por pedido explícito: PvP/Arcade no bar, treino e ambos os tutoriais na sala. Miniatura proporcional e piso reduzido preservados. Conferência conjunta no jogo em docs/evidence/shoto-fine-v4: ciclo completo de caminhada, recuo/agachado/salto, dash/backstep, quatro ataques, fortes dos dois lados, bloqueios agachado/aéreo reais, seleção/bar/PvP e tutoriais. Nenhuma homologação artística inferida dos testes.
+
+npm ci concluído; 174 testes em 22 arquivos, build, verificador dos 128 desenhos e diff aprovados. Pé agachado varia 1,5 px no atlas. Push e CI do commit desta entrega serão conferidos antes do relato final; nenhum merge em development ou main.

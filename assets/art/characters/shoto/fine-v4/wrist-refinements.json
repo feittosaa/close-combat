@@ -1,0 +1,12 @@
+[
+  {
+    "name": "enter-dash",
+    "prompt": "Edit the jewelry in this four-pose sprite sheet: the trailing/lowered wrists of figures TWO THREE FOUR are wearing round-faced watches. Remove the ENTIRE watches and redraw each as a gold CHAIN BRACELET made of small rectangular interlocking links, with NO central face or medallion. Matching chain bracelet on the other wrist of each figure. The character wears TWO CHAIN BRACELETS and ZERO WATCHES. Make this alteration clearly visible. All other art, pose, body, scale, hair, face, costume and magenta layout stays unchanged.",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-12bb8faa-13e5-47bf-8430-f7f10af1bd4b.png"
+  },
+  {
+    "name": "jump",
+    "prompt": "In image1 change ONLY the wrist jewelry to exactly match the PLAIN UNIFORM-WIDTH GOLD BANGLES in image2. The round watch-like disks in image1 must be removed. A thin strip of gold around each wrist, with a smooth straight edge, absolutely NO round central boss, NO oval face, NO watch dial. Preserve everything else including all pose positions, face, body, cream blazer, skin, canvas, clothing and background.",
+    "native": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-9b05cbd2-862e-4c47-92d2-6ab9b38ab7a0.png"
+  }
+]
