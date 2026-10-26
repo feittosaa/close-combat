@@ -170,7 +170,7 @@ As cinco propostas adicionais receberam aval manual para integração após ajus
 
 ### Cenário de treino permanente
 
-O Cais foi retirado do catálogo e dos assets ativos. Sala de Treino é uma sala neutra de parede/piso quadriculados, eixos de medição e textura pintada no traço ilustrado do projeto. É fixa nos modos Treino, Tutorial Básico e Tutorial de Combos; esses modos pulam a escolha de cenário. Temporariamente é também a única opção geral de PvP e Arcade. Quando novos cenários forem produzidos, retirar a sala das opções gerais e mantê-la restrita aos modos de treinamento. A política dos modos de treino deve continuar explícita, independente do default geral. Sala em uma camada opaca, parallax 1, escala uniforme e câmera lateral fixa; imagens não mudam colisões.
+O Cais foi retirado do catálogo e dos assets ativos. Sala de Treino é uma sala neutra de parede/piso quadriculados, eixos de medição e textura pintada no traço ilustrado do projeto. É fixa nos modos Treino, Tutorial Básico e Tutorial de Combos; esses modos pulam a escolha de cenário. Bar ao Anoitecer é o primeiro cenário geral de PvP e Arcade; Sala de Treino fica restrita aos modos de treinamento. O bar reúne arquitetura e piso em uma pintura contínua, com caixa, vaso e banco pequenos em assets separados. Objetos são decorativos por enquanto; interação futura não está implementada. A política dos modos de treino deve continuar explícita, independente do default geral. Sala em uma camada opaca, parallax 1, escala uniforme e câmera lateral fixa; imagens não mudam colisões.
 
 ### Paleta de materiais do Shoto — 26/10/2026
 
@@ -217,3 +217,8 @@ Revisar todo o conjunto existente, não apenas os seis clipes de combate. Regene
 A revisão v3 foi reprovada pelo usuário: mudou a identidade/cores, a marcha e a continuidade dos membros; a conferência anterior e a CI não comprovam qualidade artística. O runtime volta ao conjunto imediatamente anterior à padronização em lote (61ccbf9), com 120 desenhos/21 atlas, raízes e reprodução originais. Isso recupera a base anterior e não resolve os detalhes pendentes: mangas/acessórios, proporções dos fortes, mais desenhos de caminhada e demais ajustes continuam por fazer. As fontes/prompts v3 ficam somente como histórico rejeitado; não reutilizá-las como referência aprovada.
 
 Próximas correções devem preservar o que já funciona, tratar uma animação por vez e comparar o movimento completo com a base. Conferir apoio e lado da perna do início ao fim do chute, alternância dos passos, tamanho corporal agachado, rosto/cabelo, marfim do blazer, punhos e antialiasing das mãos. Nenhuma aprovação artística pode ser inferida de contagem de quadros, limites de silhueta ou CI verde.
+
+
+### Ajustes finos vigentes após a restauração
+
+O pedido atual substitui a regra de relógio esquerdo/pulso direito nu: somente uma pulseira simples de ouro em cada braço, nenhum relógio. Remover cinto/fivela de todas as folhas; cavanhaque marrom da mesma família do cabelo; calça cinza carvão bem escuro em todas. Usar as folhas existentes recuperadas, sem redesenhar personagem, rosto, blazer creme, pele, sapatos, silhueta ou poses. Somente a caminhada frontal recebe novas intermediárias entre os desenhos existentes. No chute forte, preparar, estender, recolher e pousar a MESMA perna. Não alterar física/câmera nem usar as folhas v3 rejeitadas.

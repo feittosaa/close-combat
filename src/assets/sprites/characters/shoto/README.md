@@ -7,7 +7,7 @@ O usuário aprovou idle, caminhada e agachado e, posteriormente, salto, defesa, 
 | Atlas | Índices | Quadros | Reprodução |
 | --- | --- | --- | --- |
 | idle | 0–7 | 8 | Ciclo a 6 FPS |
-| walk | 8–15 | 8 | Ciclo a 10 FPS |
+| walk + walk-inbetweens | 8–15 + 120–127 | 16 | Chaves originais intercaladas a 20 FPS; ciclo permanece 48F |
 | crouch | 16–21 | 6 | 16,17,18,19,20,21,20,19,18,17 a 6 FPS |
 | jump | 22–29 | 8 | Durações 2,4,6,10,6,4,4,2 frames lógicos, sem repetir no ar |
 | defense | 30–35 | 6 | Entrada 30/31 uma vez; mantém 32,33,34,35,34,33 |
@@ -22,7 +22,7 @@ Corrida removida. Quatro básicos e guardas agachada/aérea usam clipes próprio
 - `source/*-magenta.png`: fontes aprovadas preservadas.
 - `source/*-auburn.png`: edições pelo `image_gen` embutido, uma por folha, alterando apenas o cabelo para vermelho acobreado escuro. As poses, vestuário e composição foram preservados. Prompts e origem em `source/auburn-edits.json`.
 - `alignment.json`: raízes X/Y e escala autoradas por folha/quadro. O ponto de apoio do agachado foi corrigido; não usar centro da silhueta para alinhar braços ou abas móveis.
-- `*.png`/`*.atlas.json`: 120 quadros RGBA, 21 faixas de uma linha, sem trim. Locomoção/guardas: células 768 × 768, raiz 384/720. Ataques: 1152 × 768, raiz 576/720. Largura máxima 6912 pixels, mesma escala uniforme por altura em todos os clipes.
+- `*.png`/`*.atlas.json`: 128 quadros RGBA, 22 faixas de uma linha, sem trim. Locomoção/guardas: células 768 × 768, raiz 384/720. Ataques: 1152 × 768, raiz 576/720. Largura máxima 6912 pixels, mesma escala uniforme por altura em todos os clipes.
 - `preparation.json`: medidas da transformação executada. `verification.json`: limites opacos e medição independente do pé plantado.
 
 Reproduzir da raiz do repositório com Python, Pillow, NumPy e SciPy:
@@ -82,6 +82,15 @@ Cada guarda recebeu duas intermediárias adicionais, totalizando seis poses por 
 `airborneStartedFrame` guarda o início lógico do salto durante mudanças de guarda/stun, sem alterar física: ao soltar a guarda aérea, o salto não reinicia a sequência de subida. Conferência desta revisão em `docs/evidence/shoto-identidade-canonica/`.
 
 
-## Estado atual após rejeição da v3
+## Recuperação histórica após rejeição da v3
 
 Runtime restaurado exatamente ao conjunto anterior de 61ccbf9: 120 quadros/21 atlas, caminhada de 8 desenhos a 10 FPS, raízes e escala anteriores. As fontes `*-wardrobe-v3.png` e os registros `wardrobe-v3-*.json` são tentativas REJEITADAS, preservadas para rastreabilidade. O atlas extra de caminhada saiu do runtime e foi arquivado em `assets/art/characters/shoto/rejected-v3/`. Não usar essas tentativas como referência aprovada. A restauração não conclui os detalhes de figurino/proporção pedidos; retomar posteriormente com alterações pontuais, uma animação por vez e conferência do ciclo completo.
+
+
+## Revisão atual v4 — ajustes locais
+
+As fontes ativas são `source/*-fine-v4.png`, derivadas das folhas recuperadas: sem cinto/fivela, uma pulseira de ouro em cada braço, sem relógios, cavanhaque marrom e calça cinza carvão escuro. A v3 continua rejeitada. Prompts, fontes nativas e comparações estão em `assets/art/characters/shoto/fine-v4/` e `docs/evidence/shoto-fine-v4/`.
+
+Somente a caminhada frontal ganhou oito intermediárias: os oito desenhos originais continuam em 8–15 e os novos em 120–127, intercalados a 20 FPS. Não muda velocidade nem período de 48 frames lógicos. `sourceFrames` guarda os desenhos individuais, `scales` a escala uniforme por desenho, `roots`/`rootY` os pivôs autorados; o preparo não recolore nem redesenha. Os demais atlas conservam suas contagens e raízes X; pequenos deslocamentos de sola são compensados nos pivôs Y. Ajustes uniformes inferiores a 1% nos quatro atlas de ataque compensam a diferença de enquadramento das fontes editadas, conservando a altura inicial de 631 px. Chute forte conserva a mesma perna de apoio e corrige apenas o retorno da quinta pose, sem refazer o restante da ação.
+
+128 desenhos em 22 atlas; câmera, tamanho de exibição e regras de combate permanecem. A aprovação artística final continua sendo manual pelo usuário.

@@ -1,0 +1,170 @@
+{
+  "idle": {
+    "silhouetteIoU": 0.98475,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "idle-fine-v4.png"
+  },
+  "walk": {
+    "silhouetteIoU": 0.98223,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "walk-fine-v4.png"
+  },
+  "crouch": {
+    "silhouetteIoU": 0.98172,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "crouch-fine-v4.png"
+  },
+  "jump": {
+    "silhouetteIoU": 0.94448,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "jump-fine-v4.png"
+  },
+  "defense": {
+    "silhouetteIoU": 0.98706,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "defense-fine-v4.png"
+  },
+  "walk-backward": {
+    "silhouetteIoU": 0.98235,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "walk-backward-fine-v4.png"
+  },
+  "dash": {
+    "silhouetteIoU": 0.97836,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "dash-fine-v4.png"
+  },
+  "backstep": {
+    "silhouetteIoU": 0.98831,
+    "originalCanvas": [
+      2170,
+      725
+    ],
+    "activeSource": "backstep-fine-v4.png"
+  },
+  "enter-walk": {
+    "silhouetteIoU": 0.98316,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "enter-walk-fine-v4.png"
+  },
+  "enter-backward": {
+    "silhouetteIoU": 0.97945,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "enter-backward-fine-v4.png"
+  },
+  "enter-crouch": {
+    "silhouetteIoU": 0.98287,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "enter-crouch-fine-v4.png"
+  },
+  "enter-jump": {
+    "silhouetteIoU": 0.97779,
+    "originalCanvas": [
+      1996,
+      788
+    ],
+    "activeSource": "enter-jump-fine-v4.png"
+  },
+  "enter-defense": {
+    "silhouetteIoU": 0.98672,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "enter-defense-fine-v4.png"
+  },
+  "enter-dash": {
+    "silhouetteIoU": 0.95535,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "enter-dash-fine-v4.png"
+  },
+  "enter-backstep": {
+    "silhouetteIoU": 0.9811,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "enter-backstep-fine-v4.png"
+  },
+  "light-punch": {
+    "silhouetteIoU": 0.96775,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "light-punch-fine-v4.png"
+  },
+  "heavy-punch": {
+    "silhouetteIoU": 0.95941,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "heavy-punch-fine-v4.png"
+  },
+  "light-kick": {
+    "silhouetteIoU": 0.9552,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "light-kick-fine-v4.png"
+  },
+  "heavy-kick": {
+    "silhouetteIoU": 0.92718,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "heavy-kick-fine-v4.png"
+  },
+  "crouch-defense": {
+    "silhouetteIoU": 0.98586,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "crouch-defense-fine-v4.png"
+  },
+  "air-defense": {
+    "silhouetteIoU": 0.9763,
+    "originalCanvas": [
+      2172,
+      724
+    ],
+    "activeSource": "air-defense-fine-v4.png"
+  }
+}

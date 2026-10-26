@@ -72,3 +72,8 @@ Toda animação deve partir do turnaround aprovado do personagem, fornecido junt
 ### Shoto — regra de figurino v3
 
 Turnaround original: identidade e proporções. Regras textuais de figurino (o `turnaround-costume-v3.png` é uma tentativa reprovada, não uma referência aprovada): ambos os punhos do paletó dobrados em três quartos, antebraços expostos; somente um relógio com pulseira escura no pulso anatômico esquerdo, direito nu; nenhum bracelete dourado, cinto ou fivela. Calça carvão quase preta constante. Estas decisões posteriores prevalecem sobre detalhes divergentes das fontes antigas. Aplicar também em locomoção, entradas, saídas e guardas. Comparar cabeça/corpo, rosto, manga e materiais ao idle na mesma escala antes de aceitar cada pose.
+
+
+### Ajustes localizados vigentes — v4
+
+Usar as folhas existentes recuperadas. Sem cinto/fivela; dois braceletes simples de ouro, um em cada braço, substituindo todos os relógios (confirmação explícita do usuário); cavanhaque marrom da família do cabelo; calça cinza carvão bem escuro. Preservar rosto, gesto, altura, blazer creme, pele, mãos e sapatos. Os oito desenhos existentes de caminhada continuam chaves: apenas inserir intermediárias entre pares consecutivos, sem regenerar outro ciclo. O chute forte mantém a mesma perna na preparação, extensão, recolhimento e retorno. Não usar a v3 rejeitada.

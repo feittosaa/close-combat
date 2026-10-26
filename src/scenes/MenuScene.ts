@@ -164,11 +164,13 @@ export class MenuScene extends Phaser.Scene {
       this.text(56, height - 25, '← →  ESCOLHER     ENTER  CONFIRMAR     ESC  VOLTAR', 11, '#d3bea3');
     } else if (this.page === 'stage') {
       this.text(56, 119, 'ONDE VAMOS LUTAR?', 23);
-      const x = 212, y = 168, w = 600, scale = w / defaultStage.referenceSize.width;
+      const x = 212, y = 168, w = 600;
+      const scale = Math.min(w / defaultStage.referenceSize.width, 300 / defaultStage.referenceSize.height);
+      const imageX = x + (w - defaultStage.referenceSize.width * scale) / 2;
       this.box(x - 2, y - 2, w + 4, 303, 0xa88859);
       for (const layer of [...defaultStage.layers].sort((a, b) => a.depth - b.depth)) {
         const content = layer.contentScale ?? 1, origin = layer.scaleOrigin ?? { x: 0, y: 0 };
-        const image = this.add.image(x + scale * (layer.x + origin.x * (1 - content)), y + scale * (layer.y + origin.y * (1 - content)), stageTextureKey(defaultStage, layer)).setOrigin(0).setScale(scale * content); root.add(image);
+        const image = this.add.image(imageX + scale * (layer.x + origin.x * (1 - content)), y + scale * (layer.y + origin.y * (1 - content)), stageTextureKey(defaultStage, layer)).setOrigin(0).setScale(scale * content); root.add(image);
       }
       this.box(x, y + 245, w, 54, 0x101019, .90);
       this.text(x + 20, y + 258, defaultStage.name.toUpperCase(), 23, '#f3d49e');
