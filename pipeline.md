@@ -94,9 +94,12 @@ Branch: `codex/feature-shoto-sprites`, criada de `origin/development` para não 
 - [x] Manter fallback geométrico para ações sem arte; nenhuma alteração nas regras ou colisores.
 - [x] Validar preparação, testes de integração/determinismo, instalação, build e diff.
 - [ ] Conferir arena nos dois lados, centro/cantos, caminhada/recuo, agachado, pausa/reset e transições entre sprite/geometria.
-- [ ] Confirmar CI da branch e integrar em `development` somente após revisão visual.
+- [x] Enviar implementação e confirmar CI da branch.
+- [ ] Integrar em `development` somente após revisão visual.
 
 **Estado:** implementação local pronta; 115 testes em 14 arquivos aprovados. As tiras preparadas foram inspecionadas isoladamente, e a preparação verifica transparência, limites de célula e pé opaco em Y=719 para todos os quadros. O navegador de inspeção volta a expirar ao abrir o jogo em `127.0.0.1:5176`; não há evidência de reprodução na arena nesta entrega. Não confundir inspeção de PNGs/testes com homologação visual. Limites das folhas de origem e reprodução em [src/assets/sprites/characters/shoto/README.md](./src/assets/sprites/characters/shoto/README.md).
+
+Estado remoto: commit de implementação `2e72438a7044ccc160a3cf2659ea6c1c00ebe494` enviado; [CI da branch aprovada](https://github.com/feittosaa/close-combat/actions/runs/40254140672). Sem integração em `development`, promoção para `main` ou tag enquanto a revisão visual estiver pendente. O registro documental final acompanha a mesma branch.
 
 ### Consolidação funcional
 
