@@ -108,7 +108,12 @@ Preservar infraestrutura útil não preserva o conteúdo antigo. Adaptar seletor
 
 Seguir [identidade-visual.md](./identidade-visual.md): ilustração 2D original com referência estética em Hades, contornos expressivos, sombras gráficas, cores e texturas pictóricas controladas, silhuetas fortes e leitura em movimento.
 
+**Padrão visual aprovado em 25/10/2026:** o traço da [arte diurna do menu](./assets/art/menu/patio-solar.png) é a referência interna para novas peças: contornos pretos expressivos com variação de espessura, desenho angular, massas de cor chapada, sombras recortadas e textura discreta. A referência de Hades orienta o desenho, sem exigir reproduzir sua paleta: cores podem variar por ambiente e personagem, preservando contraste e unidade do traço.
+
+Essa arte diurna é o fundo padrão do menu, com deslocamento lento em loop e partículas discretas de luz. O movimento deve preservar a leitura das opções, não expor bordas e respeitar a preferência de movimento reduzido. A interface usa sombras de tinta, acentos quentes e tipografia de títulos com serifa; textos e foco são desenhados separadamente da imagem. O aval autoriza esta aplicação; futuras imagens de teste continuam apenas para avaliação até aprovação manual explícita, sem inclusão automática no repositório ou desenvolvimento.
+
 Guilty Gear Xrd Rev 2 orienta o combate; Hades orienta a arte. A antiga referência visual global em Guilty Gear Strive foi substituída. O nome técnico provisório continua Shoto. A aprovação manual posterior cobre o conceito “Anfitrião” e somente os três clipes básicos entregues em [src/assets/sprites/characters/shoto/README.md](./src/assets/sprites/characters/shoto/README.md). A integração está na branch `codex/feature-shoto-sprites`, aguardando conferência no jogo antes de entrar em `development`. Idle: 8 quadros; caminhada: 8; agachado: 6, todos já na postura baixa. Não criar ataques, saltos, transições ou reações por suposição; estados ainda sem arte mantêm geometria técnica explícita. Animação acompanha os frames da simulação, com pés/pivô fixos e escala uniforme. Sprites não mudam colisões, alcance, vida, dano ou duração de estados.
+
 
 ## 8. Qualidade e entrega
 
