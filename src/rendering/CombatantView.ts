@@ -18,7 +18,7 @@ export class CombatantView {
       this.sprite ??= this.scene.add.image(0, 0, pose.texture, String(pose.frame)).setDepth(10);
       this.sprite.setTexture(pose.texture, String(pose.frame))
         .setOrigin(.5, shotoSpriteManifest.footAnchorY! / shotoSpriteManifest.frameSize.height)
-        .setScale(shotoSpriteManifest.displaySize!.height / shotoSpriteManifest.frameSize.height)
+        .setScale(shotoSpriteManifest.displaySize!.height / shotoSpriteManifest.frameSize.height * pose.scale)
         .setPosition(state.x, state.y).setFlipX(pose.flipX).setVisible(true);
       this.graphics.clear();
       return;

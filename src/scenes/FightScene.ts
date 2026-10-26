@@ -195,8 +195,8 @@ export class FightScene extends Phaser.Scene {
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(110);
     if (this.training && !this.tutorial) {
       this.inputDisplays = [
-        new PlayerInputDisplay(this, 18, 82, 'P1 · ENTRADAS', '#ff8c8c', 0),
-        new PlayerInputDisplay(this, width - 218, 82, 'P2 · ENTRADAS', '#8cb4ff', 1),
+        new PlayerInputDisplay(this, 18, 104, 'P1 · ENTRADAS', '#eca58a', 0),
+        new PlayerInputDisplay(this, width - 198, 104, 'P2 · ENTRADAS', '#8dd5ca', 1),
       ];
       this.trainingHud = new TrainingHud(this, width, height);
       this.trainingKeys.forEach(([key, handler]) => {
@@ -274,7 +274,7 @@ export class FightScene extends Phaser.Scene {
     const snapshot = this.simulation?.snapshot();
     if (!snapshot) return;
 
-    this.stageView?.sync(snapshot.characters.map((character) => character.x));
+    this.stageView?.sync(snapshot.characters.map(character => character.x));
     snapshot.characters.forEach((character, index) => {
       this.combatants[index]?.sync(character, snapshot.frame);
     });

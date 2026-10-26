@@ -6,3 +6,5 @@
 - Preservar alterações existentes e manter objetivos independentes em branches distintas. Não fazer force push nem reescrever tags publicadas.
 - Antes de concluir: testes, build e checagem de diff; mudanças visuais também exigem conferência no jogo.
 - Atualizar a documentação e relatar o estado real do remoto. Não confundir validação local com CI remota aprovada.
+
+- Após merge e CI aprovada em `development`, encerrar a branch finalizada local e remotamente, verificando ancestralidade e ausência de trabalho ativo. Preservar branches com trabalho pendente, `main`, `development` e tags.

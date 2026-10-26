@@ -2,7 +2,9 @@ import type { AttackButton } from '../input/types';
 import { formatCommand } from './commandNotation';
 import { getPlayerLayout, keyLabel } from '../input/controlSettings';
 import { recoveryFrames } from '../engine/combat/frameData';
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
+import { HUD, hudText, drawHudPanel } from './hudTheme';
+import { getSystemControls } from '../input/controlSettings';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import type { TrainingSession } from '../training/TrainingSession';
 import { OPPONENT_LABELS } from '../training/TrainingSession';
@@ -17,36 +19,28 @@ export class TrainingHud {
   private readonly distance: Phaser.GameObjects.Text;
   private readonly contact: Phaser.GameObjects.Text;
   private readonly panelY: number;
+  private readonly footer: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, private readonly width: number, height: number) {
-    const left = 18;
-    this.panelY = height - 85;
-    const background = scene.add.rectangle(width / 2, this.panelY + 35, width - 36, 70, 0x14151e, 0.96)
-      .setStrokeStyle(1, 0x686271);
-    this.status = scene.add.text(width / 2, this.panelY + 4, '', {
-      color: '#ffd166', fontSize: '12px', fontStyle: 'bold',
-    }).setOrigin(0.5, 0);
-    this.fighters = [0, 1].map((index) => scene.add.text(left + 12 + index * (width / 2 - 18), this.panelY + 19, '', {
-      color: '#f4f0e8', fontSize: '11px', lineSpacing: 2,
-    }));
-    this.progress = scene.add.graphics();
-    this.distance = scene.add.text(left + 12, this.panelY + 59, '', {
-      color: '#b7b2c5', fontSize: '10px',
-    });
-    this.contact = scene.add.text(width / 2 + 12, this.panelY + 59, '', {
-      color: '#ffd166', fontSize: '10px',
-    });
-    const footerBackground = scene.add.rectangle(width / 2, height - 8, width, 16, 0x14151e, 0.94);
-    const footer = scene.add.text(width / 2, height - 8,
-      'P PAUSA · . FRAME · L VELOCIDADE · F2 RESET · F3 VIDA AUTO · F4 DISTÂNCIA · G ADVERSÁRIO · H COLISÕES · I ENTRADAS · ESC PAUSA', {
-        color: '#e9e4ee', fontSize: '9px',
-      }).setOrigin(0.5);
-    this.root = scene.add.container(0, 0, [background, this.status, ...this.fighters,
-      this.progress, this.distance, this.contact, footerBackground, footer]).setDepth(110).setScrollFactor(0);
+    this.panelY = height - 84;
+    const background = scene.add.graphics();
+    drawHudPanel(background,18,this.panelY,width-36,58,HUD.gold,.96);
+    this.status=scene.add.text(32,this.panelY+5,'',hudText(10,false,HUD.goldText));
+    this.distance=scene.add.text(width-32,this.panelY+5,'',hudText(10,false,HUD.muted)).setOrigin(1,0);
+    this.fighters=[0,1].map(index=>scene.add.text(32+index*(width/2-18),this.panelY+21,'',{
+      ...hudText(10,false,HUD.ivory),lineSpacing:2,wordWrap:{width:width/2-64}}));
+    this.progress=scene.add.graphics();
+    this.contact=scene.add.text(width/2,height-24,'',hudText(9,false,HUD.goldText)).setOrigin(.5,0);
+    const footerBackground=scene.add.rectangle(width/2,height-12,width,24,HUD.ink,.95);
+    this.footer=scene.add.text(width/2,height-11,'',hudText(8,false,HUD.muted)).setOrigin(.5,0);
+    this.root=scene.add.container(0,0,[background,footerBackground,this.status,...this.fighters,
+      this.progress,this.distance,this.contact,this.footer]).setDepth(110).setScrollFactor(0);
   }
 
   update(snapshot: SimulationSnapshot, session: TrainingSession): void {
-    this.status.setText(`TREINO · ${session.paused ? 'PAUSADO' : 'EM CURSO'} · ${session.speed * 100}% · ${OPPONENT_LABELS[session.opponentMode].replace(/\b[1-4]\b/g,button=>keyLabel(getPlayerLayout(1).buttons[button as AttackButton]))} · VIDA AUTO ${session.autoRestore ? 'ON' : 'OFF'} · RESET ${session.initialDistance}`);
+    this.status.setText(`TREINO  /  ${session.paused ? 'PAUSADO' : 'EM CURSO'} · ${session.speed * 100}% · ${OPPONENT_LABELS[session.opponentMode].replace(/\b[1-4]\b/g,button=>keyLabel(getPlayerLayout(1).buttons[button as AttackButton]))} · VIDA AUTO ${session.autoRestore ? 'ON' : 'OFF'}`);
+    const controls=getSystemControls();
+    this.footer.setText(`${keyLabel(controls.pause)} PAUSA · . FRAME · L VELOCIDADE · ${keyLabel(controls.reset)} / F2 RESET · F3 VIDA AUTO · F4 DISTÂNCIA · G ADVERSÁRIO · H COLISÕES · I ENTRADAS · ESC PAUSA`);
     this.progress.clear();
     snapshot.characters.forEach((character, index) => {
       const move = session.lastMoves[index];
@@ -62,8 +56,8 @@ export class TrainingHud {
       this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]} · ${lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);
       const barWidth = this.width / 2 - 42;
-      const barY = this.panelY + 48;
-      this.progress.fillStyle(0x34313f).fillRect(left, barY, barWidth, 5);
+      const barY = this.panelY + 52;
+      this.progress.fillStyle(HUD.rail).fillRect(left, barY, barWidth, 5);
       if (!move) return;
       const total = move.startup + move.activeFrames + recovery;
       let offset = 0;
@@ -78,7 +72,7 @@ export class TrainingHud {
       }
     });
     const distance = Math.round(Math.abs(snapshot.characters[0].x - snapshot.characters[1].x));
-    this.distance.setText(`FRAME ${snapshot.frame} · DISTÂNCIA ${distance} · COLISÕES ${session.showGeometry ? 'VISÍVEIS' : 'OCULTAS'}`);
+    this.distance.setText(`FRAME ${snapshot.frame} · DISTÂNCIA ${distance} · CAIXAS ${session.showGeometry ? 'ON' : 'OFF'}`);
     const contact = snapshot.recentContacts[snapshot.recentContacts.length - 1]?.event;
     this.contact.setText(contact
       ? `${contact.attackerId === 'player-1' ? 'P1' : 'P2'}: DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · STUN ${contact.defenderStunFrames}F · ADV ${signedFrames(contact.frameAdvantage)}`
