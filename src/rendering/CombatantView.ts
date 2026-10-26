@@ -1,15 +1,29 @@
 import type Phaser from 'phaser';
+import { getShotoSpritePose, shotoSpriteManifest } from './animations/shotoSprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
 
-/** Representação geométrica neutra, sem identidade ou animações do elenco anterior. */
+/** Approved locomotion art; unsupported states retain diagnostic geometry. */
 export class CombatantView {
   private readonly graphics: Phaser.GameObjects.Graphics;
-  constructor(scene: Phaser.Scene, private readonly color: number) {
+  private sprite?: Phaser.GameObjects.Image;
+  constructor(private readonly scene: Phaser.Scene, private readonly color: number) {
     this.graphics = scene.add.graphics().setDepth(10);
   }
-  sync(state: CharacterState, _frame: number): void {
+  sync(state: CharacterState, frame: number): void {
+    const pose = getShotoSpritePose(state, frame);
+    // Missing textures keep the useful fallback, including during loading failures.
+    if (pose && this.scene.textures?.exists(pose.texture)) {
+      this.sprite ??= this.scene.add.image(0, 0, pose.texture, String(pose.frame)).setDepth(10);
+      this.sprite.setTexture(pose.texture, String(pose.frame))
+        .setOrigin(.5, shotoSpriteManifest.footAnchorY! / shotoSpriteManifest.frameSize.height)
+        .setScale(shotoSpriteManifest.displaySize!.height / shotoSpriteManifest.frameSize.height)
+        .setPosition(state.x, state.y).setFlipX(pose.flipX).setVisible(true);
+      this.graphics.clear();
+      return;
+    }
+    this.sprite?.setVisible(false);
     const g = this.graphics;
     const box = createHurtbox(state);
     const sign = state.facing === 'right' ? 1 : -1;
@@ -29,5 +43,5 @@ export class CombatantView {
       g.lineStyle(4, 0xa6e6ff).lineBetween(state.x + sign * 28, box.y + 12, state.x + sign * 28, box.y + box.height - 12);
     }
   }
-  destroy(): void { this.graphics.destroy(); }
+  destroy(): void { this.sprite?.destroy(); this.graphics.destroy(); }
 }
