@@ -198,7 +198,7 @@ Novo aval manual: inserir salto, defesa, caminhada para trás, dash e backstep, 
 - [x] Integrar estados pela lógica real, sem inventar ataques ou animações não aprovadas.
 - [x] Escala fixa 1,6 (corpo de cerca de 40% da altura); manter salto inteiro. Limitar afastamento ao espaço visível, com margem lateral de 64 unidades por lutador, para evitar desaparecimento sem zoom dinâmico.
 - [x] Validar preparação, testes, build, diff e jogo em ambos os lados, pausa/reset, canto e salto.
-- [ ] Enviar, conferir CI, integrar e encerrar branch concluída.
+- [x] Enviar, conferir CI, integrar e encerrar branch concluída.
 
 Conferência da revisão de animações: 56 desenhos em oito atlas, cabelo editado pelo image_gen embutido; verificação independente de pixels sem corte/magenta opaco, pés alinhados e desvio X agachado de 1,5 pixel. Ciclo agachado em ida/volta, entrada de guarda sem reinício a cada volta e guarda fechada durante blockstun. Salto de P1/P2, recuo, dash, backstep, afastamento máximo e canto conferidos no jogo; capturas em docs/evidence/shoto-animacoes-alinhadas. A arte de ataques/hitstun continua provisória, conforme escopo aprovado. Estado remoto desta nova branch: envio/CI ainda pendentes neste registro.
 
@@ -212,7 +212,7 @@ Branch: `codex/feature-sala-treino`, criada de development após integração da
 - [x] Retirar Cais do catálogo e dos assets ativos; preservar histórico Git e evidências antigas.
 - [x] Fixar sala no treino e dois tutoriais, sem etapa de escolha; única opção temporária nos modos gerais.
 - [x] Validar testes, instalação, build, diff e jogo; conferir solo, enquadramento e todos os modos.
-- [ ] Enviar, confirmar CI, integrar e encerrar branch.
+- [x] Enviar e confirmar CI; integração conjunta registrada abaixo, encerramento após CI de development.
 
 Pedido posterior de dashs mais longos e transições suaves segue em objetivo separado; a geração dos conectores já começou sem misturar sua implementação nesta branch.
 
@@ -229,7 +229,7 @@ Branch: `codex/feature-dash-transicoes`, criada de origin/development após as a
 - [x] Margem lateral 88 para manter as poses largas dentro do quadro, sem zoom dinâmico.
 - [x] 137 testes em 18 arquivos, build e diff aprovados; verificação independente dos 84 quadros aprovada.
 - [x] Conferir duração/loops/transições no jogo e registrar evidências; acesso recuperado após os timeouts.
-- [ ] Enviar, confirmar CI, integrar e encerrar branch pronta.
+- [x] Enviar e confirmar CI; integração conjunta registrada abaixo, encerramento após CI de development.
 
 
 Dependência reunida para revisão conjunta: a branch de dash mantém o commit próprio `c616f68` e incorpora a sala pelo merge da branch `72cc275`, preservando ambos os objetivos. Integração em development aguarda a conferência visual conjunta e a CI do conjunto.
@@ -239,3 +239,5 @@ Conferência conjunta concluída após recuperar a prévia: treino, tutorial bá
 Dash e backstep conferidos após dois toques curtos e soltura: dash no frame 9, backstep no frame 12 e avanço até frame 24; entradas/saídas de caminhada, agachado e salto revisadas com avanço por frame, sem mudança de câmera. Capturas em docs/evidence/dash-transicoes. Correção adicional preserva o relógio de stun ao limpar direção residual. Validação conjunta: 144 testes em 19 arquivos, build, diff e verificação independente dos 84 quadros aprovados; instalação reproduzível executada nesta entrega.
 
 Estado remoto antes do fechamento: sala `72cc275`, CI 40267614680 aprovada; conjunto `1d0e555`, CI 40269742462 aprovada. O commit de fechamento registra a revisão e segue novamente CI de feature, integração e CI de development; as duas branches serão encerradas somente após confirmação. Sem promoção para main.
+
+Fechamento: código e evidências `5026ec3180b40ae1576ef5f49e4e7cfb41ea52e4` enviados e integrados por fast-forward em development. [CI da feature 40271546638](https://github.com/feittosaa/close-combat/actions/runs/40271546638) aprovada; [CI de integração 40271628696](https://github.com/feittosaa/close-combat/actions/runs/40271628696) aprovada no mesmo commit. Este último ajuste é somente documental e seguirá a mesma validação remota antes do encerramento das duas branches. A conferência no jogo e os 144 testes pertencem ao código integrado.
