@@ -3,6 +3,7 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { defaultCharacter as shoto } from '../engine/data/characters';
 import { createHurtbox } from '../engine/collision/combatGeometry';
+import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 const input = (direction: Direction = 'N', buttons: AttackButton[] = []): FrameInput => ({ direction, buttons: new Set(buttons) });
 const N = input();
@@ -35,7 +36,7 @@ describe('quatro básicos do Shoto', () => {
       const guard = outcome === 'block' ? input('B') : N;
       sim.stepFrame([input('N', [...move.input.buttons]), guard]);
       const total = move.startup + move.activeFrames + move.recovery;
-      advance(sim, total - 1, [N, guard]);
+      advance(sim, total - 1 + (outcome === 'whiff' ? 0 : CONTACT_HITSTOP_FRAMES), [N, guard]);
       expect(sim.snapshot().characters[0]).toMatchObject({ mode: 'recovery', attack: { elapsedFrames: total - 1 } });
       sim.stepFrame([N, guard]);
       expect(sim.snapshot().characters[0].attack).toBeUndefined();
@@ -154,7 +155,7 @@ describe('fundação da simulação', () => {
     const fragile = { ...shoto, maxHealth: 20 };
     const sim = new Simulation({ ...config, match: { ...config.match, roundEndPauseFrames: 2 } }, [fragile, fragile], { initialDistance: 64 });
     for (let round = 1; round <= 2; round++) {
-      sim.stepFrame([input('N', ['1']), N]); advance(sim, 6);
+      sim.stepFrame([input('N', ['1']), N]); advance(sim, 6 + CONTACT_HITSTOP_FRAMES);
       expect(sim.snapshot()).toMatchObject({ phase: 'round-over', round, roundEndReason: 'knockout', roundWinnerId: 'player-1' });
       expect(sim.snapshot().activeHitboxes).toEqual([]);
       advance(sim, 2);
@@ -175,7 +176,8 @@ describe('fundação da simulação', () => {
 it.each([30, 60, 120, 144])('relógio reproduz 120 frames lógicos em dois segundos a %i FPS', fps => {
   const sim = practice();
   for (let frame = 0; frame < fps * 2; frame++) sim.advance(1000 / fps, (_states, logicalFrame) => [logicalFrame === 0 ? input('N', ['1']) : N, N]);
-  expect(sim.snapshot().frame).toBe(120);
+  expect(sim.snapshot().elapsedFrames).toBe(120);
+  expect(sim.snapshot().frame).toBe(120 - CONTACT_HITSTOP_FRAMES);
   expect(sim.snapshot().characters[1].health).toBe(980);
 });
 

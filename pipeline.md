@@ -354,3 +354,16 @@ Revisão v4 concluída localmente: 21 folhas existentes retocadas e oito interme
 Bar ao Anoitecer trazido de 254b6af para esta mesma branch por pedido explícito: PvP/Arcade no bar, treino e ambos os tutoriais na sala. Miniatura proporcional e piso reduzido preservados. Conferência conjunta no jogo em docs/evidence/shoto-fine-v4: ciclo completo de caminhada, recuo/agachado/salto, dash/backstep, quatro ataques, fortes dos dois lados, bloqueios agachado/aéreo reais, seleção/bar/PvP e tutoriais. Nenhuma homologação artística inferida dos testes.
 
 npm ci concluído; 174 testes em 22 arquivos, build, verificador dos 128 desenhos e diff aprovados. Pé agachado varia 1,5 px no atlas. Implementação enviada em `54f0c48c86af270c1aaa478c87d93ed12a449dbb`, com [CI 40419807824](https://github.com/feittosaa/close-combat/actions/runs/40419807824) aprovada. Remoto auditado: development permanece `a5930d901654feb419570ff642acc6025d20daed`, main `77a4c939c9ccdf028eed5f334132f65368dbae30`; nenhum merge ou tag. Este fechamento documental terá a própria CI conferida antes do relato final. Branch mantida para revisão artística manual.
+
+### Micro pausa em acertos e bloqueios
+
+Branch `codex/feature-hitstop-contato`, baseada em `850ac79` da revisão visual ainda não integrada; preserva esse conjunto para a conferência. Nenhum merge em development autorizado.
+
+- [x] Pausa de contato compartilhada de 5F em hit/block; whiff sem pausa. Separar tempo de combate do relógio do round.
+- [x] Preservar pose de impacto, física/stun/recuperação durante a pausa; trades sem soma, reset/KO/time-up tratados.
+- [x] Concluir regressões, instalação/build/diff e conferir no jogo acerto, bloqueio e erro.
+- [ ] Enviar branch e verificar CI remota do commit exato.
+
+Nenhuma imagem ou folha de animação foi alterada. Regressões antigas de recuperação/gravidade agora descontam a pausa de contato, mantendo as mesmas exigências de recuperação integral e trajetória fora do hitstop.
+
+Validação local da micro pausa concluída: npm ci, 183 testes/23 arquivos, build e diff aprovados. Conferência no Fedora por avanço de ticks: hit e bloqueio mantêm cinco ticks com os mesmos pixels/posições/pose; o sexto retoma combate/stun; whiff avança normalmente. Evidências em docs/evidence/hitstop-contato. O relógio é validado separadamente em modo normal, inclusive KO/time-up, sem alterar assets ou clipes. Branch baseada em 850ac79, preservando a revisão visual anterior.

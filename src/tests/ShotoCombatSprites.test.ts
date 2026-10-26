@@ -52,7 +52,7 @@ describe.each([0,1])('golpes/guardas do jogador %i',player=>{
     expect(sim.snapshot().characters[player].health).toBe(defaultCharacter.maxHealth);
   });
 
-  it('bloqueia no ar sem suspender a gravidade e retorna ao chão',()=>{
+  it('bloqueia no ar, preserva gravidade fora do hitstop e retorna ao chão',()=>{
     const sim=new Simulation(config,undefined,{training:true,initialDistance:50});
     const control=new Simulation(config,undefined,{training:true,initialDistance:400});
     const opponent=1-player;
@@ -60,7 +60,10 @@ describe.each([0,1])('golpes/guardas do jogador %i',player=>{
     let guarded=false,blocked=false;
     for(let t=0;t<55;t++){
       const inputs=[input(),input()];inputs[player]=input('B');if(t===0)inputs[opponent]=input('N','1');
-      sim.stepFrame(inputs);control.stepFrame([input(),input()]);
+      const before=sim.snapshot();
+      sim.stepFrame(inputs);
+      if(!before.hitstopFramesRemaining)control.stepFrame([input(),input()]);
+      else expect(sim.snapshot().characters[player]).toEqual(before.characters[player]);
       const snapshot=sim.snapshot(),state=snapshot.characters[player];
       expect(state.y).toBe(control.snapshot().characters[player].y);
       if(!state.grounded&&(state.mode==='blocking'||state.mode==='blockstun')){
