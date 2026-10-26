@@ -6,6 +6,7 @@ import type { CharacterState } from '../../engine/characters/CharacterState';
 import { getStateAnimationFrame, getTimedAnimationFrame, shouldFlipAnimation, validateAnimationManifest, type CharacterAnimationManifest } from './AnimationPlayback';
 import idleImage from '../../assets/sprites/characters/shoto/idle.png';
 import walkImage from '../../assets/sprites/characters/shoto/walk.png';
+import walkInbetweensImage from '../../assets/sprites/characters/shoto/walk-inbetweens.png';
 import crouchImage from '../../assets/sprites/characters/shoto/crouch.png';
 import jumpImage from '../../assets/sprites/characters/shoto/jump.png';
 import defenseImage from '../../assets/sprites/characters/shoto/defense.png';
@@ -14,6 +15,7 @@ import dashImage from '../../assets/sprites/characters/shoto/dash.png';
 import backstepImage from '../../assets/sprites/characters/shoto/backstep.png';
 import idleAtlas from '../../assets/sprites/characters/shoto/idle.atlas.json';
 import walkAtlas from '../../assets/sprites/characters/shoto/walk.atlas.json';
+import walkInbetweensAtlas from '../../assets/sprites/characters/shoto/walk-inbetweens.atlas.json';
 import crouchAtlas from '../../assets/sprites/characters/shoto/crouch.atlas.json';
 import jumpAtlas from '../../assets/sprites/characters/shoto/jump.atlas.json';
 import defenseAtlas from '../../assets/sprites/characters/shoto/defense.atlas.json';
@@ -23,11 +25,11 @@ import backstepAtlas from '../../assets/sprites/characters/shoto/backstep.atlas.
 
 /** Approved locomotion, four basics and posture guards. Roots and body scale are atlas-authored. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
-  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:120,
+  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:128,
   footAnchorY:720,displaySize:{width:172.8*1.03,height:172.8*1.03},
   clips:[
     {key:'shoto-idle',start:0,end:7,frameRate:6,repeat:-1},
-    {key:'shoto-walk',start:8,end:15,frameRate:10,repeat:-1},
+    {key:'shoto-walk',start:8,end:127,frames:[8,120,9,121,10,122,11,123,12,124,13,125,14,126,15,127],frameRate:20,repeat:-1},
     {key:'shoto-crouch',start:16,end:21,frames:[16,17,18,19,20,21,20,19,18,17],frameRate:6,repeat:-1},
     {key:'shoto-jump',start:22,end:29,frameDurations:[2,4,6,10,6,4,4,2],frameRate:13,repeat:0},
     {key:'shoto-defense',start:30,end:35,frames:[32,33,34,35,34,33],frameRate:8,repeat:-1},
@@ -42,6 +44,7 @@ validateAnimationManifest(shotoSpriteManifest);
 const sources=[
   {key:'shoto-idle',image:idleImage,atlas:idleAtlas},
   {key:'shoto-walk',image:walkImage,atlas:walkAtlas},
+  {key:'shoto-walk-inbetweens',image:walkInbetweensImage,atlas:walkInbetweensAtlas},
   {key:'shoto-crouch',image:crouchImage,atlas:crouchAtlas},
   {key:'shoto-jump',image:jumpImage,atlas:jumpAtlas},
   {key:'shoto-defense',image:defenseImage,atlas:defenseAtlas},
@@ -95,7 +98,7 @@ export function getShotoSpritePose(state:CharacterState,frame:number){
   let sampled=getStateAnimationFrame({...state,stateStartedFrame:start},clip,frame);
   if(action==='defense')sampled=state.mode==='blockstun'||enter?getTimedAnimationFrame(clip,Math.max(0,elapsed-entryDuration)):
     elapsed<4?30+Math.floor(elapsed/2):getTimedAnimationFrame(clip,elapsed-4);
-  return pose(`shoto-${action}`,sampled);
+  return pose(action==='walk' && sampled>=120?'shoto-walk-inbetweens':`shoto-${action}`,sampled);
 }
 
 /** Authored connectors handle motion. Keep every pose opaque to avoid source-over flicker. */

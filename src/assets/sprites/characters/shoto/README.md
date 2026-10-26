@@ -7,7 +7,7 @@ O usuário aprovou idle, caminhada e agachado e, posteriormente, salto, defesa, 
 | Atlas | Índices | Quadros | Reprodução |
 | --- | --- | --- | --- |
 | idle | 0–7 | 8 | Ciclo a 6 FPS |
-| walk | 8–15 | 8 | Ciclo a 10 FPS |
+| walk + walk-inbetweens | 8–15 + 120–127 | 16 | Intercala chave/intermediária a 20 FPS; mesmo ciclo de 48F |
 | crouch | 16–21 | 6 | 16,17,18,19,20,21,20,19,18,17 a 6 FPS |
 | jump | 22–29 | 8 | Durações 2,4,6,10,6,4,4,2 frames lógicos, sem repetir no ar |
 | defense | 30–35 | 6 | Entrada 30/31 uma vez; mantém 32,33,34,35,34,33 |
@@ -22,7 +22,7 @@ Corrida removida. Quatro básicos e guardas agachada/aérea usam clipes próprio
 - `source/*-magenta.png`: fontes aprovadas preservadas.
 - `source/*-auburn.png`: edições pelo `image_gen` embutido, uma por folha, alterando apenas o cabelo para vermelho acobreado escuro. As poses, vestuário e composição foram preservados. Prompts e origem em `source/auburn-edits.json`.
 - `alignment.json`: raízes X/Y e escala autoradas por folha/quadro. O ponto de apoio do agachado foi corrigido; não usar centro da silhueta para alinhar braços ou abas móveis.
-- `*.png`/`*.atlas.json`: 120 quadros RGBA, 21 faixas de uma linha, sem trim. Locomoção/guardas: células 768 × 768, raiz 384/720. Ataques: 1152 × 768, raiz 576/720. Largura máxima 6912 pixels, mesma escala uniforme por altura em todos os clipes.
+- `*.png`/`*.atlas.json`: 128 quadros RGBA, 22 faixas de uma linha, sem trim. Locomoção/guardas: células 768 × 768, raiz 384/720. Ataques: 1152 × 768, raiz 576/720. Largura máxima 6912 pixels, mesma escala uniforme por altura em todos os clipes.
 - `preparation.json`: medidas da transformação executada. `verification.json`: limites opacos e medição independente do pé plantado.
 
 Reproduzir da raiz do repositório com Python, Pillow, NumPy e SciPy:
@@ -50,7 +50,7 @@ Entradas duram 8 frames, exceto salto/dash/backstep (4). Ao parar, o conector co
 
 ## Cores exibidas no jogo — revisão sem recortes
 
-A classificação automática de material e a quantização por faixas foram removidas: criavam recortes artificiais na pele e nas dobras marfim. `prepareShotoSprites` prepara os 21 atlas uma vez com a correção RGB contínua em `src/rendering/animations/shotoPalette.ts`. Ela preserva os pixels de tinta/marfim, sombras e gradientes originais, mantém cabelo castanho discreto, pele um pouco mais morena e escurece suavemente neutros da calça. Pesos suaves sobrepõem os ajustes, sem troca binária de material, medianas por linha ou paleta limitada. A tabela de tons nesse arquivo é referência artística, não uma lista de cores impostas a cada pixel.
+A classificação automática de material e a quantização por faixas foram removidas: criavam recortes artificiais na pele e nas dobras marfim. `prepareShotoSprites` prepara os 22 atlas uma vez com a correção RGB contínua em `src/rendering/animations/shotoPalette.ts`. Ela preserva os pixels de tinta/marfim, sombras e gradientes originais, mantém cabelo castanho discreto, pele um pouco mais morena e escurece suavemente neutros da calça. Pesos suaves sobrepõem os ajustes, sem troca binária de material, medianas por linha ou paleta limitada. A tabela de tons nesse arquivo é referência artística, não uma lista de cores impostas a cada pixel.
 
 Fontes, células 768 × 768, alpha e raiz 384/720 permanecem. Desenho exibido uniformemente 3% maior, display 177,984 × 177,984, também na seleção; sem aumento dos colisores ou zoom dinâmico. Margem lateral passa a 92 unidades. Corrida segue removida; dash sustentado volta à caminhada após 24F. Testes de continuidade cobrem os limiares que causavam as rachaduras.
 
@@ -75,8 +75,19 @@ Conferência desta entrega: `docs/evidence/shoto-golpes-guardas/`. A branch é m
 
 Referência principal obrigatória: `assets/art/characters/shoto/turnaround.png`, original reenviado pelo usuário. Preservar rosto maduro estreito, bigode e cavanhaque pontudo, coque/mecha, corpo esguio, proporção cabeça/tronco, pele morena, cabelo castanho discreto e couro castanho muito escuro. Em todo personagem futuro, usar seu próprio turnaround aprovado. Nunca usar apenas uma animação derivada para gerar a próxima.
 
-Fontes atuais: `source/*-canonical-v2.png`, editadas pela ferramenta embutida image_gen com turnaround + idle/postura existente + ação anterior. Prompts integrais, referências e origem em `source/canonical-generation.json`; fontes anteriores preservadas como histórico. Repreparar as seis folhas pelo script com os nomes dos clipes ou executar preparação completa. `alignment.json` contém raízes/escala autoradas; corpo em pé parte dos mesmos 631 pixels de altura do idle, sem aumentar a escala de renderização. O verificador limita aumento de altura nos ataques e mede deriva do pé da guarda baixa (até 3 pixels); isso não mede nem homologa identidade facial.
+Fontes da revisão anterior: `source/*-canonical-v2.png`, editadas pela ferramenta embutida image_gen com turnaround + idle/postura existente + ação anterior. Prompts integrais, referências e origem em `source/canonical-generation.json`; fontes anteriores preservadas como histórico. Repreparar as seis folhas pelo script com os nomes dos clipes ou executar preparação completa. `alignment.json` contém raízes/escala autoradas; corpo em pé parte dos mesmos 631 pixels de altura do idle, sem aumentar a escala de renderização. O verificador limita aumento de altura nos ataques e mede deriva do pé da guarda baixa (até 3 pixels); isso não mede nem homologa identidade facial.
 
 Cada guarda recebeu duas intermediárias adicionais, totalizando seis poses por folha e 120 desenhos no conjunto. Entrada/saída dos braços usa 4F; o ciclo fechado usa as quatro poses finais, inclusive em blockstun. Ao começar guarda baixa em pé, a descida usa 64–67 em 4F; ao levantar da guarda, reverte esse conector. Impactos podem fechar a guarda imediatamente. A entrada dos golpes usa 72/73 dentro dos dois primeiros frames de startup; o jab usa 73/72 nos dois últimos frames de recovery, sem alterar tempos de combate. Os demais golpes terminam com suas poses de retorno autoradas. Todas as poses continuam opacas.
 
 `airborneStartedFrame` guarda o início lógico do salto durante mudanças de guarda/stun, sem alterar física: ao soltar a guarda aérea, o salto não reinicia a sequência de subida. Conferência desta revisão em `docs/evidence/shoto-identidade-canonica/`.
+
+
+## Figurino definitivo e caminhada 16F — revisão v3
+
+Fontes ativas de TODAS as 22 folhas: `source/*-wardrobe-v3.png`, declaradas individualmente em `alignment.json`. Fontes antigas preservadas. O turnaround original rege o rosto; `assets/art/characters/shoto/turnaround-costume-v3.png` incorpora o pedido posterior: mangas sempre dobradas três quartos, antebraços expostos, um relógio discreto de pulseira escura no pulso anatômico esquerdo, direito nu, sem braceletes dourados, sem cinto/fivela, calça carvão quase preta. Não copiar acessórios divergentes de versões anteriores.
+
+Soco e chute fortes foram regenerados a partir do turnaround corrigido + idle; as demais folhas receberam edições do figurino, incluindo os sete conectores. Prompts, referências, saídas nativas e correções localizadas em `assets/art/characters/shoto/wardrobe-v3-*.json`. A preparação continua restrita a recorte, chromakey, escala uniforme por clipe e empacotamento; não recolore nem deforma membros/cabeças.
+
+A caminhada frontal intercala oito chaves (8–15) com oito desenhos intermediários novos (120–127), em dois atlas para permanecer abaixo do limite de textura. Ordem: 8,120,9,121,10,122,11,123,12,124,13,125,14,126,15,127. Cada desenho dura 3 frames lógicos: 16 poses em 48F, mesmo ritmo anterior, sem alterar deslocamento. Entrada/saída continuam pelos conectores autorados; toda pose é opaca.
+
+O verificador compara também a largura da parte superior da cabeça dos golpes fortes com a mediana do idle, tolerância de 12%, e exige 16 células de caminhada distintas. Essas checagens detectam crescimento grosseiro e duplicação; não substituem conferência facial, de figurino e do ciclo em movimento. Escala de exibição, câmera, física e balanceamento preservados. Evidências desta revisão: `docs/evidence/shoto-figurino-v3/`.

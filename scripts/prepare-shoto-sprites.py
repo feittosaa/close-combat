@@ -58,9 +58,10 @@ for name, spec in SPECS.items():
     h,w = mask.shape
     components,count = label(mask)
     sizes = np.bincount(components.ravel()); sizes[0]=0
-    # Only walking drawings touch. Other strips have one independent body per pose.
+    # Legacy walk needed seams; revised strips use independent body components.
     bodies=[]
-    if name!='walk':
+    component_separation = name!='walk' or spec.get('separation')=='components'
+    if component_separation:
         for component in np.where(sizes>30000)[0]:
             ys,xs=np.where(components==component)
             bodies.append((float(xs.mean()),component))
@@ -75,7 +76,7 @@ for name, spec in SPECS.items():
     metrics = []
     for i,anchor in enumerate(anchors):
         frame = rgba.copy()
-        if name=='walk':
+        if not component_separation:
             selected=(np.arange(w)[None,:]>=seams[i][:,None]) & (np.arange(w)[None,:]<seams[i+1][:,None])
             frame[:,:,3][~selected]=0
             pieces,_=label(frame[:,:,3]>25)

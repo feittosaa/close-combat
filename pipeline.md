@@ -311,3 +311,14 @@ Feedback do usuário: rosto/traço divergentes do turnaround, cabeça/corpo maio
 Revisão local concluída: seis fontes canônicas v2 preservadas, 120 quadros em 21 atlas, mesma escala corporal. Guardas recebem duas intermediárias adicionais; ligação de postura reaproveita conectores autorados, ataques usam fechamento/reabertura sem atrasar contatos. Corrigido relógio visual do salto para sobreviver à guarda/stun. 167 testes/22 arquivos, build, diff e verificador aprovados; seis clipes conferidos nos dois lados e evidências em docs/evidence/shoto-identidade-canonica. Sem novo filtro rígido de cor, sem física/balanceamento alterados. Revisão enviada em `56f32de5a07129b6a1c87658cbf905d60c94e818`, com [CI 40373356429](https://github.com/feittosaa/close-combat/actions/runs/40373356429) aprovada. A branch local/remota continua mantida para conferência manual. Auditoria do remoto: development segue `a5930d901654feb419570ff642acc6025d20daed`, main `77a4c939c9ccdf028eed5f334132f65368dbae30`; nenhum merge ou tag. Este fechamento é somente documental; sua CI própria será conferida antes do relato final.
 
 Regressão adicional: interromper a guarda após um único frame usa somente a profundidade alcançada; mantém a descida se D continuar, sem saltar para braços fechados.
+
+### Figurino de todas as animações, caminhada 16F e golpes fortes v3
+
+Pedido: padronizar mangas três quartos/um relógio esquerdo/sem braceletes/sem cinto/calça escura em TODAS as folhas antigas e novas; regenerar soco/chute fortes com proporções do idle e ampliar desenhos de caminhada para frente. Continuar na mesma branch sem merge.
+
+- [x] Registrar regras definitivas e preservar referência de figurino complementar.
+- [x] Corrigir todas as folhas e conectores, preservar fontes/prompts e conferir peças/acessórios.
+- [x] Integrar caminhada de 16 desenhos reais e dois golpes fortes regenerados, sem crescimento de cabeça/corpo.
+- [ ] Conferir jogo, testes, build, preparo/verificação e diff; enviar/CI na mesma branch, sem merge.
+
+Validação local desta revisão: npm ci, 168 testes/22 arquivos, build, preparo dos 128 quadros e verificador de pixels aprovados. Cabeça dos fortes comparada ao idle na mesma escala (largura superior 97–105 px, referência mediana 100 px); pés agachados dentro de 3 px. Conferência no jogo e capturas em docs/evidence/shoto-figurino-v3, incluindo quatro ataques nos dois lados e guardas reais. As 22 fontes v3, referência de figurino, prompts e seleção final foram preservados. Escala de exibição, câmera fixa e regras de combate mantidas. Envio e CI remota ainda em conferência; nenhuma integração em development.

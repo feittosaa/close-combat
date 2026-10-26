@@ -67,3 +67,8 @@ Feedback posterior rejeitou manchas e rachaduras na jaqueta/pele. Preservar cont
 ## Referência canônica dos personagens
 
 Toda animação deve partir do turnaround aprovado do personagem, fornecido junto às poses existentes de ligação. Para o Shoto, usar sempre `assets/art/characters/shoto/turnaround.png` como autoridade de rosto, anatomia, roupa e materiais. Folhas derivadas servem de guia de ação, nunca substituem a identidade original. Conferir rosto/cavanhaque, relação cabeça-corpo, escala do tronco, pele/cabelo e couro dos sapatos em todas as poses e na passagem pelo idle. Sombras naturais podem variar com os planos; a cor do material não deve mudar durante a animação. Incluir entradas/saídas autoradas sem transparência. Aplicar a mesma regra a cada personagem futuro com sua referência própria.
+
+
+### Shoto — regra de figurino v3
+
+Turnaround original: identidade e proporções. Referência complementar `assets/art/characters/shoto/turnaround-costume-v3.png`: ambos os punhos do paletó dobrados em três quartos, antebraços expostos; somente um relógio com pulseira escura no pulso anatômico esquerdo, direito nu; nenhum bracelete dourado, cinto ou fivela. Calça carvão quase preta constante. Estas decisões posteriores prevalecem sobre detalhes divergentes das fontes antigas. Aplicar também em locomoção, entradas, saídas e guardas. Comparar cabeça/corpo, rosto, manga e materiais ao idle na mesma escala antes de aceitar cada pose.
