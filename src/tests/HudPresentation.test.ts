@@ -33,7 +33,7 @@ it('barra representa zero, máximo e dano simétrico sem ultrapassar o trilho',(
 });
 it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar recursos',()=>{
   const {scene,texts,commands}=mockScene();
-  const hud=new CombatHud(scene,1024,['Shoto','Shoto'],'Cais');
+  const hud=new CombatHud(scene,1024,['Shoto','Shoto'],'Sala de Treino');
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
   snapshot.characters[0].health=750;snapshot.characters[1].health=250;
   const original=structuredClone(snapshot);hud.update(snapshot,1024);
