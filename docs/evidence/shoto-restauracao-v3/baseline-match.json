@@ -1,0 +1,181 @@
+{
+  "baseline": "61ccbf9",
+  "filesIdentical": [
+    {
+      "path": "src/assets/sprites/characters/shoto/backstep.png",
+      "sha256": "ce74fe74fcec19d507084eae36525f390b695b27ecae905d67e5e6268722d4ce"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/crouch.png",
+      "sha256": "3ea5e718e9e7b56449b7c68420d8a837f29f87920b61ceda3857a5c9f61911b3"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/dash.png",
+      "sha256": "3d1f85d170f2cde920c310381f08c41e273d0c10e247e3a969b122bd9f9e549d"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/defense.png",
+      "sha256": "b9ff819df3d5d169105ee658e53dbbac698856efddeac84681e5f0b22285d7b8"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/idle.png",
+      "sha256": "20286f1f6035a21eb0a5a3a775952044d845f5442de6b7c3e544d690d73b5080"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/jump.png",
+      "sha256": "0161b730f7ba1411540e32179ac166cf4d3b50f58c2cf011f6283b55a9335446"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/walk-backward.png",
+      "sha256": "733e47bc1565a49563258de7ba17c7d04696d95aa06dda54b1fdcca1e59fa4d5"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/walk.png",
+      "sha256": "e29bd71cbb77139ca8fa1b4534fecc4400826c7e05f62f9d6fe10f616949bdfe"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-backstep.png",
+      "sha256": "831072e6acd5b2ead70b489be6a487dcf6ca18f2b1e2f5137b8c59f071582fe4"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-backward.png",
+      "sha256": "eebbe755ed73c13976d2faed372ff07fd2784bb03053b451074a6f75f32b4e87"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-crouch.png",
+      "sha256": "e48ce0ba159d6e29ff879d4937b1b0eda668b2cb0b156f8e0f0050155190535e"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-dash.png",
+      "sha256": "f8e5f1e6686433bd67a8689b8c42d7c81a91037ebb372fa97a17fd8cdda6e35d"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-defense.png",
+      "sha256": "71aea1ecf4caee5b3469a81806095ab296743e961826169cc835ebcde1b8ba1e"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-jump.png",
+      "sha256": "fcd259d6a2b5efffcea7e5f86b2067c256ae185e27f14534e0ca760364d8d7e0"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-walk.png",
+      "sha256": "6609760ec44a30bc3022ba765c02ba7e7dd972ba2bb5524443e4d9aa9df9fabb"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/light-punch.png",
+      "sha256": "c6acd022cc02ded807c1cc7bdf643b75b8fd2c8b748439f7f1f761d9435e7b33"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/heavy-punch.png",
+      "sha256": "d90686766bb35c734401a5f3bebe1d5557586ec7faabd05d5737bfb330de535e"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/light-kick.png",
+      "sha256": "75ea3c62080a0675fdf9fca800250e79ab40d00e78c651abe9d6f135ae86bee6"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/heavy-kick.png",
+      "sha256": "b9c1ead5ad083916a9c6f8b2024913b6ffdd8457b86723d756ea1d4ad45a49eb"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/crouch-defense.png",
+      "sha256": "d9b42afe9b8f58745455a361f745a3eaa9e21e2ef0cbb2be8aeaba69eb3d68cd"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/air-defense.png",
+      "sha256": "1a2eea70bcc68270cb3f0174417897e65e4e3c80b73b681aa427d693979d7620"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/backstep.atlas.json",
+      "sha256": "159606e24dfe0c9e042bdd42a4588e036ae993a00727f2458a52fd738ee6a81c"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/crouch.atlas.json",
+      "sha256": "e325a921591847d0422e8462c6b9355cccee0d1637e0ebdd756e74a7c6a5b800"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/dash.atlas.json",
+      "sha256": "db6bbf647836e768918ead71aa66f70cc03b838598579fd8cad009b92d12029b"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/defense.atlas.json",
+      "sha256": "791da3fb19c192d683c47235fc71cb4db7b8946afaa8aac63f92e75a96ea5b6b"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/idle.atlas.json",
+      "sha256": "e13eb5ef711e75d7125950f42914490fd95085eb7f5f7ffbb288e178bcd99fbd"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/jump.atlas.json",
+      "sha256": "22643c6ef9e2755483d89db877c85cac04c673a262006ebc8e35ee61c8739bc7"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/walk-backward.atlas.json",
+      "sha256": "753718cff058c068d2b6aa43e742dec20372c17c4d6372578edfa66e489bfa58"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/walk.atlas.json",
+      "sha256": "f7bd6027e71e58e302e175afffb84166bac6736ddb8d1978e06f0fb214ebe25c"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-backstep.atlas.json",
+      "sha256": "d78ce834972462ec43a9fd772e6f9cdb701e2d0a6475ec37ed9984c539b6e9d3"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-backward.atlas.json",
+      "sha256": "d4bf121c79460008a2c0f306b22a8c1a40adf01b4777f651c6b480e9504ee926"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-crouch.atlas.json",
+      "sha256": "056610f553f6b21d4bca9b225eb669e95d5a5050854354ea41b199eed11ec363"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-dash.atlas.json",
+      "sha256": "a95330591b0f62450f707b43623d06b95d77aaf170a74fbf62ff38a6c91f7bff"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-defense.atlas.json",
+      "sha256": "b8addd6d048084f2261acd68d00a8512783a863af10a9436223666893e8f0930"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-jump.atlas.json",
+      "sha256": "2b66a1977e0bcde256ac9f2b227743abf4895e94d56576e85bc62599aa962d3c"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/enter-walk.atlas.json",
+      "sha256": "8971362ee1133d0dd43a0512280ebbb803ab61c1f569bcae96d70c94adfe694e"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/light-punch.atlas.json",
+      "sha256": "d68efb3e11c5433975047ecee884147abe7f72a00129e841b4277f875c331446"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/heavy-punch.atlas.json",
+      "sha256": "426d567c21094c7e51b1ecd404c85d4a16295f9a6787bf51d3d5915adf2957c0"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/light-kick.atlas.json",
+      "sha256": "12156c6ad25a632be077533c48078dac0b80e7aa1a65d96f5f8a1f941bb97e44"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/heavy-kick.atlas.json",
+      "sha256": "b1fffafd0119f31448340dec34b363310f31b3fdfc0f4f786d6ad23e97fb2e87"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/crouch-defense.atlas.json",
+      "sha256": "59d3238da5b0dd90b239c672920fdd9e84b92c4cd7775831c8df76d5b921a1af"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/air-defense.atlas.json",
+      "sha256": "ef579c1f5357c4a506876e4d6c84fd1b6706cc6da3f44ce32ef79bba013103ed"
+    },
+    {
+      "path": "src/assets/sprites/characters/shoto/alignment.json",
+      "sha256": "61ca98c30680671be9832d92e92c784a5ddd2ef981410ab5f1694867cbc23f77"
+    },
+    {
+      "path": "src/rendering/animations/shotoSprites.ts",
+      "sha256": "02bb3affa1d6b2d9742a833722bf22dd96d05eeaf1544bd335ace223725da38b"
+    }
+  ]
+}

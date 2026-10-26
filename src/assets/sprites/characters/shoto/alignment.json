@@ -7,518 +7,336 @@
   "clips": {
     "idle": {
       "roots": [
-        166.582,
-        438.582,
-        706.582,
-        970.582,
-        1235.582,
-        1499.582,
-        1763.578,
-        2026.572
+        167,
+        439,
+        707,
+        971,
+        1236,
+        1501,
+        1764,
+        2026
       ],
       "offset": 0,
-      "scale": 1.0031796502384738,
-      "source": "idle-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        688.0,
-        688.0,
-        688.0,
-        688.0,
-        688.0,
-        688.0,
-        688.0,
-        688.0
-      ]
+      "scale": 1
     },
     "walk": {
       "roots": [
-        157.697,
-        425.697,
-        677.697,
-        936.697,
-        1206.697,
-        1463.697,
-        1723.697,
-        1988.697
+        207,
+        460,
+        720,
+        983,
+        1244,
+        1499,
+        1755,
+        2011
       ],
       "offset": 8,
-      "scale": 1.0394088669950738,
-      "source": "walk-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        674.0,
-        675.0,
-        671.0,
-        675.0,
-        675.0,
-        675.0,
-        674.0,
-        675.0
-      ]
+      "scale": 1.025
     },
     "crouch": {
       "roots": [
-        226.89,
-        581.39,
-        938.39,
-        1307.39,
-        1662.89,
-        2027.39
+        178,
+        537,
+        899,
+        1250,
+        1605,
+        1953
       ],
       "offset": 16,
-      "scale": 0.810204081632653,
-      "source": "crouch-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        630.0,
-        633.0,
-        629.0,
-        632.0,
-        629.0,
-        632.0
-      ]
+      "scale": 0.9
     },
     "jump": {
       "roots": [
-        158.572,
-        433.568,
-        690.585,
-        963.623,
-        1234.61,
-        1510.575,
-        1776.523,
-        2038.572
+        160,
+        430,
+        690,
+        960,
+        1230,
+        1510,
+        1770,
+        2040
       ],
       "rootY": [
-        681.0,
-        625.099,
-        594.335,
-        583.832,
-        640.455,
-        675.832,
-        681.78,
-        682.586
+        682,
+        625,
+        595,
+        585,
+        640,
+        675,
+        682,
+        682
       ],
       "offset": 22,
-      "scale": 1.1437125748502994,
-      "source": "jump-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components"
+      "scale": 1.14
     },
     "defense": {
       "roots": [
-        179.154,
-        554.14,
-        929.126,
-        1303.032,
-        1647.086,
-        2006.126
+        178,
+        554,
+        919,
+        1287,
+        1619,
+        1989
       ],
       "offset": 30,
-      "scale": 1.0063694267515924,
-      "source": "defense-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        670.0,
-        670.0,
-        670.0,
-        670.0,
-        670.0,
-        670.0
-      ]
+      "scale": 1.02
     },
     "walk-backward": {
       "roots": [
-        185.275,
-        465.224,
-        735.216,
-        1001.224,
-        1277.259,
-        1551.24,
-        1801.201,
-        2071.243
+        185,
+        460,
+        730,
+        1000,
+        1275,
+        1550,
+        1800,
+        2070
       ],
       "offset": 36,
-      "scale": 1.1381818181818182,
-      "source": "walk-backward-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        627.0,
-        627.0,
-        630.0,
-        627.0,
-        629.0,
-        630.0,
-        631.0,
-        638.0
-      ]
+      "scale": 1.14
     },
     "dash": {
       "roots": [
-        175.407,
-        555.295,
-        1030.765,
-        1401.44,
-        1759.198,
-        2032.537
+        175,
+        555,
+        1030,
+        1400,
+        1760,
+        2035
       ],
       "offset": 44,
-      "scale": 1.1442687747035574,
-      "source": "dash-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        638.0,
-        628.0,
-        629.0,
-        622.0,
-        636.0,
-        641.0
-      ]
+      "scale": 1.14
     },
     "backstep": {
       "roots": [
-        187.268,
-        541.241,
-        940.53,
-        1291.211,
-        1654.281,
-        1993.267
+        185,
+        542,
+        940,
+        1292,
+        1655,
+        1993
       ],
       "offset": 50,
-      "scale": 1.048172757475083,
-      "source": "backstep-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        663.0,
-        655.0,
-        657.0,
-        657.0,
-        649.0,
-        664.0
-      ]
+      "scale": 1.05
     },
     "enter-walk": {
       "roots": [
-        327.155,
-        803.083,
-        1310.047,
-        1842.956
+        379,
+        834,
+        1310,
+        1805
       ],
       "offset": 56,
-      "scale": 0.9708588957055214,
-      "source": "enter-walk-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        689.0,
-        689.0,
-        681.0,
-        679.0
-      ]
+      "scale": 0.965
     },
     "enter-backward": {
       "roots": [
-        283.719,
-        778.709,
-        1329.686,
-        1892.621
+        285,
+        780,
+        1325,
+        1890
       ],
       "offset": 60,
-      "scale": 0.9828926905132193,
-      "source": "enter-backward-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        687.0,
-        687.0,
-        680.0,
-        676.0
-      ]
+      "scale": 0.981
     },
     "enter-crouch": {
       "roots": [
-        315.575,
-        791.584,
-        1302.575,
-        1823.541
+        316,
+        792,
+        1269,
+        1789
       ],
       "offset": 64,
-      "scale": 0.9890453834115805,
-      "source": "enter-crouch-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        688.0,
-        689.0,
-        689.0,
-        689.0
-      ]
+      "scale": 0.986
     },
     "enter-jump": {
       "roots": [
-        265.752,
-        748.752,
-        1253.68,
-        1742.747
+        266,
+        744,
+        1240,
+        1740
       ],
       "offset": 68,
-      "scale": 0.9144927536231884,
-      "source": "enter-jump-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        748.0,
-        747.0,
-        747.0,
-        746.0
-      ]
+      "scale": 0.913
     },
     "enter-defense": {
       "roots": [
-        426.537,
-        875.5,
-        1302.469,
-        1748.459
+        429,
+        875,
+        1299,
+        1737
       ],
       "offset": 72,
-      "scale": 0.948948948948949,
-      "source": "enter-defense-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        695.0,
-        695.0,
-        695.0,
-        694.0
-      ]
+      "scale": 0.946
     },
     "enter-dash": {
       "roots": [
-        200.345,
-        676.205,
-        1188.95,
-        1813.415
+        206,
+        676,
+        1190,
+        1810
       ],
       "offset": 76,
-      "scale": 1.0,
-      "source": "enter-dash-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        687.0,
-        687.0,
-        665.0,
-        660.0
-      ]
+      "scale": 0.995
     },
     "enter-backstep": {
       "roots": [
-        241.95,
-        787.941,
-        1369.946,
-        1869.962
+        241,
+        788,
+        1370,
+        1870
       ],
       "offset": 80,
-      "scale": 0.9813374805598756,
-      "source": "enter-backstep-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        687.0,
-        686.0,
-        674.0,
-        687.0
-      ]
+      "scale": 0.981
     },
     "light-punch": {
       "roots": [
-        163.382,
-        514.202,
-        906.477,
-        1312.566,
-        1656.11,
-        2002.656
+        161.98,
+        517.23,
+        902.98,
+        1308.73,
+        1649.48,
+        1993.98
       ],
       "offset": 84,
-      "scale": 1.1227758007117439,
-      "source": "light-punch-wardrobe-v3.png",
+      "scale": 1.225243,
+      "source": "light-punch-canonical-v2.png",
       "key": "balanced",
       "rootY": [
-        647.0,
-        647.0,
-        647.0,
-        647.0,
-        647.0,
-        647.0
+        631.0,
+        631.0,
+        631.0,
+        631.0,
+        631.0,
+        631.0
       ],
       "cell": [
         1152,
         768
-      ],
-      "separation": "components"
+      ]
     },
     "heavy-punch": {
       "roots": [
-        183.93,
-        517.93,
-        886.43,
-        1298.43,
-        1667.93,
-        1998.93
+        163.47,
+        505.47,
+        875.47,
+        1294.47,
+        1668.22,
+        2004.22
       ],
       "offset": 90,
-      "scale": 1.0063795853269537,
-      "source": "heavy-punch-wardrobe-v3.png",
+      "scale": 1.262,
+      "source": "heavy-punch-canonical-v2.png",
       "key": "balanced",
       "rootY": [
-        687.0,
-        689.0,
-        687.0,
-        690.0,
-        687.0,
-        687.0
+        616.0,
+        616.0,
+        616.0,
+        616.0,
+        616.0,
+        616.0
       ],
       "cell": [
         1152,
         768
-      ],
-      "separation": "components"
+      ]
     },
     "light-kick": {
       "roots": [
-        168.996,
-        404.391,
-        727.971,
-        1236.637,
-        1557.003,
-        2001.943
+        174.65,
+        423.61,
+        751.36,
+        1242.61,
+        1566.36,
+        2015.15
       ],
       "offset": 96,
-      "scale": 1.132854578096948,
-      "source": "light-kick-wardrobe-v3.png",
+      "scale": 1.272177,
+      "source": "light-kick-canonical-v2.png",
       "key": "balanced",
       "rootY": [
-        639.0,
-        632.0,
-        632.0,
-        632.0,
-        632.0,
-        639.0
+        627.0,
+        620.0,
+        620.0,
+        620.0,
+        620.0,
+        627.0
       ],
       "cell": [
         1152,
         768
-      ],
-      "separation": "components"
+      ]
     },
     "heavy-kick": {
       "roots": [
-        176.413,
-        350.689,
-        664.689,
-        1297.189,
-        1647.189,
-        1996.913
+        162.92,
+        403.91,
+        725.16,
+        1245.66,
+        1589.16,
+        2006.17
       ],
       "offset": 102,
-      "scale": 1.0079872204472844,
-      "source": "heavy-kick-wardrobe-v3.png",
+      "scale": 1.306418,
+      "source": "heavy-kick-canonical-v2.png",
       "key": "balanced",
       "rootY": [
-        686.0,
-        687.0,
-        687.0,
-        674.0,
-        676.0,
-        686.0
+        615.0,
+        613.0,
+        613.0,
+        613.0,
+        614.0,
+        616.0
       ],
       "cell": [
         1152,
         768
-      ],
-      "separation": "components"
+      ]
     },
     "crouch-defense": {
       "roots": [
-        193.615,
-        579.115,
-        929.615,
-        1276.615,
-        1635.115,
-        2001.115
+        171.81,
+        557.06,
+        909.81,
+        1256.56,
+        1615.06,
+        1980.56
       ],
       "offset": 108,
-      "scale": 1.084010840108401,
-      "source": "crouch-defense-wardrobe-v3.png",
+      "scale": 1.066667,
+      "source": "crouch-defense-canonical-v2.png",
       "key": "balanced",
       "rootY": [
-        592.0,
-        593.0,
-        593.0,
-        593.0,
-        593.0,
-        593.0
-      ],
-      "separation": "components"
+        597.0,
+        597.0,
+        597.0,
+        597.0,
+        597.0,
+        597.0
+      ]
     },
     "air-defense": {
       "roots": [
-        192.455,
-        538.032,
-        907.811,
-        1268.126,
-        1624.979,
-        1988.737
+        188.18,
+        532.68,
+        892.68,
+        1246.18,
+        1605.18,
+        1977.68
       ],
       "offset": 114,
-      "scale": 0.85,
-      "source": "air-defense-wardrobe-v3.png",
+      "scale": 0.912752,
+      "source": "air-defense-canonical-v2.png",
       "key": "balanced",
       "rootY": [
-        879.588,
-        879.588,
-        879.588,
-        879.588,
-        880.588,
-        880.765
+        847.99,
+        845.99,
+        846.99,
+        846.99,
+        848.99,
+        846.99
       ],
-      "airborne": true,
-      "separation": "components"
-    },
-    "walk-inbetweens": {
-      "offset": 120,
-      "roots": [
-        162.735,
-        422.735,
-        677.735,
-        928.735,
-        1193.735,
-        1450.735,
-        1713.735,
-        1982.735
-      ],
-      "scale": 1.0343137254901962,
-      "source": "walk-inbetweens-wardrobe-v3.png",
-      "key": "balanced",
-      "separation": "components",
-      "rootY": [
-        671.0,
-        672.0,
-        670.0,
-        671.0,
-        671.0,
-        671.0,
-        672.0,
-        666.0
-      ]
+      "airborne": true
     }
   }
 }

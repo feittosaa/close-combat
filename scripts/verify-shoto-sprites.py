@@ -1,6 +1,5 @@
 """Verify prepared pixels, independently of the runtime manifest (Pillow/NumPy/SciPy)."""
 import json
-import hashlib
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -24,11 +23,6 @@ for name,spec in config['clips'].items():
         assert not magenta.any(),(name,index,'opaque magenta')
         if not spec.get('airborne', name=='jump'): assert foot-2<=ys.max()<=foot,(name,index,'foot drift')
         metrics={'opaqueBounds':[int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)]}
-        if name in ['idle','heavy-punch','heavy-kick']:
-            # Upper head silhouette, above fists/collar, compared at the same atlas scale.
-            # This detects head inflation; it does not certify face or costume identity.
-            _,head_x=np.where(opaque[ys.min()+8:ys.min()+44])
-            metrics['upperHeadWidth']=int(head_x.max()-head_x.min()+1)
         if name in ['crouch','crouch-defense']:
             sole=opaque[foot-20:foot].sum(axis=0)>3
             labels,count=label(sole)
@@ -40,16 +34,6 @@ for name in ['light-punch','heavy-punch','light-kick','heavy-kick']:
     heights=[frame['opaqueBounds'][3]-frame['opaqueBounds'][1] for frame in report[name]]
     assert 629<=heights[0]<=633,(name,'standing scale differs from idle',heights)
     assert max(heights)<=650,(name,'body inflates during attack',heights)
-idle_head=float(np.median([f['upperHeadWidth'] for f in report['idle']]))
-for name in ['heavy-punch','heavy-kick']:
-    for index,frame in enumerate(report[name]):
-        assert .88*idle_head<=frame['upperHeadWidth']<=1.12*idle_head,(name,index,'head scale differs from idle',frame['upperHeadWidth'],idle_head)
-walk_hashes=[]
-for name in ['walk','walk-inbetweens']:
-    image=Image.open(ROOT/f'{name}.png').convert('RGBA')
-    for index in range(8):
-        walk_hashes.append(hashlib.sha256(image.crop((index*768,0,(index+1)*768,768)).tobytes()).hexdigest())
-assert len(set(walk_hashes))==16,'walk drawings must be distinct, not repeated frames'
 guard_roots=[frame['plantedFootX'] for frame in report['crouch-defense']]
 assert max(guard_roots)-min(guard_roots)<=3,('crouch guard horizontal drift',guard_roots)
 roots=[frame['plantedFootX'] for frame in report['crouch']]

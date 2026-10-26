@@ -322,3 +322,16 @@ Pedido: padronizar mangas três quartos/um relógio esquerdo/sem braceletes/sem 
 - [x] Conferir jogo, testes, build, preparo/verificação e diff; enviar/CI na mesma branch, sem merge.
 
 Validação local desta revisão: npm ci, 168 testes/22 arquivos, build, preparo dos 128 quadros e verificador de pixels aprovados. Cabeça dos fortes comparada ao idle na mesma escala (largura superior 97–105 px, referência mediana 100 px); pés agachados dentro de 3 px. Conferência no jogo e capturas em docs/evidence/shoto-figurino-v3, incluindo quatro ataques nos dois lados e guardas reais. As 22 fontes v3, referência de figurino, prompts e seleção final foram preservados. Escala de exibição, câmera fixa e regras de combate mantidas. Revisão enviada em `cb7c3de4971cc8a09e0bcd052253c933081c3e3c`, com [CI 40383532409](https://github.com/feittosaa/close-combat/actions/runs/40383532409) aprovada. Auditoria remota: development permanece `a5930d901654feb419570ff642acc6025d20daed` e main `77a4c939c9ccdf028eed5f334132f65368dbae30`; nenhum merge ou tag. Branch local/remota mantida para validação manual. Este fechamento é documental; sua própria CI será conferida antes do relato final.
+
+
+### Rejeição visual da v3 e recuperação da base anterior
+
+O usuário reprovou a v3: dedos rosados, relógio intermitente, marcha incoerente, agachado pequeno, blazer excessivamente branco, cabelo/estilo divergentes, soco brusco e troca da perna no chute. As marcações técnicas da seção anterior não representam aprovação artística; a v3 não está concluída nem aprovada.
+
+- [x] Identificar a troca em lote e preservar o histórico rejeitado sem reescrever commits.
+- [x] Restaurar sprites, raízes, preparo e reprodução de 61ccbf9, anterior à v3; retirar intermediárias rejeitadas do runtime.
+- [ ] Conferir restauração no jogo, testes, build, verificação e diff; enviar a mesma branch e verificar CI, sem merge.
+
+Objetivo desta recuperação: voltar à base anterior, sem nova geração ou tentativa de corrigir todas as folhas ao mesmo tempo. Os ajustes artísticos solicitados continuam pendentes e serão tratados pontualmente; não declarar que a restauração os resolveu.
+
+Restauração local conferida: 44 arquivos ativos idênticos byte a byte a 61ccbf9 (imagens, atlas, raízes e reprodução), 120 desenhos/21 atlas, sem as intermediárias rejeitadas. npm ci, 168 testes/22 arquivos, build, verificador e diff aprovados. Capturas/relatório em docs/evidence/shoto-restauracao-v3. Nenhuma arte nova gerada. Envio e CI remota em conferência; nenhuma integração.

@@ -1,3 +1,5 @@
+> **REPROVADO PELO USUÁRIO.** Este registro documenta a tentativa v3 e suas checagens técnicas, que não detectaram as regressões de movimento e identidade. A arte foi retirada do runtime e a base anterior foi restaurada. Não tratar as capturas/fontes desta pasta como aprovação artística.
+
 # Shoto — figurino v3 e caminhada de 16 desenhos
 
 Revisão na mesma branch `codex/feature-shoto-golpes-guardas`, sem integração. Turnaround original mantém a identidade; referência complementar `assets/art/characters/shoto/turnaround-costume-v3.png` incorpora as decisões posteriores de figurino.
