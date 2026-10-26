@@ -270,3 +270,17 @@ Branch `codex/fix-shoto-cores-suaves`, criada de development. Feedback do usuár
 Conferência no build de produção concluída: seleção/idle nos dois lados, caminhada/recuo, agachado, dash/backstep, guarda e salto em execução. Salto capturado no frame 19 sem o painel de pausa, personagem inteiro e abaixo do HUD. Jaqueta e pele preservam as sombras originais, sem o mosaico de cores criado pela classificação anterior. Evidências em docs/evidence/shoto-cores-suaves. Escala do desenho +3%, margem 92, afastamento máximo 456 em 1024 × 576; câmera continua fixa em 1,6 e colisores inalterados. Instalação reproduzível, 149 testes/20 arquivos, build e diff aprovados. Fechamento remoto segue CI do commit final antes de integração e encerramento; sem promoção para main.
 
 Código/evidências enviados em `4758f3045c39d47c2e3c255f78c060eed1747c7d`, [CI da feature 40340414066](https://github.com/feittosaa/close-combat/actions/runs/40340414066) aprovada. Este fechamento é somente documental. Integrar após CI do commit final, verificar CI de development e encerrar `codex/fix-shoto-cores-suaves` local/remotamente; o relato final confirma essas etapas do remoto. Sem alteração de main ou tags.
+
+### Transições sem piscadas de opacidade
+
+Branch `codex/fix-shoto-piscadas`, criada de development. Feedback: animações parecem piscar após correção das cores. Reprodução com snapshots reais: no frame 2 da entrada de caminhada, duas camadas com alpha 2/3 e 1/3 produzem cobertura composta 7/9 (77,78%) em composição source-over, deixando o cenário aparecer através do corpo. Regressão adicionada e confirmada falhando antes da correção.
+
+Retirar a dissolução por alpha entre poses; renderizar uma pose sempre opaca. Preservar os conectores autorados de entrada/saída, seus tempos, cores, escala +3%, física, raízes e pausa determinística.
+
+- [x] Regressão de cobertura opaca em ambos os lados, entradas/saídas, interrupções, salto/aterrissagem e dash/backstep.
+- [x] Conferir movimentos e interrupções no jogo, registrar evidências.
+- [x] Instalação reproduzível, 150 testes em 21 arquivos, build e diff aprovados.
+
+Conferência no build de produção concluída com a mesma aba atualizada: caminhada e saída, entrada/interrupção curta de agachamento, dash no frame 2, reversão em movimento real e salto. Capturas em docs/evidence/shoto-sem-piscadas; o frame 2 que antes apresentava cobertura de 77,78% agora desenha uma única pose com alpha 1. Os conectores e seus tempos continuam ativos, assim como as verificações de pausa/FPS 30/60/120/144. Ajustadas somente as expectativas antigas de duas camadas que descreviam o comportamento defeituoso; testes de retorno parcial e determinismo permanecem.
+
+Fechamento remoto desta entrega segue docs/ci-cd.md: envio, CI da feature, integração em development somente com CI verde do commit enviado, CI de development e remoção da branch após confirmar ancestralidade. O relato final registra o resultado efetivo dessas etapas. Sem promoção para main.

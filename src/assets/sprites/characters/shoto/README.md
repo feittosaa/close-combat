@@ -46,7 +46,7 @@ Sete novas folhas `enter-*`, quatro desenhos cada: walk 56–59, backward 60–6
 
 Entradas duram 8 frames, exceto salto/dash/backstep (4). Ao parar, o conector correspondente é invertido; uma entrada curta retorna apenas pelas poses já alcançadas. A preparação do salto ocupa os quatro primeiros frames de sua trajetória, mantendo os tempos de ápice/queda do restante do clipe. Dash/backstep usam o conector de 4 frames mais as seis poses principais em 20 frames (3,4,4,4,3,2), total 24. Corrida removida na revisão seguinte. Guarda entra pelo novo conector, preserva a pose fechada em blockstun e nunca reabre em cada ciclo.
 
-`getShotoSpriteLayers` mistura a pose anterior e a atual durante três frames, com informações do snapshot em vez de tempo real ou histórico do renderizador. Permite suavizar interrupções entre ações sem atrasar o controle, alterar colisores ou avançar durante pausa. A margem lateral fixa passou a 88 unidades para acomodar as poses largas (meia célula corresponde a 86,4 unidades de mundo).
+`getShotoSpriteLayers` retorna uma única pose com alpha 1. A dissolução anterior de três frames foi removida porque duas camadas com alphas complementares resultavam em cobertura composta de apenas 7/9 no meio da troca, criando piscadas e imagem dupla. Os conectores de quatro desenhos e o retorno parcial continuam em uso, sem mudar tempos ou regras. A margem lateral atual é 92 unidades, preservando a escala de desenho +3%.
 
 ## Cores exibidas no jogo — revisão sem recortes
 
