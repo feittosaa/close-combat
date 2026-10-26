@@ -284,3 +284,17 @@ Retirar a dissolução por alpha entre poses; renderizar uma pose sempre opaca. 
 Conferência no build de produção concluída com a mesma aba atualizada: caminhada e saída, entrada/interrupção curta de agachamento, dash no frame 2, reversão em movimento real e salto. Capturas em docs/evidence/shoto-sem-piscadas; o frame 2 que antes apresentava cobertura de 77,78% agora desenha uma única pose com alpha 1. Os conectores e seus tempos continuam ativos, assim como as verificações de pausa/FPS 30/60/120/144. Ajustadas somente as expectativas antigas de duas camadas que descreviam o comportamento defeituoso; testes de retorno parcial e determinismo permanecem.
 
 Fechamento remoto desta entrega segue docs/ci-cd.md: envio, CI da feature, integração em development somente com CI verde do commit enviado, CI de development e remoção da branch após confirmar ancestralidade. O relato final registra o resultado efetivo dessas etapas. Sem promoção para main.
+
+### Quatro básicos ilustrados e guardas por postura
+
+Branch `codex/feature-shoto-golpes-guardas`, criada de origin/development. Criar e implementar soco fraco/forte, chute fraco/forte, defesa agachada e aérea no mesmo personagem/traço, sem modificar o balanceamento dos quatro básicos. Sincronizar poses com preparo, atividade e recuperação reais; raízes, proporções, cores naturais e opacidade preservadas. Guardas devem ser alcançáveis na postura correspondente.
+
+Regra persistente atualizada em AGENTS.md, docs/ci-cd.md e base.md: commits/push autorizados; nenhum merge em development sem pedido explícito do usuário. Esta entrega termina na branch validada/enviada, mantida para revisão.
+
+- [x] Gerar seis folhas e preservar fontes/prompts/proveniência.
+- [x] Preparar atlas e raízes, integrar os quatro ataques por fase e duas guardas por postura.
+- [x] Verificar preparação, transparência, enquadramento, ambos os lados, impactos/defesas, pausa/reset e FPS.
+- [ ] Instalação, testes, build, diff, conferência visual, commit/push e CI da branch.
+- [ ] Auditoria final: nenhuma integração em development, branch mantida.
+
+Validação local desta branch: npm ci, 164 testes/22 arquivos, build, verificador dos 116 frames e diff aprovados. Revisão no jogo dos seis clipes em ambos os lados, com impactos, bloqueios reais, retorno e reset. Evidências em docs/evidence/shoto-golpes-guardas. Os ataques usam células 1152×768 com a mesma altura/escala; guardas 768×768. Novo módulo amostra as fases reais; guarda aérea passa a ser alcançável com B/DB, sem suspender gravidade, sem novos golpes ou mudança dos básicos. Próxima etapa: envio e CI da branch, mantendo development intacta.

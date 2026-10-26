@@ -10,6 +10,7 @@ width,height=config['cell']
 foot=config['footAnchorY']
 report={}
 for name,spec in config['clips'].items():
+    width,height=spec.get('cell',config['cell'])
     pixels=np.array(Image.open(ROOT/f'{name}.png').convert('RGBA'))
     assert pixels.shape==(height,width*len(spec['roots']),4)
     frames=[]
@@ -20,7 +21,7 @@ for name,spec in config['clips'].items():
         assert 0<xs.min()<=xs.max()<width-1 and 0<ys.min()<=ys.max()<height-1,(name,index,'clipping')
         magenta=(frame[:,:,0]>220)&(frame[:,:,1]<40)&(frame[:,:,2]>220)&opaque
         assert not magenta.any(),(name,index,'opaque magenta')
-        if name!='jump': assert foot-2<=ys.max()<=foot,(name,index,'foot drift')
+        if not spec.get('airborne', name=='jump'): assert foot-2<=ys.max()<=foot,(name,index,'foot drift')
         metrics={'opaqueBounds':[int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)]}
         if name=='crouch':
             sole=opaque[foot-20:foot].sum(axis=0)>3

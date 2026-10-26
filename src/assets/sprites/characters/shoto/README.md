@@ -1,6 +1,6 @@
 # Shoto — Anfitrião: entrega de animações
 
-O usuário aprovou idle, caminhada e agachado e, posteriormente, salto, defesa, recuo, dash e backstep. Nesta revisão autorizou inserir as cinco propostas novas, uniformizar o cabelo avermelhado em todas as folhas e corrigir alinhamento/loops. Nenhuma aprovação de novos ataques ou reações é inferida.
+O usuário aprovou idle, caminhada e agachado e, posteriormente, salto, defesa, recuo, dash e backstep. Nesta revisão autorizou inserir as cinco propostas novas, uniformizar o cabelo avermelhado em todas as folhas e corrigir alinhamento/loops. O pedido posterior autoriza quatro ataques e duas guardas descritos abaixo; reações continuam indefinidas.
 
 ## Conteúdo
 
@@ -12,17 +12,17 @@ O usuário aprovou idle, caminhada e agachado e, posteriormente, salto, defesa, 
 | jump | 22–29 | 8 | Durações 2,4,6,10,6,4,4,2 frames lógicos, sem repetir no ar |
 | defense | 30–35 | 6 | Entrada 30/31 uma vez; mantém 32,33,34,35,34,33 |
 | walk-backward | 36–43 | 8 | Ciclo próprio a 10 FPS |
-| dash | 44–49 | 6 | 2 frames lógicos por pose |
-| backstep | 50–55 | 6 | 2 frames lógicos por pose |
+| dash | 44–49 | 6 | 3,4,4,4,3,2 frames após conector de 4F |
+| backstep | 50–55 | 6 | 3,4,4,4,3,2 frames após conector de 4F |
 
-Corrida reutiliza 45–48. Defesa baixa usa a pose agachada já aprovada; não há desenho específico de guarda baixa. Ataques e hitstun conservam geometria provisória.
+Corrida removida. Quatro básicos e guardas agachada/aérea usam clipes próprios; hitstun conserva geometria provisória.
 
 ## Fontes e preparo
 
 - `source/*-magenta.png`: fontes aprovadas preservadas.
 - `source/*-auburn.png`: edições pelo `image_gen` embutido, uma por folha, alterando apenas o cabelo para vermelho acobreado escuro. As poses, vestuário e composição foram preservados. Prompts e origem em `source/auburn-edits.json`.
 - `alignment.json`: raízes X/Y e escala autoradas por folha/quadro. O ponto de apoio do agachado foi corrigido; não usar centro da silhueta para alinhar braços ou abas móveis.
-- `*.png`/`*.atlas.json`: 84 quadros RGBA, quinze faixas de uma linha, células fixas 768 × 768, sem trim, raiz 384/720. Largura máxima de atlas 6144 pixels.
+- `*.png`/`*.atlas.json`: 116 quadros RGBA, 21 faixas de uma linha, sem trim. Locomoção/guardas: células 768 × 768, raiz 384/720. Ataques: 1152 × 768, raiz 576/720. Largura máxima 6912 pixels, mesma escala uniforme por altura em todos os clipes.
 - `preparation.json`: medidas da transformação executada. `verification.json`: limites opacos e medição independente do pé plantado.
 
 Reproduzir da raiz do repositório com Python, Pillow, NumPy e SciPy:
@@ -50,6 +50,23 @@ Entradas duram 8 frames, exceto salto/dash/backstep (4). Ao parar, o conector co
 
 ## Cores exibidas no jogo — revisão sem recortes
 
-A classificação automática de material e a quantização por faixas foram removidas: criavam recortes artificiais na pele e nas dobras marfim. `prepareShotoSprites` prepara os 15 atlas uma vez com a correção RGB contínua em `src/rendering/animations/shotoPalette.ts`. Ela preserva os pixels de tinta/marfim, sombras e gradientes originais, mantém cabelo castanho discreto, pele um pouco mais morena e escurece suavemente neutros da calça. Pesos suaves sobrepõem os ajustes, sem troca binária de material, medianas por linha ou paleta limitada. A tabela de tons nesse arquivo é referência artística, não uma lista de cores impostas a cada pixel.
+A classificação automática de material e a quantização por faixas foram removidas: criavam recortes artificiais na pele e nas dobras marfim. `prepareShotoSprites` prepara os 21 atlas uma vez com a correção RGB contínua em `src/rendering/animations/shotoPalette.ts`. Ela preserva os pixels de tinta/marfim, sombras e gradientes originais, mantém cabelo castanho discreto, pele um pouco mais morena e escurece suavemente neutros da calça. Pesos suaves sobrepõem os ajustes, sem troca binária de material, medianas por linha ou paleta limitada. A tabela de tons nesse arquivo é referência artística, não uma lista de cores impostas a cada pixel.
 
 Fontes, células 768 × 768, alpha e raiz 384/720 permanecem. Desenho exibido uniformemente 3% maior, display 177,984 × 177,984, também na seleção; sem aumento dos colisores ou zoom dinâmico. Margem lateral passa a 92 unidades. Corrida segue removida; dash sustentado volta à caminhada após 24F. Testes de continuidade cobrem os limiares que causavam as rachaduras.
+
+## Quatro básicos e duas guardas — branch sem integração
+
+| Atlas | Índices | Reprodução |
+| --- | --- | --- |
+| light-punch | 84–89 | 2 poses no preparo, 1 no contato, 3 na recuperação |
+| heavy-punch | 90–95 | Mesma distribuição pelas fases reais do soco forte |
+| light-kick | 96–101 | Mesma distribuição pelas fases reais do chute fraco |
+| heavy-kick | 102–107 | Mesma distribuição pelas fases reais do chute forte |
+| crouch-defense | 108–111 | 0,1,2,3,2,1 a 6 FPS, sempre agachado |
+| air-defense | 112–115 | 0,1,2,3,2,1 a 6 FPS, guarda aérea fechada |
+
+Fontes magenta originais `source/*-combat.png`, prompts integrais e referências em `source/combat-generation.json`, gerados pela ferramenta embutida image_gen. A preparação usa chromakey balanceado nestas seis folhas para preservar vinho/pele. `alignment.json` registra raízes e escala por folha; a guarda aérea usa uma raiz virtual abaixo dos pés para não somar uma segunda trajetória ao salto físico. Os quatro atlas mais largos mantêm o centro como raiz e não mudam a altura/escala do personagem. A correção RGB recebe a largura real da célula, inclusive 1152, preservando sombras e alpha sem quantização.
+
+`shotoCombatSprites.ts` consulta os dados reais do golpe e `elapsedFrames`: nenhum relógio paralelo nem mudança de balanceamento. As poses ativas coincidem com os frames ativos; o desenho não define a hitbox. Guardas são escolhidas antes da locomoção conforme grounded/crouching. `B`/`DB` durante ameaça permite guarda aérea contra altos/médios, com gravidade e movimento aéreo preservados; baixo exige chão. Não há golpes aéreos ou agachados novos.
+
+Conferência desta entrega: `docs/evidence/shoto-golpes-guardas/`. A branch é mantida para revisão; qualquer merge em development exige pedido explícito do usuário.

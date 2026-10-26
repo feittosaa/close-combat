@@ -4,7 +4,7 @@ import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
 
-/** Approved locomotion art; unsupported states retain diagnostic geometry. */
+/** Approved Shoto poses; unsupported reactions retain diagnostic geometry. */
 export class CombatantView {
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly sprites: Phaser.GameObjects.Image[] = [];

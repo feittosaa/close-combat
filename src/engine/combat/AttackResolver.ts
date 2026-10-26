@@ -36,8 +36,8 @@ export class AttackResolver {
       if (move.hitLevel === 'high' && target.crouching) return [];
       if (!intersects(createHitbox(attacker, move), createHurtbox(target))) return [];
       const guard = inputs[1 - index]?.direction;
-      const blocked = target.grounded && ['blocking', 'blockstun'].includes(target.mode) &&
-        (move.hitLevel === 'low' ? guard === 'DB' : guard === 'B' || guard === 'DB');
+      const blocked = ['blocking', 'blockstun'].includes(target.mode) &&
+        (move.hitLevel === 'low' ? target.grounded && guard === 'DB' : guard === 'B' || guard === 'DB');
       const recovery = move.startup + move.activeFrames + move.recovery - attack.elapsedFrames - 1;
       const stun = blocked ? move.blockstun : move.hitstun;
       const event: HitEvent = { attackerId: attacker.characterId, targetId: target.characterId, moveId: move.id,
