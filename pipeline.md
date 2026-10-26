@@ -204,6 +204,20 @@ Conferência da revisão de animações: 56 desenhos em oito atlas, cabelo edita
 
 Validação final desta revisão: instalação reproduzível concluída, 129 testes em 17 arquivos, build, diff e verificação dos pixels aprovados. Evidências de P2 no ápice confirmam espelhamento; revisão no afastamento máximo mantém ambos na tela, sem mudanças de escala. O cenário de treino solicitado depois será entregue em branch independente.
 
+### Sala de treino — substituição do Cais
+
+Branch: `codex/feature-sala-treino`, criada de development após integração das animações `de97cce`. CI da feature 40265537116 e CI de development 40265888943 aprovadas; branch de animações encerrada local/remotamente.
+
+- [x] Gerar sala ilustrada neutra próxima da referência quadriculada, sem personagens/props/texto, e registrar prompt/origem.
+- [x] Retirar Cais do catálogo e dos assets ativos; preservar histórico Git e evidências antigas.
+- [x] Fixar sala no treino e dois tutoriais, sem etapa de escolha; única opção temporária nos modos gerais.
+- [ ] Validar testes, instalação, build, diff e jogo; conferir solo, enquadramento e todos os modos.
+- [ ] Enviar, confirmar CI, integrar e encerrar branch.
+
+Pedido posterior de dashs mais longos e transições suaves segue em objetivo separado; a geração dos conectores já começou sem misturar sua implementação nesta branch.
+
+Sala final conferida no treino e capturada em docs/evidence/sala-treino/treino.png. Instalação, 135 testes em 18 arquivos, build e diff aprovados; PNG final preservado em tamanho nativo. Conferência da navegação dos demais modos ficou pendente após timeouts de foco/CDP no navegador; servidor de produção segue ativo e responde HTTP. Preservar a branch sem integração até completar essa conferência. O objetivo de dash/transições prossegue separadamente a partir de development.
+
 ### Dash imediato e transições suaves
 
 Branch: `codex/feature-dash-transicoes`, criada de origin/development após as animações alinhadas. Pedido: dois toques imediatos com dash mais visível e demorado, mais sprites intermediários para evitar saltos de pose.
@@ -216,3 +230,6 @@ Branch: `codex/feature-dash-transicoes`, criada de origin/development após as a
 - [x] 137 testes em 18 arquivos, build e diff aprovados; verificação independente dos 84 quadros aprovada.
 - [ ] Conferir duração/loops/transições no jogo e registrar evidências; navegador de conferência apresentou timeouts após a sala de treino.
 - [ ] Enviar, confirmar CI, integrar e encerrar branch pronta.
+
+
+Dependência reunida para revisão conjunta: a branch de dash mantém o commit próprio `c616f68` e incorpora a sala pelo merge da branch `72cc275`, preservando ambos os objetivos. Integração em development aguarda a conferência visual conjunta e a CI do conjunto.
