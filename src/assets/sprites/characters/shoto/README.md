@@ -32,3 +32,7 @@ Ataques, salto, dash, corrida, defesa, hitstun e blockstun não receberam arte. 
 ## Validação
 
 115 testes em 14 arquivos, incluindo seleção, atlas, pivô, espelhamento, pausa/reset, FPS 30/60/120/144 e retorno à geometria. PNGs preparados inspecionados isoladamente. Revisão dentro do jogo ainda pendente: ferramenta de navegador expira ao abrir a prévia local. A branch deve permanecer fora de development até verificar animações em velocidade normal/lenta, ambos os lados, pausa/passo único/reset, pé/escala no cenário e troca entre estados com e sem arte.
+
+## Apresentação Full HD
+
+A branch `codex/feature-apresentacao-1080p` reúne estes sprites ao menu diurno aprovado. Canvas 1920 × 1080, coordenadas lógicas preservadas e zoom próximo 1,95 (+25,8% sobre 1,55); a imagem e a geometria crescem juntas pela câmera. O sprite continua com escala uniforme 0,225 no mundo. A prévia na seleção usa zoom 1,6. Não há mudança de resolução dos PNGs nem ampliação isolada dos colisores.

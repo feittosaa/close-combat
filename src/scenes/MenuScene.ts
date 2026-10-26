@@ -1,3 +1,4 @@
+import { LOGICAL_VIEW, configureUiCamera, sharpenSceneText } from '../rendering/presentation';
 import { preloadShotoSprites, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
 
@@ -60,14 +61,15 @@ export class MenuScene extends Phaser.Scene {
     if (index >= 0) this.fighterIndex = index;
   }
   preload(): void {
-    this.loading = this.add.text(this.scale.width / 2, this.scale.height / 2, 'PREPARANDO A ARENA…', { fontSize: '18px', color: '#e6c78d' }).setOrigin(.5);
+    configureUiCamera(this.cameras.main, this.scale);
+    this.loading = this.add.text(LOGICAL_VIEW.width / 2, LOGICAL_VIEW.height / 2, 'PREPARANDO A ARENA…', { fontSize: '18px', color: '#e6c78d' }).setOrigin(.5);
     this.load.image('menu-solar', menuBackground);
     preloadStage(this, defaultStage);
     preloadShotoSprites(this);
   }
   create(): void {
     this.loading?.destroy(); this.loading = undefined;
-    const { width, height } = this.scale;
+    const { width, height } = LOGICAL_VIEW;
     // Overscan keeps the slow camera drift inside the illustration at every phase.
     this.textures.get('menu-solar').setFilter(Phaser.Textures.FilterMode.LINEAR);
     const background = this.add.image(width / 2, height / 2, 'menu-solar');
@@ -128,9 +130,9 @@ export class MenuScene extends Phaser.Scene {
   }
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
-    const { width, height } = this.scale;
+    const { width, height } = LOGICAL_VIEW;
     const titles = { home: '01 / MODOS', fighter: '02 / PERSONAGEM', stage: '03 / CENÁRIO', settings: 'CONFIGURAÇÕES' };
-    this.text(width - 42, 40, titles[this.page], 13, '#d9bd8d').setOrigin(1, 0);
+    this.text(width - 42, 40, titles[this.page], 13, '#fff0d2').setStroke('#171219', 3).setOrigin(1, 0);
     if (this.page === 'home') {
       this.text(56, 112, 'COMO VOCÊ QUER JOGAR?', 19, '#ebd3ac');
       MODES.forEach((mode, i) => {
@@ -152,7 +154,7 @@ export class MenuScene extends Phaser.Scene {
         const card = this.box(x, 181, w, 291, selected ? 0x44302b : 0x17151b, .97).setStrokeStyle(2, selected ? 0xe5b877 : 0x78604d).setInteractive({ useHandCursor: true });
         this.text(x + 18, 196, fighter.name.toUpperCase(), 23, selected ? '#ffe5b3' : '#f4e4ce');
         this.text(x + 18, 226, STYLES[fighter.id] ?? '', 11, '#bdacb6');
-        this.preview(fighter, x + w / 2, 444, 1.04);
+        this.preview(fighter, x + w / 2, 444, 1.6);
         card.on('pointerover', () => card.setStrokeStyle(2, 0xe5b877)).on('pointerout', () => card.setStrokeStyle(2, selected ? 0xe5b877 : 0x78604d)).on('pointerdown', () => { this.fighterIndex = i; this.render(); });
       });
       const opponent = opponentFor(this.fighters[this.fighterIndex].id, this.mode);
@@ -179,6 +181,7 @@ export class MenuScene extends Phaser.Scene {
       this.button(56, 288, 180, 'VOLTAR', () => this.back());
       this.text(56, height - 25, 'ESC  VOLTAR AO MENU', 11, '#d3bea3');
     }
+    sharpenSceneText(this);
   }
   private chooseMode(index: number): void {
     this.modeIndex = index; const id = MODES[index].id;

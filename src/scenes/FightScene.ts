@@ -1,3 +1,4 @@
+import { LOGICAL_VIEW } from '../rendering/presentation';
 import { TutorialSession } from '../training/TutorialSession';
 import { TutorialHud } from '../ui/TutorialHud';
 import { ControlSettings } from '../ui/ControlSettings';
@@ -169,7 +170,7 @@ export class FightScene extends Phaser.Scene {
     for (const key of ['shoto-idle', 'shoto-walk', 'shoto-crouch']) {
       if (this.textures.exists(key)) this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
     }
-    const { width, height } = this.scale;
+    const { width, height } = LOGICAL_VIEW;
     const config = createGameConfig(width, height);
     const stageLayout = createStageLayout(this.selectedStage, width, height, config.arena.floorY);
     // Translate the arena into the stage without changing its playable width.
@@ -278,7 +279,7 @@ export class FightScene extends Phaser.Scene {
       this.combatants[index]?.sync(character, snapshot.frame);
     });
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
-    this.hud?.update(snapshot, this.scale.width);
+    this.hud?.update(snapshot, LOGICAL_VIEW.width);
     if (this.arcadeInfo) {
       const count = arcadeOpponents(this.selectedFighter.id).length;
       let label = `ARCADE · LUTA ${this.arcadeIndex + 1}/${count} · COMPUTADOR`;

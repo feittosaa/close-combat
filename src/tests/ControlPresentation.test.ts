@@ -58,8 +58,8 @@ describe('histórico de mudanças de entrada',()=>{
 });
 
 it('enquadra lutadores maiores de perto sem cortar as extremidades quando se afastam',()=>{
-  expect(getFightZoom(1024,[450,550])).toBe(1.55);
-  const far=getFightZoom(1024,[100,950]);expect(far).toBeLessThan(1.55);expect((850+230)*far).toBeLessThanOrEqual(1024);
+  expect(getFightZoom(1024,[450,550])).toBe(1.95);
+  const far=getFightZoom(1024,[100,950]);expect(far).toBeLessThan(1.95);expect((850+230)*far).toBeLessThanOrEqual(1024);
 });
 
 it('preserva proporção, piso projetado e limites do cenário do contato até as extremidades',()=>{
