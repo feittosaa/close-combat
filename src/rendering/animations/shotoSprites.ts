@@ -23,7 +23,7 @@ import backstepAtlas from '../../assets/sprites/characters/shoto/backstep.atlas.
 /** Approved locomotion/guard art only. Roots and scale are baked into fixed atlas cells. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
   textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:84,
-  footAnchorY:720,displaySize:{width:172.8,height:172.8},
+  footAnchorY:720,displaySize:{width:172.8*1.03,height:172.8*1.03},
   clips:[
     {key:'shoto-idle',start:0,end:7,frameRate:6,repeat:-1},
     {key:'shoto-walk',start:8,end:15,frameRate:10,repeat:-1},

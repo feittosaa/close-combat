@@ -1,3 +1,4 @@
+import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { FIGHT_WORLD_SCALE } from '../engine/data/fightFraming';
 import { Simulation } from '../engine/simulation/Simulation';
 import { expect, it, vi } from 'vitest';
@@ -24,7 +25,7 @@ it('mantém escala fixa e o piso em Full HD', () => {
   expect(y(config.arena.floorY)).toBeCloseTo(915);
   expect(y(config.arena.floorY-144)).toBeGreaterThan(220);
   expect(y(config.arena.floorY)-y(config.arena.floorY-144)).toBeCloseTo(432);
-  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:464});
+  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:456});
 });
 it('mantém ambos os lados visíveis ao afastar e trocar lutadores de lado em 1080p',()=>{
   const layout=createStageLayout(defaultStage,1024,576,488);
@@ -73,7 +74,7 @@ it('contém todo o salto real sem alterar a câmera entre decolagem e aterrissag
     expect(camera.zoom).toBe(FIGHT_WORLD_SCALE);
     expect(camera.scrollY).toBeCloseTo(75);
     for(const fighter of snapshot.characters){
-      const head=288+(fighter.y-144-camera.scrollY-288)*camera.zoom;
+      const head=288+(fighter.y-(144*1.03)-camera.scrollY-288)*camera.zoom;
       expect(head).toBeGreaterThan(78);
       expect(fighter.y).toBeLessThanOrEqual(488);
       airborne ||= !fighter.grounded;
@@ -81,4 +82,10 @@ it('contém todo o salto real sem alterar a câmera entre decolagem e aterrissag
   }
   expect(airborne).toBe(true);
   expect(sim.snapshot().characters[0].grounded).toBe(true);
+});
+
+it('amplia o desenho em 3% sem mudar a câmera e conserva margem para a célula inteira',()=>{
+  expect(shotoSpriteManifest.displaySize!.height).toBeCloseTo(172.8*1.03);
+  const margin=(1024/FIGHT_WORLD_SCALE-createGameConfig(1024,576).arena.maxSeparation!)/2;
+  expect(margin).toBeGreaterThan(shotoSpriteManifest.displaySize!.width/2);
 });

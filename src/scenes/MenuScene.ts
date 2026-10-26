@@ -118,7 +118,7 @@ export class MenuScene extends Phaser.Scene {
   private preview(fighter: CharacterDefinition, x: number, y: number, zoom: number) {
     if (fighter.id === 'shoto' && this.textures.exists('shoto-idle')) {
       this.textures.get('shoto-idle').setFilter(Phaser.Textures.FilterMode.LINEAR);
-      const sprite = this.add.image(x, y, 'shoto-idle', '0').setOrigin(.5, 720 / 768).setScale(.225 * zoom);
+      const sprite = this.add.image(x, y, 'shoto-idle', '0').setOrigin(.5, 720 / 768).setScale(shotoSpriteManifest.displaySize!.height / shotoSpriteManifest.frameSize.height * zoom);
       this.root!.add(sprite);
       const start = this.time.now;
       const animate = (time: number): void => { sprite.setFrame(String(getTimedAnimationFrame(shotoSpriteManifest.clips[0], (time - start) * .06))); };

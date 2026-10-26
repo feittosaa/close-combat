@@ -1,4 +1,4 @@
-/** One set of cel tones for every Shoto drawing. Ordered from shadow to light. */
+/** Art-direction references. Runtime grading preserves continuous source shading instead of snapping to these swatches. */
 export const shotoPalette = {
   ink: ['#0e100f'],
   trousers: ['#222423', '#2d302c', '#383c35', '#44483e'],
@@ -9,44 +9,42 @@ export const shotoPalette = {
   skin: ['#4d3024', '#704731', '#966344', '#b78359', '#d09f73'],
 } as const;
 
-type Material = keyof typeof shotoPalette;
 type RGB = readonly [number, number, number];
-const colors = Object.fromEntries(Object.entries(shotoPalette).map(([key, ramp]) => [key,
-  ramp.map(hex => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)] as RGB),
-])) as Record<Material, RGB[]>;
-const thresholds: Record<Material, readonly number[]> = {
-  ink: [], trousers: [50, 76, 106], jacket: [95, 140, 184, 220],
-  shirt: [67, 105, 150], shoes: [55, 90, 135], hair: [65, 100, 140, 180],
-  skin: [85, 123, 190, 230],
-};
 
-/** Spatial hints distinguish identical red pigments in hair, shirt and leather. */
-export function shotoMaterial(r: number, g: number, b: number, height: number, fromBody = 0): Material {
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), chroma = max - min;
-  if (max < 24) return 'ink';
+function smooth(low: number, high: number, value: number): number {
+  const t = Math.max(0, Math.min(1, (value - low) / (high - low)));
+  return t * t * (3 - 2 * t);
+}
+
+/** Continuous grading, never a material classifier or a quantized replacement color.
+ * Ivory and ink retain their source detail; mild overlapping weights preserve cel shading.
+ */
+export function shotoColor(r: number, g: number, b: number, height: number): RGB {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const saturation = (max - min) / Math.max(1, max);
   const warmth = (g - b) / Math.max(1, r - b);
-  // Ivory folds in the retreat sheet are warmer than in idle; do not turn them into skin.
-  if (max > 110 && g > r * .7 && b > r * .38 && warmth > .48) return 'jacket';
-  if (r > g * 1.15 && r > b * 1.25 && chroma > 18) {
-    if (height < .18 && warmth < .25) return 'hair';
-    if (height > .72) return 'shoes';
-    // Red reflected shadows on an exposed hand must not inherit the wine shirt.
-    if (fromBody > .075 && warmth > .08) return 'skin';
-    return warmth >= .25 ? 'skin' : 'shirt';
-  }
-  // Warm light neutrals belong to ivory cloth; olive/dark neutrals to trousers.
-  return max >= 120 || (height < .43 && max >= 75) ? 'jacket' : 'trousers';
+  const red = smooth(0, .25, (r - g) / Math.max(1, max));
+  const redPigment = red * smooth(.35, .65, saturation) * (1 - smooth(.12, .3, warmth));
+  const hair = redPigment * (1 - smooth(.12, .24, height));
+  const skin = red * smooth(.32, .58, saturation) * smooth(.16, .32, warmth)
+    * (1 - smooth(.46, .65, warmth));
+  const trousers = (1 - smooth(.25, .5, saturation)) * smooth(.35, .6, height)
+    * (1 - smooth(100, 170, max));
+  const leather = red * smooth(.32, .6, saturation) * smooth(.68, .86, height);
+  const luminance = .2126 * r + .7152 * g + .0722 * b;
+  const source: RGB = [r, g, b];
+  const hairTarget: RGB = [luminance * 1.18, luminance * .84, luminance * .64];
+  const skinScale: RGB = [.88, .91, .96];
+  const leatherScale: RGB = [.88, .96, 1.03];
+  return source.map((value, channel) => Math.round(Math.max(0, Math.min(255,
+    value + hair * (hairTarget[channel] - value)
+      + skin * value * (skinScale[channel] - 1)
+      - trousers * value * .23
+      + leather * value * (leatherScale[channel] - 1),
+  )))) as unknown as RGB;
 }
 
-export function shotoColor(r: number, g: number, b: number, height: number, fromBody = 0): RGB {
-  const material = shotoMaterial(r, g, b, height, fromBody);
-  const value = Math.max(r, g, b);
-  let level = 0;
-  for (const threshold of thresholds[material]) if (value >= threshold) level++;
-  return colors[material][level];
-}
-
-/** Palette application changes RGB only. Layout, transparent pixels and alpha are untouched. */
+/** Grade RGB only, retaining every original alpha value, pixel position and atlas cell. */
 export function applyShotoPalettePixels(data: Uint8ClampedArray, width: number, height: number, cellWidth = 768): void {
   for (let cell = 0; cell < width; cell += cellWidth) {
     let top = height, bottom = -1;
@@ -55,17 +53,11 @@ export function applyShotoPalettePixels(data: Uint8ClampedArray, width: number, 
       if (data[(y * width + x) * 4 + 3] > 32) { top = Math.min(top, y); bottom = Math.max(bottom, y); }
     }
     if (bottom < top) continue;
-    const bodyHeight = Math.max(1, bottom - top);
-    for (let y = top; y <= bottom; y++) {
-      const occupied: number[] = [];
-      for (let x = cell; x < end; x++) if (data[(y * width + x) * 4 + 3] > 32) occupied.push(x);
-      const center = occupied[Math.floor(occupied.length / 2)] ?? cell + cellWidth / 2;
-      for (let x = cell; x < end; x++) {
-        const offset = (y * width + x) * 4;
-        if (!data[offset + 3]) continue;
-        const color = shotoColor(data[offset], data[offset + 1], data[offset + 2], (y - top) / bodyHeight, Math.abs(x - center) / bodyHeight);
-        data[offset] = color[0]; data[offset + 1] = color[1]; data[offset + 2] = color[2];
-      }
+    for (let y = top; y <= bottom; y++) for (let x = cell; x < end; x++) {
+      const offset = (y * width + x) * 4;
+      if (!data[offset + 3]) continue;
+      const color = shotoColor(data[offset], data[offset + 1], data[offset + 2], (y - top) / Math.max(1, bottom - top));
+      data[offset] = color[0]; data[offset + 1] = color[1]; data[offset + 2] = color[2];
     }
   }
 }

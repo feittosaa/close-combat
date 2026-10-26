@@ -1,34 +1,44 @@
 import { expect, it } from 'vitest';
-import { applyShotoPalettePixels, shotoColor, shotoMaterial, shotoPalette } from '../rendering/animations/shotoPalette';
+import { applyShotoPalettePixels, shotoColor } from '../rendering/animations/shotoPalette';
 
-it('mantém cabelo castanho separado da pele e da camisa vinho', () => {
-  expect(shotoMaterial(174, 43, 28, .06)).toBe('hair');
-  expect(shotoMaterial(182, 109, 64, .12)).toBe('skin');
-  expect(shotoColor(182, 109, 64, .12)).toEqual([150, 99, 68]);
-  expect(shotoMaterial(182, 109, 64, .38)).toBe('skin');
-  expect(shotoMaterial(121, 57, 49, .38, .15)).toBe('skin');
-  expect(shotoMaterial(121, 57, 49, .38, 0)).toBe('shirt');
-  expect(shotoMaterial(119, 42, 39, .35)).toBe('shirt');
-  expect(shotoMaterial(100, 49, 36, .94)).toBe('shoes');
-  expect(shotoMaterial(100, 49, 36, .79)).toBe('shoes'); // lifted rear boot during a step
-  expect(shotoMaterial(231, 220, 190, .34)).toBe('jacket');
-  expect(shotoMaterial(227, 194, 143, .34)).toBe('jacket');
-  expect(shotoMaterial(181, 145, 95, .34)).toBe('jacket');
-  expect(shotoMaterial(233, 204, 163, .12)).toBe('jacket'); // raised dash sleeve, level with the face
+it('preserva marfim e tinta originais, sem trocar dobras por pele', () => {
+  for(const source of [[233,204,163],[231,220,190],[227,194,143],[0,0,0]]){
+    const result=shotoColor(source[0],source[1],source[2],.12);
+    expect(result).toEqual(source);
+  }
+  const hair=shotoColor(174,43,28,.06);
+  expect(hair[0]).toBeLessThan(100);
+  expect(hair[1]).toBeGreaterThan(43);
+  const skin=shotoColor(182,109,64,.12);
+  expect(skin[0]).toBeLessThan(182);
+  expect(skin[1]).toBeLessThanOrEqual(109);
 });
 
-it('usa a mesma rampa escura em calças claras/escurecidas de folhas diferentes', () => {
-  const samples = [[40, 37, 31], [65, 62, 50], [93, 88, 72]];
-  const allowed = new Set(shotoPalette.trousers.map(hex => hex.toLowerCase()));
-  for (const [r, g, b] of samples) {
-    expect(shotoMaterial(r, g, b, .65)).toBe('trousers');
-    const color = shotoColor(r, g, b, .65);
-    expect(allowed.has('#' + color.map(v => v.toString(16).padStart(2, '0')).join(''))).toBe(true);
-    expect(Math.max(...color)).toBeLessThan(75);
+it('não cria saltos de cor em vizinhos nos antigos limites de material e de sombra', () => {
+  const sources=[[181,145,95],[182,109,64],[121,57,49],[233,204,163],[119,42,39],[40,37,31],[120,98,72],[139,120,90],[183,160,120],[219,195,150],[189,110,68],[174,43,28]];
+  for(const source of sources)for(const height of [.119,.179,.18,.239,.24,.429,.43,.6,.719,.72,.849,.85]){
+    const baseline=shotoColor(source[0],source[1],source[2],height);
+    for(let channel=0;channel<3;channel++){
+      const neighbor=[...source];neighbor[channel]++;
+      const result=shotoColor(neighbor[0],neighbor[1],neighbor[2],height);
+      expect(Math.max(...result.map((v,i)=>Math.abs(v-baseline[i])))).toBeLessThanOrEqual(4);
+    }
+    const adjacent=shotoColor(source[0],source[1],source[2],height+1/631);
+    expect(Math.max(...adjacent.map((v,i)=>Math.abs(v-baseline[i])))).toBeLessThanOrEqual(3);
   }
 });
 
-it('preserva exatamente alpha, espaços transparentes e células com alturas diferentes', () => {
+it('retém gradientes e detalhes, sem reduzir a jaqueta a degraus de uma paleta', () => {
+  const colors=new Set<string>();
+  for(let value=140;value<240;value++)colors.add(shotoColor(value,Math.round(value*.88),Math.round(value*.7),.35).join(','));
+  expect(colors.size).toBeGreaterThan(80);
+  for(const source of [[40,37,31],[65,62,50],[93,88,72]]){
+    const result=shotoColor(source[0],source[1],source[2],.65);
+    expect(Math.max(...result)).toBeLessThan(Math.max(...source));
+  }
+});
+
+it('preserva alpha, transparência e mesma cor na mesma altura de corpos distintos', () => {
   // Two cells: second pose is crouched, with its head lower in the shared cell.
   const width = 4, height = 8, bytes = new Uint8ClampedArray(width * height * 4);
   const put = (x: number, y: number, rgba: number[]) => bytes.set(rgba, (y * width + x) * 4);

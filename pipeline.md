@@ -258,3 +258,13 @@ Conferência no build de produção concluída: seleção, idle nos dois lados, 
 Entrega de código `8d7abf1f42494b7a83b2c2c723a3802cc669b027`: [CI da feature 40325219320](https://github.com/feittosaa/close-combat/actions/runs/40325219320) aprovada. Registro final acrescenta resultado.png e documentação; não altera código nem invalida a conferência. Integração por fast-forward e encerramento somente após CI do commit final e de development, sem promoção para main. O relato de conclusão confirma o resultado remoto dessas etapas.
 
 Último ajuste de tom: a faixa média de pele foi escurecida para `#966344` (amostra de origem RGB 182/109/64 passa a 150/99/68), reservando a luz mais clara a valores acima de 190. Isso evita clarear a pele ao padronizar. Seleção e treino dos dois lados reconferidos; resultado.png atualizado. 147 testes, build e diff novamente aprovados. As capturas por ação registram a conferência anterior de classificação dos materiais; resultado.png registra a intensidade final da pele.
+
+### Cores contínuas sem recortes e presença +3%
+
+Branch `codex/fix-shoto-cores-suaves`, criada de development. Feedback do usuário rejeita os artefatos na jaqueta/pele da correção de cores anterior. Causa: classificação por limiares e troca por cores discretas; medianas por linha também mudavam a classificação de pixels vizinhos. Substituir por correção RGB contínua, preservar contornos/sombras/alpha e marfim original. Manter cabelo castanho discreto e pele um pouco mais morena. Ampliar o desenho uniformemente em 3%, com pés/raízes preservados, câmera fixa e sem alterar colisores; ajustar margem lateral para o desenho completo.
+
+- [x] Validar continuidade em vizinhos RGB e coordenadas, transparência e ausência de quantização.
+- [x] Conferir cores de todas as ações, salto inteiro e aumento discreto no jogo.
+- [ ] Instalação, testes, build, diff, push e CIs de feature/development; encerrar após integração aprovada.
+
+Conferência no build de produção concluída: seleção/idle nos dois lados, caminhada/recuo, agachado, dash/backstep, guarda e salto em execução. Salto capturado no frame 19 sem o painel de pausa, personagem inteiro e abaixo do HUD. Jaqueta e pele preservam as sombras originais, sem o mosaico de cores criado pela classificação anterior. Evidências em docs/evidence/shoto-cores-suaves. Escala do desenho +3%, margem 92, afastamento máximo 456 em 1024 × 576; câmera continua fixa em 1,6 e colisores inalterados. Instalação reproduzível, 149 testes/20 arquivos, build e diff aprovados. Fechamento remoto segue CI do commit final antes de integração e encerramento; sem promoção para main.
