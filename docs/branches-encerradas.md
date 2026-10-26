@@ -35,3 +35,7 @@ Auditoria solicitada pelo usuário: branches finalizadas devem ser encerradas ap
 - `codex/feature-apresentacao-1080p`, `codex/feature-menu-diurno` e `codex/feature-shoto-sprites`: dependências absorvidas pela branch ativa; encerrar somente após integração em development.
 - `codex/feature-gravidade-juggle`: código já integrado; commit único `1da3a3a06d2867d7b08c6687134c9d37d3a5ec41` altera apenas a pipeline histórica. Preservar no histórico sem aplicar seu conteúdo antes de encerrar.
 - `main` e `development`: permanentes.
+
+## Integração confirmada da apresentação
+
+`a35e1bafc4e71baa2182bff8c02e94ce5afbe0e5` integrado em development, CI 40263559525 aprovada. As cinco branches de apresentação/HUD/menu/sprites/gravidade listadas acima foram encerradas no remoto e localmente após a conferência. O commit histórico de gravidade foi preservado por merge sem alteração de árvore; conteúdo do protótipo não foi restaurado. Permanecem main/development e somente a nova branch ativa de animações.

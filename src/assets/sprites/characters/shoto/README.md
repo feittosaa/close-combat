@@ -1,38 +1,41 @@
-# Shoto — sprites básicos do Anfitrião
+# Shoto — Anfitrião: entrega de animações
 
-Conceito visual 5 e três folhas wide aprovados manualmente na conversa em 25/10/2026. Nome no jogo continua Shoto. Esta integração não altera combate nem conclui seu conjunto de animações.
+O usuário aprovou idle, caminhada e agachado e, posteriormente, salto, defesa, recuo, dash e backstep. Nesta revisão autorizou inserir as cinco propostas novas, uniformizar o cabelo avermelhado em todas as folhas e corrigir alinhamento/loops. Nenhuma aprovação de novos ataques ou reações é inferida.
 
-| Ação | Quadros lógicos | Cadência | Arquivo RGBA |
+## Conteúdo
+
+| Atlas | Índices | Quadros | Reprodução |
 | --- | --- | --- | --- |
-| Idle | 0–7 | 6 FPS, loop | idle.png |
-| Andar | 8–15 | 10 FPS, loop | walk.png |
-| Recuar | 15–8 | 8 FPS, loop invertido da caminhada | walk.png |
-| Idle agachado | 16–21 | 6 FPS, loop; todos baixos | crouch.png |
+| idle | 0–7 | 8 | Ciclo a 6 FPS |
+| walk | 8–15 | 8 | Ciclo a 10 FPS |
+| crouch | 16–21 | 6 | 16,17,18,19,20,21,20,19,18,17 a 6 FPS |
+| jump | 22–29 | 8 | Durações 2,4,6,10,6,4,4,2 frames lógicos, sem repetir no ar |
+| defense | 30–35 | 6 | Entrada 30/31 uma vez; mantém 32,33,34,35,34,33 |
+| walk-backward | 36–43 | 8 | Ciclo próprio a 10 FPS |
+| dash | 44–49 | 6 | 2 frames lógicos por pose |
+| backstep | 50–55 | 6 | 2 frames lógicos por pose |
 
-Cada ação é uma única faixa horizontal. Células uniformes 512 × 768, sem trim; idle/walk 4096 × 768 e crouch 3072 × 768. Pivô X=256, pés Y=720. Escala de exibição 0,225 nos dois eixos (altura desenhada em pé aproximadamente 142–143 unidades). A origem é a mesma no agachado, sem ampliar a pose para preencher a célula. Atlas JSON mantêm nomes lógicos globais. Cadências são apresentação provisória, sem alterar a simulação de 60 Hz.
+Corrida reutiliza 45–48. Defesa baixa usa a pose agachada já aprovada; não há desenho específico de guarda baixa. Ataques e hitstun conservam geometria provisória.
 
-## Fontes e preparação
+## Fontes e preparo
 
-`source/*-magenta.png` preserva as folhas originais geradas, cada uma 2172 × 724, sem retoque artístico. Fontes editáveis em camadas/vetores não foram entregues. Identificadores na conversa:
+- `source/*-magenta.png`: fontes aprovadas preservadas.
+- `source/*-auburn.png`: edições pelo `image_gen` embutido, uma por folha, alterando apenas o cabelo para vermelho acobreado escuro. As poses, vestuário e composição foram preservados. Prompts e origem em `source/auburn-edits.json`.
+- `alignment.json`: raízes X/Y e escala autoradas por folha/quadro. O ponto de apoio do agachado foi corrigido; não usar centro da silhueta para alinhar braços ou abas móveis.
+- `*.png`/`*.atlas.json`: 56 quadros RGBA, oito faixas de uma linha, células fixas 768 × 768, sem trim, raiz 384/720. Largura máxima de atlas 6144 pixels.
+- `preparation.json`: medidas da transformação executada. `verification.json`: limites opacos e medição independente do pé plantado.
 
-- Idle: `exec-0f5e0f7d-f888-4391-8192-1e0b718b7091.png`.
-- Walk: `exec-93dccd94-ae69-4a13-84ff-da968fdf8211.png`.
-- Crouch: `exec-a4fa7b87-afd5-4a22-961a-fb44b1e392f1.png`.
+Reproduzir da raiz do repositório com Python, Pillow, NumPy e SciPy:
 
-Reproduzir na raiz com `python scripts/prepare-shoto-sprites.py`, usando Pillow, NumPy e SciPy. O jogo/build não dependem de Python. A preparação remove magenta por chave cromática, separa os desenhos com divisores autorados e costuras em fundo, elimina fragmentos desconectados de vizinhos, alinha pés e raiz e exporta RGBA/atlas. `preparation.json` registra recortes e correções de escala: idle/crouch 1,0, walk 1,025 para compensar escala da fonte. Não há escala diferente por quadro. O importador verifica que não há recorte nas bordas da célula e que os pés opacos ficam no mesmo Y.
+```
+python3 scripts/prepare-shoto-sprites.py
+python3 scripts/verify-shoto-sprites.py
+```
 
-## Reprodução e limites
+A preparação remove magenta, separa corpos, usa as raízes autoradas e empacota atlas. Não redesenha nem recolore. O salto usa raízes Y autoradas para que o movimento ilustrado não duplique a trajetória da física. A proporção agachada é preparada no PNG, sem alteração de caixas ou escala variável no runtime. O pé de apoio agachado varia 1,5 pixel no atlas (menos de um pixel na saída Full HD com escala fixa 1,6).
 
-`shotoSprites.ts` define manifesto e seleção dos três estados aprovados; `CombatantView` amostra a pose pelo frame lógico e espelha no sentido do adversário. Pausa segura o mesmo frame, reset retorna à primeira pose. O menu usa a mesma cadência do idle. A filtragem linear evita tratar a ilustração como pixel art.
+## Runtime e conferência
 
-A caminhada de origem possui sobreposição entre pontas de botas de quadros vizinhos e poses semelhantes. A separação preserva o material disponível, mas contornos dessas pontas e alternância das pernas precisam de revisão na reprodução; não reconstruir anatomia nem declarar fluidez final por haver oito imagens. O relógio troca de lado no espelhamento, pois não existem desenhos direcionais independentes. Agachado é um loop baixo: não inclui descer/levantar.
+`shotoSprites.ts` amostra o frame lógico e espelha a raiz para ambos os lados. Pausa não avança a pose; reset volta ao início. O combate é independente dos pixels. O enquadramento é fixo em 1,6; a margem compartilhada de tela limita afastamento e permite acompanhamento exclusivamente lateral.
 
-Ataques, salto, dash, corrida, defesa, hitstun e blockstun não receberam arte. Nesses estados, e se a textura falhar, o sprite some e volta a geometria técnica anterior, com alcance somente na fase ativa. Não usar idle como animação falsa de ataque. Hitbox/hurtbox continuam nos dados do motor. Os dois jogadores compartilham a mesma arte; HUD, lado e direção identificam os participantes.
-
-## Validação
-
-115 testes em 14 arquivos, incluindo seleção, atlas, pivô, espelhamento, pausa/reset, FPS 30/60/120/144 e retorno à geometria. PNGs preparados inspecionados isoladamente. Revisão dentro do jogo ainda pendente: ferramenta de navegador expira ao abrir a prévia local. A branch deve permanecer fora de development até verificar animações em velocidade normal/lenta, ambos os lados, pausa/passo único/reset, pé/escala no cenário e troca entre estados com e sem arte.
-
-## Apresentação Full HD
-
-A branch `codex/feature-apresentacao-1080p` reúne estes sprites ao menu diurno aprovado. Canvas 1920 × 1080, coordenadas lógicas preservadas e zoom próximo 1,95 (+25,8% sobre 1,55); a imagem e a geometria crescem juntas pela câmera. O sprite continua com escala uniforme 0,225 no mundo. A prévia na seleção usa zoom 1,6. Não há mudança de resolução dos PNGs nem ampliação isolada dos colisores.
+Conferência no jogo e capturas em `docs/evidence/shoto-animacoes-alinhadas/`. Testes de seleção/loops, espelhamento, pausa/reset, enquadramento e separação não substituem a revisão artística pelo usuário.

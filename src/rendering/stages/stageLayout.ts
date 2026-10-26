@@ -1,3 +1,4 @@
+import { FIGHT_WORLD_SCALE } from '../../engine/data/fightFraming';
 import type { StageDefinition, StageLayer } from './StageDefinition';
 
 export interface StageLayout {
@@ -45,7 +46,7 @@ export function getStageCameraScroll(layout: StageLayout, fighterPositions: read
 
 /** Fixed world scale: only horizontal tracking changes during a fight. */
 export function getFightCameraFrame(layout: StageLayout, fighterPositions: readonly number[]): { zoom: number; scrollX: number; scrollY: number } {
-  const zoom = 1;
+  const zoom = FIGHT_WORLD_SCALE;
   const halfVisibleWidth = layout.viewportWidth / (2 * zoom);
   const target = fighterPositions.length
     ? (Math.min(...fighterPositions) + Math.max(...fighterPositions)) / 2

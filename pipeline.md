@@ -186,3 +186,20 @@ Conferência conjunta concluída no build de produção: menu diurno, configura�
 Revisão solicitada após a primeira conferência: substituir zoom dinâmico por câmera fixa em escala 1, apenas deslocamento horizontal, incluindo saltos; HUD minimalista com barras contínuas no topo, sem segmentação vertical e sem grandes molduras. As evidências anteriores do enquadramento serão substituídas pela conferência desta revisão antes da integração.
 
 Revisão visual da câmera fixa concluída: treino, salto por frame e PvP, barras contínuas no topo e ausência de mudanças de escala/altura. O zoom 2,25 mencionado no primeiro checklist foi substituído pelo pedido posterior de câmera fixa. Menu diurno e configurações conferidos nesta mesma entrega.
+
+### Animações aprovadas, cabelo e alinhamento
+
+Branch: `codex/feature-shoto-animacoes-alinhadas`, criada de development após a integração anterior `a35e1ba`. [CI da feature anterior](https://github.com/feittosaa/close-combat/actions/runs/40263439670) e [CI de development](https://github.com/feittosaa/close-combat/actions/runs/40263559525) aprovadas. As cinco branches absorvidas foram removidas localmente e no remoto, somando 25 branches encerradas nesta sessão. Menu diurno, sprites iniciais e HUD estão integrados; as pendências históricas acima foram resolvidas.
+
+Novo aval manual: inserir salto, defesa, caminhada para trás, dash e backstep, com cabelo avermelhado uniforme em todas as folhas. Revisar alinhamento X, pés e loops, especialmente agachado. Aumentar presença do personagem pela referência de proporção fornecida, mantendo câmera fixa.
+
+- [x] Editar cabelo nas oito folhas sem redesenhar poses, preservar fontes e registrar preparação.
+- [x] Preparar atlas com raiz X autorada, escala comum, pés alinhados e ciclo agachado sem teleporte.
+- [x] Integrar estados pela lógica real, sem inventar ataques ou animações não aprovadas.
+- [x] Escala fixa 1,6 (corpo de cerca de 40% da altura); manter salto inteiro. Limitar afastamento ao espaço visível, com margem lateral de 64 unidades por lutador, para evitar desaparecimento sem zoom dinâmico.
+- [x] Validar preparação, testes, build, diff e jogo em ambos os lados, pausa/reset, canto e salto.
+- [ ] Enviar, conferir CI, integrar e encerrar branch concluída.
+
+Conferência da revisão de animações: 56 desenhos em oito atlas, cabelo editado pelo image_gen embutido; verificação independente de pixels sem corte/magenta opaco, pés alinhados e desvio X agachado de 1,5 pixel. Ciclo agachado em ida/volta, entrada de guarda sem reinício a cada volta e guarda fechada durante blockstun. Salto de P1/P2, recuo, dash, backstep, afastamento máximo e canto conferidos no jogo; capturas em docs/evidence/shoto-animacoes-alinhadas. A arte de ataques/hitstun continua provisória, conforme escopo aprovado. Estado remoto desta nova branch: envio/CI ainda pendentes neste registro.
+
+Validação final desta revisão: instalação reproduzível concluída, 129 testes em 17 arquivos, build, diff e verificação dos pixels aprovados. Evidências de P2 no ápice confirmam espelhamento; revisão no afastamento máximo mantém ambos na tela, sem mudanças de escala. O cenário de treino solicitado depois será entregue em branch independente.

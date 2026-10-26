@@ -15,7 +15,7 @@ describe.each(stages)('camera and ground contract: $id', stage => {
     const layout = createStageLayout(stage, width, height, config.arena.floorY);
     const left = config.arena.left + layout.arenaOffsetX;
     const right = config.arena.right + layout.arenaOffsetX;
-    let previousZoom = Infinity;
+
     for (let fraction = 0; fraction <= 20; fraction++) {
       const span = (right - left) * fraction / 20;
       const center = (left + right) / 2;
@@ -25,10 +25,9 @@ describe.each(stages)('camera and ground contract: $id', stage => {
       expect(projectY(layout.originY + stage.groundY * layout.scale)).toBeCloseTo(config.arena.floorY, 8);
       expect(projectY(layout.originY)).toBeLessThanOrEqual(1e-7);
       expect(projectY(layout.originY + stage.referenceSize.height * layout.scale)).toBeGreaterThanOrEqual(height - 1e-7);
-      expect(frame.zoom).toBeLessThanOrEqual(previousZoom);
-      previousZoom = frame.zoom;
+      expect(frame.zoom).toBe(1.6);
     }
-    for (const positions of [[left, left + 40], [left, right], [right - 40, right], [right, left]]) {
+    for (const positions of [[left, left + 40], [left, left + config.arena.maxSeparation!], [right - 40, right], [right, right - config.arena.maxSeparation!]]) {
       const frame = getFightCameraFrame(layout, positions);
       const visibleLeft = frame.scrollX + width / 2 - width / (2 * frame.zoom);
       const visibleRight = visibleLeft + width / frame.zoom;

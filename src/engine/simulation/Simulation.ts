@@ -84,7 +84,8 @@ export class Simulation {
   private createCharacters(): [CharacterState, CharacterState] {
     const { left, right, floorY } = this.config.arena;
     const center = (left + right) / 2;
-    const distance = this.trainingDistance ?? this.options.initialDistance ?? Math.min(420, (right - left) * .55);
+    const distance = Math.min(this.config.arena.maxSeparation ?? Infinity,
+      this.trainingDistance ?? this.options.initialDistance ?? Math.min(420, (right - left) * .55));
     return this.definitions.map((fighter, index) => ({
       characterId: `player-${index + 1}`, fighterId: fighter.id, collision: structuredClone(fighter.collision),
       x: clamp(center + (index === 0 ? -1 : 1) * distance / 2, left + fighter.collision.bodyWidth / 2, right - fighter.collision.bodyWidth / 2),
@@ -167,7 +168,7 @@ export class Simulation {
       }
       if (character.attack || wasLocked || character.mode === 'blocking' || !character.grounded) this.previousAxis[index] = axis(input);
     });
-    this.resolveBodies(previousX); this.updateFacing();
+    this.resolveBodies(previousX); this.resolveScreenEdges(previousX); this.updateFacing();
     this.lastHitEvents = this.resolver.resolve(this.characters, inputs);
     this.lastHitEvents.forEach(event => {
       const attacker = this.characters.find(character => character.characterId === event.attackerId)!;
@@ -176,7 +177,7 @@ export class Simulation {
       this.recentContacts.push({ frame: this.frame, event });
     });
     this.recentContacts = this.recentContacts.filter(entry => this.frame - entry.frame < 180).slice(-20);
-    this.resolveBodies();
+    this.resolveBodies(); this.resolveScreenEdges(previousX);
     this.characters.forEach((character, index) => { if (character.mode !== previousModes[index]) character.stateStartedFrame = this.frame; });
     if (this.options.training) {
       const quiet = this.characters.every(character => !character.attack && !locked(character));
@@ -220,6 +221,22 @@ export class Simulation {
       character.x += moveAxis * speed * (character.facing === 'right' ? 1 : -1);
       character.movementDirection = moveAxis > 0 ? 'forward' : 'backward';
     }
+  }
+  /** Stop outward movement at the shared viewport edge; keep the other fighter anchored. */
+  private resolveScreenEdges(previousX: readonly number[]): void {
+    const limit = this.config.arena.maxSeparation;
+    if (limit === undefined) return;
+    const leftIndex = this.characters[0].x <= this.characters[1].x ? 0 : 1;
+    const rightIndex = 1 - leftIndex;
+    const left = this.characters[leftIndex], right = this.characters[rightIndex];
+    const excess = right.x - left.x - limit;
+    if (excess <= 0) return;
+    const leftOut = Math.max(0, previousX[leftIndex] - left.x);
+    const rightOut = Math.max(0, right.x - previousX[rightIndex]);
+    const total = leftOut + rightOut;
+    const leftShare = total > 0 ? leftOut / total : .5;
+    left.x += excess * leftShare;
+    right.x -= excess * (1 - leftShare);
   }
   private resolveBodies(previousX = this.characters.map(character => character.x)): void {
     const { left, right } = this.config.arena;
