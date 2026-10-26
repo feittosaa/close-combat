@@ -241,3 +241,16 @@ Dash e backstep conferidos após dois toques curtos e soltura: dash no frame 9, 
 Estado remoto antes do fechamento: sala `72cc275`, CI 40267614680 aprovada; conjunto `1d0e555`, CI 40269742462 aprovada. O commit de fechamento registra a revisão e segue novamente CI de feature, integração e CI de development; as duas branches serão encerradas somente após confirmação. Sem promoção para main.
 
 Fechamento: código e evidências `5026ec3180b40ae1576ef5f49e4e7cfb41ea52e4` enviados e integrados por fast-forward em development. [CI da feature 40271546638](https://github.com/feittosaa/close-combat/actions/runs/40271546638) aprovada; [CI de integração 40271628696](https://github.com/feittosaa/close-combat/actions/runs/40271628696) aprovada no mesmo commit. Este último ajuste é somente documental e seguirá a mesma validação remota antes do encerramento das duas branches. A conferência no jogo e os 144 testes pertencem ao código integrado.
+
+### Paleta uniforme e remoção da corrida — 26/10/2026
+
+Branch `codex/feature-shoto-paleta-sem-corrida`, a partir de development. Padronizar seis materiais em todos os 84 desenhos e nas prévias do menu: cabelo castanho discretamente avermelhado, pele um pouco mais morena, calça escura, paletó marfim, camisa vinho e sapatos castanhos. Aplicar a tabela compartilhada na preparação das texturas do jogo, mantendo fontes, alpha, células e raízes intactos. Remover corrida da simulação, dados, seleção de clipes e HUD; ao terminar o dash, manter direção deve resultar em caminhada.
+
+- [x] Paleta comum documentada e aplicada a todos os atlas.
+- [x] Remover corrida e cobrir retorno à caminhada nos dois sentidos.
+- [x] Instalação, testes, build, diff e conferência visual de todas as ações.
+- [ ] Push, CI da feature, integração em development, CI da integração e encerramento da branch.
+
+Validação local concluída: npm ci, 147 testes em 20 arquivos, build e diff aprovados. Corrida removida do tipo de estado, dados de movimento, simulação, rótulos e clipes; testes verificam caminhada por 60F adicionais após completar o dash. Paleta RGB aplicada uma vez por atlas, com alpha e quadros preservados. Regressões cobrem pele/cabelo/camisa, botas levantadas e dobras marfim ao nível da cabeça durante dash, além de células com alturas diferentes.
+
+Conferência no build de produção concluída: seleção, idle nos dois lados, caminhada/recuo, agachado, salto, dash, retorno à caminhada no frame 30, backstep, guarda e conectores. Corrigidas sombras quentes da manga que inicialmente eram confundidas com pele. Capturas e procedimento em docs/evidence/shoto-paleta/README.md. A prévia foi recuperada por nova aba após timeout ao recarregar. Envio/CI e integração seguem a etapa final abaixo; não confundir esta validação local com resultado remoto.

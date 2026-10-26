@@ -1,5 +1,5 @@
 import { LOGICAL_VIEW, configureUiCamera, sharpenSceneText } from '../rendering/presentation';
-import { preloadShotoSprites, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
+import { prepareShotoSprites, preloadShotoSprites, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
 
 import menuBackground from '../../assets/art/menu/patio-solar.png';
@@ -68,6 +68,7 @@ export class MenuScene extends Phaser.Scene {
     preloadShotoSprites(this);
   }
   create(): void {
+    prepareShotoSprites(this);
     this.loading?.destroy(); this.loading = undefined;
     const { width, height } = LOGICAL_VIEW;
     // Overscan keeps the slow camera drift inside the illustration at every phase.

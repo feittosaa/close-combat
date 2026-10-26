@@ -1,6 +1,6 @@
 import type { CharacterState } from '../../engine/characters/CharacterState';
 const modes: Record<CharacterState['mode'], string> = {
-  neutral: 'idle', moving: 'walk', dashing: 'dash', running: 'run', airborne: 'jump', crouching: 'crouch',
+  neutral: 'idle', moving: 'walk', dashing: 'dash', airborne: 'jump', crouching: 'crouch',
   startup: 'startup', active: 'active', recovery: 'recovery', blocking: 'defense', hitstun: 'hit', blockstun: 'blockstun',
 };
 /** Convenção de chaves para arte futura; nenhum clipe é exigido pelo Shoto geométrico. */

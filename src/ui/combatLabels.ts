@@ -2,7 +2,7 @@ import type { CharacterMode } from '../engine/characters/CharacterState';
 import type { HitEvent } from '../engine/combat/AttackResolver';
 import type { MoveDefinition } from '../engine/data/moves';
 export const MODE_LABELS: Record<CharacterMode, string> = {
-  neutral: 'NEUTRO', moving: 'MOVIMENTO', dashing: 'DASH', running: 'CORRIDA', airborne: 'NO AR',
+  neutral: 'NEUTRO', moving: 'MOVIMENTO', dashing: 'DASH', airborne: 'NO AR',
   crouching: 'AGACHADO', startup: 'PREPARO', active: 'ATIVO', recovery: 'RECUPERAÇÃO',
   blocking: 'DEFESA', hitstun: 'ATORDOADO', blockstun: 'BLOQUEIO',
 };

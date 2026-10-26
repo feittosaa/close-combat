@@ -106,7 +106,7 @@ it('espelha todos os clipes e mantém guarda fechada durante o impacto bloqueado
     {...state,mode:'crouching' as const,crouching:true},
     {...state,mode:'dashing' as const,movementDirection:'forward' as const},
     {...state,mode:'dashing' as const,movementDirection:'backward' as const},
-    {...state,mode:'running' as const}, {...state,mode:'blocking' as const},
+    {...state,mode:'blocking' as const},
     {...state,mode:'airborne' as const,grounded:false}];
   for(const pose of states){
     const right=getShotoSpritePose({...pose,facing:'right'},18)!;

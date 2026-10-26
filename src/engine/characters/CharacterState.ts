@@ -1,7 +1,7 @@
 import type { AttackButton } from '../../input/types';
 import type { CharacterCollisionProfile } from '../data/characters';
 
-export type CharacterMode = 'neutral' | 'moving' | 'dashing' | 'running' | 'airborne' | 'crouching' |
+export type CharacterMode = 'neutral' | 'moving' | 'dashing' | 'airborne' | 'crouching' |
   'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun';
 export interface CharacterAttack {
   moveId: string;

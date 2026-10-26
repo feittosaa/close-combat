@@ -1,3 +1,4 @@
+import { prepareShotoPalette } from './prepareShotoPalette';
 import { shotoTransitionSources, transitionClips, transitionByAction } from './shotoTransitions';
 import type Phaser from 'phaser';
 import type { CharacterState } from '../../engine/characters/CharacterState';
@@ -32,7 +33,6 @@ export const shotoSpriteManifest: CharacterAnimationManifest = {
     {key:'shoto-walk-backward',start:36,end:43,frameRate:10,repeat:-1},
     {key:'shoto-dash',start:44,end:49,frameDurations:[3,4,4,4,3,2],frameRate:18,repeat:0},
     {key:'shoto-backstep',start:50,end:55,frameDurations:[3,4,4,4,3,2],frameRate:18,repeat:0},
-    {key:'shoto-run',start:45,end:48,frames:[45,46,47,48],frameRate:15,repeat:-1},
     ...transitionClips,
   ],
 };
@@ -48,6 +48,9 @@ const sources=[
   {key:'shoto-backstep',image:backstepImage,atlas:backstepAtlas},
   ...shotoTransitionSources,
 ];
+export function prepareShotoSprites(scene:Phaser.Scene):void{
+  prepareShotoPalette(scene,sources.map(source=>source.key));
+}
 export function preloadShotoSprites(scene:Phaser.Scene):void{
   for(const source of sources)if(!scene.textures.exists(source.key))scene.load.atlas(source.key,source.image,source.atlas);
 }
@@ -55,10 +58,10 @@ function actionFor(state:Pick<CharacterState,'mode'|'grounded'|'crouching'|'move
   return !state.grounded?'jump':state.crouching?'crouch':
     state.mode==='neutral'?'idle':state.mode==='blocking'||state.mode==='blockstun'?'defense':
     state.mode==='dashing'?(state.movementDirection==='backward'?'backstep':'dash'):
-    state.mode==='running'?'run':state.mode==='moving'?(state.movementDirection==='backward'?'walk-backward':'walk'):undefined;
+    state.mode==='moving'?(state.movementDirection==='backward'?'walk-backward':'walk'):undefined;
 }
 function transitionFor(action:ReturnType<typeof actionFor>){
-  return action && action!=='idle' && action!=='run'?transitionByAction[action]:undefined;
+  return action && action!=='idle'?transitionByAction[action]:undefined;
 }
 export function getShotoSpritePose(state:CharacterState,frame:number){
   if(state.fighterId!=='shoto'||state.attack||state.mode==='hitstun')return undefined;
@@ -69,7 +72,7 @@ export function getShotoSpritePose(state:CharacterState,frame:number){
   const elapsed=Math.max(0,frame-(transition?.startedFrame??state.stateStartedFrame));
   const pose=(texture:string,sampled:number)=>({scale:1,texture,frame:sampled,flipX:shouldFlipAnimation(state.facing)});
   // Returning to idle reverses the authored connector; movement remains engine-owned.
-  const exitAction=from==='run'?'walk':from;
+  const exitAction=from;
   const exit=transitionFor(exitAction);
   if(action==='idle' && exit && from!=='dash' && from!=='backstep'){
     const previous=transition?.previous;
@@ -86,7 +89,7 @@ export function getShotoSpritePose(state:CharacterState,frame:number){
   let sampled=getStateAnimationFrame({...state,stateStartedFrame:start},clip,frame);
   if(action==='defense')sampled=state.mode==='blockstun'||enter?getTimedAnimationFrame(clip,Math.max(0,elapsed-entryDuration)):
     elapsed<4?30+Math.floor(elapsed/2):getTimedAnimationFrame(clip,elapsed-4);
-  return pose(action==='run'?'shoto-dash':`shoto-${action}`,sampled);
+  return pose(`shoto-${action}`,sampled);
 }
 
 /** A three-frame dissolve bridges arbitrary interruptions; it never depends on display FPS. */
