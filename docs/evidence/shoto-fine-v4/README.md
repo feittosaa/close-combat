@@ -9,7 +9,7 @@ Conferência local no Fedora, prévia 4190, branch `codex/feature-shoto-golpes-g
 - `backward-*`, `crouch-*`, `jump-*`, `dash-*`, `backstep-*`: recuo, ciclo baixo, salto completo e deslocamentos. Os conectores antigos e retorno parcial foram preservados.
 - `light-punch.png`, `light-kick.png`, `mirrored-*`: básicos e lados.
 - `crouch-guard.png`, `air-guard.png`: bloqueios reais contra P2 manual; geometria oculta para observar a arte.
-- `bar-selecao.png`, `bar-pvp.png`: miniatura e bar com Shoto v4, chão reduzido e objetos apoiados atrás da luta.
+- `bar-selecao.png`, `bar-pvp.png`, `bar-arcade.png`: miniatura e bar com Shoto v4, chão reduzido e objetos apoiados atrás da luta.
 - `tutorial.png`, `combos.png`: sala de treino fixa; receitas continuam vazias. A sala também foi conferida no treino livre.
 
 ## Verificações técnicas
@@ -19,3 +19,5 @@ Instalação reproduzível, 174 testes/22 arquivos, build e diff aprovados. Veri
 `silhouette-comparison.json` compara as fontes retocadas às recuperadas; mede preservação geral dos desenhos, não rosto, cor ou aprovação artística. Chute forte tem alteração intencional de perna na quinta pose. Raízes e escalas finais estão em alignment.json; algumas fontes editadas exigiram compensação uniforme inferior a 1% nos ataques e pequenos ajustes de sola.
 
 Fontes e prompts em assets/art/characters/shoto/fine-v4. A v3 permanece rejeitada e fora do runtime. Aprovação artística final depende da revisão manual do usuário. Evidências do bar feitas na outra branch continuam identificadas separadamente em docs/evidence/bar-anoitecer.
+
+Implementação enviada em 54f0c48, CI 40419807824 aprovada. Nenhum merge em development/main; o fechamento documental posterior não altera código ou arte.
