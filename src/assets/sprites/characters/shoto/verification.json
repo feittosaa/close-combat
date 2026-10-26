@@ -470,6 +470,244 @@
           720
         ]
       }
+    ],
+    "enter-walk": [
+      {
+        "opaqueBounds": [
+          249,
+          87,
+          532,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          237,
+          91,
+          537,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          232,
+          103,
+          589,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          217,
+          100,
+          590,
+          720
+        ]
+      }
+    ],
+    "enter-backward": [
+      {
+        "opaqueBounds": [
+          241,
+          88,
+          538,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          236,
+          88,
+          539,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          106,
+          547,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          191,
+          118,
+          533,
+          720
+        ]
+      }
+    ],
+    "enter-crouch": [
+      {
+        "opaqueBounds": [
+          248,
+          88,
+          559,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          251,
+          122,
+          573,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          248,
+          217,
+          593,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          237,
+          303,
+          617,
+          720
+        ]
+      }
+    ],
+    "enter-jump": [
+      {
+        "opaqueBounds": [
+          245,
+          89,
+          540,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          245,
+          141,
+          521,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          205,
+          210,
+          523,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          242,
+          92,
+          547,
+          720
+        ]
+      }
+    ],
+    "enter-defense": [
+      {
+        "opaqueBounds": [
+          243,
+          88,
+          556,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          232,
+          87,
+          542,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          222,
+          91,
+          553,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          219,
+          92,
+          557,
+          720
+        ]
+      }
+    ],
+    "enter-dash": [
+      {
+        "opaqueBounds": [
+          254,
+          88,
+          528,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          226,
+          112,
+          585,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          175,
+          197,
+          598,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          69,
+          211,
+          736,
+          720
+        ]
+      }
+    ],
+    "enter-backstep": [
+      {
+        "opaqueBounds": [
+          242,
+          89,
+          547,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          216,
+          90,
+          560,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          231,
+          120,
+          513,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          275,
+          114,
+          546,
+          720
+        ]
+      }
     ]
   }
 }

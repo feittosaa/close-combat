@@ -22,6 +22,7 @@ export interface CharacterState {
   maxHealth: number;
   mode: CharacterMode;
   stateStartedFrame: number;
+  animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };
   remainingStateFrames: number;
   verticalVelocity: number;
   grounded: boolean;
@@ -29,3 +30,6 @@ export interface CharacterState {
   attack?: CharacterAttack;
   hitFlashFrames: number;
 }
+
+/** Snapshot of the preceding pose state; contains no renderer objects or recursive history. */
+export type CharacterAnimationState = Pick<CharacterState,'mode'|'stateStartedFrame'|'grounded'|'crouching'|'movementDirection'|'facing'|'verticalVelocity'>;

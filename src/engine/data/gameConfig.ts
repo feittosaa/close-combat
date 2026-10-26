@@ -28,7 +28,7 @@ export function createGameConfig(width: number, height: number): GameConfig {
       jumpImpulse: -11,
       gravity: 0.55,
       dashSpeed: 4.2,
-      dashDurationFrames: 12,
+      dashDurationFrames: 24,
       doubleTapWindowFrames: 12,
     },
     match: {

@@ -22,7 +22,7 @@ Corrida reutiliza 45–48. Defesa baixa usa a pose agachada já aprovada; não h
 - `source/*-magenta.png`: fontes aprovadas preservadas.
 - `source/*-auburn.png`: edições pelo `image_gen` embutido, uma por folha, alterando apenas o cabelo para vermelho acobreado escuro. As poses, vestuário e composição foram preservados. Prompts e origem em `source/auburn-edits.json`.
 - `alignment.json`: raízes X/Y e escala autoradas por folha/quadro. O ponto de apoio do agachado foi corrigido; não usar centro da silhueta para alinhar braços ou abas móveis.
-- `*.png`/`*.atlas.json`: 56 quadros RGBA, oito faixas de uma linha, células fixas 768 × 768, sem trim, raiz 384/720. Largura máxima de atlas 6144 pixels.
+- `*.png`/`*.atlas.json`: 84 quadros RGBA, quinze faixas de uma linha, células fixas 768 × 768, sem trim, raiz 384/720. Largura máxima de atlas 6144 pixels.
 - `preparation.json`: medidas da transformação executada. `verification.json`: limites opacos e medição independente do pé plantado.
 
 Reproduzir da raiz do repositório com Python, Pillow, NumPy e SciPy:
@@ -39,3 +39,11 @@ A preparação remove magenta, separa corpos, usa as raízes autoradas e empacot
 `shotoSprites.ts` amostra o frame lógico e espelha a raiz para ambos os lados. Pausa não avança a pose; reset volta ao início. O combate é independente dos pixels. O enquadramento é fixo em 1,6; a margem compartilhada de tela limita afastamento e permite acompanhamento exclusivamente lateral.
 
 Conferência no jogo e capturas em `docs/evidence/shoto-animacoes-alinhadas/`. Testes de seleção/loops, espelhamento, pausa/reset, enquadramento e separação não substituem a revisão artística pelo usuário.
+
+## Conectores e dash revisado
+
+Sete novas folhas `enter-*`, quatro desenhos cada: walk 56–59, backward 60–63, crouch 64–67, jump 68–71, defense 72–75, dash 76–79, backstep 80–83. Fontes e prompts em `source/transitions-generation.json`; ferramenta embutida image_gen. Os conectores foram produzidos a partir das fontes idle/destino, preservando cabelo vermelho acobreado, roupa e proporções. Mesmas células 768 × 768, raiz 384/720 e preparação declarada em alignment.json.
+
+Entradas duram 8 frames, exceto salto/dash/backstep (4). Ao parar, o conector correspondente é invertido; uma entrada curta retorna apenas pelas poses já alcançadas. A preparação do salto ocupa os quatro primeiros frames de sua trajetória, mantendo os tempos de ápice/queda do restante do clipe. Dash/backstep usam o conector de 4 frames mais as seis poses principais em 20 frames (3,4,4,4,3,2), total 24. Corrida reutiliza o dash. Guarda entra pelo novo conector, preserva a pose fechada em blockstun e nunca reabre em cada ciclo.
+
+`getShotoSpriteLayers` mistura a pose anterior e a atual durante três frames, com informações do snapshot em vez de tempo real ou histórico do renderizador. Permite suavizar interrupções entre ações sem atrasar o controle, alterar colisores ou avançar durante pausa. A margem lateral fixa passou a 88 unidades para acomodar as poses largas (meia célula corresponde a 86,4 unidades de mundo).

@@ -11,8 +11,17 @@ export interface KeyboardLayout {
 export class KeyboardInput {
   private readonly pressed = new Set<string>();
   private readonly waitingForRelease = new Set<string>();
+  private lastHorizontalTap?: { code: string; time: number };
+  private pendingDashCode?: string;
   private readonly onKeyDown = (event: KeyboardEvent): void => {
-    if (!this.waitingForRelease.has(event.code)) this.pressed.add(event.code);
+    if (event.repeat || this.pressed.has(event.code) || this.waitingForRelease.has(event.code)) return;
+    this.pressed.add(event.code);
+    if (event.code === this.layout.directions.left || event.code === this.layout.directions.right) {
+      const last=this.lastHorizontalTap;
+      if(last?.code===event.code && event.timeStamp-last.time<=200){
+        this.pendingDashCode=event.code;this.lastHorizontalTap=undefined;
+      } else this.lastHorizontalTap={code:event.code,time:event.timeStamp};
+    }
   };
   private readonly onKeyUp = (event: KeyboardEvent): void => {
     this.pressed.delete(event.code);
@@ -21,6 +30,7 @@ export class KeyboardInput {
   private readonly onBlur = (): void => {
     this.pressed.clear();
     this.waitingForRelease.clear();
+    this.lastHorizontalTap=undefined;this.pendingDashCode=undefined;
   };
 
   constructor(
@@ -46,7 +56,9 @@ export class KeyboardInput {
     for (const button of ['1', '2', '3', '4'] as const) {
       if (this.pressed.has(this.layout.buttons[button])) buttons.add(button);
     }
-    return { direction, buttons };
+    const dashCode=this.pendingDashCode;this.pendingDashCode=undefined;
+    const dash=dashCode ? ((dashCode===this.layout.directions.right)===(facing==='right')?'F':'B') : undefined;
+    return dash ? {direction,buttons,dash} : {direction,buttons};
   }
 
   isSystemPressed(action: 'pause' | 'reset'): boolean { return this.pressed.has(getSystemControls()[action]); }
@@ -55,6 +67,7 @@ export class KeyboardInput {
   clear(): void {
     this.pressed.forEach((code) => this.waitingForRelease.add(code));
     this.pressed.clear();
+    this.lastHorizontalTap=undefined;this.pendingDashCode=undefined;
   }
 
   destroy(): void {
@@ -63,5 +76,6 @@ export class KeyboardInput {
     this.target.removeEventListener('blur', this.onBlur);
     this.pressed.clear();
     this.waitingForRelease.clear();
+    this.lastHorizontalTap=undefined;this.pendingDashCode=undefined;
   }
 }

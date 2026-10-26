@@ -32,4 +32,4 @@ for name,spec in config['clips'].items():
 roots=[frame['plantedFootX'] for frame in report['crouch']]
 assert max(roots)-min(roots)<=3,('crouch horizontal drift',roots)
 (ROOT/'verification.json').write_text(json.dumps({'crouchFootDriftPixels':max(roots)-min(roots),'frames':report},indent=2)+'\n')
-print(f'56 frames checked: transparent background, no clipping, grounded feet aligned; crouch X drift {max(roots)-min(roots):.1f}px.')
+print(f'{sum(len(spec["roots"]) for spec in config["clips"].values())} frames checked: transparent background, no clipping, grounded feet aligned; crouch X drift {max(roots)-min(roots):.1f}px.')

@@ -203,3 +203,16 @@ Novo aval manual: inserir salto, defesa, caminhada para trás, dash e backstep, 
 Conferência da revisão de animações: 56 desenhos em oito atlas, cabelo editado pelo image_gen embutido; verificação independente de pixels sem corte/magenta opaco, pés alinhados e desvio X agachado de 1,5 pixel. Ciclo agachado em ida/volta, entrada de guarda sem reinício a cada volta e guarda fechada durante blockstun. Salto de P1/P2, recuo, dash, backstep, afastamento máximo e canto conferidos no jogo; capturas em docs/evidence/shoto-animacoes-alinhadas. A arte de ataques/hitstun continua provisória, conforme escopo aprovado. Estado remoto desta nova branch: envio/CI ainda pendentes neste registro.
 
 Validação final desta revisão: instalação reproduzível concluída, 129 testes em 17 arquivos, build, diff e verificação dos pixels aprovados. Evidências de P2 no ápice confirmam espelhamento; revisão no afastamento máximo mantém ambos na tela, sem mudanças de escala. O cenário de treino solicitado depois será entregue em branch independente.
+
+### Dash imediato e transições suaves
+
+Branch: `codex/feature-dash-transicoes`, criada de origin/development após as animações alinhadas. Pedido: dois toques imediatos com dash mais visível e demorado, mais sprites intermediários para evitar saltos de pose.
+
+- [x] Capturar dois toques físicos entre ticks; pedido único, relativo ao facing; respeitar reset, blur, soltura e auto-repeat.
+- [x] Dash/backstep iniciam no segundo toque e completam 24 frames após soltar; corrida somente ao manter avanço depois do dash.
+- [x] Gerar sete conectores de quatro desenhos (28 novos, 84 no total), preservando cabelo/identidade, raízes e proporções.
+- [x] Entradas/saídas autoradas, retorno parcial em interrupção e mistura lógica de três frames entre ações; pausa/FPS determinísticos.
+- [x] Margem lateral 88 para manter as poses largas dentro do quadro, sem zoom dinâmico.
+- [x] 137 testes em 18 arquivos, build e diff aprovados; verificação independente dos 84 quadros aprovada.
+- [ ] Conferir duração/loops/transições no jogo e registrar evidências; navegador de conferência apresentou timeouts após a sala de treino.
+- [ ] Enviar, confirmar CI, integrar e encerrar branch pronta.
