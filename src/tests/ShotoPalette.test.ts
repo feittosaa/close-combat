@@ -4,6 +4,7 @@ import { applyShotoPalettePixels, shotoColor, shotoMaterial, shotoPalette } from
 it('mantém cabelo castanho separado da pele e da camisa vinho', () => {
   expect(shotoMaterial(174, 43, 28, .06)).toBe('hair');
   expect(shotoMaterial(182, 109, 64, .12)).toBe('skin');
+  expect(shotoColor(182, 109, 64, .12)).toEqual([150, 99, 68]);
   expect(shotoMaterial(182, 109, 64, .38)).toBe('skin');
   expect(shotoMaterial(121, 57, 49, .38, .15)).toBe('skin');
   expect(shotoMaterial(121, 57, 49, .38, 0)).toBe('shirt');

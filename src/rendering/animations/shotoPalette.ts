@@ -17,7 +17,7 @@ const colors = Object.fromEntries(Object.entries(shotoPalette).map(([key, ramp])
 const thresholds: Record<Material, readonly number[]> = {
   ink: [], trousers: [50, 76, 106], jacket: [95, 140, 184, 220],
   shirt: [67, 105, 150], shoes: [55, 90, 135], hair: [65, 100, 140, 180],
-  skin: [85, 123, 167, 205],
+  skin: [85, 123, 190, 230],
 };
 
 /** Spatial hints distinguish identical red pigments in hair, shirt and leather. */
