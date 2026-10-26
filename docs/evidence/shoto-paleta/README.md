@@ -2,6 +2,7 @@
 
 Conferência no build de produção em 127.0.0.1:4190, com a paleta final comum aos 84 quadros. PNGs de origem preservados; transformação RGB na preparação das texturas usadas tanto pelo menu quanto pelo combate.
 
+- resultado.png: treino em execução, composição final sem painel de pausa.
 - idle.png: ambos os lados, cabelo castanho discretamente avermelhado, pele morena, jaqueta marfim, vinho, carvão e couro castanho.
 - andar.png/recuo.png: 15F de caminhada sustentada após reset, sem duplo toque; mesma paleta, incluindo bota levantada.
 - agachado.png: frame 12, proporção e apoio preservados.

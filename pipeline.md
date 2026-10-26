@@ -249,8 +249,10 @@ Branch `codex/feature-shoto-paleta-sem-corrida`, a partir de development. Padron
 - [x] Paleta comum documentada e aplicada a todos os atlas.
 - [x] Remover corrida e cobrir retorno à caminhada nos dois sentidos.
 - [x] Instalação, testes, build, diff e conferência visual de todas as ações.
-- [ ] Push, CI da feature, integração em development, CI da integração e encerramento da branch.
+- [x] Código enviado e CI da feature aprovada; fechamento segue integração/CI de development e remoção da branch conforme docs/ci-cd.md.
 
 Validação local concluída: npm ci, 147 testes em 20 arquivos, build e diff aprovados. Corrida removida do tipo de estado, dados de movimento, simulação, rótulos e clipes; testes verificam caminhada por 60F adicionais após completar o dash. Paleta RGB aplicada uma vez por atlas, com alpha e quadros preservados. Regressões cobrem pele/cabelo/camisa, botas levantadas e dobras marfim ao nível da cabeça durante dash, além de células com alturas diferentes.
 
 Conferência no build de produção concluída: seleção, idle nos dois lados, caminhada/recuo, agachado, salto, dash, retorno à caminhada no frame 30, backstep, guarda e conectores. Corrigidas sombras quentes da manga que inicialmente eram confundidas com pele. Capturas e procedimento em docs/evidence/shoto-paleta/README.md. A prévia foi recuperada por nova aba após timeout ao recarregar. Envio/CI e integração seguem a etapa final abaixo; não confundir esta validação local com resultado remoto.
+
+Entrega de código `8d7abf1f42494b7a83b2c2c723a3802cc669b027`: [CI da feature 40325219320](https://github.com/feittosaa/close-combat/actions/runs/40325219320) aprovada. Registro final acrescenta resultado.png e documentação; não altera código nem invalida a conferência. Integração por fast-forward e encerramento somente após CI do commit final e de development, sem promoção para main. O relato de conclusão confirma o resultado remoto dessas etapas.
