@@ -66,7 +66,7 @@ it('entra/sai da caminhada com desenhos intermediários e sem atrasar o deslocam
 it('toque breve de agachar retorna da profundidade alcançada, sem saltar para a pose mais baixa',()=>{
   const sim=practice();sim.stepFrame([input('D'),N]);sim.stepFrame([N,N]);const snapshot=sim.snapshot();
   expect(getShotoSpritePose(snapshot.characters[0],snapshot.frame)).toMatchObject({texture:'shoto-enter-crouch',frame:64});
-  expect(getShotoSpriteLayers(snapshot.characters[0],snapshot.frame)).toHaveLength(2);
+  expect(getShotoSpriteLayers(snapshot.characters[0],snapshot.frame)).toEqual([{...getShotoSpritePose(snapshot.characters[0],snapshot.frame),alpha:1}]);
 });
 it('camadas de transição são determinísticas em 30/60/120/144 FPS e permanecem imóveis na pausa',()=>{
   const run=(fps:number)=>{
@@ -74,7 +74,7 @@ it('camadas de transição são determinísticas em 30/60/120/144 FPS e permanec
     const snapshot=sim.snapshot(),before=structuredClone(snapshot);
     const layers=getShotoSpriteLayers(snapshot.characters[0],snapshot.frame);
     expect(getShotoSpriteLayers(snapshot.characters[0],snapshot.frame)).toEqual(layers);
-    expect(snapshot).toEqual(before);expect(layers).toHaveLength(2);
+    expect(snapshot).toEqual(before);expect(layers).toHaveLength(1);expect(layers[0].alpha).toBe(1);
     return layers;
   };
   const reference=run(60);for(const fps of [30,120,144])expect(run(fps)).toEqual(reference);

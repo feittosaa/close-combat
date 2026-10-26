@@ -54,7 +54,7 @@ As folhas adicionais de salto, defesa, caminhada para trás, dash e backstep rec
 
 As oito folhas do Shoto mantêm cabelo vermelho acobreado escuro, coque e mecha com a mesma paleta. Raiz X autorada por quadro, com os apoios estabilizados; não centralizar pela caixa total da silhueta, que varia com braços, abas e passos. Células 768 × 768 e raiz 384/720; o ciclo agachado volta pelas poses intermediárias. A escala fixa 1,6 deixa o corpo em pé com cerca de 40% da altura da tela e preserva o salto inteiro.
 
-Sete conectores de quatro poses ligam os estados de locomoção e guarda, com entrada/retorno gradual. Raízes e paleta permanecem comuns; transições não podem produzir deriva de X nem alterar o tamanho do corpo. A apresentação combina poses por três frames lógicos em interrupções, sem depender do FPS ou atrasar o movimento físico.
+Sete conectores de quatro poses ligam os estados de locomoção e guarda, com entrada/retorno gradual. Raízes e paleta permanecem comuns; transições não podem produzir deriva de X nem alterar o tamanho do corpo. A apresentação mantém uma única pose opaca durante interrupções, sem dissolução por alpha; os conectores autorados suavizam o movimento sem depender do FPS ou atrasar o movimento físico.
 
 ## Paleta atual do Shoto
 

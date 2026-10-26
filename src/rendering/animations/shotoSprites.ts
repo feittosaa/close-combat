@@ -92,15 +92,8 @@ export function getShotoSpritePose(state:CharacterState,frame:number){
   return pose(`shoto-${action}`,sampled);
 }
 
-/** A three-frame dissolve bridges arbitrary interruptions; it never depends on display FPS. */
+/** Authored connectors handle motion. Keep every pose opaque to avoid source-over flicker. */
 export function getShotoSpriteLayers(state:CharacterState,frame:number){
-  const incoming=getShotoSpritePose(state,frame);
-  if(!incoming)return [];
-  const transition=state.animationTransition;
-  const elapsed=transition?Math.max(0,frame-transition.startedFrame):3;
-  if(!transition||elapsed>=3)return [{...incoming,alpha:1}];
-  const previous=getShotoSpritePose({...state,...transition.from,attack:undefined,animationTransition:transition.previous},transition.startedFrame);
-  if(!previous)return [{...incoming,alpha:1}];
-  const alpha=elapsed/3;
-  return [{...previous,alpha:1-alpha},{...incoming,alpha}];
+  const pose=getShotoSpritePose(state,frame);
+  return pose?[{...pose,alpha:1}]:[];
 }
