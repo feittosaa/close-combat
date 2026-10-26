@@ -222,3 +222,7 @@ Próximas correções devem preservar o que já funciona, tratar uma animação 
 ### Ajustes finos vigentes após a restauração
 
 O pedido atual substitui a regra de relógio esquerdo/pulso direito nu: somente uma pulseira simples de ouro em cada braço, nenhum relógio. Remover cinto/fivela de todas as folhas; cavanhaque marrom da mesma família do cabelo; calça cinza carvão bem escuro em todas. Usar as folhas existentes recuperadas, sem redesenhar personagem, rosto, blazer creme, pele, sapatos, silhueta ou poses. Somente a caminhada frontal recebe novas intermediárias entre os desenhos existentes. No chute forte, preparar, estender, recolher e pousar a MESMA perna. Não alterar física/câmera nem usar as folhas v3 rejeitadas.
+
+### Micro pausa no contato
+
+Qualquer ataque confirmado, acertado ou bloqueado, inicia uma pausa compartilhada de 5 ticks a 60 Hz (aproximadamente 83 ms). Os dois lutadores ficam na pose do contato: posições, gravidade, ataques, recuperação, stun e animações não avançam nesse intervalo. Golpes que erram não pausam. Contatos simultâneos compartilham uma única pausa, sem somar durações. O relógio do round continua contando em tempo normal; tempo de combate/animação e tempo decorrido são separados. Ao terminar a pausa, a ação retoma do ponto exato, sem pular desenhos nem modificar folhas, duração autorada dos clipes, frame advantage ou parâmetros dos golpes. KO/time-up preservam a pausa final antes de encerrar o round; o relógio nunca fica negativo. Vale para todos os personagens/modos.

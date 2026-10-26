@@ -7,10 +7,13 @@ import { CommandParser } from '../../input/CommandBuffer';
 import type { FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
+import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
 export interface SimulationSnapshot {
-  frame: number; round: number; roundFramesRemaining: number;
+  /** frame is combat/animation time; elapsedFrames counts every fixed tick, including hitstop. */
+  frame: number; elapsedFrames: number; round: number; roundFramesRemaining: number;
+  hitstopFramesRemaining: number;
   phase: 'fight' | 'round-over' | 'match-over';
   roundWins: readonly [number, number]; roundWinnerId?: string;
   roundEndReason?: 'knockout' | 'time' | 'draw'; matchWinnerId?: string;
@@ -30,6 +33,8 @@ export class Simulation {
   private readonly resolver: AttackResolver;
   private characters: [CharacterState, CharacterState];
   private frame = 0;
+  private elapsedFrames = 0;
+  private hitstopFramesRemaining = 0;
   private round = 1;
   private phase: SimulationSnapshot['phase'] = 'fight';
   private roundWins: [number, number] = [0, 0];
@@ -62,7 +67,8 @@ export class Simulation {
   }
   stepFrame(inputs: readonly FrameInput[]): void { this.clock.reset(); this.step(inputs); }
   snapshot(): SimulationSnapshot {
-    return { frame: this.frame, round: this.round, roundFramesRemaining: this.roundFramesRemaining,
+    return { frame: this.frame, elapsedFrames: this.elapsedFrames, round: this.round, roundFramesRemaining: this.roundFramesRemaining,
+      hitstopFramesRemaining: this.hitstopFramesRemaining,
       phase: this.phase, roundWins: [...this.roundWins], roundWinnerId: this.roundWinnerId,
       roundEndReason: this.roundEndReason, matchWinnerId: this.matchWinnerId,
       characters: structuredClone(this.characters), activeHitboxes: this.phase === 'fight' ? this.resolver.activeHitboxes(this.characters) : [],
@@ -76,7 +82,7 @@ export class Simulation {
   isMatchOver(): boolean { return this.phase === 'match-over'; }
   resetMatch(distance?: number): void {
     if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
-    this.frame = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
+    this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
     this.resetRound();
   }
   setTrainingAutoRestore(enabled: boolean): void { if (this.options.training) { this.trainingAutoRestore = enabled; this.quietFrames = 0; } }
@@ -98,8 +104,10 @@ export class Simulation {
     this.clearInputHistory(); this.characters = this.createCharacters(); this.roundFramesRemaining = this.config.match.roundDurationFrames;
     this.roundWinnerId = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
     this.lastHitEvents = []; this.recentContacts = []; this.quietFrames = 0;
+    this.hitstopFramesRemaining = 0;
   }
   private step(inputs: readonly FrameInput[]): void {
+    this.elapsedFrames += 1;
     this.lastHitEvents = [];
     if (this.phase !== 'fight') {
       if (this.phase === 'round-over' && --this.transitionFrames <= 0) {
@@ -108,6 +116,15 @@ export class Simulation {
         } else { this.round += 1; this.phase = 'fight'; this.resetRound(); }
       }
       this.frame += 1; return;
+    }
+    // The round clock uses real fixed ticks, independently of combat/animation time.
+    if (!this.options.training) this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
+    if (this.hitstopFramesRemaining > 0) {
+      this.hitstopFramesRemaining -= 1;
+      // Keep attacks/poses intact through the last impact tick, including KO/time-up.
+      if (!this.hitstopFramesRemaining && !this.options.training &&
+        (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
+      return;
     }
     const previousAnimationStates:CharacterAnimationState[]=this.characters.map(c=>({mode:c.mode,stateStartedFrame:c.stateStartedFrame,grounded:c.grounded,crouching:c.crouching,movementDirection:c.movementDirection,facing:c.facing,verticalVelocity:c.verticalVelocity}));
     const previousTransitions=this.characters.map(c=>c.animationTransition?{startedFrame:c.animationTransition.startedFrame,from:c.animationTransition.from}:undefined);
@@ -176,6 +193,7 @@ export class Simulation {
     });
     this.resolveBodies(previousX); this.resolveScreenEdges(previousX); this.updateFacing();
     this.lastHitEvents = this.resolver.resolve(this.characters, inputs);
+    if (this.lastHitEvents.length) this.hitstopFramesRemaining = CONTACT_HITSTOP_FRAMES;
     this.lastHitEvents.forEach(event => {
       const attacker = this.characters.find(character => character.characterId === event.attackerId)!;
       const target = this.characters.find(character => character.characterId === event.targetId)!;
@@ -198,8 +216,8 @@ export class Simulation {
       this.quietFrames = quiet ? this.quietFrames + 1 : 0;
       if (this.trainingAutoRestore && this.quietFrames >= 90) this.characters.forEach(character => { character.health = character.maxHealth; });
     } else {
-      this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
-      if (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0) this.finishRound();
+      if (!this.hitstopFramesRemaining &&
+        (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
     }
     this.frame += 1;
   }
