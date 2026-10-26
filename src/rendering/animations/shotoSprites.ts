@@ -23,7 +23,7 @@ import backstepAtlas from '../../assets/sprites/characters/shoto/backstep.atlas.
 
 /** Approved locomotion, four basics and posture guards. Roots and body scale are atlas-authored. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
-  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:116,
+  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:120,
   footAnchorY:720,displaySize:{width:172.8*1.03,height:172.8*1.03},
   clips:[
     {key:'shoto-idle',start:0,end:7,frameRate:6,repeat:-1},
@@ -91,7 +91,7 @@ export function getShotoSpritePose(state:CharacterState,frame:number){
   const entryDuration=enter?entry!.duration:0;
   if(enter && elapsed<entryDuration)return pose(entry!.texture,entry!.start+Math.min(3,Math.floor(elapsed*4/entryDuration)));
   const clip=shotoSpriteManifest.clips.find(c=>c.key===`shoto-${action}`)!;
-  const start=action==='jump'?state.stateStartedFrame:(transition?.startedFrame??state.stateStartedFrame)+entryDuration;
+  const start=action==='jump'?(state.airborneStartedFrame??state.stateStartedFrame):(transition?.startedFrame??state.stateStartedFrame)+entryDuration;
   let sampled=getStateAnimationFrame({...state,stateStartedFrame:start},clip,frame);
   if(action==='defense')sampled=state.mode==='blockstun'||enter?getTimedAnimationFrame(clip,Math.max(0,elapsed-entryDuration)):
     elapsed<4?30+Math.floor(elapsed/2):getTimedAnimationFrame(clip,elapsed-4);

@@ -24,6 +24,8 @@ export interface CharacterState {
   stateStartedFrame: number;
   animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };
   remainingStateFrames: number;
+  /** Logical jump origin survives guard/stun pose changes; renderer never restarts a flight. */
+  airborneStartedFrame?: number;
   verticalVelocity: number;
   grounded: boolean;
   crouching: boolean;

@@ -23,14 +23,20 @@ for name,spec in config['clips'].items():
         assert not magenta.any(),(name,index,'opaque magenta')
         if not spec.get('airborne', name=='jump'): assert foot-2<=ys.max()<=foot,(name,index,'foot drift')
         metrics={'opaqueBounds':[int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)]}
-        if name=='crouch':
+        if name in ['crouch','crouch-defense']:
             sole=opaque[foot-20:foot].sum(axis=0)>3
             labels,count=label(sole)
             pieces=[np.where(labels==part)[0] for part in range(1,count+1) if (labels==part).sum()>8]
             metrics['plantedFootX']=float(pieces[0].mean())
         frames.append(metrics)
     report[name]=frames
+for name in ['light-punch','heavy-punch','light-kick','heavy-kick']:
+    heights=[frame['opaqueBounds'][3]-frame['opaqueBounds'][1] for frame in report[name]]
+    assert 629<=heights[0]<=633,(name,'standing scale differs from idle',heights)
+    assert max(heights)<=650,(name,'body inflates during attack',heights)
+guard_roots=[frame['plantedFootX'] for frame in report['crouch-defense']]
+assert max(guard_roots)-min(guard_roots)<=3,('crouch guard horizontal drift',guard_roots)
 roots=[frame['plantedFootX'] for frame in report['crouch']]
 assert max(roots)-min(roots)<=3,('crouch horizontal drift',roots)
-(ROOT/'verification.json').write_text(json.dumps({'crouchFootDriftPixels':max(roots)-min(roots),'frames':report},indent=2)+'\n')
+(ROOT/'verification.json').write_text(json.dumps({'crouchFootDriftPixels':max(roots)-min(roots),'crouchDefenseFootDriftPixels':max(guard_roots)-min(guard_roots),'frames':report},indent=2)+'\n')
 print(f'{sum(len(spec["roots"]) for spec in config["clips"].values())} frames checked: transparent background, no clipping, grounded feet aligned; crouch X drift {max(roots)-min(roots):.1f}px.')

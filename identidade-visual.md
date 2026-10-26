@@ -63,3 +63,7 @@ A paleta única de materiais documentada em base.md substitui o vermelho acobrea
 ### Correção de cor sem posterização
 
 Feedback posterior rejeitou manchas e rachaduras na jaqueta/pele. Preservar contornos, gradientes e sombras originais; usar somente correção contínua suave, sem classificar cada pixel em um material ou prendê-lo a faixas de cor. A tabela anterior é referência de direção artística. Ampliar Shoto uniformemente em 3% mantendo suas proporções, pivô nos pés e câmera fixa.
+
+## Referência canônica dos personagens
+
+Toda animação deve partir do turnaround aprovado do personagem, fornecido junto às poses existentes de ligação. Para o Shoto, usar sempre `assets/art/characters/shoto/turnaround.png` como autoridade de rosto, anatomia, roupa e materiais. Folhas derivadas servem de guia de ação, nunca substituem a identidade original. Conferir rosto/cavanhaque, relação cabeça-corpo, escala do tronco, pele/cabelo e couro dos sapatos em todas as poses e na passagem pelo idle. Sombras naturais podem variar com os planos; a cor do material não deve mudar durante a animação. Incluir entradas/saídas autoradas sem transparência. Aplicar a mesma regra a cada personagem futuro com sua referência própria.

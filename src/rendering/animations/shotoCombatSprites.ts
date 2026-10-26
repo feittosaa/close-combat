@@ -20,12 +20,12 @@ export const shotoCombatSources = [
   {key:'shoto-light-kick',image:image2,atlas:atlas2,start:96},
   {key:'shoto-heavy-kick',image:image3,atlas:atlas3,start:102},
   {key:'shoto-crouch-defense',image:image4,atlas:atlas4,start:108},
-  {key:'shoto-air-defense',image:image5,atlas:atlas5,start:112},
+  {key:'shoto-air-defense',image:image5,atlas:atlas5,start:114},
 ];
 
 export const shotoCombatClips: AnimationClip[] = shotoCombatSources.map((source,index) => ({
-  key:source.key,start:source.start,end:source.start+(index<4?5:3),
-  ...(index>=4?{frames:[0,1,2,3,2,1].map(frame=>source.start+frame)}:{}),
+  key:source.key,start:source.start,end:source.start+5,
+  ...(index>=4?{frames:[2,3,4,5,4,3].map(frame=>source.start+frame)}:{}),
   frameRate:6,repeat:index<4?0:-1,
 }));
 
@@ -37,6 +37,10 @@ export function getShotoCombatPose(state:CharacterState,frame:number){
     const move=getCharacterById(state.fighterId)?.moves.find(move=>move.id===state.attack!.moveId);
     if(!source||!move)return undefined;
     const elapsed=state.attack.elapsedFrames;
+    // Shared authored hand-close bridges idle to the attack without delaying contact.
+    if(elapsed<2)return pose('shoto-enter-defense',72+elapsed);
+    const remaining=move.startup+move.activeFrames+move.recovery-elapsed;
+    if(move.id==='light-punch' && remaining<=2)return pose('shoto-enter-defense',71+remaining);
     const local=elapsed<move.startup?Math.min(1,Math.floor(elapsed*2/move.startup)):
       elapsed<move.startup+move.activeFrames?2:
       3+Math.min(2,Math.floor((elapsed-move.startup-move.activeFrames)*3/move.recovery));
@@ -45,7 +49,39 @@ export function getShotoCombatPose(state:CharacterState,frame:number){
   if((state.mode==='blocking'||state.mode==='blockstun')&&(!state.grounded||state.crouching)){
     const index=state.grounded?4:5;
     const source=shotoCombatSources[index];
-    return pose(source.key,getTimedAnimationFrame(shotoCombatClips[index],frame-state.stateStartedFrame));
+    const elapsed=Math.max(0,frame-(state.animationTransition?.startedFrame??state.stateStartedFrame));
+    const enteringCrouch=state.grounded && state.animationTransition && !state.animationTransition.from.crouching;
+    const postureDuration=enteringCrouch?4:0;
+    if(state.mode!=='blockstun' && elapsed<postureDuration)return pose('shoto-enter-crouch',64+elapsed);
+    const closing=Math.max(0,elapsed-postureDuration);
+    const local=state.mode!=='blockstun'&&closing<4?Math.floor(closing/2):
+      getTimedAnimationFrame(shotoCombatClips[index],Math.max(0,closing-4))-source.start;
+    return pose(source.key,source.start+local);
+  }
+  const transition=state.animationTransition;
+  const from=transition?.from;
+  const previous=transition?.previous;
+  const held=previous?transition!.startedFrame-previous.startedFrame:Infinity;
+  const partial=from?.mode==='blocking'&&previous;
+  const oldDescent=Boolean(partial&&from.grounded&&!previous!.from.crouching);
+  if(from && (from.mode==='blocking'||from.mode==='blockstun') && from.crouching &&
+      state.grounded && !state.crouching && ['neutral','moving'].includes(state.mode)){
+    const elapsed=Math.max(0,frame-transition!.startedFrame);
+    const last=oldDescent?Math.min(3,Math.max(0,held-1)):3;
+    if(elapsed<=last)return pose('shoto-enter-crouch',64+last-elapsed);
+  }
+  if(from && (from.mode==='blocking'||from.mode==='blockstun') &&
+      from.grounded===state.grounded && from.crouching===state.crouching &&
+      (!state.grounded||state.crouching)){
+    const elapsed=Math.max(0,frame-transition!.startedFrame);
+    const source=shotoCombatSources[state.grounded?4:5];
+    if(oldDescent&&held<4){
+      if(elapsed<4-held)return pose('shoto-enter-crouch',64+held+elapsed);
+      return undefined;
+    }
+    const closing=held-(oldDescent?4:0);
+    const last=partial?Math.min(1,Math.max(0,Math.floor((closing-1)/2))):1;
+    if(elapsed<(last+1)*2)return pose(source.key,source.start+last-Math.floor(elapsed/2));
   }
   return undefined;
 }

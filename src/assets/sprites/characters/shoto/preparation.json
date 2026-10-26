@@ -1130,79 +1130,79 @@
     "light-punch": [
       {
         "sourceBounds": [
-          62,
-          169,
-          261,
-          586
+          48,
+          116,
+          283,
+          631
         ],
-        "sourceRootX": 166.77,
-        "sourceRootY": 586,
-        "scale": 1.513189,
+        "sourceRootX": 161.98,
+        "sourceRootY": 631.0,
+        "scale": 1.225243,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          424,
-          169,
-          690,
-          586
+          397,
+          118,
+          713,
+          631
         ],
-        "sourceRootX": 529.52,
-        "sourceRootY": 586,
-        "scale": 1.513189,
+        "sourceRootX": 517.23,
+        "sourceRootY": 631.0,
+        "scale": 1.225243,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          786,
-          168,
-          1086,
-          586
+          777,
+          117,
+          1162,
+          631
         ],
-        "sourceRootX": 890.77,
-        "sourceRootY": 586,
-        "scale": 1.513189,
+        "sourceRootX": 902.98,
+        "sourceRootY": 631.0,
+        "scale": 1.225243,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1172,
-          168,
-          1371,
-          586
+          1190,
+          118,
+          1432,
+          631
         ],
-        "sourceRootX": 1276.02,
-        "sourceRootY": 586,
-        "scale": 1.513189,
+        "sourceRootX": 1308.73,
+        "sourceRootY": 631.0,
+        "scale": 1.225243,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1536,
-          169,
-          1735,
-          586
+          1533,
+          118,
+          1773,
+          631
         ],
-        "sourceRootX": 1640.52,
-        "sourceRootY": 586,
-        "scale": 1.513189,
+        "sourceRootX": 1649.48,
+        "sourceRootY": 631.0,
+        "scale": 1.225243,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1911,
-          169,
-          2110,
-          586
+          1877,
+          117,
+          2115,
+          631
         ],
-        "sourceRootX": 2015.77,
-        "sourceRootY": 586,
-        "scale": 1.513189,
+        "sourceRootX": 1993.98,
+        "sourceRootY": 631.0,
+        "scale": 1.225243,
         "preparedRootX": 576,
         "preparedRootY": 720
       }
@@ -1210,79 +1210,79 @@
     "heavy-punch": [
       {
         "sourceBounds": [
-          39,
-          132,
-          313,
-          601
+          34,
+          116,
+          301,
+          616
         ],
-        "sourceRootX": 180.43,
-        "sourceRootY": 601,
-        "scale": 1.345416,
+        "sourceRootX": 163.47,
+        "sourceRootY": 616.0,
+        "scale": 1.262,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          377,
-          132,
-          699,
-          601
+          359,
+          115,
+          659,
+          616
         ],
-        "sourceRootX": 525.43,
-        "sourceRootY": 601,
-        "scale": 1.345416,
+        "sourceRootX": 505.47,
+        "sourceRootY": 616.0,
+        "scale": 1.262,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          733,
-          131,
-          1112,
-          601
+          721,
+          114,
+          1146,
+          616
         ],
-        "sourceRootX": 882.93,
-        "sourceRootY": 601,
-        "scale": 1.345416,
+        "sourceRootX": 875.47,
+        "sourceRootY": 616.0,
+        "scale": 1.262,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1128,
-          136,
-          1523,
-          602
+          1141,
+          117,
+          1456,
+          616
         ],
-        "sourceRootX": 1284.18,
-        "sourceRootY": 602,
-        "scale": 1.345416,
+        "sourceRootX": 1294.47,
+        "sourceRootY": 616.0,
+        "scale": 1.262,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1528,
-          131,
-          1796,
-          601
+          1531,
+          115,
+          1813,
+          616
         ],
-        "sourceRootX": 1666.93,
-        "sourceRootY": 601,
-        "scale": 1.345416,
+        "sourceRootX": 1668.22,
+        "sourceRootY": 616.0,
+        "scale": 1.262,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1898,
-          131,
-          2135,
-          601
+          1883,
+          115,
+          2133,
+          616
         ],
-        "sourceRootX": 2021.18,
-        "sourceRootY": 601,
-        "scale": 1.345416,
+        "sourceRootX": 2004.22,
+        "sourceRootY": 616.0,
+        "scale": 1.262,
         "preparedRootX": 576,
         "preparedRootY": 720
       }
@@ -1290,79 +1290,79 @@
     "light-kick": [
       {
         "sourceBounds": [
-          78,
-          166,
-          275,
-          597
+          58,
+          131,
+          296,
+          627
         ],
-        "sourceRootX": 182.76,
-        "sourceRootY": 597,
-        "scale": 1.464037,
+        "sourceRootX": 174.65,
+        "sourceRootY": 627.0,
+        "scale": 1.272177,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          410,
-          167,
-          604,
-          591
+          401,
+          131,
+          608,
+          620
         ],
-        "sourceRootX": 503.26,
-        "sourceRootY": 591,
-        "scale": 1.464037,
+        "sourceRootX": 423.61,
+        "sourceRootY": 620.0,
+        "scale": 1.272177,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          728,
-          167,
-          1095,
-          591
+          722,
+          131,
+          1136,
+          620
         ],
-        "sourceRootX": 824.01,
-        "sourceRootY": 591,
-        "scale": 1.464037,
+        "sourceRootX": 751.36,
+        "sourceRootY": 620.0,
+        "scale": 1.272177,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1192,
-          166,
-          1370,
-          590
+          1218,
+          132,
+          1419,
+          620
         ],
-        "sourceRootX": 1283.01,
-        "sourceRootY": 590,
-        "scale": 1.464037,
+        "sourceRootX": 1242.61,
+        "sourceRootY": 620.0,
+        "scale": 1.272177,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1541,
-          167,
-          1754,
-          591
+          1553,
+          132,
+          1802,
+          620
         ],
-        "sourceRootX": 1622.26,
-        "sourceRootY": 591,
-        "scale": 1.464037,
+        "sourceRootX": 1566.36,
+        "sourceRootY": 620.0,
+        "scale": 1.272177,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1900,
-          167,
-          2095,
-          596
+          1903,
+          132,
+          2130,
+          627
         ],
-        "sourceRootX": 2003.26,
-        "sourceRootY": 596,
-        "scale": 1.464037,
+        "sourceRootX": 2015.15,
+        "sourceRootY": 627.0,
+        "scale": 1.272177,
         "preparedRootX": 576,
         "preparedRootY": 720
       }
@@ -1370,79 +1370,79 @@
     "heavy-kick": [
       {
         "sourceBounds": [
-          61,
-          166,
-          291,
-          593
+          51,
+          132,
+          282,
+          615
         ],
-        "sourceRootX": 179.94,
-        "sourceRootY": 593,
-        "scale": 1.477752,
+        "sourceRootX": 162.92,
+        "sourceRootY": 615.0,
+        "scale": 1.306418,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          384,
-          162,
-          617,
-          590
+          358,
+          130,
+          588,
+          613
         ],
-        "sourceRootX": 488.94,
-        "sourceRootY": 590,
-        "scale": 1.477752,
+        "sourceRootX": 403.91,
+        "sourceRootY": 613.0,
+        "scale": 1.306418,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          698,
-          160,
-          1141,
-          591
+          677,
+          130,
+          1162,
+          613
         ],
-        "sourceRootX": 823.69,
-        "sourceRootY": 591,
-        "scale": 1.477752,
+        "sourceRootX": 725.16,
+        "sourceRootY": 613.0,
+        "scale": 1.306418,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1196,
-          167,
-          1495,
-          590
+          1214,
+          130,
+          1481,
+          613
         ],
-        "sourceRootX": 1323.69,
-        "sourceRootY": 590,
-        "scale": 1.477752,
+        "sourceRootX": 1245.66,
+        "sourceRootY": 613.0,
+        "scale": 1.306418,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1593,
-          162,
-          1793,
-          590
+          1559,
+          130,
+          1801,
+          614
         ],
-        "sourceRootX": 1696.94,
-        "sourceRootY": 590,
-        "scale": 1.477752,
+        "sourceRootX": 1589.16,
+        "sourceRootY": 614.0,
+        "scale": 1.306418,
         "preparedRootX": 576,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1919,
-          165,
-          2120,
-          593
+          1899,
+          130,
+          2124,
+          616
         ],
-        "sourceRootX": 2023.44,
-        "sourceRootY": 593,
-        "scale": 1.477752,
+        "sourceRootX": 2006.17,
+        "sourceRootY": 616.0,
+        "scale": 1.306418,
         "preparedRootX": 576,
         "preparedRootY": 720
       }
@@ -1450,52 +1450,78 @@
     "crouch-defense": [
       {
         "sourceBounds": [
-          128,
+          34,
           222,
-          414,
+          399,
           597
         ],
-        "sourceRootX": 277.06,
-        "sourceRootY": 597,
+        "sourceRootX": 171.81,
+        "sourceRootY": 597.0,
         "scale": 1.066667,
         "preparedRootX": 384,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          674,
+          424,
+          218,
+          710,
+          597
+        ],
+        "sourceRootX": 557.06,
+        "sourceRootY": 597.0,
+        "scale": 1.066667,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          777,
           221,
-          955,
+          1056,
           597
         ],
-        "sourceRootX": 819.56,
-        "sourceRootY": 597,
+        "sourceRootX": 909.81,
+        "sourceRootY": 597.0,
         "scale": 1.066667,
         "preparedRootX": 384,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1217,
-          224,
-          1502,
+          1123,
+          221,
+          1405,
           597
         ],
-        "sourceRootX": 1362.56,
-        "sourceRootY": 597,
+        "sourceRootX": 1256.56,
+        "sourceRootY": 597.0,
         "scale": 1.066667,
         "preparedRootX": 384,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1758,
-          222,
-          2043,
+          1480,
+          219,
+          1760,
           597
         ],
-        "sourceRootX": 1906.31,
-        "sourceRootY": 597,
+        "sourceRootX": 1615.06,
+        "sourceRootY": 597.0,
+        "scale": 1.066667,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1845,
+          221,
+          2129,
+          597
+        ],
+        "sourceRootX": 1980.56,
+        "sourceRootY": 597.0,
         "scale": 1.066667,
         "preparedRootX": 384,
         "preparedRootY": 720
@@ -1504,53 +1530,79 @@
     "air-defense": [
       {
         "sourceBounds": [
-          106,
-          161,
-          359,
-          555
+          49,
+          149,
+          339,
+          596
         ],
-        "sourceRootX": 236.16,
-        "sourceRootY": 777.11,
-        "scale": 1.035533,
+        "sourceRootX": 188.18,
+        "sourceRootY": 847.99,
+        "scale": 0.912752,
         "preparedRootX": 384,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          670,
-          161,
-          908,
-          562
+          406,
+          147,
+          675,
+          596
         ],
-        "sourceRootX": 765.12,
-        "sourceRootY": 777.11,
-        "scale": 1.035533,
+        "sourceRootX": 532.68,
+        "sourceRootY": 845.99,
+        "scale": 0.912752,
         "preparedRootX": 384,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1217,
-          160,
-          1466,
-          558
+          769,
+          148,
+          1032,
+          598
         ],
-        "sourceRootX": 1324.33,
-        "sourceRootY": 776.11,
-        "scale": 1.035533,
+        "sourceRootX": 892.68,
+        "sourceRootY": 846.99,
+        "scale": 0.912752,
         "preparedRootX": 384,
         "preparedRootY": 720
       },
       {
         "sourceBounds": [
-          1790,
-          161,
-          2036,
-          562
+          1125,
+          148,
+          1390,
+          597
         ],
-        "sourceRootX": 1893.9,
-        "sourceRootY": 777.11,
-        "scale": 1.035533,
+        "sourceRootX": 1246.18,
+        "sourceRootY": 846.99,
+        "scale": 0.912752,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1486,
+          150,
+          1752,
+          597
+        ],
+        "sourceRootX": 1605.18,
+        "sourceRootY": 848.99,
+        "scale": 0.912752,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1855,
+          147,
+          2120,
+          597
+        ],
+        "sourceRootX": 1977.68,
+        "sourceRootY": 846.99,
+        "scale": 0.912752,
         "preparedRootX": 384,
         "preparedRootY": 720
       }

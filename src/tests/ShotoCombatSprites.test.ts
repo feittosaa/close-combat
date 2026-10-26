@@ -16,6 +16,12 @@ describe.each([0,1])('golpes/guardas do jogador %i',player=>{
       sim.stepFrame(inputs);
       const snapshot=sim.snapshot(),state=snapshot.characters[player];
       const pose=getShotoSpritePose(state,snapshot.frame)!;
+      if(pose.texture==='shoto-enter-defense'){
+        const elapsed=state.attack!.elapsedFrames;
+        expect(elapsed<2 || (move.id==='light-punch'&&elapsed>=move.startup+move.activeFrames+move.recovery-2)).toBe(true);
+        expect([72,73]).toContain(pose.frame);
+        continue;
+      }
       expect(pose.texture).toBe(`shoto-${move.id}`);
       expect(pose.flipX).toBe(player===1);
       expect(getShotoSpriteLayers(state,snapshot.frame)).toHaveLength(1);
@@ -38,7 +44,7 @@ describe.each([0,1])('golpes/guardas do jogador %i',player=>{
       const inputs=[input(),input()];inputs[player]=input('DB');if(t===0)inputs[opponent]=input('N','3');
       sim.stepFrame(inputs);const snapshot=sim.snapshot(),state=snapshot.characters[player];
       if(state.mode==='blocking'||state.mode==='blockstun'){
-        expect(getShotoSpritePose(state,snapshot.frame)?.texture).toBe('shoto-crouch-defense');
+        expect(['shoto-enter-crouch','shoto-crouch-defense']).toContain(getShotoSpritePose(state,snapshot.frame)?.texture);
         expect(state.crouching).toBe(true);
       }
     }
@@ -104,4 +110,54 @@ it('mantém movimento aéreo comum sem ameaça e guarda ao aterrissar sob ameaç
   }
   expect(sim.snapshot().characters[0].mode).toBe('blocking');
   expect(getShotoSpritePose(sim.snapshot().characters[0],sim.snapshot().frame)?.texture).toBe('shoto-enter-defense');
+});
+
+it('fecha a guarda por intermediárias, mantém o ciclo fechado e reabre sem transparência',()=>{
+  const sim=new Simulation(config,undefined,{training:true,initialDistance:400});
+  const frames:number[]=[];
+  for(let t=0;t<13;t++){
+    sim.stepFrame([input('DB'),input('N',t===0?'2':undefined)]);
+    const snap=sim.snapshot();frames.push(getShotoSpritePose(snap.characters[0],snap.frame)!.frame);
+  }
+  expect(frames.slice(0,8)).toEqual([64,65,66,67,108,108,109,109]);
+  expect(frames.slice(8).every(frame=>frame>=110&&frame<=113)).toBe(true);
+  for(let i=0;i<4;i++){
+    sim.stepFrame([input('D'),input()]);const snap=sim.snapshot();
+    expect(getShotoSpriteLayers(snap.characters[0],snap.frame)).toEqual([
+      expect.objectContaining({texture:'shoto-crouch-defense',frame:109-Math.floor(i/2),alpha:1}),
+    ]);
+  }
+  sim.stepFrame([input('D'),input()]);const snap=sim.snapshot();
+  expect(getShotoSpritePose(snap.characters[0],snap.frame)?.texture).toBe('shoto-crouch');
+});
+
+it('não reinicia a pose de subida depois de soltar a guarda aérea',()=>{
+  const sim=new Simulation(config,undefined,{training:true,initialDistance:400});
+  const control=new Simulation(config,undefined,{training:true,initialDistance:400});
+  for(let t=0;t<22;t++){
+    const direction=t===0?'U':t>=6&&t<14?'B':'N';
+    sim.stepFrame([input(direction),input('N',t===6?'2':undefined)]);
+    control.stepFrame([input(direction),input()]);
+    const snapshot=sim.snapshot(),state=snapshot.characters[0];
+    expect(state.airborneStartedFrame).toBe(0);
+    if(t>=18){
+      expect(getShotoSpritePose(state,snapshot.frame)).toEqual(getShotoSpritePose(control.snapshot().characters[0],snapshot.frame));
+      expect(getShotoSpritePose(state,snapshot.frame)!.frame).toBeGreaterThanOrEqual(25);
+    }
+  }
+});
+
+
+it('não salta para guarda fechada ao interromper uma entrada de apenas um frame',()=>{
+  const sim=new Simulation(config,undefined,{training:true,initialDistance:400});
+  sim.stepFrame([input('DB'),input('N','2')]);
+  expect(getShotoSpritePose(sim.snapshot().characters[0],1)?.frame).toBe(64);
+  sim.stepFrame([input('D'),input()]);
+  expect(getShotoSpritePose(sim.snapshot().characters[0],2)).toMatchObject({texture:'shoto-enter-crouch',frame:65});
+  const air=new Simulation(config,undefined,{training:true,initialDistance:400});
+  air.stepFrame([input('U'),input()]);
+  air.stepFrame([input('B'),input('N','2')]);
+  expect(getShotoSpritePose(air.snapshot().characters[0],2)?.frame).toBe(114);
+  air.stepFrame([input(),input()]);
+  expect(getShotoSpritePose(air.snapshot().characters[0],3)).toMatchObject({texture:'shoto-air-defense',frame:114});
 });

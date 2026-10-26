@@ -158,6 +158,7 @@ export class Simulation {
       } else this.dashFrames[index] = 0;
       const up = input.direction.startsWith('U');
       if (up && !this.jumpHeld[index] && character.grounded && !character.attack && !wasLocked) {
+        character.airborneStartedFrame=this.frame;
         character.grounded = false; character.crouching = false; character.verticalVelocity = this.definitions[index].movement.jumpVelocity;
         character.mode = 'airborne'; this.dashFrames[index] = 0;
       }
@@ -166,6 +167,7 @@ export class Simulation {
         character.y += character.verticalVelocity;
         character.verticalVelocity += this.config.movement.gravity;
         if (character.y >= this.config.arena.floorY) {
+          character.airborneStartedFrame=undefined;
           character.y = this.config.arena.floorY; character.grounded = true; character.verticalVelocity = 0;
           if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';
         }
