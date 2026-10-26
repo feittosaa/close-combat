@@ -8,6 +8,12 @@ A referência estética passa a ser **Hades**, traduzida em arte original: ilust
 
 A linguagem deve unir personalidade visual e leitura imediata em um jogo de luta. Personagens, cenários, retratos, interface e efeitos precisam parecer parte do mesmo universo, com desenho próprio, sem reproduzir personagens, figurinos, logotipos ou interfaces das referências.
 
+## Referência interna aprovada
+
+A [arte diurna do menu](./assets/art/menu/patio-solar.png) estabelece o padrão de traço: tinta preta expressiva, formas angulares, cores chapadas e sombras duras, com textura controlada. A paleta é livre para acompanhar ambientes e personagens; não é obrigatório repetir as cores da referência externa. O fundo aprovado tem movimento lento e partículas discretas, desativados com preferência por movimento reduzido. O menu combina serifas nos títulos, sombras de tinta e acentos de ouro/coral.
+
+Imagens exploratórias só entram no projeto após aval manual. A autorização de 25/10/2026 cobre a arte diurna e sua aplicação no menu; não aprova as outras variantes nem define a aparência do Shoto.
+
 ## Etapa atual
 
 O único personagem em desenvolvimento é o shoto de nome provisório **Shoto**. O usuário escolheu a proposta 5, “Anfitrião”: homem alto e esguio, cabelo castanho-avermelhado preso com mecha solta, bigode e cavanhaque, paletó marfim, camisa vinho, calça preta e botas marrons. O nome de conceito não altera seu nome no jogo.
