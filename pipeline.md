@@ -294,6 +294,8 @@ Branch `codex/feature-bar-anoitecer`, criada de origin/development; alterações
 - [x] Registrar cenário, separar objetos e manter política dos modos.
 - [x] Conferir no jogo: proporção, apoios, extremos da câmera, salto, PvP/Arcade e modos de treino.
 - [x] Instalação, 156 testes/21 arquivos, build e diff.
-- [ ] Commit/push e CI da branch.
+- [x] Commit/push e CI da implementação: `254b6af`, [CI 40392607510](https://github.com/feittosaa/close-combat/actions/runs/40392607510) aprovada.
 
 Conferência visual concluída na prévia local: bar em Arcade/PvP; seleção com miniatura ajustada proporcionalmente; câmera nos extremos, salto inteiro e objetos apoiados atrás da luta. Treino e os dois tutoriais continuam na sala. Console sem erros/avisos. Evidências em docs/evidence/bar-anoitecer. Instalação reproduzível concluída; 156 testes em 21 arquivos, build e diff aprovados também após o ajuste final da miniatura. Nenhum merge em development autorizado ou realizado.
+
+Código/arte/evidências enviados em `254b6af19f9e2ca6e4f0c51da42722248fa456a7`, com CI remota aprovada. Este fechamento é somente documental e terá a própria CI conferida antes do relato final. Branch preservada para revisão; development segue `a5930d901654feb419570ff642acc6025d20daed`, sem merge, promoção ou tag. Trabalho local de animação na pasta principal preservado.
