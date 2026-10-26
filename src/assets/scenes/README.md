@@ -1,6 +1,6 @@
 # Cenários
 
-Regras em `base.md`; catálogo/validação em `src/rendering/stages/`. Atualmente só existe `sala-treino/`, com manifesto, PNG opaco da sala e registro da geração. Cais foi retirado dos assets ativos e permanece no histórico Git.
+Regras em `base.md`; catálogo/validação em `src/rendering/stages/`. `bar-anoitecer/` é o cenário geral de PvP/Arcade, com pintura única de piso/fundo e três objetos pequenos separados. `sala-treino/` fica exclusiva de Treino e tutoriais. Cais foi retirado dos assets ativos e permanece no histórico Git.
 
 Cada pasta de cenário contém `stage.json`, `README.md` e `layers/*.png`. O ID coincide com a pasta; `name` é o título visível. Todas as camadas compartilham dimensões/origem declaradas em `referenceSize`. Preserve a tela completa, sem recortes independentes. Fundos opacos podem manter seu PNG RGB; camadas recortadas precisam de alpha verdadeiro.
 

@@ -284,3 +284,16 @@ Retirar a dissolução por alpha entre poses; renderizar uma pose sempre opaca. 
 Conferência no build de produção concluída com a mesma aba atualizada: caminhada e saída, entrada/interrupção curta de agachamento, dash no frame 2, reversão em movimento real e salto. Capturas em docs/evidence/shoto-sem-piscadas; o frame 2 que antes apresentava cobertura de 77,78% agora desenha uma única pose com alpha 1. Os conectores e seus tempos continuam ativos, assim como as verificações de pausa/FPS 30/60/120/144. Ajustadas somente as expectativas antigas de duas camadas que descreviam o comportamento defeituoso; testes de retorno parcial e determinismo permanecem.
 
 Fechamento remoto desta entrega segue docs/ci-cd.md: envio, CI da feature, integração em development somente com CI verde do commit enviado, CI de development e remoção da branch após confirmar ancestralidade. O relato final registra o resultado efetivo dessas etapas. Sem promoção para main.
+
+
+### Primeiro cenário geral: Bar ao Anoitecer
+
+Branch `codex/feature-bar-anoitecer`, criada de origin/development; alterações de animação na pasta principal preservadas. Pedido: reduzir a faixa de chão para conversar com a escala atual do Shoto e adicionar o bar aprovado ao jogo. Fundo/piso únicos; caixa, vaso e banco menores, em assets independentes. Sem novas interações, física ou mudanças de personagem. Treino e tutoriais mantêm a sala; PvP/Arcade usam o bar. Sem autorização de merge em development.
+
+- [x] Editar composição com a ferramenta de imagens e preservar fonte/prompts.
+- [x] Registrar cenário, separar objetos e manter política dos modos.
+- [x] Conferir no jogo: proporção, apoios, extremos da câmera, salto, PvP/Arcade e modos de treino.
+- [x] Instalação, 156 testes/21 arquivos, build e diff.
+- [ ] Commit/push e CI da branch.
+
+Conferência visual concluída na prévia local: bar em Arcade/PvP; seleção com miniatura ajustada proporcionalmente; câmera nos extremos, salto inteiro e objetos apoiados atrás da luta. Treino e os dois tutoriais continuam na sala. Console sem erros/avisos. Evidências em docs/evidence/bar-anoitecer. Instalação reproduzível concluída; 156 testes em 21 arquivos, build e diff aprovados também após o ajuste final da miniatura. Nenhum merge em development autorizado ou realizado.
