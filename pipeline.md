@@ -362,8 +362,10 @@ Branch `codex/feature-hitstop-contato`, baseada em `850ac79` da revisão visual 
 - [x] Pausa de contato compartilhada de 5F em hit/block; whiff sem pausa. Separar tempo de combate do relógio do round.
 - [x] Preservar pose de impacto, física/stun/recuperação durante a pausa; trades sem soma, reset/KO/time-up tratados.
 - [x] Concluir regressões, instalação/build/diff e conferir no jogo acerto, bloqueio e erro.
-- [ ] Enviar branch e verificar CI remota do commit exato.
+- [x] Enviar branch e verificar CI remota do commit exato.
 
 Nenhuma imagem ou folha de animação foi alterada. Regressões antigas de recuperação/gravidade agora descontam a pausa de contato, mantendo as mesmas exigências de recuperação integral e trajetória fora do hitstop.
 
 Validação local da micro pausa concluída: npm ci, 183 testes/23 arquivos, build e diff aprovados. Conferência no Fedora por avanço de ticks: hit e bloqueio mantêm cinco ticks com os mesmos pixels/posições/pose; o sexto retoma combate/stun; whiff avança normalmente. Evidências em docs/evidence/hitstop-contato. O relógio é validado separadamente em modo normal, inclusive KO/time-up, sem alterar assets ou clipes. Branch baseada em 850ac79, preservando a revisão visual anterior.
+
+Micro pausa enviada em `fcf38426c5d333694ac054a4141b5a86c14ab20e`, com [CI 40422004102](https://github.com/feittosaa/close-combat/actions/runs/40422004102) aprovada. Sem merge/promoção/tag; development e main preservadas. Este fechamento é apenas documental e sua CI própria será conferida antes do relato final.
