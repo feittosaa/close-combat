@@ -101,4 +101,4 @@ for name, spec in SPECS.items():
     (ROOT/f'{name}.atlas.json').write_text(json.dumps({'frames':frames,'meta':{'image':f'{name}.png','size':{'w':strip.width,'h':strip.height},'scale':'1'}},indent=2)+'\n')
     report[name] = metrics
 (ROOT/'preparation.json').write_text(json.dumps({'cell':CELL,'footAnchorY':FOOT,'clips':report},indent=2)+'\n')
-print('Prepared 56 RGBA frames in fixed 768x768 cells; authored roots, no runtime pixel inference.')
+print(f'Prepared {sum(len(spec["roots"]) for spec in SPECS.values())} RGBA frames in fixed 768x768 cells; authored roots, no runtime pixel inference.')

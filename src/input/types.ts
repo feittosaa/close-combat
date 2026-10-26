@@ -5,5 +5,7 @@ export type AttackButton = '1' | '2' | '3' | '4';
 
 export interface FrameInput {
   direction: Direction;
+  /** One-shot double-tap request captured even between two simulation ticks. */
+  dash?: 'F' | 'B';
   buttons: ReadonlySet<AttackButton>;
 }

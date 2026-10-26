@@ -8,10 +8,10 @@ const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{
 vi.mock('phaser', () => ({ default: {} }));
 const initial = () => new Simulation(createGameConfig(1024,576)).snapshot().characters[0];
 
-it('entrega 56 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
+it('entrega 84 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
   const frames = Object.assign({},...Object.values(atlasFiles).map(a=>a.frames));
-  expect(Object.keys(frames)).toHaveLength(56);
-  for (let i=0;i<56;i++) {
+  expect(Object.keys(frames)).toHaveLength(84);
+  for (let i=0;i<84;i++) {
     const f = frames[String(i) as keyof typeof frames];
     expect(f).toBeDefined();
     expect(f.trimmed).toBe(false);
@@ -39,7 +39,7 @@ describe.each([30,60,120,144])('renderização de sprites em %i FPS', fps => {
   it('preserva pose lógica e pausa, troca de textura e retorno à geometria sem modificar estado', () => {
     const calls: unknown[][]=[];
     const graphic=Object.fromEntries(['setDepth','clear','fillStyle','fillRect','lineStyle','strokeRect','lineBetween','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return graphic;}]));
-    const image=Object.fromEntries(['setDepth','setTexture','setOrigin','setScale','setPosition','setFlipX','setVisible','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return image;}]));
+    const image=Object.fromEntries(['setDepth','setTexture','setOrigin','setScale','setPosition','setFlipX','setVisible','setAlpha','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return image;}]));
     const view=new CombatantView({add:{graphics:()=>graphic,image:()=>image},textures:{exists:()=>true}} as unknown as Phaser.Scene,0xff0000);
     const sim=new Simulation(createGameConfig(1024,576));
     const neutral={direction:'N' as const,buttons:new Set<'1'>()};

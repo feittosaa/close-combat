@@ -118,6 +118,76 @@
       ],
       "offset": 50,
       "scale": 1.05
+    },
+    "enter-walk": {
+      "roots": [
+        379,
+        834,
+        1310,
+        1805
+      ],
+      "offset": 56,
+      "scale": 0.965
+    },
+    "enter-backward": {
+      "roots": [
+        285,
+        780,
+        1325,
+        1890
+      ],
+      "offset": 60,
+      "scale": 0.981
+    },
+    "enter-crouch": {
+      "roots": [
+        316,
+        792,
+        1269,
+        1789
+      ],
+      "offset": 64,
+      "scale": 0.986
+    },
+    "enter-jump": {
+      "roots": [
+        266,
+        744,
+        1240,
+        1740
+      ],
+      "offset": 68,
+      "scale": 0.913
+    },
+    "enter-defense": {
+      "roots": [
+        429,
+        875,
+        1299,
+        1737
+      ],
+      "offset": 72,
+      "scale": 0.946
+    },
+    "enter-dash": {
+      "roots": [
+        206,
+        676,
+        1190,
+        1810
+      ],
+      "offset": 76,
+      "scale": 0.995
+    },
+    "enter-backstep": {
+      "roots": [
+        241,
+        788,
+        1370,
+        1870
+      ],
+      "offset": 80,
+      "scale": 0.981
     }
   }
 }

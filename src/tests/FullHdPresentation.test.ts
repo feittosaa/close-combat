@@ -24,12 +24,12 @@ it('mantém escala fixa e o piso em Full HD', () => {
   expect(y(config.arena.floorY)).toBeCloseTo(915);
   expect(y(config.arena.floorY-144)).toBeGreaterThan(220);
   expect(y(config.arena.floorY)-y(config.arena.floorY-144)).toBeCloseTo(432);
-  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:512});
+  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:464});
 });
 it('mantém ambos os lados visíveis ao afastar e trocar lutadores de lado em 1080p',()=>{
   const layout=createStageLayout(defaultStage,1024,576,488);
   const left=24+layout.arenaOffsetX,right=1000+layout.arenaOffsetX;
-  for(const positions of [[left,left+40],[left,left+512],[right-512,right],[right,right-512]]){
+  for(const positions of [[left,left+40],[left,left+464],[right-464,right],[right,right-512]]){
     const f=projectCameraToOutput(getFightCameraFrame(layout,positions),LOGICAL_VIEW,RENDER_SIZE);
     for(const p of positions){
       const x=960+(p-f.scrollX-960)*f.zoom;

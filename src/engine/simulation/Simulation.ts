@@ -1,4 +1,4 @@
-import type { CharacterState } from '../characters/CharacterState';
+import type { CharacterState, CharacterAnimationState } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import { defaultCharacter, type CharacterDefinition } from '../data/characters';
 import type { GameConfig } from '../data/gameConfig';
@@ -109,7 +109,8 @@ export class Simulation {
       }
       this.frame += 1; return;
     }
-    const previousModes = this.characters.map(character => character.mode);
+    const previousAnimationStates:CharacterAnimationState[]=this.characters.map(c=>({mode:c.mode,stateStartedFrame:c.stateStartedFrame,grounded:c.grounded,crouching:c.crouching,movementDirection:c.movementDirection,facing:c.facing,verticalVelocity:c.verticalVelocity}));
+    const previousTransitions=this.characters.map(c=>c.animationTransition?{startedFrame:c.animationTransition.startedFrame,from:c.animationTransition.from}:undefined);
     const previousX = this.characters.map(character => character.x);
     const attackingAtInput = this.characters.map(character => Boolean(character.attack));
     const lockedAtInput = this.characters.map(character => locked(character));
@@ -178,7 +179,13 @@ export class Simulation {
     });
     this.recentContacts = this.recentContacts.filter(entry => this.frame - entry.frame < 180).slice(-20);
     this.resolveBodies(); this.resolveScreenEdges(previousX);
-    this.characters.forEach((character, index) => { if (character.mode !== previousModes[index]) character.stateStartedFrame = this.frame; });
+    this.characters.forEach((character,index)=>{
+      const previous=previousAnimationStates[index];
+      if(character.mode!==previous.mode || character.grounded!==previous.grounded || character.crouching!==previous.crouching || character.movementDirection!==previous.movementDirection){
+        character.stateStartedFrame=this.frame;
+        character.animationTransition={startedFrame:this.frame+1,from:previous,previous:previousTransitions[index]};
+      }
+    });
     if (this.options.training) {
       const quiet = this.characters.every(character => !character.attack && !locked(character));
       this.quietFrames = quiet ? this.quietFrames + 1 : 0;
@@ -195,16 +202,19 @@ export class Simulation {
     const movement = this.definitions[index].movement;
     const grounded = character.grounded;
     if (grounded && !character.crouching && horizontal && horizontal !== this.previousAxis[index]) {
-      if (this.tapAxis[index] === horizontal && this.frame - this.tapFrame[index] <= this.config.movement.doubleTapWindowFrames) {
+      if (this.dashFrames[index] === 0 && this.tapAxis[index] === horizontal && this.frame - this.tapFrame[index] <= this.config.movement.doubleTapWindowFrames) {
         this.dashFrames[index] = this.config.movement.dashDurationFrames; this.dashAxis[index] = horizontal;
       }
       this.tapAxis[index] = horizontal; this.tapFrame[index] = this.frame;
+    }
+    if(grounded && !character.crouching && this.dashFrames[index]===0 && input.dash){
+      this.dashAxis[index]=input.dash==='F'?1:-1;this.dashFrames[index]=this.config.movement.dashDurationFrames;
     }
     this.previousAxis[index] = horizontal;
     if (character.crouching) {
       this.dashFrames[index] = 0; this.dashAxis[index] = 0; character.mode = 'crouching'; return;
     }
-    if (!grounded || !horizontal || horizontal !== this.dashAxis[index]) {
+    if (!grounded || (horizontal !== 0 && this.dashFrames[index] > 0 && horizontal !== this.dashAxis[index])) {
       this.dashFrames[index] = 0; this.dashAxis[index] = 0;
     }
     let speed = horizontal > 0 ? movement.walkSpeed : movement.backwardWalkSpeed;
