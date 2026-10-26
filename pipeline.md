@@ -265,6 +265,8 @@ Branch `codex/fix-shoto-cores-suaves`, criada de development. Feedback do usuár
 
 - [x] Validar continuidade em vizinhos RGB e coordenadas, transparência e ausência de quantização.
 - [x] Conferir cores de todas as ações, salto inteiro e aumento discreto no jogo.
-- [ ] Instalação, testes, build, diff, push e CIs de feature/development; encerrar após integração aprovada.
+- [x] Instalação, testes, build, diff e push; CI da feature aprovada. Fechamento documental segue CI própria, integração/CI de development e remoção da branch conforme manifesto.
 
 Conferência no build de produção concluída: seleção/idle nos dois lados, caminhada/recuo, agachado, dash/backstep, guarda e salto em execução. Salto capturado no frame 19 sem o painel de pausa, personagem inteiro e abaixo do HUD. Jaqueta e pele preservam as sombras originais, sem o mosaico de cores criado pela classificação anterior. Evidências em docs/evidence/shoto-cores-suaves. Escala do desenho +3%, margem 92, afastamento máximo 456 em 1024 × 576; câmera continua fixa em 1,6 e colisores inalterados. Instalação reproduzível, 149 testes/20 arquivos, build e diff aprovados. Fechamento remoto segue CI do commit final antes de integração e encerramento; sem promoção para main.
+
+Código/evidências enviados em `4758f3045c39d47c2e3c255f78c060eed1747c7d`, [CI da feature 40340414066](https://github.com/feittosaa/close-combat/actions/runs/40340414066) aprovada. Este fechamento é somente documental. Integrar após CI do commit final, verificar CI de development e encerrar `codex/fix-shoto-cores-suaves` local/remotamente; o relato final confirma essas etapas do remoto. Sem alteração de main ou tags.
