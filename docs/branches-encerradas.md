@@ -47,3 +47,7 @@ Branch `codex/feature-shoto-animacoes-alinhadas` encerrada local/remotamente ap�
 Sala de treino (`72cc275`) e dash/transições (`1d0e555` mais fechamento de evidências) foram reunidos preservando os commits de cada objetivo. Após CI do fechamento e da integração em development, encerrar ambas verificando ancestralidade e ausência de checkout ativo. Manter main/development.
 
 Integração conjunta efetivada: `5026ec3180b40ae1576ef5f49e4e7cfb41ea52e4` em development, CI da feature 40271546638 aprovada; CI da integração 40271628696 aprovada. As referências `codex/feature-sala-treino` e `codex/feature-dash-transicoes` estão totalmente absorvidas; remover após a CI final deste fechamento documental. Com essas duas remoções, o total será 28 branches encerradas, restando somente main/development.
+
+## Paleta do Shoto e locomoção sem corrida
+
+Código `8d7abf1f42494b7a83b2c2c723a3802cc669b027`, CI da feature 40325219320 aprovada. Branch `codex/feature-shoto-paleta-sem-corrida` segue fechamento após integrar o registro final e confirmar CI de development, com verificação de ancestralidade e ausência de checkout ativo. Não apagar main/development. Sala e dash/transições da entrega anterior foram encerradas, totalizando 28 branches naquele fechamento.
