@@ -51,3 +51,7 @@ Integração conjunta efetivada: `5026ec3180b40ae1576ef5f49e4e7cfb41ea52e4` em d
 ## Paleta do Shoto e locomoção sem corrida
 
 Código `8d7abf1f42494b7a83b2c2c723a3802cc669b027`, CI da feature 40325219320 aprovada. Branch `codex/feature-shoto-paleta-sem-corrida` segue fechamento após integrar o registro final e confirmar CI de development, com verificação de ancestralidade e ausência de checkout ativo. Não apagar main/development. Sala e dash/transições da entrega anterior foram encerradas, totalizando 28 branches naquele fechamento.
+
+## Correção de cores sem recortes e desenho +3%
+
+Branch `codex/fix-shoto-cores-suaves`: código/evidências `4758f3045c39d47c2e3c255f78c060eed1747c7d`, CI da feature 40340414066 aprovada. Encerramento após CI do fechamento documental e da integração em development, com conferência de ancestralidade e ausência de checkout ativo. A branch anterior de paleta (`1c84b63`) já foi encerrada local/remotamente após CI de development 40326104505 aprovada.
