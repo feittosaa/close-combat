@@ -211,7 +211,7 @@ Branch: `codex/feature-sala-treino`, criada de development após integração da
 - [x] Gerar sala ilustrada neutra próxima da referência quadriculada, sem personagens/props/texto, e registrar prompt/origem.
 - [x] Retirar Cais do catálogo e dos assets ativos; preservar histórico Git e evidências antigas.
 - [x] Fixar sala no treino e dois tutoriais, sem etapa de escolha; única opção temporária nos modos gerais.
-- [ ] Validar testes, instalação, build, diff e jogo; conferir solo, enquadramento e todos os modos.
+- [x] Validar testes, instalação, build, diff e jogo; conferir solo, enquadramento e todos os modos.
 - [ ] Enviar, confirmar CI, integrar e encerrar branch.
 
 Pedido posterior de dashs mais longos e transições suaves segue em objetivo separado; a geração dos conectores já começou sem misturar sua implementação nesta branch.
@@ -228,8 +228,14 @@ Branch: `codex/feature-dash-transicoes`, criada de origin/development após as a
 - [x] Entradas/saídas autoradas, retorno parcial em interrupção e mistura lógica de três frames entre ações; pausa/FPS determinísticos.
 - [x] Margem lateral 88 para manter as poses largas dentro do quadro, sem zoom dinâmico.
 - [x] 137 testes em 18 arquivos, build e diff aprovados; verificação independente dos 84 quadros aprovada.
-- [ ] Conferir duração/loops/transições no jogo e registrar evidências; navegador de conferência apresentou timeouts após a sala de treino.
+- [x] Conferir duração/loops/transições no jogo e registrar evidências; acesso recuperado após os timeouts.
 - [ ] Enviar, confirmar CI, integrar e encerrar branch pronta.
 
 
 Dependência reunida para revisão conjunta: a branch de dash mantém o commit próprio `c616f68` e incorpora a sala pelo merge da branch `72cc275`, preservando ambos os objetivos. Integração em development aguarda a conferência visual conjunta e a CI do conjunto.
+
+Conferência conjunta concluída após recuperar a prévia: treino, tutorial básico, tutorial de combos, PvP e Arcade usam a Sala de Treino. Tutoriais entram diretamente após escolher personagem; modos gerais mostram a sala como única opção. Evidências em docs/evidence/sala-treino. A pendência visual anterior está resolvida.
+
+Dash e backstep conferidos após dois toques curtos e soltura: dash no frame 9, backstep no frame 12 e avanço até frame 24; entradas/saídas de caminhada, agachado e salto revisadas com avanço por frame, sem mudança de câmera. Capturas em docs/evidence/dash-transicoes. Correção adicional preserva o relógio de stun ao limpar direção residual. Validação conjunta: 144 testes em 19 arquivos, build, diff e verificação independente dos 84 quadros aprovados; instalação reproduzível executada nesta entrega.
+
+Estado remoto antes do fechamento: sala `72cc275`, CI 40267614680 aprovada; conjunto `1d0e555`, CI 40269742462 aprovada. O commit de fechamento registra a revisão e segue novamente CI de feature, integração e CI de development; as duas branches serão encerradas somente após confirmação. Sem promoção para main.
