@@ -1,3 +1,5 @@
+import { preloadShotoSprites, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
+import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
 import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
 import { playableCharacters } from '../engine/data/characters';
@@ -57,6 +59,7 @@ export class MenuScene extends Phaser.Scene {
   preload(): void {
     this.loading = this.add.text(this.scale.width / 2, this.scale.height / 2, 'PREPARANDO A ARENA…', { fontSize: '18px', color: '#e6c78d' }).setOrigin(.5);
     preloadStage(this, defaultStage);
+    preloadShotoSprites(this);
   }
   create(): void {
     this.loading?.destroy(); this.loading = undefined;
@@ -87,7 +90,17 @@ export class MenuScene extends Phaser.Scene {
     this.text(x + w / 2, y + 12, label, 14).setOrigin(.5, 0);
     rect.on('pointerover', () => rect.setFillStyle(0xc24b60)).on('pointerout', () => rect.setFillStyle(0xa63c50)).on('pointerdown', action);
   }
-  private preview(_fighter: CharacterDefinition, x: number, y: number, zoom: number) {
+  private preview(fighter: CharacterDefinition, x: number, y: number, zoom: number) {
+    if (fighter.id === 'shoto' && this.textures.exists('shoto-idle')) {
+      this.textures.get('shoto-idle').setFilter(Phaser.Textures.FilterMode.LINEAR);
+      const sprite = this.add.image(x, y, 'shoto-idle', '0').setOrigin(.5, 720 / 768).setScale(.225 * zoom);
+      this.root!.add(sprite);
+      const start = this.time.now;
+      const animate = (time: number): void => { sprite.setFrame(String(getTimedAnimationFrame(shotoSpriteManifest.clips[0], (time - start) * .06))); };
+      this.events.on('update', animate);
+      sprite.once('destroy', () => this.events.off('update', animate));
+      return;
+    }
     this.box(x - 24 * zoom, y - 144 * zoom, 48 * zoom, 144 * zoom, 0xb7aabf).setStrokeStyle(2, 0xf1dfc4);
     this.box(x + 12 * zoom, y - 128 * zoom, 6 * zoom, 6 * zoom, 0xffffff);
   }

@@ -10,9 +10,11 @@ A linguagem deve unir personalidade visual e leitura imediata em um jogo de luta
 
 ## Etapa atual
 
-O único personagem a desenvolver primeiro é um shoto de nome provisório **Shoto**, sem aparência, características ou animações finais definidas. A anotação temática hitman/John Wick não aprova seu figurino, arma ou identidade. Não produzir arte final nesta revisão documental.
+O único personagem em desenvolvimento é o shoto de nome provisório **Shoto**. O usuário escolheu a proposta 5, “Anfitrião”: homem alto e esguio, cabelo castanho-avermelhado preso com mecha solta, bigode e cavanhaque, paletó marfim, camisa vinho, calça preta e botas marrons. O nome de conceito não altera seu nome no jogo.
 
-Todo o elenco anterior está retirado do novo design. Seus sprites, retratos e manifestos foram removidos do runtime e dos assets nesta migração; não são modelos para o novo personagem. A bancada inicial deve usar representação neutra para inspeção de regras. Pixel art antiga não é a direção final nem uma obrigação para a nova produção.
+O aval posterior autoriza integrar somente idle, caminhada e idle agachado das folhas wide aprovadas. PNGs magenta originais ficam preservados; cópias RGBA preparadas usam células fixas, pés/pivô comuns e escala uniforme. A branch `codex/feature-shoto-sprites` permanece sem integração enquanto a revisão no jogo estiver pendente. Arte de ataques, saltos, dash/corrida, guarda/reação e transições ainda não foi produzida; esses estados usam a representação técnica explícita. Espelhamento também espelha o relógio e outras assimetrias; versões direcionais independentes não foram entregues. Novas propostas exploratórias dependem de aval manual para inclusão no projeto.
+
+Todo o elenco anterior está retirado do novo design. Seus sprites, retratos e manifestos foram removidos do runtime e dos assets nesta migração; não são modelos para o novo personagem. A geometria neutra permanece para estados sem arte e inspeção de regras. Pixel art antiga não é a direção final nem uma obrigação para a nova produção.
 
 ## Princípios de produção
 

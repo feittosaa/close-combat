@@ -6,7 +6,7 @@
 
 ## 1. Reinício do projeto de combate
 
-Close Combat é um jogo de luta 100% 2D para navegador. O foco atual é construir e equilibrar um único personagem do arquétipo **shoto**, usando-o como referência para os demais. Seu nome provisório é **Shoto**; aparência, personalidade, arma e animações finais continuam indefinidas. O shoto de balanceamento não está automaticamente identificado com o protagonista da história futura.
+Close Combat é um jogo de luta 100% 2D para navegador. O foco atual é construir e equilibrar um único personagem do arquétipo **shoto**, usando-o como referência para os demais. Seu nome provisório é **Shoto**. O usuário aprovou o conceito visual “Anfitrião” e a integração dos sprites de idle, caminhada e idle agachado: homem alto e esguio, cabelo castanho-avermelhado preso, bigode/cavanhaque, paletó marfim, camisa vinho e calça preta. Arma, narrativa, nome definitivo e demais animações continuam indefinidos. O shoto de balanceamento não está automaticamente identificado com o protagonista da história futura.
 
 O ritmo e o balanceamento têm como referência conceitual um **anime fighter, especialmente Guilty Gear Xrd Rev 2**. A direção de arte tem como referência **Hades**, traduzida em desenho original. São referências de intenção, sem adoção automática de números, comandos, personagens ou sistemas completos dessas obras.
 
@@ -46,7 +46,7 @@ História, roguelike, cartas, bênçãos, trinkets e missões estão fora da imp
 | Gimmick | Regra particular que define suas decisões | Pirata de sorte, nota de nome “Nimbus” |
 | Set play | Preparação de situações e pressão planejada | Caçador de bruxas / médico da peste |
 
-Essas descrições orientam diferenças de jogo; não são catálogos ou regras fechadas. As referências nominais são notas criativas, não instruções para reproduzir personagens. **Nenhuma delas define o visual do shoto inicial.** Composite é uma décima ideia exploratória, fora dos nove arquétipos principais e sem produção prevista.
+Essas descrições orientam diferenças de jogo; não são catálogos ou regras fechadas. As referências nominais são notas criativas, não instruções para reproduzir personagens. As notas temáticas não substituem o conceito visual “Anfitrião”, posteriormente escolhido pelo usuário. Composite é uma décima ideia exploratória, fora dos nove arquétipos principais e sem produção prevista.
 
 Primeiro definir e equilibrar o shoto. Só depois criar e balancear os outros personagens em relação a essa referência, um por vez. Não fabricar nove kits em paralelo nem fixar confrontos antes de existir a base.
 
@@ -108,7 +108,7 @@ Preservar infraestrutura útil não preserva o conteúdo antigo. Adaptar seletor
 
 Seguir [identidade-visual.md](./identidade-visual.md): ilustração 2D original com referência estética em Hades, contornos expressivos, sombras gráficas, cores e texturas pictóricas controladas, silhuetas fortes e leitura em movimento.
 
-Guilty Gear Xrd Rev 2 orienta o combate; Hades orienta a arte. A antiga referência visual global em Guilty Gear Strive foi substituída. O nome técnico provisório é Shoto. Não produzir figurino, arma, retrato ou animação final agora. Usar representação neutra de diagnóstico quando a implementação começar; não reaproveitar identidade de um personagem retirado como identidade aprovada.
+Guilty Gear Xrd Rev 2 orienta o combate; Hades orienta a arte. A antiga referência visual global em Guilty Gear Strive foi substituída. O nome técnico provisório continua Shoto. A aprovação manual posterior cobre o conceito “Anfitrião” e somente os três clipes básicos entregues em [src/assets/sprites/characters/shoto/README.md](./src/assets/sprites/characters/shoto/README.md). A integração está na branch `codex/feature-shoto-sprites`, aguardando conferência no jogo antes de entrar em `development`. Idle: 8 quadros; caminhada: 8; agachado: 6, todos já na postura baixa. Não criar ataques, saltos, transições ou reações por suposição; estados ainda sem arte mantêm geometria técnica explícita. Animação acompanha os frames da simulação, com pés/pivô fixos e escala uniforme. Sprites não mudam colisões, alcance, vida, dano ou duração de estados.
 
 ## 8. Qualidade e entrega
 
@@ -145,4 +145,4 @@ Os quatro básicos só começam em pé e no chão. Agachar ou saltar não cria g
 
 Movimento técnico preservado: andar frente 2,4 e trás 1,8 unidades/frame; dash frente 4,6 e trás 3,6 por 12F, corrida 5,2 mantendo avanço após dash; salto inicial −10 e gravidade 0,55. Agachar mantém posição. Dash/corrida são locomoção comum, sem implementar drive rush. Arena, câmera, rounds (99s, duas vitórias) e remapeamento continuam disponíveis. Todos os números continuam provisórios.
 
-PvP e treino usam Shoto espelhado. Arcade tem uma luta espelhada com IA por entradas legais até haver novo elenco. O tutorial básico possui seis lições: movimento, os quatro golpes e defesa. O treino de combos mantém a estrutura e mostra mensagem de espera porque não há receitas. Renderização geométrica neutra distingue jogadores por cor e orientação e representa o alcance apenas na fase ativa; não é arte ou animação final.
+PvP e treino usam Shoto espelhado. Arcade tem uma luta espelhada com IA por entradas legais até haver novo elenco. O tutorial básico possui seis lições: movimento, os quatro golpes e defesa. O treino de combos mantém a estrutura e mostra mensagem de espera porque não há receitas. Nos estados sem clipe aprovado, a renderização geométrica técnica distingue jogadores por cor e orientação e representa o alcance apenas na fase ativa. Idle, andar e agachado possuem sprites aprovados na branch de integração citada em §7; a revisão dentro do jogo permanece pendente.
