@@ -182,7 +182,7 @@ export class Simulation {
     this.characters.forEach((character,index)=>{
       const previous=previousAnimationStates[index];
       if(character.mode!==previous.mode)character.stateStartedFrame=this.frame;
-      const directionalPose=['moving','dashing','running'].includes(character.mode);
+      const directionalPose=['moving','dashing'].includes(character.mode);
       if(character.mode!==previous.mode || character.grounded!==previous.grounded || character.crouching!==previous.crouching ||
         (directionalPose && character.movementDirection!==previous.movementDirection)){
         character.animationTransition={startedFrame:this.frame+1,from:previous,previous:previousTransitions[index]};
@@ -224,10 +224,7 @@ export class Simulation {
     if (this.dashFrames[index] > 0 && grounded && !character.crouching) {
       moveAxis = this.dashAxis[index]; speed = moveAxis > 0 ? movement.dashSpeed : movement.backdashSpeed;
       this.dashFrames[index] -= 1; character.mode = 'dashing';
-    } else if (grounded && character.mode === 'dashing' && this.dashAxis[index] === 1 && horizontal === 1) {
-      speed = movement.runSpeed; character.mode = 'running';
-    } else if (grounded && character.mode === 'running' && horizontal === 1) speed = movement.runSpeed;
-    else character.mode = !grounded ? 'airborne' : character.crouching ? 'crouching' : horizontal ? 'moving' : 'neutral';
+    } else character.mode = !grounded ? 'airborne' : character.crouching ? 'crouching' : horizontal ? 'moving' : 'neutral';
     if (character.crouching) { moveAxis = 0; this.dashFrames[index] = 0; }
     if (moveAxis) {
       character.x += moveAxis * speed * (character.facing === 'right' ? 1 : -1);

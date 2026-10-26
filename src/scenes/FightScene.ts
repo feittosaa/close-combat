@@ -15,7 +15,7 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
-import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
+import { prepareShotoSprites, preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
@@ -166,6 +166,7 @@ export class FightScene extends Phaser.Scene {
   }
 
   create(): void {
+    prepareShotoSprites(this);
 
     for (const key of ['shoto-idle', 'shoto-walk', 'shoto-crouch']) {
       if (this.textures.exists(key)) this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);

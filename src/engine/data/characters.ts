@@ -21,7 +21,7 @@ export interface CharacterDefinition {
   id: string;
   name: string;
   maxHealth: number;
-  movement: { walkSpeed: number; backwardWalkSpeed: number; jumpVelocity: number; dashSpeed: number; backdashSpeed: number; runSpeed: number };
+  movement: { walkSpeed: number; backwardWalkSpeed: number; jumpVelocity: number; dashSpeed: number; backdashSpeed: number };
   moves: readonly MoveDefinition[];
   /** Reservado à autoria manual do usuário; o Shoto inicial não possui receitas. */
   combos?: readonly ComboRecipe[];

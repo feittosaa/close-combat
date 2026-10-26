@@ -3,7 +3,7 @@ import type { CharacterDefinition } from '../characters';
 /** Bancada provisória criada do zero. Valores técnicos, ainda sem homologação de balanceamento. */
 export const shoto: CharacterDefinition = {
   id: 'shoto', name: 'Shoto', maxHealth: 1000,
-  movement: { walkSpeed: 2.4, backwardWalkSpeed: 1.8, jumpVelocity: -10, dashSpeed: 4.6, backdashSpeed: 3.6, runSpeed: 5.2 },
+  movement: { walkSpeed: 2.4, backwardWalkSpeed: 1.8, jumpVelocity: -10, dashSpeed: 4.6, backdashSpeed: 3.6 },
   collision: {
     bodyWidth: 48,
     hurtboxes: {
