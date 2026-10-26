@@ -59,3 +59,7 @@ Sete conectores de quatro poses ligam os estados de locomoção e guarda, com en
 ## Paleta atual do Shoto
 
 A paleta única de materiais documentada em base.md substitui o vermelho acobreado intenso das fontes anteriores: cabelo castanho discretamente avermelhado, pele morena quente, calça carvão, jaqueta marfim, camisa vinho e couro castanho. Valores e rampas em `src/rendering/animations/shotoPalette.ts`; aplicados também aos conectores e à seleção do personagem, preservando desenho e alinhamento.
+
+### Correção de cor sem posterização
+
+Feedback posterior rejeitou manchas e rachaduras na jaqueta/pele. Preservar contornos, gradientes e sombras originais; usar somente correção contínua suave, sem classificar cada pixel em um material ou prendê-lo a faixas de cor. A tabela anterior é referência de direção artística. Ampliar Shoto uniformemente em 3% mantendo suas proporções, pivô nos pés e câmera fixa.
