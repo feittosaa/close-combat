@@ -12,7 +12,7 @@ const practice = (distance = 64) => new Simulation(config, [shoto, shoto], { tra
 const advance = (sim: Simulation, frames: number, inputs = [N, N]) => { for (let f = 0; f < frames; f++) sim.stepFrame(inputs); };
 
 describe('quatro básicos do Shoto', () => {
-  it.each(shoto.moves)('$name acerta uma única vez em ambos os lados', move => {
+  it.each(shoto.moves.filter(move => move.category === 'basic'))('$name acerta uma única vez em ambos os lados', move => {
     for (const index of [0, 1]) {
       const sim = practice(); const inputs = [N, N]; inputs[index] = input('N', [...move.input.buttons]);
       sim.stepFrame(inputs);
@@ -30,7 +30,7 @@ describe('quatro básicos do Shoto', () => {
       expect(sim.snapshot().characters[index].attack).toBeUndefined();
     }
   });
-  it.each(shoto.moves)('$name recupera integralmente em acerto, bloqueio e erro', move => {
+  it.each(shoto.moves.filter(move => move.category === 'basic'))('$name recupera integralmente em acerto, bloqueio e erro', move => {
     for (const outcome of ['hit', 'block', 'whiff'] as const) {
       const sim = practice(outcome === 'whiff' ? 300 : 64);
       const guard = outcome === 'block' ? input('B') : N;
@@ -43,7 +43,7 @@ describe('quatro básicos do Shoto', () => {
       if (outcome === 'block') expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
     }
   });
-  it.each(shoto.moves)('$name usa guarda sem parry mesmo no primeiro frame de contato', move => {
+  it.each(shoto.moves.filter(move => move.category === 'basic'))('$name usa guarda sem parry mesmo no primeiro frame de contato', move => {
     const sim = practice(); sim.stepFrame([input('N', [...move.input.buttons]), N]);
     advance(sim, move.startup - 1);
     sim.stepFrame([N, input('B')]);
@@ -53,33 +53,33 @@ describe('quatro básicos do Shoto', () => {
     expect(contact.attackerRecoveryFrames).toBe(move.activeFrames + move.recovery - 1);
     expect(contact.frameAdvantage).toBe(contact.defenderStunFrames - contact.attackerRecoveryFrames);
   });
-  it.each(shoto.moves)('$name não repete enquanto o botão estiver mantido', move => {
+  it.each(shoto.moves.filter(move => move.category === 'basic'))('$name não repete enquanto o botão estiver mantido', move => {
     const sim = practice(); const held = input('N', [...move.input.buttons]);
     advance(sim, 120, [held, N]);
     expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth - move.damage);
     expect(sim.snapshot().characters[0].attack).toBeUndefined();
   });
   it.each(['F', 'B'] as const)('direção %s não cria variantes', direction => {
-    for (const move of shoto.moves) {
+    for (const move of shoto.moves.filter(move => move.category === 'basic')) {
       const sim = practice(); sim.stepFrame([input(direction, [...move.input.buttons]), N]);
       expect(sim.snapshot().characters[0].attack?.moveId).toBe(move.id);
     }
   });
-  it.each([['1', '2'], ['1', '3'], ['2', '4'], ['1', '2', '3', '4']] as AttackButton[][])('ignora acorde sem cadastro %s', (...buttons: AttackButton[]) => {
+  it.each([['1', '4'], ['2', '3'], ['1', '2', '3', '4']] as AttackButton[][])('ignora acorde sem cadastro %s', (...buttons: AttackButton[]) => {
     const sim = practice(); sim.stepFrame([input('N', buttons), N]); advance(sim, 80);
     expect(sim.snapshot().characters[0].attack).toBeUndefined(); expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
   });
-  it('não cancela recuperação nem enfileira comandos antigos', () => {
-    const sim = practice(); sim.stepFrame([input('N', ['1']), N]);
+  it('não cancela erro nem enfileira comandos antigos', () => {
+    const sim = practice(300); sim.stepFrame([input('N', ['1']), N]);
     advance(sim, 9); sim.stepFrame([input('N', ['2']), N]);
     expect(sim.snapshot().characters[0].attack?.moveId).toBe('light-punch');
     advance(sim, 40); expect(sim.snapshot().characters[0].attack).toBeUndefined();
-    expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth - 20);
+    expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
   });
-  it('não cria ataques agachados ou aéreos', () => {
+  it('usa versão agachada sem criar básicos aéreos', () => {
     const sim = practice(); sim.stepFrame([input('D', ['1']), N]);
-    expect(sim.snapshot().characters[0]).toMatchObject({ mode: 'crouching', crouching: true });
-    expect(sim.snapshot().characters[0].attack).toBeUndefined();
+    expect(sim.snapshot().characters[0]).toMatchObject({ mode: 'startup', crouching: true, attack: {moveId:'crouch-punch'} });
+    advance(sim,35);
     sim.stepFrame([input('U'), N]); sim.stepFrame([input('N', ['4']), N]);
     expect(sim.snapshot().characters[0].grounded).toBe(false);
     expect(sim.snapshot().characters[0].attack).toBeUndefined();

@@ -7,7 +7,7 @@ export const MODE_LABELS: Record<CharacterMode, string> = {
   blocking: 'DEFESA', hitstun: 'ATORDOADO', blockstun: 'BLOQUEIO',
 };
 export function signedFrames(value: number): string { return `${value > 0 ? '+' : ''}${value}F`; }
-export function moveInputLabel(move: MoveDefinition): string { return move.input.buttons.join('+'); }
+export function moveInputLabel(move: MoveDefinition): string { return move.notation ?? move.input.buttons.join('+'); }
 export function contactLabel(hit: HitEvent): string {
   const result = hit.outcome === 'block' ? 'BLOQUEADO' : hit.context === 'block-punish' ? 'PUNIÇÃO DE BLOQUEIO' :
     hit.context === 'whiff-punish' ? 'PUNIÇÃO DE ERRO' : hit.context === 'counter-hit' ? 'CONTRA-ATAQUE' : 'ACERTO';

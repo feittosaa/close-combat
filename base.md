@@ -16,6 +16,23 @@ Anime fighters, especialmente Guilty Gear Xrd Rev 2, orientam a intenção de ri
 - Uma definição de personagem não se torna regra universal por estar implementada primeiro. Cada kit tem dados e revisão próprios.
 - Lacunas ficam explícitas na pipeline; não completá-las por cópia de versões descartadas.
 
+## Notação universal de comandos
+
+Esta convenção vale para todos os personagens; não define quais golpes ou combos cada um possui.
+
+| Símbolo | Significado |
+| --- | --- |
+| `1` | Soco fraco |
+| `2` | Soco forte |
+| `3` | Chute fraco |
+| `4` | Chute forte |
+| `u` | Up — cima |
+| `d` | Down — baixo |
+| `b` | Back — trás |
+| `f` | Front — frente |
+
+Frente e trás são relativos à orientação do personagem, não a um lado fixo da tela. Letras combinadas representam diagonais (`df` e `fd`: baixo/frente; `bd`: baixo/trás). Vírgulas indicam entradas sucessivas; `+` indica botões simultâneos. A notação é independente das teclas físicas remapeáveis. Cada etapa de combo exige sua entrada; não executar uma sequência inteira com um único botão. Catálogos e exceções individuais ficam somente na pipeline e nos dados de cada personagem.
+
 ## Fundação técnica
 
 TypeScript, Vite, Phaser e Vitest formam a base técnica. A simulação determinística roda a 60 Hz, independente da renderização. Entrada, dados, estado, colisão, combate, renderização, interface e assets têm responsabilidades separadas.

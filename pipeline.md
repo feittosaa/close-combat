@@ -13,8 +13,8 @@ Este é o único documento Markdown para estado de implementação, decisões de
 - Preparar: `python scripts/prepare-shoto-sprites.py`; conferir: `python scripts/verify-shoto-sprites.py`. Precisam de Pillow, NumPy e SciPy. Procedência das fontes selecionadas: `assets/art/characters/shoto/source-generation.json`.
 - Hitstun ainda usa representação técnica; não há nova arte de reação autorizada por esta limpeza. Corrida removida; dash/backstep permanecem.
 - Bar ao Anoitecer é cenário geral de PvP/Arcade. Sala de Treino é fixa no treino, tutorial básico e tutorial de combos. Objetos do bar são decorativos; não há interação inferida.
-- Nenhuma receita de combo homologada; conteúdo continua vazio até receber sequências manuais.
-- Combo breaker, drive rush, rage e rage art continuam pendentes de definição. Outros personagens, história e roguelike não têm autorização de implementação automática.
+- Catálogo manual do Shoto recebido: sequências, acordes, agarrões, agachados e especiais registrados abaixo. Implementados com valores provisórios para teste; balanceamento manual ainda não homologado.
+- Combo breaker e drive rush continuam pendentes; ultimate do Shoto já tem comando e apresentação definidos, exigindo rage cheia. Barra e propriedades de combate implementadas provisoriamente para teste; ajustes finais permanecem com o usuário. Outros personagens, história e roguelike não têm autorização de implementação automática.
 - Revisões visuais e hitstop estão em branches de trabalho; não confundir com integração em development. Base desta limpeza: `a027c302ccdf8a58d2a965593dcd452f7a3ee0f1`. Sem merge nesta tarefa.
 
 ## Limpeza de artes, referência e documentação
@@ -40,12 +40,12 @@ Fonte de verdade executável: `src/engine/data/fighters/shoto.ts`. Vida 1000; bo
 
 | Entrada | Nome | S / A / R | Dano | Hit / block stun | Pushback hit / block | Caixa: avanço, Y, largura, altura |
 | --- | --- | --- | --- | --- | --- | --- |
-| `1` | Soco fraco | 6 / 2 / 12F | 20 | 10 / 6F | 6 / 4 | 20, −120, 42, 28 |
+| `1` | Soco fraco | 6 / 2 / 12F | 20 | 12 / 6F | 6 / 4 | 20, −120, 42, 28 |
 | `2` | Soco forte | 10 / 3 / 18F | 35 | 14 / 8F | 9 / 6 | 20, −122, 58, 32 |
-| `3` | Chute fraco | 8 / 3 / 15F | 25 | 12 / 7F | 7 / 5 | 20, −74, 62, 30 |
+| `3` | Chute fraco | 8 / 3 / 15F | 25 | 16 / 7F | 7 / 5 | 20, −74, 62, 30 |
 | `4` | Chute forte | 13 / 4 / 22F | 45 | 16 / 9F | 12 / 8 | 20, −92, 78, 38 |
 
-Socos altos, chutes médios; todos recuperam em acerto/erro/bloqueio e têm um contato. Sem variantes agachadas/aéreas, acordes ou cancelamentos. Nenhum desses números constitui aprovação do balanceamento final. A futura comparação entre arquétipos ainda depende do ajuste manual desta base.
+Socos altos, chutes médios; todos recuperam em acerto/erro/bloqueio e têm um contato. As variantes, acordes, especiais e cancelamentos agora estão no catálogo manual abaixo; estes quatro básicos continuam com um contato cada. Nenhum desses números constitui aprovação do balanceamento final. A futura comparação entre arquétipos ainda depende do ajuste manual desta base.
 
 ## Registro por receita a receber
 
@@ -90,9 +90,65 @@ Primeiro definir e equilibrar o shoto. Só depois criar e balancear os outros pe
 
 O usuário criará os combos **manualmente, um por um**. Não gerar um catálogo, preencher combinações possíveis, restaurar receitas antigas ou assumir rotas com base apenas no arquétipo.
 
-As notas `1,1,1`, `2,2,2` e `3,3,3` exemplificam **combos fechados** a especificar. Não são três receitas implementadas, aprovadas ou necessariamente garantidas no bloqueio. “etc.” não autoriza gerar outras sequências. Cada passo exige sua entrada; a nota não autoriza executar o combo inteiro com um botão.
+### Catálogo manual solicitado — exclusivo do Shoto
 
-A notação numérica continua útil para conversar: vírgula indica sequência e `+` simultaneidade. A decisão de 25/10/2026 define `1` como soco fraco, `2` soco forte, `3` chute fraco e `4` chute forte. O kit inicial contém somente esses quatro golpes em pé; `F` e `B` não mudam o golpe. Não há versões agachadas/aéreas, acordes, especiais ou agarrões cadastrados.
+A notação universal está em `base.md`. **Todos os itens abaixo pertencem apenas ao Shoto**, sem aplicação automática aos demais personagens. O pedido autoriza estas sequências concretas; substitui as notas antigas que as tratavam apenas como exemplos. Status: implementado para teste com valores provisórios, conforme autorização posterior do usuário; homologação de balanceamento pendente. Não inferir novas rotas nem tratar os valores provisórios como decisões finais.
+
+| Categoria | Comando | Intenção |
+| --- | --- | --- |
+| Combo simples | `1,1,1` | Três socos fracos |
+| Combo simples | `2,2,2` | Três socos fortes |
+| Combo simples | `3,3,3` | Três chutes fracos |
+| Combo simples | `4,4,4` | Três chutes fortes |
+| Combo alternado | `1,1,2` | Sequência manual |
+| Combo alternado | `3,3,4` | Sequência manual |
+| Combo alternado | `1,2,3,4` | Sequência manual |
+| Combo alternado | `1,3,2,4` | Sequência manual |
+| Golpe potente | `1+2` | Acorde de socos |
+| Golpe potente | `3+4` | Acorde de chutes |
+| Combo potente | `1,1,1+2` | Dois socos fracos e golpe potente |
+| Combo potente | `3,4,3+4` | Chute fraco, forte e golpe potente |
+| Agarrão | `1+3` | Agarrão; demais propriedades a definir |
+| Agarrão | `2+4` | Agarrão; demais propriedades a definir |
+| Golpe abaixado | `1` enquanto agachado | Soco rápido |
+| Golpe abaixado | `2` enquanto agachado | Antiaéreo forte |
+| Golpe abaixado | `3` enquanto agachado | Chute rasteiro rápido |
+| Golpe abaixado | `4` enquanto agachado | Chute baixo de longo alcance |
+| Especial | `d,df,f,1` | Projétil fraco e rápido: arremessa uma taça de vinho |
+| Especial | `d,df,f,2` | Projétil forte e lento: arremessa uma garrafa de vinho |
+| Especial | `f,d,fd,4` | Chute aéreo com invulnerabilidade de reversal |
+| Especial | `f,d,fd,3,f,d,fd,4` | Chute aéreo estendido, dois golpes |
+| Especial | `b,bd,d,df,f,3` | Joelhada de avanço com invulnerabilidade a projéteis |
+| Ultimate | `b,bd,d,df,f,1+2` | Somente com barra de rage cheia: bebe uma garrafa de vinho, arremessa a garrafa no oponente e depois um isqueiro, formando um coquetel molotov |
+
+O comando estendido mantém exatamente a ordem solicitada: a primeira parte termina em `3` e a segunda em `4`. Não interpretar isso como autorização para trocar pernas, gerar rotas adicionais ou atribuir dois contatos aos outros especiais.
+
+### Entrega do catálogo
+
+Branch: `codex/feature-shoto-catalogo-manual`, baseada em `de9927a8ee9d188daea20bda3a86109988c74c2e` para preservar a documentação geral recém-organizada e o trabalho visual ainda não integrado.
+
+- [x] Fixar a notação universal em base.md.
+- [x] Registrar os 24 itens solicitados exclusivamente nesta ficha.
+- [x] Usuário autorizou colocar tudo no jogo, sem novas animações e com valores provisórios para testar e balancear.
+- [x] Implementar comandos, cancelamentos manuais, versões abaixadas, agarrões, projéteis, invulnerabilidades, rage e ultimate.
+- [x] Expor 19 golpes e 11 receitas no catálogo da pausa; oferecer somente os quatro básicos no tutorial básico e as 11 receitas no tutorial de combos.
+- [x] Conferir taça e ultimate pelo teclado na prévia, incluindo dano, consumo de rage, catálogo e avanço de frame.
+- [x] Instalação reproduzível, 209 testes em 25 arquivos, build e diff aprovados na versão final, incluindo direção de impacto própria dos projéteis.
+- [ ] Commit/push e CI do commit exato, sem integração.
+
+### Parâmetros provisórios desta bancada
+
+Fonte de ajuste: `src/engine/data/fighters/shoto.ts`; os 15 golpes novos têm dano, preparo, atividade, recuperação, stun, alcance e deslocamento declarados ali. Nenhuma nova imagem ou animação foi produzida. Golpes novos reutilizam poses existentes; abaixados mantêm uma pose de agachamento; taça/garrafa/molotov usam marcadores geométricos temporários. A sequência visual de beber, arremessar a garrafa e lançar o isqueiro permanece para a etapa de animação, sem bloquear a função da ultimate.
+
+- Dez strings manuais e uma extensão de dois golpes. Uma entrada por etapa, sem autocombos; somente prefixos dessas receitas podem cancelar após contato (acerto ou bloqueio). Erro não permite cancelamento. Ao terminar ou interromper uma string, sua progressão é descartada; não autoriza loops nem rotas adicionais.
+- Buffer de continuação: 6F; movimento especial: histórico de 36F. Acordes aceitam diferença de até 3F e substituem o botão simples ainda no preparo. Soco fraco tem hitstun 12F e chute fraco 16F para sustentar as rotas pedidas; soco potente tem preparo 8F.
+- Agarrões: chão, curta distância, não bloqueáveis; não pegam alvo no ar ou já em hitstun/blockstun. Sem mecânica de escape inventada. Dano provisório 75 (`1+3`) e 85 (`2+4`).
+- Taça: dano 30, velocidade 7, vida 100F. Garrafa: dano 55, velocidade 3,5, vida 180F. Projetil tem contato próprio, permanece após recuperação/interrupção do dono, respeita guarda, hitstop, limites e expiração. Não há clash ou chip adicional.
+- Reversal forte: invulnerabilidade a ataques nos primeiros 16F. Extensão: início com `3`, novo movimento com `4`, um contato por etapa; a segunda depende da primeira conectar. Joelhada: invulnerável somente a projéteis nos primeiros 21F; continua vulnerável a golpes corporais.
+- Rage local do Shoto: máximo 100; ganha 10 ao acertar, 15 ao receber acerto e 5 para cada lado no bloqueio. Sem ganho por erro; clamp em 100; reset a cada round/partida. Ultimate exige 100 e consome 100 no início, mesmo se interrompida ou errar; seu acerto não recarrega a própria barra. Dano provisório 240, sem chip no bloqueio. Drive rush e breaker não foram acrescentados.
+- HUD mostra rage; pausa do treino oferece **Encher rage · treino** para os dois jogadores. Esse atalho não funciona fora do treino. As regras de ganho/consumo pertencem aos dados do personagem, sem impor rage aos futuros kits.
+
+Balanceamento e homologação manual continuam pendentes; não equivaler os testes de execução à aprovação dos números.
 
 ### Processo de aprovação de uma receita
 
@@ -103,7 +159,7 @@ A notação numérica continua útil para conversar: vírgula indica sequência 
 5. Testar ambos os lados, centro e canto quando aplicável, defesa, erro, interrupção e interação com recursos já especificados.
 6. Conferir no treino e registrar a decisão: proposta, em ajuste ou homologada. Somente então usar como referência para a próxima receita.
 
-Não há receitas homologadas. A ficha numérica inicial serve somente para operar a bancada, sem homologação de balanceamento. A bancada está em [docs/shoto-balanceamento.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/docs/shoto-balanceamento.md).
+As receitas acima foram fornecidas pelo usuário; ainda não há homologação de execução no jogo. A ficha numérica inicial serve somente para operar a bancada, sem homologação de balanceamento. A bancada está em [docs/shoto-balanceamento.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/docs/shoto-balanceamento.md).
 
 ## 5. Sistemas de combate da nova direção
 
@@ -112,8 +168,8 @@ Não há receitas homologadas. A ficha numérica inicial serve somente para oper
 | Parry | Removido do design | Retirar lógica, input, feedback e lições dependentes na migração |
 | Combo breaker | Incluir uma saída de combos | Comando, elegibilidade, custo, disponibilidade, janela, efeito, risco, imunidade e retorno ao controle |
 | Drive rush | Incluir como mecânica de avanço/pressão | Ativação, custo, velocidade, duração, cancelamentos, vulnerabilidade e interação com defesa |
-| Rage | Incluir como estado/recurso | Gatilho, duração, ganho/consumo, efeitos, persistência e relação com drive rush |
-| Rage art | Ultimate da nova direção | Comando, condição, custo, uso por round, defesa, erro, dano e apresentação |
+| Rage | Recurso provisório do Shoto implementado no catálogo | Balancear ganhos/consumo e eventual relação com drive rush; sem regra universal para o elenco |
+| Rage art | Ultimate do Shoto implementada provisoriamente, somente com rage cheia | Homologar valores e produzir animação posteriormente |
 
 A fala “rage (drive rush)” deixa a relação entre esses dois sistemas aberta. Registrar ambos sem presumir que compartilham barra, que um ativa o outro ou que sejam nomes intercambiáveis. Rage art é a ultimate; não criar uma segunda ultimate paralela.
 

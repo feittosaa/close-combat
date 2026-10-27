@@ -33,9 +33,11 @@ export const shotoCombatClips: AnimationClip[] = shotoCombatSources.map((source,
 export function getShotoCombatPose(state:CharacterState,frame:number){
   const pose=(texture:string,sampled:number)=>({texture,frame:sampled,scale:1,flipX:state.facing==='left'});
   if(state.attack){
-    const source=shotoCombatSources.slice(0,4).find(source=>source.key===`shoto-${state.attack!.moveId}`);
     const move=getCharacterById(state.fighterId)?.moves.find(move=>move.id===state.attack!.moveId);
-    if(!source||!move)return undefined;
+    if(!move)return undefined;
+    if(move.crouching)return pose('shoto-crouch',18);
+    const source=shotoCombatSources.slice(0,4).find(source=>source.key===`shoto-${move.pose ?? move.id}`);
+    if(!source)return undefined;
     const elapsed=state.attack.elapsedFrames;
     // Shared authored hand-close bridges idle to the attack without delaying contact.
     if(elapsed<2)return pose('shoto-enter-defense',72+elapsed);

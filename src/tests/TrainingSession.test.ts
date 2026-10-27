@@ -33,8 +33,8 @@ it('tutorial básico só oferece movimento, quatro básicos e guarda; exige cont
   expect(tutorial.passed).toBe(true); expect(tutorial.next()).toBe(true);
   expect(tutorial.lesson?.notation).toBe('2'); tutorial.resetAttempt(); expect(tutorial.passed).toBe(false);
 });
-it('treino de combos inicia vazio sem crash, receita inventada ou conclusão automática', () => {
+it('treino de combos oferece somente receitas manuais e não aprova digitação isolada', () => {
   const tutorial = new TutorialSession(shoto, 'combo-tutorial');
-  expect(tutorial.lessons).toEqual([]); expect(tutorial.lesson).toBeUndefined();
+  expect(tutorial.lessons).toHaveLength(11); expect(tutorial.lesson?.notation).toBe('1,1,1');
   tutorial.observe(create().snapshot(), N); expect(tutorial.complete).toBe(false); expect(tutorial.next()).toBe(false);
 });

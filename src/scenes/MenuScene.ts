@@ -17,10 +17,10 @@ const MODES = [
   { id: 'versus', title: 'LUTA PVP', hint: 'Dois jogadores no mesmo teclado.', tag: '2 JOGADORES' },
   { id: 'training', title: 'MODO TREINO', hint: 'Pratique comandos, alcances e punições.', tag: 'PRÁTICA LIVRE' },
   { id: 'tutorial', title: 'TUTORIAL BÁSICO', hint: 'Aprenda movimento, quatro básicos e defesa.', tag: 'PASSO A PASSO' },
-  { id: 'combo-tutorial', title: 'TUTORIAL DE COMBOS', hint: 'Aguardando suas receitas manuais.', tag: 'COMBOS' },
+  { id: 'combo-tutorial', title: 'TUTORIAL DE COMBOS', hint: 'Pratique as sequências manuais do personagem.', tag: 'COMBOS' },
   { id: 'settings', title: 'CONFIGURAÇÕES', hint: 'Teclas e controles dos dois jogadores.', tag: 'OPÇÕES' },
 ] as const;
-const STYLES: Record<string, string> = { shoto: 'Base provisória · Quatro golpes básicos' };
+const STYLES: Record<string, string> = { shoto: 'Anfitrião · Golpes, especiais e combos manuais' };
 
 /** Fluxo público: modo → personagem de P1 → cenário → luta. */
 export class MenuScene extends Phaser.Scene {

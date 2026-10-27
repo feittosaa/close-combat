@@ -9,5 +9,5 @@ export function classifyHitContext(target: CharacterState): HitContext | undefin
   if (target.mode === 'startup' || target.mode === 'active') return 'counter-hit';
   return undefined;
 }
-/** Os quatro básicos recuperam após acerto, erro e bloqueio, sem cancelamentos. */
+/** Recuperação nominal; rotas explicitamente cadastradas podem cancelar após contato. */
 export function recoveryFrames(move: MoveDefinition): number { return move.recovery; }

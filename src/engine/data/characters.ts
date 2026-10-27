@@ -23,7 +23,8 @@ export interface CharacterDefinition {
   maxHealth: number;
   movement: { walkSpeed: number; backwardWalkSpeed: number; jumpVelocity: number; dashSpeed: number; backdashSpeed: number };
   moves: readonly MoveDefinition[];
-  /** Reservado à autoria manual do usuário; o Shoto inicial não possui receitas. */
+  rage?: { maximum: number; onHit: number; onDamage: number; onBlock: number };
+  /** Receitas de autoria manual; cancelamentos só seguem os prefixos declarados. */
   combos?: readonly ComboRecipe[];
   collision: CharacterCollisionProfile;
 }
