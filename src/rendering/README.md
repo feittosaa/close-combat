@@ -1,5 +1,5 @@
 # Renderização
 
-`CombatantView` desenha Shoto com geometria neutra: corpo ancorado aos pés, marcador de frente, alcance durante atividade e indicador de defesa. Não carrega sprites do elenco retirado nem muda corpo por fase. `HitboxView` usa as mesmas caixas do resolvedor. Cenário e câmera continuam em `stages/`; HUD fica fixo. A simulação decide acertos, dano e tempo.
+Apresentar o estado do motor com sprites, geometria de inspeção, cenários e câmeras. A renderização não decide dano, alcance ou duração de estados. Caixas de diagnóstico usam os mesmos contratos dos resolvedores.
 
-Raiz de regras: [base.md](../../base.md).
+Manter escala uniforme, apoio no piso, projeção compartilhada e HUD legível. Representações provisórias devem ser explícitas na pipeline. Pausa, contato e espelhamento preservam a fase visual sem modificar a simulação por conveniência gráfica.

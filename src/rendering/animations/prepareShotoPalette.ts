@@ -16,7 +16,8 @@ export function prepareShotoPalette(scene: Phaser.Scene, keys: readonly string[]
     if (!context) throw new Error('Não foi possível preparar a paleta do Shoto.');
     context.drawImage(image, 0, 0);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-    applyShotoPalettePixels(pixels.data, canvas.width, canvas.height);
+    const firstFrame=original.get(original.getFrameNames()[0]);
+    applyShotoPalettePixels(pixels.data, canvas.width, canvas.height, firstFrame.cutWidth);
     context.putImageData(pixels, 0, 0);
     const frames = original.getFrameNames().map(name => {
       const frame = original.get(name);

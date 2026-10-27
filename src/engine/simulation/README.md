@@ -1,7 +1,7 @@
 # Simulação
 
-`Simulation` usa `FixedStepClock` em 60 Hz e não depende de Phaser. `advance` e `stepFrame` percorrem as mesmas regras. Snapshot copia estado, caixas, eventos do último frame e até 20 contatos dos últimos 180 frames; não expõe referências mutáveis ao motor.
+Simulação determinística em 60 Hz, independente de Phaser e do FPS de renderização. Avanço contínuo e passo único usam as mesmas regras. Snapshots são cópias e não expõem referências mutáveis do motor.
 
-A base contém locomoção, salto/gravidade, guarda, quatro básicos e rounds. Ataques não cancelam, não repetem por botão mantido e não aceitam entradas durante lock. Treino desativa encerramento por KO/tempo e pode restaurar vida após 90 frames sem golpe/stun, preservando registros; reset limpa estado e entradas e permite distância própria do treino.
+Tempo de combate/animação e tempo decorrido são distintos: uma pausa de contato congela a ação sem parar o relógio do round. Pausa manual e reset devem preservar ou limpar esses estados conforme sua função, sem carregar entradas de outro contexto.
 
-Raiz de regras: [base.md](../../../base.md).
+Partidas, IA, treino e tutoriais compartilham o mesmo motor. Exceções de ferramentas não podem alterar regras competitivas silenciosamente.

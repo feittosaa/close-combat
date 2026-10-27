@@ -71,7 +71,7 @@ describe('guard and grounded movement', () => {
     const x = sim.snapshot().characters[1].x;
     for (let t = 0; t < 360; t += 1) step(sim, [forward, { direction: 'D', buttons: new Set() }]);
     expect(sim.snapshot().characters[1].x).toBe(x);
-    expect(sim.snapshot().characters[1].x - sim.snapshot().characters[0].x).toBe(defaultCharacter.collision.bodyWidth);
+    expect(sim.snapshot().characters[1].x - sim.snapshot().characters[0].x).toBeCloseTo(defaultCharacter.collision.bodyWidth, 10);
   });
 
   it('does not drag guard during startup at body contact', () => {
@@ -84,12 +84,12 @@ describe('guard and grounded movement', () => {
     expect(sim.snapshot().hitEvents).toHaveLength(0);
   });
 
-  it('does not create an attack or movement while crouched', () => {
+  it('uses a crouching attack without moving while crouched', () => {
     const sim = new Simulation(config);
     const x = sim.snapshot().characters[0].x;
     step(sim, [{ direction: 'D', buttons: new Set(['2']) }, neutral]);
     for (let t = 0; t < 10; t += 1) step(sim, [{ direction: 'D', buttons: new Set() }, neutral]);
-    expect(sim.snapshot().characters[0].attack).toBeUndefined();
+    expect(sim.snapshot().characters[0].attack?.moveId).toBe('crouch-uppercut');
     expect(sim.snapshot().characters[0].x).toBe(x);
   });
 

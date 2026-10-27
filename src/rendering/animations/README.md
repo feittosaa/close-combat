@@ -1,5 +1,5 @@
-# Infraestrutura de animação
+# Reprodução de animações
 
-`AnimationPlayback` preserva amostragem genérica de sequências/holds, fases e poses por frame lógico, além de validação de manifesto. `CharacterAnimationMap` fornece convenções de chaves sem importar assets. Não há clipes registrados para Shoto: sua apresentação é geométrica, sem animação final. Arte futura segue `identidade-visual.md` e só será produzida quando definida pelo usuário.
+Amostrar sequências, holds e fases pelo tempo lógico de combate; validar manifestos e preservar orientação, pivô, escala, pausa e reset. Associações de clipes são dados explícitos de cada personagem, não condições baseadas em pixels.
 
-Raiz de regras: [base.md](../../../base.md).
+Transições devem manter continuidade e opacidade do desenho. Qualquer correção deve ser conferida no ciclo completo e em diferentes FPS. Listas de clipes e limitações individuais ficam na pipeline.

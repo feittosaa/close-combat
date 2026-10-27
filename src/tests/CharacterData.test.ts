@@ -4,14 +4,14 @@ import { fighterMoveList, filterMoveList } from '../training/MoveList';
 import { arcadeOpponents, opponentFor } from '../scenes/matchSetup';
 
 describe('elenco reiniciado', () => {
-  it('registra somente Shoto, com quatro básicos e sem receitas ou assets antigos', () => {
+  it('registra somente Shoto, preservando os quatro básicos e o catálogo manual', () => {
     expect(characters.map(fighter => fighter.id)).toEqual(['shoto']);
     expect(playableCharacters).toEqual([defaultCharacter]);
     expect(defaultCharacter.name).toBe('Shoto');
-    expect(defaultCharacter.moves.map(move => [move.name, move.input.buttons])).toEqual([
+    expect(defaultCharacter.moves.filter(move => move.category === 'basic').map(move => [move.name, move.input.buttons])).toEqual([
       ['Soco fraco', ['1']], ['Soco forte', ['2']], ['Chute fraco', ['3']], ['Chute forte', ['4']],
     ]);
-    expect(defaultCharacter.combos).toEqual([]);
+    expect(defaultCharacter.combos).toHaveLength(11);
     expect(defaultCharacter).not.toHaveProperty('assets');
     expect(defaultCharacter).not.toHaveProperty('combatRules');
   });
@@ -21,10 +21,10 @@ describe('elenco reiniciado', () => {
     expect(opponentFor('id-inválido', mode).id).toBe('shoto');
     expect(arcadeOpponents('shoto')).toEqual([defaultCharacter]);
   });
-  it('oferece os quatro básicos no catálogo, com busca e sem combos antigos', () => {
+  it('separa básicos, especiais e receitas manuais com busca', () => {
     const entries = fighterMoveList(defaultCharacter);
-    expect(entries).toHaveLength(4);
-    expect(filterMoveList(entries, 'combos', '')).toEqual([]);
+    expect(entries).toHaveLength(defaultCharacter.moves.length + 11);
+    expect(filterMoveList(entries, 'combos', '')).toHaveLength(11);
     expect(filterMoveList(entries, 'basics', 'forte').map(entry => entry.notation)).toEqual(['2', '4']);
   });
 });

@@ -1,0 +1,7 @@
+{
+  "tool": "built-in image_gen",
+  "backgroundPrompt": "Use case: precise-object-edit. Edit this exact Spanish bar at blue hour fighting-game arena. Preserve its identity, expressive ink linework, angular cel-painted textures, burgundy awning, amber lights and muted indigo sky. Change ONLY framing and floor proportion: lower the wall/pavement junction to exactly 79% canvas height, so pavement occupies only bottom 21% instead of current 33%. Recompose architecture vertically naturally with taller visible upper facade, no geometric stretching. Continuous painted ground with shallow perspective and smaller paving stones appropriate to human sized fighters; level clear standing lane at 88% canvas height. Keep whole image cohesive and opaque, no blank strips. Maintain wide 16:9 ratio and facade parallel to horizontal fighting lane. No people, loose props, UI, lettering, borders. Independent crates/plants/stool will be added separately. This is a restrained targeted change, preserve original scene.",
+  "objectsPrompt": "Three separate transparent props for Spanish bar at blue hour: wine delivery crate, terracotta olive planter, wooden backless stool. Angular expressive black ink contours, flat indigo/wine shadows, amber upper-left lighting; no ground or scenery.",
+  "backgroundSource": "exec-eeb3106e-e72c-41f8-8160-3931cb053476.png",
+  "objectsSource": "exec-df326cea-5a27-4769-a0db-4b421853c0ed.png"
+}

@@ -4,7 +4,7 @@ import type { StageDefinition, StageLayer } from './StageDefinition';
 const manifests = import.meta.glob<StageDefinition>('../../assets/scenes/*/stage.json', { eager: true, import: 'default' });
 const images = import.meta.glob<string>('../../assets/scenes/*/layers/*.png', { eager: true, import: 'default', query: '?url' });
 
-export const DEFAULT_STAGE_ID = 'sala-treino';
+export const DEFAULT_STAGE_ID = 'bar-anoitecer';
 export const stages: readonly StageDefinition[] = Object.values(manifests);
 
 export function getStageLayerUrl(stage: StageDefinition, layer: StageLayer): string {

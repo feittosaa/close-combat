@@ -30,12 +30,12 @@ canvas {
 }
 
 .combat-pause[hidden] { display: none; }
-.combat-pause { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e12e8; color: #f6e6ce; }
-.pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #b7905c; background: #17131a; padding: 22px; box-shadow: 0 18px 90px #0009; }
+.combat-pause { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e12cc; backdrop-filter: blur(5px); color: #f6e6ce; }
+.pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #b7905c; background: linear-gradient(120deg,#302029,#17131a 65%); padding: 26px; border-top: 4px solid #dcaf71; box-shadow: 0 0 0 5px #16121ae0, 0 24px 90px #000b; }
 .pause-panel header { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .pause-panel h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(20px, 3vw, 32px); }
 .pause-eyebrow { color: #efac66; font-size: 11px; letter-spacing: .14em; margin: 0; }
-.pause-actions { display: flex; gap: 8px; margin-left: auto; }
+.pause-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .combat-pause button, .combat-pause input { font: inherit; color: inherit; background: #33272b; border: 1px solid #8d6a47; padding: 10px 12px; border-radius: 0; }
 .combat-pause button { cursor: pointer; }
 .combat-pause button:hover, .combat-pause button[aria-pressed="true"] { background: #754835; border-color: #f1c98c; }
@@ -87,3 +87,10 @@ canvas {
 
 .controls-panel button:hover { background: #793f32; border-color: #f0c68a; }
 .controls-panel h2 { color: #ead3ad; font-family: Georgia, serif; }
+
+.combat-pause.match-pause .pause-panel { width: min(640px,100%); padding: 38px; }
+.combat-pause.match-pause header { display: block; }
+.combat-pause.match-pause h1 { margin: 12px 0 28px; font-style: italic; font-size: clamp(26px,4vw,44px); }
+.combat-pause.match-pause .pause-actions { display: grid; gap: 10px; }
+.combat-pause.match-pause button { text-align: left; padding: 16px 20px; border-left: 4px solid #b7905c; }
+.combat-pause.match-pause button:first-child { background: #803e34; border-color: #f0c68a; }
