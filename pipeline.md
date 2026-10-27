@@ -4,6 +4,12 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Diretriz de limpeza e manutenção — 2026-10-27
+
+Pedido concluído localmente: reforçar em `AGENTS.md` e `base.md` a prioridade de código limpo, legível e organizado; excluir sobras, duplicações, dependências e arquivos desnecessários; manter apenas artes em uso, fontes ativas, referências canônicas e propostas necessárias à revisão autorizada. Conferir consumidores antes de remover e preservar trabalho em andamento.
+
+Branch própria para a diretriz: `codex/chore-diretriz-limpeza`. Validação do checkout: instalação reproduzível, testes, build e diff aprovados; alteração somente documental, sem mudança visual ou de controles. As alterações de câmera/ultimate e o ajuste de receita aérea já existentes são preservados fora deste commit documental. A consulta ao remoto funcionou fora do sandbox: development em `a5930d901654feb419570ff642acc6025d20daed`, main em `77a4c939c9ccdf028eed5f334132f65368dbae30`. Envio e CI desta diretriz serão conferidos após o commit; sem integração.
+
 ## Estado vigente
 
 - Elenco jogável: Shoto provisório, conceito Anfitrião; agente secreto espanhol, alto e esguio. A referência de identidade é o [turnaround canônico](assets/art/characters/shoto/turnaround.png).
