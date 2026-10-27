@@ -12,7 +12,7 @@ Branch `codex/feature-selecao-dupla-idle`, baseada em development `e372120`. Ped
 - [x] Grade 4×3 central; PvP apresenta dois previews, dois cursores e estados de confirmação. Mouse alterna o jogador pelos botões P1/P2 e usa a grade comum; teclado P1 A/D + J, P2 setas + Num1, Enter confirma a vez ativa. Somente avança ao cenário após ambos confirmarem; luta recebe os dois IDs escolhidos. Retornar do cenário limpa confirmações e mantém escolhas.
 - [x] Remover chamadas, slogan, selo inferior, indicação de etapa e rodapé do menu principal. Preservar nome do jogo e botões dos modos. Remover CSS e estado de entrada obsoletos.
 - [x] `npm ci`, 235 testes/28 arquivos, build e diff aprovados. Cinco regressões novas cobrem escolhas independentes, ordem de confirmação, espelhamento de escolha, alteração após confirmar e retorno. No jogo: menu sem as frases retiradas, idle dos dois lados (offsets do atlas mudam), P1 por mouse/J, P2 por Num1 antes de P1, espera pelas duas confirmações, cenário e início de PvP/Arcade, retorno limpando confirmações, seleção central no treino e Tab + Enter. Console sem erros/avisos. Captura local `selecao-pvp-idle.png` no painel de trabalho.
-- [ ] Commit/push e CI da feature. Esta revisão nova ainda não foi integrada; a autorização anterior de consolidação já foi cumprida e não representa merge deste novo pedido.
+- [x] Implementação enviada em `a21c07b5e3e9f1c2d0e4b4b2a8fde3f327056316`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40571023824). Branch mantida para revisão; development permanece `e372120` e main `77a4c93`. Sem nova integração, promoção ou tag. Este fechamento somente documental terá sua própria CI conferida antes do relato final.
 
 ## Diretriz de limpeza e manutenção — 2026-10-27
 
