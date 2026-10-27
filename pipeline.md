@@ -14,7 +14,7 @@ Branch própria para a diretriz: `codex/chore-diretriz-limpeza`. Validação do 
 
 Pedido explícito: integrar as entregas concluídas em development e encerrar as branches absorvidas. Todas as branches de código, limpeza e catálogo já são ancestrais dos menus, exceto `codex/feature-bar-anoitecer` (`438347a`). Seu código/arte de `254b6af` foi incorporado em `54f0c48`, conforme registro histórico abaixo, e depois revisado pela limpeza e panoramas/câmera. O merge mantém a árvore vigente: não restaura camadas e capturas retiradas, Markdown específico antigo, proporção anterior do fundo ou testes substituídos. O histórico original fica integrado por merge real com ambos os pais.
 
-O worktree registrado em `/tmp/close-combat-bar` não existe mais e aparece como prunable; sem checkout ativo ou arquivos locais a descartar. Conferir ancestralidade remota e CI de development antes de remover referências. Main e tags preservadas. Integração remota e encerramento ainda pendentes.
+O worktree registrado em `/tmp/close-combat-bar` não existe mais e aparece como prunable; sem checkout ativo ou arquivos locais a descartar. Conferir ancestralidade remota e CI de development antes de remover referências. Main e tags preservadas. Instalação reproduzível, 230 testes/27 arquivos, build e diff aprovados no conjunto consolidado. CIs das features aprovadas: [menus c48d8b2](https://github.com/feittosaa/close-combat/actions/runs/40566252080), [ritmo 23cd974](https://github.com/feittosaa/close-combat/actions/runs/40566254036), [receita fe33042](https://github.com/feittosaa/close-combat/actions/runs/40566251331). Branch de consolidação `codex/chore-integracao-development`; envio/CI da consolidação, integração remota e encerramento ainda pendentes.
 
 ## Menus clássicos e integração — 2026-10-27
 
@@ -36,7 +36,7 @@ Branch `codex/fix-ritmo-ultimate`, dependente de `codex/feature-camera-ultimates
 - [x] Garrafa da ultimate de 18 para 15 unidades/tick; isqueiro de 9 para 7,5 unidades/tick (redução de aproximadamente 17% em ambos). Preservar a confirmação, stun, aterrissagem em pé e explosão. Não alterar os especiais comuns sem preparação cinematográfica.
 - [x] Validação local: `npm ci`, 230 testes em 27 arquivos, build e `git diff --check` aprovados. Regressão nova verifica os seis desenhos ao longo dos dois segundos; testes de pausa verificam todos os 120 ticks e os projéteis preservam confirmação nos dois lados.
 - [x] Conexão do navegador recuperada. Preparação de beber e retomada com confirmação/explosão de 280 conferidas no treino a 100%; animação prolongada e projéteis revisados sem nova arte.
-- [ ] Implementação em `23cd974` de `codex/fix-ritmo-ultimate`; push e CI pendentes. Receita aérea preservada fora deste commit e autorizada posteriormente para entrega separada.
+- [x] Implementação enviada em `23cd974` de `codex/fix-ritmo-ultimate`; [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40566254036). Receita aérea preservada fora deste commit e autorizada posteriormente para entrega separada.
 
 A seção anterior de câmera/ultimate abaixo registra a implementação precedente; os tempos e velocidades vigentes são os desta revisão.
 
