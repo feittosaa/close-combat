@@ -134,7 +134,9 @@ Branch: `codex/feature-shoto-catalogo-manual`, baseada em `de9927a8ee9d188daea20
 - [x] Expor 19 golpes e 11 receitas no catálogo da pausa; oferecer somente os quatro básicos no tutorial básico e as 11 receitas no tutorial de combos.
 - [x] Conferir taça e ultimate pelo teclado na prévia, incluindo dano, consumo de rage, catálogo e avanço de frame.
 - [x] Instalação reproduzível, 209 testes em 25 arquivos, build e diff aprovados na versão final, incluindo direção de impacto própria dos projéteis.
-- [ ] Commit/push e CI do commit exato, sem integração.
+- [x] Commit/push e CI da implementação aprovada, sem integração.
+
+Implementação remota: `b0e2b4dc03cffcf273f1bab44efdd95b09ce8ca5`, [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40430583405). Registro documental final na mesma branch. development/main não foram modificadas; balanceamento manual permanece pendente.
 
 ### Parâmetros provisórios desta bancada
 
