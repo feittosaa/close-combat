@@ -117,10 +117,8 @@ export class MenuScene extends Phaser.Scene {
     this.alignMenu();
     this.root = this.add.container(0, 0); this.render();
     window.addEventListener('keydown', this.handleKey);
-    this.input.keyboard?.addCapture(['UP', 'DOWN', 'LEFT', 'RIGHT', 'ENTER', 'ESC']);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener('keydown', this.handleKey);
-      this.input.keyboard?.removeCapture(['UP', 'DOWN', 'LEFT', 'RIGHT', 'ENTER', 'ESC']);
       this.resizeObserver?.disconnect();
       window.removeEventListener('resize', this.alignMenu);
       this.menuElement?.remove(); this.menuElement = undefined;
