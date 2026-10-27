@@ -35,7 +35,7 @@ const move = (id: string) => shoto.moves.find(m => m.id === id)!;
 describe('manual Shoto catalogue', () => {
   it('registers only the ten authored strings and the two-hit extension', () => {
     expect(shoto.combos?.map(c => c.notation)).toEqual([
-      '1,1,1','2,2,2','3,3,3','4,4,4','1,1,2','3,3,4','1,2,3,4','1,3,2,4','1,1,1+2','3,4,3+4','f,d,fd,3,f,d,fd,4',
+      '1,1,1','2,2,2','3,3,3','4,4,4','1,1,2','3,3,4','1,2,3,4','1,3,2,4','1,1,1+2','3,4,3+4','f,d,fd,3,4',
     ]);
     expect(formatCommand('b,bd,d,df,f,1+2')).toContain('←,↙,↓,↘,→,');
     expect(formatCommand('f,d,fd,4')).toContain('→,↓,↘,');
@@ -199,11 +199,10 @@ describe('manual Shoto catalogue', () => {
     wait(sim,220);expect(sim.snapshot().projectiles).toHaveLength(0);
   });
 
-  it('does not reuse the first motion for the aerial extension', () => {
+  it('accepts the aerial extension with only a fresh 4 after the initial kick', () => {
     const sim=create(56);command(sim,move('reversal-light'));untilContact(sim);
-    step(sim,input('DF',['4']));wait(sim,6);
-    expect(sim.snapshot().characters[0].attack?.moveId).toBe('reversal-light');
-    expect(sim.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual(['reversal-light']);
+    step(sim,input('N',['4']));untilContact(sim);
+    expect(sim.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual(['reversal-light','reversal-followup']);
   });
 
   it.each([0,1])('gates ultimate and respects guard on either side for player %i', player => {

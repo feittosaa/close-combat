@@ -25,7 +25,7 @@ export const shoto: CharacterDefinition = {
     { id: 'alternate-1324', name: 'Combo alternado · 1,3,2,4', notation: '1,3,2,4', moveIds: ['light-punch','light-kick','heavy-punch','heavy-kick'] },
     { id: 'power-1112', name: 'Combo potente · 1,1,1+2', notation: '1,1,1+2', moveIds: ['light-punch','light-punch','power-punch'] },
     { id: 'power-3434', name: 'Combo potente · 3,4,3+4', notation: '3,4,3+4', moveIds: ['light-kick','heavy-kick','power-kick'] },
-    { id: 'extended-reversal', name: 'Chute aéreo estendido', notation: 'f,d,fd,3,f,d,fd,4', moveIds: ['reversal-light','reversal-followup'] },
+    { id: 'extended-reversal', name: 'Chute aéreo estendido', notation: 'f,d,fd,3,4', moveIds: ['reversal-light','reversal-followup'] },
   ],
   moves: [
     { id: 'light-punch', category: 'basic', name: 'Soco fraco', input: { buttons: ['1'] }, startup: 6, activeFrames: 2, recovery: 12,
@@ -78,7 +78,7 @@ export const shoto: CharacterDefinition = {
       startup: 6, activeFrames: 8, recovery: 28, damage: 30, hitstun: 38, blockstun: 12, pushback: { hit: 5, block: 4 }, hitLevel: 'mid',
       movement: { speed: 1.2, until: 12, launch: -5 },
       hitbox: { forward: 9.2, yOffset: -126.5, width: 75.9, height: 126.5 } },
-    { id: 'reversal-followup', name: 'Chute aéreo estendido — final', category: 'special', pose: 'heavy-kick', notation: 'f,d,fd,4 (após f,d,fd,3)', input: { buttons: ['4'], sequence: ['F','D','DF'] },
+    { id: 'reversal-followup', name: 'Chute aéreo estendido — final', category: 'special', pose: 'heavy-kick', notation: '4 (após f,d,fd,3)', input: { buttons: ['4'] },
       follows: 'reversal-light', followWindow: 36, airborne: true,
       startup: 5, activeFrames: 8, recovery: 30, damage: 55, hitstun: 26, blockstun: 13, pushback: { hit: 14, block: 8 }, hitLevel: 'mid',
       movement: { speed: 1.5, until: 12, launch: -4 },
