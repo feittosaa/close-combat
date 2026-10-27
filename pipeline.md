@@ -4,6 +4,16 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Revisão da seleção: idle, centro e PvP duplo — 2026-10-27
+
+Branch `codex/feature-selecao-dupla-idle`, baseada em development `e372120`. Pedido atual: animação idle nos personagens da seleção; grade de retratos no centro em todos os modos; PvP com escolha e confirmação independentes de P1/P2 e um personagem de cada lado; retirar frases extras acima das opções e do canto inferior direito do menu principal, mantendo nome e opções.
+
+- [x] Reproduzir o idle autorado de oito poses a 6 FPS nos previews ampliados, usando o mesmo amostrador temporal do jogo; P2 espelhado para o centro. Retratos permanecem recortes do atlas ativo; nenhuma nova arte.
+- [x] Grade 4×3 central; PvP apresenta dois previews, dois cursores e estados de confirmação. Mouse alterna o jogador pelos botões P1/P2 e usa a grade comum; teclado P1 A/D + J, P2 setas + Num1, Enter confirma a vez ativa. Somente avança ao cenário após ambos confirmarem; luta recebe os dois IDs escolhidos. Retornar do cenário limpa confirmações e mantém escolhas.
+- [x] Remover chamadas, slogan, selo inferior, indicação de etapa e rodapé do menu principal. Preservar nome do jogo e botões dos modos. Remover CSS e estado de entrada obsoletos.
+- [x] `npm ci`, 235 testes/28 arquivos, build e diff aprovados. Cinco regressões novas cobrem escolhas independentes, ordem de confirmação, espelhamento de escolha, alteração após confirmar e retorno. No jogo: menu sem as frases retiradas, idle dos dois lados (offsets do atlas mudam), P1 por mouse/J, P2 por Num1 antes de P1, espera pelas duas confirmações, cenário e início de PvP/Arcade, retorno limpando confirmações, seleção central no treino e Tab + Enter. Console sem erros/avisos. Captura local `selecao-pvp-idle.png` no painel de trabalho.
+- [ ] Commit/push e CI da feature. Esta revisão nova ainda não foi integrada; a autorização anterior de consolidação já foi cumprida e não representa merge deste novo pedido.
+
 ## Diretriz de limpeza e manutenção — 2026-10-27
 
 Pedido concluído localmente: reforçar em `AGENTS.md` e `base.md` a prioridade de código limpo, legível e organizado; excluir sobras, duplicações, dependências e arquivos desnecessários; manter apenas artes em uso, fontes ativas, referências canônicas e propostas necessárias à revisão autorizada. Conferir consumidores antes de remover e preservar trabalho em andamento.
