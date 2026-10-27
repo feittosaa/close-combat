@@ -71,7 +71,7 @@ describe('guard and grounded movement', () => {
     const x = sim.snapshot().characters[1].x;
     for (let t = 0; t < 360; t += 1) step(sim, [forward, { direction: 'D', buttons: new Set() }]);
     expect(sim.snapshot().characters[1].x).toBe(x);
-    expect(sim.snapshot().characters[1].x - sim.snapshot().characters[0].x).toBe(defaultCharacter.collision.bodyWidth);
+    expect(sim.snapshot().characters[1].x - sim.snapshot().characters[0].x).toBeCloseTo(defaultCharacter.collision.bodyWidth, 10);
   });
 
   it('does not drag guard during startup at body contact', () => {

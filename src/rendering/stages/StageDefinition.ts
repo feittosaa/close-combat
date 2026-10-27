@@ -19,6 +19,8 @@ export interface StageDefinition {
   referenceSize: { width: number; height: number };
   /** Linha dos pés na imagem de referência; é alinhada ao floorY da simulação. */
   groundY: number;
+  /** Extra source pixels above the original composition; do not magnify the scenery. */
+  topExtension?: number;
   minimumScale: number;
   layers: readonly StageLayer[];
 }
@@ -26,9 +28,10 @@ export interface StageDefinition {
 export function validateStage(stage: StageDefinition): void {
   const { width, height } = stage.referenceSize;
   if (!stage.id || !stage.name || !Number.isFinite(width) || width <= 0 ||
-      !Number.isFinite(height) || height <= 0 || !Number.isFinite(stage.groundY) ||
+      !Number.isFinite(height) || height <= 0 || width / height < 21 / 9 || !Number.isFinite(stage.groundY) ||
       stage.groundY <= 0 || stage.groundY >= height || !Number.isFinite(stage.minimumScale) ||
-      stage.minimumScale <= 0 || !stage.layers.length) {
+      stage.minimumScale <= 0 || !stage.layers.length ||
+      (stage.topExtension !== undefined && (!Number.isFinite(stage.topExtension) || stage.topExtension < 0 || stage.topExtension >= stage.groundY))) {
     throw new Error(`Cenário inválido: ${stage.id}`);
   }
   const ids = new Set<string>();

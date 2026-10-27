@@ -8,10 +8,10 @@ const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{
 vi.mock('phaser', () => ({ default: {} }));
 const initial = () => new Simulation(createGameConfig(1024,576)).snapshot().characters[0];
 
-it('entrega 128 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
+it('entrega 134 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
   const frames = Object.assign({},...Object.values(atlasFiles).map(a=>a.frames));
-  expect(Object.keys(frames)).toHaveLength(128);
-  for (let i=0;i<128;i++) {
+  expect(Object.keys(frames)).toHaveLength(134);
+  for (let i=0;i<134;i++) {
     const f = frames[String(i) as keyof typeof frames];
     expect(f).toBeDefined();
     expect(f.trimmed).toBe(false);
@@ -50,7 +50,7 @@ describe.each([30,60,120,144])('renderização de sprites em %i FPS', fps => {
   it('preserva pose lógica e pausa, troca de textura e retorno à geometria sem modificar estado', () => {
     const calls: unknown[][]=[];
     const graphic=Object.fromEntries(['setDepth','clear','fillStyle','fillRect','lineStyle','strokeRect','lineBetween','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return graphic;}]));
-    const image=Object.fromEntries(['setDepth','setTexture','setOrigin','setScale','setPosition','setFlipX','setVisible','setAlpha','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return image;}]));
+    const image=Object.fromEntries(['setDepth','setTexture','setAngle','setOrigin','setScale','setPosition','setFlipX','setVisible','setAlpha','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return image;}]));
     const view=new CombatantView({add:{graphics:()=>graphic,image:()=>image},textures:{exists:()=>true}} as unknown as Phaser.Scene,0xff0000);
     const sim=new Simulation(createGameConfig(1024,576));
     const neutral={direction:'N' as const,buttons:new Set<'1'>()};
@@ -126,4 +126,16 @@ it('espelha todos os clipes e mantém guarda fechada durante o impacto bloqueado
     expect(right.flipX).toBe(false);
   }
   expect(getShotoSpritePose({...state,mode:'blockstun',remainingStateFrames:10},0)!.frame).toBeGreaterThanOrEqual(32);
+});
+
+it('keeps bottle-confirmed defenders upright and presents the independent lighter throw',()=>{
+  const state=initial();
+  for(const grounded of [true,false]){
+    const pose=getShotoSpritePose({...state,mode:'hitstun',grounded,ultimateCapture:{ownerId:'player-2'}},20);
+    expect(pose).toMatchObject({texture:'shoto-idle',frame:0});
+  }
+  const throwing={...state,ultimateThrowStartedFrame:20};
+  expect(getShotoSpritePose(throwing,20)).toMatchObject({texture:'shoto-heavy-punch',frame:92});
+  expect(getShotoSpritePose({...throwing,facing:'left'},26)).toMatchObject({texture:'shoto-heavy-punch',frame:95,flipX:true});
+  expect(getShotoSpritePose(throwing,28)?.texture).toBe('shoto-idle');
 });

@@ -20,7 +20,7 @@ import { ProjectileView } from '../rendering/ProjectileView';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
-import { createStageLayout } from '../rendering/stages/stageLayout';
+import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
 import { preloadStage, StageView } from '../rendering/stages/StageView';
 import { CombatHud } from '../ui/CombatHud';
 import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
@@ -176,9 +176,8 @@ export class FightScene extends Phaser.Scene {
     const { width, height } = LOGICAL_VIEW;
     const config = createGameConfig(width, height);
     const stageLayout = createStageLayout(this.selectedStage, width, height, config.arena.floorY);
-    // Translate the arena into the stage without changing its playable width.
-    config.arena.left += stageLayout.arenaOffsetX;
-    config.arena.right += stageLayout.arenaOffsetX;
+    // The full panorama defines the walls; shared viewport separation still limits lone retreat.
+    Object.assign(config.arena,getStageArenaBounds(stageLayout));
     this.stageView = new StageView(this, this.selectedStage, stageLayout);
     this.simulation = new Simulation(config, [this.selectedFighter, this.opponentFighter], this.training
       ? { training: true, initialDistance: this.training.initialDistance } : {});
@@ -278,11 +277,11 @@ export class FightScene extends Phaser.Scene {
     const snapshot = this.simulation?.snapshot();
     if (!snapshot) return;
 
-    this.stageView?.sync(snapshot.characters.map(character => character.x));
+    this.stageView?.sync(snapshot.characters.map(character => character.x), snapshot.characters.map(character => character.y));
     snapshot.characters.forEach((character, index) => {
-      this.combatants[index]?.sync(character, snapshot.frame);
+      this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined);
     });
-    this.projectileView?.sync(snapshot.projectiles);
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, LOGICAL_VIEW.width);
     if (this.arcadeInfo) {

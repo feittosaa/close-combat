@@ -34,8 +34,8 @@ export class StageView {
     this.sync([]);
   }
 
-  sync(fighterPositions: readonly number[]): void {
-    const logicalFrame = getFightCameraFrame(this.layout, fighterPositions);
+  sync(fighterPositions: readonly number[], fighterYPositions: readonly number[] = []): void {
+    const logicalFrame = getFightCameraFrame(this.layout, fighterPositions, fighterYPositions);
     const frame = projectCameraToOutput(logicalFrame,
       { width: this.layout.viewportWidth, height: this.layout.worldHeight },
       this.scene.scale ?? { width: this.layout.viewportWidth, height: this.layout.worldHeight });

@@ -1712,6 +1712,86 @@
         "preparedRootX": 384,
         "preparedRootY": 720
       }
+    ],
+    "ultimate-drink": [
+      {
+        "sourceBounds": [
+          46,
+          18,
+          335,
+          714
+        ],
+        "sourceRootX": 190.0,
+        "sourceRootY": 714,
+        "scale": 0.90483,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          382,
+          17,
+          673,
+          714
+        ],
+        "sourceRootX": 527.0,
+        "sourceRootY": 714,
+        "scale": 0.90483,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          736,
+          11,
+          1027,
+          714
+        ],
+        "sourceRootX": 880.5,
+        "sourceRootY": 714,
+        "scale": 0.90483,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1113,
+          10,
+          1405,
+          714
+        ],
+        "sourceRootX": 1258.5,
+        "sourceRootY": 714,
+        "scale": 0.90483,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1477,
+          11,
+          1769,
+          714
+        ],
+        "sourceRootX": 1622.5,
+        "sourceRootY": 714,
+        "scale": 0.90483,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      },
+      {
+        "sourceBounds": [
+          1837,
+          17,
+          2129,
+          714
+        ],
+        "sourceRootX": 1982.5,
+        "sourceRootY": 714,
+        "scale": 0.90483,
+        "preparedRootX": 384,
+        "preparedRootY": 720
+      }
     ]
   }
 }

@@ -81,12 +81,16 @@ for name, spec in SPECS.items():
         (ROOT/f'{name}.atlas.json').write_text(json.dumps({'frames':frames,'meta':{'image':f'{name}.png','size':{'w':strip.width,'h':strip.height},'scale':'1'}},indent=2)+'\n')
         report[name]=metrics
         continue
-    rgb = np.array(Image.open(ROOT/'source'/spec.get('source',f'{name}-auburn.png')).convert('RGB')).astype(float)
-    chroma = np.minimum(rgb[:, :, 0], rgb[:, :, 2])-rgb[:, :, 1]
-    keyed = (chroma>12) & (np.minimum(rgb[:,:,0],rgb[:,:,2]) > rgb[:,:,1]*1.5)
-    if spec.get('key')=='balanced': keyed &= np.abs(rgb[:,:,0]-rgb[:,:,2]) < np.maximum(rgb[:,:,0],rgb[:,:,2])*.35
-    alpha = np.ones(chroma.shape)
-    alpha[keyed] = np.clip((35-chroma[keyed])/23,0,1)
+    source_image = np.array(Image.open(ROOT/'source'/spec.get('source',f'{name}-auburn.png')).convert('RGBA'))
+    rgb = source_image[:,:,:3].astype(float)
+    if spec.get('transparentSource'):
+        alpha = source_image[:,:,3].astype(float)/255
+    else:
+        chroma = np.minimum(rgb[:, :, 0], rgb[:, :, 2])-rgb[:, :, 1]
+        keyed = (chroma>12) & (np.minimum(rgb[:,:,0],rgb[:,:,2]) > rgb[:,:,1]*1.5)
+        if spec.get('key')=='balanced': keyed &= np.abs(rgb[:,:,0]-rgb[:,:,2]) < np.maximum(rgb[:,:,0],rgb[:,:,2])*.35
+        alpha = np.ones(chroma.shape)
+        alpha[keyed] = np.clip((35-chroma[keyed])/23,0,1)
     rgba = np.dstack((rgb, np.round(alpha*255))).astype('uint8')
     mask = alpha>.5
     h,w = mask.shape

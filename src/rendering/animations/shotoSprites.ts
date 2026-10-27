@@ -4,6 +4,8 @@ import { shotoTransitionSources, transitionClips, transitionByAction } from './s
 import type Phaser from 'phaser';
 import type { CharacterState } from '../../engine/characters/CharacterState';
 import { getStateAnimationFrame, getTimedAnimationFrame, shouldFlipAnimation, validateAnimationManifest, type CharacterAnimationManifest } from './AnimationPlayback';
+import drinkImage from '../../assets/sprites/characters/shoto/ultimate-drink.png';
+import drinkAtlas from '../../assets/sprites/characters/shoto/ultimate-drink.atlas.json';
 import idleImage from '../../assets/sprites/characters/shoto/idle.png';
 import walkImage from '../../assets/sprites/characters/shoto/walk.png';
 import walkInbetweensImage from '../../assets/sprites/characters/shoto/walk-inbetweens.png';
@@ -25,8 +27,8 @@ import backstepAtlas from '../../assets/sprites/characters/shoto/backstep.atlas.
 
 /** Approved locomotion, four basics and posture guards. Roots and body scale are atlas-authored. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
-  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:128,
-  footAnchorY:720,displaySize:{width:172.8*1.03,height:172.8*1.03},
+  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:134,
+  footAnchorY:720,displaySize:{width:172.8*1.03*1.15,height:172.8*1.03*1.15},
   clips:[
     {key:'shoto-idle',start:0,end:7,frameRate:6,repeat:-1},
     {key:'shoto-walk',start:8,end:127,frames:[8,120,9,121,10,122,11,123,12,124,13,125,14,126,15,127],frameRate:20,repeat:-1},
@@ -38,10 +40,12 @@ export const shotoSpriteManifest: CharacterAnimationManifest = {
     {key:'shoto-backstep',start:50,end:55,frameDurations:[3,4,4,4,3,2],frameRate:18,repeat:0},
     ...transitionClips,
     ...shotoCombatClips,
+    {key:'shoto-ultimate-drink',start:128,end:133,frameRate:60,repeat:0},
   ],
 };
 validateAnimationManifest(shotoSpriteManifest);
 const sources=[
+  {key:'shoto-ultimate-drink',image:drinkImage,atlas:drinkAtlas},
   {key:'shoto-idle',image:idleImage,atlas:idleAtlas},
   {key:'shoto-walk',image:walkImage,atlas:walkAtlas},
   {key:'shoto-walk-inbetweens',image:walkInbetweensImage,atlas:walkInbetweensAtlas},
@@ -70,7 +74,11 @@ function transitionFor(action:ReturnType<typeof actionFor>){
   return action && action!=='idle'?transitionByAction[action]:undefined;
 }
 export function getShotoSpritePose(state:CharacterState,frame:number){
-  if(state.fighterId!=='shoto'||state.mode==='hitstun')return undefined;
+  if(state.fighterId!=='shoto')return undefined;
+  const lighterElapsed = frame - (state.ultimateThrowStartedFrame ?? -Infinity);
+  if (lighterElapsed >= 0 && lighterElapsed < 8) return {texture:'shoto-heavy-punch',frame:92+Math.min(3,Math.floor(lighterElapsed/2)),scale:1,flipX:state.facing==='left'};
+  if (state.ultimateCapture) return {texture:'shoto-idle',frame:0,scale:1,flipX:state.facing==='left'};
+  if(state.mode==='hitstun')return undefined;
   const combat=getShotoCombatPose(state,frame);
   if(combat)return combat;
   if(state.attack)return undefined;

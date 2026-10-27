@@ -4,7 +4,7 @@ import type { MoveDefinition } from '../engine/data/moves';
 export const MODE_LABELS: Record<CharacterMode, string> = {
   neutral: 'NEUTRO', moving: 'MOVIMENTO', dashing: 'DASH', airborne: 'NO AR',
   crouching: 'AGACHADO', startup: 'PREPARO', active: 'ATIVO', recovery: 'RECUPERAÇÃO',
-  blocking: 'DEFESA', hitstun: 'ATORDOADO', blockstun: 'BLOQUEIO',
+  knockdown: 'NO CHÃO', blocking: 'DEFESA', hitstun: 'ATORDOADO', blockstun: 'BLOQUEIO',
 };
 export function signedFrames(value: number): string { return `${value > 0 ? '+' : ''}${value}F`; }
 export function moveInputLabel(move: MoveDefinition): string { return move.notation ?? move.input.buttons.join('+'); }

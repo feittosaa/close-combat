@@ -17,7 +17,8 @@ export interface MoveDefinition {
   followWindow?: number;
   movement?: { speed: number; until: number; launch?: number };
   invulnerability?: { kind: 'all' | 'projectile'; until: number };
-  projectile?: { speed: number; life: number; visual: 'glass' | 'bottle' | 'molotov' };
+  projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'glass' | 'bottle' | 'molotov' };
+  ultimateSequence?: { lighterHitbox: MoveDefinition['hitbox']; lighterDelay: number; lighterSpeed: number; confirmStun: number; knockbackSpeed: number; launchSpeed: number; knockdownFrames: number };
   rageCost?: number;
   startup: number;
   activeFrames: number;

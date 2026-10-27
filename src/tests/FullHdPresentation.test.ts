@@ -25,7 +25,7 @@ it('mantém escala fixa e o piso em Full HD', () => {
   expect(y(config.arena.floorY)).toBeCloseTo(915);
   expect(y(config.arena.floorY-144)).toBeGreaterThan(220);
   expect(y(config.arena.floorY)-y(config.arena.floorY-144)).toBeCloseTo(432);
-  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:456});
+  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:512});
 });
 it('mantém ambos os lados visíveis ao afastar e trocar lutadores de lado em 1080p',()=>{
   const layout=createStageLayout(defaultStage,1024,576,488);
@@ -61,7 +61,7 @@ it('mantém escala e altura constantes no contato, afastamento e troca de lados'
   expect(getFightCameraFrame(layout,[400,500]).scrollX).not.toBe(getFightCameraFrame(layout,[900,1000]).scrollX);
 });
 
-it('contém todo o salto real sem alterar a câmera entre decolagem e aterrissagem',()=>{
+it('acompanha a subida e a descida do salto real com zoom fixo',()=>{
   const config=createGameConfig(1024,576);
   const sim=new Simulation(config,undefined,{training:true,initialDistance:96});
   const layout=createStageLayout(defaultStage,1024,576,488);
@@ -70,11 +70,12 @@ it('contém todo o salto real sem alterar a câmera entre decolagem e aterrissag
   for(let frame=0;frame<60;frame++){
     sim.stepFrame([{...neutral,direction:frame===0?'U':'N'},neutral]);
     const snapshot=sim.snapshot();
-    const camera=getFightCameraFrame(layout,snapshot.characters.map(c=>c.x));
+    const camera=getFightCameraFrame(layout,snapshot.characters.map(c=>c.x),snapshot.characters.map(c=>c.y));
     expect(camera.zoom).toBe(FIGHT_WORLD_SCALE);
-    expect(camera.scrollY).toBeCloseTo(75);
+    expect(camera.scrollY).toBeLessThanOrEqual(75);
+    if (!snapshot.characters[0].grounded) expect(camera.scrollY).toBeLessThan(75);
     for(const fighter of snapshot.characters){
-      const head=288+(fighter.y-(144*1.03)-camera.scrollY-288)*camera.zoom;
+      const head=288+(fighter.y-(144*1.03*1.15)-camera.scrollY-288)*camera.zoom;
       expect(head).toBeGreaterThan(78);
       expect(fighter.y).toBeLessThanOrEqual(488);
       airborne ||= !fighter.grounded;
@@ -84,8 +85,17 @@ it('contém todo o salto real sem alterar a câmera entre decolagem e aterrissag
   expect(sim.snapshot().characters[0].grounded).toBe(true);
 });
 
-it('amplia o desenho em 3% sem mudar a câmera e conserva margem para a célula inteira',()=>{
-  expect(shotoSpriteManifest.displaySize!.height).toBeCloseTo(172.8*1.03);
-  const margin=(1024/FIGHT_WORLD_SCALE-createGameConfig(1024,576).arena.maxSeparation!)/2;
-  expect(margin).toBeGreaterThan(shotoSpriteManifest.displaySize!.width/2);
+it('amplia o desenho em 15% e deixa as silhuetas em pé próximas das bordas sem mudar o zoom',()=>{
+  expect(shotoSpriteManifest.displaySize!.height).toBeCloseTo(172.8*1.03*1.15);
+  const config=createGameConfig(1024,576);
+  const layout=createStageLayout(defaultStage,1024,576,488);
+  const positions=[layout.worldWidth/2-256,layout.worldWidth/2+256];
+  expect(positions[1]-positions[0]).toBe(config.arena.maxSeparation);
+  const frame=getFightCameraFrame(layout,positions);
+  // Visible neutral body extends at most 140 source pixels from the root, not the transparent cell edge.
+  const silhouetteHalfWidth=140*shotoSpriteManifest.displaySize!.width/768;
+  const left=512+(positions[0]-silhouetteHalfWidth-frame.scrollX-512)*frame.zoom;
+  const right=512+(positions[1]+silhouetteHalfWidth-frame.scrollX-512)*frame.zoom;
+  expect(left).toBeGreaterThan(0);expect(left).toBeLessThan(55);
+  expect(right).toBeLessThan(1024);expect(right).toBeGreaterThan(969);
 });
