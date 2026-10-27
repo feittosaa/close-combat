@@ -53,7 +53,7 @@ O HUD deve ser minimalista: barras de vida contínuas próximas ao topo, sem div
 
 Acertos e bloqueios confirmados recebem uma micro pausa compartilhada na pose de impacto; golpes que erram não pausam. A pausa usa cinco ticks a 60 Hz, aproximadamente 83 ms. Durante ela, combate, física e animação ficam congelados, enquanto o relógio do round continua contando normalmente. Contatos simultâneos não somam pausas. A retomada não deve pular desenhos nem alterar os tempos próprios dos golpes. Reset e encerramento de round devem tratar esse intervalo de forma consistente.
 
-A ativação de toda ultimate usa uma pausa global de seis ticks a 60 Hz: somente a sequência de ativação do autor avança; adversários, projéteis, física, efeitos e relógio do round ficam congelados. Essa pausa é distinta da micro pausa de contato. Ativações simultâneas compartilham o mesmo intervalo, sem acumular tempo. O combate retoma após o sexto tick, sem pular frames ou conservar esse estado após reset.
+A ativação de toda ultimate usa uma preparação cinematográfica prolongada com pausa global: somente a sequência de ativação do autor avança; adversários, projéteis, física, efeitos e relógio do round ficam congelados. Essa pausa é distinta da micro pausa de contato. Ativações simultâneas compartilham o mesmo intervalo, sem acumular tempo. O combate retoma ao terminar a animação de preparação, sem pular frames ou conservar esse estado após reset.
 
 Fundos de combate são ultrawide, com proporção mínima 21:9. Preservar a proporção nativa e ajustar o enquadramento do cenário para evitar ampliação excessiva; a escala dos lutadores e o tamanho de saída da tela são decisões separadas. Não esticar a imagem nem aplicar zoom dinâmico.
 

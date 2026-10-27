@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type Phaser from 'phaser';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { getShotoSpritePose, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
+import { getShotoSpritePose, getShotoUltimateActivationPose, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { CombatantView } from '../rendering/CombatantView';
 const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{w:number;h:number}}>}>('../assets/sprites/characters/shoto/*.atlas.json',{eager:true,import:'default'});
 vi.mock('phaser', () => ({ default: {} }));
@@ -138,4 +138,15 @@ it('keeps bottle-confirmed defenders upright and presents the independent lighte
   expect(getShotoSpritePose(throwing,20)).toMatchObject({texture:'shoto-heavy-punch',frame:92});
   expect(getShotoSpritePose({...throwing,facing:'left'},26)).toMatchObject({texture:'shoto-heavy-punch',frame:95,flipX:true});
   expect(getShotoSpritePose(throwing,28)?.texture).toBe('shoto-idle');
+});
+
+it('spreads all six drinking poses across the full two-second global pause',()=>{
+  const counts=new Map<number,number>();
+  for(let tick=0;tick<120;tick++){
+    const pose=getShotoUltimateActivationPose(tick,'right');
+    counts.set(pose.frame,(counts.get(pose.frame)??0)+1);
+    expect(getShotoUltimateActivationPose(tick,'left')).toEqual({...pose,flipX:true});
+  }
+  expect([...counts]).toEqual([[128,20],[129,20],[130,20],[131,20],[132,20],[133,20]]);
+  expect(getShotoUltimateActivationPose(120,'right').frame).toBe(133);
 });

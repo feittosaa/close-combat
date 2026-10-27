@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { getShotoSpriteLayers, shotoSpriteManifest } from './animations/shotoSprites';
+import { getShotoSpriteLayers, getShotoUltimateActivationPose, shotoSpriteManifest } from './animations/shotoSprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
@@ -13,7 +13,7 @@ export class CombatantView {
   }
   sync(state: CharacterState, frame: number, activationFrame?: number): void {
     const down = state.mode === 'knockdown';
-    const layers=state.fighterId==='shoto' && activationFrame !== undefined ? [{texture:'shoto-ultimate-drink',frame:128+Math.min(5,activationFrame),scale:1,alpha:1,flipX:state.facing==='left'}] : down ? [{texture:'shoto-idle',frame:0,scale:1,alpha:1,flipX:state.facing==='left'}] : getShotoSpriteLayers(state,frame);
+    const layers=state.fighterId==='shoto' && activationFrame !== undefined ? [getShotoUltimateActivationPose(activationFrame,state.facing)] : down ? [{texture:'shoto-idle',frame:0,scale:1,alpha:1,flipX:state.facing==='left'}] : getShotoSpriteLayers(state,frame);
     if(layers.length && layers.every(pose=>this.scene.textures?.exists(pose.texture))){
       layers.forEach((pose,index)=>{
         const sprite=this.sprites[index]??=this.scene.add.image(0,0,pose.texture,String(pose.frame)).setDepth(10);
