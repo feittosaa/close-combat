@@ -10,6 +10,12 @@ Pedido concluído localmente: reforçar em `AGENTS.md` e `base.md` a prioridade 
 
 Branch própria para a diretriz: `codex/chore-diretriz-limpeza`. Validação do checkout: instalação reproduzível, testes, build e diff aprovados; alteração somente documental, sem mudança visual ou de controles. As alterações de câmera/ultimate e o ajuste de receita aérea já existentes são preservados fora deste commit documental. A consulta ao remoto funcionou fora do sandbox: development em `a5930d901654feb419570ff642acc6025d20daed`, main em `77a4c939c9ccdf028eed5f334132f65368dbae30`. Diretriz enviada em `c4d4ca81ee610a7f0d988b017ca3c280e1dd0142`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40562393410); sem integração.
 
+## Consolidação autorizada de branches — 2026-10-27
+
+Pedido explícito: integrar as entregas concluídas em development e encerrar as branches absorvidas. Todas as branches de código, limpeza e catálogo já são ancestrais dos menus, exceto `codex/feature-bar-anoitecer` (`438347a`). Seu código/arte de `254b6af` foi incorporado em `54f0c48`, conforme registro histórico abaixo, e depois revisado pela limpeza e panoramas/câmera. O merge mantém a árvore vigente: não restaura camadas e capturas retiradas, Markdown específico antigo, proporção anterior do fundo ou testes substituídos. O histórico original fica integrado por merge real com ambos os pais.
+
+O worktree registrado em `/tmp/close-combat-bar` não existe mais e aparece como prunable; sem checkout ativo ou arquivos locais a descartar. Conferir ancestralidade remota e CI de development antes de remover referências. Main e tags preservadas. Integração remota e encerramento ainda pendentes.
+
 ## Menus clássicos e integração — 2026-10-27
 
 Branch `codex/feature-menus-classicos`, dependente da revisão de ritmo em `23cd974`. Pedido: estilizar menu principal e pausa, seleção clássica com quadrados de retratos e personagem ampliado à esquerda em PvP, Arcade e treino. Reaproveitar somente artes ativas; espaços vazios são decorativos, sem personagens inventados.
