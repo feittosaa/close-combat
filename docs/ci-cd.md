@@ -8,7 +8,7 @@ Este manifesto rege a entrega de mudanças. `base.md` continua sendo a raiz das 
 
 - `development`: integração das features concluídas e validadas.
 - `main`: versões estáveis, promovidas a partir de `development` após validação conjunta.
-- Uma branch por objetivo, criada a partir de `origin/development` atualizado. Usar `codex/feature-<nome>`, `codex/fix-<nome>` ou `codex/chore-<nome>` conforme a mudança. Não misturar objetivos independentes.
+- Uma branch por objetivo, criada a partir de `origin/development` atualizado. Uma dependência ainda não integrada pode servir de base quando necessária para preservar a versão em revisão; registrar essa dependência na pipeline. Usar `codex/feature-<nome>`, `codex/fix-<nome>` ou `codex/chore-<nome>` conforme a mudança. Não misturar objetivos independentes.
 - Antes de começar, conferir branch, remoto e alterações locais. Preservar trabalho existente; não carregar mudanças de outra tarefa por acidente.
 - Não desenvolver diretamente em `development` ou `main`. Não usar force push nas branches compartilhadas nem substituir tags publicadas.
 
@@ -21,15 +21,15 @@ Este manifesto rege a entrega de mudanças. `base.md` continua sendo a raiz das 
 5. Para arte, animações, interface ou controles, conferir também no jogo e registrar evidência. Testes e build não substituem revisão visual.
 6. Com objetivo concluído e verificações aprovadas, criar o commit final e executar `git push -u origin <branch>`. O push é parte da conclusão autorizada da tarefa; não deixar a entrega apenas local.
 7. Aguardar a CI do commit enviado. Se falhar, corrigir na mesma branch, repetir verificações e enviar novamente. Nunca declarar CI remota aprovada com base apenas nos testes locais.
-8. Integrar a feature em `development` por PR preferencialmente, preservando rastreabilidade do objetivo. A integração exige a CI verde do commit atual e todos os critérios concluídos. Se a base mudar, atualizar a branch e validar novamente. Atualizar e enviar `development`; conferir a CI da integração antes de declarar a entrega encerrada.
+8. Após pedido explícito do usuário para integrar essa entrega, fazer merge em `development` por PR preferencialmente, preservando rastreabilidade do objetivo. Sem esse pedido, manter a branch pronta e enviada, sem merge e sem apagá-la. CI verde e conclusão da feature não substituem a autorização explícita. A integração exige também CI verde do commit atual e todos os critérios concluídos. Se a base mudar, atualizar a branch e validar novamente. Atualizar e enviar `development`; conferir a CI da integração antes de declarar a entrega encerrada.
 
 9. Após confirmar a integração e a CI de `development`, encerrar a branch finalizada: verificar ancestralidade no remoto atualizado e ausência de checkout/trabalho ativo, remover a referência remota e usar `git branch -d` para a local. Conferir a remoção no remoto. Não apagar `development`, `main`, tags ou branches com trabalho pendente. Branches dependentes absorvidas pela mesma integração também devem ser encerradas. Se uma branch antiga tiver commit único ainda não integrado, auditar e preservar seu histórico antes de removê-la; nunca fazer force push nem descartar código por inferência.
 
-A autorização do usuário para esse fluxo vale para os próximos objetivos deste projeto: concluir, testar, commitar, enviar a branch e integrar features prontas em `development`. Não repetir pedidos de confirmação para essas ações rotineiras. Restrições reais do remoto devem ser respeitadas e reportadas.
+A autorização de trabalho cobre concluir, testar, commitar e enviar a branch. Qualquer merge em `development`, promoção para `main` ou release exige pedido explícito do usuário. CI verde não autoriza integração automática nem exclusão de uma branch ainda não integrada. Respeitar e reportar restrições reais do remoto.
 
 ## Promoção de versão
 
-Promover `development` para `main` no fechamento de uma versão, após validar o conjunto integrado e registrar o escopo da release. A conclusão de uma feature não promove automaticamente todas as mudanças de `development` para `main`. Sem pedido ou marco de release definido, a feature permanece integrada em `development`.
+Promover `development` para `main` no fechamento de uma versão, após validar o conjunto integrado e registrar o escopo da release. A conclusão de uma feature não promove automaticamente todas as mudanças de `development` para `main`. Sem autorização explícita, manter a branch sem integração ou promoção.
 
 1. Atualizar referências remotas, conferir os commits da promoção e confirmar que todos pertencem ao escopo concluído.
 2. Atualizar `package.json` e `package-lock.json` com a nova versão em branch própria, atualizar notas de versão e integrar em `development` pelo mesmo processo de validação.

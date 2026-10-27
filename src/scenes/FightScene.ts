@@ -16,10 +16,11 @@ import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
 import { prepareShotoSprites, preloadShotoSprites } from '../rendering/animations/shotoSprites';
+import { ProjectileView } from '../rendering/ProjectileView';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
-import { createStageLayout } from '../rendering/stages/stageLayout';
+import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
 import { preloadStage, StageView } from '../rendering/stages/StageView';
 import { CombatHud } from '../ui/CombatHud';
 import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
@@ -43,6 +44,7 @@ export class FightScene extends Phaser.Scene {
   private inputHistories = [new InputHistory(), new InputHistory()];
   private commandBuffers: [CommandBuffer, CommandBuffer] = [new CommandBuffer(), new CommandBuffer()];
   private currentInputs: [FrameInput, FrameInput] = [neutralInput(), neutralInput()];
+  private projectileView?: ProjectileView;
   private combatants: CombatantView[] = [];
   private inputDisplays: PlayerInputDisplay[] = [];
   private hitboxView?: HitboxView;
@@ -174,9 +176,8 @@ export class FightScene extends Phaser.Scene {
     const { width, height } = LOGICAL_VIEW;
     const config = createGameConfig(width, height);
     const stageLayout = createStageLayout(this.selectedStage, width, height, config.arena.floorY);
-    // Translate the arena into the stage without changing its playable width.
-    config.arena.left += stageLayout.arenaOffsetX;
-    config.arena.right += stageLayout.arenaOffsetX;
+    // The full panorama defines the walls; shared viewport separation still limits lone retreat.
+    Object.assign(config.arena,getStageArenaBounds(stageLayout));
     this.stageView = new StageView(this, this.selectedStage, stageLayout);
     this.simulation = new Simulation(config, [this.selectedFighter, this.opponentFighter], this.training
       ? { training: true, initialDistance: this.training.initialDistance } : {});
@@ -184,6 +185,7 @@ export class FightScene extends Phaser.Scene {
     this.keyboardInputs = [new KeyboardInput(getPlayerLayout(0)), new KeyboardInput(getPlayerLayout(1))];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
 
+    this.projectileView = new ProjectileView(this);
     this.combatants = [
       new CombatantView(this, 0xe45b5b),
       new CombatantView(this, 0x5b8de4),
@@ -218,7 +220,7 @@ export class FightScene extends Phaser.Scene {
     this.pauseMenu = new PauseMenu([this.selectedFighter, this.opponentFighter], Boolean(this.training),
       () => this.togglePause(false),
       () => this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }),
-      (entry, playerIndex) => { this.pinnedMove?.setText(`TREINAR · ${formatMoveTitle(entry.title,getPlayerLayout(playerIndex))}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()));
+      (entry, playerIndex) => { this.pinnedMove?.setText(`TREINAR · ${formatMoveTitle(entry.title,getPlayerLayout(playerIndex))}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()), () => { this.simulation?.fillTrainingRage(); this.syncViewsAndHud(); });
     window.addEventListener('keydown', this.handlePause);
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
     window.addEventListener('keydown', this.handleRestart);
@@ -275,10 +277,11 @@ export class FightScene extends Phaser.Scene {
     const snapshot = this.simulation?.snapshot();
     if (!snapshot) return;
 
-    this.stageView?.sync(snapshot.characters.map(character => character.x));
+    this.stageView?.sync(snapshot.characters.map(character => character.x), snapshot.characters.map(character => character.y));
     snapshot.characters.forEach((character, index) => {
-      this.combatants[index]?.sync(character, snapshot.frame);
+      this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined);
     });
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, LOGICAL_VIEW.width);
     if (this.arcadeInfo) {
@@ -317,7 +320,8 @@ export class FightScene extends Phaser.Scene {
     this.keyboardInputs.forEach((input) => input.destroy());
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());
-    this.combatants = [];
+    this.projectileView = new ProjectileView(this);
+    this.combatants = []; this.projectileView?.destroy(); this.projectileView = undefined;
     this.arcadeInfo?.destroy();
     this.arcadeInfo = undefined;
     this.bot = undefined;

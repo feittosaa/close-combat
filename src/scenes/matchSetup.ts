@@ -9,7 +9,7 @@ export function opponentFor(playerId: string, _mode: MatchMode, _arcadeIndex = 0
 export function isTrainingMode(mode:MatchMode):boolean {
   return mode==='training'||mode==='tutorial'||mode==='combo-tutorial';
 }
-/** Practice modes always use their room; general modes currently have the same sole option. */
+/** Practice stays in its room, including when a general stage is requested. */
 export function stageForMatch(mode:MatchMode,requestedId?:string){
-  return isTrainingMode(mode)?trainingStage:getStageById(requestedId??'')??defaultStage;
+  return isTrainingMode(mode)?trainingStage:(requestedId === trainingStage.id ? defaultStage : getStageById(requestedId??'')??defaultStage);
 }

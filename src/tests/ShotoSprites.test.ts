@@ -2,20 +2,20 @@ import { describe, expect, it, vi } from 'vitest';
 import type Phaser from 'phaser';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { getShotoSpritePose, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
+import { getShotoSpritePose, getShotoUltimateActivationPose, shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { CombatantView } from '../rendering/CombatantView';
 const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{w:number;h:number}}>}>('../assets/sprites/characters/shoto/*.atlas.json',{eager:true,import:'default'});
 vi.mock('phaser', () => ({ default: {} }));
 const initial = () => new Simulation(createGameConfig(1024,576)).snapshot().characters[0];
 
-it('entrega 84 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
+it('entrega 134 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
   const frames = Object.assign({},...Object.values(atlasFiles).map(a=>a.frames));
-  expect(Object.keys(frames)).toHaveLength(84);
-  for (let i=0;i<84;i++) {
+  expect(Object.keys(frames)).toHaveLength(134);
+  for (let i=0;i<134;i++) {
     const f = frames[String(i) as keyof typeof frames];
     expect(f).toBeDefined();
     expect(f.trimmed).toBe(false);
-    expect(f.frame.w).toBe(shotoSpriteManifest.frameSize.width);
+    expect(f.frame.w).toBe(i>=84 && i<108?1152:768);
     expect(f.frame.h).toBe(shotoSpriteManifest.frameSize.height);
   }
   expect(shotoSpriteManifest.footAnchorY).toBe(720);
@@ -35,11 +35,22 @@ it('seleciona idle, ida, recuo e agachado; não mascara estados sem arte', () =>
   expect(getShotoSpritePose({...state,mode:'dashing',movementDirection:'forward'},0)?.texture).toBe('shoto-dash');
   expect(getShotoSpritePose({...state,mode:'dashing',movementDirection:'backward'},0)?.texture).toBe('shoto-backstep');
 });
+it('intercala os oito desenhos existentes com intermediárias sem mudar a duração do passo',()=>{
+  const state={...initial(),mode:'moving' as const,movementDirection:'forward' as const};
+  const expected=[8,120,9,121,10,122,11,123,12,124,13,125,14,126,15,127];
+  expect(Array.from({length:16},(_,i)=>getShotoSpritePose(state,i*3)!.frame)).toEqual(expected);
+  for(let f=0;f<144;f++){
+    const pose=getShotoSpritePose(state,f)!;
+    expect(pose.texture).toBe(pose.frame>=120?'shoto-walk-inbetweens':'shoto-walk');
+    expect(getShotoSpritePose(state,f+48)).toEqual(pose);
+    expect(getShotoSpritePose(state,f)).toEqual(pose);
+  }
+});
 describe.each([30,60,120,144])('renderização de sprites em %i FPS', fps => {
   it('preserva pose lógica e pausa, troca de textura e retorno à geometria sem modificar estado', () => {
     const calls: unknown[][]=[];
     const graphic=Object.fromEntries(['setDepth','clear','fillStyle','fillRect','lineStyle','strokeRect','lineBetween','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return graphic;}]));
-    const image=Object.fromEntries(['setDepth','setTexture','setOrigin','setScale','setPosition','setFlipX','setVisible','setAlpha','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return image;}]));
+    const image=Object.fromEntries(['setDepth','setTexture','setAngle','setOrigin','setScale','setPosition','setFlipX','setVisible','setAlpha','destroy'].map(k=>[k,(...a:unknown[])=>{calls.push([k,...a]);return image;}]));
     const view=new CombatantView({add:{graphics:()=>graphic,image:()=>image},textures:{exists:()=>true}} as unknown as Phaser.Scene,0xff0000);
     const sim=new Simulation(createGameConfig(1024,576));
     const neutral={direction:'N' as const,buttons:new Set<'1'>()};
@@ -115,4 +126,27 @@ it('espelha todos os clipes e mantém guarda fechada durante o impacto bloqueado
     expect(right.flipX).toBe(false);
   }
   expect(getShotoSpritePose({...state,mode:'blockstun',remainingStateFrames:10},0)!.frame).toBeGreaterThanOrEqual(32);
+});
+
+it('keeps bottle-confirmed defenders upright and presents the independent lighter throw',()=>{
+  const state=initial();
+  for(const grounded of [true,false]){
+    const pose=getShotoSpritePose({...state,mode:'hitstun',grounded,ultimateCapture:{ownerId:'player-2'}},20);
+    expect(pose).toMatchObject({texture:'shoto-idle',frame:0});
+  }
+  const throwing={...state,ultimateThrowStartedFrame:20};
+  expect(getShotoSpritePose(throwing,20)).toMatchObject({texture:'shoto-heavy-punch',frame:92});
+  expect(getShotoSpritePose({...throwing,facing:'left'},26)).toMatchObject({texture:'shoto-heavy-punch',frame:95,flipX:true});
+  expect(getShotoSpritePose(throwing,28)?.texture).toBe('shoto-idle');
+});
+
+it('spreads all six drinking poses across the full two-second global pause',()=>{
+  const counts=new Map<number,number>();
+  for(let tick=0;tick<120;tick++){
+    const pose=getShotoUltimateActivationPose(tick,'right');
+    counts.set(pose.frame,(counts.get(pose.frame)??0)+1);
+    expect(getShotoUltimateActivationPose(tick,'left')).toEqual({...pose,flipX:true});
+  }
+  expect([...counts]).toEqual([[128,20],[129,20],[130,20],[131,20],[132,20],[133,20]]);
+  expect(getShotoUltimateActivationPose(120,'right').frame).toBe(133);
 });

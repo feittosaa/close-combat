@@ -3,6 +3,7 @@ Requires Pillow, NumPy and SciPy. Re-run from repository root. Sources stay unto
 """
 from pathlib import Path
 import json
+import sys
 import numpy as np
 from scipy.ndimage import label
 from PIL import Image
@@ -41,14 +42,55 @@ def seam(mask, center, foot_center=None):
         x -= int(history[y, x])
     return result
 
-report = {}
+report = json.loads((ROOT/'preparation.json').read_text()).get('clips',{}) if len(sys.argv)>1 and (ROOT/'preparation.json').exists() else {}
 for name, spec in SPECS.items():
+    if len(sys.argv)>1 and name not in sys.argv[1:]: continue
+    frame_cell=tuple(spec.get('cell',CELL))
     anchors, offset, scale = spec['roots'], spec['offset'], spec['scale']
-    rgb = np.array(Image.open(ROOT/'source'/f'{name}-auburn.png').convert('RGB')).astype(float)
-    chroma = np.minimum(rgb[:, :, 0], rgb[:, :, 2])-rgb[:, :, 1]
-    keyed = (chroma>12) & (np.minimum(rgb[:,:,0],rgb[:,:,2]) > rgb[:,:,1]*1.5)
-    alpha = np.ones(chroma.shape)
-    alpha[keyed] = np.clip((35-chroma[keyed])/23,0,1)
+    if 'sourceFrames' in spec:
+        # Independently authored in-betweens: fixed, reviewed anchors and uniform
+        # scale per drawing. Never infer the pivot from moving feet at runtime.
+        strip = Image.new('RGBA',(frame_cell[0]*len(anchors),frame_cell[1]))
+        frames, metrics = {}, []
+        for i, source in enumerate(spec['sourceFrames']):
+            rgba = np.array(Image.open(ROOT/'source'/source).convert('RGBA'))
+            rgb = rgba[:,:,:3].astype(float)
+            chroma = np.minimum(rgb[:,:,0],rgb[:,:,2])-rgb[:,:,1]
+            keyed = (chroma>12)&(np.minimum(rgb[:,:,0],rgb[:,:,2])>rgb[:,:,1]*1.5)
+            alpha = rgba[:,:,3].astype(float)/255
+            alpha[keyed] *= np.clip((35-chroma[keyed])/23,0,1)
+            rgba[:,:,3] = np.round(alpha*255).astype('uint8')
+            components,_=label(alpha>.5)
+            sizes=np.bincount(components.ravel());sizes[0]=0
+            from scipy.ndimage import binary_dilation
+            selected=binary_dilation(components==sizes.argmax(),iterations=2)
+            rgba[:,:,3][~selected]=0
+            ys,xs=np.where(rgba[:,:,3]>128)
+            left,top,right,bottom=int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)
+            factor=spec['scales'][i]
+            root_y=spec['rootY'][i]
+            crop=Image.fromarray(rgba).crop((left,top,right,bottom))
+            crop=crop.resize((round(crop.width*factor),round(crop.height*factor)),Image.Resampling.LANCZOS)
+            x=frame_cell[0]//2-round((anchors[i]-left)*factor)
+            y=FOOT-round((root_y-top)*factor)
+            assert x>0 and x+crop.width<frame_cell[0] and y>0 and y+crop.height<frame_cell[1],(name,i,'clipping')
+            strip.alpha_composite(crop,(i*frame_cell[0]+x,y))
+            frames[str(offset+i)]={'frame':{'x':i*frame_cell[0],'y':0,'w':frame_cell[0],'h':frame_cell[1]},'rotated':False,'trimmed':False,'spriteSourceSize':{'x':0,'y':0,'w':frame_cell[0],'h':frame_cell[1]},'sourceSize':{'w':frame_cell[0],'h':frame_cell[1]}}
+            metrics.append({'sourceBounds':[left,top,right,bottom],'sourceRootX':anchors[i],'sourceRootY':root_y,'scale':factor,'preparedRootX':frame_cell[0]//2,'preparedRootY':FOOT})
+        strip.save(ROOT/f'{name}.png')
+        (ROOT/f'{name}.atlas.json').write_text(json.dumps({'frames':frames,'meta':{'image':f'{name}.png','size':{'w':strip.width,'h':strip.height},'scale':'1'}},indent=2)+'\n')
+        report[name]=metrics
+        continue
+    source_image = np.array(Image.open(ROOT/'source'/spec.get('source',f'{name}-auburn.png')).convert('RGBA'))
+    rgb = source_image[:,:,:3].astype(float)
+    if spec.get('transparentSource'):
+        alpha = source_image[:,:,3].astype(float)/255
+    else:
+        chroma = np.minimum(rgb[:, :, 0], rgb[:, :, 2])-rgb[:, :, 1]
+        keyed = (chroma>12) & (np.minimum(rgb[:,:,0],rgb[:,:,2]) > rgb[:,:,1]*1.5)
+        if spec.get('key')=='balanced': keyed &= np.abs(rgb[:,:,0]-rgb[:,:,2]) < np.maximum(rgb[:,:,0],rgb[:,:,2])*.35
+        alpha = np.ones(chroma.shape)
+        alpha[keyed] = np.clip((35-chroma[keyed])/23,0,1)
     rgba = np.dstack((rgb, np.round(alpha*255))).astype('uint8')
     mask = alpha>.5
     h,w = mask.shape
@@ -66,7 +108,7 @@ for name, spec in SPECS.items():
         foot_seams=[400,550,812,1115,1420,1590,1850]
         upper_seams=[335,558,819,1080,1380,1590,1860]
         seams=[np.zeros(h,dtype=int)]+[seam(mask,c,f) for c,f in zip(upper_seams,foot_seams)]+[np.full(h,w,dtype=int)]
-    strip = Image.new('RGBA',(CELL[0]*len(anchors),CELL[1]))
+    strip = Image.new('RGBA',(frame_cell[0]*len(anchors),frame_cell[1]))
     frames = {}
     metrics = []
     for i,anchor in enumerate(anchors):
@@ -85,20 +127,20 @@ for name, spec in SPECS.items():
         left,right,top,bottom = int(xs.min()),int(xs.max())+1,int(ys.min()),int(ys.max())+1
         crop = Image.fromarray(frame).crop((left,top,right,bottom))
         crop = crop.resize((round(crop.width*scale),round(crop.height*scale)),Image.Resampling.LANCZOS)
-        x = CELL[0]//2-round((anchor-left)*scale)
+        x = frame_cell[0]//2-round((anchor-left)*scale)
         root_y=spec.get('rootY',[bottom]*len(anchors))[i]
         y = FOOT-round((root_y-top)*scale)
-        if x<0 or x+crop.width>CELL[0] or y<0:
+        if x<0 or x+crop.width>frame_cell[0] or y<0:
             raise ValueError((name,i,'frame outside fixed cell',x,y,crop.size))
-        strip.alpha_composite(crop,(i*CELL[0]+x,y))
-        frames[str(offset+i)] = {'frame':{'x':i*CELL[0],'y':0,'w':CELL[0],'h':CELL[1]},'rotated':False,'trimmed':False,'spriteSourceSize':{'x':0,'y':0,'w':CELL[0],'h':CELL[1]},'sourceSize':{'w':CELL[0],'h':CELL[1]}}
-        metrics.append({'sourceBounds':[left,top,right,bottom],'sourceRootX':anchor,'sourceRootY':root_y,'scale':scale,'preparedRootX':CELL[0]//2,'preparedRootY':FOOT})
+        strip.alpha_composite(crop,(i*frame_cell[0]+x,y))
+        frames[str(offset+i)] = {'frame':{'x':i*frame_cell[0],'y':0,'w':frame_cell[0],'h':frame_cell[1]},'rotated':False,'trimmed':False,'spriteSourceSize':{'x':0,'y':0,'w':frame_cell[0],'h':frame_cell[1]},'sourceSize':{'w':frame_cell[0],'h':frame_cell[1]}}
+        metrics.append({'sourceBounds':[left,top,right,bottom],'sourceRootX':anchor,'sourceRootY':root_y,'scale':scale,'preparedRootX':frame_cell[0]//2,'preparedRootY':FOOT})
     for i in range(len(anchors)):
-        cell = np.array(strip)[:,i*CELL[0]:(i+1)*CELL[0]]
+        cell = np.array(strip)[:,i*frame_cell[0]:(i+1)*frame_cell[0]]
         ys,xs = np.where(cell[:,:,3]>128)
-        assert xs.min()>0 and xs.max()<CELL[0]-1 and ys.max()<CELL[1], (name,i,'clipping or foot drift')
+        assert xs.min()>0 and xs.max()<frame_cell[0]-1 and ys.max()<frame_cell[1], (name,i,'clipping or foot drift')
     strip.save(ROOT/f'{name}.png')
     (ROOT/f'{name}.atlas.json').write_text(json.dumps({'frames':frames,'meta':{'image':f'{name}.png','size':{'w':strip.width,'h':strip.height},'scale':'1'}},indent=2)+'\n')
     report[name] = metrics
 (ROOT/'preparation.json').write_text(json.dumps({'cell':CELL,'footAnchorY':FOOT,'clips':report},indent=2)+'\n')
-print(f'Prepared {sum(len(spec["roots"]) for spec in SPECS.values())} RGBA frames in fixed 768x768 cells; authored roots, no runtime pixel inference.')
+print(f'Prepared {sum(len(frames) for frames in report.values())} RGBA frames; fixed per-clip cells, authored roots, no runtime pixel inference.')

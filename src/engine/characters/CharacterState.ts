@@ -2,9 +2,10 @@ import type { AttackButton } from '../../input/types';
 import type { CharacterCollisionProfile } from '../data/characters';
 
 export type CharacterMode = 'neutral' | 'moving' | 'dashing' | 'airborne' | 'crouching' |
-  'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun';
+  'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun' | 'knockdown';
 export interface CharacterAttack {
   moveId: string;
+  commandFrame?: number;
   buttons: readonly AttackButton[];
   elapsedFrames: number;
   hasHit: boolean;
@@ -20,15 +21,25 @@ export interface CharacterState {
   movementDirection?: 'forward' | 'backward';
   health: number;
   maxHealth: number;
+  rage: number;
+  maxRage: number;
   mode: CharacterMode;
   stateStartedFrame: number;
   animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };
   remainingStateFrames: number;
+  /** Logical jump origin survives guard/stun pose changes; renderer never restarts a flight. */
+  airborneStartedFrame?: number;
   verticalVelocity: number;
   grounded: boolean;
   crouching: boolean;
   attack?: CharacterAttack;
   hitFlashFrames: number;
+  chain?: string[];
+  chainLastFrame?: number;
+  knockdown?: { velocityX: number };
+  /** Bottle confirmation holds the defender until the lighter arrives, including landing. */
+  ultimateCapture?: { ownerId: string };
+  ultimateThrowStartedFrame?: number;
 }
 
 /** Snapshot of the preceding pose state; contains no renderer objects or recursive history. */

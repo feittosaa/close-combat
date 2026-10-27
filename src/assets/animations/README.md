@@ -1,5 +1,5 @@
-# Animações futuras
+# Animações
 
-Não há manifestos de personagens nesta etapa. Shoto usa representação geométrica. Quando houver arte aprovada, entregar PNG RGBA em células uniformes e manifesto com dimensões, pivô dos pés, intervalos, holds, orientação e escala uniforme. Frames, colisões e dano continuam no motor. Seguir `identidade-visual.md`; não recuperar manifestos do elenco removido.
+Exportações e dados de sequências devem declarar dimensões, orientação, pivô, escala, quadros e holds. O tempo lógico pertence ao motor; arquivos de arte não definem dano, colisão ou regras.
 
-Raiz de regras: [base.md](../../../base.md).
+Seguir a identidade visual e o processo geral de animação. Listas de clipes, aprovação e pendências individuais pertencem à pipeline e aos manifestos específicos.
