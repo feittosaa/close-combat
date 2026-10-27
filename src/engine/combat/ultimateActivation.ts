@@ -1,5 +1,5 @@
-/** Shared ultimate activation: six fixed ticks freeze world and round clock. */
-export const ULTIMATE_ACTIVATION_FRAMES = 6;
+/** Shared ultimate activation: two seconds of fixed ticks freeze world and round clock. */
+export const ULTIMATE_ACTIVATION_FRAMES = 120;
 export interface UltimateActivation {
   ownerIds: readonly string[];
   elapsedFrames: number;

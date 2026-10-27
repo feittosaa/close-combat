@@ -89,7 +89,7 @@ export const shoto: CharacterDefinition = {
       hitbox: { forward: 13.8, yOffset: -120.75, width: 73.6, height: 69 } },
     { id: 'wine-ultimate', name: 'Ultimate — Coquetel molotov', category: 'ultimate', pose: 'heavy-punch', notation: 'b,bd,d,df,f,1+2', input: { buttons: ['1','2'], sequence: ['B','DB','D','DF','F'] },
       rageCost: 100, startup: 1, activeFrames: 1, recovery: 38, damage: 280, hitstun: 44, blockstun: 20, pushback: { hit: 24, block: 14 }, hitLevel: 'mid',
-      ultimateSequence: { lighterHitbox: { forward: 0, yOffset: -115, width: 9.2, height: 13.8 }, lighterDelay: 6, lighterSpeed: 9, confirmStun: 120, knockbackSpeed: 8, launchSpeed: -5, knockdownFrames: 24 },
-      projectile: { speed: 18, life: 150, visual: 'bottle' }, hitbox: { forward: 0, yOffset: -105.8, width: 34.5, height: 27.6 } },
+      ultimateSequence: { lighterHitbox: { forward: 0, yOffset: -115, width: 9.2, height: 13.8 }, lighterDelay: 6, lighterSpeed: 7.5, confirmStun: 120, knockbackSpeed: 8, launchSpeed: -5, knockdownFrames: 24 },
+      projectile: { speed: 15, life: 150, visual: 'bottle' }, hitbox: { forward: 0, yOffset: -105.8, width: 34.5, height: 27.6 } },
   ],
 };

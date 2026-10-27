@@ -1,3 +1,4 @@
+import { ULTIMATE_ACTIVATION_FRAMES } from '../../engine/combat/ultimateActivation';
 import { shotoCombatSources, shotoCombatClips, getShotoCombatPose } from './shotoCombatSprites';
 import { prepareShotoPalette } from './prepareShotoPalette';
 import { shotoTransitionSources, transitionClips, transitionByAction } from './shotoTransitions';
@@ -25,6 +26,8 @@ import backwardAtlas from '../../assets/sprites/characters/shoto/walk-backward.a
 import dashAtlas from '../../assets/sprites/characters/shoto/dash.atlas.json';
 import backstepAtlas from '../../assets/sprites/characters/shoto/backstep.atlas.json';
 
+const ultimateDrinkClip = {key:'shoto-ultimate-drink',start:128,end:133,frameRate:360/ULTIMATE_ACTIVATION_FRAMES,repeat:0};
+
 /** Approved locomotion, four basics and posture guards. Roots and body scale are atlas-authored. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
   textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:134,
@@ -40,10 +43,14 @@ export const shotoSpriteManifest: CharacterAnimationManifest = {
     {key:'shoto-backstep',start:50,end:55,frameDurations:[3,4,4,4,3,2],frameRate:18,repeat:0},
     ...transitionClips,
     ...shotoCombatClips,
-    {key:'shoto-ultimate-drink',start:128,end:133,frameRate:60,repeat:0},
+    ultimateDrinkClip,
   ],
 };
 validateAnimationManifest(shotoSpriteManifest);
+
+export function getShotoUltimateActivationPose(elapsedFrames: number, facing: CharacterState['facing']) {
+  return {texture:ultimateDrinkClip.key,frame:getTimedAnimationFrame(ultimateDrinkClip,elapsedFrames),scale:1,alpha:1,flipX:facing==='left'};
+}
 const sources=[
   {key:'shoto-ultimate-drink',image:drinkImage,atlas:drinkAtlas},
   {key:'shoto-idle',image:idleImage,atlas:idleAtlas},

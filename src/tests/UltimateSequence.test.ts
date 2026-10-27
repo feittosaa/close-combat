@@ -25,7 +25,8 @@ function contact(sim:Simulation,stage:'confirm'|'explosion',player=0,target=N){
   throw new Error(`Missing ${stage} contact`);
 }
 
-it('freezes the round clock and entire world for exactly six activation ticks, for any ultimate',()=>{
+it('freezes the round clock and entire world for two full seconds of activation, for any ultimate',()=>{
+  expect(ULTIMATE_ACTIVATION_FRAMES).toBe(120);
   const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:100}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
@@ -53,13 +54,13 @@ it('freezes already flying projectiles, and simultaneous ultimates share one act
   const sim=create(350);sim.fillTrainingRage();command(sim,'wine-bottle',1);wait(sim,20);
   expect(sim.snapshot().projectiles).toHaveLength(1);
   command(sim,'wine-ultimate');const started=sim.snapshot();
-  for(let i=0;i<5;i++){step(sim);expect(sim.snapshot().projectiles).toEqual(started.projectiles);}
+  for(let i=0;i<ULTIMATE_ACTIVATION_FRAMES-1;i++){step(sim);expect(sim.snapshot().projectiles).toEqual(started.projectiles);}
   const both=create();both.fillTrainingRage();
   for(const direction of ['B','DB','D','DF','F'] as Direction[]){
     const value=input(direction,direction==='F'?['1','2']:[]);both.stepFrame([value,value]);
   }
   expect(both.snapshot().ultimateActivation?.ownerIds).toEqual(['player-1','player-2']);
-  wait(both,5);expect(both.snapshot().ultimateActivation?.elapsedFrames).toBe(5);
+  wait(both,ULTIMATE_ACTIVATION_FRAMES-1);expect(both.snapshot().ultimateActivation?.elapsedFrames).toBe(ULTIMATE_ACTIVATION_FRAMES-1);
   step(both);expect(both.snapshot().ultimateActivation).toBeUndefined();
 });
 
@@ -89,7 +90,7 @@ it('guarding or missing the bottle never creates the lighter or deals explosion 
   const outOfLine={...shoto,collision:{...shoto.collision,hurtboxes:{...shoto.collision.hurtboxes,
     standing:{...shoto.collision.hurtboxes.standing,offsetY:-1000}}}};
   const miss=new Simulation(config,[shoto,outOfLine],{training:true,initialDistance:350});
-  miss.fillTrainingRage();command(miss,'wine-ultimate');wait(miss,170);
+  miss.fillTrainingRage();command(miss,'wine-ultimate');wait(miss,ULTIMATE_ACTIVATION_FRAMES+170);
   expect(miss.snapshot().recentContacts).toHaveLength(0);
   expect(miss.snapshot().projectiles).toHaveLength(0);
   expect(miss.snapshot().characters[1].health).toBe(1000);
@@ -184,12 +185,16 @@ it.each([0,1])('captures an airborne defender upright, waits for landing and exp
   throw new Error('Air confirmation never reached its explosion');
 });
 
-it.each([0,1])('throws the ultimate bottle across maximum separation in under half a second: player %i',player=>{
+it.each([0,1])('throws the ultimate bottle across maximum separation at the reduced speed while retaining a reliable lighter confirmation: player %i',player=>{
   const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
   wait(sim,ULTIMATE_ACTIVATION_FRAMES);
-  const launched=sim.snapshot();expect(Math.abs(launched.projectiles[0].velocity)).toBe(18);
+  const launched=sim.snapshot();expect(Math.abs(launched.projectiles[0].velocity)).toBe(15);
   const started=launched.frame;contact(sim,'confirm',player);
-  expect(sim.snapshot().frame-started).toBeLessThanOrEqual(30);
+  expect(sim.snapshot().frame-started).toBeLessThanOrEqual(36);
+  let lighter;
+  for(let tick=0;tick<20&&!lighter;tick++){step(sim);lighter=sim.snapshot().projectiles.find(p=>p.phase==='lighter');}
+  expect(lighter).toBeDefined();
+  expect(Math.hypot(lighter!.velocity,lighter!.verticalVelocity??0)).toBeCloseTo(7.5);
   expect(contact(sim,'explosion',player).damage).toBe(280);
 });
 

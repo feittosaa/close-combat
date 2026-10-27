@@ -10,6 +10,19 @@ Pedido concluído localmente: reforçar em `AGENTS.md` e `base.md` a prioridade 
 
 Branch própria para a diretriz: `codex/chore-diretriz-limpeza`. Validação do checkout: instalação reproduzível, testes, build e diff aprovados; alteração somente documental, sem mudança visual ou de controles. As alterações de câmera/ultimate e o ajuste de receita aérea já existentes são preservados fora deste commit documental. A consulta ao remoto funcionou fora do sandbox: development em `a5930d901654feb419570ff642acc6025d20daed`, main em `77a4c939c9ccdf028eed5f334132f65368dbae30`. Diretriz enviada em `c4d4ca81ee610a7f0d988b017ca3c280e1dd0142`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40562393410); sem integração.
 
+## Ritmo da preparação e projéteis da ultimate — 2026-10-27
+
+Branch `codex/fix-ritmo-ultimate`, dependente de `codex/feature-camera-ultimates` em `af4a64d7a9acf60ba5995ca0d29a98e7672c6f41`, ainda sem integração. Pedido: tornar a preparação cinematográfica deliberada e desacelerar um pouco os projéteis.
+
+- [x] Pausa compartilhada das ultimates de 120 ticks a 60 Hz (dois segundos), substituindo os seis ticks anteriores. Cronômetro, oponente, projéteis, efeitos e simulação permanecem congelados; somente a animação de preparação avança. Ativações simultâneas não somam duração.
+- [x] Distribuir os seis desenhos existentes de beber ao longo dos 120 ticks: 20 ticks por pose. Não terminar o movimento nos primeiros seis ticks nem prender a última imagem durante o restante da pausa.
+- [x] Garrafa da ultimate de 18 para 15 unidades/tick; isqueiro de 9 para 7,5 unidades/tick (redução de aproximadamente 17% em ambos). Preservar a confirmação, stun, aterrissagem em pé e explosão. Não alterar os especiais comuns sem preparação cinematográfica.
+- [x] Validação local: `npm ci`, 230 testes em 27 arquivos, build e `git diff --check` aprovados. Regressão nova verifica os seis desenhos ao longo dos dois segundos; testes de pausa verificam todos os 120 ticks e os projéteis preservam confirmação nos dois lados.
+- [ ] Conferência no jogo bloqueada pela conexão de automação do navegador integrado: recarregamento e aba nova falharam; a seleção de ambas as abas expirou ao configurar foco via CDP. O servidor localhost responde HTTP 200. Não declarar revisão visual concluída.
+- [ ] Commit/push e CI desta revisão pendentes da conferência no jogo exigida pelo processo. Alterações somente locais em `codex/fix-ritmo-ultimate`; base remota de referência da implementação anterior: `af4a64d`. O ajuste de receita aérea anterior continua preservado localmente fora desta entrega. Sem merge, promoção ou tag.
+
+A seção anterior de câmera/ultimate abaixo registra a implementação precedente; os tempos e velocidades vigentes são os desta revisão.
+
 ## Câmera vertical, escala e conclusão da ultimate — 2026-10-27
 
 Branch: `codex/feature-camera-ultimates`, a partir de `codex/chore-diretriz-limpeza` (`c4d4ca8`), ainda não integrada. A base do runtime é o catálogo em `0324c2a`; esta entrega conclui os arquivos de ultimate e panoramas já em andamento em `codex/feature-ultimate-cinematica`. O ajuste preexistente de receita aérea permanece local e fora do commit desta entrega.
