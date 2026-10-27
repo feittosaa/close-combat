@@ -15,7 +15,7 @@ export class ArcadeController {
     const threat = this.opponent.moves.find(move => move.id === opponent.attack?.moveId);
     if (threat && distance < 140 && (opponent.attack?.elapsedFrames ?? 0) >= 4) return { direction: 'B', buttons: new Set() };
     if (self.mode === 'blockstun') return neutral();
-    const candidates = this.fighter.moves.filter(move => distance <= move.hitbox.forward + move.hitbox.width + opponent.collision.bodyWidth / 2);
+    const candidates = this.fighter.moves.filter(move => (!move.category || move.category === 'basic') && distance <= move.hitbox.forward + move.hitbox.width + opponent.collision.bodyWidth / 2);
     if (candidates.length && frame >= this.nextDecisionFrame) {
       this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
       const move = candidates[this.seed % candidates.length];

@@ -14,6 +14,7 @@ export class CombatHud {
   private readonly hitLabel: Phaser.GameObjects.Text;
   private readonly resultLabel: Phaser.GameObjects.Text;
   private readonly modeLabels: Phaser.GameObjects.Text[];
+  private readonly rageLabels: Phaser.GameObjects.Text[];
   private readonly healthLabels: Phaser.GameObjects.Text[];
   private readonly pauseHint: Phaser.GameObjects.Text;
   private lastImpactLabel = '';
@@ -28,6 +29,7 @@ export class CombatHud {
     this.healthGraphics=scene.add.graphics();
     this.healthLabels=[scene.add.text(388,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
       scene.add.text(width-388,33,'',hudText(10,false,HUD.goldText))];
+    this.rageLabels=[scene.add.text(30,72,'',hudText(9,false,HUD.goldText)),scene.add.text(width-30,72,'',hudText(9,false,HUD.goldText)).setOrigin(1,0)];
     this.modeLabels=[scene.add.text(30,49,'',hudText(10,false,HUD.muted)),
       scene.add.text(width-30,49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
     this.timer=scene.add.text(width/2,6,'99',hudText(30,true)).setOrigin(.5,0);
@@ -36,7 +38,7 @@ export class CombatHud {
     this.hitLabel=scene.add.text(width/2,78,'',{...hudText(11,false,HUD.goldText),align:'center',wordWrap:{width:540}}).setOrigin(.5,0).setVisible(training);
     this.resultLabel=scene.add.text(width/2,98,'',{...hudText(17,true),stroke:'#17131a',strokeThickness:4,align:'center'}).setOrigin(.5,0);
     this.pauseHint=scene.add.text(width/2,LOGICAL_VIEW.height-18,'',hudText(10,false,HUD.muted)).setOrigin(.5).setVisible(!training);
-    this.root=scene.add.container(0,0,[decoration,...labels,this.healthGraphics,...this.healthLabels,...this.modeLabels,
+    this.root=scene.add.container(0,0,[decoration,...labels,this.healthGraphics,...this.healthLabels,...this.modeLabels,...this.rageLabels,
       this.timer,this.roundLabel,stageLabel,this.hitLabel,this.resultLabel,this.pauseHint]).setScrollFactor(0).setDepth(100);
   }
 
@@ -66,6 +68,12 @@ export class CombatHud {
       }
       g.lineStyle(1,HUD.gold,.9).strokeRect(x,10,this.barWidth,17);
       for(let round=0;round<2;round++)drawDiamond(g,index===0?420+round*16:width-420-round*16,19,3,HUD.lightGold,snapshot.roundWins[index]>round);
+      if(character.maxRage>0){
+        const rageX=index===0?30:width-180;
+        g.fillStyle(HUD.rail).fillRect(rageX,64,150,4);
+        g.fillStyle(character.rage>=character.maxRage?HUD.lightGold:HUD.players[index]).fillRect(rageX,64,150*character.rage/character.maxRage,4);
+      }
+      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}${character.rage>=character.maxRage?' · PRONTA':''}`:'');
       this.healthLabels[index]?.setText(`${Math.max(0,character.health)} / ${character.maxHealth}`);
       this.modeLabels[index]?.setText(this.training?MODE_LABELS[character.mode]:index===0?'JOGADOR 1':'JOGADOR 2')
         .setColor(character.mode==='hitstun'?'#f09a84':character.mode==='blockstun'||character.mode==='blocking'?'#95d7d0':HUD.muted);

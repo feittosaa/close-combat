@@ -7,6 +7,7 @@ import { CommandParser } from '../../input/CommandBuffer';
 import type { FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
+import type { ProjectileState } from '../combat/ProjectileState';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
@@ -18,6 +19,7 @@ export interface SimulationSnapshot {
   roundWins: readonly [number, number]; roundWinnerId?: string;
   roundEndReason?: 'knockout' | 'time' | 'draw'; matchWinnerId?: string;
   characters: readonly CharacterState[]; activeHitboxes: readonly Hitbox[];
+  projectiles: readonly ProjectileState[];
   hitEvents: readonly HitEvent[]; recentContacts: readonly CombatLogEntry[];
 }
 export interface SimulationOptions { training?: boolean; initialDistance?: number }
@@ -26,12 +28,15 @@ const locked = (state: CharacterState): boolean => state.mode === 'hitstun' || s
 const axis = (input: FrameInput): number => input.direction.endsWith('F') ? 1 : input.direction.endsWith('B') ? -1 : 0;
 const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
 
-/** Base determinística: quatro básicos, guarda e locomoção. Sem regras do elenco removido. */
+/** Deterministic combat. Commands, resources and allowed routes belong to each fighter's data. */
 export class Simulation {
   private readonly clock = new FixedStepClock();
-  private readonly parsers = [new CommandParser(), new CommandParser()];
+  private readonly parsers = [new CommandParser(true, 36), new CommandParser(true, 36)];
   private readonly resolver: AttackResolver;
   private characters: [CharacterState, CharacterState];
+  private projectiles: ProjectileState[] = [];
+  private nextProjectileId = 0;
+  private pendingCommands: ({ move: MoveDefinition; expires: number } | undefined)[] = [undefined, undefined];
   private frame = 0;
   private elapsedFrames = 0;
   private hitstopFramesRemaining = 0;
@@ -71,19 +76,23 @@ export class Simulation {
       hitstopFramesRemaining: this.hitstopFramesRemaining,
       phase: this.phase, roundWins: [...this.roundWins], roundWinnerId: this.roundWinnerId,
       roundEndReason: this.roundEndReason, matchWinnerId: this.matchWinnerId,
-      characters: structuredClone(this.characters), activeHitboxes: this.phase === 'fight' ? this.resolver.activeHitboxes(this.characters) : [],
+      characters: structuredClone(this.characters), activeHitboxes: this.phase === 'fight' ? this.resolver.activeHitboxes(this.characters, this.projectiles) : [],
+      projectiles: structuredClone(this.projectiles),
       hitEvents: this.lastHitEvents.map(event => ({ ...event })), recentContacts: this.recentContacts.map(entry => ({ frame: entry.frame, event: { ...entry.event } })) };
   }
   clearInputHistory(): void {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
     this.jumpHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
-    this.dashFrames.fill(0); this.dashAxis.fill(0);
+    this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
   }
   isMatchOver(): boolean { return this.phase === 'match-over'; }
   resetMatch(distance?: number): void {
     if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
     this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
     this.resetRound();
+  }
+  fillTrainingRage(): void {
+    if (this.options.training) this.characters.forEach(character => { character.rage = character.maxRage; });
   }
   setTrainingAutoRestore(enabled: boolean): void { if (this.options.training) { this.trainingAutoRestore = enabled; this.quietFrames = 0; } }
 
@@ -95,7 +104,7 @@ export class Simulation {
     return this.definitions.map((fighter, index) => ({
       characterId: `player-${index + 1}`, fighterId: fighter.id, collision: structuredClone(fighter.collision),
       x: clamp(center + (index === 0 ? -1 : 1) * distance / 2, left + fighter.collision.bodyWidth / 2, right - fighter.collision.bodyWidth / 2),
-      y: floorY, facing: index === 0 ? 'right' : 'left', health: fighter.maxHealth, maxHealth: fighter.maxHealth,
+      y: floorY, facing: index === 0 ? 'right' : 'left', health: fighter.maxHealth, maxHealth: fighter.maxHealth, rage: 0, maxRage: fighter.rage?.maximum ?? 0,
       mode: 'neutral', stateStartedFrame: this.frame, remainingStateFrames: 0, verticalVelocity: 0,
       grounded: true, crouching: false, hitFlashFrames: 0,
     })) as [CharacterState, CharacterState];
@@ -104,7 +113,7 @@ export class Simulation {
     this.clearInputHistory(); this.characters = this.createCharacters(); this.roundFramesRemaining = this.config.match.roundDurationFrames;
     this.roundWinnerId = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
     this.lastHitEvents = []; this.recentContacts = []; this.quietFrames = 0;
-    this.hitstopFramesRemaining = 0;
+    this.hitstopFramesRemaining = 0; this.projectiles = []; this.nextProjectileId = 0;
   }
   private step(inputs: readonly FrameInput[]): void {
     this.elapsedFrames += 1;
@@ -120,6 +129,7 @@ export class Simulation {
     // The round clock uses real fixed ticks, independently of combat/animation time.
     if (!this.options.training) this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
     if (this.hitstopFramesRemaining > 0) {
+      this.characters.forEach((character, index) => this.readCommand(character, index, inputs[index] ?? neutral()));
       this.hitstopFramesRemaining -= 1;
       // Keep attacks/poses intact through the last impact tick, including KO/time-up.
       if (!this.hitstopFramesRemaining && !this.options.training &&
@@ -144,28 +154,44 @@ export class Simulation {
         character.attack.elapsedFrames += 1;
         if (character.attack.elapsedFrames >= move.startup + move.activeFrames + move.recovery) character.attack = undefined;
       }
-      const command = this.parsers[index].update(input, this.frame, this.definitions[index].moves,
-        { airborne: !character.grounded, crouching: false });
-      // Apenas os quatro básicos em pé: não criar versões agachadas/aéreas implicitamente.
-      return input.buttons.size === 1 && character.grounded && !input.direction.startsWith('D') && !input.direction.startsWith('U') ? command : undefined;
+      this.readCommand(character, index, input);
+      return this.pendingCommands[index]?.move;
     });
     this.characters.forEach((character, index) => {
       const input = inputs[index] ?? neutral();
       const opponent = this.characters[1 - index];
       const wasLocked = lockedAtInput[index];
       character.movementDirection = undefined;
-      if (!character.attack && !wasLocked && commands[index]) {
-        const move = commands[index]!;
-        character.attack = { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false };
-        character.crouching = false; this.dashFrames[index] = 0;
+      const requested = commands[index];
+      if (!wasLocked && requested && this.canStart(character, index, requested)) {
+        const previous = character.attack;
+        const promotion = previous && previous.elapsedFrames <= 3 && !previous.hasHit &&
+          requested.input.buttons.length > previous.buttons.length;
+        character.chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), requested.id] : [requested.id];
+        character.chainLastFrame = this.frame;
+        character.rage = Math.max(0, character.rage - (requested.rageCost ?? 0));
+        character.attack = { moveId: requested.id, commandFrame: this.frame, buttons: requested.input.buttons, elapsedFrames: 0, hasHit: false };
+        character.crouching = Boolean(requested.crouching); this.dashFrames[index] = 0;
+        this.pendingCommands[index] = undefined;
+        if (requested.movement?.launch) {
+          character.grounded = false; character.airborneStartedFrame = this.frame;
+          character.verticalVelocity = requested.movement.launch;
+        }
       }
       if (character.attack) {
         const move = this.move(index, character.attack.moveId)!;
         const elapsed = character.attack.elapsedFrames;
+        if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
+        if (move.projectile && elapsed === move.startup) {
+          this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
+            x: character.x + (character.facing === 'right' ? 28 : -28), y: character.y, facing: character.facing,
+            velocity: move.projectile.speed * (character.facing === 'right' ? 1 : -1), remainingFrames: move.projectile.life,
+            visual: move.projectile.visual, attack: { ...character.attack, hasHit: false } });
+        }
         character.mode = elapsed < move.startup ? 'startup' : elapsed < move.startup + move.activeFrames ? 'active' : 'recovery';
       } else if (!wasLocked) {
         character.crouching = character.grounded && input.direction.startsWith('D');
-        const threatening = Boolean(attackingAtInput[1 - index] || opponent.attack || commands[1 - index]);
+        const threatening = Boolean(attackingAtInput[1 - index] || opponent.attack || commands[1 - index] || this.projectiles.some(p => p.ownerId === opponent.characterId));
         const guard = threatening && (input.direction === 'B' || input.direction === 'DB');
         if (guard) {
           if(!character.grounded)this.moveCharacter(character,input,index);
@@ -192,17 +218,25 @@ export class Simulation {
       if (character.attack || wasLocked || character.mode === 'blocking' || !character.grounded) this.previousAxis[index] = axis(input);
     });
     this.resolveBodies(previousX); this.resolveScreenEdges(previousX); this.updateFacing();
-    this.lastHitEvents = this.resolver.resolve(this.characters, inputs);
+    this.projectiles.forEach(projectile => { projectile.x += projectile.velocity; projectile.remainingFrames -= 1; });
+    this.lastHitEvents = this.resolver.resolve(this.characters, inputs, this.projectiles);
+    this.projectiles = this.projectiles.filter(p => !p.attack.hasHit && p.remainingFrames > 0 && p.x >= this.config.arena.left - 100 && p.x <= this.config.arena.right + 100);
     if (this.lastHitEvents.length) this.hitstopFramesRemaining = CONTACT_HITSTOP_FRAMES;
     this.lastHitEvents.forEach(event => {
       const attacker = this.characters.find(character => character.characterId === event.attackerId)!;
       const target = this.characters.find(character => character.characterId === event.targetId)!;
-      target.x += event.pushback * (attacker.facing === 'right' ? 1 : -1);
+      const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
+      const gain = this.definitions[attackerIndex].rage;
+      const received = this.definitions[targetIndex].rage;
+      if (gain && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
+      if (received) target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
+      target.x += event.pushback * ((event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1);
       this.recentContacts.push({ frame: this.frame, event });
     });
     this.recentContacts = this.recentContacts.filter(entry => this.frame - entry.frame < 180).slice(-20);
     this.resolveBodies(); this.resolveScreenEdges(previousX);
     this.characters.forEach((character,index)=>{
+      if (!character.attack || locked(character)) character.chain = undefined;
       const previous=previousAnimationStates[index];
       if(character.mode!==previous.mode)character.stateStartedFrame=this.frame;
       const directionalPose=['moving','dashing'].includes(character.mode);
@@ -212,7 +246,7 @@ export class Simulation {
       }
     });
     if (this.options.training) {
-      const quiet = this.characters.every(character => !character.attack && !locked(character));
+      const quiet = this.characters.every(character => !character.attack && !locked(character) && this.projectiles.length === 0);
       this.quietFrames = quiet ? this.quietFrames + 1 : 0;
       if (this.trainingAutoRestore && this.quietFrames >= 90) this.characters.forEach(character => { character.health = character.maxHealth; });
     } else {
@@ -220,6 +254,28 @@ export class Simulation {
         (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
     }
     this.frame += 1;
+  }
+  private readCommand(character: CharacterState, index: number, input: FrameInput): void {
+    if (this.pendingCommands[index] && this.pendingCommands[index]!.expires < this.frame) this.pendingCommands[index] = undefined;
+    const moves = this.definitions[index].moves.filter(move => !move.follows || character.attack?.moveId === move.follows)
+      .map(move => move.follows ? { ...move, sequenceAfterFrame: character.attack?.commandFrame } : move);
+    const command = this.parsers[index].update(input, this.frame, moves,
+      { airborne: !character.grounded, crouching: input.direction.startsWith('D') && character.grounded });
+    if (command && command.input.buttons.length === input.buttons.size && !input.direction.startsWith('U')) this.pendingCommands[index] = { move: command, expires: this.frame + 6 };
+  }
+  private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
+    if ((move.rageCost ?? 0) > character.rage) return false;
+    if (Boolean(move.airborne) !== !character.grounded) return false;
+    const previous = character.attack;
+    if (move.follows) return previous?.moveId === move.follows && previous.hasHit && previous.elapsedFrames <= (move.followWindow ?? 36);
+    if (!previous) return true;
+    // A chord completed within the input grace window replaces its uncommitted single.
+    if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
+      previous.buttons.every(button => move.input.buttons.includes(button))) return true;
+    if (!previous.hasHit) return false;
+    const chain = [...(character.chain ?? [previous.moveId]), move.id];
+    return (this.definitions[index].combos ?? []).some(recipe =>
+      chain.length <= recipe.moveIds.length && chain.every((id, step) => recipe.moveIds[step] === id));
   }
   private move(index: number, id: string): MoveDefinition | undefined { return this.definitions[index].moves.find(move => move.id === id); }
   private moveCharacter(character: CharacterState, input: FrameInput, index: number): void {
@@ -306,7 +362,7 @@ export class Simulation {
     this.roundWinnerId = winner === undefined ? undefined : this.characters[winner].characterId;
     this.roundEndReason = winner === undefined ? 'draw' : this.characters.some(character => character.health === 0) ? 'knockout' : 'time';
     if (winner !== undefined) this.roundWins[winner] += 1;
-    this.characters.forEach(character => { character.attack = undefined; });
+    this.characters.forEach(character => { character.attack = undefined; }); this.projectiles = [];
     this.phase = 'round-over'; this.transitionFrames = this.config.match.roundEndPauseFrames;
   }
 }

@@ -5,6 +5,7 @@ export type CharacterMode = 'neutral' | 'moving' | 'dashing' | 'airborne' | 'cro
   'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun';
 export interface CharacterAttack {
   moveId: string;
+  commandFrame?: number;
   buttons: readonly AttackButton[];
   elapsedFrames: number;
   hasHit: boolean;
@@ -20,6 +21,8 @@ export interface CharacterState {
   movementDirection?: 'forward' | 'backward';
   health: number;
   maxHealth: number;
+  rage: number;
+  maxRage: number;
   mode: CharacterMode;
   stateStartedFrame: number;
   animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };
@@ -31,6 +34,8 @@ export interface CharacterState {
   crouching: boolean;
   attack?: CharacterAttack;
   hitFlashFrames: number;
+  chain?: string[];
+  chainLastFrame?: number;
 }
 
 /** Snapshot of the preceding pose state; contains no renderer objects or recursive history. */
