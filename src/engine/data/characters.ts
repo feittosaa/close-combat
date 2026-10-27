@@ -9,7 +9,7 @@ export interface CharacterHurtbox {
 }
 export interface CharacterCollisionProfile {
   bodyWidth: number;
-  hurtboxes: { standing: CharacterHurtbox; crouching: CharacterHurtbox; airborne: CharacterHurtbox };
+  hurtboxes: { standing: CharacterHurtbox; crouching: CharacterHurtbox; airborne: CharacterHurtbox; knockdown: CharacterHurtbox };
 }
 export interface ComboRecipe {
   id: string;

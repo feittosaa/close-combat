@@ -500,6 +500,28 @@
         "walk-inbetweens-fine-v4/materials-6.png",
         "walk-inbetweens-fine-v4/materials-7.png"
       ]
+    },
+    "ultimate-drink": {
+      "roots": [
+        190.0,
+        527.0,
+        880.5,
+        1258.5,
+        1622.5,
+        1982.5
+      ],
+      "rootY": [
+        714,
+        714,
+        714,
+        714,
+        714,
+        714
+      ],
+      "offset": 128,
+      "scale": 0.90483,
+      "source": "ultimate-drink.png",
+      "transparentSource": true
     }
   }
 }

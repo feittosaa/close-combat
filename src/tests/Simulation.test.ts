@@ -112,7 +112,7 @@ describe('fundação da simulação', () => {
     expect(b.x - a.x).toBeGreaterThanOrEqual(shoto.collision.bodyWidth);
     advance(sim, 400, [input('B'), input('B')]);
     const ends = sim.snapshot().characters;
-    expect(ends[0].x).toBe(config.arena.left + 24); expect(ends[1].x).toBe(config.arena.right - 24);
+    expect(ends[0].x).toBe(config.arena.left + shoto.collision.bodyWidth / 2); expect(ends[1].x).toBe(config.arena.right - shoto.collision.bodyWidth / 2);
   });
   it('salta, aplica gravidade e aterrissa no piso compartilhado', () => {
     const sim = practice(); sim.stepFrame([input('UF'), N]);
@@ -127,7 +127,7 @@ describe('fundação da simulação', () => {
     stream.forEach(value => { a.stepFrame([value, N]); b.stepFrame([value, N]); });
     expect(a.snapshot()).toEqual(b.snapshot());
     const copy = a.snapshot(); copy.characters[0].collision.bodyWidth = 999; copy.characters[0].health = 0;
-    expect(a.snapshot().characters[0].collision.bodyWidth).toBe(48);
+    expect(a.snapshot().characters[0].collision.bodyWidth).toBe(55.2);
     expect(a.snapshot().characters[0].health).toBe(1000);
   });
   it('reseta vida, entradas, registros e opções de distância no treino', () => {
@@ -148,8 +148,8 @@ describe('fundação da simulação', () => {
   });
   it('geometria é espelhada por personagem e não depende de arte', () => {
     const states = practice().snapshot().characters;
-    expect(createHurtbox(states[0]).width).toBe(48);
-    expect(createHurtbox({ ...states[1], crouching: true }).height).toBe(90);
+    expect(createHurtbox(states[0]).width).toBe(55.2);
+    expect(createHurtbox({ ...states[1], crouching: true }).height).toBe(103.5);
   });
   it('vence rounds por KO, conta vitórias e permite reinício da partida', () => {
     const fragile = { ...shoto, maxHealth: 20 };

@@ -39,6 +39,10 @@ export function getShotoCombatPose(state:CharacterState,frame:number){
     const source=shotoCombatSources.slice(0,4).find(source=>source.key===`shoto-${move.pose ?? move.id}`);
     if(!source)return undefined;
     const elapsed=state.attack.elapsedFrames;
+    if (move.category === 'ultimate') {
+      const local = elapsed < 6 ? 2 : 3 + Math.min(2, Math.floor((elapsed - 6) * 3 / Math.max(1, move.recovery - 4)));
+      return pose(source.key, source.start + local);
+    }
     // Shared authored hand-close bridges idle to the attack without delaying contact.
     if(elapsed<2)return pose('shoto-enter-defense',72+elapsed);
     const remaining=move.startup+move.activeFrames+move.recovery-elapsed;

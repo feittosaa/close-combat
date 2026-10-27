@@ -9,7 +9,11 @@ export interface ProjectileState {
   y: number;
   facing: 'left' | 'right';
   velocity: number;
+  verticalVelocity?: number;
+  gravity?: number;
+  phase?: 'confirm' | 'lighter';
+  targetId?: string;
   remainingFrames: number;
-  visual: 'glass' | 'bottle' | 'molotov';
+  visual: 'glass' | 'bottle' | 'molotov' | 'lighter';
   attack: CharacterAttack;
 }

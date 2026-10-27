@@ -2,7 +2,7 @@ import type { AttackButton } from '../../input/types';
 import type { CharacterCollisionProfile } from '../data/characters';
 
 export type CharacterMode = 'neutral' | 'moving' | 'dashing' | 'airborne' | 'crouching' |
-  'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun';
+  'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun' | 'knockdown';
 export interface CharacterAttack {
   moveId: string;
   commandFrame?: number;
@@ -36,6 +36,10 @@ export interface CharacterState {
   hitFlashFrames: number;
   chain?: string[];
   chainLastFrame?: number;
+  knockdown?: { velocityX: number };
+  /** Bottle confirmation holds the defender until the lighter arrives, including landing. */
+  ultimateCapture?: { ownerId: string };
+  ultimateThrowStartedFrame?: number;
 }
 
 /** Snapshot of the preceding pose state; contains no renderer objects or recursive history. */

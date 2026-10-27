@@ -2,11 +2,11 @@
   "id": "sala-treino",
   "name": "Sala de Treino",
   "referenceSize": {
-    "width": 1774,
-    "height": 887
+    "width": 2172,
+    "height": 904
   },
-  "groundY": 780,
-  "minimumScale": 0.5,
+  "groundY": 795,
+  "minimumScale": 0.01,
   "layers": [
     {
       "id": "sala",
@@ -16,5 +16,6 @@
       "x": 0,
       "y": 0
     }
-  ]
+  ],
+  "topExtension": 180
 }

@@ -131,7 +131,8 @@ describe('manual Shoto catalogue', () => {
     expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([100,15]);wait(sim);
     command(sim,move('wine-ultimate'));
     expect(sim.snapshot().characters[0]).toMatchObject({rage:0,attack:{moveId:'wine-ultimate'}});
-    untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'wine-ultimate',damage:240});
+    untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'wine-ultimate',stage:'confirm',damage:0});
+    step(sim);untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'wine-ultimate',stage:'explosion',damage:280});
     expect(sim.snapshot().characters[0].rage).toBe(0);
     sim.resetMatch();expect(sim.snapshot().projectiles).toHaveLength(0);expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
   });

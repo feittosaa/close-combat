@@ -10,12 +10,29 @@ Pedido concluído localmente: reforçar em `AGENTS.md` e `base.md` a prioridade 
 
 Branch própria para a diretriz: `codex/chore-diretriz-limpeza`. Validação do checkout: instalação reproduzível, testes, build e diff aprovados; alteração somente documental, sem mudança visual ou de controles. As alterações de câmera/ultimate e o ajuste de receita aérea já existentes são preservados fora deste commit documental. A consulta ao remoto funcionou fora do sandbox: development em `a5930d901654feb419570ff642acc6025d20daed`, main em `77a4c939c9ccdf028eed5f334132f65368dbae30`. Envio e CI desta diretriz serão conferidos após o commit; sem integração.
 
+## Câmera vertical, escala e conclusão da ultimate — 2026-10-27
+
+Branch: `codex/feature-camera-ultimates`, a partir de `codex/chore-diretriz-limpeza` (`c4d4ca8`), ainda não integrada. A base do runtime é o catálogo em `0324c2a`; esta entrega conclui os arquivos de ultimate e panoramas já em andamento em `codex/feature-ultimate-cinematica`. O ajuste preexistente de receita aérea permanece local e fora do commit desta entrega.
+
+- [x] Ampliar os lutadores em 15%: célula visual de 204,6816 unidades; zoom uniforme continua 1,6 e a escala dos cenários permanece idêntica.
+- [x] Rever explicitamente todos os perfis do elenco ativo (somente o Shoto): corpo 55,2; hurtboxes em pé 55,2×165,6, agachada 55,2×103,5, aérea 55,2×156,4 e caída 165,6×41,4. Hitboxes e deslocamentos aumentados em 15%; dano, tempos e movimento preservados nesta revisão de tamanho.
+- [x] Acompanhar o personagem mais alto nos dois lados: deslocamento vertical de 40% da subida, limitado para manter os pés do adversário no chão dentro da visão; retorno ao pousar, sem alterar zoom nem foco horizontal por causa do salto.
+- [x] Ampliar separação normal de 456 para 512 unidades, sem arrastar o adversário parado. Reservar espaço adicional para corpos deitados durante a queda, conservando o zoom e as bordas físicas do panorama.
+- [x] Acrescentar 180 pixels somente ao topo dos dois fundos: 2172×904, chão de referência Y=795, `topExtension=180`. Os 724 pixels de altura originais foram preservados integralmente, comprovados por comparação RGBA. Ferramenta integrada image_gen; prompts e preparo em `assets/art/stages/vertical-extension.json`. No céu do bar, a transição de cor foi preparada somente na faixa nova.
+- [x] Pausa global de ativação mantém seis ticks: somente os seis desenhos de beber avançam; combate, oponente, projéteis, efeitos e cronômetro congelam. Ativações simultâneas compartilham a pausa; reset limpa todos os estados.
+- [x] Ultimate do Shoto: garrafa a 18 unidades/tick (antes 5), zero dano na confirmação, stun reservado até o isqueiro chegar. Acerto aéreo cancela a subida e faz o alvo cair em pé; o isqueiro aguarda aterrissagem e os seis ticks de preparo, persegue o alvo e confirma uma explosão de 280. Bloqueio/erro da garrafa não criam isqueiro nem explosão. Pose existente de arremesso reaproveitada; projéteis e explosão continuam marcadores geométricos provisórios.
+- [x] Validação local: `npm ci`, 229 testes em 27 arquivos, build, `git diff --check` e verificação dos 134 quadros aprovados. Regressões cobrem câmera/escala/cobertura dos fundos, alcance novo, espelhamento, stun aéreo, velocidade na distância máxima e corpo deitado nas bordas.
+- [x] Conferência no jogo: sala e bar, salto do segundo jogador, tamanho, caixas, afastamento máximo, animação de beber e explosão na borda em câmera lenta. Revisão funcional local não equivale a aprovação artística das extensões.
+- [ ] Commit/push do conjunto isolado e CI remota; sem merge, promoção ou tag.
+
+Remoto consultado: development `a5930d901654feb419570ff642acc6025d20daed`, main `77a4c939c9ccdf028eed5f334132f65368dbae30`. Diretriz documental em `c4d4ca8`, com envio/CI em conferência. Aprovação artística e balanceamento manual continuam com o usuário.
+
 ## Estado vigente
 
 - Elenco jogável: Shoto provisório, conceito Anfitrião; agente secreto espanhol, alto e esguio. A referência de identidade é o [turnaround canônico](assets/art/characters/shoto/turnaround.png).
 - Figurino vigente: sem cinto, fivela ou relógio; somente uma pulseira simples de ouro em cada braço; cavanhaque marrom da família do cabelo, calça cinza carvão muito escuro, blazer creme, camisa vinho e sapatos marrons. Preservar rosto, proporções, pele, cabelo e desenho nas animações.
-- 128 quadros em 22 atlas, com oito chaves antigas da caminhada e oito intermediárias, ciclo de 48F a 20 FPS. Chute forte usa a mesma perna em preparação, extensão, recolhimento e pouso. Conectores opacos; sem dissolução que cause piscadas.
-- Fontes ativas e raízes: `src/assets/sprites/characters/shoto/alignment.json`. Os 21 strips ativos e oito fontes individuais são usados pelo preparo. Células de altura 768, pivô Y=720; largura 1152 nos ataques e 768 nas demais ações. A escala de exibição continua 172,8 × 1,03, sem modificar colisões.
+- 134 quadros em 23 atlas, com oito chaves antigas da caminhada e oito intermediárias, ciclo de 48F a 20 FPS. Chute forte usa a mesma perna em preparação, extensão, recolhimento e pouso. Conectores opacos; sem dissolução que cause piscadas.
+- Fontes ativas e raízes: `src/assets/sprites/characters/shoto/alignment.json`. Os 22 strips ativos e oito fontes individuais são usados pelo preparo. Células de altura 768, pivô Y=720; largura 1152 nos ataques e 768 nas demais ações. A escala de exibição passa a 172,8 × 1,03 × 1,15, com geometria revisada proporcionalmente conforme a seção vigente acima.
 - Preparar: `python scripts/prepare-shoto-sprites.py`; conferir: `python scripts/verify-shoto-sprites.py`. Precisam de Pillow, NumPy e SciPy. Procedência das fontes selecionadas: `assets/art/characters/shoto/source-generation.json`.
 - Hitstun ainda usa representação técnica; não há nova arte de reação autorizada por esta limpeza. Corrida removida; dash/backstep permanecem.
 - Bar ao Anoitecer é cenário geral de PvP/Arcade. Sala de Treino é fixa no treino, tutorial básico e tutorial de combos. Objetos do bar são decorativos; não há interação inferida.
@@ -42,14 +59,14 @@ Inventário: 442 imagens/mídias no checkout antes da limpeza; 384 removidas (15
 
 ## Ficha inicial implementada
 
-Fonte de verdade executável: `src/engine/data/fighters/shoto.ts`. Vida 1000; body 48; hurtbox em pé 48×144, agachada 48×90 e aérea 48×136. Caixas relativas aos pés e centro horizontal do lutador, espelhadas pelo motor.
+Fonte de verdade executável: `src/engine/data/fighters/shoto.ts`. Vida 1000; body 55,2; hurtbox em pé 55,2×165,6, agachada 55,2×103,5 e aérea 55,2×156,4. Caixas relativas aos pés e centro horizontal do lutador, espelhadas pelo motor.
 
 | Entrada | Nome | S / A / R | Dano | Hit / block stun | Pushback hit / block | Caixa: avanço, Y, largura, altura |
 | --- | --- | --- | --- | --- | --- | --- |
-| `1` | Soco fraco | 6 / 2 / 12F | 20 | 12 / 6F | 6 / 4 | 20, −120, 42, 28 |
-| `2` | Soco forte | 10 / 3 / 18F | 35 | 14 / 8F | 9 / 6 | 20, −122, 58, 32 |
-| `3` | Chute fraco | 8 / 3 / 15F | 25 | 16 / 7F | 7 / 5 | 20, −74, 62, 30 |
-| `4` | Chute forte | 13 / 4 / 22F | 45 | 16 / 9F | 12 / 8 | 20, −92, 78, 38 |
+| `1` | Soco fraco | 6 / 2 / 12F | 20 | 12 / 6F | 6 / 4 | 23, −138, 48,3, 32,2 |
+| `2` | Soco forte | 10 / 3 / 18F | 35 | 14 / 8F | 9 / 6 | 23, −140,3, 66,7, 36,8 |
+| `3` | Chute fraco | 8 / 3 / 15F | 25 | 16 / 7F | 7 / 5 | 23, −85,1, 71,3, 34,5 |
+| `4` | Chute forte | 13 / 4 / 22F | 45 | 16 / 9F | 12 / 8 | 23, −105,8, 89,7, 43,7 |
 
 Socos altos, chutes médios; todos recuperam em acerto/erro/bloqueio e têm um contato. As variantes, acordes, especiais e cancelamentos agora estão no catálogo manual abaixo; estes quatro básicos continuam com um contato cada. Nenhum desses números constitui aprovação do balanceamento final. A futura comparação entre arquétipos ainda depende do ajuste manual desta base.
 

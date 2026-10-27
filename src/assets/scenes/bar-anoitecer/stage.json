@@ -2,11 +2,11 @@
   "id": "bar-anoitecer",
   "name": "Bar ao Anoitecer",
   "referenceSize": {
-    "width": 1672,
-    "height": 941
+    "width": 2172,
+    "height": 904
   },
-  "groundY": 825,
-  "minimumScale": 0.65,
+  "groundY": 795,
+  "minimumScale": 0.01,
   "layers": [
     {
       "id": "bar",
@@ -15,30 +15,7 @@
       "parallax": 1,
       "x": 0,
       "y": 0
-    },
-    {
-      "id": "caixa",
-      "file": "layers/caixa.png",
-      "depth": -100,
-      "parallax": 1,
-      "x": 0,
-      "y": 0
-    },
-    {
-      "id": "vaso",
-      "file": "layers/vaso.png",
-      "depth": -100,
-      "parallax": 1,
-      "x": 0,
-      "y": 0
-    },
-    {
-      "id": "banco",
-      "file": "layers/banco.png",
-      "depth": -100,
-      "parallax": 1,
-      "x": 0,
-      "y": 0
     }
-  ]
+  ],
+  "topExtension": 180
 }

@@ -24,7 +24,7 @@ Preservar uma pose opaca quando misturas de alpha criarem transparência ou pisc
 
 ## Cenários e interface
 
-Cenários devem oferecer profundidade ilustrada, faixa de luta limpa e contraste favorável aos personagens. Camadas compartilham enquadramento e origem; objetos decorativos não adquirem colisão por estarem desenhados. Evitar perspectivas que façam os pés flutuarem.
+Cenários de combate são panoramas ultrawide, com proporção mínima 21:9, compostos com espaço lateral e sem depender de ampliação excessiva. Devem oferecer profundidade ilustrada, faixa de luta limpa e contraste favorável aos personagens. Camadas compartilham enquadramento e origem; objetos decorativos não adquirem colisão por estarem desenhados. Evitar perspectivas que façam os pés flutuarem.
 
 HUD e menus usam sombras de tinta, acentos contidos, títulos com serifa e números/comandos de leitura clara. Feedback deve distinguir acerto e bloqueio sem esconder os lutadores. A câmera e a apresentação seguem as regras compartilhadas de base.md; não corrigir proporções por zoom ou escala variável em execução.
 
