@@ -1,79 +1,37 @@
 # Identidade visual — Close Combat
 
-> Revisão de 25/10/2026. Escopo e regras em [base.md](./base.md); execução em [pipeline.md](./pipeline.md).
+Regras gerais em [base.md](base.md); definições de personagens, cenários, peças aprovadas e progresso exclusivamente na [pipeline](pipeline.md).
 
-## Direção
+## Linguagem artística
 
-A referência estética passa a ser **Hades**, traduzida em arte original: ilustração 2D expressiva, contornos marcantes, sombras recortadas, contraste forte e textura pictórica controlada. Essa decisão substitui Guilty Gear Strive como referência visual global. **Guilty Gear Xrd Rev 2 é a referência de ritmo e balanceamento do combate.**
+Ilustração 2D original com referência estética em Hades: contorno preto expressivo com variação de espessura, desenho angular, massas de cor chapada, sombras recortadas, contraste forte e textura pictórica controlada. Personagens, retratos, cenários, interface e efeitos devem pertencer ao mesmo universo visual.
 
-A linguagem deve unir personalidade visual e leitura imediata em um jogo de luta. Personagens, cenários, retratos, interface e efeitos precisam parecer parte do mesmo universo, com desenho próprio, sem reproduzir personagens, figurinos, logotipos ou interfaces das referências.
+A paleta é livre por personagem e ambiente; não precisa reproduzir as cores da referência externa. A [referência interna de traço](assets/art/menu/patio-solar.png) exemplifica a linguagem compartilhada. Não copiar personagens, figurinos, logotipos ou interfaces de outros jogos.
 
-## Referência interna aprovada
+## Identidade dos personagens
 
-A [arte diurna do menu](./assets/art/menu/patio-solar.png) estabelece o padrão de traço: tinta preta expressiva, formas angulares, cores chapadas e sombras duras, com textura controlada. A paleta é livre para acompanhar ambientes e personagens; não é obrigatório repetir as cores da referência externa. O fundo aprovado tem movimento lento e partículas discretas, desativados com preferência por movimento reduzido. O menu combina serifas nos títulos, sombras de tinta e acentos de ouro/coral.
+Toda produção ou revisão usa o turnaround canônico do personagem como referência primária de identidade, junto às poses existentes para continuidade. Referências canônicas ficam em `assets/art/characters/<id>/turnaround.png`; escolhas individuais e respectivos materiais são registradas somente na pipeline.
 
-Imagens exploratórias só entram no projeto após aval manual. A autorização de 25/10/2026 cobre a arte diurna e sua aplicação no menu; não aprova as outras variantes nem define a aparência do Shoto.
+Preservar rosto, relação cabeça/corpo, anatomia, silhueta, roupa, materiais e acessórios entre poses. A cor do material deve permanecer reconhecível durante o movimento; sombras podem acompanhar os planos. Folhas derivadas orientam a ação, mas não substituem a referência canônica.
 
-## Etapa atual
+Não aumentar cabeça ou corpo para enfatizar um golpe, nem mudar tom de pele, roupa ou acessórios entre quadros. Conferir assimetrias e espelhamento. Correções de cor não devem produzir posterização, manchas, bordas coloridas ou rachaduras nas sombras.
 
-O único personagem em desenvolvimento é o shoto de nome provisório **Shoto**. O usuário escolheu a proposta 5, “Anfitrião”: homem alto e esguio, cabelo castanho-avermelhado preso com mecha solta, bigode e cavanhaque, paletó marfim, camisa vinho, calça preta e botas marrons. O nome de conceito não altera seu nome no jogo.
+## Animação
 
-O aval manual autoriza idle, caminhada, agachado, salto, defesa, recuo, dash e backstep. Fontes originais e edições de cabelo avermelhado ficam preservadas; cópias RGBA usam células fixas, raiz autorada e escala uniforme. Menu e três clipes iniciais foram integrados em development após revisão no jogo e CI. Ataques e reações de acerto ainda usam representação técnica explícita; corrida reutiliza poses aprovadas do dash. Espelhamento também espelha o relógio e outras assimetrias; versões direcionais independentes não foram entregues. Novas propostas exploratórias dependem de aval manual antes da inclusão.
+Antecipação, contato e recuperação precisam ser legíveis. Usar transições autoradas, continuidade dos membros, apoios estáveis e proporções constantes. A raiz não deriva com braços, roupas ou variação da silhueta. Locomoção real pertence à simulação.
 
-Todo o elenco anterior está retirado do novo design. Seus sprites, retratos e manifestos foram removidos do runtime e dos assets nesta migração; não são modelos para o novo personagem. A geometria neutra permanece para estados sem arte e inspeção de regras. Pixel art antiga não é a direção final nem uma obrigação para a nova produção.
+Preservar uma pose opaca quando misturas de alpha criarem transparência ou piscadas. Não alongar regras de combate para acomodar uma folha. Holds, orientação, escala, células e pivôs são declarados nos manifestos, sem inferência de gameplay a partir dos pixels. Processo geral em [docs/animacao.md](docs/animacao.md).
 
-## Princípios de produção
+## Cenários e interface
 
-- Silhuetas e poses que comuniquem ação, direção, altura e peso no tamanho real da luta.
-- Contorno com variação de espessura, sombras em massas gráficas e cor de destaque com propósito.
-- Textura e detalhe concentrados onde não disputem atenção com contato, guarda e recursos.
-- Cenário com profundidade sugerida por camadas, faixa de luta limpa e contraste favorável aos lutadores.
-- HUD legível, com tipografia simples para números/comandos e ornamentos contidos nas bordas.
-- Feedback distinto para acerto, bloqueio, combo breaker, drive rush, rage e rage art quando suas regras forem aprovadas. Parry não terá efeito ou indicador novo.
-- Estados comunicados por forma/texto além de cor; evitar flashes prolongados e efeitos que escondam o defensor.
+Cenários devem oferecer profundidade ilustrada, faixa de luta limpa e contraste favorável aos personagens. Camadas compartilham enquadramento e origem; objetos decorativos não adquirem colisão por estarem desenhados. Evitar perspectivas que façam os pés flutuarem.
 
-## Resolução de apresentação
+HUD e menus usam sombras de tinta, acentos contidos, títulos com serifa e números/comandos de leitura clara. Feedback deve distinguir acerto e bloqueio sem esconder os lutadores. A câmera e a apresentação seguem as regras compartilhadas de base.md; não corrigir proporções por zoom ou escala variável em execução.
 
-Canvas Full HD 1920 × 1080 com composição lógica 1024 × 576 e escala uniforme de câmera. Câmera fixa em escala 1,6, sem zoom dinâmico nem deslocamento vertical; apenas acompanhamento lateral. O salto inteiro cabe no enquadramento. Texto rasterizado em resolução 2 e filtragem linear para a ilustração. O agachado recebe escala uniforme autorada na preparação para manter a proporção em relação ao idle; a câmera não aproxima por causa do agachamento. A altura do salto não altera a câmera. O HUD usa barras contínuas no topo, sem divisões verticais ou grandes molduras, dourado discreto, títulos com serifa e acentos coral/jade; valores, vida, rounds e timelines são dados reais da simulação. O menu usa a arte diurna aprovada com movimento lento, respeitando movimento reduzido, e interface com serifas, sombras escuras e acentos quentes.
+## Produção e aprovação
 
-## Animação e contrato técnico
+Imagens exploratórias dependem de aval manual antes da integração. Manter no checkout somente arte consumida pelo jogo, fontes ativas necessárias para reproduzi-la e referências canônicas vigentes. Variantes substituídas e propostas rejeitadas ficam no histórico Git.
 
-A animação acompanha a simulação de 60 Hz. Startup, contato e recuperação precisam de poses legíveis; pausa e passo único devem manter correspondência com o frame lógico. Desenhos não definem dano, colisão ou duração de estado.
+Exportar sprites em PNG RGBA com alpha verdadeiro, enquadramento fixo e margens suficientes. Fundos opacos podem ser RGB. Preservar a procedência e os parâmetros de preparação em metadados; detalhes de uma peça e seu estado de aprovação ficam na pipeline.
 
-Entregar PNG RGBA com células uniformes, enquadramento fixo, pés e pivô alinhados; preservar fontes editáveis. Documentar tamanho, intervalos, holds, orientação, escala, clipes e limitações no manifesto. Conferir os dois lados e o espelhamento de acessórios/assimetrias. Não embutir hitboxes, HUD ou fundo nos sprites.
-
-Produzir uma ação completa e revisá-la antes de ampliar o conjunto. Fallbacks devem ser explícitos e nunca confundidos com animações finais aprovadas. A matriz antiga de Tester não é uma lista de produção do shoto.
-
-## Aprovação visual
-
-Conferir no jogo em velocidade normal, câmera lenta e passo único: silhueta, contato, contraste, escala, apoio dos pés, transições, espelhamento, câmera e correspondência com caixas. Revisar sobre fundos claros/escuros e nos extremos da arena.
-
-Registrar evidência por ação. Testes de manifesto, build e associações de clipes não substituem essa conferência. Nome definitivo, visual e personalidade serão definidos posteriormente com o usuário.
-
-As folhas adicionais de salto, defesa, caminhada para trás, dash e backstep receberam aval de integração após correção do tom do cabelo e alinhamento.
-
-As oito folhas do Shoto mantêm cabelo vermelho acobreado escuro, coque e mecha com a mesma paleta. Raiz X autorada por quadro, com os apoios estabilizados; não centralizar pela caixa total da silhueta, que varia com braços, abas e passos. Células 768 × 768 e raiz 384/720; o ciclo agachado volta pelas poses intermediárias. A escala fixa 1,6 deixa o corpo em pé com cerca de 40% da altura da tela e preserva o salto inteiro.
-
-Sete conectores de quatro poses ligam os estados de locomoção e guarda, com entrada/retorno gradual. Raízes e paleta permanecem comuns; transições não podem produzir deriva de X nem alterar o tamanho do corpo. A apresentação mantém uma única pose opaca durante interrupções, sem dissolução por alpha; os conectores autorados suavizam o movimento sem depender do FPS ou atrasar o movimento físico.
-
-## Paleta atual do Shoto
-
-A paleta única de materiais documentada em base.md substitui o vermelho acobreado intenso das fontes anteriores: cabelo castanho discretamente avermelhado, pele morena quente, calça carvão, jaqueta marfim, camisa vinho e couro castanho. Valores e rampas em `src/rendering/animations/shotoPalette.ts`; aplicados também aos conectores e à seleção do personagem, preservando desenho e alinhamento.
-
-### Correção de cor sem posterização
-
-Feedback posterior rejeitou manchas e rachaduras na jaqueta/pele. Preservar contornos, gradientes e sombras originais; usar somente correção contínua suave, sem classificar cada pixel em um material ou prendê-lo a faixas de cor. A tabela anterior é referência de direção artística. Ampliar Shoto uniformemente em 3% mantendo suas proporções, pivô nos pés e câmera fixa.
-
-## Referência canônica dos personagens
-
-Toda animação deve partir do turnaround aprovado do personagem, fornecido junto às poses existentes de ligação. Para o Shoto, usar sempre `assets/art/characters/shoto/turnaround.png` como autoridade de rosto, anatomia, roupa e materiais. Folhas derivadas servem de guia de ação, nunca substituem a identidade original. Conferir rosto/cavanhaque, relação cabeça-corpo, escala do tronco, pele/cabelo e couro dos sapatos em todas as poses e na passagem pelo idle. Sombras naturais podem variar com os planos; a cor do material não deve mudar durante a animação. Incluir entradas/saídas autoradas sem transparência. Aplicar a mesma regra a cada personagem futuro com sua referência própria.
-
-
-### Shoto — regra de figurino v3
-
-Turnaround original: identidade e proporções. Regras textuais de figurino (o `turnaround-costume-v3.png` é uma tentativa reprovada, não uma referência aprovada): ambos os punhos do paletó dobrados em três quartos, antebraços expostos; somente um relógio com pulseira escura no pulso anatômico esquerdo, direito nu; nenhum bracelete dourado, cinto ou fivela. Calça carvão quase preta constante. Estas decisões posteriores prevalecem sobre detalhes divergentes das fontes antigas. Aplicar também em locomoção, entradas, saídas e guardas. Comparar cabeça/corpo, rosto, manga e materiais ao idle na mesma escala antes de aceitar cada pose.
-
-
-### Ajustes localizados vigentes — v4
-
-Usar as folhas existentes recuperadas. Sem cinto/fivela; dois braceletes simples de ouro, um em cada braço, substituindo todos os relógios (confirmação explícita do usuário); cavanhaque marrom da família do cabelo; calça cinza carvão bem escuro. Preservar rosto, gesto, altura, blazer creme, pele, mãos e sapatos. Os oito desenhos existentes de caminhada continuam chaves: apenas inserir intermediárias entre pares consecutivos, sem regenerar outro ciclo. O chute forte mantém a mesma perna na preparação, extensão, recolhimento e retorno. Não usar a v3 rejeitada.
+Revisar no jogo em velocidade normal, câmera lenta e passo único: silhueta, contraste, proporções, rosto, materiais, transições, direção, pés, contato, ciclos, extremos da arena e dois lados. Testes e build não substituem essa revisão nem a aprovação artística manual.

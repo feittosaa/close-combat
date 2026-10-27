@@ -1,5 +1,5 @@
 # Dados de combate
 
-`characters.ts` registra apenas Shoto; `fighters/shoto.ts` define seus quatro básicos e colisões próprios. `moves.ts` contém o contrato mínimo de ataque, sem catálogos globais ou dados externos. `ComboRecipe` preserva somente o formato de receitas futuras; o array de Shoto está vazio. Números são provisórios conforme `base.md` §10 e a bancada de balanceamento.
+Contratos e definições de personagens, movimentos, colisões e configuração do motor. Manter propriedades particulares em dados próprios, sem catálogos globais implícitos ou dependência de assets.
 
-Raiz de regras: [base.md](../../../base.md).
+Valores provisórios não constituem aprovação de balanceamento. Fichas, receitas, decisões e pendências individuais pertencem à pipeline; receitas de combo exigem autoria manual do usuário.

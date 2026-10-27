@@ -1,7 +1,5 @@
 # Combate
 
-`AttackResolver` resolve um contato por golpe, guarda e trades com geometria compartilhada com a visualização. Não contém parry, agarrões, projéteis, recursos ou reações do elenco anterior. Contatos são coletados antes de alterar os dois jogadores.
+Resolver contatos com geometria e dados do motor. Coletar contatos simultâneos antes de aplicar efeitos para evitar viés de ordem entre jogadores. Defesa, dano, recuperação e vantagem devem refletir regras explícitas, sem decisões escondidas na renderização.
 
-`frameData.ts` calcula vantagem como stun do defensor menos frames futuros de ataque, excluindo o contato. Recuperação é integral em acerto, erro e bloqueio. Punição/contra-ataque exige colisão real; rótulos não alteram dano. `ArcadeController` gera entradas legais do livro do Shoto, sem acerto forçado.
-
-Raiz de regras: [base.md](../../../base.md).
+IA e ferramentas usam entradas legais e os mesmos resolvedores das partidas. Eventos de contato devem ser consumíveis sem reaplicar dano. Mecânicas não definidas precisam de especificação e cobertura antes de implementação; seus detalhes ficam na pipeline.

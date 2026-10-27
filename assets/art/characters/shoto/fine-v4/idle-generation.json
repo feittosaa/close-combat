@@ -1,9 +1,0 @@
-{
-  "tool": "image_gen built-in",
-  "name": "idle",
-  "target": "src/assets/sprites/characters/shoto/source/idle-auburn.png",
-  "reference": "assets/art/characters/shoto/turnaround.png",
-  "prompt": "EDIT TARGET: image 1, the existing EIGHT-frame idle sprite sheet. Image 2 is identity reference ONLY; do not redraw the target from it. Make a precise local retouch of image 1, preserving the EXACT eight existing drawings, poses, head size, face, hair shape/color, cream blazer shading, burgundy shirt, skin, fingertips, shoes, proportions and positions. Change ONLY: (1) erase any trouser belt/buckle, leaving the same plain tailored waistband; (2) replace ALL wristwatches/straps with ONE narrow plain GOLD BANGLE on EACH wrist in EVERY drawing, two bangles total, no watch faces; (3) recolor the existing moustache/goatee strokes DARK BROWN #50372B, matching the character's brown hair identity, preserving their exact shape; (4) trousers use consistent VERY DARK NEUTRAL CHARCOAL GRAY, base #242526, darker shadows and restrained dark-gray fold highlights, never olive green or light gray. Do not change the cut, folds or shape of trousers. All other pixels/lines/colors stay unchanged, especially cream blazer, original anatomy and hands. Keep the exact single-row layout, eight bodies and flat #FF00FF background. No new poses, no new rendering/style, no pink skin/fingertips, no resizing or body reinterpretation.",
-  "generatedPath": "/home/feit/.codex/generated_images/01a173b9-a241-7ff3-9383-a5f33575821d/exec-ec1e4c0a-24ef-4320-a5da-3c9084136ac7.png",
-  "source": "idle-fine-v4.png"
-}

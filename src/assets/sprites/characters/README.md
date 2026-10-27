@@ -1,5 +1,5 @@
-# Sprites futuros de personagens
+# Sprites de personagens
 
-Os assets do elenco anterior foram removidos. Shoto usa representação geométrica neutra e ainda não tem desenho ou animação final. Não gerar arte até definir sua identidade com o usuário. Futura entrega deve ter pasta própria, fonte editável, PNG RGBA, grade fixa, pés/pivô alinhados, manifesto e README de origem/exportação conforme `identidade-visual.md`.
+Cada personagem possui fontes ativas de preparação, atlas e manifestos próprios, ligados à sua referência canônica. Usar escala uniforme, apoio e pivô autorados; verificar identidade e continuidade em todos os quadros e entre ações.
 
-Raiz de regras: [base.md](../../../../base.md).
+Não derivar regras físicas de pixels nem impor a todos os personagens o kit de um deles. Clipes, paletas, medidas, figurino, pendências e aprovações individuais ficam somente na pipeline e nos dados próprios.
