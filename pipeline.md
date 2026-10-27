@@ -26,7 +26,9 @@ Branch: `codex/chore-artes-documentacao`, dependente das revisões ainda não in
 - [x] Retirar variantes rejeitadas, fontes substituídas, intermediárias descartadas, cópias e capturas históricas; preservar o conjunto ativo e as fontes necessárias para reproduzi-lo.
 - [x] Centralizar os detalhes específicos nesta pipeline; retirar Markdown obsoleto e corrigir READMEs genéricos desatualizados.
 - [x] Auditar referências, reproduzir os atlas sem diferença de pixels, conferir jogo, testes, build, links e diff.
-- [ ] Commit/push e CI exata da branch, sem integração.
+- [x] Commit/push e CI da implementação aprovada, sem integração.
+
+Remoto: implementação `3b933e7e8dec46dcdee35b1a67f76aca95e0b4ed`, [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40424558139). O registro documental final segue na mesma branch. development permanece em `a5930d901654feb419570ff642acc6025d20daed`; main em `77a4c939c9ccdf028eed5f334132f65368dbae30`.
 
 Inventário: 442 imagens/mídias no checkout antes da limpeza; 384 removidas (159.2 MiB). Permanecem 58: 28 carregadas pelo jogo, 29 fontes ativas de sprites e um turnaround canônico. As 28 imagens do runtime reproduzidas mantiveram SHA-256 idêntico ao inventário anterior à limpeza. Validação: 186 testes em 24 arquivos, build e diff aprovados; preparação verificou 128 quadros. Menu e treino conferidos no navegador, incluindo movimento. Três testes novos protegem consumo de imagens, separação documental e links Markdown. npm ci concluído; auditoria informa três vulnerabilidades preexistentes (uma moderada, duas críticas), sem atualização de dependências nesta tarefa. Capturas/variantes removidas continuam recuperáveis no histórico Git, não no checkout ativo.
 
