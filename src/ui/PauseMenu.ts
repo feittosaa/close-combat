@@ -30,6 +30,7 @@ export class PauseMenu {
 
   constructor(private readonly fighters: readonly CharacterDefinition[], training: boolean,
     resume: () => void, menu: () => void, private readonly pin: (entry: MoveListEntry, playerIndex: number) => void, step?: () => void, controls?: () => void, fillRage?: () => void) {
+    this.root.classList.toggle('match-pause', !training);
     this.root.setAttribute('role', 'dialog'); this.root.setAttribute('aria-modal', 'true');
     this.root.setAttribute('aria-label', training ? 'Treino pausado — lista de golpes' : 'Partida pausada');
     const panel = el('div', undefined, 'pause-panel');
