@@ -1,9 +1,9 @@
-<!-- src/assets/README.md -->
+# Assets
 
-Recursos originais de arte e áudio deste projeto. Não incluir recursos extraídos dos jogos de referência.
+Recursos originais de arte e áudio. Não incluir recursos extraídos de jogos de referência.
 
-- `animations/`: dados/exportações de sequências de quadros.
-- `sprites/`: imagens-fonte e spritesheets, agrupados por personagem, efeito ou interface.
-- `scenes/`: fundos e objetos visuais de arenas. As classes executáveis das cenas Phaser ficam em `src/scenes/`.
+- `animations/`: dados e exportações de sequências.
+- `sprites/`: sprites de personagens, efeitos e interface.
+- `scenes/`: imagens e camadas de arenas; classes executáveis ficam em `src/scenes/`.
 
-Use nomes claros e versionados para os arquivos-fonte. Consulte `base.md` §6–7 para as regras de organização.
+Manter somente consumidores ativos, fontes necessárias para reproduzi-los e referências canônicas. Contratos específicos ficam nos manifestos; decisões e estado de cada peça ficam exclusivamente na pipeline.

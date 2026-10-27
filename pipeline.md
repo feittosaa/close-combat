@@ -1,8 +1,158 @@
-# Close Combat — Pipeline de implementação
+# Close Combat — Pipeline
 
-> **Raiz:** [base.md](./base.md), design 0.5.1 · revisão de 25/10/2026.
-> **Entrega:** [docs/ci-cd.md](./docs/ci-cd.md).
-> **Estado:** Shoto inicial implementado; apenas quatro básicos, com representação neutra e modos adaptados. Novos recursos e combos manuais continuam pendentes.
+Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visual.md). Entrega: [docs/ci-cd.md](docs/ci-cd.md).
+
+Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
+
+## Estado vigente
+
+- Elenco jogável: Shoto provisório, conceito Anfitrião; agente secreto espanhol, alto e esguio. A referência de identidade é o [turnaround canônico](assets/art/characters/shoto/turnaround.png).
+- Figurino vigente: sem cinto, fivela ou relógio; somente uma pulseira simples de ouro em cada braço; cavanhaque marrom da família do cabelo, calça cinza carvão muito escuro, blazer creme, camisa vinho e sapatos marrons. Preservar rosto, proporções, pele, cabelo e desenho nas animações.
+- 128 quadros em 22 atlas, com oito chaves antigas da caminhada e oito intermediárias, ciclo de 48F a 20 FPS. Chute forte usa a mesma perna em preparação, extensão, recolhimento e pouso. Conectores opacos; sem dissolução que cause piscadas.
+- Fontes ativas e raízes: `src/assets/sprites/characters/shoto/alignment.json`. Os 21 strips ativos e oito fontes individuais são usados pelo preparo. Células de altura 768, pivô Y=720; largura 1152 nos ataques e 768 nas demais ações. A escala de exibição continua 172,8 × 1,03, sem modificar colisões.
+- Preparar: `python scripts/prepare-shoto-sprites.py`; conferir: `python scripts/verify-shoto-sprites.py`. Precisam de Pillow, NumPy e SciPy. Procedência das fontes selecionadas: `assets/art/characters/shoto/source-generation.json`.
+- Hitstun ainda usa representação técnica; não há nova arte de reação autorizada por esta limpeza. Corrida removida; dash/backstep permanecem.
+- Bar ao Anoitecer é cenário geral de PvP/Arcade. Sala de Treino é fixa no treino, tutorial básico e tutorial de combos. Objetos do bar são decorativos; não há interação inferida.
+- Nenhuma receita de combo homologada; conteúdo continua vazio até receber sequências manuais.
+- Combo breaker, drive rush, rage e rage art continuam pendentes de definição. Outros personagens, história e roguelike não têm autorização de implementação automática.
+- Revisões visuais e hitstop estão em branches de trabalho; não confundir com integração em development. Base desta limpeza: `a027c302ccdf8a58d2a965593dcd452f7a3ee0f1`. Sem merge nesta tarefa.
+
+## Limpeza de artes, referência e documentação
+
+Branch: `codex/chore-artes-documentacao`, dependente das revisões ainda não integradas. Pedido: remover artes sem uso, atualizar cinto/pulseiras do turnaround e restringir os demais Markdown a regras gerais.
+
+- [x] Inventariar imports do jogo, manifests de cenário, fontes do preparo e referências canônicas.
+- [x] Atualizar o turnaround no mesmo caminho: sem cinto/fivela/relógio; uma pulseira de ouro em cada braço. Ferramenta integrada image_gen, prompt em `assets/art/characters/shoto/turnaround-generation.json`.
+- [x] Retirar variantes rejeitadas, fontes substituídas, intermediárias descartadas, cópias e capturas históricas; preservar o conjunto ativo e as fontes necessárias para reproduzi-lo.
+- [x] Centralizar os detalhes específicos nesta pipeline; retirar Markdown obsoleto e corrigir READMEs genéricos desatualizados.
+- [x] Auditar referências, reproduzir os atlas sem diferença de pixels, conferir jogo, testes, build, links e diff.
+- [ ] Commit/push e CI exata da branch, sem integração.
+
+Inventário: 442 imagens/mídias no checkout antes da limpeza; 384 removidas (159.2 MiB). Permanecem 58: 28 carregadas pelo jogo, 29 fontes ativas de sprites e um turnaround canônico. As 28 imagens do runtime reproduzidas mantiveram SHA-256 idêntico ao inventário anterior à limpeza. Validação: 186 testes em 24 arquivos, build e diff aprovados; preparação verificou 128 quadros. Menu e treino conferidos no navegador, incluindo movimento. Três testes novos protegem consumo de imagens, separação documental e links Markdown. npm ci concluído; auditoria informa três vulnerabilidades preexistentes (uma moderada, duas críticas), sem atualização de dependências nesta tarefa. Capturas/variantes removidas continuam recuperáveis no histórico Git, não no checkout ativo.
+
+## Bancada do Shoto e receitas
+
+## Ficha inicial implementada
+
+Fonte de verdade executável: `src/engine/data/fighters/shoto.ts`. Vida 1000; body 48; hurtbox em pé 48×144, agachada 48×90 e aérea 48×136. Caixas relativas aos pés e centro horizontal do lutador, espelhadas pelo motor.
+
+| Entrada | Nome | S / A / R | Dano | Hit / block stun | Pushback hit / block | Caixa: avanço, Y, largura, altura |
+| --- | --- | --- | --- | --- | --- | --- |
+| `1` | Soco fraco | 6 / 2 / 12F | 20 | 10 / 6F | 6 / 4 | 20, −120, 42, 28 |
+| `2` | Soco forte | 10 / 3 / 18F | 35 | 14 / 8F | 9 / 6 | 20, −122, 58, 32 |
+| `3` | Chute fraco | 8 / 3 / 15F | 25 | 12 / 7F | 7 / 5 | 20, −74, 62, 30 |
+| `4` | Chute forte | 13 / 4 / 22F | 45 | 16 / 9F | 12 / 8 | 20, −92, 78, 38 |
+
+Socos altos, chutes médios; todos recuperam em acerto/erro/bloqueio e têm um contato. Sem variantes agachadas/aéreas, acordes ou cancelamentos. Nenhum desses números constitui aprovação do balanceamento final. A futura comparação entre arquétipos ainda depende do ajuste manual desta base.
+
+## Registro por receita a receber
+
+Usar esta ficha somente quando o usuário enviar uma receita:
+
+| Campo | Informação a registrar |
+| --- | --- |
+| Identificação e estado | Proposta, em ajuste ou homologada; revisão dos dados |
+| Sequência enviada | Entradas exatas e contexto inicial |
+| Intenção | Função do starter, passos e conclusão |
+| Regras | Janelas, cancelamentos, confirmação e condições de interrupção |
+| Medições | Dano, duração, distância inicial/final, transporte e recuperação |
+| Defesa | Bloqueio, erro, interrupção, punição e retorno ao controle |
+| Recursos | Interação aprovada com breaker, drive rush, rage e rage art |
+| Cenários | Lados, centro/canto aplicável, distâncias e reprodução por entradas |
+| Evidência | Testes, conferência no jogo e decisão do usuário |
+
+Manter valores desconhecidos explicitamente pendentes. Receitas de tutorial só entram após homologação e precisam de todos os contatos na ordem no mesmo combo. Não validar pela digitação isolada.
+
+
+## Planejamento específico ainda não implementado
+
+## 3. Nove arquétipos e sequência de elenco
+
+| Arquétipo | Papel de design | Ideia temática futura, sem identidade aprovada |
+| --- | --- | --- |
+| Shoto | Base versátil para comparação dos demais | Hitman / John Wick como anotação conceitual |
+| Grappler | Proximidade e ameaça de agarrões | Personagem grande cyberpunk |
+| Stance | Alternância entre posturas | Kung fu chinês |
+| Puppet | Controle de personagem e entidade auxiliar | Mafioso demoníaco / Constantine como anotação |
+| Rushdown | Aproximação e pressão ofensiva | Viking berserker |
+| Zoner | Controle de espaço e distância | Cowboy |
+| Mix-up | Variação de ameaças e respostas defensivas | Samurai |
+| Gimmick | Regra particular que define suas decisões | Pirata de sorte, nota de nome “Nimbus” |
+| Set play | Preparação de situações e pressão planejada | Caçador de bruxas / médico da peste |
+
+Essas descrições orientam diferenças de jogo; não são catálogos ou regras fechadas. As referências nominais são notas criativas, não instruções para reproduzir personagens. As notas temáticas não substituem o conceito visual “Anfitrião”, posteriormente escolhido pelo usuário. Composite é uma décima ideia exploratória, fora dos nove arquétipos principais e sem produção prevista.
+
+Primeiro definir e equilibrar o shoto. Só depois criar e balancear os outros personagens em relação a essa referência, um por vez. Não fabricar nove kits em paralelo nem fixar confrontos antes de existir a base.
+
+## 4. Golpes e combos de autoria manual
+
+O usuário criará os combos **manualmente, um por um**. Não gerar um catálogo, preencher combinações possíveis, restaurar receitas antigas ou assumir rotas com base apenas no arquétipo.
+
+As notas `1,1,1`, `2,2,2` e `3,3,3` exemplificam **combos fechados** a especificar. Não são três receitas implementadas, aprovadas ou necessariamente garantidas no bloqueio. “etc.” não autoriza gerar outras sequências. Cada passo exige sua entrada; a nota não autoriza executar o combo inteiro com um botão.
+
+A notação numérica continua útil para conversar: vírgula indica sequência e `+` simultaneidade. A decisão de 25/10/2026 define `1` como soco fraco, `2` soco forte, `3` chute fraco e `4` chute forte. O kit inicial contém somente esses quatro golpes em pé; `F` e `B` não mudam o golpe. Não há versões agachadas/aéreas, acordes, especiais ou agarrões cadastrados.
+
+### Processo de aprovação de uma receita
+
+1. Receber do usuário a sequência e a intenção do combo.
+2. Registrar starter, passos, contexto, condição de acerto, conclusão e comportamento esperado em erro ou bloqueio.
+3. Definir com o usuário as propriedades que faltarem, sem preencher um catálogo inteiro por suposição.
+4. Implementar a receita no livro próprio do shoto; medir dano, duração, alcance, risco, transporte e devolução de controle.
+5. Testar ambos os lados, centro e canto quando aplicável, defesa, erro, interrupção e interação com recursos já especificados.
+6. Conferir no treino e registrar a decisão: proposta, em ajuste ou homologada. Somente então usar como referência para a próxima receita.
+
+Não há receitas homologadas. A ficha numérica inicial serve somente para operar a bancada, sem homologação de balanceamento. A bancada está em [docs/shoto-balanceamento.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/docs/shoto-balanceamento.md).
+
+## 5. Sistemas de combate da nova direção
+
+| Sistema | Decisão | Definições necessárias antes de implementar |
+| --- | --- | --- |
+| Parry | Removido do design | Retirar lógica, input, feedback e lições dependentes na migração |
+| Combo breaker | Incluir uma saída de combos | Comando, elegibilidade, custo, disponibilidade, janela, efeito, risco, imunidade e retorno ao controle |
+| Drive rush | Incluir como mecânica de avanço/pressão | Ativação, custo, velocidade, duração, cancelamentos, vulnerabilidade e interação com defesa |
+| Rage | Incluir como estado/recurso | Gatilho, duração, ganho/consumo, efeitos, persistência e relação com drive rush |
+| Rage art | Ultimate da nova direção | Comando, condição, custo, uso por round, defesa, erro, dano e apresentação |
+
+A fala “rage (drive rush)” deixa a relação entre esses dois sistemas aberta. Registrar ambos sem presumir que compartilham barra, que um ativa o outro ou que sejam nomes intercambiáveis. Rage art é a ultimate; não criar uma segunda ultimate paralela.
+
+Não adotar automaticamente o limite antigo de 25% de vida, uma tentativa por round, quatro botões simultâneos ou qualquer outra regra de ultimate do protótipo. Também não presumir air dash, Roman Cancel ou outras mecânicas por causa da referência anime fighter.
+
+### Fundamentos a especificar e medir
+
+Manter movimento, ataque, defesa, distância, vantagem e punição como dimensões de combate. Reavaliar startup, atividade, recuperação em acerto/erro/bloqueio, hitstun, blockstun, cancelamentos, knockdown, juggle, escala de dano e canto para servir à nova direção. Valores e regras de combate do protótipo não equivalem a aprovação para o shoto.
+
+O kit inicial não derruba nem lança o adversário; não há knockdown, juggle ou levantada implementados nesta base. A preferência por recuperação manual fica registrada para quando quedas forem novamente especificadas, sem reintroduzir seus golpes e tempos antigos.
+
+O objetivo é pressão, rotas e respostas defensivas legíveis, com limites verificáveis contra loops e retorno de controle definido. Medir cada escolha antes de afirmar que o balanceamento se aproxima da referência desejada.
+
+
+# Ideias futuras — história e roguelike
+
+> Notas de 25/10/2026. **Fora da implementação atual.** Não são tarefas autorizadas de produção. Prioridade em [base.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/base.md): shoto, balanceamento, PvP, Arcade PvE e treino.
+
+## Premissa narrativa exploratória
+
+O pai do protagonista é um rei. Para se tornar herdeiro, o personagem precisa treinar e provar que é digno do trono. O pai o coloca em um loop temporal; ele viaja pelo tempo para derrotar grandes guerreiros de diferentes épocas da humanidade. Só poderá sair do loop e assumir o trono depois de vencer todos.
+
+A expressão “tsukuyomi infinito” é uma referência informal das notas para a ideia de aprisionamento no loop, não um nome ou poder a reproduzir. Tom, regras do tempo, elenco, desfecho e identidade do protagonista seguem abertos.
+
+## Estrutura desejada para uma fase posterior
+
+- Modo história principal de luta roguelike com um personagem único; Zagreu é referência de estrutura de protagonista, sem definir nome, desenho ou identidade.
+- Cartas de habilidades e bênçãos que modifiquem a experiência de uma corrida.
+- Personagens da história que concedem bênçãos e também compõem o elenco de PvP.
+- Trinkets associados a personagens secundários.
+- Missões com diferentes NPCs.
+- Composite como décima possibilidade exploratória além dos nove arquétipos principais.
+
+Não assumir que o protagonista roguelike é o shoto de balanceamento. Não levar cartas, bônus ou progressão ao PvP por inferência. Economia, persistência, geração de encontros, desbloqueios e interação com equilíbrio competitivo serão definidos apenas quando esse modo entrar no escopo.
+
+Os nove arquétipos e suas sugestões temáticas estão em [base.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/base.md). Nenhuma identidade dessas notas está pronta para produção.
+
+## Histórico de execução
+
+<details>
+<summary>Entregas e validações anteriores — registros históricos</summary>
 
 ## Revisão documental anterior — redefinir o design
 
@@ -36,7 +186,7 @@ Branch: `codex/feature-shoto-inicial`. Objetivo autorizado em 25/10/2026: remove
 
 **Saída:** nenhum personagem ou receita anterior acessível; modos executáveis com a nova base; nenhuma dependência residual de parry. Mudança visual e de controles exige revisão no jogo.
 
-Validação local concluída: `npm ci`, 109 testes em 13 arquivos, build, links locais e diff aprovados. Conferidos no jogo os quatro golpes, guarda sem dano, catálogo com quatro entradas, PvP, Arcade, tutorial básico completo e estado vazio do treino de combos. No build de produção, verificados pausa e avanço único do frame 3 para o 4, sem erros de console. Evidências e rastreabilidade dos testes em [docs/shoto-migracao.md](./docs/shoto-migracao.md). Implementação integrada por fast-forward em `development`, commit `7a60ea985d34a79fa422af17d9a4cd9f4a765a93`. CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40204017166) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40204102774) aprovadas. Este fechamento documental segue o mesmo fluxo de CI/integração; sem promoção para `main` ou tag.
+Validação local concluída: `npm ci`, 109 testes em 13 arquivos, build, links locais e diff aprovados. Conferidos no jogo os quatro golpes, guarda sem dano, catálogo com quatro entradas, PvP, Arcade, tutorial básico completo e estado vazio do treino de combos. No build de produção, verificados pausa e avanço único do frame 3 para o 4, sem erros de console. Evidências e rastreabilidade dos testes em [docs/shoto-migracao.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/docs/shoto-migracao.md). Implementação integrada por fast-forward em `development`, commit `7a60ea985d34a79fa422af17d9a4cd9f4a765a93`. CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40204017166) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40204102774) aprovadas. Este fechamento documental segue o mesmo fluxo de CI/integração; sem promoção para `main` ou tag.
 
 ## Etapa 2 — especificar sistemas e kit mínimo
 
@@ -56,7 +206,7 @@ Pode ser documentada antes da migração; a implementação depende da base limp
 
 ## Etapa 3 — equilibrar o shoto, uma receita por vez
 
-- [ ] Registrar a receita recebida em [docs/shoto-balanceamento.md](./docs/shoto-balanceamento.md).
+- [ ] Registrar a receita recebida em [docs/shoto-balanceamento.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/docs/shoto-balanceamento.md).
 - [ ] Implementar somente os passos e propriedades definidos; não expandir “etc.” em catálogo.
 - [ ] Medir dano por abertura, duração, alcance, risco em erro/bloqueio, transporte, gasto de recurso e resposta do defensor.
 - [ ] Conferir ambos os lados, centro/canto aplicável, diferentes distâncias, contato/erro/bloqueio e combo breaker.
@@ -74,7 +224,7 @@ Pode ser documentada antes da migração; a implementação depende da base limp
 Branch: `codex/feature-artes-tela-inicial`. Objetivo: produzir duas propostas de fundo para o menu atual com contorno expressivo, sombras gráficas e textura controlada. Escopo: artes estáticas, sem integração da interface ou definição visual do Shoto.
 
 - [x] Gerar e inspecionar Arena de Brasa e Pátio de Jade, com área de baixo contraste à esquerda para as seis opções.
-- [x] Salvar PNGs originais, dimensões, prompts e orientação de uso em [assets/art/menu/README.md](./assets/art/menu/README.md).
+- [x] Salvar PNGs originais, dimensões, prompts e orientação de uso em [assets/art/menu/README.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/assets/art/menu/README.md).
 - [x] Validar instalação, 109 testes em 13 arquivos, build e diff.
 - [x] Enviar branch, confirmar CI e integrar o pacote de propostas em `development`.
 
@@ -97,7 +247,7 @@ Branch: `codex/feature-shoto-sprites`, criada de `origin/development` para não 
 - [x] Enviar implementação e confirmar CI da branch.
 - [ ] Integrar em `development` somente após revisão visual.
 
-**Estado:** implementação local pronta; 115 testes em 14 arquivos aprovados. As tiras preparadas foram inspecionadas isoladamente, e a preparação verifica transparência, limites de célula e pé opaco em Y=719 para todos os quadros. O navegador de inspeção volta a expirar ao abrir o jogo em `127.0.0.1:5176`; não há evidência de reprodução na arena nesta entrega. Não confundir inspeção de PNGs/testes com homologação visual. Limites das folhas de origem e reprodução em [src/assets/sprites/characters/shoto/README.md](./src/assets/sprites/characters/shoto/README.md).
+**Estado:** implementação local pronta; 115 testes em 14 arquivos aprovados. As tiras preparadas foram inspecionadas isoladamente, e a preparação verifica transparência, limites de célula e pé opaco em Y=719 para todos os quadros. O navegador de inspeção volta a expirar ao abrir o jogo em `127.0.0.1:5176`; não há evidência de reprodução na arena nesta entrega. Não confundir inspeção de PNGs/testes com homologação visual. Limites das folhas de origem e reprodução em [src/assets/sprites/characters/shoto/README.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/src/assets/sprites/characters/shoto/README.md).
 
 Estado remoto: commit de implementação `2e72438a7044ccc160a3cf2659ea6c1c00ebe494` enviado; [CI da branch aprovada](https://github.com/feittosaa/close-combat/actions/runs/40254140672). Sem integração em `development`, promoção para `main` ou tag enquanto a revisão visual estiver pendente. O registro documental final acompanha a mesma branch.
 
@@ -173,7 +323,7 @@ Manter os modos utilizáveis nas etapas anteriores; consolidar aqui o conjunto h
 - [ ] Comparar cada confronto com o shoto de referência; medir vantagens, respostas e recursos.
 - [ ] Aprovar um personagem por vez antes de ampliar a produção.
 
-Composite e história/roguelike não pertencem a esta etapa. Consultar [docs/ideias-futuras.md](./docs/ideias-futuras.md), sem iniciar implementação.
+Composite e história/roguelike não pertencem a esta etapa. Consultar [docs/ideias-futuras.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/docs/ideias-futuras.md), sem iniciar implementação.
 
 ## Validação da revisão documental anterior e histórico
 
@@ -181,7 +331,7 @@ As pipelines anteriores, números de testes e aprovações de Ayla/Gris/Tester f
 
 Validação local: `npm ci`, 419 testes em 24 arquivos, `npm run build`, links locais dos seis documentos ativos e `git diff --check` aprovados. Nenhum código de jogo ou teste foi alterado. Conferência visual no jogo não se aplica a esta entrega exclusivamente documental. Entrega integrada por fast-forward em `development`: commit `3ebb4097a96747056794a3780708ff6413f6d7f7`. CI da [branch](https://github.com/feittosaa/close-combat/actions/runs/40199645834) e da [integração](https://github.com/feittosaa/close-combat/actions/runs/40199715568) aprovadas. O fechamento deste registro documental segue o mesmo fluxo de CI e integração. Sem promoção para `main` ou tag nesta entrega.
 
-Conferência conjunta concluída no build de produção: menu diurno, configurações, seleção, treino e PvP; agachado inspecionado por frame nos dois lados; salto preserva espaço do HUD; P2 apresenta 980/1000 após contato. Rodapé ajustado após revisão para separar contato e atalhos. Evidências em [docs/evidence/hud-enquadramento/README.md](./docs/evidence/hud-enquadramento/README.md). Validação final: 124 testes em 16 arquivos, build e diff aprovados. A conferência atual substitui a pendência visual das entregas de menu, sprites e Full HD; os relatos anteriores descrevem o estado histórico. Integração e CI desta branch ainda pendentes neste registro.
+Conferência conjunta concluída no build de produção: menu diurno, configurações, seleção, treino e PvP; agachado inspecionado por frame nos dois lados; salto preserva espaço do HUD; P2 apresenta 980/1000 após contato. Rodapé ajustado após revisão para separar contato e atalhos. Evidências em [docs/evidence/hud-enquadramento/README.md](https://github.com/feittosaa/close-combat/blob/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1/docs/evidence/hud-enquadramento/README.md). Validação final: 124 testes em 16 arquivos, build e diff aprovados. A conferência atual substitui a pendência visual das entregas de menu, sprites e Full HD; os relatos anteriores descrevem o estado histórico. Integração e CI desta branch ainda pendentes neste registro.
 
 Revisão solicitada após a primeira conferência: substituir zoom dinâmico por câmera fixa em escala 1, apenas deslocamento horizontal, incluindo saltos; HUD minimalista com barras contínuas no topo, sem segmentação vertical e sem grandes molduras. As evidências anteriores do enquadramento serão substituídas pela conferência desta revisão antes da integração.
 
@@ -369,3 +519,10 @@ Nenhuma imagem ou folha de animação foi alterada. Regressões antigas de recup
 Validação local da micro pausa concluída: npm ci, 183 testes/23 arquivos, build e diff aprovados. Conferência no Fedora por avanço de ticks: hit e bloqueio mantêm cinco ticks com os mesmos pixels/posições/pose; o sexto retoma combate/stun; whiff avança normalmente. Evidências em docs/evidence/hitstop-contato. O relógio é validado separadamente em modo normal, inclusive KO/time-up, sem alterar assets ou clipes. Branch baseada em 850ac79, preservando a revisão visual anterior.
 
 Micro pausa enviada em `fcf38426c5d333694ac054a4141b5a86c14ab20e`, com [CI 40422004102](https://github.com/feittosaa/close-combat/actions/runs/40422004102) aprovada. Sem merge/promoção/tag; development e main preservadas. Este fechamento é apenas documental e sua CI própria será conferida antes do relato final.
+
+
+</details>
+
+## Documentos específicos retirados do checkout
+
+As fichas, propostas e capturas substituídas não são requisitos gerais. O estado vigente e as pendências foram centralizados acima. As versões anteriores são consultáveis no [checkout anterior à limpeza](https://github.com/feittosaa/close-combat/tree/a027c302ccdf8a58d2a965593dcd452f7a3ee0f1); o conteúdo antigo descartado não está novamente autorizado.

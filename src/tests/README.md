@@ -1,7 +1,5 @@
 # Testes
 
-Cobertura da base atual do Shoto, independente do navegador: dados/seleção, input, geometria, ataque e recuperação, guarda, trades, movimento, rounds, treino, tutorial vazio e IA. Controles e câmera usam os contratos preservados; animação genérica usa dados sintéticos sem sprites do elenco retirado.
+Cobrir contratos de dados, entradas, colisões, combate, tempo, determinismo, reprodução, câmera, interface e ferramentas. Testar lados, contato, bloqueio, erro e condições de borda relevantes à regra alterada.
 
-A rastreabilidade dos testes substituídos com a retirada das regras está em `docs/shoto-migracao.md`. Executar `npm test -- --run`, build e diff antes da entrega. Conferência visual no jogo é separada da cobertura automatizada.
-
-Raiz de regras: [base.md](../../base.md).
+Regressões devem comprovar comportamento, sem reproduzir apenas a implementação ou enfraquecer exigências para ocultar falhas. Testes e build não substituem revisão visual no navegador. Resultados, contagens e evidências de cada entrega ficam exclusivamente na pipeline.

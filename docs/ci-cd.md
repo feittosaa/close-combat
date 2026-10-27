@@ -8,7 +8,7 @@ Este manifesto rege a entrega de mudanças. `base.md` continua sendo a raiz das 
 
 - `development`: integração das features concluídas e validadas.
 - `main`: versões estáveis, promovidas a partir de `development` após validação conjunta.
-- Uma branch por objetivo, criada a partir de `origin/development` atualizado. Usar `codex/feature-<nome>`, `codex/fix-<nome>` ou `codex/chore-<nome>` conforme a mudança. Não misturar objetivos independentes.
+- Uma branch por objetivo, criada a partir de `origin/development` atualizado. Uma dependência ainda não integrada pode servir de base quando necessária para preservar a versão em revisão; registrar essa dependência na pipeline. Usar `codex/feature-<nome>`, `codex/fix-<nome>` ou `codex/chore-<nome>` conforme a mudança. Não misturar objetivos independentes.
 - Antes de começar, conferir branch, remoto e alterações locais. Preservar trabalho existente; não carregar mudanças de outra tarefa por acidente.
 - Não desenvolver diretamente em `development` ou `main`. Não usar force push nas branches compartilhadas nem substituir tags publicadas.
 
@@ -25,11 +25,11 @@ Este manifesto rege a entrega de mudanças. `base.md` continua sendo a raiz das 
 
 9. Após confirmar a integração e a CI de `development`, encerrar a branch finalizada: verificar ancestralidade no remoto atualizado e ausência de checkout/trabalho ativo, remover a referência remota e usar `git branch -d` para a local. Conferir a remoção no remoto. Não apagar `development`, `main`, tags ou branches com trabalho pendente. Branches dependentes absorvidas pela mesma integração também devem ser encerradas. Se uma branch antiga tiver commit único ainda não integrado, auditar e preservar seu histórico antes de removê-la; nunca fazer force push nem descartar código por inferência.
 
-A autorização vigente cobre concluir, testar, commitar e enviar a branch. Desde o pedido de novas animações de golpes/guardas, qualquer merge em `development` depende de pedido explícito do usuário para aquela entrega; essa regra substitui a autorização histórica de integração automática. Não criar uma rotina de integração automática nem apagar branches prontas ainda não integradas. Restrições reais do remoto devem ser respeitadas e reportadas.
+A autorização de trabalho cobre concluir, testar, commitar e enviar a branch. Qualquer merge em `development`, promoção para `main` ou release exige pedido explícito do usuário. CI verde não autoriza integração automática nem exclusão de uma branch ainda não integrada. Respeitar e reportar restrições reais do remoto.
 
 ## Promoção de versão
 
-Promover `development` para `main` no fechamento de uma versão, após validar o conjunto integrado e registrar o escopo da release. A conclusão de uma feature não promove automaticamente todas as mudanças de `development` para `main`. Sem pedido ou marco de release definido, a feature permanece integrada em `development`.
+Promover `development` para `main` no fechamento de uma versão, após validar o conjunto integrado e registrar o escopo da release. A conclusão de uma feature não promove automaticamente todas as mudanças de `development` para `main`. Sem autorização explícita, manter a branch sem integração ou promoção.
 
 1. Atualizar referências remotas, conferir os commits da promoção e confirmar que todos pertencem ao escopo concluído.
 2. Atualizar `package.json` e `package-lock.json` com a nova versão em branch própria, atualizar notas de versão e integrar em `development` pelo mesmo processo de validação.
