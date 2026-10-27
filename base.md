@@ -55,6 +55,8 @@ Acertos e bloqueios confirmados recebem uma micro pausa compartilhada na pose de
 
 ## Qualidade e entrega
 
+Priorizar código limpo, legível e bem organizado, com nomes claros, responsabilidades coesas e soluções proporcionais à necessidade atual. Manter somente código, dependências, documentação e assets necessários ao escopo autorizado; retirar sobras, duplicações e peças substituídas após conferir seus consumidores. Artes rejeitadas ou sem aprovação não compõem o acervo ativo; propostas em revisão só permanecem enquanto necessárias a uma tarefa autorizada registrada na pipeline. Fontes ativas de preparação e referências canônicas são parte desse acervo necessário. O Git preserva versões descartadas.
+
 Seguir [docs/ci-cd.md](docs/ci-cd.md). Instalação reproduzível, testes, build e diff são obrigatórios. Mudanças de arte, interface, animação ou controles também exigem conferência no jogo. Validação local, CI remota e aprovação artística são evidências distintas.
 
 Não remover ou enfraquecer testes para mascarar falhas. Alterações de regra exigem atualização explícita das regressões correspondentes. Código e documentação devem comunicar o estado real, sem apresentar tarefas pendentes como concluídas.
