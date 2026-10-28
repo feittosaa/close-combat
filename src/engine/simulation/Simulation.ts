@@ -1,4 +1,4 @@
-import type { CharacterState, CharacterAnimationState } from '../characters/CharacterState';
+import type { CharacterState, CharacterAnimationState, CharacterAttack } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import { defaultCharacter, type CharacterDefinition } from '../data/characters';
 import type { GameConfig } from '../data/gameConfig';
@@ -47,7 +47,7 @@ export class Simulation {
   private explosions: ExplosionState[] = [];
   private projectiles: ProjectileState[] = [];
   private nextProjectileId = 0;
-  private pendingCommands: ({ move: MoveDefinition; expires: number } | undefined)[] = [undefined, undefined];
+  private pendingCommands: ({ move: MoveDefinition; expires: number; throwDirection?: CharacterAttack['throwDirection'] } | undefined)[] = [undefined, undefined];
   private frame = 0;
   private elapsedFrames = 0;
   private hitstopFramesRemaining = 0;
@@ -293,6 +293,7 @@ export class Simulation {
       return !p.attack.hasHit && p.remainingFrames > 0 && p.x >= this.config.arena.left - 100 && p.x <= this.config.arena.right + 100 && box.y+box.height <= this.config.arena.floorY;
     });
     if (this.lastHitEvents.length) this.hitstopFramesRemaining = CONTACT_HITSTOP_FRAMES;
+    const contactPositions = this.characters.map(character => character.x);
     this.lastHitEvents.forEach(event => {
       const attacker = this.characters.find(character => character.characterId === event.attackerId)!;
       const target = this.characters.find(character => character.characterId === event.targetId)!;
@@ -350,11 +351,14 @@ export class Simulation {
       const received = this.definitions[targetIndex].rage;
       if (gain && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
       if (received && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
-      target.x += event.pushback * ((event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1);
+      const pushSign = (event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1;
+      if (sourceMove.category === 'throw' && event.outcome === 'hit') {
+        target.x = contactPositions[attackerIndex] + pushSign * (Math.abs(contactPositions[targetIndex] - contactPositions[attackerIndex]) + event.pushback);
+      } else target.x += event.pushback * pushSign;
       this.recentContacts.push({ frame: this.frame, event });
     });
     this.recentContacts = this.recentContacts.filter(entry => this.frame - entry.frame < 180).slice(-20);
-    this.resolveBodies(); this.resolveScreenEdges(previousX);
+    this.resolveBodies(); this.resolveScreenEdges(previousX); this.updateFacing();
     this.characters.forEach((character,index)=>{
       if (!character.attack || locked(character)) character.chain = undefined;
       const previous=previousAnimationStates[index];
@@ -397,7 +401,8 @@ export class Simulation {
         character.chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), move.id] : [move.id];
         character.chainLastFrame = this.frame;
         character.rage = Math.max(0, character.rage - (move.rageCost ?? 0));
-        character.attack = { moveId: move.id, commandFrame: this.frame, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false };
+        character.attack = { moveId: move.id, commandFrame: this.frame, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false,
+          ...(move.category === 'throw' ? { throwDirection: this.pendingCommands[index]?.throwDirection ?? 'forward' } : {}) };
         character.crouching = Boolean(move.crouching); this.dashFrames[index] = 0;
         this.pendingCommands[index] = undefined;
         if (move.movement?.launch) {
@@ -412,7 +417,8 @@ export class Simulation {
       .map(move => move.follows ? { ...move, sequenceAfterFrame: character.attack?.commandFrame } : move);
     const command = this.parsers[index].update(input, this.frame, moves,
       { airborne: !character.grounded, crouching: input.direction.startsWith('D') && character.grounded });
-    if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6 };
+    if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6,
+      ...(command.category === 'throw' ? { throwDirection: input.direction.endsWith('B') ? 'backward' : 'forward' } : {}) };
   }
   private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
     if ((move.rageCost ?? 0) > character.rage) return false;

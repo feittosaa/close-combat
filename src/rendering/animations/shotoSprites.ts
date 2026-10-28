@@ -1,6 +1,5 @@
 import { ULTIMATE_ACTIVATION_FRAMES } from '../../engine/combat/ultimateActivation';
 import { shotoCombatSources, shotoCombatClips, getShotoCombatPose } from './shotoCombatSprites';
-import { prepareShotoPalette } from './prepareShotoPalette';
 import { shotoTransitionSources, transitionClips, transitionByAction } from './shotoTransitions';
 import type Phaser from 'phaser';
 import type { CharacterState } from '../../engine/characters/CharacterState';
@@ -65,9 +64,6 @@ const sources=[
   ...shotoTransitionSources,
   ...shotoCombatSources,
 ];
-export function prepareShotoSprites(scene:Phaser.Scene):void{
-  prepareShotoPalette(scene,sources.map(source=>source.key));
-}
 export function preloadShotoSprites(scene:Phaser.Scene):void{
   for(const source of sources)if(!scene.textures.exists(source.key))scene.load.atlas(source.key,source.image,source.atlas);
 }

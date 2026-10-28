@@ -9,6 +9,7 @@ export interface CharacterAttack {
   buttons: readonly AttackButton[];
   elapsedFrames: number;
   hasHit: boolean;
+  throwDirection?: 'forward' | 'backward';
   hitOutcome?: 'hit' | 'block';
 }
 export interface CharacterState {
