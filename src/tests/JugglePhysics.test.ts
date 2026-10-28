@@ -1,3 +1,4 @@
+import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { expect, it } from 'vitest';
 import { AttackResolver } from '../engine/combat/AttackResolver';
 import { Simulation } from '../engine/simulation/Simulation';
@@ -80,7 +81,7 @@ it('increases gravity once per real air hit, caps it, and never resets upward mo
       hits++;
       expect(after.characters[1].juggle?.airHits).toBe(hits);
       expect(after.characters[1].juggle?.gravityScale).toBeCloseTo(Math.min(juggleFixture.juggle!.maximumGravityScale,0.7+hits*0.15));
-      expect(after.characters[1].verticalVelocity).toBeCloseTo(before.characters[1].verticalVelocity+config.movement.gravity*before.characters[1].juggle!.gravityScale);
+      expect(after.characters[1].verticalVelocity).toBeCloseTo(before.characters[1].verticalVelocity+(before.characters[1].juggle!.suspensionFrames?0:config.movement.gravity*before.characters[1].juggle!.gravityScale));
     }
   }
   expect(hits).toBeGreaterThanOrEqual(2);
@@ -108,7 +109,7 @@ it('protects getup and the exact wakeup interval from strikes, throws and projec
 
 it('freezes juggle state during contact pauses and clears flight/protection on reset',()=>{
   const sim=launch();const impact=sim.snapshot();
-  for(let tick=0;tick<5;tick++){step(sim);expect(sim.snapshot().characters).toEqual(impact.characters);}
+  for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++){step(sim);expect(sim.snapshot().characters).toEqual(impact.characters);}
   sim.resetMatch();expect(sim.snapshot().characters.every(c=>!c.juggle && !c.wakeupInvulnerabilityFrames && c.mode==='neutral')).toBe(true);
   const landing=launch();while(!landing.snapshot().characters[1].grounded)step(landing);
   landing.resetMatch();expect(landing.snapshot().characters.every(c=>!c.juggle && !c.wakeupInvulnerabilityFrames && !c.knockdown)).toBe(true);
@@ -121,4 +122,24 @@ it('keeps a launcher KO in flight until the target reaches the floor',()=>{
   expect(sim.snapshot().characters[1].health).toBe(0);
   while(!sim.snapshot().characters[1].grounded) {expect(sim.snapshot().phase).toBe('fight');step(sim);}
   expect(sim.snapshot().phase).toBe('round-over');
+});
+
+it('suspends a juggled target for six combat ticks after hitstop, then resumes its preserved velocity with heavier gravity',()=>{
+  const sim=launch(0,juggleFixture);
+  for(let i=0;i<31;i++)step(sim);
+  step(sim,0,input('N',['1']));contact(sim);
+  const impact=sim.snapshot();const target=impact.characters[1];
+  expect(target.juggle).toMatchObject({airHits:1,gravityScale:0.85,suspensionFrames:6});
+  for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++) {
+    step(sim);expect(sim.snapshot().characters).toEqual(impact.characters);
+  }
+  for(let tick=1;tick<=6;tick++) {
+    step(sim);const suspended=sim.snapshot().characters[1];
+    expect([suspended.x,suspended.y,suspended.verticalVelocity]).toEqual([target.x,target.y,target.verticalVelocity]);
+    expect(suspended.juggle?.suspensionFrames).toBe(6-tick);
+    expect(sim.snapshot().frame).toBe(impact.frame+tick);
+  }
+  step(sim);const resumed=sim.snapshot().characters[1];
+  expect(resumed.y).toBeCloseTo(target.y+target.verticalVelocity);
+  expect(resumed.verticalVelocity).toBeCloseTo(target.verticalVelocity+config.movement.gravity*0.85);
 });

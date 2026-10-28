@@ -238,10 +238,15 @@ export class Simulation {
       }
       this.jumpHeld[index] = up;
       if (!character.grounded) {
-        character.y += character.verticalVelocity;
-        character.verticalVelocity += this.config.movement.gravity * (character.juggle?.gravityScale ?? 1);
+        character.airborneElapsedFrames = this.frame + 1 - (character.airborneStartedFrame ?? this.frame);
+        if (character.juggle?.suspensionFrames) {
+          character.juggle.suspensionFrames -= 1;
+        } else {
+          character.y += character.verticalVelocity;
+          character.verticalVelocity += this.config.movement.gravity * (character.juggle?.gravityScale ?? 1);
+        }
         if (character.y >= this.config.arena.floorY) {
-          character.airborneStartedFrame=undefined;
+          character.airborneStartedFrame=undefined; character.airborneElapsedFrames=undefined;
           character.y = this.config.arena.floorY; character.grounded = true; character.verticalVelocity = 0;
           const juggleRules = this.definitions[index].juggle;
           if (character.juggle && juggleRules) {
@@ -300,6 +305,7 @@ export class Simulation {
       if (event.outcome === 'hit' && !event.stage && juggleRules) {
         if (target.juggle && !target.grounded) {
           target.juggle.airHits += 1;
+          target.juggle.suspensionFrames = juggleRules.airHitSuspensionFrames;
           target.juggle.gravityScale = Math.min(juggleRules.maximumGravityScale,
             juggleRules.initialGravityScale + target.juggle.airHits * juggleRules.gravityScalePerHit);
         } else if (launcher) {
@@ -335,7 +341,7 @@ export class Simulation {
         this.explosions.push({x: target.x,y:target.y-85,remainingFrames:10});
       }
       if (target.juggle && juggleRules) {
-        target.remainingStateFrames = juggleRules.getupFrames + flightFramesRemaining(target.y, target.verticalVelocity,
+        target.remainingStateFrames = juggleRules.getupFrames + (target.juggle.suspensionFrames ?? 0) + flightFramesRemaining(target.y, target.verticalVelocity,
           this.config.arena.floorY, this.config.movement.gravity * target.juggle.gravityScale);
         event.defenderStunFrames = target.remainingStateFrames;
         event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
