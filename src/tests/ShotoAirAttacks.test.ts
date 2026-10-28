@@ -60,6 +60,7 @@ it.each([0,1])('launches only the confirmed final hit of 1,1,2: player %i', play
       contact(sim,player,input(guard?'B':'N'));
     }
     const target = sim.snapshot().characters[1-player];
+    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(guard?undefined:6);
     expect(target.grounded).toBe(guard);
     expect(target.verticalVelocity).toBe(guard?0:-10);
     if(!guard) {
@@ -71,6 +72,7 @@ it.each([0,1])('launches only the confirmed final hit of 1,1,2: player %i', play
     const sim = new Simulation(config,undefined,{training:true,initialDistance:56});
     for(const button of buttons){step(sim,player,input('N',button));contact(sim,player);}
     expect(sim.snapshot().characters[1-player].grounded).toBe(true);
+    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBeUndefined();
   }
 });
 

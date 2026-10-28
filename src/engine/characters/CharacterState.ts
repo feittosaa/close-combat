@@ -10,6 +10,8 @@ export interface CharacterAttack {
   hasHit: boolean;
   throwDirection?: 'forward' | 'backward';
   hitOutcome?: 'hit' | 'block';
+  /** Recovery of this confirmed attack, when its authored launcher shortens the nominal move. */
+  recoveryFrames?: number;
 }
 export interface CharacterState {
   characterId: string;

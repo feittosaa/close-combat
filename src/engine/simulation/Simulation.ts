@@ -12,6 +12,7 @@ import type { ProjectileState } from '../combat/ProjectileState';
 import { ULTIMATE_ACTIVATION_FRAMES, type UltimateActivation, type PendingUltimateLighter, type ExplosionState } from '../combat/ultimateActivation';
 import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { flightFramesRemaining } from '../combat/airPhysics';
+import { attackDurationFrames } from '../combat/frameData';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
@@ -196,7 +197,7 @@ export class Simulation {
       if (character.attack) {
         const move = this.move(index, character.attack.moveId)!;
         character.attack.elapsedFrames += 1;
-        if (character.attack.elapsedFrames >= move.startup + move.activeFrames + move.recovery) character.attack = undefined;
+        if (character.attack.elapsedFrames >= attackDurationFrames(move, character.attack)) character.attack = undefined;
       }
       return this.pendingCommands[index]?.move;
     });
@@ -264,7 +265,7 @@ export class Simulation {
             character.mode = 'knockdown'; character.attack = undefined;
             const owner = this.characters.find(candidate => candidate.hitSequence?.targetId === character.characterId);
             const move = owner?.attack ? this.move(this.characters.indexOf(owner), owner.attack.moveId) : undefined;
-            const recovery = move && owner?.attack ? move.startup + move.activeFrames + move.recovery - owner.attack.elapsedFrames : 0;
+            const recovery = move && owner?.attack ? attackDurationFrames(move, owner.attack) - owner.attack.elapsedFrames : 0;
             character.remainingStateFrames = Math.max(juggleRules.getupFrames, recovery);
             character.knockdown = { velocityX: 0 };
           }
@@ -320,7 +321,7 @@ export class Simulation {
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
       const sourceMove = this.move(attackerIndex,event.moveId)!;
       const launcher = this.definitions[attackerIndex].combos?.find(recipe =>
-        recipe.launchVelocity !== undefined && recipe.moveIds.length === attacker.chain?.length &&
+        recipe.launch !== undefined && recipe.moveIds.length === attacker.chain?.length &&
         recipe.moveIds.every((id, step) => attacker.chain![step] === id));
       const juggleRules = this.definitions[targetIndex].juggle;
       if (event.outcome === 'hit' && !event.stage && juggleRules) {
@@ -335,7 +336,12 @@ export class Simulation {
       }
       if (launcher && event.outcome === 'hit' && !event.stage) {
         target.grounded = false; target.crouching = false;
-        target.verticalVelocity = launcher.launchVelocity!;
+        target.verticalVelocity = launcher.launch!.velocity;
+        if (attacker.attack?.moveId === event.moveId) {
+          attacker.attack.recoveryFrames = launcher.launch!.recoveryFrames;
+          event.attackerRecoveryFrames = attackDurationFrames(sourceMove, attacker.attack) - attacker.attack.elapsedFrames;
+        }
+        attacker.chain = undefined;
         target.airborneStartedFrame = this.frame;
       }
       if (event.stage === 'confirm' && event.outcome === 'hit') {
@@ -368,9 +374,9 @@ export class Simulation {
         event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
       }
       if (event.outcome === 'hit' && !event.stage && chainStrike(sourceMove) && attacker.attack?.moveId === event.moveId) {
-        attacker.hitSequence = { targetId: target.characterId, heavy: Boolean(attacker.hitSequence?.heavy || heavyStrike(sourceMove)) };
+        attacker.hitSequence = { targetId: target.characterId, heavy: !launcher && Boolean(attacker.hitSequence?.heavy || heavyStrike(sourceMove)) };
         if (target.grounded && !target.juggle) {
-          const remaining = sourceMove.startup + sourceMove.activeFrames + sourceMove.recovery - attacker.attack.elapsedFrames;
+          const remaining = attackDurationFrames(sourceMove, attacker.attack) - attacker.attack.elapsedFrames;
           target.remainingStateFrames = remaining;
           event.attackerRecoveryFrames = remaining;
           event.defenderStunFrames = remaining;

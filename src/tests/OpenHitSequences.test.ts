@@ -61,14 +61,17 @@ it.each(['2','4'] as const)('blocks both weak buttons after strong %s, drops the
   }
 });
 
-it('keeps the strength floor across a launcher even after the attacker recovers',()=>{
-  const sim=create();for(const button of ['1','1','2'] as const)hit(sim,0,[button]);
-  expect(sim.snapshot().characters[1].juggle).toBeDefined();
-  while(sim.snapshot().characters[0].attack)step(sim);
-  expect(sim.snapshot().characters[1].mode).toBe('hitstun');
-  step(sim,0,input(['1']));expect(sim.snapshot().characters[0].attack).toBeUndefined();
-  while(sim.snapshot().characters[1].mode!=='neutral')step(sim);
-  step(sim,0,input(['1']));expect(sim.snapshot().characters[0].attack?.moveId).toBe('light-punch');
+it.each([0,1])('resets the strength floor and recipe after a confirmed launcher: player %i',player=>{
+  const sim=create();for(const button of ['1','1','2'] as const)hit(sim,player,[button]);
+  const launched=sim.snapshot();
+  expect(launched.characters[1-player].juggle).toBeDefined();
+  expect(launched.characters[player].hitSequence).toMatchObject({heavy:false});
+  expect(launched.characters[player].chain).toBeUndefined();
+  while(sim.snapshot().characters[player].attack)step(sim);
+  expect(sim.snapshot().characters[1-player].mode).toBe('hitstun');
+  step(sim,player,input(['1']));
+  expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-punch');
+  expect(sim.snapshot().characters[player].chain).toEqual(['light-punch']);
 });
 
 it('keeps punch repetition capped at the authored string and gives kicks no repetition route',()=>{
