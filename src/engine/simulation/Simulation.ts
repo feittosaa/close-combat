@@ -237,6 +237,10 @@ export class Simulation {
         if (character.y >= this.config.arena.floorY) {
           character.airborneStartedFrame=undefined;
           character.y = this.config.arena.floorY; character.grounded = true; character.verticalVelocity = 0;
+          // Air basics end at landing; rising grounded specials retain their own recovery.
+          if (character.attack && this.move(index, character.attack.moveId)?.airborne && !this.move(index, character.attack.moveId)?.follows) {
+            character.attack = undefined; character.chain = undefined; character.mode = 'neutral';
+          }
           if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';
         }
       }
@@ -272,6 +276,17 @@ export class Simulation {
       const target = this.characters.find(character => character.characterId === event.targetId)!;
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
       const sourceMove = this.move(attackerIndex,event.moveId)!;
+      const launcher = this.definitions[attackerIndex].combos?.find(recipe =>
+        recipe.launchVelocity !== undefined && recipe.moveIds.length === attacker.chain?.length &&
+        recipe.moveIds.every((id, step) => attacker.chain![step] === id));
+      if (launcher && event.outcome === 'hit' && !event.stage) {
+        target.grounded = false; target.crouching = false;
+        target.verticalVelocity = launcher.launchVelocity!;
+        target.airborneStartedFrame = this.frame;
+        target.remainingStateFrames = Math.max(target.remainingStateFrames, Math.ceil(-2 * launcher.launchVelocity! / this.config.movement.gravity) + 1);
+        event.defenderStunFrames = target.remainingStateFrames;
+        event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
+      }
       if (event.stage === 'confirm' && event.outcome === 'hit') {
         target.ultimateCapture = { ownerId: attacker.characterId };
         target.crouching = false;
@@ -356,10 +371,11 @@ export class Simulation {
   private readCommand(character: CharacterState, index: number, input: FrameInput): void {
     if (this.pendingCommands[index] && this.pendingCommands[index]!.expires < this.frame) this.pendingCommands[index] = undefined;
     const moves = this.definitions[index].moves.filter(move => !move.follows || character.attack?.moveId === move.follows)
+      .sort((left, right) => Number(Boolean(right.follows)) - Number(Boolean(left.follows)))
       .map(move => move.follows ? { ...move, sequenceAfterFrame: character.attack?.commandFrame } : move);
     const command = this.parsers[index].update(input, this.frame, moves,
       { airborne: !character.grounded, crouching: input.direction.startsWith('D') && character.grounded });
-    if (command && command.input.buttons.length === input.buttons.size && !input.direction.startsWith('U')) this.pendingCommands[index] = { move: command, expires: this.frame + 6 };
+    if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6 };
   }
   private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
     if ((move.rageCost ?? 0) > character.rage) return false;

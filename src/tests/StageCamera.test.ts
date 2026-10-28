@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type Phaser from 'phaser';
 import { stages } from '../rendering/stages/stageCatalog';
 import { StageView } from '../rendering/stages/StageView';
-import { createStageLayout, getFightCameraFrame } from '../rendering/stages/stageLayout';
+import { createStageLayout, getFightCameraFrame, getStageArenaBounds } from '../rendering/stages/stageLayout';
 import { createGameConfig } from '../engine/data/gameConfig';
 
 // StageView only needs the Scene surface below; keep the Node test independent of browser APIs.
@@ -13,8 +13,7 @@ describe.each(stages)('camera and ground contract: $id', stage => {
   it.each([[640, 360], [1024, 576], [1280, 720], [1920, 1080]])('preserves the floor and image bounds at %ix%i', (width, height) => {
     const config = createGameConfig(width, height);
     const layout = createStageLayout(stage, width, height, config.arena.floorY);
-    const left = config.arena.left + layout.arenaOffsetX;
-    const right = config.arena.right + layout.arenaOffsetX;
+    const { left, right } = getStageArenaBounds(layout);
 
     for (let fraction = 0; fraction <= 20; fraction++) {
       const span = (right - left) * fraction / 20;
@@ -70,7 +69,8 @@ describe.each(stages)('camera and ground contract: $id', stage => {
 
 it.each(stages)('tracks the highest fighter and preserves scenery scale and coverage: $id', stage => {
   const layout=createStageLayout(stage,1024,576,488);
-  const oldLayout=createStageLayout({...stage,topExtension:0,groundY:615,referenceSize:{width:2172,height:724}},1024,576,488);
+  const extension = stage.topExtension ?? 0;
+  const oldLayout=createStageLayout({...stage,topExtension:0,groundY:stage.groundY-extension,referenceSize:{width:stage.referenceSize.width,height:stage.referenceSize.height-extension}},1024,576,488);
   expect(layout.scale).toBe(oldLayout.scale);
   expect(layout.worldWidth).toBe(oldLayout.worldWidth);
   const grounded=getFightCameraFrame(layout,[400,500],[488,488]);

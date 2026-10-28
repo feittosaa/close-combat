@@ -12,7 +12,7 @@ const practice = (distance = 64) => new Simulation(config, [shoto, shoto], { tra
 const advance = (sim: Simulation, frames: number, inputs = [N, N]) => { for (let f = 0; f < frames; f++) sim.stepFrame(inputs); };
 
 describe('quatro básicos do Shoto', () => {
-  it.each(shoto.moves.filter(move => move.category === 'basic'))('$name acerta uma única vez em ambos os lados', move => {
+  it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name acerta uma única vez em ambos os lados', move => {
     for (const index of [0, 1]) {
       const sim = practice(); const inputs = [N, N]; inputs[index] = input('N', [...move.input.buttons]);
       sim.stepFrame(inputs);
@@ -30,7 +30,7 @@ describe('quatro básicos do Shoto', () => {
       expect(sim.snapshot().characters[index].attack).toBeUndefined();
     }
   });
-  it.each(shoto.moves.filter(move => move.category === 'basic'))('$name recupera integralmente em acerto, bloqueio e erro', move => {
+  it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name recupera integralmente em acerto, bloqueio e erro', move => {
     for (const outcome of ['hit', 'block', 'whiff'] as const) {
       const sim = practice(outcome === 'whiff' ? 300 : 64);
       const guard = outcome === 'block' ? input('B') : N;
@@ -43,7 +43,7 @@ describe('quatro básicos do Shoto', () => {
       if (outcome === 'block') expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
     }
   });
-  it.each(shoto.moves.filter(move => move.category === 'basic'))('$name usa guarda sem parry mesmo no primeiro frame de contato', move => {
+  it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name usa guarda sem parry mesmo no primeiro frame de contato', move => {
     const sim = practice(); sim.stepFrame([input('N', [...move.input.buttons]), N]);
     advance(sim, move.startup - 1);
     sim.stepFrame([N, input('B')]);
@@ -53,14 +53,14 @@ describe('quatro básicos do Shoto', () => {
     expect(contact.attackerRecoveryFrames).toBe(move.activeFrames + move.recovery - 1);
     expect(contact.frameAdvantage).toBe(contact.defenderStunFrames - contact.attackerRecoveryFrames);
   });
-  it.each(shoto.moves.filter(move => move.category === 'basic'))('$name não repete enquanto o botão estiver mantido', move => {
+  it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name não repete enquanto o botão estiver mantido', move => {
     const sim = practice(); const held = input('N', [...move.input.buttons]);
     advance(sim, 120, [held, N]);
     expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth - move.damage);
     expect(sim.snapshot().characters[0].attack).toBeUndefined();
   });
   it.each(['F', 'B'] as const)('direção %s não cria variantes', direction => {
-    for (const move of shoto.moves.filter(move => move.category === 'basic')) {
+    for (const move of shoto.moves.filter(move => move.category === 'basic' && !move.airborne)) {
       const sim = practice(); sim.stepFrame([input(direction, [...move.input.buttons]), N]);
       expect(sim.snapshot().characters[0].attack?.moveId).toBe(move.id);
     }
@@ -76,13 +76,13 @@ describe('quatro básicos do Shoto', () => {
     advance(sim, 40); expect(sim.snapshot().characters[0].attack).toBeUndefined();
     expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
   });
-  it('usa versão agachada sem criar básicos aéreos', () => {
+  it('seleciona versões agachada e aérea conforme a postura', () => {
     const sim = practice(); sim.stepFrame([input('D', ['1']), N]);
     expect(sim.snapshot().characters[0]).toMatchObject({ mode: 'startup', crouching: true, attack: {moveId:'crouch-punch'} });
     advance(sim,35);
     sim.stepFrame([input('U'), N]); sim.stepFrame([input('N', ['4']), N]);
     expect(sim.snapshot().characters[0].grounded).toBe(false);
-    expect(sim.snapshot().characters[0].attack).toBeUndefined();
+    expect(sim.snapshot().characters[0].attack?.moveId).toBe('air-heavy-kick');
   });
   it('não soma acertos fora de alcance nem dá dano no bloqueio', () => {
     const sim = practice(300); sim.stepFrame([input('N', ['4']), N]); advance(sim, 40);

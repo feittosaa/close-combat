@@ -1,0 +1,20 @@
+{
+  "id": "salao-treino",
+  "name": "Salão de Treino",
+  "referenceSize": {
+    "width": 1942,
+    "height": 809
+  },
+  "groundY": 700,
+  "minimumScale": 0.01,
+  "layers": [
+    {
+      "id": "salao",
+      "file": "layers/salao.png",
+      "depth": -300,
+      "parallax": 1,
+      "x": 0,
+      "y": 0
+    }
+  ]
+}

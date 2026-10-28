@@ -11,7 +11,7 @@ const neutral=[input(),input()];
 const config=createGameConfig(1024,576);
 const contactPoses:Record<string,number>={'light-punch':86,'heavy-punch':92,'light-kick':98,'heavy-kick':104};
 
-it.each(defaultCharacter.moves.filter(move => move.category === 'basic'))('$name pausa ambos no contato, conserva a pose máxima e mantém o relógio em hit e block',move=>{
+it.each(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne))('$name pausa ambos no contato, conserva a pose máxima e mantém o relógio em hit e block',move=>{
   for(const player of [0,1])for(const outcome of ['hit','block'] as const){
     const sim=new Simulation(config,undefined,{initialDistance:64});
     const inputs=[input(),input()];inputs[player]=input('N',move.input.buttons[0]);
