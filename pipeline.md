@@ -4,6 +4,14 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Um levantamento por sequência — 2026-10-28
+
+Branch `codex/fix-limite-levantamentos`, dependente de `codex/feature-personagens-maiores` em `229a318`, ainda não integrada.
+
+- [x] Primeiro levantamento confirmado mantém trajetória, recuperação curta e reinício do atacante. Um novo levantamento durante o juggle leva o alvo ao piso no mesmo contato, cancela velocidade/suspensão aérea e inicia queda protegida, preservando dano e micro pausa. A recuperação no chão cobre pelo menos a recuperação restante do atacante. Golpes aéreos comuns continuam permitidos; depois de levantar/recuperar o controle ou resetar a partida, um novo levantamento é permitido. Capturas da ultimate mantêm seu contrato.
+- [x] npm ci, 295 testes/36 arquivos, build e diff aprovados. Regressões nos dois lados cobrem primeiro/segundo levantamento, dano, ida imediata ao piso, limpeza do voo, micro pausa, proteção, recuperação e novo levantamento após retorno ao controle/reset. Conferência no jogo por entradas legais: 1,1,2 → 1,1,2 conecta seis impactos, vida 850/1000, alvo no chão imediatamente no segundo launcher, recuperação protegida 24F contra 10F restantes do atacante. Console sem erros/avisos; evidência /tmp/shoto-segundo-levantamento-chao.png. Sem alteração de arte.
+- [ ] Envio e CI do commit exato; sem merge, promoção ou release.
+
 ## Personagens maiores e acompanhamento vertical — 2026-10-28
 
 Branch `codex/feature-personagens-maiores`, dependente de `codex/fix-recuperacao-launcher-garrafa` em `89adb4d`, ainda não integrada.

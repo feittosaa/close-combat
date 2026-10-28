@@ -57,3 +57,29 @@ it.each([0,1])('plays the complete shortened recovery and keeps the measured tra
   training.observe(sim.snapshot());expect(training.lastMoves[player]?.recovery).toBe(6);
   expect(sim.snapshot().characters[1-player].grounded).toBe(false);
 });
+
+it.each([0,1])('drops a second launcher to the floor and permits a new launch after wakeup: player %i',player=>{
+  const sim=launch(player);
+  const first=sim.snapshot();
+  expect(first.characters[1-player]).toMatchObject({grounded:false,verticalVelocity:-10});
+  for(const button of ['1','1','2'] as const)hit(sim,player,button);
+  const second=sim.snapshot();const target=second.characters[1-player];
+  expect(target.health).toBe(850);
+  expect(target).toMatchObject({y:config.arena.floorY,grounded:true,verticalVelocity:0,mode:'knockdown'});
+  expect(target.juggle).toBeUndefined();
+  expect(target.airborneStartedFrame).toBeUndefined();
+  expect(target.airborneElapsedFrames).toBeUndefined();
+  expect(target.remainingStateFrames).toBeGreaterThanOrEqual(second.hitEvents[0].attackerRecoveryFrames);
+  expect(target.wakeupInvulnerabilityFrames).toBe(target.remainingStateFrames+shoto.juggle!.wakeupInvulnerabilityFrames);
+  for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++){
+    step(sim);expect(sim.snapshot().characters).toEqual(second.characters);
+  }
+  while(sim.snapshot().characters[1-player].wakeupInvulnerabilityFrames)step(sim);
+  expect(sim.snapshot().characters[1-player].mode).toBe('neutral');
+  for(const button of ['1','1','2'] as const)hit(sim,player,button);
+  expect(sim.snapshot().characters[1-player]).toMatchObject({grounded:false,verticalVelocity:-10});
+  expect(sim.snapshot().characters[1-player].juggle?.airHits).toBe(0);
+  sim.resetMatch();
+  for(const button of ['1','1','2'] as const)hit(sim,player,button);
+  expect(sim.snapshot().characters[1-player]).toMatchObject({grounded:false,verticalVelocity:-10});
+});
