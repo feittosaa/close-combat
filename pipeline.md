@@ -4,6 +4,36 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Continuação da cinemática, básicos aéreos e launcher — 2026-10-27
+
+Pedido: continuar na branch atual `codex/feature-salao-treino`, preservar o trabalho existente, concluir/conferir a ultimate; acrescentado pelo usuário: quatro básicos aéreos e `1,1,2` como launcher. Merge desta branch em development explicitamente autorizado após conclusão e CI verde. Base dependente da seleção dupla/idle em `39e62a4`, ainda não integrada; cenário preexistente preservado em commit próprio `7e01e0f`.
+
+- [x] Auditoria da ultimate vigente: preparação global de 120 ticks, seis poses de beber com 20 ticks cada, garrafa a 15, confirmação sem dano, captura aérea caindo em pé, isqueiro a 7,5 após aterrissagem/preparo e explosão única de 280 com queda. Bloqueio/erro não geram continuação. Simultâneas, pausa do mundo/relógio, alcance, reset e KO cobertos pelas regressões existentes; não foi necessário substituir essa implementação nem produzir arte.
+- [x] Quatro básicos aéreos em `1/2/3/4`, com os dados provisórios e poses dos básicos correspondentes. Gravidade contínua, aceitação de botão com cima mantido no ar e encerramento ao pousar. Continuação manual `f,d,fd,3,4` tem prioridade sobre o novo chute aéreo 4; nenhuma receita nova. Lista de golpes mostra “no ar”; tutorial introdutório conserva os quatro básicos no chão.
+- [x] Somente o acerto final da receita exata `1,1,2` lança o alvo. Velocidade vertical provisória -10, igual ao salto vigente; stun mínimo calculado pela gravidade para a trajetória inicial, com frame advantage atualizado. Soco forte isolado, `1,2`, `2,2,2`, bloqueio e erro não recebem lançamento; dano e demais receitas preservados. Reação de hitstun continua geométrica provisória.
+- [x] `npm ci`, 250 testes em 29 arquivos, build, `git diff --check` e verificador dos 134 quadros aprovados. Oito regressões novas cobrem os quatro ataques nos dois lados, cima mantido, gravidade, acerto, guarda aérea, hitstop, erro, pouso/reset e isolamento do launcher. Testes antigos que declaravam ausência de ataques aéreos foram atualizados para o novo pedido; as verificações dos básicos terrestres permanecem.
+- [x] Conferência no navegador do runtime Phaser por entradas legais e avanço determinístico em bancada temporária: beber, confirmação de zero dano, explosão de 280, quatro ataques no ar, launcher e salto no Salão. Catálogo/teclas observados na pausa normal; Arcade iniciado pela seleção normal do Salão. Console sem erros/avisos durante a conferência. Bancada retirada do checkout; capturas locais em `/tmp/shoto-ultimate-explosion.png`, `/tmp/shoto-air-heavy-punch.png` e `/tmp/shoto-launcher.png`. Nenhuma aprovação artística ou balanceamento final inferidos.
+- [ ] Enviar commit final, aguardar CI exata, integrar em development e conferir CI da integração; encerrar branches absorvidas após auditoria de ancestralidade e trabalho ativo. Remoto conferido antes do envio: development `e37212082553e6b1102bcee4e7895f962b663db5`, main `77a4c939c9ccdf028eed5f334132f65368dbae30`; esta branch ainda não existia no remoto. Main/tags fora do escopo.
+
+## Salão de Treino — 2026-10-27
+
+Branch `codex/feature-salao-treino`, dependente da seleção animada ainda não integrada em `39e62a4`. Pedido: adicionar a imagem fornecida `Crimson Banner Dojo Arena.png` com o nome Salão de Treino. Usuário confirmou novo cenário selecionável em PvP/Arcade; não substituir a sala fixa dos modos de prática.
+
+- [x] Incorporar o PNG original sem edição, 1942×809, camada única, proporção nativa ultrawide, linha dos pés em Y=700. Zoom e regras de combate preservados; referência interna `salao-treino`.
+- [x] Tela de cenário alterna Bar ao Anoitecer/Salão de Treino por setas ou botões anterior/próximo; miniatura e ID da partida acompanham a escolha. Sala de prática continua reservada a treino/tutoriais.
+- [x] Instalação reproduzível, 242 testes/28 arquivos antes da ampliação do combate, build e diff aprovados. Conferência no jogo: seletor Bar/Salão por seta, início de Arcade no cenário escolhido e salto/enquadramento do Salão no runtime. Sala fixa preservada no treino. Capturas locais em `/tmp/salao-treino-arcade.png` e `/tmp/salao-treino-jump.png`; aprovação artística não é inferida da validação técnica.
+- [ ] Commit/push e CI da feature. Usuário autorizou posteriormente integrar esta branch em development após concluir e validar o conjunto; main preservada.
+
+## Revisão da seleção: idle, centro e PvP duplo — 2026-10-27
+
+Branch `codex/feature-selecao-dupla-idle`, baseada em development `e372120`. Pedido atual: animação idle nos personagens da seleção; grade de retratos no centro em todos os modos; PvP com escolha e confirmação independentes de P1/P2 e um personagem de cada lado; retirar frases extras acima das opções e do canto inferior direito do menu principal, mantendo nome e opções.
+
+- [x] Reproduzir o idle autorado de oito poses a 6 FPS nos previews ampliados, usando o mesmo amostrador temporal do jogo; P2 espelhado para o centro. Retratos permanecem recortes do atlas ativo; nenhuma nova arte.
+- [x] Grade 4×3 central; PvP apresenta dois previews, dois cursores e estados de confirmação. Mouse alterna o jogador pelos botões P1/P2 e usa a grade comum; teclado P1 A/D + J, P2 setas + Num1, Enter confirma a vez ativa. Somente avança ao cenário após ambos confirmarem; luta recebe os dois IDs escolhidos. Retornar do cenário limpa confirmações e mantém escolhas.
+- [x] Remover chamadas, slogan, selo inferior, indicação de etapa e rodapé do menu principal. Preservar nome do jogo e botões dos modos. Remover CSS e estado de entrada obsoletos.
+- [x] `npm ci`, 235 testes/28 arquivos, build e diff aprovados. Cinco regressões novas cobrem escolhas independentes, ordem de confirmação, espelhamento de escolha, alteração após confirmar e retorno. No jogo: menu sem as frases retiradas, idle dos dois lados (offsets do atlas mudam), P1 por mouse/J, P2 por Num1 antes de P1, espera pelas duas confirmações, cenário e início de PvP/Arcade, retorno limpando confirmações, seleção central no treino e Tab + Enter. Console sem erros/avisos. Captura local `selecao-pvp-idle.png` no painel de trabalho.
+- [x] Implementação enviada em `a21c07b5e3e9f1c2d0e4b4b2a8fde3f327056316`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40571023824). Branch mantida para revisão; development permanece `e372120` e main `77a4c93`. Sem nova integração, promoção ou tag. Este fechamento somente documental terá sua própria CI conferida antes do relato final.
+
 ## Diretriz de limpeza e manutenção — 2026-10-27
 
 Pedido concluído localmente: reforçar em `AGENTS.md` e `base.md` a prioridade de código limpo, legível e organizado; excluir sobras, duplicações, dependências e arquivos desnecessários; manter apenas artes em uso, fontes ativas, referências canônicas e propostas necessárias à revisão autorizada. Conferir consumidores antes de remover e preservar trabalho em andamento.

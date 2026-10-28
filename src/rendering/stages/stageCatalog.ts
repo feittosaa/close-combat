@@ -39,3 +39,6 @@ export function stageTextureKey(stage: StageDefinition, layer: StageLayer): stri
 
 /** Permanent training room, independent of the future general stage default. */
 export const trainingStage = getStageById('sala-treino')!;
+
+/** Scenarios available to the general match selector; practice keeps its dedicated room. */
+export const selectableStages = stages.filter(stage => stage.id !== trainingStage.id);

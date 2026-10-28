@@ -8,7 +8,7 @@ const input=(direction:Direction='N',button?:AttackButton):FrameInput=>({directi
 const config=createGameConfig(1024,576);
 
 describe.each([0,1])('golpes/guardas do jogador %i',player=>{
-  it.each(defaultCharacter.moves.filter(move => move.category === 'basic'))('sincroniza todas as poses de $id com as fases reais',move=>{
+  it.each(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne))('sincroniza todas as poses de $id com as fases reais',move=>{
     const sim=new Simulation(config,undefined,{training:true,initialDistance:400});
     const seen=new Set<number>();
     for(let t=0;t<move.startup+move.activeFrames+move.recovery;t++){
