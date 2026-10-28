@@ -4,6 +4,14 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Preparação e alcance dos agarrões — 2026-10-28
+
+Branch `codex/fix-tempo-alcance-agarrao`, dependente de `codex/fix-agarrao-cores-originais` em `f6d142e`, ainda não integrada. O usuário esclareceu que deseja um agarrão mais demorado: preparação de ambos passa a 12 frames, substituindo 5/7; ativos 2 e recuperação 28/30 preservados, total próprio 42/44 frames (mais a pausa compartilhada quando há contato). Caixa de captura ampliada horizontalmente de 25,3 para 46 unidades, mesmo deslocamento frontal 18,4 e mesma altura 126,5. Captura a 80 unidades de distância entre centros e erro a 100; não captura alvos aéreos. Dano, comandos, frente/trás, regras de defesa e imagens preservados.
+
+- [x] `npm ci`, 269 testes/33 arquivos, build e diff aprovados. Regressões verificam ausência de contato antes do frame 12, captura no frame 12 nos dois jogadores/comandos, alcance ampliado e seu limite, duração completa no erro; simultâneas ajustadas para aguardar a nova preparação. Casos anteriores de direção, paredes e alvo aéreo continuam passando.
+- [x] Conferência no jogo com entradas legais dos dois comandos/jogadores a distância 80: sem contato no frame 11, contato no 12, caixa ampliada visível e direção traseira preservada. Console sem erros/avisos. Evidência local `/tmp/shoto-throw-twelve.png`; bancada temporária removida. Nenhuma alteração de arte ou regra global.
+- [ ] Commit/push e CI remota desta branch. Sem novo pedido de integração; branches dependentes preservadas.
+
 ## Agarrão direcional e cores oficiais — 2026-10-27
 
 Branch `codex/fix-agarrao-cores-originais`, dependente de `codex/fix-carregamento-impacto-aereo` em `07b3c66`, ainda não integrada (e da correção de juggle nela contida). Pedido: escolher frente/trás nos agarrões e retirar os efeitos de cor aplicados às imagens do Shoto; proibir globalmente correção de cores de spritesheets por CSS/código. Nenhum novo merge autorizado.

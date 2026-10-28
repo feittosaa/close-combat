@@ -60,9 +60,33 @@ it('resolves simultaneous back throws symmetrically from the contact positions',
   const sim=new Simulation(config,undefined,{training:true,initialDistance:56});
   const before=sim.snapshot().characters;const center=(before[0].x+before[1].x)/2;
   const grab=input('B',['1','3']);sim.stepFrame([grab,grab]);
-  for(let tick=0;tick<10 && !sim.snapshot().hitEvents.length;tick++)step(sim);
+  for(let tick=0;tick<20 && !sim.snapshot().hitEvents.length;tick++)step(sim);
   const snapshot=sim.snapshot();expect(snapshot.hitEvents).toHaveLength(2);
   expect(snapshot.characters.map(c=>c.health)).toEqual([925,925]);
   expect((snapshot.characters[0].x+snapshot.characters[1].x)/2).toBeCloseTo(center);
   expect(snapshot.characters[0].x).toBeGreaterThan(snapshot.characters[1].x);
+});
+
+
+it.each([0,1])('delays both throws until frame twelve and captures at expanded range: player %i',player=>{
+  for(const move of shoto.moves.filter(m=>m.category==='throw')) {
+    const sim=new Simulation(config,undefined,{training:true,initialDistance:80});
+    step(sim,player,input('N',move.input.buttons));
+    for(let elapsed=0;elapsed<12;elapsed++) {
+      expect(sim.snapshot().characters[player].attack?.elapsedFrames).toBe(elapsed);
+      expect(sim.snapshot().hitEvents).toHaveLength(0);
+      step(sim);
+    }
+    expect(sim.snapshot().characters[player].attack?.elapsedFrames).toBe(12);
+    expect(sim.snapshot().hitEvents).toEqual([expect.objectContaining({moveId:move.id,outcome:'hit'})]);
+    const miss=new Simulation(config,undefined,{training:true,initialDistance:100});
+    step(miss,player,input('N',move.input.buttons));
+    for(let tick=0;tick<60;tick++)step(miss);
+    expect(miss.snapshot().recentContacts).toHaveLength(0);
+    const whiff=new Simulation(config,undefined,{training:true,initialDistance:300});
+    step(whiff,player,input('N',move.input.buttons));
+    const total=move.id==='throw-13'?42:44;
+    for(let elapsed=1;elapsed<total;elapsed++){step(whiff);expect(whiff.snapshot().characters[player].attack).toBeDefined();}
+    step(whiff);expect(whiff.snapshot().characters[player].attack).toBeUndefined();
+  }
 });
