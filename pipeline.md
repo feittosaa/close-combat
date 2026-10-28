@@ -10,7 +10,7 @@ Branch `codex/fix-tempo-alcance-agarrao`, dependente de `codex/fix-agarrao-cores
 
 - [x] `npm ci`, 269 testes/33 arquivos, build e diff aprovados. Regressões verificam ausência de contato antes do frame 12, captura no frame 12 nos dois jogadores/comandos, alcance ampliado e seu limite, duração completa no erro; simultâneas ajustadas para aguardar a nova preparação. Casos anteriores de direção, paredes e alvo aéreo continuam passando.
 - [x] Conferência no jogo com entradas legais dos dois comandos/jogadores a distância 80: sem contato no frame 11, contato no 12, caixa ampliada visível e direção traseira preservada. Console sem erros/avisos. Evidência local `/tmp/shoto-throw-twelve.png`; bancada temporária removida. Nenhuma alteração de arte ou regra global.
-- [ ] Commit/push e CI remota desta branch. Sem novo pedido de integração; branches dependentes preservadas.
+- [x] Implementação enviada em `91cd8a47aaa1615d3b0134ddfa8d1ded20e98a34`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40625957143). Sem novo pedido de integração; branches dependentes preservadas. Fechamento documental com CI própria conferida antes do relato final.
 
 ## Agarrão direcional e cores oficiais — 2026-10-27
 
