@@ -1,3 +1,5 @@
-<!-- src/engine/data/README.md -->
+# Dados de combate
 
-Tipos e definições configuráveis de personagens e golpes. `characters.ts` registra Tester como padrão temporário e Dummy como segundo lutador de teste. Cada definição tem seu próprio array `moves` (golpes, especiais, agarrões, aéreos e cancelamentos) e `collision` (largura corporal e hurtboxes em pé, agachada e aérea). `moves.ts` declara apenas o livro provisório do Tester; para adicionar um personagem, crie e associe um novo livro à respectiva definição. O livro do personagem é a fonte de verdade; não use IDs para buscar dados globais. `MoveDefinition.hitbox` é a hitbox de ataque daquele golpe; `hitLevel`, frames, dano e propriedades especiais também pertencem ao golpe. Coordenadas e regras estão em `base.md` §7.5. Não registrar números de balanceamento sem decisão documentada em `base.md`.
+Contratos e definições de personagens, movimentos, colisões e configuração do motor. Manter propriedades particulares em dados próprios, sem catálogos globais implícitos ou dependência de assets.
+
+Valores provisórios não constituem aprovação de balanceamento. Fichas, receitas, decisões e pendências individuais pertencem à pipeline; receitas de combo exigem autoria manual do usuário.

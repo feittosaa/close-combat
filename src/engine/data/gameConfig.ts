@@ -1,6 +1,7 @@
+import { maximumFighterSeparation } from './fightFraming';
 // src/engine/data/gameConfig.ts
 export interface GameConfig {
-  arena: { left: number; right: number; floorY: number };
+  arena: { left: number; right: number; floorY: number; maxSeparation?: number };
   movement: {
     walkSpeed: number;
     jumpImpulse: number;
@@ -12,7 +13,7 @@ export interface GameConfig {
   match: { maxHealth: number; roundDurationFrames: number; roundCount: number; roundEndPauseFrames: number };
 }
 
-/** Valores temporários de protótipo documentados em base.md §20. */
+/** Configuração técnica de arena e rounds; valores provisórios, separados do kit do Shoto. */
 export function createGameConfig(width: number, height: number): GameConfig {
   const arenaInset = 24;
   return {
@@ -20,13 +21,14 @@ export function createGameConfig(width: number, height: number): GameConfig {
       left: arenaInset,
       right: width - arenaInset,
       floorY: height - 88,
+      maxSeparation: maximumFighterSeparation(width),
     },
     movement: {
-      walkSpeed: 3,
+      walkSpeed: 2,
       jumpImpulse: -11,
       gravity: 0.55,
-      dashSpeed: 6,
-      dashDurationFrames: 12,
+      dashSpeed: 4.2,
+      dashDurationFrames: 24,
       doubleTapWindowFrames: 12,
     },
     match: {

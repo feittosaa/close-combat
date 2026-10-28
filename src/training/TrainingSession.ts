@@ -4,10 +4,11 @@ import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { getCharacterById } from '../engine/data/characters';
 import type { MoveDefinition } from '../engine/data/moves';
 
-export const DUMMY_MODES = ['manual', 'guard-high', 'guard-low', 'repeat-cross', 'repeat-jab', 'repeat-kick'] as const;
-export type DummyMode = typeof DUMMY_MODES[number];
+export const OPPONENT_MODES = ['idle', 'guard-high', 'guard-low', 'repeat-cross', 'repeat-jab', 'repeat-kick', 'manual'] as const;
+export type OpponentMode = typeof OPPONENT_MODES[number];
 
-export const DUMMY_LABELS: Record<DummyMode, string> = {
+export const OPPONENT_LABELS: Record<OpponentMode, string> = {
+  idle: 'PARADO',
   manual: 'SEGUNDO JOGADOR',
   'guard-high': 'GUARDA ALTA',
   'guard-low': 'GUARDA BAIXA',
@@ -21,7 +22,7 @@ export class TrainingSession {
   paused = false;
   showGeometry = true;
   showInputs = true;
-  dummyMode: DummyMode = 'manual';
+  opponentMode: OpponentMode = 'idle';
   speed: 1 | 0.5 | 0.25 = 1;
   autoRestore = true;
   initialDistance = 96;
@@ -46,20 +47,21 @@ export class TrainingSession {
     this.lastMoves.fill(undefined);
   }
 
-  cycleDummy(): void {
-    this.dummyMode = DUMMY_MODES[(DUMMY_MODES.indexOf(this.dummyMode) + 1) % DUMMY_MODES.length];
+  cycleOpponent(): void {
+    this.opponentMode = OPPONENT_MODES[(OPPONENT_MODES.indexOf(this.opponentMode) + 1) % OPPONENT_MODES.length];
   }
 
-  dummyInput(frame: number, characters: readonly CharacterState[]): FrameInput | undefined {
-    if (this.dummyMode === 'manual') return undefined;
-    if (this.dummyMode.startsWith('repeat-')) {
-      const button = this.dummyMode === 'repeat-jab' ? '1' : this.dummyMode === 'repeat-kick' ? '4' : '2';
+  opponentInput(frame: number, characters: readonly CharacterState[]): FrameInput | undefined {
+    if (this.opponentMode === 'manual') return undefined;
+    if (this.opponentMode === 'idle') return { direction: 'N', buttons: new Set() };
+    if (this.opponentMode.startsWith('repeat-')) {
+      const button = this.opponentMode === 'repeat-jab' ? '1' : this.opponentMode === 'repeat-kick' ? '4' : '2';
       return { direction: 'N', buttons: new Set<AttackButton>(frame % 120 === 30 ? [button] : []) };
     }
     const opponent = characters[0];
     // Inputs are read immediately before a logic step. Release B as soon as the
     // opponent has no attack, avoiding an intentional retreat between repetitions.
     const shouldGuard = Boolean(opponent?.attack);
-    return { direction: shouldGuard ? this.dummyMode === 'guard-low' ? 'DB' : 'B' : 'N', buttons: new Set() };
+    return { direction: shouldGuard ? this.opponentMode === 'guard-low' ? 'DB' : 'B' : 'N', buttons: new Set() };
   }
 }

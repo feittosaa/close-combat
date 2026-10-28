@@ -1,0 +1,21 @@
+{
+  "id": "bar-anoitecer",
+  "name": "Bar ao Anoitecer",
+  "referenceSize": {
+    "width": 2172,
+    "height": 904
+  },
+  "groundY": 795,
+  "minimumScale": 0.01,
+  "layers": [
+    {
+      "id": "bar",
+      "file": "layers/bar.png",
+      "depth": -300,
+      "parallax": 1,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "topExtension": 180
+}

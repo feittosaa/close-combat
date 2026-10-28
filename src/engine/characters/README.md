@@ -1,3 +1,3 @@
-<!-- src/engine/characters/README.md -->
+# Estado de personagens
 
-Estado e comportamento dos lutadores durante a simulação. Manter estado lógico independente de sprites e animações.
+Estado e comportamento lógico dos lutadores durante a simulação. Manter regras independentes de sprites, interface e FPS. A definição de cada personagem pertence aos seus dados; o contrato de estado deve permitir testes e snapshots sem expor referências mutáveis.

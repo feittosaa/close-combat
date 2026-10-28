@@ -1,261 +1,84 @@
-// src/engine/combat/AttackResolver.ts
+import type { ProjectileState } from './ProjectileState';
 import type { CharacterState } from '../characters/CharacterState';
 import type { MoveDefinition } from '../data/moves';
-import { intersects } from '../collision/intersects';
+import type { FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { createHitbox, createHurtbox } from '../collision/combatGeometry';
-import type { AttackButton, FrameInput } from '../../input/types';
-import { classifyHitContext, frameAdvantage } from './frameData';
-import type { HitContext } from './frameData';
+import { createProjectileHitbox } from '../collision/projectileGeometry';
+import { intersects } from '../collision/intersects';
+import { classifyHitContext, frameAdvantage, type HitContext } from './frameData';
 
 export interface HitEvent {
   attackerId: string;
   targetId: string;
   moveId: string;
   damage: number;
-  outcome: 'hit' | 'block' | 'parry' | 'throw-start' | 'throw-break' | 'throw';
+  outcome: 'hit' | 'block';
   pushback: number;
-  attackerRecoveryFrames?: number;
-  defenderStunFrames?: number;
-  attackerStunFrames?: number;
-  frameAdvantage?: number;
-  breakButtons?: readonly AttackButton[];
-  targetOffsetFromAttacker?: number;
+  pushbackDirection?: 'left' | 'right';
+  attackerRecoveryFrames: number;
+  defenderStunFrames: number;
+  frameAdvantage: number;
   context?: HitContext;
+  stage?: 'confirm' | 'explosion';
 }
-
-/** Resolve contatos da simulação e fornece a geometria exata para a visualização. */
 export class AttackResolver {
-  constructor(
-    private readonly resolveMove: (fighterId: string, moveId: string) => MoveDefinition | undefined,
-  ) {}
-
-  activeHitboxes(characters: readonly CharacterState[]): Hitbox[] {
-    return characters.flatMap((character) => {
+  constructor(private readonly resolveMove: (fighterId: string, moveId: string) => MoveDefinition | undefined) {}
+  activeHitboxes(characters: readonly CharacterState[], projectiles: readonly ProjectileState[] = []): Hitbox[] {
+    return characters.flatMap(character => {
       const move = character.attack ? this.resolveMove(character.fighterId, character.attack.moveId) : undefined;
-      if (!move || !isActive(character, move)) return [];
-      return [createHitbox(character, move)];
-    });
+      return move && !move.projectile && character.mode === 'active' ? [createHitbox(character, move)] : [];
+    }).concat(projectiles.flatMap(projectile => {
+      const owner = characters.find(c => c.characterId === projectile.ownerId);
+      const move = this.resolveMove(projectile.fighterId, projectile.attack.moveId);
+      return owner && move ? [createProjectileHitbox(projectile, move)] : [];
+    }));
   }
-
-  resolve(
-    characters: CharacterState[],
-    inputs: readonly FrameInput[],
-    freshlyPressed: readonly [ReadonlySet<AttackButton>, ReadonlySet<AttackButton>],
-    freshBack: readonly [boolean, boolean],
-  ): HitEvent[] {
-    const resolvedThrows = this.resolveGrabStates(characters, freshlyPressed);
-    const pending: Array<{
-      event: HitEvent;
-      attack: NonNullable<CharacterState['attack']>;
-      target: CharacterState;
-    }> = [];
-
-    characters.forEach((attacker, attackerIndex) => {
-      const attack = attacker.attack;
+  resolve(characters: CharacterState[], inputs: readonly FrameInput[], projectiles: readonly ProjectileState[] = []): HitEvent[] {
+    // Capturar todos os contatos antes de aplicar dano mantém trades simétricos.
+    const sources = [
+      ...characters.map((attacker, index) => ({ attacker, index, attack: attacker.attack, projectile: false, phase: undefined as ProjectileState['phase'], targetId: undefined as string | undefined })),
+      ...projectiles.map(p => {
+        const index = characters.findIndex(c => c.characterId === p.ownerId);
+        return { attacker: { ...characters[index], x: p.x, y: p.y, facing: p.facing }, index, attack: p.attack, projectile: true, phase: p.phase, targetId: p.targetId };
+      }),
+    ];
+    const pending = sources.flatMap(({ attacker, index, attack, projectile, phase, targetId }) => {
       const move = attack ? this.resolveMove(attacker.fighterId, attack.moveId) : undefined;
-      if (!attack || attack.hasHit || !move || !isActive(attacker, move)) return;
-
-      const target = characters[1 - attackerIndex];
-      const hitbox = createHitbox(attacker, move);
-      if (move.throw) {
-        if (!canGrab(attacker, target, move)) return;
-        const brokenImmediately = matchesButtons(freshlyPressed[1 - attackerIndex] ?? new Set(), move.throw.breakButtons);
-        pending.push({
-          event: {
-            ...emptyEvent(attacker.characterId, target.characterId, move.id),
-            outcome: brokenImmediately ? 'throw-break' : 'throw-start',
-            breakButtons: brokenImmediately ? undefined : move.throw.breakButtons,
-          },
-          attack,
-          target,
-        });
-        return;
-      }
-      if (this.isStrikeInvulnerable(target)) return;
-      if (move.hitLevel === 'high' && target.crouching) return;
-      if (intersects(hitbox, createHurtbox(target))) {
-        const targetInput = inputs[1 - attackerIndex];
-        const parried = move.parryable === true && freshBack[1 - attackerIndex] === true;
-        const blocked = !parried && target.mode === 'blocking' && canBlock(move.hitLevel, targetInput);
-        const defenderStunFrames = Math.max(target.remainingStateFrames, blocked ? move.blockstun : move.hitstun);
-        const totalAttackFrames = move.startup + move.activeFrames + move.recovery;
-        // The contact frame has already happened; count only future locked frames.
-        const attackerRecoveryFrames = Math.max(0, totalAttackFrames - attack.elapsedFrames - 1);
-        pending.push({
-          event: {
-            attackerId: attacker.characterId,
-            targetId: target.characterId,
-            moveId: move.id,
-            damage: blocked || parried ? 0 : move.damage,
-            outcome: parried ? 'parry' : blocked ? 'block' : 'hit',
-            pushback: parried ? 0 : blocked ? move.pushback.block : move.pushback.hit,
-            attackerRecoveryFrames: parried ? undefined : attackerRecoveryFrames,
-            defenderStunFrames: parried ? undefined : defenderStunFrames,
-            attackerStunFrames: parried ? PARRY_STUN_FRAMES : undefined,
-            frameAdvantage: parried ? undefined : frameAdvantage(attackerRecoveryFrames, defenderStunFrames),
-            context: !blocked && !parried ? classifyHitContext(target) : undefined,
-          },
-          attack,
-          target,
-        });
-      }
+      const target = characters[1 - index];
+      if (!attack || attack.hasHit || !move || (!projectile && (attacker.mode !== 'active' || move.projectile))) return [];
+      if (targetId && target.characterId !== targetId) return [];
+      if (target.mode === 'knockdown') return [];
+      const defense = target.attack ? this.resolveMove(target.fighterId, target.attack.moveId)?.invulnerability : undefined;
+      if (defense && target.attack!.elapsedFrames < defense.until && (defense.kind === 'all' || projectile)) return [];
+      if (move.category === 'throw' && (!target.grounded || !attacker.grounded || target.mode === 'hitstun' || target.mode === 'blockstun')) return [];
+      if (move.hitLevel === 'high' && target.crouching) return [];
+      const box = projectile ? createProjectileHitbox({ownerId:attacker.characterId,x:attacker.x,y:attacker.y,facing:attacker.facing,phase},move) : createHitbox(attacker,move);
+      if (!intersects(box, createHurtbox(target))) return [];
+      const guard = inputs[1 - index]?.direction;
+      const blocked = move.category !== 'throw' && ['blocking', 'blockstun'].includes(target.mode) &&
+        (move.hitLevel === 'low' ? target.grounded && guard === 'DB' : guard === 'B' || guard === 'DB');
+      const owner = characters[index];
+      const ownerMove = owner.attack ? this.resolveMove(owner.fighterId, owner.attack.moveId) : undefined;
+      const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, ownerMove.startup + ownerMove.activeFrames + ownerMove.recovery - owner.attack.elapsedFrames - 1) : 0) : move.startup + move.activeFrames + move.recovery - attack.elapsedFrames - 1;
+      const stun = blocked ? move.blockstun : phase === 'confirm' ? move.ultimateSequence!.confirmStun : move.hitstun;
+      const event: HitEvent = { attackerId: attacker.characterId, targetId: target.characterId, moveId: move.id,
+        stage: phase === 'confirm' ? 'confirm' : phase === 'lighter' ? 'explosion' : undefined,
+        damage: blocked || phase === 'confirm' ? 0 : Math.min(target.health, move.damage), outcome: blocked ? 'block' : 'hit',
+        pushback: phase === 'confirm' ? 0 : blocked ? move.pushback.block : move.pushback.hit, pushbackDirection: attacker.facing, attackerRecoveryFrames: recovery,
+        defenderStunFrames: stun, frameAdvantage: frameAdvantage(recovery, stun),
+        context: blocked ? undefined : classifyHitContext(target) };
+      return [{ attack, target, event }];
     });
-
-    // Calcular todos os contatos antes de aplicar efeitos permite trades determinísticos.
-    pending.forEach(({ event, attack, target }) => {
-      const attackerState = characters.find((character) => character.characterId === event.attackerId);
-      const move = attackerState ? this.resolveMove(attackerState.fighterId, event.moveId) : undefined;
-      if (!move) return;
-      attack.hasHit = true;
-      attack.hitOutcome = event.outcome === 'hit' || event.outcome === 'block' ? event.outcome : undefined;
-      if (event.outcome === 'hit' || event.outcome === 'block' || event.outcome === 'parry') attack.hitElapsedFrames = attack.elapsedFrames;
-      if (event.outcome === 'throw-start' || event.outcome === 'throw-break') {
-        const attacker = characters.find((character) => character.characterId === event.attackerId);
-        const throwMove = move.throw;
-        if (!attacker || !throwMove) return;
-        attacker.attack = undefined;
-        attacker.mode = 'throwRecovery';
-        attacker.remainingStateFrames = event.outcome === 'throw-break'
-          ? throwMove.breakRecovery
-          : throwMove.breakFrames + move.recovery;
-        if (event.outcome === 'throw-start') {
-          target.mode = 'grabbed';
-          target.remainingStateFrames = throwMove.breakFrames;
-          target.grab = {
-            attackerId: attacker.characterId,
-            moveId: move.id,
-            remainingFrames: throwMove.breakFrames,
-            throwDirection: attack.throwDirection ?? 'forward',
-          };
-        } else {
-          target.grab = undefined;
-          if (target.mode === 'grabbed') {
-            target.mode = 'neutral';
-            target.remainingStateFrames = 0;
-          }
-        }
-        return;
-      }
-      if (event.outcome === 'parry') {
-        const attacker = characters.find((character) => character.characterId === event.attackerId);
-        if (attacker) {
-          attacker.attack = undefined;
-          attacker.mode = 'hitstun';
-          attacker.remainingStateFrames = Math.max(attacker.remainingStateFrames, PARRY_STUN_FRAMES);
-          attacker.hitFlashFrames = 5;
-        }
-        return;
-      }
-      if (event.outcome === 'block') {
-        target.mode = 'blockstun';
-        target.remainingStateFrames = Math.max(target.remainingStateFrames, move.blockstun);
-      } else {
-        target.health = Math.max(0, target.health - move.damage);
-        target.mode = 'hitstun';
-        target.remainingStateFrames = Math.max(target.remainingStateFrames, move.hitstun);
-        target.hitFlashFrames = 5;
-      }
+    for (const { attack, target, event } of pending) {
+      attack.hasHit = true; attack.hitOutcome = event.outcome;
+      event.damage = Math.min(target.health, event.damage);
+      target.health = Math.max(0, target.health - event.damage);
+      target.mode = event.outcome === 'block' ? 'blockstun' : 'hitstun';
+      target.remainingStateFrames = event.defenderStunFrames;
       target.attack = undefined;
-      if (event.outcome !== 'block') target.crouching = false;
-    });
-
-    return [...resolvedThrows, ...pending.map(({ event }) => event)];
+      target.hitFlashFrames = event.outcome === 'hit' ? 5 : 0;
+    }
+    return pending.map(({ event }) => event);
   }
-
-  private resolveGrabStates(
-    characters: CharacterState[],
-    freshlyPressed: readonly [ReadonlySet<AttackButton>, ReadonlySet<AttackButton>],
-  ): HitEvent[] {
-    const events: HitEvent[] = [];
-    characters.forEach((target, targetIndex) => {
-      const grab = target.grab;
-      if (!grab || target.mode !== 'grabbed') return;
-      const attacker = characters.find((character) => character.characterId === grab.attackerId);
-      const move = attacker ? this.resolveMove(attacker.fighterId, grab.moveId) : undefined;
-      if (!attacker || !move?.throw) {
-        target.grab = undefined;
-        target.mode = 'neutral';
-        target.remainingStateFrames = 0;
-        return;
-      }
-
-      if (matchesButtons(freshlyPressed[targetIndex] ?? new Set(), move.throw.breakButtons)) {
-        target.grab = undefined;
-        target.mode = 'neutral';
-        target.remainingStateFrames = 0;
-        target.crouching = false;
-        attacker.mode = 'throwRecovery';
-        attacker.remainingStateFrames = move.throw.breakRecovery;
-        events.push({
-          ...emptyEvent(attacker.characterId, target.characterId, move.id),
-          outcome: 'throw-break',
-        });
-        return;
-      }
-
-      grab.remainingFrames -= 1;
-      target.remainingStateFrames = grab.remainingFrames;
-      if (grab.remainingFrames > 0) return;
-
-      target.grab = undefined;
-      target.health = Math.max(0, target.health - move.damage);
-      target.mode = 'hitstun';
-      target.remainingStateFrames = move.hitstun;
-      target.crouching = false;
-      target.hitFlashFrames = 5;
-      events.push({
-        ...emptyEvent(attacker.characterId, target.characterId, move.id),
-        outcome: 'throw',
-        damage: move.damage,
-        targetOffsetFromAttacker: grab.throwDirection === 'backward'
-          ? -move.throw.launchDistance.backward
-          : move.throw.launchDistance.forward,
-        attackerRecoveryFrames: move.recovery,
-        defenderStunFrames: move.hitstun,
-        frameAdvantage: frameAdvantage(move.recovery, move.hitstun),
-      });
-    });
-    return events;
-  }
-
-  private isStrikeInvulnerable(character: CharacterState): boolean {
-    const attack = character.attack;
-    const move = attack ? this.resolveMove(character.fighterId, attack.moveId) : undefined;
-    return Boolean(
-      move?.strikeInvulnerableStartupFrames &&
-      attack &&
-      attack.elapsedFrames < move.startup &&
-      attack.elapsedFrames < move.strikeInvulnerableStartupFrames,
-    );
-  }
-}
-
-const PARRY_STUN_FRAMES = 18;
-
-function emptyEvent(attackerId: string, targetId: string, moveId: string): HitEvent {
-  return { attackerId, targetId, moveId, damage: 0, outcome: 'hit', pushback: 0 };
-}
-
-function matchesButtons(pressed: ReadonlySet<AttackButton>, required: readonly AttackButton[]): boolean {
-  return pressed.size === required.length && required.every((button) => pressed.has(button));
-}
-
-function canGrab(attacker: CharacterState, target: CharacterState, move: MoveDefinition): boolean {
-  if (!move.throw || !attacker.grounded || !target.grounded || target.crouching || target.attack) return false;
-  if (!['neutral', 'moving', 'blocking'].includes(target.mode)) return false;
-  const direction = attacker.facing === 'right' ? 1 : -1;
-  const distance = (target.x - attacker.x) * direction;
-  return distance >= 0 && distance <= move.throw.range;
-}
-
-function canBlock(hitLevel: MoveDefinition['hitLevel'], input: FrameInput | undefined): boolean {
-  if (!input) return false;
-  if (hitLevel === 'low') return input.direction === 'DB';
-  return input.direction === 'B';
-}
-
-function isActive(character: CharacterState, move: MoveDefinition): boolean {
-  const frame = character.attack?.elapsedFrames ?? -1;
-  return frame >= move.startup && frame < move.startup + move.activeFrames;
 }

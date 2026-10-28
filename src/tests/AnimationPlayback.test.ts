@@ -1,107 +1,27 @@
-import { describe, expect, it } from 'vitest';
-import testerManifest from '../assets/animations/tester.json';
-import { testerMoves } from '../engine/data/moves';
-import { createGameConfig } from '../engine/data/gameConfig';
+import { it, expect } from 'vitest';
+import { getTimedAnimationFrame, getAttackAnimationFrame, getStateAnimationFrame, shouldFlipAnimation, validateAnimationManifest, type AnimationClip } from '../rendering/animations/AnimationPlayback';
 import { Simulation } from '../engine/simulation/Simulation';
-import type { CharacterState } from '../engine/characters/CharacterState';
-import { getCharacterAnimationKey } from '../rendering/animations/CharacterAnimationMap';
-import { getAttackAnimationFrame, getClipFrames, shouldFlipAnimation } from '../rendering/animations/AnimationPlayback';
-import type { AnimationClip } from '../rendering/animations/AnimationPlayback';
-
-const clips: readonly AnimationClip[] = testerManifest.clips;
-const fighter = new Simulation(createGameConfig(1024, 576)).snapshot().characters[0]!;
-
-function attacking(moveId: string, mode: 'startup' | 'active' | 'recovery', elapsedFrames = 0): CharacterState {
-  const move = testerMoves.find(({ id }) => id === moveId)!;
-  return {
-    ...fighter, mode,
-    attack: { moveId, buttons: move.input.buttons, airborne: move.airborne, crouching: move.crouching,
-      elapsedFrames, hasHit: false, preciseExecution: false },
-  };
-}
-
-describe('character animation playback', () => {
-  it('faces the opponent for both source orientations, including idle, walking and kicks', () => {
-    for (const key of ['tester-idle', 'tester-walk', 'tester-dash', 'tester-light-kick-active']) {
-      const clip = clips.find((clip) => clip.key === key)!;
-      expect(shouldFlipAnimation('right', clip)).toBe(true);
-      expect(shouldFlipAnimation('left', clip)).toBe(false);
-    }
-    const kick = clips.find((clip) => clip.key === 'tester-heavy-kick-active')!;
-    expect(shouldFlipAnimation('right', kick)).toBe(false);
-    expect(shouldFlipAnimation('left', kick)).toBe(true);
-  });
-
-  it('resolves every registered kick and its three phases to real atlas frames', () => {
-    const kicks = testerMoves.filter((move) => !move.throw && move.input.buttons.some((button) => button === '3' || button === '4'));
-    expect(kicks.length).toBeGreaterThan(4);
-    for (const move of kicks) {
-      for (const mode of ['startup', 'active', 'recovery'] as const) {
-        const key = getCharacterAnimationKey(attacking(move.id, mode));
-        const clip = clips.find((clip) => clip.key === key);
-        expect(clip, `${move.id} / ${mode}`).toBeDefined();
-        expect(getClipFrames(clip!).every((frame) => frame >= 0 && frame < testerManifest.totalFrames)).toBe(true);
-      }
-    }
-  });
-
-  it('keeps the standing guard poses on block impact instead of playing a falling sequence', () => {
-    const guard = clips.find((clip) => clip.key === 'tester-defense')!;
-    const blocked = clips.find((clip) => clip.key === getCharacterAnimationKey({ ...fighter, mode: 'blockstun' }))!;
-    expect(getClipFrames(blocked)).toEqual(getClipFrames(guard));
-    expect(blocked.sourceFacesLeft).toBe(guard.sourceFacesLeft);
-    expect(getCharacterAnimationKey({ ...fighter, crouching: true, mode: 'blockstun' })).toBe('tester-crouch');
-  });
-
-  it('mirrors the jump toward the opponent on both sides of the arena', () => {
-    const jump = clips.find((clip) => clip.key === getCharacterAnimationKey({ ...fighter, mode: 'airborne' }))!;
-    expect(shouldFlipAnimation('right', jump)).toBe(true);
-    expect(shouldFlipAnimation('left', jump)).toBe(false);
-  });
-
-  it('uses a grounded hit reaction without the somersault frames used by knockdown', () => {
-    const hit = clips.find((clip) => clip.key === getCharacterAnimationKey({ ...fighter, mode: 'hitstun' }))!;
-    const knockdown = clips.find((clip) => clip.key === 'tester-knockdown')!;
-    expect(getClipFrames(hit)).toEqual([144, 145, 144]);
-    expect(getClipFrames(hit).some((frame) => getClipFrames(knockdown).includes(frame))).toBe(false);
-    expect(hit.repeat).toBe(0);
-    expect(shouldFlipAnimation('right', hit)).toBe(true);
-    expect(shouldFlipAnimation('left', hit)).toBe(false);
-  });
-
-  it('keeps crouching and aerial kicks distinct from standing kicks', () => {
-    expect(getCharacterAnimationKey(attacking('test-sweep', 'active'))).toBe('tester-crouch-light-kick-active');
-    expect(getCharacterAnimationKey(attacking('test-air-heavy-kick', 'active'))).toBe('tester-air-heavy-kick-active');
-    expect(getCharacterAnimationKey({ ...attacking('test-low-kick', 'active'), fighterId: 'dummy' }))
-      .toBe('dummy-test-low-kick-active');
-  });
-
-  it('mirrors the same walk clip for retreat without turning the combat facing', () => {
-    const walk = clips.find((clip) => clip.key === 'tester-walk')!;
-    expect(getCharacterAnimationKey({ ...fighter, mode: 'moving', movementDirection: 'forward' }))
-      .toBe(getCharacterAnimationKey({ ...fighter, mode: 'moving', movementDirection: 'backward' }));
-    for (const facing of ['left', 'right'] as const) {
-      expect(shouldFlipAnimation(facing, walk, true)).toBe(!shouldFlipAnimation(facing, walk, false));
-    }
-  });
-
-  it('holds the impact pose throughout active frames and spans the whole recovery', () => {
-    const move = testerMoves.find(({ id }) => id === 'test-heavy-kick')!;
-    const active = clips.find((clip) => clip.key === 'tester-heavy-kick-active')!;
-    for (let t = move.startup; t < move.startup + move.activeFrames; t += 1) {
-      expect(getAttackAnimationFrame(attacking(move.id, 'active', t), active, move)).toBe(69);
-    }
-    const recovery = clips.find((clip) => clip.key === 'tester-heavy-kick-recovery')!;
-    const begins = move.startup + move.activeFrames;
-    expect(getAttackAnimationFrame(attacking(move.id, 'recovery', begins), recovery, move)).toBe(69);
-    expect(getAttackAnimationFrame(attacking(move.id, 'recovery', begins + move.recovery - 1), recovery, move)).toBe(64);
-    expect(getAttackAnimationFrame(fighter, recovery, move)).toBeUndefined();
-  });
-
-  it('preserves the explicit return poses of loops instead of replacing them with a numeric range', () => {
-    const idle = clips.find((clip) => clip.key === 'tester-idle')!;
-    expect(getClipFrames(idle)).toEqual([212, 213, 214, 215, 216, 217, 218, 217, 216, 215, 214, 213]);
-    expect(idle.repeat).toBe(-1);
-    expect(getClipFrames({ key: 'range', start: 2, end: 4, frameRate: 8, repeat: 0 })).toEqual([2, 3, 4]);
-  });
+import { createGameConfig } from '../engine/data/gameConfig';
+import { defaultCharacter as shoto } from '../engine/data/characters';
+const loop: AnimationClip = { key: 'future-idle', start: 0, end: 2, frames: [0, 1, 2, 1], frameDurations: [14, 10, 14, 10], frameRate: 10, repeat: -1 };
+it('mantém holds e o retorno de um clipe genérico sem depender de assets retirados', () => {
+  expect([0, 13, 14, 23, 24, 37, 38, 47, 48].map(t => getTimedAnimationFrame(loop, t))).toEqual([0, 0, 1, 1, 2, 2, 1, 1, 0]);
+  expect(getTimedAnimationFrame({ ...loop, repeat: 0 }, 100)).toBe(1);
+  expect(shouldFlipAnimation('left', loop)).toBe(true);
+  expect(shouldFlipAnimation('left', { ...loop, sourceFacesLeft: true })).toBe(false);
+});
+it('amostra fases a partir do frame lógico, incluindo recuperação em acerto', () => {
+  const state = new Simulation(createGameConfig(1024, 576)).snapshot().characters[0];
+  const move = shoto.moves[0];
+  const start = { ...state, mode: 'startup' as const, attack: { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false } };
+  expect(getAttackAnimationFrame(start, loop, move)).toBe(0);
+  const recovery = { ...start, mode: 'recovery' as const, attack: { ...start.attack, elapsedFrames: move.startup + move.activeFrames + move.recovery - 1, hitOutcome: 'hit' as const } };
+  expect(getAttackAnimationFrame(recovery, loop, move)).toBe(1);
+  expect(getStateAnimationFrame(state, loop, 14)).toBe(1);
+});
+it('recusa manifesto com escala desigual ou índices de quadro inválidos', () => {
+  const manifest = { textureKey: 'future', frameSize: { width: 128, height: 128 }, totalFrames: 3, clips: [loop] };
+  expect(() => validateAnimationManifest(manifest)).not.toThrow();
+  expect(() => validateAnimationManifest({ ...manifest, displaySize: { width: 100, height: 120 } })).toThrow();
+  expect(() => validateAnimationManifest({ ...manifest, totalFrames: 2 })).toThrow();
 });

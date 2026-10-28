@@ -1,0 +1,132 @@
+{
+  "frames": {
+    "90": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "91": {
+      "frame": {
+        "x": 1152,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "92": {
+      "frame": {
+        "x": 2304,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "93": {
+      "frame": {
+        "x": 3456,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "94": {
+      "frame": {
+        "x": 4608,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "95": {
+      "frame": {
+        "x": 5760,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    }
+  },
+  "meta": {
+    "image": "heavy-punch.png",
+    "size": {
+      "w": 6912,
+      "h": 768
+    },
+    "scale": "1"
+  }
+}

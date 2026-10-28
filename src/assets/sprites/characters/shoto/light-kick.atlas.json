@@ -1,0 +1,132 @@
+{
+  "frames": {
+    "96": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "97": {
+      "frame": {
+        "x": 1152,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "98": {
+      "frame": {
+        "x": 2304,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "99": {
+      "frame": {
+        "x": 3456,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "100": {
+      "frame": {
+        "x": 4608,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "101": {
+      "frame": {
+        "x": 5760,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    }
+  },
+  "meta": {
+    "image": "light-kick.png",
+    "size": {
+      "w": 6912,
+      "h": 768
+    },
+    "scale": "1"
+  }
+}

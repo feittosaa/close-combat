@@ -9,9 +9,9 @@ const neutral: FrameInput = { direction: 'N', buttons: new Set() };
 const back: FrameInput = { direction: 'B', buttons: new Set() };
 const forward: FrameInput = { direction: 'F', buttons: new Set() };
 const strike: FrameInput = { direction: 'N', buttons: new Set(['2']) };
-const cross = defaultCharacter.moves.find(({ id }) => id === 'test-cross')!;
+const cross = defaultCharacter.moves.find(({ id }) => id === 'heavy-punch')!;
 const attacker = { ...defaultCharacter, id: 'guard-test-attacker', moves: [
-  { ...cross, id: 'guard-test-strike', startup: 4, activeFrames: 3, recovery: 8 },
+  { ...cross, id: 'guard-test-strike', startup: 4, activeFrames: 3, recovery: 8, pushback: { hit: 6, block: 4 } },
 ] };
 
 function step(sim: Simulation, inputs: readonly FrameInput[]): void {
@@ -26,8 +26,8 @@ describe('guard and grounded movement', () => {
     const after = sim.snapshot().characters;
     expect(after[0]).toMatchObject({ mode: 'moving', movementDirection: 'backward', facing: 'right' });
     expect(after[1]).toMatchObject({ mode: 'moving', movementDirection: 'backward', facing: 'left' });
-    expect(after[0].x).toBe(before[0].x - 3);
-    expect(after[1].x).toBe(before[1].x + 3);
+    expect(after[0].x).toBe(before[0].x - defaultCharacter.movement.backwardWalkSpeed!);
+    expect(after[1].x).toBe(before[1].x + defaultCharacter.movement.backwardWalkSpeed!);
   });
 
   it.each([0, 1])('guards a distant new attack immediately for defender %i and stays still on a whiff', (defenderIndex) => {
@@ -69,34 +69,34 @@ describe('guard and grounded movement', () => {
   it('does not let body contact drag a stationary crouching fighter', () => {
     const sim = new Simulation(config);
     const x = sim.snapshot().characters[1].x;
-    for (let t = 0; t < 220; t += 1) step(sim, [forward, { direction: 'D', buttons: new Set() }]);
+    for (let t = 0; t < 360; t += 1) step(sim, [forward, { direction: 'D', buttons: new Set() }]);
     expect(sim.snapshot().characters[1].x).toBe(x);
-    expect(sim.snapshot().characters[1].x - sim.snapshot().characters[0].x).toBe(defaultCharacter.collision.bodyWidth);
+    expect(sim.snapshot().characters[1].x - sim.snapshot().characters[0].x).toBeCloseTo(defaultCharacter.collision.bodyWidth, 10);
   });
 
-  it('does not let an advancing attack push the guard through body contact before a hit', () => {
-    const advancing = { ...attacker, moves: [{ ...attacker.moves[0], advance: 80 }] };
+  it('does not drag guard during startup at body contact', () => {
+    const advancing = attacker;
     const sim = new Simulation(config, [advancing, defaultCharacter]);
-    for (let t = 0; t < 100; t += 1) step(sim, [forward, forward]);
+    for (let t = 0; t < 180; t += 1) step(sim, [forward, forward]);
     const x = sim.snapshot().characters[1].x;
     step(sim, [strike, back]);
     expect(sim.snapshot().characters[1]).toMatchObject({ mode: 'blocking', x });
     expect(sim.snapshot().hitEvents).toHaveLength(0);
   });
 
-  it('does not apply a crouching move advance while crouched', () => {
+  it('uses a crouching attack without moving while crouched', () => {
     const sim = new Simulation(config);
     const x = sim.snapshot().characters[0].x;
     step(sim, [{ direction: 'D', buttons: new Set(['2']) }, neutral]);
     for (let t = 0; t < 10; t += 1) step(sim, [{ direction: 'D', buttons: new Set() }, neutral]);
-    expect(sim.snapshot().characters[0].attack?.moveId).toBe('test-crouching-hook');
+    expect(sim.snapshot().characters[0].attack?.moveId).toBe('crouch-uppercut');
     expect(sim.snapshot().characters[0].x).toBe(x);
   });
 
   it.each([0, 1])('applies only a small single displacement on a blocked hit to defender %i', (defenderIndex) => {
     const ai = 1 - defenderIndex;
     const sim = new Simulation(config, defenderIndex === 0 ? [defaultCharacter, attacker] : [attacker, defaultCharacter]);
-    for (let t = 0; t < 100; t += 1) step(sim, [forward, forward]);
+    for (let t = 0; t < 180; t += 1) step(sim, [forward, forward]);
     const x = sim.snapshot().characters[defenderIndex].x;
     const inputs = [back, back]; inputs[ai] = strike;
     step(sim, inputs);

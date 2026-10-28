@@ -1,0 +1,19 @@
+{
+  "tool": "built-in image_gen",
+  "canvas": {
+    "width": 2172,
+    "height": 904,
+    "topExtension": 180
+  },
+  "preparation": "Normalize generated canvas to 2172x904; composite the original 2172x724 pixels unchanged at (0,180). Only the generated upper band is retained. Existing scenery scale and ground projection are preserved via topExtension. For the bar sky only, fade generated sky into the median-filtered original top boundary color within the added band, retaining generated dark tree pixels. Original rows are never blended.",
+  "requests": [
+    {
+      "target": "src/assets/scenes/sala-treino/layers/sala.png",
+      "prompt": "Use case: precise-object-edit. Edit target: this 2172x904 fighting game training room image with a solid MAGENTA band at the TOP. Replace ONLY the magenta top 180 rows with a seamless upward continuation of the tiled concrete wall directly below it. Match the exact wall texture, panel spacing, vertical lines and dark central stripe at x=1086. Extend vertical lines straight upwards; continue horizontal rows at their existing spacing. The magenta is a guide area to paint, NOT a color to keep. Do not move, resize, repaint, crop, or alter ANY part of the original room below y=180. The existing lower 724 rows and floor must be identical. Keep canvas 2172x904. No new objects, ceiling, text or characters. Paint the entire magenta band without a visible horizontal seam."
+    },
+    {
+      "target": "src/assets/scenes/bar-anoitecer/layers/bar.png",
+      "prompt": "Use case: precise-object-edit. Edit target: this 2172x904 illustrated Spanish evening bar panorama with a solid MAGENTA band at the TOP. Replace ONLY the magenta upper 180 rows with seamless upward continuation of the existing blue evening sky and the few trees/chimneys touching its boundary. Match existing deep blue sky, subtle purple evening clouds and restrained outlined illustration. No new buildings, no new objects, no moon, no stars, no text or characters. The band is extension space, NOT a color to preserve. Keep the entire original panorama below y=180 unchanged: exact buildings, roofs, lanterns, perspective, cobblestone floor and lighting. Do not zoom, rescale, crop or reframe. Keep 2172x904 canvas, paint only the top band, no horizontal seam."
+    }
+  ]
+}
