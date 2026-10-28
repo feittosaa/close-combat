@@ -1,5 +1,5 @@
 /** Shared ultimate activation: extended preparation freezes world and round clock. */
-export const ULTIMATE_ACTIVATION_FRAMES = 200;
+export const ULTIMATE_ACTIVATION_FRAMES = 150;
 export interface UltimateActivation {
   ownerIds: readonly string[];
   elapsedFrames: number;

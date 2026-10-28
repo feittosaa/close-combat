@@ -194,7 +194,7 @@ describe('manual Shoto catalogue', () => {
   it('projectile continues after its owner is interrupted, then expires without contact', () => {
     const sim=create(56);command(sim,move('wine-bottle'));
     // Time a reversal to interrupt after bottle release while its invulnerability avoids contact.
-    wait(sim,23);command(sim,move('reversal-kick'),1);
+    wait(sim,move('wine-bottle').startup-7);command(sim,move('reversal-kick'),1);
     untilContact(sim,1);
     expect(sim.snapshot().characters[0].mode).toBe('hitstun');
     expect(sim.snapshot().projectiles.some(p=>p.ownerId==='player-1')).toBe(true);

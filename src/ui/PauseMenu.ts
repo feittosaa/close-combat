@@ -131,7 +131,7 @@ export class PauseMenu {
       for (const [label, frames, cls] of [['Preparo', move.startup, 'startup'], ['Atividade', move.activeFrames, 'active'], ['Recuperação', move.recovery, 'recovery']] as const) {
         const block = el('span', `${label} ${frames}F`, cls); block.style.flexGrow = String(frames); timeline.append(block);
       }
-      this.details.append(timeline, el('p', 'Valores provisórios para balanceamento. Após acerto, troque de golpe para continuar; repetições seguem as receitas. Forte impede voltar ao fraco até o fim da sequência.', 'pause-note'));
+      this.details.append(timeline, el('p', 'Valores provisórios para balanceamento. Receitas fechadas funcionam também no vazio, após a atividade do golpe. Fora delas, só o acerto permite trocar de golpe e continuar. Forte impede voltar ao fraco até o fim da sequência.', 'pause-note'));
     }
     if (entry.combo) this.details.append(el('p', 'Receita manual aprovada pelo usuário.'));
     const pin = el('button', 'Fixar comando no treino'); pin.onclick = () => this.pin(entry,this.fighterIndex); this.details.append(pin);

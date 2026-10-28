@@ -140,13 +140,13 @@ it('keeps bottle-confirmed defenders upright and presents the independent lighte
   expect(getShotoSpritePose(throwing,28)?.texture).toBe('shoto-idle');
 });
 
-it('spreads all six drinking poses across the full 200-tick global pause',()=>{
+it('spreads all six drinking poses across the full 150-tick global pause',()=>{
   const counts=new Map<number,number>();
-  for(let tick=0;tick<200;tick++){
+  for(let tick=0;tick<150;tick++){
     const pose=getShotoUltimateActivationPose(tick,'right');
     counts.set(pose.frame,(counts.get(pose.frame)??0)+1);
     expect(getShotoUltimateActivationPose(tick,'left')).toEqual({...pose,flipX:true});
   }
-  expect([...counts]).toEqual([[128,34],[129,33],[130,33],[131,34],[132,33],[133,33]]);
-  expect(getShotoUltimateActivationPose(200,'right').frame).toBe(133);
+  expect([...counts]).toEqual([[128,25],[129,25],[130,25],[131,25],[132,25],[133,25]]);
+  expect(getShotoUltimateActivationPose(150,'right').frame).toBe(133);
 });

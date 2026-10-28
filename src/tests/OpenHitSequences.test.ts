@@ -26,13 +26,14 @@ function hit(sim: Simulation, player:number, buttons:AttackButton[], continuous=
 }
 
 it.each([0,1])('connects 1,1,1 → 3 → 2,2,2 as an open sequence without adding a recipe: player %i', player=>{
-  const sim=create();
+  const sim=create(96);
   const buttons:AttackButton[]=['1','1','1','3','2','2','2'];
   buttons.forEach((button,index)=>hit(sim,player,[button],index>0));
   expect(sim.snapshot().recentContacts.map(c=>c.event.moveId)).toEqual([
     'light-punch','light-punch','light-punch','light-kick','heavy-punch','heavy-punch','heavy-punch',
   ]);
   expect(sim.snapshot().characters[1-player].health).toBe(810);
+  expect(Math.abs(sim.snapshot().characters[1].x-sim.snapshot().characters[0].x)).toBeCloseTo(103);
   expect(shoto.combos?.map(recipe=>recipe.notation)).toEqual(['1,1,1','2,2,2','1,1,2','1,1,1+2']);
   for(let tick=0;tick<100;tick++) {
     const snapshot=sim.snapshot();
@@ -85,7 +86,7 @@ it('does not open new routes or synchronize recovery on block or whiff',()=>{
   for(const blocked of [true,false]){
     const sim=create(blocked?56:300);const guard=blocked?input([],'B'):N;
     step(sim,0,input(['1']),guard);
-    for(let i=0;i<10;i++)step(sim,0,N,guard);
+    for(let i=0;i<8;i++)step(sim,0,N,guard);
     const contact=sim.snapshot().hitEvents[0];
     if(blocked){expect(contact.outcome).toBe('block');expect(contact.frameAdvantage).toBeLessThan(0);}
     step(sim,0,input(['4']),guard);wait(sim,CONTACT_HITSTOP_FRAMES+1);
@@ -137,7 +138,7 @@ it('lets the defender attack and the attacker guard on their shared recovery tic
   step(sim,0,input([],'B'),input(['1']));
   expect(sim.snapshot().characters[0].mode).toBe('blocking');
   expect(sim.snapshot().characters[1].attack?.moveId).toBe('light-punch');
-  for(let tick=0;tick<10;tick++)step(sim,0,input([],'B'));
+  for(let tick=0;tick<8;tick++)step(sim,0,input([],'B'));
   expect(sim.snapshot().hitEvents).toEqual([expect.objectContaining({attackerId:'player-2',outcome:'block',damage:0})]);
   expect(sim.snapshot().characters[0].health).toBe(1000);
 });

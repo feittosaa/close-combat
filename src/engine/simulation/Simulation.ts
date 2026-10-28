@@ -471,8 +471,11 @@ export class Simulation {
     // A chord completed within the input grace window replaces its uncommitted single.
     if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
       previous.buttons.every(button => move.input.buttons.includes(button))) return true;
-    if (!previous.hasHit) return false;
     const chain = [...(character.chain ?? [previous.moveId]), move.id];
+    if (!previous.hasHit) {
+      const previousMove = this.move(index, previous.moveId)!;
+      return previous.elapsedFrames >= previousMove.startup + previousMove.activeFrames && this.recipePrefix(index, chain);
+    }
     if (previous.hitOutcome === 'block') return this.recipePrefix(index, chain);
     if (previous.hitOutcome !== 'hit' || !character.hitSequence || !chainStrike(move)) return false;
     const previousMove = this.move(index, previous.moveId)!;
