@@ -11,7 +11,7 @@ Branch `codex/feature-personagens-maiores`, dependente de `codex/fix-recuperacao
 - [x] Desenho, corpo, hurtboxes, hitboxes e deslocamentos ampliados em mais 10%; escala uniforme sem recoloração ou mudança de arte. Tempos, dano, caminhada, salto e física preservados. Garrafa da ultimate mantém a redução relativa já solicitada.
 - [x] Zoom fixo 1,6 preservado. Acompanhamento vertical passa de 40% para 60% da subida, limitado a manter os pés do personagem no chão 16 pixels acima da borda inferior. Margem lateral proporcional 64 → 70,4, sem arrastar o oponente parado. Escala e imagens dos cenários preservadas.
 - [x] npm ci, 293 testes/36 arquivos, build e diff aprovados. Conferência no jogo de chão, salto/pouso e afastamento máximo 499,2, com ambos inteiros nas bordas e acompanhamento vertical sem zoom dinâmico. Console sem erros/avisos. Evidências /tmp/shoto-maior-chao.png, /tmp/shoto-maior-salto.png e /tmp/shoto-maior-bordas.png. Testes do catálogo completo verificam cobertura em toda a viagem vertical: não é necessário aumentar a altura nem alterar as proporções dos cenários atuais. Sem alteração de imagem ou aprovação artística inferida.
-- [ ] Envio e CI do commit exato; sem merge, promoção ou release.
+- [x] Implementação enviada em `6bbbbd4d7a646151c82a180d0f6d418db514da75`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40757181796). A conferência combinada /tmp/shoto-maior-launcher-fraco.png confirma fraco iniciado depois de 1,1,2 com as caixas maiores. Remoto auditado: development `ba2d46f` e main `be7d340` preservadas. Sem merge, promoção ou release; fechamento documental tem sua própria CI conferida antes do relato final.
 
 ## Recuperação dos levantamentos e garrafa menor — 2026-10-28
 
