@@ -5,13 +5,11 @@ import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlaybac
 import { FighterSelection, type SelectionPlayer } from '../ui/FighterSelection';
 import idlePortrait from '../assets/sprites/characters/shoto/idle.png';
 import '../ui/menu.css';
-import menuBackground from '../../assets/art/menu/patio-solar.png';
 
 import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
 import { playableCharacters } from '../engine/data/characters';
 import { defaultStage, selectableStages, stageTextureKey } from '../rendering/stages/stageCatalog';
-import { preloadStage } from '../rendering/stages/StageView';
 import { opponentFor, isTrainingMode, type MatchMode } from './matchSetup';
 
 const MODES = [
@@ -42,7 +40,6 @@ export class MenuScene extends Phaser.Scene {
     const rect = this.game.canvas.getBoundingClientRect();
     Object.assign(this.menuElement!.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
   };
-  private loading?: Phaser.GameObjects.Text;
   private transitioning = false;
   private readonly handleKey = (event: KeyboardEvent): void => {
     if (ControlSettings.active || event.repeat || this.transitioning) return;
@@ -83,14 +80,8 @@ export class MenuScene extends Phaser.Scene {
     const index = this.fighters.findIndex(f => f.id === data.fighterId);
     if (index >= 0) this.fighterIndex = index;
   }
-  preload(): void {
-    configureUiCamera(this.cameras.main, this.scale);
-    this.loading = this.add.text(LOGICAL_VIEW.width / 2, LOGICAL_VIEW.height / 2, 'PREPARANDO A ARENA…', { fontSize: '18px', color: '#e6c78d' }).setOrigin(.5);
-    this.load.image('menu-solar', menuBackground);
-    selectableStages.forEach(stage => preloadStage(this, stage));
-  }
   create(): void {
-    this.loading?.destroy(); this.loading = undefined;
+    configureUiCamera(this.cameras.main, this.scale);
     const { width, height } = LOGICAL_VIEW;
     // Overscan keeps the slow camera drift inside the illustration at every phase.
     this.textures.get('menu-solar').setFilter(Phaser.Textures.FilterMode.LINEAR);

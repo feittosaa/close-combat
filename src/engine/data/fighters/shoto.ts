@@ -6,6 +6,11 @@ export const shoto: CharacterDefinition = {
   movement: { walkSpeed: 2.4, backwardWalkSpeed: 1.8, jumpVelocity: -10, dashSpeed: 4.6, backdashSpeed: 3.6 },
   collision: {
     bodyWidth: 55.2,
+    jumpHurtboxes: {
+      extended: { offsetX: 0, offsetY: -165, width: 55.2, height: 145 },
+      compact: { offsetX: 0, offsetY: -170, width: 55.2, height: 110 },
+      compactFromFrame: 12, compactUntilFrame: 22,
+    },
     hurtboxes: {
       standing: { offsetX: 0, offsetY: -165.6, width: 55.2, height: 165.6 },
       crouching: { offsetX: 0, offsetY: -103.5, width: 55.2, height: 103.5 },
@@ -14,7 +19,7 @@ export const shoto: CharacterDefinition = {
     },
   },
   juggle: { initialGravityScale: 0.7, gravityScalePerHit: 0.15, maximumGravityScale: 1.6,
-    getupFrames: 24, wakeupInvulnerabilityFrames: 8 },
+    getupFrames: 24, wakeupInvulnerabilityFrames: 8, airHitSuspensionFrames: 6 },
   rage: { maximum: 100, onHit: 10, onDamage: 15, onBlock: 5 },
   combos: [
     { id: 'simple-1', name: 'Combo simples · 1,1,1', notation: '1,1,1', moveIds: ['light-punch','light-punch','light-punch'] },

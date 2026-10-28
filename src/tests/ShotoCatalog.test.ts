@@ -1,3 +1,4 @@
+import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
@@ -166,7 +167,7 @@ describe('manual Shoto catalogue', () => {
   it('a projectile contact triggers hitstop independently of the round clock and resets with the match', () => {
     const sim=new Simulation(config,undefined,{initialDistance:300});
     command(sim,move('wine-glass'));untilContact(sim);
-    const contact=sim.snapshot();expect(contact.hitstopFramesRemaining).toBe(5);
+    const contact=sim.snapshot();expect(contact.hitstopFramesRemaining).toBe(CONTACT_HITSTOP_FRAMES);
     step(sim);expect(sim.snapshot().frame).toBe(contact.frame);
     expect(sim.snapshot().roundFramesRemaining).toBe(contact.roundFramesRemaining-1);
     sim.resetMatch();expect(sim.snapshot().projectiles).toEqual([]);

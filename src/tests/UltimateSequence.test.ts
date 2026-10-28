@@ -1,3 +1,4 @@
+import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { shoto } from '../engine/data/fighters/shoto';
@@ -68,8 +69,8 @@ it.each([0,1])('bottle confirms, lighter explodes once for 280 and physically kn
   const sim=create();sim.fillTrainingRage();command(sim,'wine-ultimate',player);
   expect(contact(sim,'confirm',player)).toMatchObject({damage:0,outcome:'hit',defenderStunFrames:120});
   expect(sim.snapshot().characters[1-player].health).toBe(1000);
-  // Six combat frames of throw preparation, independently of the five hitstop ticks.
-  wait(sim,10);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
+  // Six combat frames of throw preparation, independently of the shared contact pause.
+  wait(sim,CONTACT_HITSTOP_FRAMES+5);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
   const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(44);
   const target=sim.snapshot().characters[1-player];
   expect(target).toMatchObject({health:720,mode:'knockdown',grounded:false});
@@ -159,6 +160,8 @@ it('reaches both actual panorama walls when the opponent follows, without draggi
 it.each([0,1])('captures an airborne defender upright, waits for landing and explodes after the lighter: player %i',player=>{
   const sim=create(200);sim.fillTrainingRage();
   step(sim,input('U'),1-player);
+  // Meet the descending extended hurtbox rather than the compact apex silhouette.
+  wait(sim,10);
   command(sim,'wine-ultimate',player);
   contact(sim,'confirm',player);
   const confirmed=sim.snapshot().characters[1-player];

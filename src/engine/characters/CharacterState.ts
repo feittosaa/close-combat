@@ -29,6 +29,7 @@ export interface CharacterState {
   remainingStateFrames: number;
   /** Logical jump origin survives guard/stun pose changes; renderer never restarts a flight. */
   airborneStartedFrame?: number;
+  airborneElapsedFrames?: number;
   verticalVelocity: number;
   grounded: boolean;
   crouching: boolean;
@@ -38,7 +39,7 @@ export interface CharacterState {
   chainLastFrame?: number;
   knockdown?: { velocityX: number };
   /** Confirmed launcher flight; independent of ordinary jumps and scripted captures. */
-  juggle?: { gravityScale: number; airHits: number };
+  juggle?: { gravityScale: number; airHits: number; suspensionFrames?: number };
   /** Counts combat ticks, including grounded getup, then a short protected return. */
   wakeupInvulnerabilityFrames?: number;
   /** Bottle confirmation holds the defender until the lighter arrives, including landing. */

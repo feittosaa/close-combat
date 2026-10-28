@@ -9,6 +9,10 @@ export interface CharacterHurtbox {
 }
 export interface CharacterCollisionProfile {
   bodyWidth: number;
+  jumpHurtboxes?: {
+    extended: CharacterHurtbox; compact: CharacterHurtbox;
+    compactFromFrame: number; compactUntilFrame: number;
+  };
   hurtboxes: { standing: CharacterHurtbox; crouching: CharacterHurtbox; airborne: CharacterHurtbox; knockdown: CharacterHurtbox };
 }
 export interface ComboRecipe {
@@ -27,7 +31,7 @@ export interface CharacterDefinition {
   moves: readonly MoveDefinition[];
   juggle?: {
     initialGravityScale: number; gravityScalePerHit: number; maximumGravityScale: number;
-    getupFrames: number; wakeupInvulnerabilityFrames: number;
+    getupFrames: number; wakeupInvulnerabilityFrames: number; airHitSuspensionFrames: number;
   };
   rage?: { maximum: number; onHit: number; onDamage: number; onBlock: number };
   /** Receitas de autoria manual; cancelamentos só seguem os prefixos declarados. */
