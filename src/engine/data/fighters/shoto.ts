@@ -24,7 +24,7 @@ export const shoto: CharacterDefinition = {
   combos: [
     { id: 'simple-1', name: 'Combo simples · 1,1,1', notation: '1,1,1', moveIds: ['light-punch','light-punch','light-punch'] },
     { id: 'simple-2', name: 'Combo simples · 2,2,2', notation: '2,2,2', moveIds: ['heavy-punch','heavy-punch','heavy-punch'] },
-    { id: 'alternate-112', name: 'Launcher · 1,1,2', notation: '1,1,2', launchVelocity: -10, moveIds: ['light-punch','light-punch','heavy-punch'] },
+    { id: 'alternate-112', name: 'Launcher · 1,1,2', notation: '1,1,2', launch: { velocity: -10, recoveryFrames: 6 }, moveIds: ['light-punch','light-punch','heavy-punch'] },
     { id: 'power-1112', name: 'Combo potente · 1,1,1+2', notation: '1,1,1+2', moveIds: ['light-punch','light-punch','power-punch'] },
   ],
   moves: [
@@ -97,6 +97,6 @@ export const shoto: CharacterDefinition = {
     { id: 'wine-ultimate', name: 'Ultimate — Coquetel molotov', category: 'ultimate', pose: 'heavy-punch', notation: 'b,bd,d,df,f,1+2', input: { buttons: ['1','2'], sequence: ['B','DB','D','DF','F'] },
       rageCost: 100, startup: 1, activeFrames: 1, recovery: 48, damage: 280, hitstun: 55, blockstun: 25, pushback: { hit: 24, block: 14 }, hitLevel: 'mid',
       ultimateSequence: { lighterHitbox: { forward: 0, yOffset: -115, width: 9.2, height: 13.8 }, lighterDelay: 8, lighterSpeed: 7.5, confirmStun: 150, knockbackSpeed: 8, launchSpeed: -5, knockdownFrames: 30 },
-      projectile: { speed: 15, life: 150, verticalSpeed: -1.5, gravity: 0.12, visual: 'bottle' }, hitbox: { forward: 0, yOffset: -193.2, width: 69, height: 55.2 } },
+      projectile: { speed: 15, life: 150, verticalSpeed: -1.5, gravity: 0.12, visual: 'bottle' }, hitbox: { forward: 0, yOffset: -187.68, width: 55.2, height: 44.16 } },
   ],
 };

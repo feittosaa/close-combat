@@ -6,7 +6,7 @@ import type { Hitbox } from '../collision/types';
 import { createHitbox, createHurtbox } from '../collision/combatGeometry';
 import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { intersects } from '../collision/intersects';
-import { classifyHitContext, frameAdvantage, type HitContext } from './frameData';
+import { attackDurationFrames, classifyHitContext, frameAdvantage, type HitContext } from './frameData';
 
 export interface HitEvent {
   attackerId: string;
@@ -60,7 +60,7 @@ export class AttackResolver {
         (move.hitLevel === 'low' ? target.grounded && guard === 'DB' : guard === 'B' || guard === 'DB');
       const owner = characters[index];
       const ownerMove = owner.attack ? this.resolveMove(owner.fighterId, owner.attack.moveId) : undefined;
-      const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, ownerMove.startup + ownerMove.activeFrames + ownerMove.recovery - owner.attack.elapsedFrames - 1) : 0) : move.startup + move.activeFrames + move.recovery - attack.elapsedFrames - 1;
+      const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, attackDurationFrames(ownerMove, owner.attack) - owner.attack.elapsedFrames - 1) : 0) : attackDurationFrames(move, attack) - attack.elapsedFrames - 1;
       const stun = blocked ? move.blockstun : phase === 'confirm' ? move.ultimateSequence!.confirmStun : move.hitstun;
       const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward'
         ? (attacker.facing === 'right' ? 'left' : 'right') : attacker.facing;

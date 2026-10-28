@@ -4,6 +4,15 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Recuperação dos levantamentos e garrafa menor — 2026-10-28
+
+Branch `codex/fix-recuperacao-launcher-garrafa`, dependente de `codex/feature-ritmo-combos-distancia` em `70bec33`, ainda não integrada. Pedido: levantamentos confirmados recuperam mais rápido para permitir continuar o combo; diminuir um pouco a garrafa da ultimate.
+
+- [x] Metadados do launcher reúnem velocidade de lançamento e recuperação do autor. No acerto final de `1,1,2`, recuperação do ataque passa de 23 para 6 ticks, sem encurtar preparo/atividade, pular elapsedFrames ou alterar o soco forte isolado, no bloqueio ou no erro. Duração efetiva compartilhada por simulação, previsão de recuperação, animações e HUD; levantamento preserva velocidade -10, gravidade/juggle e comandos. Por pedido posterior, o levantamento confirmado limpa a receita e reinicia o piso de força, liberando fracos novamente; demais fortes continuam impedindo forte → fraco.
+- [x] Garrafa da ultimate reduzida em 20% por dimensão: 69 × 55,2 → 55,2 × 44,16. Deslocamento Y -187,68 conserva o centro na altura do topo do personagem (-165,6). Desenho geométrico e caixa continuam compartilhados; arco, velocidades, dano, pausa e captura/isqueiro preservados. Sem imagens novas ou recoloração.
+- [x] Instalação reproduzível, 293 testes/36 arquivos, build e diff aprovados. Conferência no jogo por comandos legais: launcher recupera em 6 ticks, continuação aérea forte conecta, fraco pode iniciar nova receita após levantamento, garrafa menor conserva saída alta/arco. Console sem erros. Evidências em /tmp/shoto-launcher-recuperacao-6.png, /tmp/shoto-launcher-continuacao-aerea.png, /tmp/shoto-launcher-reinicio-fraco.png e /tmp/shoto-garrafa-ultimate-menor.png. Sem alteração de arte ou aprovação artística inferida.
+- [ ] Envio e CI do commit exato; sem merge, promoção ou release.
+
 ## Ritmo a 80%, receitas no vazio e empurrão mínimo — 2026-10-28
 
 Branch `codex/feature-ritmo-combos-distancia`, dependente de `codex/feature-sequencias-abertas-shoto` em `056c5af`, ainda não integrada. Pedido: trocar a redução de velocidade de 40% por aproximadamente 20%, permitir executar receitas fechadas sem contato e evitar o afastamento excessivo durante os combos.

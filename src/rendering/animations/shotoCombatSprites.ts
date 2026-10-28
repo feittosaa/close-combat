@@ -1,3 +1,4 @@
+import { recoveryFrames } from '../../engine/combat/frameData';
 import type { CharacterState } from '../../engine/characters/CharacterState';
 import { getCharacterById } from '../../engine/data/characters';
 import { getTimedAnimationFrame, type AnimationClip } from './AnimationPlayback';
@@ -39,17 +40,18 @@ export function getShotoCombatPose(state:CharacterState,frame:number){
     const source=shotoCombatSources.slice(0,4).find(source=>source.key===`shoto-${move.pose ?? move.id}`);
     if(!source)return undefined;
     const elapsed=state.attack.elapsedFrames;
+    const recovery=recoveryFrames(move,state.attack);
     if (move.category === 'ultimate') {
-      const local = elapsed < 6 ? 2 : 3 + Math.min(2, Math.floor((elapsed - 6) * 3 / Math.max(1, move.recovery - 4)));
+      const local = elapsed < 6 ? 2 : 3 + Math.min(2, Math.floor((elapsed - 6) * 3 / Math.max(1, recovery - 4)));
       return pose(source.key, source.start + local);
     }
     // Shared authored hand-close bridges idle to the attack without delaying contact.
     if(elapsed<2)return pose('shoto-enter-defense',72+elapsed);
-    const remaining=move.startup+move.activeFrames+move.recovery-elapsed;
+    const remaining=move.startup+move.activeFrames+recovery-elapsed;
     if(move.id==='light-punch' && remaining<=2)return pose('shoto-enter-defense',71+remaining);
     const local=elapsed<move.startup?Math.min(1,Math.floor(elapsed*2/move.startup)):
       elapsed<move.startup+move.activeFrames?2:
-      3+Math.min(2,Math.floor((elapsed-move.startup-move.activeFrames)*3/move.recovery));
+      3+Math.min(2,Math.floor((elapsed-move.startup-move.activeFrames)*3/recovery));
     return pose(source.key,source.start+local);
   }
   if((state.mode==='blocking'||state.mode==='blockstun')&&(!state.grounded||state.crouching)){
