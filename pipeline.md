@@ -4,6 +4,14 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Ajuste fino da pausa de contato — 2026-10-27
+
+Na mesma branch `codex/fix-carregamento-impacto-aereo`, pedido posterior: reduzir a pausa compartilhada de acerto/bloqueio de 10 para 7 ticks a 60 Hz (aproximadamente 117 ms). A suspensão adicional de juggle continua em 6 ticks; demais regras preservadas. Este valor substitui os 10 ticks registrados na entrega abaixo.
+
+- [x] Constante de contato e regressão explícita atualizadas para 7 ticks.
+- [x] `npm ci`, 265 testes/33 arquivos, build e diff aprovados. Conferência no runtime: contato inicia com 7, sete ticks preservam a pose/estado e o oitavo retoma combate. Captura local `/tmp/shoto-hitstop-seven.png`; bancada temporária removida.
+- [ ] Envio e CI da revisão. Sem novo merge autorizado.
+
 ## Entrada na luta e leitura do impacto aéreo — 2026-10-27
 
 Branch `codex/fix-carregamento-impacto-aereo`, dependente de `codex/fix-trajetoria-juggle` em `6f82d6b`, ainda não integrada. Escopo ampliado pelos pedidos do usuário nesta entrega: eliminar espera após seleção, revisar todos os modos e criar regressão; reduzir hurtbox do salto livre conforme a animação; suspender brevemente o alvo atingido no juggle sem zerar velocidade; dobrar pausa de acerto/bloqueio. Nenhum novo merge autorizado, receita, golpe ou asset artístico.

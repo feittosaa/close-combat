@@ -86,4 +86,4 @@ it('reproduz contatos, poses congeladas e relógio iguais em 30/60/120/144 FPS',
   const reference=run(60);for(const fps of [30,120,144])expect(run(fps)).toEqual(reference);
 });
 
-it('uses ten fixed ticks for the requested stronger impact pause',()=>expect(CONTACT_HITSTOP_FRAMES).toBe(10));
+it('uses seven fixed ticks for the requested impact pause',()=>expect(CONTACT_HITSTOP_FRAMES).toBe(7));
