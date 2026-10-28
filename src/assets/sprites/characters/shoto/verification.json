@@ -1,0 +1,1136 @@
+{
+  "crouchFootDriftPixels": 1.5,
+  "crouchDefenseFootDriftPixels": 1.5,
+  "frames": {
+    "idle": [
+      {
+        "opaqueBounds": [
+          252,
+          92,
+          522,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          91,
+          520,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          251,
+          85,
+          511,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          253,
+          91,
+          509,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          92,
+          524,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          251,
+          92,
+          509,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          251,
+          93,
+          523,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          249,
+          92,
+          516,
+          721
+        ]
+      }
+    ],
+    "walk": [
+      {
+        "opaqueBounds": [
+          189,
+          90,
+          577,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          269,
+          91,
+          451,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          233,
+          91,
+          482,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          219,
+          89,
+          515,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          225,
+          91,
+          568,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          267,
+          90,
+          443,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          246,
+          91,
+          480,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          214,
+          92,
+          545,
+          721
+        ]
+      }
+    ],
+    "crouch": [
+      {
+        "opaqueBounds": [
+          237,
+          328,
+          574,
+          721
+        ],
+        "plantedFootX": 291.5
+      },
+      {
+        "opaqueBounds": [
+          250,
+          329,
+          574,
+          721
+        ],
+        "plantedFootX": 291.5
+      },
+      {
+        "opaqueBounds": [
+          250,
+          339,
+          568,
+          721
+        ],
+        "plantedFootX": 291.5
+      },
+      {
+        "opaqueBounds": [
+          250,
+          347,
+          561,
+          721
+        ],
+        "plantedFootX": 292.0
+      },
+      {
+        "opaqueBounds": [
+          252,
+          327,
+          560,
+          721
+        ],
+        "plantedFootX": 290.5
+      },
+      {
+        "opaqueBounds": [
+          249,
+          344,
+          572,
+          721
+        ],
+        "plantedFootX": 291.5
+      }
+    ],
+    "jump": [
+      {
+        "opaqueBounds": [
+          234,
+          148,
+          517,
+          716
+        ]
+      },
+      {
+        "opaqueBounds": [
+          231,
+          111,
+          503,
+          739
+        ]
+      },
+      {
+        "opaqueBounds": [
+          238,
+          88,
+          529,
+          655
+        ]
+      },
+      {
+        "opaqueBounds": [
+          254,
+          84,
+          523,
+          489
+        ]
+      },
+      {
+        "opaqueBounds": [
+          247,
+          83,
+          525,
+          699
+        ]
+      },
+      {
+        "opaqueBounds": [
+          235,
+          85,
+          496,
+          702
+        ]
+      },
+      {
+        "opaqueBounds": [
+          216,
+          193,
+          525,
+          716
+        ]
+      },
+      {
+        "opaqueBounds": [
+          234,
+          92,
+          520,
+          716
+        ]
+      }
+    ],
+    "defense": [
+      {
+        "opaqueBounds": [
+          222,
+          91,
+          568,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          223,
+          91,
+          566,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          92,
+          567,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          231,
+          96,
+          548,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          227,
+          91,
+          565,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          94,
+          559,
+          721
+        ]
+      }
+    ],
+    "walk-backward": [
+      {
+        "opaqueBounds": [
+          188,
+          96,
+          523,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          99,
+          509,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          231,
+          95,
+          539,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          224,
+          94,
+          491,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          200,
+          94,
+          492,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          213,
+          92,
+          501,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          240,
+          91,
+          512,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          211,
+          83,
+          495,
+          721
+        ]
+      }
+    ],
+    "dash": [
+      {
+        "opaqueBounds": [
+          204,
+          142,
+          577,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          170,
+          219,
+          563,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          7,
+          197,
+          714,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          213,
+          202,
+          532,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          139,
+          152,
+          538,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          243,
+          91,
+          534,
+          721
+        ]
+      }
+    ],
+    "backstep": [
+      {
+        "opaqueBounds": [
+          222,
+          90,
+          561,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          238,
+          118,
+          483,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          65,
+          158,
+          578,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          257,
+          122,
+          494,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          215,
+          163,
+          538,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          223,
+          90,
+          560,
+          721
+        ]
+      }
+    ],
+    "enter-walk": [
+      {
+        "opaqueBounds": [
+          249,
+          90,
+          533,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          238,
+          94,
+          537,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          232,
+          106,
+          588,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          216,
+          103,
+          589,
+          721
+        ]
+      }
+    ],
+    "enter-backward": [
+      {
+        "opaqueBounds": [
+          241,
+          90,
+          539,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          236,
+          92,
+          539,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          225,
+          110,
+          547,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          191,
+          121,
+          533,
+          721
+        ]
+      }
+    ],
+    "enter-crouch": [
+      {
+        "opaqueBounds": [
+          248,
+          91,
+          560,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          251,
+          125,
+          574,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          248,
+          219,
+          593,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          238,
+          307,
+          617,
+          721
+        ]
+      }
+    ],
+    "enter-jump": [
+      {
+        "opaqueBounds": [
+          246,
+          91,
+          541,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          245,
+          142,
+          522,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          205,
+          212,
+          524,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          244,
+          94,
+          548,
+          721
+        ]
+      }
+    ],
+    "enter-defense": [
+      {
+        "opaqueBounds": [
+          243,
+          91,
+          556,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          232,
+          90,
+          542,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          222,
+          93,
+          552,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          219,
+          94,
+          556,
+          721
+        ]
+      }
+    ],
+    "enter-dash": [
+      {
+        "opaqueBounds": [
+          254,
+          92,
+          529,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          225,
+          116,
+          584,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          174,
+          202,
+          598,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          69,
+          215,
+          736,
+          721
+        ]
+      }
+    ],
+    "enter-backstep": [
+      {
+        "opaqueBounds": [
+          242,
+          91,
+          547,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          216,
+          93,
+          560,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          231,
+          123,
+          512,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          275,
+          117,
+          546,
+          721
+        ]
+      }
+    ],
+    "light-punch": [
+      {
+        "opaqueBounds": [
+          435,
+          90,
+          724,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          428,
+          90,
+          820,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          420,
+          90,
+          897,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          429,
+          90,
+          727,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          432,
+          90,
+          727,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          432,
+          90,
+          725,
+          721
+        ]
+      }
+    ],
+    "heavy-punch": [
+      {
+        "opaqueBounds": [
+          412,
+          90,
+          752,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          392,
+          90,
+          771,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          380,
+          88,
+          920,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          381,
+          91,
+          780,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          402,
+          90,
+          760,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          421,
+          90,
+          741,
+          721
+        ]
+      }
+    ],
+    "light-kick": [
+      {
+        "opaqueBounds": [
+          427,
+          90,
+          732,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          547,
+          99,
+          812,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          540,
+          97,
+          1069,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          544,
+          99,
+          800,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          560,
+          97,
+          878,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          432,
+          90,
+          721,
+          721
+        ]
+      }
+    ],
+    "heavy-kick": [
+      {
+        "opaqueBounds": [
+          430,
+          90,
+          732,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          517,
+          93,
+          818,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          512,
+          92,
+          1149,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          533,
+          93,
+          885,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          535,
+          90,
+          853,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          434,
+          89,
+          731,
+          721
+        ]
+      }
+    ],
+    "crouch-defense": [
+      {
+        "opaqueBounds": [
+          237,
+          322,
+          627,
+          721
+        ],
+        "plantedFootX": 274.5
+      },
+      {
+        "opaqueBounds": [
+          242,
+          318,
+          547,
+          721
+        ],
+        "plantedFootX": 274.0
+      },
+      {
+        "opaqueBounds": [
+          241,
+          321,
+          540,
+          721
+        ],
+        "plantedFootX": 273.0
+      },
+      {
+        "opaqueBounds": [
+          242,
+          322,
+          543,
+          721
+        ],
+        "plantedFootX": 274.0
+      },
+      {
+        "opaqueBounds": [
+          240,
+          320,
+          539,
+          721
+        ],
+        "plantedFootX": 274.0
+      },
+      {
+        "opaqueBounds": [
+          239,
+          321,
+          541,
+          721
+        ],
+        "plantedFootX": 273.0
+      }
+    ],
+    "air-defense": [
+      {
+        "opaqueBounds": [
+          257,
+          83,
+          523,
+          488
+        ]
+      },
+      {
+        "opaqueBounds": [
+          268,
+          83,
+          514,
+          490
+        ]
+      },
+      {
+        "opaqueBounds": [
+          270,
+          83,
+          511,
+          490
+        ]
+      },
+      {
+        "opaqueBounds": [
+          272,
+          84,
+          515,
+          490
+        ]
+      },
+      {
+        "opaqueBounds": [
+          275,
+          82,
+          517,
+          488
+        ]
+      },
+      {
+        "opaqueBounds": [
+          271,
+          83,
+          514,
+          490
+        ]
+      }
+    ],
+    "walk-inbetweens": [
+      {
+        "opaqueBounds": [
+          197,
+          88,
+          560,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          235,
+          90,
+          491,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          215,
+          89,
+          563,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          208,
+          90,
+          561,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          209,
+          88,
+          535,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          216,
+          90,
+          494,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          220,
+          91,
+          554,
+          721
+        ]
+      },
+      {
+        "opaqueBounds": [
+          210,
+          90,
+          558,
+          721
+        ]
+      }
+    ],
+    "ultimate-drink": [
+      {
+        "opaqueBounds": [
+          254,
+          90,
+          515,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          253,
+          89,
+          516,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          253,
+          84,
+          516,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          83,
+          516,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          84,
+          516,
+          720
+        ]
+      },
+      {
+        "opaqueBounds": [
+          252,
+          89,
+          516,
+          720
+        ]
+      }
+    ]
+  }
+}

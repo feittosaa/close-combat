@@ -4,7 +4,7 @@ import type { StageDefinition, StageLayer } from './StageDefinition';
 const manifests = import.meta.glob<StageDefinition>('../../assets/scenes/*/stage.json', { eager: true, import: 'default' });
 const images = import.meta.glob<string>('../../assets/scenes/*/layers/*.png', { eager: true, import: 'default', query: '?url' });
 
-export const DEFAULT_STAGE_ID = 'cais';
+export const DEFAULT_STAGE_ID = 'bar-anoitecer';
 export const stages: readonly StageDefinition[] = Object.values(manifests);
 
 export function getStageLayerUrl(stage: StageDefinition, layer: StageLayer): string {
@@ -36,3 +36,9 @@ export const defaultStage = requireDefaultStage();
 export function stageTextureKey(stage: StageDefinition, layer: StageLayer): string {
   return `stage:${stage.id}:${layer.id}`;
 }
+
+/** Permanent training room, independent of the future general stage default. */
+export const trainingStage = getStageById('sala-treino')!;
+
+/** Scenarios available to the general match selector; practice keeps its dedicated room. */
+export const selectableStages = stages.filter(stage => stage.id !== trainingStage.id);

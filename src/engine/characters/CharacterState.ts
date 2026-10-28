@@ -1,43 +1,16 @@
-// src/engine/characters/CharacterState.ts
 import type { AttackButton } from '../../input/types';
 import type { CharacterCollisionProfile } from '../data/characters';
 
-export type CharacterMode =
-  | 'neutral'
-  | 'moving'
-  | 'dashing'
-  | 'airborne'
-  | 'crouching'
-  | 'startup'
-  | 'active'
-  | 'recovery'
-  | 'blocking'
-  | 'hitstun'
-  | 'blockstun'
-  | 'grabbed'
-  | 'throwRecovery'
-  | 'knockdown';
-
+export type CharacterMode = 'neutral' | 'moving' | 'dashing' | 'airborne' | 'crouching' |
+  'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun' | 'knockdown';
 export interface CharacterAttack {
   moveId: string;
+  commandFrame?: number;
   buttons: readonly AttackButton[];
-  airborne?: boolean;
-  crouching?: boolean;
   elapsedFrames: number;
   hasHit: boolean;
-  hitElapsedFrames?: number;
   hitOutcome?: 'hit' | 'block';
-  preciseExecution: boolean;
-  throwDirection?: 'forward' | 'backward';
 }
-
-export interface CharacterGrab {
-  attackerId: string;
-  moveId: string;
-  remainingFrames: number;
-  throwDirection: 'forward' | 'backward';
-}
-
 export interface CharacterState {
   characterId: string;
   fighterId: string;
@@ -45,18 +18,29 @@ export interface CharacterState {
   x: number;
   y: number;
   facing: 'left' | 'right';
-  /** Direção da locomoção relativa ao oponente; não muda a orientação lógica do combate. */
   movementDirection?: 'forward' | 'backward';
   health: number;
   maxHealth: number;
+  rage: number;
+  maxRage: number;
   mode: CharacterMode;
-  /** Frame lógico de entrada no estado atual; permite apresentação e inspeção determinísticas. */
   stateStartedFrame: number;
+  animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };
   remainingStateFrames: number;
+  /** Logical jump origin survives guard/stun pose changes; renderer never restarts a flight. */
+  airborneStartedFrame?: number;
   verticalVelocity: number;
   grounded: boolean;
   crouching: boolean;
   attack?: CharacterAttack;
-  grab?: CharacterGrab;
   hitFlashFrames: number;
+  chain?: string[];
+  chainLastFrame?: number;
+  knockdown?: { velocityX: number };
+  /** Bottle confirmation holds the defender until the lighter arrives, including landing. */
+  ultimateCapture?: { ownerId: string };
+  ultimateThrowStartedFrame?: number;
 }
+
+/** Snapshot of the preceding pose state; contains no renderer objects or recursive history. */
+export type CharacterAnimationState = Pick<CharacterState,'mode'|'stateStartedFrame'|'grounded'|'crouching'|'movementDirection'|'facing'|'verticalVelocity'>;

@@ -1,635 +1,485 @@
-// src/engine/simulation/Simulation.ts
-import type { CharacterState } from '../characters/CharacterState';
+import type { CharacterState, CharacterAnimationState } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import { defaultCharacter, type CharacterDefinition } from '../data/characters';
 import type { GameConfig } from '../data/gameConfig';
+import { FIGHT_SIDE_MARGIN } from '../data/fightFraming';
 import type { MoveDefinition } from '../data/moves';
 import { CommandParser } from '../../input/CommandBuffer';
-import type { AttackButton, FrameInput } from '../../input/types';
+import type { FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
-
-export interface SimulationSnapshot {
-  frame: number;
-  round: number;
-  roundFramesRemaining: number;
-  phase: 'fight' | 'round-over' | 'match-over';
-  roundWins: readonly [number, number];
-  roundWinnerId?: string;
-  roundEndReason?: 'knockout' | 'time' | 'draw';
-  matchWinnerId?: string;
-  characters: readonly CharacterState[];
-  activeHitboxes: readonly Hitbox[];
-  hitEvents: readonly HitEvent[];
-  recentContacts: readonly CombatLogEntry[];
-}
+import type { ProjectileState } from '../combat/ProjectileState';
+import { ULTIMATE_ACTIVATION_FRAMES, type UltimateActivation, type PendingUltimateLighter, type ExplosionState } from '../combat/ultimateActivation';
+import { createProjectileHitbox } from '../collision/projectileGeometry';
+import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
-
-export interface SimulationOptions {
-  training?: boolean;
-  /** Distância inicial entre centros para exercícios; ausente preserva o spawn da partida. */
-  initialDistance?: number;
+export interface SimulationSnapshot {
+  /** frame is combat/animation time; elapsedFrames counts every fixed tick, including hitstop. */
+  frame: number; elapsedFrames: number; round: number; roundFramesRemaining: number;
+  hitstopFramesRemaining: number;
+  ultimateActivation?: UltimateActivation;
+  explosions: readonly ExplosionState[];
+  phase: 'fight' | 'round-over' | 'match-over';
+  roundWins: readonly [number, number]; roundWinnerId?: string;
+  roundEndReason?: 'knockout' | 'time' | 'draw'; matchWinnerId?: string;
+  characters: readonly CharacterState[]; activeHitboxes: readonly Hitbox[];
+  projectiles: readonly ProjectileState[];
+  hitEvents: readonly HitEvent[]; recentContacts: readonly CombatLogEntry[];
 }
+export interface SimulationOptions { training?: boolean; initialDistance?: number }
+const knockdownRadius = (state: CharacterState): number => state.collision.hurtboxes.knockdown.width / 2 + 8;
+const wallInset = (state: CharacterState): number => state.mode === 'knockdown' ? knockdownRadius(state) : state.collision.bodyWidth / 2;
+const neutral = (): FrameInput => ({ direction: 'N', buttons: new Set() });
+const locked = (state: CharacterState): boolean => state.mode === 'hitstun' || state.mode === 'blockstun' || state.mode === 'knockdown';
+const axis = (input: FrameInput): number => input.direction.endsWith('F') ? 1 : input.direction.endsWith('B') ? -1 : 0;
+const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
 
-/** Simulação determinística inicial de movimento e ataques locais para dois jogadores. */
+/** Deterministic combat. Commands, resources and allowed routes belong to each fighter's data. */
 export class Simulation {
   private readonly clock = new FixedStepClock();
-  private readonly attackResolver: AttackResolver;
+  private readonly parsers = [new CommandParser(true, 36), new CommandParser(true, 36)];
+  private readonly resolver: AttackResolver;
+  private characters: [CharacterState, CharacterState];
+  private ultimateActivation?: UltimateActivation;
+  private pendingLighters: PendingUltimateLighter[] = [];
+  private explosions: ExplosionState[] = [];
+  private projectiles: ProjectileState[] = [];
+  private nextProjectileId = 0;
+  private pendingCommands: ({ move: MoveDefinition; expires: number } | undefined)[] = [undefined, undefined];
   private frame = 0;
-  private roundFramesRemaining: number;
+  private elapsedFrames = 0;
+  private hitstopFramesRemaining = 0;
   private round = 1;
   private phase: SimulationSnapshot['phase'] = 'fight';
   private roundWins: [number, number] = [0, 0];
+  private roundFramesRemaining: number;
   private roundWinnerId?: string;
   private roundEndReason?: SimulationSnapshot['roundEndReason'];
   private matchWinnerId?: string;
-  private roundEndFramesRemaining = 0;
-  private readonly characters: [CharacterState, CharacterState];
-  private readonly fighterDefinitions: readonly [CharacterDefinition, CharacterDefinition];
-  private readonly fighterMoves: readonly [readonly MoveDefinition[], readonly MoveDefinition[]];
-  private readonly commandParsers: [CommandParser, CommandParser] = [new CommandParser(), new CommandParser()];
-  private readonly jumpHeld = [false, false];
-  private readonly previousInputButtons: [Set<AttackButton>, Set<AttackButton>] = [new Set(), new Set()];
-  private readonly previousDirections: [FrameInput['direction'], FrameInput['direction']] = ['N', 'N'];
-  private readonly previousHorizontalAxis = [0, 0];
-  private readonly lastTapAxis = [0, 0];
-  private readonly lastTapFrame = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
-  private readonly dashFramesRemaining = [0, 0];
-  private readonly dashAxis = [0, 0];
+  private transitionFrames = 0;
   private lastHitEvents: HitEvent[] = [];
   private recentContacts: CombatLogEntry[] = [];
   private trainingDistance?: number;
   private trainingAutoRestore = false;
-  private trainingQuietFrames = 0;
+  private quietFrames = 0;
+  private jumpHeld = [false, false];
+  private previousAxis = [0, 0];
+  private tapAxis = [0, 0];
+  private tapFrame = [-Infinity, -Infinity];
+  private dashFrames = [0, 0];
+  private dashAxis = [0, 0];
 
-  constructor(
-    private readonly config: GameConfig,
-    fighterDefinitions: readonly [CharacterDefinition, CharacterDefinition] = [defaultCharacter, defaultCharacter],
-    private readonly options: SimulationOptions = {},
-  ) {
-    const { match } = config;
-    this.fighterDefinitions = fighterDefinitions;
-    this.fighterMoves = [
-      fighterDefinitions[0].moves,
-      fighterDefinitions[1].moves,
-    ];
-    const positions = this.spawnPositions();
-    this.characters = [
-      this.createCharacter('player-1', fighterDefinitions[0], positions[0], 'right'),
-      this.createCharacter('player-2', fighterDefinitions[1], positions[1], 'left'),
-    ];
-    this.roundFramesRemaining = match.roundDurationFrames;
-    const moveBooks = new Map(fighterDefinitions.map((definition, index) => [definition.id, this.fighterMoves[index]]));
-    this.attackResolver = new AttackResolver(
-      (fighterId, moveId) => moveBooks.get(fighterId)?.find((move) => move.id === moveId),
-    );
+  constructor(private readonly config: GameConfig,
+    private readonly definitions: readonly [CharacterDefinition, CharacterDefinition] = [defaultCharacter, defaultCharacter],
+    private readonly options: SimulationOptions = {}) {
+    this.roundFramesRemaining = config.match.roundDurationFrames;
+    this.characters = this.createCharacters();
+    this.resolver = new AttackResolver((fighterId, moveId) => definitions.find(fighter => fighter.id === fighterId)?.moves.find(move => move.id === moveId));
   }
-
-  advance(
-    deltaMs: number,
-    readInputs: (characters: readonly CharacterState[], frame: number) => readonly FrameInput[],
-  ): void {
-    this.clock.advance(deltaMs, () => this.step(readInputs(this.characters, this.frame)));
+  advance(delta: number, read: (characters: readonly CharacterState[], frame: number) => readonly FrameInput[]): void {
+    this.clock.advance(delta, () => this.step(read(this.characters, this.frame)));
   }
-
-  /** A training step uses exactly the same rules as normal fixed-clock playback. */
-  stepFrame(inputs: readonly FrameInput[]): void {
-    this.clock.reset();
-    this.step(inputs);
-  }
-
+  stepFrame(inputs: readonly FrameInput[]): void { this.clock.reset(); this.step(inputs); }
   snapshot(): SimulationSnapshot {
-    return {
-      frame: this.frame,
-      round: this.round,
-      roundFramesRemaining: this.roundFramesRemaining,
-      phase: this.phase,
-      roundWins: [...this.roundWins],
-      roundWinnerId: this.roundWinnerId,
-      roundEndReason: this.roundEndReason,
-      matchWinnerId: this.matchWinnerId,
-      characters: this.characters.map((character) => ({
-        ...character,
-        attack: character.attack ? { ...character.attack } : undefined,
-        grab: character.grab ? { ...character.grab } : undefined,
-      })),
-      activeHitboxes: this.attackResolver.activeHitboxes(this.characters),
-      hitEvents: [...this.lastHitEvents],
-      recentContacts: this.recentContacts.map(({ frame, event }) => ({ frame, event: { ...event } })),
-    };
+    return { frame: this.frame, elapsedFrames: this.elapsedFrames, round: this.round, roundFramesRemaining: this.roundFramesRemaining,
+      hitstopFramesRemaining: this.hitstopFramesRemaining, ultimateActivation: structuredClone(this.ultimateActivation), explosions: structuredClone(this.explosions),
+      phase: this.phase, roundWins: [...this.roundWins], roundWinnerId: this.roundWinnerId,
+      roundEndReason: this.roundEndReason, matchWinnerId: this.matchWinnerId,
+      characters: structuredClone(this.characters), activeHitboxes: this.phase === 'fight' ? this.resolver.activeHitboxes(this.characters, this.projectiles) : [],
+      projectiles: structuredClone(this.projectiles),
+      hitEvents: this.lastHitEvents.map(event => ({ ...event })), recentContacts: this.recentContacts.map(entry => ({ frame: entry.frame, event: { ...entry.event } })) };
   }
-
-  isMatchOver(): boolean {
-    return this.phase === 'match-over';
+  clearInputHistory(): void {
+    this.clock.reset(); this.parsers.forEach(parser => parser.clear());
+    this.jumpHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
+    this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
   }
-
-  resetMatch(trainingDistance?: number): void {
-    if (this.options.training && trainingDistance !== undefined && Number.isFinite(trainingDistance)) {
-      this.trainingDistance = trainingDistance;
-    }
-    this.clock.reset();
-    this.frame = 0;
-    this.round = 1;
-    this.roundWins = [0, 0];
-    this.phase = 'fight';
-    this.roundWinnerId = undefined;
-    this.roundEndReason = undefined;
-    this.matchWinnerId = undefined;
-    this.roundEndFramesRemaining = 0;
-    this.resetRoundState();
+  isMatchOver(): boolean { return this.phase === 'match-over'; }
+  resetMatch(distance?: number): void {
+    if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
+    this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
+    this.resetRound();
   }
-
-  /** Training convenience only; health is restored at a quiet logical boundary. */
-  setTrainingAutoRestore(enabled: boolean): void {
-    if (!this.options.training) return;
-    this.trainingAutoRestore = enabled;
-    this.trainingQuietFrames = 0;
+  fillTrainingRage(): void {
+    if (this.options.training) this.characters.forEach(character => { character.rage = character.maxRage; });
   }
+  setTrainingAutoRestore(enabled: boolean): void { if (this.options.training) { this.trainingAutoRestore = enabled; this.quietFrames = 0; } }
 
+  private createCharacters(): [CharacterState, CharacterState] {
+    const { left, right, floorY } = this.config.arena;
+    const center = (left + right) / 2;
+    const distance = Math.min(this.config.arena.maxSeparation ?? Infinity,
+      this.trainingDistance ?? this.options.initialDistance ?? Math.min(420, (right - left) * .55));
+    return this.definitions.map((fighter, index) => ({
+      characterId: `player-${index + 1}`, fighterId: fighter.id, collision: structuredClone(fighter.collision),
+      x: clamp(center + (index === 0 ? -1 : 1) * distance / 2, left + fighter.collision.bodyWidth / 2, right - fighter.collision.bodyWidth / 2),
+      y: floorY, facing: index === 0 ? 'right' : 'left', health: fighter.maxHealth, maxHealth: fighter.maxHealth, rage: 0, maxRage: fighter.rage?.maximum ?? 0,
+      mode: 'neutral', stateStartedFrame: this.frame, remainingStateFrames: 0, verticalVelocity: 0,
+      grounded: true, crouching: false, hitFlashFrames: 0,
+    })) as [CharacterState, CharacterState];
+  }
+  private resetRound(): void {
+    this.clearInputHistory(); this.characters = this.createCharacters(); this.roundFramesRemaining = this.config.match.roundDurationFrames;
+    this.roundWinnerId = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
+    this.lastHitEvents = []; this.recentContacts = []; this.quietFrames = 0;
+    this.hitstopFramesRemaining = 0; this.ultimateActivation = undefined; this.pendingLighters = []; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
+  }
   private step(inputs: readonly FrameInput[]): void {
+    this.elapsedFrames += 1;
+    this.lastHitEvents = [];
     if (this.phase !== 'fight') {
-      this.advanceRoundTransition();
-      this.frame += 1;
-      return;
-    }
-    const previousX = this.characters.map(({ x }) => x) as [number, number];
-    const previousStates = this.characters.map(({ mode, attack, crouching }) => ({ mode, attack, crouching }));
-    const nextX = [...previousX] as [number, number];
-    this.lastHitEvents = [];
-    const freshlyPressedFor = (index: number): ReadonlySet<AttackButton> => {
-      const input = inputs[index];
-      const previous = this.previousInputButtons[index];
-      const pressed = new Set([...(input?.buttons ?? [])].filter((button) => !previous?.has(button)));
-      this.previousInputButtons[index] = new Set(input?.buttons ?? []);
-      return pressed;
-    };
-    const freshlyPressed: [ReadonlySet<AttackButton>, ReadonlySet<AttackButton>] = [
-      freshlyPressedFor(0), freshlyPressedFor(1),
-    ];
-    const freshBack: [boolean, boolean] = [0, 1].map((index) => {
-      const direction = inputs[index]?.direction ?? 'N';
-      const pressed = direction === 'B' && this.previousDirections[index] !== 'B';
-      this.previousDirections[index] = direction;
-      return pressed;
-    }) as [boolean, boolean];
-
-    const canControlAtInput = this.characters.map((character) => !character.attack && !isStunned(character));
-    // Read both commands before deciding guard, so a new attack is visible to
-    // either defender on the same frame regardless of player iteration order.
-    const commands = this.characters.map((character, index) => {
-      const input = inputs[index] ?? neutralInput();
-      const canControl = canControlAtInput[index];
-      const airborneAtInput = !character.grounded;
-      character.movementDirection = undefined;
-      this.updateStunAndFeedback(character);
-      this.updateVerticalMovement(character, input, index, canControl);
-      const crouchingInput = input.direction === 'D' && character.crouching;
-      return this.commandParsers[index].update(
-        input,
-        this.frame,
-        this.fighterMoves[index],
-        { airborne: airborneAtInput, crouching: crouchingInput },
-      );
-    });
-    const attacking = this.characters.map((character, index) => Boolean(character.attack) ||
-      Boolean(commands[index] && (canControlAtInput[index] || this.canCancel(character, commands[index]))));
-
-    this.characters.forEach((character, index) => {
-      const input = inputs[index] ?? neutralInput();
-      const canControl = canControlAtInput[index];
-      const moveCommand = commands[index];
-
-      if (canControl) {
-        const horizontal = horizontalAxis(input.direction);
-        const facingSign = character.facing === 'right' ? 1 : -1;
-        const guarding = character.grounded && (input.direction === 'B' || input.direction === 'DB') && attacking[1 - index];
-        const stationary = guarding || (character.grounded && character.crouching);
-        const dashing = this.updateDash(index, horizontal, character.grounded && !stationary);
-        const speed = dashing
-          ? this.config.movement.dashSpeed
-          : this.fighterDefinitions[index].movement.walkSpeed;
-        if (!stationary) nextX[index] += horizontal * facingSign * speed;
-        if (guarding) character.mode = 'blocking';
-        else if (dashing) character.mode = 'dashing';
-        else if (horizontal !== 0 && character.grounded && !character.crouching) character.mode = 'moving';
-        if (character.mode === 'moving' || character.mode === 'dashing') {
-          character.movementDirection = horizontal < 0 ? 'backward' : 'forward';
-        }
-
-      } else {
-        this.previousHorizontalAxis[index] = horizontalAxis(input.direction);
-        this.dashFramesRemaining[index] = 0;
-        this.dashAxis[index] = 0;
+      if (this.phase === 'round-over' && --this.transitionFrames <= 0) {
+        if (this.roundWins.some(wins => wins >= this.config.match.roundCount) || this.roundEndReason === 'draw') {
+          this.phase = 'match-over'; this.matchWinnerId = this.roundWinnerId;
+        } else { this.round += 1; this.phase = 'fight'; this.resetRound(); }
       }
-
-      if (canControl || this.canCancel(character, moveCommand)) {
-        const move = this.startAttack(character, moveCommand, input.direction);
-        if (move?.advance && !move.airborne && !character.crouching) {
-          const facingSign = character.facing === 'right' ? 1 : -1;
-          nextX[index] += facingSign * move.advance;
-        }
+      this.frame += 1; return;
+    }
+    if (this.ultimateActivation) {
+      if (this.ultimateActivation.remainingFrames > 0) {
+        this.ultimateActivation.remainingFrames -= 1;
+        this.ultimateActivation.elapsedFrames += 1;
+        return;
       }
-
-      const halfWidth = character.collision.bodyWidth / 2;
-      nextX[index] = clamp(
-        nextX[index],
-        this.config.arena.left + halfWidth,
-        this.config.arena.right - halfWidth,
-      );
-    });
-
-    this.characters.forEach((character, index) => { character.x = nextX[index]; });
-    this.resolveBodySpacing(previousX);
-    this.updateFacing();
-    this.lastHitEvents = this.attackResolver.resolve(this.characters, inputs, freshlyPressed, freshBack);
-    this.lastHitEvents.forEach((event) => {
-      const attacker = this.characters.find((character) => character.characterId === event.attackerId);
-      const target = this.characters.find((character) => character.characterId === event.targetId);
-      if (!attacker || !target) return;
-      const direction = attacker.facing === 'right' ? 1 : -1;
-      const displacedX = event.targetOffsetFromAttacker === undefined
-        ? target.x + direction * event.pushback
-        : attacker.x + direction * event.targetOffsetFromAttacker;
-      target.x = clamp(displacedX, this.config.arena.left + target.collision.bodyWidth / 2,
-        this.config.arena.right - target.collision.bodyWidth / 2);
-    });
-    this.resolveBodySpacing(this.characters.map(({ x }) => x));
-    this.updateFacing();
-    this.advanceAttacks();
-    this.frame += 1;
-    if (this.lastHitEvents.length) {
-      this.recentContacts.push(...this.lastHitEvents.map((event) => ({ frame: this.frame, event })));
-      this.recentContacts = this.recentContacts.slice(-32);
+      this.ultimateActivation = undefined;
     }
-    if (!this.options.training) {
-      this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
-      if (this.characters.some(({ health }) => health === 0)) this.finishRound('knockout');
-      else if (this.roundFramesRemaining === 0) this.finishRound('time');
-    }
-    this.restoreTrainingHealthIfQuiet();
-    this.characters.forEach((character, index) => {
-      const previous = previousStates[index];
-      const renewedReaction = this.lastHitEvents.some((event) =>
-        (event.targetId === character.characterId && ['hit', 'block', 'throw', 'throw-start'].includes(event.outcome)) ||
-        (event.attackerId === character.characterId && event.outcome === 'parry'));
-      if (character.mode !== previous.mode || character.attack !== previous.attack ||
-          character.crouching !== previous.crouching || renewedReaction) character.stateStartedFrame = this.frame;
-    });
-  }
-
-  private restoreTrainingHealthIfQuiet(): void {
-    if (!this.options.training || !this.trainingAutoRestore) return;
-    const quiet = !this.lastHitEvents.length && this.characters.every((character) =>
-      character.grounded && !character.attack && !character.grab && !isStunned(character));
-    this.trainingQuietFrames = quiet ? this.trainingQuietFrames + 1 : 0;
-    if (this.trainingQuietFrames < 90) return;
-    this.characters.forEach((character) => { character.health = character.maxHealth; });
-    this.trainingQuietFrames = 0;
-  }
-
-  private finishRound(reason: 'knockout' | 'time'): void {
-    const [first, second] = this.characters;
-    let winnerIndex = -1;
-    if (reason === 'knockout') {
-      if (first.health !== second.health) winnerIndex = first.health > second.health ? 0 : 1;
-    } else if (first.health !== second.health) {
-      winnerIndex = first.health > second.health ? 0 : 1;
-    }
-    this.roundWinnerId = winnerIndex >= 0 ? this.characters[winnerIndex]?.characterId : undefined;
-    this.roundEndReason = winnerIndex >= 0 ? reason : 'draw';
-    if (winnerIndex >= 0) this.roundWins[winnerIndex] += 1;
-    this.characters.forEach((character) => {
-      character.attack = undefined;
-      character.hitFlashFrames = 0;
-      if (['startup', 'active', 'recovery'].includes(character.mode)) character.mode = 'neutral';
-    });
-    this.phase = 'round-over';
-    this.roundEndFramesRemaining = Math.max(0, this.config.match.roundEndPauseFrames);
-    if (this.roundEndFramesRemaining === 0) this.advanceRoundTransition();
-  }
-
-  private advanceRoundTransition(): void {
-    if (this.phase !== 'round-over') return;
-    this.roundEndFramesRemaining -= 1;
-    if (this.roundEndFramesRemaining > 0) return;
-    if (this.round >= Math.max(1, this.config.match.roundCount)) {
-      this.phase = 'match-over';
-      this.matchWinnerId = this.roundWins[0] === this.roundWins[1]
-        ? undefined
-        : this.characters[this.roundWins[0] > this.roundWins[1] ? 0 : 1]?.characterId;
-      return;
-    }
-    this.round += 1;
-    this.phase = 'fight';
-    this.roundWinnerId = undefined;
-    this.roundEndReason = undefined;
-    this.resetRoundState();
-  }
-
-  private resetRoundState(): void {
-    this.trainingQuietFrames = 0;
-    const positions = this.spawnPositions();
-    this.characters.forEach((character, index) => {
-      const definition = this.fighterDefinitions[index];
-      if (!definition) return;
-      Object.assign(character, {
-        x: positions[index],
-        y: this.config.arena.floorY,
-        facing: index === 0 ? 'right' : 'left',
-        movementDirection: undefined,
-        health: this.configuredMaxHealth(definition),
-        maxHealth: this.configuredMaxHealth(definition),
-        mode: 'neutral',
-        stateStartedFrame: this.frame,
-        remainingStateFrames: 0,
-        verticalVelocity: 0,
-        grounded: true,
-        crouching: false,
-        attack: undefined,
-        grab: undefined,
-        hitFlashFrames: 0,
+    // Read before any world/timer mutation so activation freezes both players symmetrically.
+    if (!this.hitstopFramesRemaining) {
+      this.characters.forEach((character,index) => this.readCommand(character,index,inputs[index] ?? neutral()));
+      const owners: string[] = [];
+      this.characters.forEach((character,index) => {
+        const move = this.pendingCommands[index]?.move;
+        if (move?.category === 'ultimate' && !locked(character) && this.canStart(character,index,move)) {
+          this.startMove(character,index,move);
+          character.mode = 'startup'; character.stateStartedFrame = this.frame;
+          owners.push(character.characterId);
+        }
       });
-      this.commandParsers[index]?.clear();
-      this.previousInputButtons[index]?.clear();
-      this.previousDirections[index] = 'N';
-      this.jumpHeld[index] = false;
-      this.previousHorizontalAxis[index] = 0;
-      this.lastTapAxis[index] = 0;
-      this.lastTapFrame[index] = Number.NEGATIVE_INFINITY;
-      this.dashFramesRemaining[index] = 0;
-      this.dashAxis[index] = 0;
-    });
-    this.lastHitEvents = [];
-    this.recentContacts = [];
-    this.roundFramesRemaining = this.config.match.roundDurationFrames;
-  }
-
-  private spawnPositions(): readonly [number, number] {
-    const { left, right } = this.config.arena;
-    const initialDistance = this.trainingDistance ?? this.options.initialDistance;
-    if (initialDistance !== undefined && Number.isFinite(initialDistance)) {
-      const halfWidths = this.fighterDefinitions.map((definition) => definition.collision.bodyWidth / 2);
-      const minimumDistance = halfWidths[0] + halfWidths[1];
-      const distance = clamp(initialDistance, minimumDistance, right - left - minimumDistance);
-      const center = (left + right) / 2;
-      return [clamp(center - distance / 2, left + halfWidths[0], right - halfWidths[0]),
-        clamp(center + distance / 2, left + halfWidths[1], right - halfWidths[1])];
-    }
-    const inset = Math.min(190, (right - left) * 0.22);
-    return [left + inset, right - inset];
-  }
-
-  private createCharacter(
-    characterId: string,
-    definition: CharacterDefinition,
-    x: number,
-    facing: CharacterState['facing'],
-  ): CharacterState {
-    return {
-      characterId,
-      fighterId: definition.id,
-      collision: definition.collision,
-      x,
-      y: this.config.arena.floorY,
-      facing,
-      health: this.configuredMaxHealth(definition),
-      maxHealth: this.configuredMaxHealth(definition),
-      mode: 'neutral',
-      stateStartedFrame: this.frame,
-      remainingStateFrames: 0,
-      verticalVelocity: 0,
-      grounded: true,
-      crouching: false,
-      hitFlashFrames: 0,
-    };
-  }
-
-  private configuredMaxHealth(definition: CharacterDefinition): number {
-    return Math.min(definition.maxHealth, this.config.match.maxHealth);
-  }
-
-  private updateStunAndFeedback(character: CharacterState): void {
-    if (character.hitFlashFrames > 0) character.hitFlashFrames -= 1;
-    if (character.mode === 'grabbed') return;
-    if (!isStunned(character)) return;
-
-    character.remainingStateFrames -= 1;
-    if (character.remainingStateFrames <= 0) {
-      character.remainingStateFrames = 0;
-      character.mode = 'neutral';
-    }
-  }
-
-  private updateVerticalMovement(
-    character: CharacterState,
-    input: FrameInput,
-    index: number,
-    canControl: boolean,
-  ): void {
-    const vertical = verticalAxis(input.direction);
-    const jumpPressed = vertical === 'up' && !this.jumpHeld[index];
-    this.jumpHeld[index] = vertical === 'up';
-
-    if (canControl && jumpPressed && character.grounded) {
-      character.verticalVelocity = this.fighterDefinitions[index].movement.jumpVelocity;
-      character.grounded = false;
-    }
-
-    if (!character.grounded) {
-      character.verticalVelocity += this.config.movement.gravity;
-      character.y += character.verticalVelocity;
-      if (character.y >= this.config.arena.floorY) {
-        character.y = this.config.arena.floorY;
-        character.verticalVelocity = 0;
-        character.grounded = true;
+      if (owners.length) {
+        this.ultimateActivation = { ownerIds: owners, elapsedFrames: 0, remainingFrames: ULTIMATE_ACTIVATION_FRAMES - 1 };
+        return;
       }
     }
-
-    const crouchingAttack = character.attack
-      ? this.moveFor(character, character.attack.moveId)?.crouching === true
-      : false;
-    character.crouching = (character.grounded && vertical === 'down' && (canControl || character.mode === 'blockstun')) || crouchingAttack;
-    if (canControl && !character.attack) {
-      character.mode = character.crouching ? 'crouching' : character.grounded ? 'neutral' : 'airborne';
-    }
-  }
-
-  private startAttack(
-    character: CharacterState,
-    move: MoveDefinition | undefined,
-    direction: FrameInput['direction'],
-  ): MoveDefinition | undefined {
-    if (!move) return undefined;
-
-    character.attack = {
-      moveId: move.id,
-      buttons: [...move.input.buttons],
-      airborne: move.airborne === true,
-      crouching: move.crouching === true,
-      elapsedFrames: 0,
-      hasHit: false,
-      preciseExecution: move.precisionWindowFrames !== undefined,
-      throwDirection: move.throw
-        ? isBackwardDirection(direction) ? 'backward' : 'forward'
-        : undefined,
-    };
-    character.crouching = move.crouching === true;
-    character.mode = 'startup';
-    character.movementDirection = undefined;
-    return move;
-  }
-
-  private canCancel(character: CharacterState, nextMove: MoveDefinition | undefined): boolean {
-    const attack = character.attack;
-    const currentMove = attack ? this.moveFor(character, attack.moveId) : undefined;
-    const cancelRule = currentMove?.cancelOnHit;
-    if (!attack || !nextMove || attack.hitOutcome !== 'hit' || attack.hitElapsedFrames === undefined || !cancelRule) {
-      return false;
-    }
-    return attack.elapsedFrames - attack.hitElapsedFrames <= cancelRule.windowFrames &&
-      cancelRule.moveIds.includes(nextMove.id);
-  }
-
-  private updateDash(index: number, horizontal: number, grounded: boolean): boolean {
-    if (!grounded) {
-      this.previousHorizontalAxis[index] = horizontal;
-      this.lastTapAxis[index] = 0;
-      this.lastTapFrame[index] = Number.NEGATIVE_INFINITY;
-      this.dashFramesRemaining[index] = 0;
-      this.dashAxis[index] = 0;
-      return false;
-    }
-
-    const wasPressed = this.previousHorizontalAxis[index] !== 0;
-    const isPressed = horizontal !== 0;
-    if (isPressed && (!wasPressed || horizontal !== this.previousHorizontalAxis[index])) {
-      const withinWindow = this.frame - this.lastTapFrame[index] <= this.config.movement.doubleTapWindowFrames;
-      if (horizontal === this.lastTapAxis[index] && withinWindow) {
-        this.dashFramesRemaining[index] = this.config.movement.dashDurationFrames;
-        this.dashAxis[index] = horizontal;
-      }
-      this.lastTapAxis[index] = horizontal;
-      this.lastTapFrame[index] = this.frame;
-    }
-
-    this.previousHorizontalAxis[index] = horizontal;
-    if (!isPressed || horizontal !== this.dashAxis[index]) {
-      this.dashFramesRemaining[index] = 0;
-      return false;
-    }
-    if (this.dashFramesRemaining[index] <= 0) return false;
-
-    this.dashFramesRemaining[index] -= 1;
-    return true;
-  }
-
-  private advanceAttacks(): void {
-    this.characters.forEach((character) => {
-      const attack = character.attack;
-      const move = attack ? this.moveFor(character, attack.moveId) : undefined;
-      if (!attack || !move) return;
-
-      attack.elapsedFrames += 1;
-      const activeStartsAt = move.startup;
-      const recoveryStartsAt = move.startup + move.activeFrames;
-      const totalFrames = recoveryStartsAt + move.recovery;
-
-      if (attack.elapsedFrames >= totalFrames) {
-        character.attack = undefined;
-        if (!isStunned(character)) character.mode = 'neutral';
-      } else if (attack.elapsedFrames >= recoveryStartsAt) {
-        character.mode = 'recovery';
-      } else if (attack.elapsedFrames >= activeStartsAt) {
-        character.mode = 'active';
-      } else {
-        character.mode = 'startup';
-      }
-    });
-  }
-
-  private resolveBodySpacing(previousX: readonly number[]): void {
-    const [first, second] = this.characters;
-    const minimumDistance = (first.collision.bodyWidth + second.collision.bodyWidth) / 2;
-    const airborneCrossing = (!first.grounded || !second.grounded) &&
-      Math.abs(first.y - second.y) >= minimumDistance;
-    if (airborneCrossing) return;
-
-    const firstWasLeft = previousX[0] <= previousX[1];
-    const overlap = firstWasLeft
-      ? first.x + minimumDistance > second.x
-      : second.x + minimumDistance > first.x;
-
-    if (!overlap) return;
-
-    // A moving opponent must not drag a guarding or crouching fighter along.
-    // Actual hit/block displacement is applied separately from body spacing.
-    const firstAnchored = isStationaryGrounded(first);
-    const secondAnchored = isStationaryGrounded(second);
-    if (firstAnchored && !secondAnchored) {
-      second.x = first.x + (firstWasLeft ? minimumDistance : -minimumDistance);
+    // The round clock uses real fixed ticks, independently of combat/animation time.
+    if (!this.options.training) this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
+    if (this.hitstopFramesRemaining > 0) {
+      this.characters.forEach((character, index) => this.readCommand(character, index, inputs[index] ?? neutral()));
+      this.hitstopFramesRemaining -= 1;
+      // Keep attacks/poses intact through the last impact tick, including KO/time-up.
+      if (!this.hitstopFramesRemaining && !this.options.training && !this.characters.some(c=>c.ultimateCapture || (c.knockdown && !c.grounded)) &&
+        (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
       return;
     }
-    if (secondAnchored && !firstAnchored) {
-      first.x = second.x + (firstWasLeft ? -minimumDistance : minimumDistance);
-      return;
-    }
-
-    const midpoint = (first.x + second.x) / 2;
-    const halfDistance = minimumDistance / 2;
-    if (firstWasLeft) {
-      first.x = midpoint - halfDistance;
-      second.x = midpoint + halfDistance;
+    const previousAnimationStates:CharacterAnimationState[]=this.characters.map(c=>({mode:c.mode,stateStartedFrame:c.stateStartedFrame,grounded:c.grounded,crouching:c.crouching,movementDirection:c.movementDirection,facing:c.facing,verticalVelocity:c.verticalVelocity}));
+    const previousTransitions=this.characters.map(c=>c.animationTransition?{startedFrame:c.animationTransition.startedFrame,from:c.animationTransition.from}:undefined);
+    const previousX = this.characters.map(character => character.x);
+    const attackingAtInput = this.characters.map(character => Boolean(character.attack));
+    const lockedAtInput = this.characters.map(character => locked(character));
+    // Ler ambos os comandos antes de avaliar guarda evita viés por ordem dos jogadores.
+    const commands = this.characters.map((character, index) => {
+      character.hitFlashFrames = Math.max(0, character.hitFlashFrames - 1);
+      const holdLastStunFrame = character.remainingStateFrames === 1 &&
+        (character.ultimateCapture || (character.mode === 'knockdown' && !character.grounded));
+      if (locked(character) && character.remainingStateFrames > 0 && !holdLastStunFrame) {
+        character.remainingStateFrames -= 1;
+        if (!character.remainingStateFrames) { character.mode = character.grounded ? 'neutral' : 'airborne'; character.knockdown = undefined; }
+      }
+      if (character.attack) {
+        const move = this.move(index, character.attack.moveId)!;
+        character.attack.elapsedFrames += 1;
+        if (character.attack.elapsedFrames >= move.startup + move.activeFrames + move.recovery) character.attack = undefined;
+      }
+      return this.pendingCommands[index]?.move;
+    });
+    this.characters.forEach((character, index) => {
+      const input = inputs[index] ?? neutral();
+      const opponent = this.characters[1 - index];
+      const wasLocked = lockedAtInput[index];
+      character.movementDirection = undefined;
+      const requested = commands[index];
+      if (!wasLocked && requested && this.canStart(character, index, requested)) {
+        this.startMove(character,index,requested);
+      }
+      if (character.attack) {
+        const move = this.move(index, character.attack.moveId)!;
+        const elapsed = character.attack.elapsedFrames;
+        if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
+        if (move.projectile && elapsed === move.startup) {
+          this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
+            x: character.x + (character.facing === 'right' ? 1 : -1) * character.collision.bodyWidth * 7 / 12, y: character.y, facing: character.facing,
+            velocity: move.projectile.speed * (character.facing === 'right' ? 1 : -1), remainingFrames: move.projectile.life,
+            verticalVelocity: move.projectile.verticalSpeed ?? 0, gravity: move.projectile.gravity ?? 0, phase: move.ultimateSequence ? 'confirm' : undefined,
+            visual: move.projectile.visual, attack: { ...character.attack, hasHit: false } });
+        }
+        character.mode = elapsed < move.startup ? 'startup' : elapsed < move.startup + move.activeFrames ? 'active' : 'recovery';
+      } else if (!wasLocked) {
+        character.crouching = character.grounded && input.direction.startsWith('D');
+        const threatening = Boolean(attackingAtInput[1 - index] || opponent.attack || commands[1 - index] || this.projectiles.some(p => p.ownerId === opponent.characterId));
+        const guard = threatening && (input.direction === 'B' || input.direction === 'DB');
+        if (guard) {
+          if(!character.grounded)this.moveCharacter(character,input,index);
+          character.mode = 'blocking'; this.dashFrames[index] = 0;
+        }
+        else this.moveCharacter(character, input, index);
+      } else this.dashFrames[index] = 0;
+      if (character.knockdown) { character.x += character.knockdown.velocityX; character.knockdown.velocityX *= .94; }
+      const up = input.direction.startsWith('U');
+      if (up && !this.jumpHeld[index] && character.grounded && !character.attack && !wasLocked) {
+        character.airborneStartedFrame=this.frame;
+        character.grounded = false; character.crouching = false; character.verticalVelocity = this.definitions[index].movement.jumpVelocity;
+        character.mode = 'airborne'; this.dashFrames[index] = 0;
+      }
+      this.jumpHeld[index] = up;
+      if (!character.grounded) {
+        character.y += character.verticalVelocity;
+        character.verticalVelocity += this.config.movement.gravity;
+        if (character.y >= this.config.arena.floorY) {
+          character.airborneStartedFrame=undefined;
+          character.y = this.config.arena.floorY; character.grounded = true; character.verticalVelocity = 0;
+          // Air basics end at landing; rising grounded specials retain their own recovery.
+          if (character.attack && this.move(index, character.attack.moveId)?.airborne && !this.move(index, character.attack.moveId)?.follows) {
+            character.attack = undefined; character.chain = undefined; character.mode = 'neutral';
+          }
+          if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';
+        }
+      }
+      if (character.attack || wasLocked || character.mode === 'blocking' || !character.grounded) this.previousAxis[index] = axis(input);
+    });
+    this.resolveBodies(previousX); this.resolveScreenEdges(previousX); this.updateFacing();
+    this.explosions = this.explosions.map(e => ({ ...e, remainingFrames: e.remainingFrames - 1 })).filter(e => e.remainingFrames > 0);
+    this.updateLighters();
+    this.projectiles.forEach(projectile => {
+      if (projectile.targetId) {
+        const target = this.characters.find(c => c.characterId === projectile.targetId)!;
+        const dx = target.x - projectile.x, dy = target.y - projectile.y;
+        const distance = Math.hypot(dx,dy) || 1;
+        const speed = Math.abs(this.move(this.characters.findIndex(c=>c.characterId===projectile.ownerId),projectile.attack.moveId)!.ultimateSequence!.lighterSpeed);
+        const step = Math.min(speed,distance);
+        projectile.velocity = dx/distance*step; projectile.verticalVelocity = dy/distance*step;
+        projectile.facing = dx >= 0 ? 'right' : 'left';
+      }
+      projectile.x += projectile.velocity;
+      projectile.y += projectile.verticalVelocity ?? 0;
+      projectile.verticalVelocity = (projectile.verticalVelocity ?? 0) + (projectile.gravity ?? 0);
+      projectile.remainingFrames -= 1;
+    });
+    this.lastHitEvents = this.resolver.resolve(this.characters, inputs, this.projectiles);
+    this.projectiles = this.projectiles.filter(p => {
+      const move = this.definitions.find(f=>f.id===p.fighterId)!.moves.find(m=>m.id===p.attack.moveId)!;
+      const box = createProjectileHitbox(p,move);
+      return !p.attack.hasHit && p.remainingFrames > 0 && p.x >= this.config.arena.left - 100 && p.x <= this.config.arena.right + 100 && box.y+box.height <= this.config.arena.floorY;
+    });
+    if (this.lastHitEvents.length) this.hitstopFramesRemaining = CONTACT_HITSTOP_FRAMES;
+    this.lastHitEvents.forEach(event => {
+      const attacker = this.characters.find(character => character.characterId === event.attackerId)!;
+      const target = this.characters.find(character => character.characterId === event.targetId)!;
+      const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
+      const sourceMove = this.move(attackerIndex,event.moveId)!;
+      const launcher = this.definitions[attackerIndex].combos?.find(recipe =>
+        recipe.launchVelocity !== undefined && recipe.moveIds.length === attacker.chain?.length &&
+        recipe.moveIds.every((id, step) => attacker.chain![step] === id));
+      if (launcher && event.outcome === 'hit' && !event.stage) {
+        target.grounded = false; target.crouching = false;
+        target.verticalVelocity = launcher.launchVelocity!;
+        target.airborneStartedFrame = this.frame;
+        target.remainingStateFrames = Math.max(target.remainingStateFrames, Math.ceil(-2 * launcher.launchVelocity! / this.config.movement.gravity) + 1);
+        event.defenderStunFrames = target.remainingStateFrames;
+        event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
+      }
+      if (event.stage === 'confirm' && event.outcome === 'hit') {
+        target.ultimateCapture = { ownerId: attacker.characterId };
+        target.crouching = false;
+        target.knockdown = undefined;
+        // Cancel upward momentum; the stunned defender falls upright before the lighter.
+        target.verticalVelocity = Math.max(0, target.verticalVelocity);
+        this.pendingLighters.push({ ownerId: attacker.characterId, targetId: target.characterId, fighterId: attacker.fighterId,
+          moveId: event.moveId, remainingFrames: sourceMove.ultimateSequence!.lighterDelay });
+      }
+      if (event.stage === 'explosion' && event.outcome === 'hit') {
+        const sequence = sourceMove.ultimateSequence!;
+        target.ultimateCapture = undefined;
+        target.mode = 'knockdown';
+        let flightFrames = 0, landingY = target.y, launchVelocity = sequence.launchSpeed;
+        do { landingY += launchVelocity; launchVelocity += this.config.movement.gravity; flightFrames += 1; } while (landingY < this.config.arena.floorY && flightFrames < 300);
+        target.remainingStateFrames = sequence.knockdownFrames + flightFrames;
+        event.defenderStunFrames = target.remainingStateFrames; event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
+        target.grounded = false; target.crouching = false; target.verticalVelocity = sequence.launchSpeed;
+        target.airborneStartedFrame = this.frame;
+        target.knockdown = { velocityX: sequence.knockbackSpeed * (event.pushbackDirection === 'right' ? 1 : -1) };
+        this.explosions.push({x: target.x,y:target.y-85,remainingFrames:10});
+      }
+      const gain = this.definitions[attackerIndex].rage;
+      const received = this.definitions[targetIndex].rage;
+      if (gain && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
+      if (received && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
+      target.x += event.pushback * ((event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1);
+      this.recentContacts.push({ frame: this.frame, event });
+    });
+    this.recentContacts = this.recentContacts.filter(entry => this.frame - entry.frame < 180).slice(-20);
+    this.resolveBodies(); this.resolveScreenEdges(previousX);
+    this.characters.forEach((character,index)=>{
+      if (!character.attack || locked(character)) character.chain = undefined;
+      const previous=previousAnimationStates[index];
+      if(character.mode!==previous.mode)character.stateStartedFrame=this.frame;
+      const directionalPose=['moving','dashing'].includes(character.mode);
+      if(character.mode!==previous.mode || character.grounded!==previous.grounded || character.crouching!==previous.crouching ||
+        (directionalPose && character.movementDirection!==previous.movementDirection)){
+        character.animationTransition={startedFrame:this.frame+1,from:previous,previous:previousTransitions[index]};
+      }
+    });
+    if (this.options.training) {
+      const quiet = this.characters.every(character => !character.attack && !locked(character) && this.projectiles.length === 0 && this.pendingLighters.length === 0);
+      this.quietFrames = quiet ? this.quietFrames + 1 : 0;
+      if (this.trainingAutoRestore && this.quietFrames >= 90) this.characters.forEach(character => { character.health = character.maxHealth; });
     } else {
-      second.x = midpoint - halfDistance;
-      first.x = midpoint + halfDistance;
+      if (!this.hitstopFramesRemaining && !this.characters.some(c=>c.ultimateCapture || (c.knockdown && !c.grounded)) &&
+        (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
+    }
+    this.frame += 1;
+  }
+  private updateLighters(): void {
+    this.pendingLighters = this.pendingLighters.filter(pending => {
+      pending.remainingFrames = Math.max(0, pending.remainingFrames - 1);
+      const target = this.characters.find(c => c.characterId === pending.targetId)!;
+      if (pending.remainingFrames > 0 || !target.grounded) return true;
+      const owner = this.characters.find(c => c.characterId === pending.ownerId)!;
+      const move = this.definitions.find(f => f.id === pending.fighterId)!.moves.find(m => m.id === pending.moveId)!;
+      owner.ultimateThrowStartedFrame = this.frame;
+      this.projectiles.push({ id: this.nextProjectileId++, ownerId: owner.characterId, fighterId: owner.fighterId,
+        x: owner.x, y: owner.y, facing: owner.facing, velocity: move.ultimateSequence!.lighterSpeed, verticalVelocity: 0, gravity: 0,
+        remainingFrames: 100, visual: 'lighter', phase: 'lighter', targetId: target.characterId,
+        attack: { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false } });
+      return false;
+    });
+  }
+  private startMove(character: CharacterState, index: number, move: MoveDefinition): void {
+        const previous = character.attack;
+        const promotion = previous && previous.elapsedFrames <= 3 && !previous.hasHit &&
+          move.input.buttons.length > previous.buttons.length;
+        character.chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), move.id] : [move.id];
+        character.chainLastFrame = this.frame;
+        character.rage = Math.max(0, character.rage - (move.rageCost ?? 0));
+        character.attack = { moveId: move.id, commandFrame: this.frame, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false };
+        character.crouching = Boolean(move.crouching); this.dashFrames[index] = 0;
+        this.pendingCommands[index] = undefined;
+        if (move.movement?.launch) {
+          character.grounded = false; character.airborneStartedFrame = this.frame;
+          character.verticalVelocity = move.movement.launch;
+        }
+  }
+  private readCommand(character: CharacterState, index: number, input: FrameInput): void {
+    if (this.pendingCommands[index] && this.pendingCommands[index]!.expires < this.frame) this.pendingCommands[index] = undefined;
+    const moves = this.definitions[index].moves.filter(move => !move.follows || character.attack?.moveId === move.follows)
+      .sort((left, right) => Number(Boolean(right.follows)) - Number(Boolean(left.follows)))
+      .map(move => move.follows ? { ...move, sequenceAfterFrame: character.attack?.commandFrame } : move);
+    const command = this.parsers[index].update(input, this.frame, moves,
+      { airborne: !character.grounded, crouching: input.direction.startsWith('D') && character.grounded });
+    if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6 };
+  }
+  private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
+    if ((move.rageCost ?? 0) > character.rage) return false;
+    if (Boolean(move.airborne) !== !character.grounded) return false;
+    const previous = character.attack;
+    if (move.follows) return previous?.moveId === move.follows && previous.hasHit && previous.elapsedFrames <= (move.followWindow ?? 36);
+    if (!previous) return true;
+    // A chord completed within the input grace window replaces its uncommitted single.
+    if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
+      previous.buttons.every(button => move.input.buttons.includes(button))) return true;
+    if (!previous.hasHit) return false;
+    const chain = [...(character.chain ?? [previous.moveId]), move.id];
+    return (this.definitions[index].combos ?? []).some(recipe =>
+      chain.length <= recipe.moveIds.length && chain.every((id, step) => recipe.moveIds[step] === id));
+  }
+  private move(index: number, id: string): MoveDefinition | undefined { return this.definitions[index].moves.find(move => move.id === id); }
+  private moveCharacter(character: CharacterState, input: FrameInput, index: number): void {
+    const horizontal = axis(input);
+    const movement = this.definitions[index].movement;
+    const grounded = character.grounded;
+    if (grounded && !character.crouching && horizontal && horizontal !== this.previousAxis[index]) {
+      if (this.dashFrames[index] === 0 && this.tapAxis[index] === horizontal && this.frame - this.tapFrame[index] <= this.config.movement.doubleTapWindowFrames) {
+        this.dashFrames[index] = this.config.movement.dashDurationFrames; this.dashAxis[index] = horizontal;
+      }
+      this.tapAxis[index] = horizontal; this.tapFrame[index] = this.frame;
+    }
+    if(grounded && !character.crouching && this.dashFrames[index]===0 && input.dash){
+      this.dashAxis[index]=input.dash==='F'?1:-1;this.dashFrames[index]=this.config.movement.dashDurationFrames;
+    }
+    this.previousAxis[index] = horizontal;
+    if (character.crouching) {
+      this.dashFrames[index] = 0; this.dashAxis[index] = 0; character.mode = 'crouching'; return;
+    }
+    if (!grounded || (horizontal !== 0 && this.dashFrames[index] > 0 && horizontal !== this.dashAxis[index])) {
+      this.dashFrames[index] = 0; this.dashAxis[index] = 0;
+    }
+    let speed = horizontal > 0 ? movement.walkSpeed : movement.backwardWalkSpeed;
+    let moveAxis = horizontal;
+    if (this.dashFrames[index] > 0 && grounded && !character.crouching) {
+      moveAxis = this.dashAxis[index]; speed = moveAxis > 0 ? movement.dashSpeed : movement.backdashSpeed;
+      this.dashFrames[index] -= 1; character.mode = 'dashing';
+    } else character.mode = !grounded ? 'airborne' : character.crouching ? 'crouching' : horizontal ? 'moving' : 'neutral';
+    if (character.crouching) { moveAxis = 0; this.dashFrames[index] = 0; }
+    if (moveAxis) {
+      character.x += moveAxis * speed * (character.facing === 'right' ? 1 : -1);
+      character.movementDirection = moveAxis > 0 ? 'forward' : 'backward';
     }
   }
-
+  /** Stop outward movement at the shared viewport edge; keep the other fighter anchored. */
+  private resolveScreenEdges(previousX: readonly number[]): void {
+    const configuredLimit = this.config.arena.maxSeparation;
+    if (configuredLimit === undefined) return;
+    // Prone bodies occupy more horizontal space; reserve it without changing zoom or dragging the other fighter.
+    const extraMargin = Math.max(0, ...this.characters.map(c => c.mode === 'knockdown' ? knockdownRadius(c) - FIGHT_SIDE_MARGIN : 0));
+    const limit = Math.max(0, configuredLimit - extraMargin * 2);
+    const leftIndex = this.characters[0].x <= this.characters[1].x ? 0 : 1;
+    const rightIndex = 1 - leftIndex;
+    const left = this.characters[leftIndex], right = this.characters[rightIndex];
+    const excess = right.x - left.x - limit;
+    if (excess <= 0) return;
+    const leftOut = Math.max(0, previousX[leftIndex] - left.x);
+    const rightOut = Math.max(0, right.x - previousX[rightIndex]);
+    const total = leftOut + rightOut;
+    const leftShare = total > 0 ? leftOut / total : .5;
+    left.x += excess * leftShare;
+    right.x -= excess * (1 - leftShare);
+  }
+  private resolveBodies(previousX = this.characters.map(character => character.x)): void {
+    const { left, right } = this.config.arena;
+    this.characters.forEach(character => { character.x = clamp(character.x, left + wallInset(character), right - wallInset(character)); });
+    const [a, b] = this.characters;
+    const minimum = (a.collision.bodyWidth + b.collision.bodyWidth) / 2;
+    if ((!a.grounded || !b.grounded) && Math.abs(a.y - b.y) >= minimum) return;
+    const aWasLeft = previousX[0] <= previousX[1];
+    if ((aWasLeft ? b.x - a.x : a.x - b.x) >= minimum) return;
+    const anchored = (character: CharacterState) => character.grounded &&
+      (character.crouching || character.mode === 'blocking' || character.mode === 'blockstun');
+    if (anchored(a) && !anchored(b)) b.x = a.x + (aWasLeft ? minimum : -minimum);
+    else if (anchored(b) && !anchored(a)) a.x = b.x + (aWasLeft ? -minimum : minimum);
+    else {
+      const middle = (a.x + b.x) / 2;
+      a.x = middle + (aWasLeft ? -minimum / 2 : minimum / 2);
+      b.x = middle + (aWasLeft ? minimum / 2 : -minimum / 2);
+    }
+    const first = aWasLeft ? a : b, second = aWasLeft ? b : a;
+    if (first.x < left + wallInset(first)) {
+      first.x = left + wallInset(first); second.x = first.x + minimum;
+    }
+    if (second.x > right - wallInset(second)) {
+      second.x = right - wallInset(second); first.x = second.x - minimum;
+    }
+  }
   private updateFacing(): void {
     const [first, second] = this.characters;
-    if (first.x < second.x) {
-      first.facing = 'right';
-      second.facing = 'left';
-    } else if (first.x > second.x) {
-      first.facing = 'left';
-      second.facing = 'right';
-    }
+    if (first.x === second.x) return;
+    first.facing = first.x < second.x ? 'right' : 'left'; second.facing = first.facing === 'right' ? 'left' : 'right';
   }
-
-  private moveFor(character: CharacterState, moveId: string): MoveDefinition | undefined {
-    const index = character.characterId === 'player-1' ? 0 : 1;
-    return this.fighterMoves[index].find((move) => move.id === moveId);
+  private finishRound(): void {
+    const [first, second] = this.characters;
+    const winner = first.health === second.health ? undefined : first.health > second.health ? 0 : 1;
+    this.roundWinnerId = winner === undefined ? undefined : this.characters[winner].characterId;
+    this.roundEndReason = winner === undefined ? 'draw' : this.characters.some(character => character.health === 0) ? 'knockout' : 'time';
+    if (winner !== undefined) this.roundWins[winner] += 1;
+    this.characters.forEach(character => { character.attack = undefined; }); this.projectiles = []; this.pendingLighters = []; this.ultimateActivation = undefined;
+    this.phase = 'round-over'; this.transitionFrames = this.config.match.roundEndPauseFrames;
   }
-}
-
-function neutralInput(): FrameInput {
-  return { direction: 'N', buttons: new Set() };
-}
-
-function isStationaryGrounded(character: CharacterState): boolean {
-  return character.grounded && (character.crouching || character.mode === 'blocking' || character.mode === 'blockstun');
-}
-
-function horizontalAxis(direction: FrameInput['direction']): number {
-  return direction.endsWith('F') ? 1 : direction.endsWith('B') ? -1 : 0;
-}
-
-function verticalAxis(direction: FrameInput['direction']): 'up' | 'down' | 'neutral' {
-  if (direction.startsWith('U')) return 'up';
-  if (direction.startsWith('D')) return 'down';
-  return 'neutral';
-}
-
-function isBackwardDirection(direction: FrameInput['direction']): boolean {
-  return direction === 'B' || direction === 'DB' || direction === 'UB';
-}
-
-function isStunned(character: CharacterState): boolean {
-  return character.mode === 'hitstun' || character.mode === 'blockstun' ||
-    character.mode === 'grabbed' || character.mode === 'throwRecovery';
-}
-
-function clamp(value: number, minimum: number, maximum: number): number {
-  return Math.min(Math.max(value, minimum), maximum);
 }

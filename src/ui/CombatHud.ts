@@ -1,127 +1,83 @@
-// src/ui/CombatHud.ts
-import Phaser from 'phaser';
+import { LOGICAL_VIEW } from '../rendering/presentation';
+import type Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { contactLabel, MODE_LABELS } from './combatLabels';
+import { getSystemControls, keyLabel } from '../input/controlSettings';
+import { HUD, hudText, drawDiamond, healthBarFill } from './hudTheme';
 
-/** HUD provisório, atualizado exclusivamente a partir de um snapshot da simulação. */
+/** Minimal HUD; all values and round markers reflect the same simulation snapshot. */
 export class CombatHud {
   private readonly root: Phaser.GameObjects.Container;
-  private readonly labels: Phaser.GameObjects.Text[];
   private readonly healthGraphics: Phaser.GameObjects.Graphics;
   private readonly timer: Phaser.GameObjects.Text;
   private readonly roundLabel: Phaser.GameObjects.Text;
   private readonly hitLabel: Phaser.GameObjects.Text;
   private readonly resultLabel: Phaser.GameObjects.Text;
   private readonly modeLabels: Phaser.GameObjects.Text[];
+  private readonly rageLabels: Phaser.GameObjects.Text[];
+  private readonly healthLabels: Phaser.GameObjects.Text[];
+  private readonly pauseHint: Phaser.GameObjects.Text;
   private lastImpactLabel = '';
   private lastImpactFrame = Number.NEGATIVE_INFINITY;
   private readonly barWidth = 360;
-  private readonly barHeight = 22;
   private readonly sidePadding = 28;
 
-  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string, string] = ['JOGADOR 1', 'JOGADOR 2'], stageName = '', private readonly training = false) {
-    this.labels = [
-      scene.add.text(this.sidePadding, 18, `P1 · ${fighterNames[0].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }),
-      scene.add.text(width - this.sidePadding, 18, `P2 · ${fighterNames[1].toUpperCase()}`, { color: '#f4f0e8', fontSize: '16px' }).setOrigin(1, 0),
-    ];
-    this.healthGraphics = scene.add.graphics();
-    this.modeLabels = training ? [
-      scene.add.text(this.sidePadding, 67, 'NEUTRO', { color: '#f4f0e8', fontSize: '12px', fontStyle: 'bold' }),
-      scene.add.text(width - this.sidePadding, 67, 'NEUTRO', { color: '#f4f0e8', fontSize: '12px', fontStyle: 'bold' }).setOrigin(1, 0),
-    ] : [];
-    this.timer = scene.add.text(width / 2, 14, '99', {
-      color: '#ffd166',
-      fontSize: '32px',
-      fontStyle: 'bold',
-    }).setOrigin(0.5, 0);
-    this.roundLabel = scene.add.text(width / 2, 52, 'ROUND 1', {
-      color: '#f4f0e8',
-      fontSize: '12px',
-    }).setOrigin(0.5, 0);
-    this.hitLabel = scene.add.text(width / 2, 92, '', {
-      color: '#ffd166',
-      fontSize: '12px',
-      fontStyle: 'bold',
-      align: 'center', wordWrap: { width: 540 },
-    }).setOrigin(0.5, 0).setVisible(training);
-    this.resultLabel = scene.add.text(width / 2, 114, '', {
-      color: '#f4f0e8',
-      fontSize: '14px',
-      fontStyle: 'bold',
-    }).setOrigin(0.5, 0);
-    const stageLabel = scene.add.text(width / 2, 72, stageName.toUpperCase(), {
-      color: '#f4f0e8', fontSize: '11px',
-    }).setOrigin(0.5, 0);
-    this.root = scene.add.container(0, 0, [
-      ...this.labels, this.healthGraphics, ...this.modeLabels, this.timer,
-      this.roundLabel, stageLabel, this.hitLabel, this.resultLabel,
-    ]).setScrollFactor(0).setDepth(100);
-    this.updateBars([], width);
+  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = ['JOGADOR 1','JOGADOR 2'], stageName = '', private readonly training = false, private readonly practiceLabel = 'TREINO LIVRE') {
+    const decoration=scene.add.graphics();
+    const labels=[scene.add.text(28,31,`P1  /  ${fighterNames[0].toUpperCase()}`,hudText(13,true)),
+      scene.add.text(width-28,31,`P2  /  ${fighterNames[1].toUpperCase()}`,hudText(13,true)).setOrigin(1,0)];
+    this.healthGraphics=scene.add.graphics();
+    this.healthLabels=[scene.add.text(388,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
+      scene.add.text(width-388,33,'',hudText(10,false,HUD.goldText))];
+    this.rageLabels=[scene.add.text(30,72,'',hudText(9,false,HUD.goldText)),scene.add.text(width-30,72,'',hudText(9,false,HUD.goldText)).setOrigin(1,0)];
+    this.modeLabels=[scene.add.text(30,49,'',hudText(10,false,HUD.muted)),
+      scene.add.text(width-30,49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
+    this.timer=scene.add.text(width/2,6,'99',hudText(30,true)).setOrigin(.5,0);
+    this.roundLabel=scene.add.text(width/2,41,'ROUND 1',hudText(10,false,HUD.goldText)).setOrigin(.5,0);
+    const stageLabel=scene.add.text(width/2,61,stageName.toUpperCase(),hudText(9,false,HUD.muted)).setOrigin(.5,0);
+    this.hitLabel=scene.add.text(width/2,78,'',{...hudText(11,false,HUD.goldText),align:'center',wordWrap:{width:540}}).setOrigin(.5,0).setVisible(training);
+    this.resultLabel=scene.add.text(width/2,98,'',{...hudText(17,true),stroke:'#17131a',strokeThickness:4,align:'center'}).setOrigin(.5,0);
+    this.pauseHint=scene.add.text(width/2,LOGICAL_VIEW.height-18,'',hudText(10,false,HUD.muted)).setOrigin(.5).setVisible(!training);
+    this.root=scene.add.container(0,0,[decoration,...labels,this.healthGraphics,...this.healthLabels,...this.modeLabels,...this.rageLabels,
+      this.timer,this.roundLabel,stageLabel,this.hitLabel,this.resultLabel,this.pauseHint]).setScrollFactor(0).setDepth(100);
   }
 
   update(snapshot: SimulationSnapshot, width: number): void {
-    this.timer.setText(this.training ? '∞' : String(Math.ceil(snapshot.roundFramesRemaining / 60)).padStart(2, '0'));
-    this.roundLabel.setText(this.training ? 'TREINO LIVRE' : `ROUND ${snapshot.round}`);
-    const winnerIndex = snapshot.characters.findIndex(({ characterId }) => characterId === snapshot.roundWinnerId);
-    const matchWinnerIndex = snapshot.characters.findIndex(({ characterId }) => characterId === snapshot.matchWinnerId);
-    if (snapshot.phase === 'match-over') {
-      this.resultLabel.setText(matchWinnerIndex < 0 ? 'EMPATE · R PARA REINICIAR' : `LUTA · P${matchWinnerIndex + 1} VENCE · R PARA REINICIAR`);
-    } else if (snapshot.phase === 'round-over') {
-      const outcome = snapshot.roundEndReason === 'knockout' ? 'K.O.' : snapshot.roundEndReason === 'time' ? 'TEMPO' : 'EMPATE';
-      this.resultLabel.setText(winnerIndex < 0 ? `ROUND ${outcome}` : `ROUND ${outcome} · P${winnerIndex + 1} VENCE`);
-    } else {
-      this.resultLabel.setText('');
-    }
-    if (this.training) this.updateTrainingLabels(snapshot);
-    this.updateBars(snapshot.characters, width);
-  }
-
-  private updateTrainingLabels(snapshot: SimulationSnapshot): void {
-    const latest = snapshot.recentContacts[snapshot.recentContacts.length - 1];
-    if (snapshot.frame < this.lastImpactFrame) {
-      this.lastImpactLabel = '';
-      this.lastImpactFrame = Number.NEGATIVE_INFINITY;
-    }
-    if (latest && latest.frame > this.lastImpactFrame) {
-      this.lastImpactLabel = contactLabel(latest.event);
-      this.lastImpactFrame = latest.frame;
-    }
-    this.hitLabel.setText(snapshot.frame - this.lastImpactFrame <= 90 ? this.lastImpactLabel : '');
-    snapshot.characters.forEach((character, index) => {
-      const modeLabel = character.attack?.preciseExecution ? 'PRECISO · ' : '';
-      this.modeLabels[index]?.setText(`${modeLabel}${MODE_LABELS[character.mode]}`);
-      this.modeLabels[index]?.setColor(character.mode === 'hitstun' ? '#ff7777' : character.mode === 'blockstun' || character.mode === 'blocking' ? '#8cb4ff' : '#f4f0e8');
-    });
-  }
-
-  destroy(): void {
-    this.root.destroy(true);
-  }
-
-  private updateBars(
-    characters: SimulationSnapshot['characters'] | [],
-    width: number,
-  ): void {
+    this.timer.setText(this.training?'∞':String(Math.ceil(snapshot.roundFramesRemaining/60)).padStart(2,'0'));
+    this.roundLabel.setText(this.training?this.practiceLabel:`ROUND ${snapshot.round}`).setFontSize(this.training?9:10);
+    const winner=snapshot.characters.findIndex(c=>c.characterId===(snapshot.phase==='match-over'?snapshot.matchWinnerId:snapshot.roundWinnerId));
+    const reset=keyLabel(getSystemControls().reset);
+    const outcome=snapshot.roundEndReason==='knockout'?'K.O.':snapshot.roundEndReason==='time'?'TEMPO':'EMPATE';
+    this.resultLabel.setText(snapshot.phase==='match-over' ? `${winner<0?'EMPATE':`P${winner+1} VENCE A LUTA`} · ${reset} REINICIAR`
+      : snapshot.phase==='round-over'?`${outcome}${winner<0?'':` · P${winner+1} VENCE`}`:'');
+    this.pauseHint.setText(`${keyLabel(getSystemControls().pause)} / ESC · PAUSA`);
+    const latest=snapshot.recentContacts[snapshot.recentContacts.length-1];
+    if(snapshot.frame<this.lastImpactFrame){this.lastImpactLabel='';this.lastImpactFrame=Number.NEGATIVE_INFINITY;}
+    if(latest&&latest.frame>this.lastImpactFrame){this.lastImpactLabel=contactLabel(latest.event);this.lastImpactFrame=latest.frame;}
+    this.hitLabel.setText(snapshot.frame-this.lastImpactFrame<=90?this.lastImpactLabel:'');
     this.healthGraphics.clear();
-    const left = this.sidePadding;
-    const right = width - this.sidePadding - this.barWidth;
-    this.drawBarBackground(left, right);
-
-    characters.forEach((character, index) => {
-      const ratio = character.maxHealth > 0 ? character.health / character.maxHealth : 0;
-      const fillWidth = this.barWidth * Phaser.Math.Clamp(ratio, 0, 1);
-      this.healthGraphics.fillStyle(index === 0 ? 0xe45b5b : 0x5b8de4, 1);
-      const x = index === 0 ? left : right + this.barWidth - fillWidth;
-      this.healthGraphics.fillRect(x, 42, fillWidth, this.barHeight);
+    snapshot.characters.forEach((character,index)=>{
+      const x=index===0?this.sidePadding:width-this.sidePadding-this.barWidth;
+      const g=this.healthGraphics;
+      g.fillStyle(HUD.rail).fillRect(x,10,this.barWidth,17);
+      const fill=healthBarFill(character.health,character.maxHealth,x+3,this.barWidth-6,index===1);
+      if(fill.width>0){
+        g.fillStyle(HUD.players[index]).fillRect(fill.x,12,fill.width,13);
+        g.fillStyle(HUD.lightGold,.45).fillRect(fill.x,12,fill.width,1);
+        g.fillStyle(0x000000,.22).fillRect(fill.x,24,fill.width,1);
+      }
+      g.lineStyle(1,HUD.gold,.9).strokeRect(x,10,this.barWidth,17);
+      for(let round=0;round<2;round++)drawDiamond(g,index===0?420+round*16:width-420-round*16,19,3,HUD.lightGold,snapshot.roundWins[index]>round);
+      if(character.maxRage>0){
+        const rageX=index===0?30:width-180;
+        g.fillStyle(HUD.rail).fillRect(rageX,64,150,4);
+        g.fillStyle(character.rage>=character.maxRage?HUD.lightGold:HUD.players[index]).fillRect(rageX,64,150*character.rage/character.maxRage,4);
+      }
+      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}${character.rage>=character.maxRage?' · PRONTA':''}`:'');
+      this.healthLabels[index]?.setText(`${Math.max(0,character.health)} / ${character.maxHealth}`);
+      this.modeLabels[index]?.setText(this.training?MODE_LABELS[character.mode]:index===0?'JOGADOR 1':'JOGADOR 2')
+        .setColor(character.mode==='hitstun'?'#f09a84':character.mode==='blockstun'||character.mode==='blocking'?'#95d7d0':HUD.muted);
     });
   }
-
-  private drawBarBackground(left: number, right: number): void {
-    this.healthGraphics.fillStyle(0x494750, 1);
-    this.healthGraphics.fillRect(left, 42, this.barWidth, this.barHeight);
-    this.healthGraphics.fillRect(right, 42, this.barWidth, this.barHeight);
-    this.healthGraphics.lineStyle(2, 0xf4f0e8, 0.75);
-    this.healthGraphics.strokeRect(left, 42, this.barWidth, this.barHeight);
-    this.healthGraphics.strokeRect(right, 42, this.barWidth, this.barHeight);
-  }
+  destroy():void{this.root.destroy(true);}
 }

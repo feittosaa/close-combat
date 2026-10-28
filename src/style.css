@@ -28,3 +28,69 @@ body {
 canvas {
   display: block;
 }
+
+.combat-pause[hidden] { display: none; }
+.combat-pause { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e12cc; backdrop-filter: blur(5px); color: #f6e6ce; }
+.pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #b7905c; background: linear-gradient(120deg,#302029,#17131a 65%); padding: 26px; border-top: 4px solid #dcaf71; box-shadow: 0 0 0 5px #16121ae0, 0 24px 90px #000b; }
+.pause-panel header { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.pause-panel h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(20px, 3vw, 32px); }
+.pause-eyebrow { color: #efac66; font-size: 11px; letter-spacing: .14em; margin: 0; }
+.pause-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.combat-pause button, .combat-pause input { font: inherit; color: inherit; background: #33272b; border: 1px solid #8d6a47; padding: 10px 12px; border-radius: 0; }
+.combat-pause button { cursor: pointer; }
+.combat-pause button:hover, .combat-pause button[aria-pressed="true"] { background: #754835; border-color: #f1c98c; }
+.combat-pause :focus-visible { outline: 2px solid #ffc485; outline-offset: 2px; }
+.pause-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 12px; }
+.pause-tools input { flex: 1; min-width: 180px; }
+.pause-count { color: #bcb5c5; font-size: 12px; }
+.pause-body { display: grid; grid-template-columns: 155px minmax(210px, 1fr) minmax(260px, 1fr); gap: 14px; min-height: 0; height: min(540px, 58dvh); }
+.pause-categories, .pause-moves, .pause-details { overflow-y: auto; scrollbar-color: #76697a #15151f; padding: 4px; }
+.pause-categories { display: flex; flex-direction: column; gap: 5px; }
+.pause-categories button { text-align: left; font-size: 13px; }
+.pause-moves { display: flex; flex-direction: column; gap: 7px; }
+.pause-move { display: flex; flex-direction: column; text-align: left; gap: 6px; flex-shrink: 0; }
+.pause-move strong { color: #ffd49d; font-size: 15px; overflow-wrap: anywhere; }
+.pause-move span, .pause-move small { color: #c6c0ce; font-size: 11px; }
+.pause-move small { color: #d6ac74; }
+.pause-details { padding: 14px; border: 1px solid #725537; background: #251d23; font-size: 13px; line-height: 1.5; }
+.pause-details h2 { margin: 10px 0; font-size: 19px; overflow-wrap: anywhere; }
+.pause-command { color: #ffd49d; overflow-wrap: anywhere; }
+.pause-note, .pause-legend { color: #aaa5b6; font-size: 11px; line-height: 1.6; }
+.pause-legend { margin: 15px 0 0; }
+.pause-timeline { display: flex; gap: 3px; margin: 16px 0; }
+.pause-timeline span { padding: 5px; font-size: 10px; text-align: center; color: #101014; }
+.pause-timeline .startup { background: #eeb065; } .pause-timeline .active { background: #ec7e89; } .pause-timeline .recovery { background: #8fc6e7; }
+@media (max-width: 760px) { .combat-pause { padding: 8px; } .pause-panel { padding: 12px; max-height: calc(100dvh - 16px); } .pause-body { grid-template-columns: 100px 1fr; height: 60dvh; } .pause-details { grid-column: 1 / -1; min-height: 150px; } .pause-body { overflow-y: auto; } .pause-actions { margin-left: 0; } }
+
+.combat-pause.inspection { background: transparent; align-items: start; padding-top: 90px; pointer-events: none; }
+.combat-pause.inspection .pause-panel { pointer-events: auto; padding: 12px; width: auto; max-width: calc(100% - 30px); }
+.combat-pause.inspection .pause-tools, .combat-pause.inspection .pause-body, .combat-pause.inspection .pause-legend, .combat-pause.inspection .pause-eyebrow { display: none; }
+.combat-pause.inspection h1 { font-size: 16px; }
+.combat-pause.inspection button { padding: 8px; font-size: 12px; }
+.command-notation { font-family: Arial, sans-serif; font-size: 1.1em; line-height: 1.65; }
+.command-button { display: inline-block; min-width: 1.35em; padding: 0 .17em; margin: 0 .1em; text-align: center; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; background: #10101a; }
+.control-settings { position: fixed; inset: 0; z-index: 200; background: #100e12df; display: grid; place-items: center; padding: 20px; color: #eee9f2; }
+.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: linear-gradient(135deg, #282024, #17151b); border: 2px solid #b7905c; box-shadow: 0 0 0 5px #171219, 0 24px 80px #000b; padding: 24px; }
+.controls-panel h1 { margin: 0; font-family: Georgia, serif; color: #ffe0a4; letter-spacing: .08em; }
+.controls-panel p { font-size: 13px; color: #c4bbc9; min-height: 1.5em; }
+.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.controls-grid h2 { font-size: 17px; }
+.controls-grid > div > div { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 14px; }
+.controls-panel button { color: #fff1da; background: #48302b; border: 1px solid #b7905c; border-radius: 0; padding: 9px 14px; cursor: pointer; min-width: 100px; font: inherit; }
+.controls-panel button:focus-visible { outline: 2px solid #ffd68b; }
+.controls-panel footer { display: flex; justify-content: flex-end; gap: 12px; }
+@media(max-width:600px) { .controls-grid {grid-template-columns:1fr;} }
+.pause-move .command-notation { font-size: 18px; }
+.pause-move .command-notation > span { font-size: inherit; color: inherit; }
+.pause-command .command-notation { font-size: 21px; }
+.command-direction { font-weight: 700; letter-spacing: .08em; }
+
+.controls-panel button:hover { background: #793f32; border-color: #f0c68a; }
+.controls-panel h2 { color: #ead3ad; font-family: Georgia, serif; }
+
+.combat-pause.match-pause .pause-panel { width: min(640px,100%); padding: 38px; }
+.combat-pause.match-pause header { display: block; }
+.combat-pause.match-pause h1 { margin: 12px 0 28px; font-style: italic; font-size: clamp(26px,4vw,44px); }
+.combat-pause.match-pause .pause-actions { display: grid; gap: 10px; }
+.combat-pause.match-pause button { text-align: left; padding: 16px 20px; border-left: 4px solid #b7905c; }
+.combat-pause.match-pause button:first-child { background: #803e34; border-color: #f0c68a; }

@@ -1,86 +1,30 @@
-import { describe, expect, it } from 'vitest';
-import { DEFAULT_CHARACTER_ID, defaultCharacter, getCharacterById, SECOND_TEST_CHARACTER_ID } from '../engine/data/characters';
-import { getCharacterAnimationKey } from '../rendering/animations/CharacterAnimationMap';
-import { Simulation } from '../engine/simulation/Simulation';
-import { createGameConfig } from '../engine/data/gameConfig';
+import { describe, it, expect } from 'vitest';
+import { characters, playableCharacters, defaultCharacter, getCharacterById } from '../engine/data/characters';
+import { fighterMoveList, filterMoveList } from '../training/MoveList';
+import { arcadeOpponents, opponentFor } from '../scenes/matchSetup';
 
-describe('provisional Tester character', () => {
-  it('is the default fighter and has resolvable prototype moves', () => {
-    expect(DEFAULT_CHARACTER_ID).toBe('tester');
-    expect(defaultCharacter.name).toBe('Tester');
-    expect(defaultCharacter.moves.length).toBeGreaterThan(0);
-    expect(defaultCharacter.moves.some((move) => move.id === 'test-front-throw')).toBe(true);
+describe('elenco reiniciado', () => {
+  it('registra somente Shoto, preservando os quatro básicos e o catálogo manual', () => {
+    expect(characters.map(fighter => fighter.id)).toEqual(['shoto']);
+    expect(playableCharacters).toEqual([defaultCharacter]);
+    expect(defaultCharacter.name).toBe('Shoto');
+    expect(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne).map(move => [move.name, move.input.buttons])).toEqual([
+      ['Soco fraco', ['1']], ['Soco forte', ['2']], ['Chute fraco', ['3']], ['Chute forte', ['4']],
+    ]);
+    expect(defaultCharacter.combos).toHaveLength(11);
+    expect(defaultCharacter).not.toHaveProperty('assets');
+    expect(defaultCharacter).not.toHaveProperty('combatRules');
   });
-
-  it('loads as the default fighter for both sides of the simulation', () => {
-    const snapshot = new Simulation(createGameConfig(1024, 576)).snapshot();
-
-    expect(snapshot.characters.map((character) => character.fighterId)).toEqual(['tester', 'tester']);
-    expect(snapshot.characters.map((character) => character.health)).toEqual([1000, 1000]);
+  it.each(['ayla', 'gris', 'tester', 'dummy'])('não resolve o personagem removido %s', id => expect(getCharacterById(id)).toBeUndefined());
+  it.each(['versus', 'training', 'tutorial', 'combo-tutorial', 'arcade'] as const)('usa Shoto espelhado em %s', mode => {
+    expect(opponentFor('shoto', mode).id).toBe('shoto');
+    expect(opponentFor('id-inválido', mode).id).toBe('shoto');
+    expect(arcadeOpponents('shoto')).toEqual([defaultCharacter]);
   });
-
-  it('provides a second test fighter with resolvable, distinct data', () => {
-    const dummy = getCharacterById(SECOND_TEST_CHARACTER_ID);
-    expect(dummy?.name).toBe('Dummy');
-    expect(dummy?.id).not.toBe(defaultCharacter.id);
-    expect(dummy?.maxHealth).toBe(900);
-    expect(dummy?.movement.walkSpeed).toBeLessThan(defaultCharacter.movement.walkSpeed);
-    expect(dummy?.moves.length).toBeGreaterThan(0);
-    expect(dummy?.moves.map((move) => move.id)).toContain('dummy-jab');
-    expect(dummy?.moves.map((move) => move.id)).not.toContain('test-jab');
-    expect(dummy?.moves.find((move) => move.id === 'dummy-jab')?.hitbox)
-      .not.toEqual(defaultCharacter.moves.find((move) => move.id === 'test-jab')?.hitbox);
-    expect(dummy?.collision.hurtboxes.airborne).not.toEqual(defaultCharacter.collision.hurtboxes.airborne);
-
-    const snapshot = new Simulation(createGameConfig(1024, 576), [defaultCharacter, dummy!]).snapshot();
-    expect(snapshot.characters.map((character) => character.fighterId)).toEqual(['tester', 'dummy']);
-    expect(snapshot.characters.map((character) => character.health)).toEqual([1000, 900]);
-  });
-
-  it('resolves the Dummy move book and damage independently from Tester', () => {
-    const dummy = getCharacterById(SECOND_TEST_CHARACTER_ID)!;
-    const simulation = new Simulation(createGameConfig(1024, 576), [defaultCharacter, dummy]);
-    const forward = { direction: 'F' as const, buttons: new Set<never>() };
-    const neutral = { direction: 'N' as const, buttons: new Set<never>() };
-    for (let frame = 0; frame < 100; frame += 1) simulation.advance(1000 / 60, () => [forward, forward]);
-    simulation.advance(1000 / 60, () => [neutral, { direction: 'N', buttons: new Set(['1' as const]) }]);
-    let snapshot = simulation.snapshot();
-    for (let frame = 0; frame < 24 && snapshot.hitEvents.length === 0; frame += 1) {
-      simulation.advance(1000 / 60, () => [neutral, neutral]);
-      snapshot = simulation.snapshot();
-    }
-
-    expect(snapshot.hitEvents[0]).toMatchObject({ moveId: 'dummy-jab', damage: 38, outcome: 'hit' });
-    expect(snapshot.characters[0].health).toBe(1000 - 38);
-  });
-
-  it('applies the configured match health ceiling to both fighters', () => {
-    const matchConfig = createGameConfig(1024, 576);
-    matchConfig.match.maxHealth = 750;
-    const snapshot = new Simulation(matchConfig).snapshot();
-    expect(snapshot.characters.map((character) => character.health)).toEqual([750, 750]);
-  });
-
-  it('maps combat modes and attacks to stable animation keys', () => {
-    const [fighter] = new Simulation(createGameConfig(1024, 576)).snapshot().characters;
-    expect(getCharacterAnimationKey(fighter!)).toBe('tester-idle');
-
-    const attacking = {
-      ...fighter!,
-      mode: 'active' as const,
-      attack: { moveId: 'test-jab', buttons: ['1'] as const, elapsedFrames: 4, hasHit: false, preciseExecution: false },
-    };
-    expect(getCharacterAnimationKey(attacking)).toBe('tester-light-punch-active');
-  });
-
-  it('maps Tester movement and attack states to its animation keys', () => {
-    const [fighter] = new Simulation(createGameConfig(1024, 576)).snapshot().characters;
-    expect(getCharacterAnimationKey({ ...fighter!, mode: 'moving' })).toBe('tester-walk');
-    expect(getCharacterAnimationKey({ ...fighter!, mode: 'crouching' })).toBe('tester-crouch');
-    expect(getCharacterAnimationKey({
-      ...fighter!,
-      mode: 'active',
-      attack: { moveId: 'test-jab', buttons: ['1'], elapsedFrames: 1, hasHit: false, preciseExecution: false },
-    })).toBe('tester-light-punch-active');
+  it('separa básicos, especiais e receitas manuais com busca', () => {
+    const entries = fighterMoveList(defaultCharacter);
+    expect(entries).toHaveLength(defaultCharacter.moves.length + 11);
+    expect(filterMoveList(entries, 'combos', '')).toHaveLength(11);
+    expect(filterMoveList(entries, 'basics', 'forte').map(entry => entry.notation)).toEqual(['2', '4', 'no ar + 2', 'no ar + 4']);
   });
 });
