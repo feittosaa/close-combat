@@ -13,6 +13,8 @@ export const shoto: CharacterDefinition = {
       airborne: { offsetX: 0, offsetY: -156.4, width: 55.2, height: 156.4 },
     },
   },
+  juggle: { initialGravityScale: 0.7, gravityScalePerHit: 0.15, maximumGravityScale: 1.6,
+    getupFrames: 24, wakeupInvulnerabilityFrames: 8 },
   rage: { maximum: 100, onHit: 10, onDamage: 15, onBlock: 5 },
   combos: [
     { id: 'simple-1', name: 'Combo simples · 1,1,1', notation: '1,1,1', moveIds: ['light-punch','light-punch','light-punch'] },

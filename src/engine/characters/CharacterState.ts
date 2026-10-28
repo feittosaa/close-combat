@@ -37,6 +37,10 @@ export interface CharacterState {
   chain?: string[];
   chainLastFrame?: number;
   knockdown?: { velocityX: number };
+  /** Confirmed launcher flight; independent of ordinary jumps and scripted captures. */
+  juggle?: { gravityScale: number; airHits: number };
+  /** Counts combat ticks, including grounded getup, then a short protected return. */
+  wakeupInvulnerabilityFrames?: number;
   /** Bottle confirmation holds the defender until the lighter arrives, including landing. */
   ultimateCapture?: { ownerId: string };
   ultimateThrowStartedFrame?: number;
