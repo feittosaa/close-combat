@@ -4,6 +4,15 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Salão de Treino — 2026-10-27
+
+Branch `codex/feature-salao-treino`, dependente da seleção animada ainda não integrada em `39e62a4`. Pedido: adicionar a imagem fornecida `Crimson Banner Dojo Arena.png` com o nome Salão de Treino. Usuário confirmou novo cenário selecionável em PvP/Arcade; não substituir a sala fixa dos modos de prática.
+
+- [x] Incorporar o PNG original sem edição, 1942×809, camada única, proporção nativa ultrawide, linha dos pés em Y=700. Zoom e regras de combate preservados; referência interna `salao-treino`.
+- [x] Tela de cenário alterna Bar ao Anoitecer/Salão de Treino por setas ou botões anterior/próximo; miniatura e ID da partida acompanham a escolha. Sala de prática continua reservada a treino/tutoriais.
+- [x] Instalação reproduzível, 242 testes/28 arquivos antes da ampliação do combate, build e diff aprovados. Conferência no jogo: seletor Bar/Salão por seta, início de Arcade no cenário escolhido e salto/enquadramento do Salão no runtime. Sala fixa preservada no treino. Capturas locais em `/tmp/salao-treino-arcade.png` e `/tmp/salao-treino-jump.png`; aprovação artística não é inferida da validação técnica.
+- [ ] Commit/push e CI da feature. Usuário autorizou posteriormente integrar esta branch em development após concluir e validar o conjunto; main preservada.
+
 ## Revisão da seleção: idle, centro e PvP duplo — 2026-10-27
 
 Branch `codex/feature-selecao-dupla-idle`, baseada em development `e372120`. Pedido atual: animação idle nos personagens da seleção; grade de retratos no centro em todos os modos; PvP com escolha e confirmação independentes de P1/P2 e um personagem de cada lado; retirar frases extras acima das opções e do canto inferior direito do menu principal, mantendo nome e opções.
