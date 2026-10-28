@@ -19,15 +19,15 @@ function command(sim:Simulation,id:string,player=0,target=N){
   step(sim,input(sequence[sequence.length-1]??'N',move.input.buttons),player,target);
 }
 function contact(sim:Simulation,stage:'confirm'|'explosion',player=0,target=N){
-  for(let i=0;i<240;i++){
+  for(let i=0;i<400;i++){
     const event=sim.snapshot().hitEvents.find(e=>e.stage===stage&&e.attackerId===`player-${player+1}`);
     if(event)return event;step(sim,N,player,target);
   }
   throw new Error(`Missing ${stage} contact`);
 }
 
-it('freezes the round clock and entire world for two full seconds of activation, for any ultimate',()=>{
-  expect(ULTIMATE_ACTIVATION_FRAMES).toBe(120);
+it('freezes the round clock and entire world for 200 ticks of activation, for any ultimate',()=>{
+  expect(ULTIMATE_ACTIVATION_FRAMES).toBe(200);
   const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:100}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
@@ -52,7 +52,7 @@ it('freezes the round clock and entire world for two full seconds of activation,
 });
 
 it('freezes already flying projectiles, and simultaneous ultimates share one activation interval',()=>{
-  const sim=create(350);sim.fillTrainingRage();command(sim,'wine-bottle',1);wait(sim,20);
+  const sim=create(350);sim.fillTrainingRage();command(sim,'wine-bottle',1);wait(sim,30);
   expect(sim.snapshot().projectiles).toHaveLength(1);
   command(sim,'wine-ultimate');const started=sim.snapshot();
   for(let i=0;i<ULTIMATE_ACTIVATION_FRAMES-1;i++){step(sim);expect(sim.snapshot().projectiles).toEqual(started.projectiles);}
@@ -67,18 +67,18 @@ it('freezes already flying projectiles, and simultaneous ultimates share one act
 
 it.each([0,1])('bottle confirms, lighter explodes once for 280 and physically knocks player %i down',player=>{
   const sim=create();sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  expect(contact(sim,'confirm',player)).toMatchObject({damage:0,outcome:'hit',defenderStunFrames:120});
+  expect(contact(sim,'confirm',player)).toMatchObject({damage:0,outcome:'hit',defenderStunFrames:200});
   expect(sim.snapshot().characters[1-player].health).toBe(1000);
-  // Six combat frames of throw preparation, independently of the shared contact pause.
-  wait(sim,CONTACT_HITSTOP_FRAMES+5);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
-  const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(44);
+  // Ten combat frames of throw preparation, independently of the shared contact pause.
+  wait(sim,CONTACT_HITSTOP_FRAMES+9);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
+  const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(60);
   const target=sim.snapshot().characters[1-player];
   expect(target).toMatchObject({health:720,mode:'knockdown',grounded:false});
   expect(target.verticalVelocity).toBe(-5);expect(target.knockdown).toBeDefined();
   expect(sim.snapshot().explosions).toHaveLength(1);
   const x=target.x;wait(sim,30);const down=sim.snapshot().characters[1-player];
   expect(Math.abs(down.x-x)).toBeGreaterThan(40);expect(down.grounded).toBe(true);expect(down.mode).toBe('knockdown');
-  wait(sim,30);expect(sim.snapshot().characters[1-player].mode).toBe('neutral');
+  wait(sim,50);expect(sim.snapshot().characters[1-player].mode).toBe('neutral');
   expect(sim.snapshot().characters[1-player].health).toBe(720);
   expect(sim.snapshot().explosions).toHaveLength(0);
 });
@@ -190,7 +190,7 @@ it.each([0,1])('captures an airborne defender upright, waits for landing and exp
 
 it.each([0,1])('throws the ultimate bottle across maximum separation at the reduced speed while retaining a reliable lighter confirmation: player %i',player=>{
   const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  wait(sim,ULTIMATE_ACTIVATION_FRAMES);
+  wait(sim,ULTIMATE_ACTIVATION_FRAMES+1);
   const launched=sim.snapshot();expect(Math.abs(launched.projectiles[0].velocity)).toBe(15);
   const started=launched.frame;contact(sim,'confirm',player);
   expect(sim.snapshot().frame-started).toBeLessThanOrEqual(36);

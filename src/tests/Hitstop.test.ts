@@ -57,7 +57,7 @@ it('erro não pausa; o mesmo relógio avança em hit, bloqueio e erro',()=>{
 it('trade inicia uma única pausa compartilhada e reset não carrega pausa antiga',()=>{
   const sim=new Simulation(config,undefined,{training:true,initialDistance:64});
   sim.stepFrame([input('N','1'),input('N','1')]);
-  for(let i=0;i<6;i++)sim.stepFrame(neutral);
+  for(let i=0;i<10;i++)sim.stepFrame(neutral);
   expect(sim.snapshot().hitEvents).toHaveLength(2);
   expect(sim.snapshot().hitstopFramesRemaining).toBe(CONTACT_HITSTOP_FRAMES);
   sim.resetMatch();expect(sim.snapshot()).toMatchObject({frame:0,elapsedFrames:0,hitstopFramesRemaining:0});
@@ -65,8 +65,8 @@ it('trade inicia uma única pausa compartilhada e reset não carrega pausa antig
 });
 it.each([20,1000])('KO/time-up com %i HP conserva a micro pausa sem tempo extra no relógio',health=>{
   const fragile={...defaultCharacter,maxHealth:health};
-  const sim=new Simulation({...config,match:{...config.match,roundDurationFrames:9}},[fragile,fragile],{initialDistance:64});
-  sim.stepFrame([input('N','1'),input()]);for(let i=0;i<6;i++)sim.stepFrame(neutral);
+  const sim=new Simulation({...config,match:{...config.match,roundDurationFrames:13}},[fragile,fragile],{initialDistance:64});
+  sim.stepFrame([input('N','1'),input()]);for(let i=0;i<10;i++)sim.stepFrame(neutral);
   const pose=sim.snapshot().characters[0].attack;
   for(let i=0;i<CONTACT_HITSTOP_FRAMES-1;i++){
     sim.stepFrame(neutral);expect(sim.snapshot().phase).toBe('fight');

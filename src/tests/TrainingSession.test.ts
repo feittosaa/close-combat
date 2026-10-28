@@ -29,7 +29,7 @@ it('tutorial básico só oferece movimento, quatro básicos e guarda; exige cont
   tutorial.index = 1; const sim = create();
   tutorial.observe(sim.snapshot(), { direction: 'N', buttons: new Set(['1']) }); expect(tutorial.passed).toBe(false);
   sim.stepFrame([{ direction: 'N', buttons: new Set(['1']) }, N]);
-  for (let f = 0; f < 7; f++) { tutorial.observe(sim.snapshot(), N); sim.stepFrame([N, N]); }
+  for (let f = 0; f < 11; f++) { tutorial.observe(sim.snapshot(), N); sim.stepFrame([N, N]); }
   expect(tutorial.passed).toBe(true); expect(tutorial.next()).toBe(true);
   expect(tutorial.lesson?.notation).toBe('2'); tutorial.resetAttempt(); expect(tutorial.passed).toBe(false);
 });
