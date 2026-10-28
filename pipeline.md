@@ -4,6 +4,15 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Personagens maiores e acompanhamento vertical — 2026-10-28
+
+Branch `codex/feature-personagens-maiores`, dependente de `codex/fix-recuperacao-launcher-garrafa` em `89adb4d`, ainda não integrada.
+
+- [x] Desenho, corpo, hurtboxes, hitboxes e deslocamentos ampliados em mais 10%; escala uniforme sem recoloração ou mudança de arte. Tempos, dano, caminhada, salto e física preservados. Garrafa da ultimate mantém a redução relativa já solicitada.
+- [x] Zoom fixo 1,6 preservado. Acompanhamento vertical passa de 40% para 60% da subida, limitado a manter os pés do personagem no chão 16 pixels acima da borda inferior. Margem lateral proporcional 64 → 70,4, sem arrastar o oponente parado. Escala e imagens dos cenários preservadas.
+- [x] npm ci, 293 testes/36 arquivos, build e diff aprovados. Conferência no jogo de chão, salto/pouso e afastamento máximo 499,2, com ambos inteiros nas bordas e acompanhamento vertical sem zoom dinâmico. Console sem erros/avisos. Evidências /tmp/shoto-maior-chao.png, /tmp/shoto-maior-salto.png e /tmp/shoto-maior-bordas.png. Testes do catálogo completo verificam cobertura em toda a viagem vertical: não é necessário aumentar a altura nem alterar as proporções dos cenários atuais. Sem alteração de imagem ou aprovação artística inferida.
+- [ ] Envio e CI do commit exato; sem merge, promoção ou release.
+
 ## Recuperação dos levantamentos e garrafa menor — 2026-10-28
 
 Branch `codex/fix-recuperacao-launcher-garrafa`, dependente de `codex/feature-ritmo-combos-distancia` em `70bec33`, ainda não integrada. Pedido: levantamentos confirmados recuperam mais rápido para permitir continuar o combo; diminuir um pouco a garrafa da ultimate.
@@ -11,7 +20,7 @@ Branch `codex/fix-recuperacao-launcher-garrafa`, dependente de `codex/feature-ri
 - [x] Metadados do launcher reúnem velocidade de lançamento e recuperação do autor. No acerto final de `1,1,2`, recuperação do ataque passa de 23 para 6 ticks, sem encurtar preparo/atividade, pular elapsedFrames ou alterar o soco forte isolado, no bloqueio ou no erro. Duração efetiva compartilhada por simulação, previsão de recuperação, animações e HUD; levantamento preserva velocidade -10, gravidade/juggle e comandos. Por pedido posterior, o levantamento confirmado limpa a receita e reinicia o piso de força, liberando fracos novamente; demais fortes continuam impedindo forte → fraco.
 - [x] Garrafa da ultimate reduzida em 20% por dimensão: 69 × 55,2 → 55,2 × 44,16. Deslocamento Y -187,68 conserva o centro na altura do topo do personagem (-165,6). Desenho geométrico e caixa continuam compartilhados; arco, velocidades, dano, pausa e captura/isqueiro preservados. Sem imagens novas ou recoloração.
 - [x] Instalação reproduzível, 293 testes/36 arquivos, build e diff aprovados. Conferência no jogo por comandos legais: launcher recupera em 6 ticks, continuação aérea forte conecta, fraco pode iniciar nova receita após levantamento, garrafa menor conserva saída alta/arco. Console sem erros. Evidências em /tmp/shoto-launcher-recuperacao-6.png, /tmp/shoto-launcher-continuacao-aerea.png, /tmp/shoto-launcher-reinicio-fraco.png e /tmp/shoto-garrafa-ultimate-menor.png. Sem alteração de arte ou aprovação artística inferida.
-- [ ] Envio e CI do commit exato; sem merge, promoção ou release.
+- [x] Implementação enviada em `89adb4dd635b4a24bd8ad97244ab9c72807fa878`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40756836346). Sem merge, promoção ou release. Fechamento documental registrado também na branch dependente de personagens maiores.
 
 ## Ritmo a 80%, receitas no vazio e empurrão mínimo — 2026-10-28
 

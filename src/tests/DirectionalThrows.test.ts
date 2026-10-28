@@ -70,7 +70,7 @@ it('resolves simultaneous back throws symmetrically from the contact positions',
 
 it.each([0,1])('delays both throws until frame fifteen and captures at expanded range: player %i',player=>{
   for(const move of shoto.moves.filter(m=>m.category==='throw')) {
-    const sim=new Simulation(config,undefined,{training:true,initialDistance:80});
+    const sim=new Simulation(config,undefined,{training:true,initialDistance:88});
     step(sim,player,input('N',move.input.buttons));
     for(let elapsed=0;elapsed<15;elapsed++) {
       expect(sim.snapshot().characters[player].attack?.elapsedFrames).toBe(elapsed);
@@ -79,7 +79,7 @@ it.each([0,1])('delays both throws until frame fifteen and captures at expanded 
     }
     expect(sim.snapshot().characters[player].attack?.elapsedFrames).toBe(15);
     expect(sim.snapshot().hitEvents).toEqual([expect.objectContaining({moveId:move.id,outcome:'hit'})]);
-    const miss=new Simulation(config,undefined,{training:true,initialDistance:100});
+    const miss=new Simulation(config,undefined,{training:true,initialDistance:110});
     step(miss,player,input('N',move.input.buttons));
     for(let tick=0;tick<60;tick++)step(miss);
     expect(miss.snapshot().recentContacts).toHaveLength(0);
