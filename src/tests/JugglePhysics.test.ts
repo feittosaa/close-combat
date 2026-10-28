@@ -68,7 +68,7 @@ it.each([0,1])('uses lighter launcher gravity, keeps the target stunned and rese
 // Isolate reaction physics with legal single-button attacks and guaranteed geometric range.
 const juggleFixture: CharacterDefinition={...shoto,id:'juggle-fixture',combos:shoto.combos,juggle:{...shoto.juggle!,maximumGravityScale:1},
   moves:shoto.moves.map(m=>m.id==='heavy-punch'?{...m,activeFrames:3,recovery:18,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:
-    m.id==='light-punch'?{...m,startup:4,activeFrames:1,recovery:1,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:m)};
+    ['light-punch','heavy-kick'].includes(m.id)?{...m,startup:4,activeFrames:1,recovery:1,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:m)};
 
 it('increases gravity once per real air hit, caps it, and never resets upward momentum on ordinary hits',()=>{
   const sim=launch(0,juggleFixture);
@@ -76,7 +76,7 @@ it('increases gravity once per real air hit, caps it, and never resets upward mo
   for(let i=0;i<26;i++)step(sim);
   let hits=0;
   for(let tick=0;tick<240 && !sim.snapshot().characters[1].grounded;tick++) {
-    const before=sim.snapshot();step(sim,0,input('N',tick%2===0?['1']:[]));const after=sim.snapshot();
+    const before=sim.snapshot();step(sim,0,input('N',tick%2===0?['4']:[]));const after=sim.snapshot();
     if(after.hitEvents.some(e=>e.attackerId==='player-1')) {
       hits++;
       expect(after.characters[1].juggle?.airHits).toBe(hits);
@@ -127,7 +127,7 @@ it('keeps a launcher KO in flight until the target reaches the floor',()=>{
 it('suspends a juggled target for six combat ticks after hitstop, then resumes its preserved velocity with heavier gravity',()=>{
   const sim=launch(0,juggleFixture);
   for(let i=0;i<31;i++)step(sim);
-  step(sim,0,input('N',['1']));contact(sim);
+  step(sim,0,input('N',['4']));contact(sim);
   const impact=sim.snapshot();const target=impact.characters[1];
   expect(target.juggle).toMatchObject({airHits:1,gravityScale:0.85,suspensionFrames:6});
   for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++) {

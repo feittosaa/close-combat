@@ -31,7 +31,7 @@ Esta convenção vale para todos os personagens; não define quais golpes ou com
 | `b` | Back — trás |
 | `f` | Front — frente |
 
-Frente e trás são relativos à orientação do personagem, não a um lado fixo da tela. Letras combinadas representam diagonais (`df` e `fd`: baixo/frente; `bd`: baixo/trás). Vírgulas indicam entradas sucessivas; `+` indica botões simultâneos. A notação é independente das teclas físicas remapeáveis. Cada etapa de combo exige sua entrada; não executar uma sequência inteira com um único botão. Catálogos e exceções individuais ficam somente na pipeline e nos dados de cada personagem.
+Frente e trás são relativos à orientação do personagem, não a um lado fixo da tela. Letras combinadas representam diagonais (`df` e `fd`: baixo/frente; `bd`: baixo/trás). Vírgulas indicam entradas sucessivas; `+` indica botões simultâneos. A notação é independente das teclas físicas remapeáveis. Cada etapa de combo exige sua entrada; não executar uma sequência inteira com um único botão. Receitas fechadas e sequências abertas de acertos são conceitos distintos: trocar de golpe durante uma sequência não cria uma nova receita no catálogo. Catálogos e exceções individuais ficam somente na pipeline e nos dados de cada personagem.
 
 ## Fundação técnica
 
@@ -54,6 +54,8 @@ O HUD deve ser minimalista: barras de vida contínuas próximas ao topo, sem div
 ## Contato e tempo
 
 Acertos e bloqueios confirmados recebem uma micro pausa compartilhada na pose de impacto; golpes que erram não pausam. A duração da pausa é compartilhada entre acerto e bloqueio e definida na configuração de contato. Durante ela, combate, física e animação ficam congelados, enquanto o relógio do round continua contando normalmente. Contatos simultâneos não somam pausas. A retomada não deve pular desenhos nem alterar os tempos próprios dos golpes. Reset e encerramento de round devem tratar esse intervalo de forma consistente.
+
+Em sequências abertas de golpes confirmados, ataques fortes impedem o retorno a ataques fracos até o defensor recuperar o controle. Repetições pertencem às receitas autoradas. Golpes bloqueados ou que erram não liberam continuação aberta. Quando o último golpe acertado mantém o alvo no chão, os dois recuperam o controle juntos, sem recuperação exposta do atacante. Lançamentos preservam a trajetória e a recuperação aérea protegida; capturas cinematográficas mantêm suas regras próprias.
 
 A ativação de toda ultimate usa uma preparação cinematográfica prolongada com pausa global: somente a sequência de ativação do autor avança; adversários, projéteis, física, efeitos e relógio do round ficam congelados. Essa pausa é distinta da micro pausa de contato. Ativações simultâneas compartilham o mesmo intervalo, sem acumular tempo. O combate retoma ao terminar a animação de preparação, sem pular frames ou conservar esse estado após reset.
 

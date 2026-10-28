@@ -34,17 +34,17 @@ function untilContact(sim: Simulation, player = 0, guard = N, continuous = false
 const move = (id: string) => shoto.moves.find(m => m.id === id)!;
 
 describe('manual Shoto catalogue', () => {
-  it('registers only the ten authored strings and the two-hit extension', () => {
+  it('registers only the four authored punch strings', () => {
     expect(shoto.combos?.map(c => c.notation)).toEqual([
-      '1,1,1','2,2,2','3,3,3','4,4,4','1,1,2','3,3,4','1,2,3,4','1,3,2,4','1,1,1+2','3,4,3+4','f,d,fd,3,4',
+      '1,1,1','2,2,2','1,1,2','1,1,1+2',
     ]);
     expect(formatCommand('b,bd,d,df,f,1+2')).toContain('←,↙,↓,↘,→,');
     expect(formatCommand('f,d,fd,4')).toContain('→,↓,↘,');
-    expect(fighterMoveList(shoto).filter(e => e.categories.includes('special'))).toHaveLength(6);
+    expect(fighterMoveList(shoto).filter(e => e.categories.includes('special'))).toHaveLength(5);
   });
 
   it.each([0,1])('executes every authored string with connected hits for player %i', player => {
-    for (const recipe of shoto.combos!.filter(c => c.id !== 'extended-reversal')) {
+    for (const recipe of shoto.combos!) {
       const sim = create(56), tutorial = new TutorialSession(shoto, 'combo-tutorial');
       tutorial.index = shoto.combos!.indexOf(recipe);
       for (const [index,id] of recipe.moveIds.entries()) {
@@ -69,8 +69,8 @@ describe('manual Shoto catalogue', () => {
     expect(sim.snapshot().recentContacts).toHaveLength(1);
     const miss=create(350);command(miss,move('light-punch'));wait(miss,7);command(miss,move('heavy-punch'));
     expect(miss.snapshot().characters[0].attack?.moveId).toBe('light-punch');
-    const wrong=create();command(wrong,move('light-punch'));untilContact(wrong);command(wrong,move('heavy-kick'));wait(wrong,6);
-    expect(wrong.snapshot().characters[0].attack?.moveId).toBe('light-punch');
+    const wrong=create();command(wrong,move('heavy-punch'));untilContact(wrong);command(wrong,move('light-kick'));wait(wrong,CONTACT_HITSTOP_FRAMES+1);
+    expect(wrong.snapshot().characters[0].attack?.moveId).toBe('heavy-punch');
   });
 
   it.each([0,1])('prioritizes crouching attacks and low guard correctly for player %i', player => {
@@ -115,13 +115,14 @@ describe('manual Shoto catalogue', () => {
     }
   });
 
-  it.each([0,1])('requires the first aerial kick before its two-hit extension for player %i', player => {
-    const sim=create(56);command(sim,move('reversal-light'),player);untilContact(sim,player);
-    command(sim,move('reversal-followup'),player);untilContact(sim,player);
-    expect(sim.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual(['reversal-light','reversal-followup']);
-    expect(sim.snapshot().characters[1-player].health).toBe(915);
-    const single=create(56);command(single,move('reversal-kick'),player);untilContact(single,player);
-    expect(single.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual(['reversal-kick']);
+  it.each([0,1])('keeps single reversal kicks without the removed aerial extension for player %i', player => {
+    for (const id of ['reversal-light','reversal-kick']) {
+      const sim=create(56);command(sim,move(id),player);untilContact(sim,player);
+      step(sim,input('N',['4']),player);wait(sim,CONTACT_HITSTOP_FRAMES+1);
+      expect(sim.snapshot().characters[player].attack?.moveId).toBe(id);
+      expect(sim.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual([id]);
+    }
+    expect(shoto.moves.some(m=>m.id==='reversal-followup')).toBe(false);
   });
 
   it('builds rage on real contacts, requires a full bar and consumes it on ultimate startup', () => {
@@ -198,12 +199,6 @@ describe('manual Shoto catalogue', () => {
     expect(sim.snapshot().characters[0].mode).toBe('hitstun');
     expect(sim.snapshot().projectiles.some(p=>p.ownerId==='player-1')).toBe(true);
     wait(sim,220);expect(sim.snapshot().projectiles).toHaveLength(0);
-  });
-
-  it('accepts the aerial extension with only a fresh 4 after the initial kick', () => {
-    const sim=create(56);command(sim,move('reversal-light'));untilContact(sim);
-    step(sim,input('N',['4']));untilContact(sim);
-    expect(sim.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual(['reversal-light','reversal-followup']);
   });
 
   it.each([0,1])('gates ultimate and respects guard on either side for player %i', player => {

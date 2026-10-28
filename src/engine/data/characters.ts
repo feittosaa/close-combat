@@ -34,7 +34,7 @@ export interface CharacterDefinition {
     getupFrames: number; wakeupInvulnerabilityFrames: number; airHitSuspensionFrames: number;
   };
   rage?: { maximum: number; onHit: number; onDamage: number; onBlock: number };
-  /** Receitas de autoria manual; cancelamentos só seguem os prefixos declarados. */
+  /** Receitas de autoria manual, independentes das sequências abertas de acertos. */
   combos?: readonly ComboRecipe[];
   collision: CharacterCollisionProfile;
 }
