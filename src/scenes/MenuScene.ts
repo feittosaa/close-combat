@@ -10,7 +10,7 @@ import menuBackground from '../../assets/art/menu/patio-solar.png';
 import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
 import { playableCharacters } from '../engine/data/characters';
-import { defaultStage, stageTextureKey } from '../rendering/stages/stageCatalog';
+import { defaultStage, selectableStages, stageTextureKey } from '../rendering/stages/stageCatalog';
 import { preloadStage } from '../rendering/stages/StageView';
 import { opponentFor, isTrainingMode, type MatchMode } from './matchSetup';
 
@@ -28,6 +28,8 @@ export class MenuScene extends Phaser.Scene {
   private page: 'home' | 'fighter' | 'stage' | 'settings' = 'home';
   private mode: MatchMode = 'arcade';
   private modeIndex = 0;
+  private stageIndex = 0;
+  private get selectedStage() { return selectableStages[this.stageIndex]; }
   private readonly selection = new FighterSelection(playableCharacters.length);
   private readonly idleImages: SVGImageElement[] = [];
   private get fighterIndex(): number { return this.selection.indices[0]; }
@@ -64,7 +66,10 @@ export class MenuScene extends Phaser.Scene {
       } else if (versus && key.toLowerCase() === 'j') this.confirmFighter(0);
       else if (versus && event.code === 'Numpad1') this.confirmFighter(1);
       else if (key === 'Enter') this.confirmFighter();
-    } else if (this.page === 'stage' && key === 'Enter') this.startFight();
+    } else if (this.page === 'stage') {
+      if (key === 'ArrowLeft' || key === 'ArrowRight') this.chooseStage(key === 'ArrowLeft' ? -1 : 1);
+      else if (key === 'Enter') this.startFight();
+    }
   };
 
   private get fighters() {
@@ -74,6 +79,7 @@ export class MenuScene extends Phaser.Scene {
   constructor() { super('MenuScene'); }
   init(data: { fighterId?: string } = {}): void {
     this.page = 'home'; this.mode = 'arcade'; this.transitioning = false; this.selection.reopen();
+    this.stageIndex = selectableStages.findIndex(stage => stage.id === defaultStage.id);
     const index = this.fighters.findIndex(f => f.id === data.fighterId);
     if (index >= 0) this.fighterIndex = index;
   }
@@ -81,7 +87,7 @@ export class MenuScene extends Phaser.Scene {
     configureUiCamera(this.cameras.main, this.scale);
     this.loading = this.add.text(LOGICAL_VIEW.width / 2, LOGICAL_VIEW.height / 2, 'PREPARANDO A ARENA…', { fontSize: '18px', color: '#e6c78d' }).setOrigin(.5);
     this.load.image('menu-solar', menuBackground);
-    preloadStage(this, defaultStage);
+    selectableStages.forEach(stage => preloadStage(this, stage));
   }
   create(): void {
     this.loading?.destroy(); this.loading = undefined;
@@ -160,21 +166,24 @@ export class MenuScene extends Phaser.Scene {
     const titles = { home: '01 / MODOS', fighter: '02 / PERSONAGEM', stage: '03 / CENÁRIO', settings: 'CONFIGURAÇÕES' };
     this.text(width - 42, 40, titles[this.page], 13, '#fff0d2').setStroke('#171219', 3).setOrigin(1, 0);
     if (this.page === 'stage') {
+      const stage = this.selectedStage;
       this.text(56, 119, 'ONDE VAMOS LUTAR?', 23);
       const x = 212, y = 168, w = 600;
-      const scale = Math.min(w / defaultStage.referenceSize.width, 300 / defaultStage.referenceSize.height);
-      const imageX = x + (w - defaultStage.referenceSize.width * scale) / 2;
+      const scale = Math.min(w / stage.referenceSize.width, 300 / stage.referenceSize.height);
+      const imageX = x + (w - stage.referenceSize.width * scale) / 2;
       this.box(x - 2, y - 2, w + 4, 303, 0xa88859);
-      for (const layer of [...defaultStage.layers].sort((a, b) => a.depth - b.depth)) {
+      for (const layer of [...stage.layers].sort((a, b) => a.depth - b.depth)) {
         const content = layer.contentScale ?? 1, origin = layer.scaleOrigin ?? { x: 0, y: 0 };
-        const image = this.add.image(imageX + scale * (layer.x + origin.x * (1 - content)), y + scale * (layer.y + origin.y * (1 - content)), stageTextureKey(defaultStage, layer)).setOrigin(0).setScale(scale * content); root.add(image);
+        const image = this.add.image(imageX + scale * (layer.x + origin.x * (1 - content)), y + scale * (layer.y + origin.y * (1 - content)), stageTextureKey(stage, layer)).setOrigin(0).setScale(scale * content); root.add(image);
       }
       this.box(x, y + 245, w, 54, 0x101019, .90);
-      this.text(x + 20, y + 258, defaultStage.name.toUpperCase(), 23, '#f3d49e');
+      this.text(x + 20, y + 258, stage.name.toUpperCase(), 23, '#f3d49e');
       this.text(x + w - 20, y + 267, 'CENÁRIO SELECIONADO', 11, '#c4b8c0').setOrigin(1, 0);
+      this.button(58, 310, 112, '← ANTERIOR', () => this.chooseStage(-1));
+      this.button(854, 310, 112, 'PRÓXIMO →', () => this.chooseStage(1));
+      this.text(56, height - 25, '← →  CENÁRIO     ENTER  COMEÇAR     ESC  VOLTAR', 11, '#d3bea3');
       this.text(160, 490, `${this.fighters[this.fighterIndex].name.toUpperCase()}${this.mode === 'versus' ? ` × ${this.fighters[this.selection.indices[1]].name.toUpperCase()}` : ''} · ${MODES.find(m => m.id === this.mode)!.title}`, 14, '#d4b47d');
       this.button(630, 486, 234, 'COMEÇAR LUTA', () => this.startFight());
-      this.text(56, height - 25, 'ENTER  COMEÇAR     ESC  VOLTAR', 11, '#d3bea3');
     } else {
       this.text(56, 144, 'CONFIGURAÇÕES', 26);
       this.text(56, 204, 'Configure as teclas no painel de controles.', 18, '#c4b8c0');
@@ -257,6 +266,10 @@ export class MenuScene extends Phaser.Scene {
       ? 'P1: A / D · J CONFIRMAR     P2: ← / → · NUM1 CONFIRMAR     ENTER: CONFIRMAR VEZ     ESC: VOLTAR'
       : '← →  ESCOLHER     ENTER  CONFIRMAR     ESC  VOLTAR'));
   }
+  private chooseStage(direction: number): void {
+    this.stageIndex = (this.stageIndex + direction + selectableStages.length) % selectableStages.length;
+    this.render();
+  }
   private chooseMode(index: number): void {
     this.selection.reopen();
     this.modeIndex = index; const id = MODES[index].id;
@@ -274,6 +287,6 @@ export class MenuScene extends Phaser.Scene {
   private startFight(): void {
     if (this.transitioning) return; this.transitioning = true;
     const fighter = this.fighters[this.fighterIndex];
-    this.scene.start('FightScene', { fighterId: fighter.id, opponentId: this.mode === 'versus' ? this.fighters[this.selection.indices[1]].id : opponentFor(fighter.id, this.mode).id, stageId: defaultStage.id, mode: this.mode, arcadeIndex: 0 });
+    this.scene.start('FightScene', { fighterId: fighter.id, opponentId: this.mode === 'versus' ? this.fighters[this.selection.indices[1]].id : opponentFor(fighter.id, this.mode).id, stageId: this.selectedStage.id, mode: this.mode, arcadeIndex: 0 });
   }
 }

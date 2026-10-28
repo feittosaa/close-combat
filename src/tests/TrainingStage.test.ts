@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest';
-import { stages, defaultStage, trainingStage, getStageById } from '../rendering/stages/stageCatalog';
+import { stages, defaultStage, trainingStage, getStageById, selectableStages } from '../rendering/stages/stageCatalog';
 import { isTrainingMode, stageForMatch, type MatchMode } from '../scenes/matchSetup';
 import { createStageLayout, getFightCameraFrame } from '../rendering/stages/stageLayout';
 it('entrega o bar como cenário geral e preserva a sala de prática',()=>{
-  expect(stages.map(s=>s.id).sort()).toEqual(['bar-anoitecer','sala-treino']);
+  expect(stages.map(s=>s.id).sort()).toEqual(['bar-anoitecer','sala-treino','salao-treino']);
   expect(getStageById('cais')).toBeUndefined();
   expect(defaultStage.id).toBe('bar-anoitecer');
   expect(trainingStage.referenceSize).toEqual({width:2172,height:904});
@@ -30,4 +30,21 @@ it('mantém pouco piso visível atrás dos pés sem alterar a câmera ou escala 
   expect(frame.zoom).toBe(1.6);
   expect(defaultStage.layers.map(l=>l.id)).toEqual(['bar']);
   expect(defaultStage.layers.every(l=>l.parallax===1)).toBe(true);
+});
+
+it('oferece o Salão de Treino em PvP e Arcade sem substituir a sala de prática', () => {
+  const hall = getStageById('salao-treino')!;
+  expect(hall.name).toBe('Salão de Treino');
+  expect(hall.referenceSize).toEqual({ width: 1942, height: 809 });
+  expect(selectableStages.map(stage => stage.id)).toEqual(['bar-anoitecer', 'salao-treino']);
+  for (const mode of ['versus', 'arcade'] as const) expect(stageForMatch(mode, hall.id)).toBe(hall);
+  for (const mode of ['training', 'tutorial', 'combo-tutorial'] as const) expect(stageForMatch(mode, hall.id)).toBe(trainingStage);
+  const layout = createStageLayout(hall, 1024, 576, 488);
+  for (const rise of [0, 120, 300]) {
+    const frame = getFightCameraFrame(layout, [], [488 - rise]);
+    const project = (y: number) => 288 + (layout.originY + y * layout.scale - frame.scrollY - 288) * frame.zoom;
+    expect(project(0)).toBeLessThanOrEqual(0);
+    expect(project(hall.referenceSize.height)).toBeGreaterThanOrEqual(576);
+    expect(frame.zoom).toBe(1.6);
+  }
 });
