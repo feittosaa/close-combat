@@ -324,7 +324,8 @@ export class Simulation {
         recipe.launch !== undefined && recipe.moveIds.length === attacker.chain?.length &&
         recipe.moveIds.every((id, step) => attacker.chain![step] === id));
       const juggleRules = this.definitions[targetIndex].juggle;
-      if (event.outcome === 'hit' && !event.stage && juggleRules) {
+      const repeatedLauncher = Boolean(launcher && target.juggle);
+      if (event.outcome === 'hit' && !event.stage && juggleRules && !repeatedLauncher) {
         if (target.juggle && !target.grounded) {
           target.juggle.airHits += 1;
           target.juggle.suspensionFrames = juggleRules.airHitSuspensionFrames;
@@ -335,15 +336,30 @@ export class Simulation {
         }
       }
       if (launcher && event.outcome === 'hit' && !event.stage) {
-        target.grounded = false; target.crouching = false;
-        target.verticalVelocity = launcher.launch!.velocity;
         if (attacker.attack?.moveId === event.moveId) {
           attacker.attack.recoveryFrames = launcher.launch!.recoveryFrames;
           event.attackerRecoveryFrames = attackDurationFrames(sourceMove, attacker.attack) - attacker.attack.elapsedFrames;
         }
         attacker.chain = undefined;
-        target.airborneStartedFrame = this.frame;
+        target.crouching = false;
+        if (repeatedLauncher && juggleRules) {
+          target.y = this.config.arena.floorY;
+          target.grounded = true; target.verticalVelocity = 0;
+          target.airborneStartedFrame = undefined; target.airborneElapsedFrames = undefined;
+          target.juggle = undefined;
+          target.mode = 'knockdown'; target.attack = undefined;
+          target.knockdown = { velocityX: 0 };
+          target.remainingStateFrames = Math.max(juggleRules.getupFrames, event.attackerRecoveryFrames);
+          target.wakeupInvulnerabilityFrames = target.remainingStateFrames + juggleRules.wakeupInvulnerabilityFrames;
+          event.defenderStunFrames = target.remainingStateFrames;
+          event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
+        } else {
+          target.grounded = false;
+          target.verticalVelocity = launcher.launch!.velocity;
+          target.airborneStartedFrame = this.frame;
+        }
       }
+
       if (event.stage === 'confirm' && event.outcome === 'hit') {
         target.juggle = undefined;
         target.ultimateCapture = { ownerId: attacker.characterId };
@@ -375,7 +391,7 @@ export class Simulation {
       }
       if (event.outcome === 'hit' && !event.stage && chainStrike(sourceMove) && attacker.attack?.moveId === event.moveId) {
         attacker.hitSequence = { targetId: target.characterId, heavy: !launcher && Boolean(attacker.hitSequence?.heavy || heavyStrike(sourceMove)) };
-        if (target.grounded && !target.juggle) {
+        if (target.grounded && !target.juggle && target.mode !== 'knockdown') {
           const remaining = attackDurationFrames(sourceMove, attacker.attack) - attacker.attack.elapsedFrames;
           target.remainingStateFrames = remaining;
           event.attackerRecoveryFrames = remaining;
