@@ -16,6 +16,8 @@ Preservar rosto, relação cabeça/corpo, anatomia, silhueta, roupa, materiais e
 
 Não aumentar cabeça ou corpo para enfatizar um golpe, nem mudar tom de pele, roupa ou acessórios entre quadros. Conferir assimetrias e espelhamento. Correções de cor não devem produzir posterização, manchas, bordas coloridas ou rachaduras nas sombras.
 
+Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É proibido ajustar suas cores por CSS ou código, incluindo filtros, tint, shaders, LUTs, recoloração de pixels ou pós-processamento. Correções artísticas pertencem à imagem fonte e exigem aprovação; recorte, transparência, escala, alinhamento e espelhamento técnicos não autorizam recoloração.
+
 ## Animação
 
 Antecipação, contato e recuperação precisam ser legíveis. Usar transições autoradas, continuidade dos membros, apoios estáveis e proporções constantes. A raiz não deriva com braços, roupas ou variação da silhueta. Locomoção real pertence à simulação.

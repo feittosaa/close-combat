@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import menuBackground from '../../assets/art/menu/patio-solar.png';
 import { configureUiCamera, LOGICAL_VIEW } from '../rendering/presentation';
-import { preloadShotoSprites, prepareShotoSprites } from '../rendering/animations/shotoSprites';
+import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { stages } from '../rendering/stages/stageCatalog';
 import { preloadStage } from '../rendering/stages/StageView';
 
@@ -18,7 +18,6 @@ export class BootScene extends Phaser.Scene {
     preloadShotoSprites(this);
   }
   create(): void {
-    prepareShotoSprites(this);
     this.scene.start('MenuScene');
   }
 }

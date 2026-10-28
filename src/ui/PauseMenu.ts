@@ -121,6 +121,7 @@ export class PauseMenu {
     this.details.replaceChildren(el('p', this.fighters[this.fighterIndex].name, 'pause-eyebrow'), el('h2', formatMoveTitle(entry.title,layout)), commandLine);
     if (entry.move) {
       const move = entry.move;
+      if (move.category === 'throw') this.details.append(el('p', 'Ao iniciar o comando, segure frente para lançar à frente ou trás para lançar atrás. Sem direção, lança à frente.'));
       if (move.rageCost) this.details.append(el('p', `Exige ${move.rageCost} de rage; consome ao iniciar.`));
       if (move.invulnerability) this.details.append(el('p', `Invulnerável ${move.invulnerability.kind === 'all' ? 'a ataques' : 'a projéteis'} por ${move.invulnerability.until}F.`));
       if (move.projectile) this.details.append(el('p', `Projétil · velocidade ${move.projectile.speed} · duração ${move.projectile.life}F.`));

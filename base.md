@@ -41,6 +41,8 @@ O motor é a autoridade sobre contato, dano, posições e duração dos estados.
 
 Controles são remapeáveis, direções são relativas ao oponente e transições de pausa/reset/foco não devem reaproveitar comandos antigos. Ferramentas de treino e IA usam entradas legais e a mesma simulação das partidas, sem acertos ou vantagens forçados.
 
+Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É proibido ajustar suas cores por CSS ou código, incluindo filtros, tint, shaders, LUTs, recoloração de pixels ou pós-processamento. Correções artísticas pertencem à imagem fonte e exigem aprovação; recorte, transparência, escala, alinhamento e espelhamento técnicos não autorizam recoloração.
+
 ## Apresentação compartilhada
 
 A saída padrão é Full HD 1920 × 1080, em 16:9, com composição lógica 1024 × 576 e projeção uniforme. A câmera de combate tem escala fixa, acompanha o combate no eixo horizontal e o personagem mais alto no eixo vertical durante a subida e a descida. O tamanho visual dos personagens é independente da escala do cenário; o enquadramento deve preservar ambos nos limites laterais. Não aplicar zoom dinâmico por distância, ação ou postura.
