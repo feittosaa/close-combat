@@ -4,6 +4,16 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Garrafa da ultimate: tamanho, arco e trava após confirmação — 2026-10-28
+
+Branch `codex/feature-arco-garrafa-ultimate`, dependente de `codex/feature-ritmo-combate` em `b40aaf9`, ainda não integrada. Escopo ampliado por pedido posterior para manter ambos os jogadores sem comandos de deslocamento após o acerto da garrafa, até o impacto do isqueiro.
+
+- [x] Caixa da garrafa da ultimate ampliada de 34,5 × 27,6 para 69 × 55,2 (dobro por dimensão, quatro vezes a área). Centro inicial na altura do topo do corpo em pé: deslocamento Y -193,2 com meia altura 27,6, centro -165,6. Velocidade vertical inicial -1,5 e gravidade 0,12 geram pequena subida seguida de queda em arco. Velocidade horizontal 15, duração 150, dano 280 e sequência de confirmação/isqueiro preservados. Taça e garrafa especial comum não alteradas. O desenho geométrico provisório compartilha a caixa real, sem imagem nova ou ajuste artístico.
+- [x] A captura existente do alvo trava também o autor: caminhada, dash, salto e novos ataques não são aceitos enquanto o alvo estiver capturado. Comandos recebidos nesse intervalo não ficam pendentes. Trava se encerra no impacto do isqueiro; alvo mantém queda/recuperação normais após explosão. Alvo aéreo continua aterrissando sob gravidade para permitir o lançamento do isqueiro. Erro/bloqueio da garrafa não ativam captura. Reset limpa a relação sem estado adicional.
+- [x] `npm ci`, 273 testes/33 arquivos, build e diff aprovados. Novas regressões em ambos os lados verificam dimensões, altura inicial, arco, velocidade horizontal preservada, confirmação/explosão, posição constante sob tentativas contínuas de movimento/ataque, retorno de controle e reset durante captura. Regressões anteriores de bloqueio, erro, capturas aéreas e limite da arena permanecem verdes.
+- [x] Conferência no jogo por entradas legais e avanço de frames, a 25% para inspeção: caixa ampliada junto ao topo do personagem, voo, confirmação sem dano inicial, distância 222 mantida até o isqueiro e retorno de movimento após explosão. Console sem erros/avisos. Evidências locais `/tmp/shoto-ultimate-garrafa-arco.png`, `/tmp/shoto-ultimate-trava.png` e `/tmp/shoto-ultimate-retorno.png`. Prévia restabelecida na porta 5174; nenhuma aprovação artística inferida.
+- [ ] Envio e CI remota do commit exato. Sem autorização de merge, promoção ou release.
+
 ## Ritmo dos golpes do Shoto — 2026-10-28
 
 Branch `codex/feature-ritmo-combate`, dependente de `codex/fix-tempo-alcance-agarrao` em `f445d03`, ainda não integrada. Pedido esclarecido: somente golpes aproximadamente 40% mais lentos, sem desacelerar caminhada, salto ou projéteis. Tempos de preparação, atividade e recuperação dos 23 golpes divididos por 0,6 e arredondados ao frame mais próximo; soco fraco 10/3/20, forte 17/5/30, chutes 13/5/25 e 22/7/37, agarrões 20/3/47 e 20/3/50. Reações de acerto/bloqueio, janelas de continuação e invulnerabilidade acompanham a escala temporal. Avanços próprios dos especiais ficam mais lentos com duração ampliada para conservar aproximadamente a distância. Velocidades verticais, gravidade, dano, caixas, comandos, receitas e imagens preservados; ataques aéreos continuam terminando ao aterrissar.
@@ -11,7 +21,7 @@ Branch `codex/feature-ritmo-combate`, dependente de `codex/fix-tempo-alcance-aga
 - [x] Preparação cinematográfica da ultimate ampliada de 120 para 200 ticks; lançamento do isqueiro de 6 para 10. Confirmação e queda protegida acompanham a duração ampliada; trajetórias e velocidades dos projéteis/lançamentos preservadas. Pausa de contato permanece 7 ticks, relógio e simulação a 60 Hz sem escala global.
 - [x] Instalação reproduzível, 269 testes/33 arquivos, build e diff aprovados. Regressões atualizadas para aguardar os novos tempos sem relaxar contato, recuperação, bloqueio, invulnerabilidade, combos, determinismo ou limpeza após reset. Fixture de física de juggle mantém recuperação curta explícita para isolar a suspensão aérea da duração dos golpes oficiais.
 - [x] Conferência no jogo por entradas legais dos quatro básicos: HUD mostra novos tempos, dano real preservado e reprodução das poses. Console sem erros/avisos. Evidência local `/tmp/shoto-golpes-lentos.png`. Nenhuma arte alterada; ajuste de ritmo sujeito à avaliação do usuário.
-- [ ] Commit/push e CI remota do commit exato. Sem autorização de merge, promoção ou release.
+- [x] Enviado em `b40aaf9c191e1bc5f5b4d02f038d710c2ee85ab7`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40744848652). Sem merge, promoção ou release; development `ba2d46f` e main `be7d340` preservadas.
 
 ## Preparação e alcance dos agarrões — 2026-10-28
 

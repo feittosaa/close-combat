@@ -176,7 +176,7 @@ export class Simulation {
     const previousTransitions=this.characters.map(c=>c.animationTransition?{startedFrame:c.animationTransition.startedFrame,from:c.animationTransition.from}:undefined);
     const previousX = this.characters.map(character => character.x);
     const attackingAtInput = this.characters.map(character => Boolean(character.attack));
-    const lockedAtInput = this.characters.map(character => locked(character));
+    const lockedAtInput = this.characters.map(character => locked(character) || this.heldByUltimate(character));
     // Ler ambos os comandos antes de avaliar guarda evita viés por ordem dos jogadores.
     const commands = this.characters.map((character, index) => {
       if (character.wakeupInvulnerabilityFrames) {
@@ -209,8 +209,10 @@ export class Simulation {
       if (character.attack) {
         const move = this.move(index, character.attack.moveId)!;
         const elapsed = character.attack.elapsedFrames;
-        if (!character.grounded && !move.movement) this.moveInDirection(character, axis(input), index);
-        if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
+        if (!this.heldByUltimate(character)) {
+          if (!character.grounded && !move.movement) this.moveInDirection(character, axis(input), index);
+          if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
+        }
         if (move.projectile && elapsed === move.startup) {
           this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
             x: character.x + (character.facing === 'right' ? 1 : -1) * character.collision.bodyWidth * 7 / 12, y: character.y, facing: character.facing,
@@ -417,10 +419,15 @@ export class Simulation {
       .map(move => move.follows ? { ...move, sequenceAfterFrame: character.attack?.commandFrame } : move);
     const command = this.parsers[index].update(input, this.frame, moves,
       { airborne: !character.grounded, crouching: input.direction.startsWith('D') && character.grounded });
+    if (this.heldByUltimate(character)) { this.pendingCommands[index] = undefined; return; }
     if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6,
       ...(command.category === 'throw' ? { throwDirection: input.direction.endsWith('B') ? 'backward' : 'forward' } : {}) };
   }
+  private heldByUltimate(character: CharacterState): boolean {
+    return Boolean(character.ultimateCapture || this.characters.some(target => target.ultimateCapture?.ownerId === character.characterId));
+  }
   private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
+    if (this.heldByUltimate(character)) return false;
     if ((move.rageCost ?? 0) > character.rage) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;

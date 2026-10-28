@@ -1,3 +1,4 @@
+import { createProjectileHitbox } from '../engine/collision/projectileGeometry';
 import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
@@ -218,4 +219,59 @@ it('keeps the complete knocked-down body inside the fixed viewport at maximum se
       step(sim);
     }
   }
+});
+
+
+it.each([0,1])('launches a double-size ultimate bottle at head height in a falling arc: player %i',player=>{
+  const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
+  wait(sim,ULTIMATE_ACTIVATION_FRAMES+1);
+  const initial=sim.snapshot();const bottle=initial.projectiles.find(p=>p.phase==='confirm')!;
+  const owner=initial.characters[player];const move=shoto.moves.find(m=>m.id==='wine-ultimate')!;
+  const box=createProjectileHitbox(bottle,move);
+  expect(box.width).toBe(69);expect(box.height).toBe(55.2);
+  // The first integration already moved the bottle upward by its launch velocity.
+  expect(box.y+box.height/2).toBeCloseTo(owner.y+owner.collision.hurtboxes.standing.offsetY-1.5);
+  expect(box.y).toBeLessThan(owner.y+owner.collision.hurtboxes.standing.offsetY);
+  const positions=[bottle.y];
+  for(let tick=0;tick<20;tick++){
+    const before=sim.snapshot().projectiles.find(p=>p.id===bottle.id)!;
+    step(sim);const after=sim.snapshot().projectiles.find(p=>p.id===bottle.id)!;
+    expect(after.x-before.x).toBeCloseTo(player===0?15:-15);
+    expect(after.y-before.y).toBeCloseTo(before.verticalVelocity!);
+    expect(after.verticalVelocity!-before.verticalVelocity!).toBeCloseTo(0.12);
+    positions.push(after.y);
+  }
+  expect(positions[5]).toBeLessThan(positions[0]);
+  expect(positions[20]).toBeGreaterThan(positions[15]);
+  expect(contact(sim,'explosion',player).damage).toBe(280);
+});
+
+it.each([0,1])('holds both players from bottle confirmation through lighter impact, then releases control: player %i',player=>{
+  const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
+  contact(sim,'confirm',player);
+  const positions=sim.snapshot().characters.map(c=>({x:c.x,y:c.y}));
+  let exploded=false;
+  for(let tick=0;tick<180;tick++){
+    const attempts=[input('F',['1']),input('B',['2']),input('UF',['3']),input('DB',['4'])];
+    step(sim,attempts[tick%attempts.length],player,attempts[(tick+2)%attempts.length]);
+    const snapshot=sim.snapshot();
+    if(snapshot.hitEvents.some(e=>e.stage==='explosion')){exploded=true;break;}
+    expect(snapshot.characters.map(c=>({x:c.x,y:c.y}))).toEqual(positions);
+    expect(snapshot.characters[player].attack?.moveId??'wine-ultimate').toBe('wine-ultimate');
+    expect(snapshot.characters[1-player].attack).toBeUndefined();
+    expect(snapshot.characters[1-player].ultimateCapture).toBeDefined();
+  }
+  expect(exploded).toBe(true);
+  expect(sim.snapshot().characters[1-player].ultimateCapture).toBeUndefined();
+  wait(sim,CONTACT_HITSTOP_FRAMES+1);
+  const before=sim.snapshot().characters[player].x;step(sim,input('F'),player);
+  expect(sim.snapshot().characters[player].x).not.toBe(before);
+  expect(sim.snapshot().characters[player].attack).toBeUndefined();
+  wait(sim,100);
+  const target=sim.snapshot().characters[1-player].x;step(sim,input('F'),1-player);
+  expect(sim.snapshot().characters[1-player].x).not.toBe(target);
+
+  sim.resetMatch();sim.fillTrainingRage();command(sim,'wine-ultimate',player);contact(sim,'confirm',player);
+  sim.resetMatch();const reset=sim.snapshot().characters[player].x;step(sim,input('F'),player);
+  expect(sim.snapshot().characters[player].x).not.toBe(reset);
 });
