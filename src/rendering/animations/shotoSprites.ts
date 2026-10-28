@@ -30,7 +30,7 @@ const ultimateDrinkClip = {key:'shoto-ultimate-drink',start:128,end:133,frameRat
 /** Approved locomotion, four basics and posture guards. Roots and body scale are atlas-authored. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
   textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:134,
-  footAnchorY:720,displaySize:{width:172.8*1.03*1.15,height:172.8*1.03*1.15},
+  footAnchorY:720,displaySize:{width:172.8*1.03*1.15*1.1,height:172.8*1.03*1.15*1.1},
   clips:[
     {key:'shoto-idle',start:0,end:7,frameRate:6,repeat:-1},
     {key:'shoto-walk',start:8,end:127,frames:[8,120,9,121,10,122,11,123,12,124,13,125,14,126,15,127],frameRate:20,repeat:-1},

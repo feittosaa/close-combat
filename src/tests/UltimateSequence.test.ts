@@ -228,7 +228,7 @@ it.each([0,1])('launches a resized ultimate bottle at head height in a falling a
   const initial=sim.snapshot();const bottle=initial.projectiles.find(p=>p.phase==='confirm')!;
   const owner=initial.characters[player];const move=shoto.moves.find(m=>m.id==='wine-ultimate')!;
   const box=createProjectileHitbox(bottle,move);
-  expect(box.width).toBe(55.2);expect(box.height).toBe(44.16);
+  expect(box.width).toBe(60.72);expect(box.height).toBe(48.576);
   // The first integration already moved the bottle upward by its launch velocity.
   expect(box.y+box.height/2).toBeCloseTo(owner.y+owner.collision.hurtboxes.standing.offsetY-1.5);
   expect(box.y).toBeLessThan(owner.y+owner.collision.hurtboxes.standing.offsetY);

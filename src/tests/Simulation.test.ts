@@ -127,7 +127,7 @@ describe('fundação da simulação', () => {
     stream.forEach(value => { a.stepFrame([value, N]); b.stepFrame([value, N]); });
     expect(a.snapshot()).toEqual(b.snapshot());
     const copy = a.snapshot(); copy.characters[0].collision.bodyWidth = 999; copy.characters[0].health = 0;
-    expect(a.snapshot().characters[0].collision.bodyWidth).toBe(55.2);
+    expect(a.snapshot().characters[0].collision.bodyWidth).toBe(60.72);
     expect(a.snapshot().characters[0].health).toBe(1000);
   });
   it('reseta vida, entradas, registros e opções de distância no treino', () => {
@@ -148,8 +148,8 @@ describe('fundação da simulação', () => {
   });
   it('geometria é espelhada por personagem e não depende de arte', () => {
     const states = practice().snapshot().characters;
-    expect(createHurtbox(states[0]).width).toBe(55.2);
-    expect(createHurtbox({ ...states[1], crouching: true }).height).toBe(103.5);
+    expect(createHurtbox(states[0]).width).toBe(60.72);
+    expect(createHurtbox({ ...states[1], crouching: true }).height).toBe(113.85);
   });
   it('vence rounds por KO, conta vitórias e permite reinício da partida', () => {
     const fragile = { ...shoto, maxHealth: 20 };
