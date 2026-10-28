@@ -67,7 +67,7 @@ it.each([0,1])('uses lighter launcher gravity, keeps the target stunned and rese
 
 // Isolate reaction physics with legal single-button attacks and guaranteed geometric range.
 const juggleFixture: CharacterDefinition={...shoto,id:'juggle-fixture',combos:shoto.combos,juggle:{...shoto.juggle!,maximumGravityScale:1},
-  moves:shoto.moves.map(m=>m.id==='heavy-punch'?{...m,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:
+  moves:shoto.moves.map(m=>m.id==='heavy-punch'?{...m,activeFrames:3,recovery:18,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:
     m.id==='light-punch'?{...m,startup:4,activeFrames:1,recovery:1,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:m)};
 
 it('increases gravity once per real air hit, caps it, and never resets upward momentum on ordinary hits',()=>{

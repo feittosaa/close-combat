@@ -1,5 +1,5 @@
-/** Shared ultimate activation: two seconds of fixed ticks freeze world and round clock. */
-export const ULTIMATE_ACTIVATION_FRAMES = 120;
+/** Shared ultimate activation: extended preparation freezes world and round clock. */
+export const ULTIMATE_ACTIVATION_FRAMES = 200;
 export interface UltimateActivation {
   ownerIds: readonly string[];
   elapsedFrames: number;

@@ -4,6 +4,15 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Ritmo dos golpes do Shoto — 2026-10-28
+
+Branch `codex/feature-ritmo-combate`, dependente de `codex/fix-tempo-alcance-agarrao` em `f445d03`, ainda não integrada. Pedido esclarecido: somente golpes aproximadamente 40% mais lentos, sem desacelerar caminhada, salto ou projéteis. Tempos de preparação, atividade e recuperação dos 23 golpes divididos por 0,6 e arredondados ao frame mais próximo; soco fraco 10/3/20, forte 17/5/30, chutes 13/5/25 e 22/7/37, agarrões 20/3/47 e 20/3/50. Reações de acerto/bloqueio, janelas de continuação e invulnerabilidade acompanham a escala temporal. Avanços próprios dos especiais ficam mais lentos com duração ampliada para conservar aproximadamente a distância. Velocidades verticais, gravidade, dano, caixas, comandos, receitas e imagens preservados; ataques aéreos continuam terminando ao aterrissar.
+
+- [x] Preparação cinematográfica da ultimate ampliada de 120 para 200 ticks; lançamento do isqueiro de 6 para 10. Confirmação e queda protegida acompanham a duração ampliada; trajetórias e velocidades dos projéteis/lançamentos preservadas. Pausa de contato permanece 7 ticks, relógio e simulação a 60 Hz sem escala global.
+- [x] Instalação reproduzível, 269 testes/33 arquivos, build e diff aprovados. Regressões atualizadas para aguardar os novos tempos sem relaxar contato, recuperação, bloqueio, invulnerabilidade, combos, determinismo ou limpeza após reset. Fixture de física de juggle mantém recuperação curta explícita para isolar a suspensão aérea da duração dos golpes oficiais.
+- [x] Conferência no jogo por entradas legais dos quatro básicos: HUD mostra novos tempos, dano real preservado e reprodução das poses. Console sem erros/avisos. Evidência local `/tmp/shoto-golpes-lentos.png`. Nenhuma arte alterada; ajuste de ritmo sujeito à avaliação do usuário.
+- [ ] Commit/push e CI remota do commit exato. Sem autorização de merge, promoção ou release.
+
 ## Preparação e alcance dos agarrões — 2026-10-28
 
 Branch `codex/fix-tempo-alcance-agarrao`, dependente de `codex/fix-agarrao-cores-originais` em `f6d142e`, ainda não integrada. O usuário esclareceu que deseja um agarrão mais demorado: preparação de ambos passa a 12 frames, substituindo 5/7; ativos 2 e recuperação 28/30 preservados, total próprio 42/44 frames (mais a pausa compartilhada quando há contato). Caixa de captura ampliada horizontalmente de 25,3 para 46 unidades, mesmo deslocamento frontal 18,4 e mesma altura 126,5. Captura a 80 unidades de distância entre centros e erro a 100; não captura alvos aéreos. Dano, comandos, frente/trás, regras de defesa e imagens preservados.

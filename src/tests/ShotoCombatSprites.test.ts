@@ -80,18 +80,18 @@ it('mantém os seis clipes e pausa idênticos em 30/60/120/144 FPS',()=>{
   const run=(fps:number)=>{
     const sim=new Simulation(config,undefined,{training:true,initialDistance:64});
     const trace:unknown[]=[];const textures=new Set<string>();
-    for(let i=0;i<fps*4;i++)sim.advance(1000/fps,(_characters,frame)=>{
+    for(let i=0;i<fps*6;i++)sim.advance(1000/fps,(_characters,frame)=>{
       const snapshot=sim.snapshot();
       for(const state of snapshot.characters){
         const layers=getShotoSpriteLayers(state,snapshot.frame);
         expect(getShotoSpriteLayers(state,snapshot.frame)).toEqual(layers);
         layers.forEach(layer=>textures.add(layer.texture));trace.push(layers);
       }
-      if(frame<160){
-        const button=frame===0?'1':frame===40?'2':frame===80?'3':frame===120?'4':undefined;
+      if(frame<280){
+        const button=frame===0?'1':frame===70?'2':frame===140?'3':frame===210?'4':undefined;
         return [input('N',button),input('DB')];
       }
-      return [input(frame===180?'U':frame>180&&frame<215?'B':'N'),input('N',frame===181?'1':undefined)];
+      return [input(frame===300?'U':frame>300&&frame<345?'B':'N'),input('N',frame===301?'1':undefined)];
     });
     for(const name of ['light-punch','heavy-punch','light-kick','heavy-kick','crouch-defense','air-defense'])expect(textures.has(`shoto-${name}`)).toBe(true);
     return trace;

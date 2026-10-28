@@ -24,7 +24,7 @@ function command(sim: Simulation, move: MoveDefinition, player = 0): void {
   step(sim, input(sequence[sequence.length-1] ?? (move.crouching ? 'D' : 'N'), move.input.buttons), player);
 }
 function untilContact(sim: Simulation, player = 0, guard = N, continuous = false): void {
-  for (let i = 0; i < 180; i++) {
+  for (let i = 0; i < 400; i++) {
     if (sim.snapshot().hitEvents.some(e => e.attackerId === `player-${player + 1}`)) return;
     if(continuous)expect(sim.snapshot().characters[1-player].mode, `Defender escaped combo: ${sim.snapshot().characters[player].attack?.moveId}`).toBe('hitstun');
     step(sim, N, player, guard);
@@ -147,20 +147,20 @@ describe('manual Shoto catalogue', () => {
     for(const id of ['reversal-kick','reversal-light']) {
       const sim=create(56);step(sim,input('N',['1']),1);
       command(sim,move(id));
-      for(let i=0;i<6;i++)step(sim);
+      for(let i=0;i<10;i++)step(sim);
       expect(sim.snapshot().characters[0].health).toBe(id==='reversal-kick'?1000:980);
     }
   });
 
   it('advancing knee passes through a real projectile, but is not immune to melee', () => {
     const sim=create(200);command(sim,move('wine-glass'),1);
-    wait(sim,10);command(sim,move('advancing-knee'));
+    wait(sim,20);command(sim,move('advancing-knee'));
     const start=sim.snapshot().characters[0].x;
-    for(let i=0;i<16;i++)step(sim);
+    for(let i=0;i<26;i++)step(sim);
     expect(sim.snapshot().characters[0].x).toBeGreaterThan(start);
     expect(sim.snapshot().characters[0].health).toBe(1000);
     expect(sim.snapshot().projectiles.some(p=>p.x < sim.snapshot().characters[0].x)).toBe(true);
-    const melee=create(56);step(melee,input('N',['1']),1);command(melee,move('advancing-knee'));wait(melee,3);
+    const melee=create(56);step(melee,input('N',['1']),1);command(melee,move('advancing-knee'));wait(melee,7);
     expect(melee.snapshot().characters[0].health).toBe(980);
   });
 
@@ -193,7 +193,7 @@ describe('manual Shoto catalogue', () => {
   it('projectile continues after its owner is interrupted, then expires without contact', () => {
     const sim=create(56);command(sim,move('wine-bottle'));
     // Time a reversal to interrupt after bottle release while its invulnerability avoids contact.
-    wait(sim,13);command(sim,move('reversal-kick'),1);
+    wait(sim,23);command(sim,move('reversal-kick'),1);
     untilContact(sim,1);
     expect(sim.snapshot().characters[0].mode).toBe('hitstun');
     expect(sim.snapshot().projectiles.some(p=>p.ownerId==='player-1')).toBe(true);
