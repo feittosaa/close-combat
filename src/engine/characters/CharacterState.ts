@@ -5,7 +5,6 @@ export type CharacterMode = 'neutral' | 'moving' | 'dashing' | 'airborne' | 'cro
   'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun' | 'knockdown';
 export interface CharacterAttack {
   moveId: string;
-  commandFrame?: number;
   buttons: readonly AttackButton[];
   elapsedFrames: number;
   hasHit: boolean;
@@ -37,7 +36,8 @@ export interface CharacterState {
   attack?: CharacterAttack;
   hitFlashFrames: number;
   chain?: string[];
-  chainLastFrame?: number;
+  /** Confirmed pressure keeps its strength floor until the defender regains control. */
+  hitSequence?: { targetId: string; heavy: boolean };
   knockdown?: { velocityX: number };
   /** Confirmed launcher flight; independent of ordinary jumps and scripted captures. */
   juggle?: { gravityScale: number; airHits: number; suspensionFrames?: number };

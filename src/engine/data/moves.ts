@@ -13,8 +13,6 @@ export interface MoveDefinition {
   airborne?: boolean;
   /** Existing artwork only; this is a temporary pose alias, never new animation. */
   pose?: 'light-punch' | 'heavy-punch' | 'light-kick' | 'heavy-kick';
-  follows?: string;
-  followWindow?: number;
   movement?: { speed: number; until: number; launch?: number };
   invulnerability?: { kind: 'all' | 'projectile'; until: number };
   projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'glass' | 'bottle' | 'molotov' };
