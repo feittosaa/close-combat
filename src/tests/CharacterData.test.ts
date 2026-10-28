@@ -8,7 +8,7 @@ describe('elenco reiniciado', () => {
     expect(characters.map(fighter => fighter.id)).toEqual(['shoto']);
     expect(playableCharacters).toEqual([defaultCharacter]);
     expect(defaultCharacter.name).toBe('Shoto');
-    expect(defaultCharacter.moves.filter(move => move.category === 'basic').map(move => [move.name, move.input.buttons])).toEqual([
+    expect(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne).map(move => [move.name, move.input.buttons])).toEqual([
       ['Soco fraco', ['1']], ['Soco forte', ['2']], ['Chute fraco', ['3']], ['Chute forte', ['4']],
     ]);
     expect(defaultCharacter.combos).toHaveLength(11);
@@ -25,6 +25,6 @@ describe('elenco reiniciado', () => {
     const entries = fighterMoveList(defaultCharacter);
     expect(entries).toHaveLength(defaultCharacter.moves.length + 11);
     expect(filterMoveList(entries, 'combos', '')).toHaveLength(11);
-    expect(filterMoveList(entries, 'basics', 'forte').map(entry => entry.notation)).toEqual(['2', '4']);
+    expect(filterMoveList(entries, 'basics', 'forte').map(entry => entry.notation)).toEqual(['2', '4', 'no ar + 2', 'no ar + 4']);
   });
 });

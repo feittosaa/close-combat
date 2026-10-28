@@ -16,6 +16,8 @@ export interface ComboRecipe {
   name: string;
   notation: string;
   moveIds: readonly string[];
+  /** Upward velocity applied only by the confirmed final hit of this exact recipe. */
+  launchVelocity?: number;
 }
 export interface CharacterDefinition {
   id: string;
