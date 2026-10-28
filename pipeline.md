@@ -10,7 +10,7 @@ Na mesma branch `codex/fix-carregamento-impacto-aereo`, pedido posterior: reduzi
 
 - [x] Constante de contato e regressão explícita atualizadas para 7 ticks.
 - [x] `npm ci`, 265 testes/33 arquivos, build e diff aprovados. Conferência no runtime: contato inicia com 7, sete ticks preservam a pose/estado e o oitavo retoma combate. Captura local `/tmp/shoto-hitstop-seven.png`; bancada temporária removida.
-- [ ] Envio e CI da revisão. Sem novo merge autorizado.
+- [x] Ajuste enviado em `fe2e7ad3c8045721306cfd81c28173f00ffbbe58`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40621344708). Mesma branch preservada; sem merge. Este fechamento somente documental terá sua CI própria conferida antes do relato final.
 
 ## Entrada na luta e leitura do impacto aéreo — 2026-10-27
 
