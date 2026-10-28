@@ -11,6 +11,7 @@ import { FixedStepClock } from './FixedStepClock';
 import type { ProjectileState } from '../combat/ProjectileState';
 import { ULTIMATE_ACTIVATION_FRAMES, type UltimateActivation, type PendingUltimateLighter, type ExplosionState } from '../combat/ultimateActivation';
 import { createProjectileHitbox } from '../collision/projectileGeometry';
+import { flightFramesRemaining } from '../combat/airPhysics';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
@@ -167,7 +168,7 @@ export class Simulation {
       this.characters.forEach((character, index) => this.readCommand(character, index, inputs[index] ?? neutral()));
       this.hitstopFramesRemaining -= 1;
       // Keep attacks/poses intact through the last impact tick, including KO/time-up.
-      if (!this.hitstopFramesRemaining && !this.options.training && !this.characters.some(c=>c.ultimateCapture || (c.knockdown && !c.grounded)) &&
+      if (!this.hitstopFramesRemaining && !this.options.training && !this.characters.some(c=>c.juggle || c.ultimateCapture || (c.knockdown && !c.grounded)) &&
         (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
       return;
     }
@@ -178,9 +179,13 @@ export class Simulation {
     const lockedAtInput = this.characters.map(character => locked(character));
     // Ler ambos os comandos antes de avaliar guarda evita viés por ordem dos jogadores.
     const commands = this.characters.map((character, index) => {
+      if (character.wakeupInvulnerabilityFrames) {
+        character.wakeupInvulnerabilityFrames -= 1;
+        if (!character.wakeupInvulnerabilityFrames) character.wakeupInvulnerabilityFrames = undefined;
+      }
       character.hitFlashFrames = Math.max(0, character.hitFlashFrames - 1);
       const holdLastStunFrame = character.remainingStateFrames === 1 &&
-        (character.ultimateCapture || (character.mode === 'knockdown' && !character.grounded));
+        (character.juggle || character.ultimateCapture || (character.mode === 'knockdown' && !character.grounded));
       if (locked(character) && character.remainingStateFrames > 0 && !holdLastStunFrame) {
         character.remainingStateFrames -= 1;
         if (!character.remainingStateFrames) { character.mode = character.grounded ? 'neutral' : 'airborne'; character.knockdown = undefined; }
@@ -204,6 +209,7 @@ export class Simulation {
       if (character.attack) {
         const move = this.move(index, character.attack.moveId)!;
         const elapsed = character.attack.elapsedFrames;
+        if (!character.grounded && !move.movement) this.moveInDirection(character, axis(input), index);
         if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
         if (move.projectile && elapsed === move.startup) {
           this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
@@ -233,12 +239,23 @@ export class Simulation {
       this.jumpHeld[index] = up;
       if (!character.grounded) {
         character.y += character.verticalVelocity;
-        character.verticalVelocity += this.config.movement.gravity;
+        character.verticalVelocity += this.config.movement.gravity * (character.juggle?.gravityScale ?? 1);
         if (character.y >= this.config.arena.floorY) {
           character.airborneStartedFrame=undefined;
           character.y = this.config.arena.floorY; character.grounded = true; character.verticalVelocity = 0;
+          const juggleRules = this.definitions[index].juggle;
+          if (character.juggle && juggleRules) {
+            character.juggle = undefined;
+            character.mode = 'knockdown'; character.attack = undefined;
+            character.remainingStateFrames = juggleRules.getupFrames;
+            character.knockdown = { velocityX: 0 };
+          }
+          if (character.mode === 'knockdown' && juggleRules) {
+            character.wakeupInvulnerabilityFrames = character.remainingStateFrames + juggleRules.wakeupInvulnerabilityFrames;
+          }
           // Air basics end at landing; rising grounded specials retain their own recovery.
-          if (character.attack && this.move(index, character.attack.moveId)?.airborne && !this.move(index, character.attack.moveId)?.follows) {
+          const landingMove = character.attack ? this.move(index, character.attack.moveId) : undefined;
+          if (landingMove?.airborne && !landingMove.follows) {
             character.attack = undefined; character.chain = undefined; character.mode = 'neutral';
           }
           if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';
@@ -279,15 +296,23 @@ export class Simulation {
       const launcher = this.definitions[attackerIndex].combos?.find(recipe =>
         recipe.launchVelocity !== undefined && recipe.moveIds.length === attacker.chain?.length &&
         recipe.moveIds.every((id, step) => attacker.chain![step] === id));
+      const juggleRules = this.definitions[targetIndex].juggle;
+      if (event.outcome === 'hit' && !event.stage && juggleRules) {
+        if (target.juggle && !target.grounded) {
+          target.juggle.airHits += 1;
+          target.juggle.gravityScale = Math.min(juggleRules.maximumGravityScale,
+            juggleRules.initialGravityScale + target.juggle.airHits * juggleRules.gravityScalePerHit);
+        } else if (launcher) {
+          target.juggle = { gravityScale: juggleRules.initialGravityScale, airHits: 0 };
+        }
+      }
       if (launcher && event.outcome === 'hit' && !event.stage) {
         target.grounded = false; target.crouching = false;
         target.verticalVelocity = launcher.launchVelocity!;
         target.airborneStartedFrame = this.frame;
-        target.remainingStateFrames = Math.max(target.remainingStateFrames, Math.ceil(-2 * launcher.launchVelocity! / this.config.movement.gravity) + 1);
-        event.defenderStunFrames = target.remainingStateFrames;
-        event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
       }
       if (event.stage === 'confirm' && event.outcome === 'hit') {
+        target.juggle = undefined;
         target.ultimateCapture = { ownerId: attacker.characterId };
         target.crouching = false;
         target.knockdown = undefined;
@@ -298,16 +323,22 @@ export class Simulation {
       }
       if (event.stage === 'explosion' && event.outcome === 'hit') {
         const sequence = sourceMove.ultimateSequence!;
+        target.juggle = undefined;
         target.ultimateCapture = undefined;
         target.mode = 'knockdown';
-        let flightFrames = 0, landingY = target.y, launchVelocity = sequence.launchSpeed;
-        do { landingY += launchVelocity; launchVelocity += this.config.movement.gravity; flightFrames += 1; } while (landingY < this.config.arena.floorY && flightFrames < 300);
-        target.remainingStateFrames = sequence.knockdownFrames + flightFrames;
+        target.remainingStateFrames = sequence.knockdownFrames + flightFramesRemaining(
+          target.y, sequence.launchSpeed, this.config.arena.floorY, this.config.movement.gravity);
         event.defenderStunFrames = target.remainingStateFrames; event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
         target.grounded = false; target.crouching = false; target.verticalVelocity = sequence.launchSpeed;
         target.airborneStartedFrame = this.frame;
         target.knockdown = { velocityX: sequence.knockbackSpeed * (event.pushbackDirection === 'right' ? 1 : -1) };
         this.explosions.push({x: target.x,y:target.y-85,remainingFrames:10});
+      }
+      if (target.juggle && juggleRules) {
+        target.remainingStateFrames = juggleRules.getupFrames + flightFramesRemaining(target.y, target.verticalVelocity,
+          this.config.arena.floorY, this.config.movement.gravity * target.juggle.gravityScale);
+        event.defenderStunFrames = target.remainingStateFrames;
+        event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
       }
       const gain = this.definitions[attackerIndex].rage;
       const received = this.definitions[targetIndex].rage;
@@ -333,7 +364,7 @@ export class Simulation {
       this.quietFrames = quiet ? this.quietFrames + 1 : 0;
       if (this.trainingAutoRestore && this.quietFrames >= 90) this.characters.forEach(character => { character.health = character.maxHealth; });
     } else {
-      if (!this.hitstopFramesRemaining && !this.characters.some(c=>c.ultimateCapture || (c.knockdown && !c.grounded)) &&
+      if (!this.hitstopFramesRemaining && !this.characters.some(c=>c.juggle || c.ultimateCapture || (c.knockdown && !c.grounded)) &&
         (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
     }
     this.frame += 1;
@@ -419,10 +450,14 @@ export class Simulation {
       this.dashFrames[index] -= 1; character.mode = 'dashing';
     } else character.mode = !grounded ? 'airborne' : character.crouching ? 'crouching' : horizontal ? 'moving' : 'neutral';
     if (character.crouching) { moveAxis = 0; this.dashFrames[index] = 0; }
-    if (moveAxis) {
-      character.x += moveAxis * speed * (character.facing === 'right' ? 1 : -1);
-      character.movementDirection = moveAxis > 0 ? 'forward' : 'backward';
-    }
+    this.moveInDirection(character, moveAxis, index, speed);
+  }
+  private moveInDirection(character: CharacterState, direction: number, index: number, speed?: number): void {
+    if (!direction) return;
+    const movement = this.definitions[index].movement;
+    const movementSpeed = speed ?? (direction > 0 ? movement.walkSpeed : movement.backwardWalkSpeed);
+    character.x += direction * movementSpeed * (character.facing === 'right' ? 1 : -1);
+    character.movementDirection = direction > 0 ? 'forward' : 'backward';
   }
   /** Stop outward movement at the shared viewport edge; keep the other fighter anchored. */
   private resolveScreenEdges(previousX: readonly number[]): void {

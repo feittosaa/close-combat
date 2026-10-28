@@ -57,6 +57,10 @@ A ativação de toda ultimate usa uma preparação cinematográfica prolongada c
 
 Fundos de combate são ultrawide, com proporção mínima 21:9. Preservar a proporção nativa e ajustar o enquadramento do cenário para evitar ampliação excessiva; a escala dos lutadores e o tamanho de saída da tela são decisões separadas. Não esticar a imagem nem aplicar zoom dinâmico.
 
+Ataques aéreos básicos preservam o deslocamento e a gravidade do salto; iniciar um golpe não interrompe a trajetória horizontal. Deslocamentos próprios de especiais continuam definidos nos dados do golpe.
+
+Um alvo lançado permanece em reação aérea até aterrissar. A gravidade inicial do levantamento é reduzida e aumenta progressivamente a cada novo acerto recebido no ar. Ao tocar o chão, o alvo entra em recuperação protegida e recebe uma breve invencibilidade ao retornar ao controle normal. O salto livre não usa a gravidade de juggle; valores de cada personagem pertencem aos seus dados. Capturas cinematográficas mantêm sua sequência própria.
+
 ## Qualidade e entrega
 
 Priorizar código limpo, legível e bem organizado, com nomes claros, responsabilidades coesas e soluções proporcionais à necessidade atual. Manter somente código, dependências, documentação e assets necessários ao escopo autorizado; retirar sobras, duplicações e peças substituídas após conferir seus consumidores. Artes rejeitadas ou sem aprovação não compõem o acervo ativo; propostas em revisão só permanecem enquanto necessárias a uma tarefa autorizada registrada na pipeline. Fontes ativas de preparação e referências canônicas são parte desse acervo necessário. O Git preserva versões descartadas.
