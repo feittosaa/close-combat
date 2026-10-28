@@ -89,7 +89,7 @@ describe('quatro básicos do Shoto', () => {
     expect(sim.snapshot().recentContacts).toEqual([]); expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
   });
   it('resolve simultâneos como trade sem viés de ordem', () => {
-    const sim = practice(); sim.stepFrame([input('N', ['1']), input('N', ['1'])]); advance(sim, 10);
+    const sim = practice(); sim.stepFrame([input('N', ['1']), input('N', ['1'])]); advance(sim, 8);
     expect(sim.snapshot().hitEvents).toHaveLength(2);
     expect(sim.snapshot().characters.map(character => character.health)).toEqual([980, 980]);
     expect(sim.snapshot().characters.every(character => character.mode === 'hitstun' && !character.attack)).toBe(true);
@@ -155,7 +155,7 @@ describe('fundação da simulação', () => {
     const fragile = { ...shoto, maxHealth: 20 };
     const sim = new Simulation({ ...config, match: { ...config.match, roundEndPauseFrames: 2 } }, [fragile, fragile], { initialDistance: 64 });
     for (let round = 1; round <= 2; round++) {
-      sim.stepFrame([input('N', ['1']), N]); advance(sim, 10 + CONTACT_HITSTOP_FRAMES);
+      sim.stepFrame([input('N', ['1']), N]); advance(sim, 8 + CONTACT_HITSTOP_FRAMES);
       expect(sim.snapshot()).toMatchObject({ phase: 'round-over', round, roundEndReason: 'knockout', roundWinnerId: 'player-1' });
       expect(sim.snapshot().activeHitboxes).toEqual([]);
       advance(sim, 2);

@@ -27,8 +27,8 @@ function contact(sim:Simulation,stage:'confirm'|'explosion',player=0,target=N){
   throw new Error(`Missing ${stage} contact`);
 }
 
-it('freezes the round clock and entire world for 200 ticks of activation, for any ultimate',()=>{
-  expect(ULTIMATE_ACTIVATION_FRAMES).toBe(200);
+it('freezes the round clock and entire world for 150 ticks of activation, for any ultimate',()=>{
+  expect(ULTIMATE_ACTIVATION_FRAMES).toBe(150);
   const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:100}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
@@ -68,11 +68,11 @@ it('freezes already flying projectiles, and simultaneous ultimates share one act
 
 it.each([0,1])('bottle confirms, lighter explodes once for 280 and physically knocks player %i down',player=>{
   const sim=create();sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  expect(contact(sim,'confirm',player)).toMatchObject({damage:0,outcome:'hit',defenderStunFrames:200});
+  expect(contact(sim,'confirm',player)).toMatchObject({damage:0,outcome:'hit',defenderStunFrames:150});
   expect(sim.snapshot().characters[1-player].health).toBe(1000);
-  // Ten combat frames of throw preparation, independently of the shared contact pause.
-  wait(sim,CONTACT_HITSTOP_FRAMES+9);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
-  const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(60);
+  // Eight combat frames of throw preparation, independently of the shared contact pause.
+  wait(sim,CONTACT_HITSTOP_FRAMES+7);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
+  const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(50);
   const target=sim.snapshot().characters[1-player];
   expect(target).toMatchObject({health:720,mode:'knockdown',grounded:false});
   expect(target.verticalVelocity).toBe(-5);expect(target.knockdown).toBeDefined();
@@ -191,7 +191,7 @@ it.each([0,1])('captures an airborne defender upright, waits for landing and exp
 
 it.each([0,1])('throws the ultimate bottle across maximum separation at the reduced speed while retaining a reliable lighter confirmation: player %i',player=>{
   const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  wait(sim,ULTIMATE_ACTIVATION_FRAMES+1);
+  wait(sim,ULTIMATE_ACTIVATION_FRAMES);
   const launched=sim.snapshot();expect(Math.abs(launched.projectiles[0].velocity)).toBe(15);
   const started=launched.frame;contact(sim,'confirm',player);
   expect(sim.snapshot().frame-started).toBeLessThanOrEqual(36);
@@ -224,7 +224,7 @@ it('keeps the complete knocked-down body inside the fixed viewport at maximum se
 
 it.each([0,1])('launches a double-size ultimate bottle at head height in a falling arc: player %i',player=>{
   const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  wait(sim,ULTIMATE_ACTIVATION_FRAMES+1);
+  wait(sim,ULTIMATE_ACTIVATION_FRAMES);
   const initial=sim.snapshot();const bottle=initial.projectiles.find(p=>p.phase==='confirm')!;
   const owner=initial.characters[player];const move=shoto.moves.find(m=>m.id==='wine-ultimate')!;
   const box=createProjectileHitbox(bottle,move);

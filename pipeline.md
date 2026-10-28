@@ -4,6 +4,17 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Ritmo a 80%, receitas no vazio e empurrão mínimo — 2026-10-28
+
+Branch `codex/feature-ritmo-combos-distancia`, dependente de `codex/feature-sequencias-abertas-shoto` em `056c5af`, ainda não integrada. Pedido: trocar a redução de velocidade de 40% por aproximadamente 20%, permitir executar receitas fechadas sem contato e evitar o afastamento excessivo durante os combos.
+
+- [x] Tempos recalculados diretamente da base anterior à desaceleração (`f445d03`), dividindo por 0,8 e arredondando ao frame mais próximo, sem acumular arredondamentos do ajuste de 40%. Velocidades dos avanços próprios dos especiais em 80% da base; caminhada, salto, gravidade e projéteis preservados. Ultimate passa a preparar por 150 ticks, com demais tempos correlatos na mesma proporção. Soco fraco 8/3/15, forte 13/4/23, chutes 10/4/19 e 16/5/28.
+- [x] As quatro receitas fechadas podem continuar no erro, após encerrar os frames ativos de cada etapa. Entrada antecipada só usa o buffer existente; não pula preparo/atividade nem executa a receita com botão mantido. Trocas fora das receitas continuam exigindo acerto; forte → fraco e término seguro permanecem. Erro conserva recuperação punível e não mantém o adversário em reação.
+- [x] Empurrão no acerto dos básicos, abaixados e potentes reduzido a 1 unidade por impacto; bloqueio, agarrões, especiais/projéteis e deslocamentos da ultimate preservados. Nenhum novo comando, receita, imagem, dano ou caixa.
+- [x] `npm ci`, 288 testes/35 arquivos, build e diff aprovados. Cinco regressões novas cobrem as quatro receitas no vazio nos dois lados, entradas separadas, ausência de dano/stun/continuação automática, preparo/atividade completos, rejeição de rotas externas no erro e empurrão real de 1 unidade nos dois jogadores. A sequência aberta existente foi conferida partindo de distância 96, com os sete acertos conectados e distância final 103. Regressões de ritmo/ultimate/agarrões foram atualizadas para os tempos novos, mantendo as mesmas exigências de contato, pausa, recuperação, trajetória e segurança.
+- [x] Conferência no jogo por entradas legais e avanço de frames: `1,1,1` a distância 220, três entradas/execuções sem dano e alvo neutro; soco fraco 8/3/15 e forte 13/4/23 no HUD; `1,1,1 → 3 → 2,2,2` conecta 190 de dano contra tentativa de guarda, distância 96 → 103 e vantagem final 0F. Console sem erros/avisos. Evidências locais `/tmp/shoto-combo-vazio-20.png` e `/tmp/shoto-empurrao-minimo-20.png`. Sem alteração de arte ou nova aprovação artística.
+- [ ] Envio e CI remota do commit exato; sem merge, promoção ou release.
+
 ## Sequências abertas, receitas de socos e término seguro — 2026-10-28
 
 Branch `codex/feature-sequencias-abertas-shoto`, dependente de `codex/feature-arco-garrafa-ultimate` em `45af619`, ainda não integrada. Pedido confirmado: somente socos nas receitas, forte → fraco nunca durante a sequência, retorno conjunto ao controle após acerto e manutenção do launcher.
