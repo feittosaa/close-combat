@@ -25,6 +25,7 @@ export interface CharacterState {
   maxHealth: number;
   rage: number;
   maxRage: number;
+  ultimateUsed: boolean;
   mode: CharacterMode;
   stateStartedFrame: number;
   animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };

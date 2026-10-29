@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Menu, HUD e rage — 2026-10-29
+
+Na branch `codex/feature-tela-adaptavel`, o destaque do menu usa tamanho uniforme e impede quebra de linha. HUD ocupa a largura disponível: vida, rage e entradas de treino ficam nas extremidades, mantendo a escala; barra de rage maior junto à parte inferior. Shoto passa de 100 para 150 de capacidade e custo, com ganhos por contato inalterados: a carga completa exige 50% mais recurso. Cada jogador pode ativar uma ultimate por partida, inclusive ao trocar de round; reiniciar a partida libera nova ativação. No treino, reiniciar também libera outra ativação. Instalação reproduzível, 337 testes em 39 arquivos, build e diff aprovados. Conferidos no jogo o destaque de Configurações e as barras de treino; regressões cobrem HUD largo e uso da ultimate entre rounds nos dois lados. Aprovação visual pendente; envio e CI em andamento.
+
 ## Tela adaptável — 2026-10-29
 
 Branch `codex/feature-tela-adaptavel`, criada a pedido a partir de `development`. Adaptar menus e cenário ao tamanho da janela, preservando escala relativa dos lutadores e HUD, câmera fixa e simulação. Manter `sprites/shoto` separada. Canvas acompanha a janela; HUD conserva a composição central e a escala, enquanto a câmera mantém zoom lógico e simulação. O cenário usa laterais espelhadas nas paredes e uma cópia de fundo para cobrir proporções extremas sem esticar a imagem. Instalação reproduzível, 334 testes em 39 arquivos, build e diff aprovados; navegador conferido em janela estreita/alta, menu e treino. Proporções largas verificadas por regressões geométricas, ainda sem conferência visual em monitor ultrawide; aprovação visual pendente. Envio e CI a conferir.

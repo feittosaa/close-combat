@@ -252,7 +252,6 @@ export class MenuScene extends Phaser.Scene {
     const mode = MODES[index];
     featureNumber.textContent = `0${index + 1} / ${mode.tag}`;
     featureTitle.textContent = mode.title;
-    featureTitle.classList.toggle('long', mode.title.length > 13);
     featureHint.textContent = mode.hint;
     if (changed && !this.motionPreference?.matches && typeof featureTitle.animate === 'function') {
       featureTitle.animate([{ opacity: .35, transform: 'translateX(-18px)' }, { opacity: 1, transform: 'translateX(0)' }],

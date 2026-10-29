@@ -74,10 +74,10 @@ it('starts the cinematic when a buffered ultimate becomes available as a missed 
 
 it('freezes the round clock and entire world for 150 ticks of activation, for any ultimate',()=>{
   expect(ULTIMATE_ACTIVATION_FRAMES).toBe(150);
-  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:100}};
+  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:150}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
-  expect(sim.snapshot().characters[0].rage).toBe(100);
+  expect(sim.snapshot().characters[0].rage).toBe(150);
   const motion=shoto.moves.find(m=>m.id==='wine-ultimate')!.input.sequence!;
   motion.slice(0,-1).forEach(d=>step(sim,input(d)));
   const before=sim.snapshot();step(sim,input('F',['1','2']),0,input('UF',['4']));
@@ -153,7 +153,7 @@ it('reset clears activation, confirmations, lighter, knockdown and explosion sta
 });
 
 it('keeps the KO launch alive until the defender reaches the floor',()=>{
-  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:100}};
+  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:150}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,80);command(sim,'wine-ultimate');contact(sim,'explosion');wait(sim,6);
   expect(sim.snapshot().phase).toBe('fight');
@@ -319,4 +319,25 @@ it.each([0,1])('holds both players from bottle confirmation through lighter impa
   sim.resetMatch();sim.fillTrainingRage();command(sim,'wine-ultimate',player);contact(sim,'confirm',player);
   sim.resetMatch();const reset=sim.snapshot().characters[player].x;step(sim,input('F'),player);
   expect(sim.snapshot().characters[player].x).not.toBe(reset);
+});
+
+it.each([0,1])('allows one ultimate per fighter across rounds and restores it on match reset: player %i', player => {
+  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:150}};
+  const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
+  command(sim,'light-punch',player);wait(sim,80);
+  expect(sim.snapshot().characters[player].rage).toBe(150);
+  command(sim,'wine-ultimate',player);
+  expect(sim.snapshot().characters[player].ultimateUsed).toBe(true);
+  expect(sim.snapshot().characters[1-player].ultimateUsed).toBe(false);
+  contact(sim,'explosion',player);
+  for(let i=0;i<400 && sim.snapshot().round===1;i++)step(sim);
+  expect(sim.snapshot()).toMatchObject({round:2,phase:'fight'});
+  expect(sim.snapshot().characters[player].ultimateUsed).toBe(true);
+  command(sim,'light-punch',player);wait(sim,80);
+  expect(sim.snapshot().characters[player].rage).toBe(150);
+  command(sim,'wine-ultimate',player);wait(sim,20);
+  expect(sim.snapshot().ultimateActivation).toBeUndefined();
+  expect(sim.snapshot().characters[player].attack?.moveId).not.toBe('wine-ultimate');
+  sim.resetMatch();
+  expect(sim.snapshot().characters.every(c=>!c.ultimateUsed)).toBe(true);
 });
