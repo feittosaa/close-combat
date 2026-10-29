@@ -1,5 +1,15 @@
 # Close Combat — Pipeline
 
+## Alcance, seleção de cenário e continuidade de combos — 2026-10-29
+
+Branch `codex/feature-selecao-cenarios-alcance`, dependente de `codex/fix-janela-punicao-maior` em `66fd55d`, ainda não integrada. Ampliar em 10% a largura horizontal das caixas corpo a corpo do Shoto, incluindo básicos, agachados, aéreos, potentes, agarrões e especiais diretos, sem alterar projéteis, hurtboxes ou tempos de contato. Regressão confirma punição após bloqueio à distância 114, antes fora do alcance do soco fraco, nos dois lados.
+
+Seleção de cenário substituída por grade central 3×3, com vagas vazias, prévia da arena em fundo ao passar o ponteiro ou navegar pelo teclado e confirmação do cenário selecionado. A seleção de personagem ocupa toda a área do jogo; personagens idle ficaram maiores e mais próximos das extremidades. Não há novas imagens nem recoloração. Conferência em Arcade e PvP: prévias do Bar e do Salão, ponteiro, teclado e início de luta no Salão. Áreas externas ao canvas permanecem sujeitas ao enquadramento proporcional da janela.
+
+Combos fechados de socos confirmados: recuperação final 10F em `1,1,1`, 30F em `2,2,2`; atacante e alvo no chão recuperam o controle juntos. Uma continuação iniciada enquanto o alvo ainda está em hitstun mantém a reação através do preparo e atividade do próximo golpe, inclusive se ele tentar defender, permitindo 1,1,1 → 2,2,2 quando a continuação começa perto do fim da reação. Sem criar novas receitas. Levantamento `1,1,2`, limite de força e recuperação da sequência no vazio preservados. Testes de regressão nos dois lados e com defesa pressionada; balanceamento permanece provisório.
+
+Validação local: instalação reproduzível, 317 testes em 38 arquivos, build e diff aprovados. Envio e CI remota pendentes; aprovação artística e integração em `development` não inferidas.
+
 ## Recuperação bloqueada ampliada — 2026-10-29
 
 Branch `codex/fix-janela-punicao-maior`, baseada em `development` após a integração de menus e combate. O usuário relatou dificuldade para punir manualmente na janela anterior de 9/16 frames. Recuperação de golpes diretos bloqueados ampliada para oferecer ao defensor no mínimo 24 frames (0,4 s) contra leves e 36 frames (0,6 s) contra fortes, depois de terminar o blockstun. O atacante mantém sua recuperação vulnerável e não pode bloquear, agachar para evitar a resposta nem cancelar em outro golpe durante ela; os sprites usam a recuperação real até retornar ao estado normal. Acerto e erro mantêm os tempos anteriores; projéteis preservam a recuperação natural conforme escolha do usuário.

@@ -74,6 +74,24 @@ describe('blocked attack recovery', () => {
     }
   });
 
+  it.each([0, 1])('punishes a blocked heavy punch at the previously unreachable distance, player %i', attacker => {
+    const sim = new Simulation(config, undefined, { training: true, initialDistance: 108 });
+    const defender = 1 - attacker;
+    const advance = (attack: FrameInput, defense: FrameInput) => {
+      const inputs = [neutral, neutral]; inputs[attacker] = attack; inputs[defender] = defense;
+      sim.stepFrame(inputs);
+    };
+    advance(input('N', '2'), input('B'));
+    for (let i = 0; i < 40 && !sim.snapshot().hitEvents.length; i++) advance(input('B'), input('B'));
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', moveId: 'heavy-punch' });
+    for (let i = 0; i < 60 && (sim.snapshot().hitstopFramesRemaining || sim.snapshot().characters[defender].mode === 'blockstun'); i++) advance(input('B'), input('B'));
+    const before = sim.snapshot();
+    expect(Math.abs(before.characters[0].x - before.characters[1].x)).toBeCloseTo(114);
+    advance(input('B'), input('N', '1'));
+    for (let i = 0; i < 15 && !sim.snapshot().hitEvents.length; i++) advance(input('B'), neutral);
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'hit', moveId: 'light-punch', context: 'block-punish' });
+  });
+
   it('stays exposed through every recovery frame and returns to idle at the end', () => {
     const sim = new Simulation(config, undefined, { training: true, initialDistance: 64 });
     sim.stepFrame([input('N', '1'), input('B')]);
