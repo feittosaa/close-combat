@@ -31,14 +31,14 @@ canvas {
 
 .combat-pause[hidden] { display: none; }
 .combat-pause { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e12cc; backdrop-filter: blur(5px); color: #f6e6ce; }
-.pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #b7905c; background: linear-gradient(120deg,#302029,#17131a 65%); padding: 26px; border-top: 4px solid #dcaf71; box-shadow: 0 0 0 5px #16121ae0, 0 24px 90px #000b; }
+.pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #f0dfc477; background: linear-gradient(120deg,#25191d,#130f14 65%); padding: 26px; border-top: 4px solid #c04436; box-shadow: 0 0 0 5px #16121ae0, 0 24px 90px #000b; }
 .pause-panel header { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.pause-panel h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(20px, 3vw, 32px); }
+.pause-panel h1 { margin: 0; font: 900 clamp(20px, 3vw, 32px) Arial,sans-serif; letter-spacing: -.04em; }
 .pause-eyebrow { color: #efac66; font-size: 11px; letter-spacing: .14em; margin: 0; }
 .pause-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .combat-pause button, .combat-pause input { font: inherit; color: inherit; background: #33272b; border: 1px solid #8d6a47; padding: 10px 12px; border-radius: 0; }
 .combat-pause button { cursor: pointer; }
-.combat-pause button:hover, .combat-pause button[aria-pressed="true"] { background: #754835; border-color: #f1c98c; }
+.combat-pause button:hover, .combat-pause button[aria-pressed="true"] { background: #a6372e; border-color: #f0dfc4; }
 .combat-pause :focus-visible { outline: 2px solid #ffc485; outline-offset: 2px; }
 .pause-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 12px; }
 .pause-tools input { flex: 1; min-width: 180px; }
@@ -70,8 +70,8 @@ canvas {
 .command-notation { font-family: Arial, sans-serif; font-size: 1.1em; line-height: 1.65; }
 .command-button { display: inline-block; min-width: 1.35em; padding: 0 .17em; margin: 0 .1em; text-align: center; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; background: #10101a; }
 .control-settings { position: fixed; inset: 0; z-index: 200; background: #100e12df; display: grid; place-items: center; padding: 20px; color: #eee9f2; }
-.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: linear-gradient(135deg, #282024, #17151b); border: 2px solid #b7905c; box-shadow: 0 0 0 5px #171219, 0 24px 80px #000b; padding: 24px; }
-.controls-panel h1 { margin: 0; font-family: Georgia, serif; color: #ffe0a4; letter-spacing: .08em; }
+.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: linear-gradient(135deg, #282024, #17151b); border: 2px solid #c04436; box-shadow: 0 0 0 5px #171219, 0 24px 80px #000b; padding: 24px; }
+.controls-panel h1 { margin: 0; font-family: Arial, sans-serif; font-weight: 900; color: #f0dfc4; letter-spacing: .08em; }
 .controls-panel p { font-size: 13px; color: #c4bbc9; min-height: 1.5em; }
 .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .controls-grid h2 { font-size: 17px; }
@@ -92,5 +92,40 @@ canvas {
 .combat-pause.match-pause header { display: block; }
 .combat-pause.match-pause h1 { margin: 12px 0 28px; font-style: italic; font-size: clamp(26px,4vw,44px); }
 .combat-pause.match-pause .pause-actions { display: grid; gap: 10px; }
-.combat-pause.match-pause button { text-align: left; padding: 16px 20px; border-left: 4px solid #b7905c; }
-.combat-pause.match-pause button:first-child { background: #803e34; border-color: #f0c68a; }
+.combat-pause.match-pause button { text-align: left; padding: 16px 20px; border-left: 4px solid #c04436; }
+.combat-pause.match-pause button:first-child { background: #a6372e; border-color: #f0dfc4; }
+
+/* Pause uses the angular ink panels and warm accents of the main menu. */
+.combat-pause { background: #100d13e8; font-family: Arial,sans-serif; }
+.pause-panel { position: relative; border: 0; border-top: 4px solid #c04436; background: linear-gradient(120deg,#171016f5,#251a22ed); box-shadow: 0 24px 90px #000b; }
+.pause-panel h1 { font-weight: 900; text-transform: uppercase; letter-spacing: -.06em; }
+.pause-actions button { border: 0; border-left: 4px solid #c04436; background: #130f14; font-weight: 900; text-align: left; }
+.pause-actions button:hover, .pause-actions button:focus-visible { background: #c04436; }
+.pause-details { background: #f0dfc4; color: #171216; border: 0; }
+.pause-details .pause-eyebrow, .pause-details .pause-command { color: #a3382e; }
+.pause-details .pause-note { color: #584a4a; }
+.pause-details button { color: #fff0d2; }
+.combat-pause.match-pause .pause-panel { width: min(900px,100%); min-height: 390px; background: linear-gradient(110deg,#130f14 0 46%,#f0dfc4 46% 100%); }
+.combat-pause.match-pause header { width: 43%; }
+.combat-pause.match-pause .pause-panel::after { content: 'PAUSA'; position: absolute; right: 6%; top: 40%; color: #171216; font: 900 clamp(45px,8vw,110px)/.9 Arial,sans-serif; letter-spacing: -.07em; }
+.combat-pause.match-pause .pause-legend { position: absolute; right: 6%; bottom: 16%; color: #584a4a; }
+@media (max-width: 760px) { .combat-pause.match-pause .pause-panel { min-height: 0; background: #171016; } .combat-pause.match-pause header { width: 100%; } .combat-pause.match-pause .pause-panel::after { display: none; } .combat-pause.match-pause .pause-legend { position: static; color: #aaa5b6; } }
+
+/* Angled, layered surfaces keep every pause mode in the same visual family. */
+.combat-pause { background: radial-gradient(ellipse at 50% 40%,#392329d9,#0c0a10ef 75%); }
+.pause-panel { background: linear-gradient(135deg,#382529,#171016 55%,#28191e); border-top: 0; box-shadow: 9px 12px 0 #08070bc9, 0 24px 90px #000b; clip-path: polygon(1% 1%,97% 0,100% 4%,99% 99%,3% 100%,0 96%); padding: 30px 34px; }
+.pause-panel::before { content: ''; position: absolute; inset: 0 0 auto; height: 5px; background: linear-gradient(90deg,#f0dfc4,#c04436 22%,#7d3029 75%,transparent); }
+.pause-panel header { position: relative; }
+.pause-panel h1 { text-shadow: 3px 3px #742c25; }
+.combat-pause button { transition: background .15s ease, transform .15s ease; }
+.pause-actions button, .pause-categories button, .pause-tools button, .pause-details button { clip-path: polygon(3% 0,100% 0,97% 100%,0 100%); border: 0; background: linear-gradient(135deg,#422b2d,#191319); box-shadow: inset 4px 0 #b94536; font-weight: 700; }
+.pause-actions button:hover, .pause-actions button:focus-visible, .pause-categories button:hover, .pause-categories button:focus-visible, .pause-categories button[aria-pressed="true"], .pause-tools button:hover, .pause-tools button:focus-visible, .pause-details button:hover, .pause-details button:focus-visible { background: linear-gradient(110deg,#9f342c,#ca5140); }
+.pause-move { border: 0 !important; border-left: 4px solid #966b56 !important; background: linear-gradient(110deg,#3b292c,#1a151a) !important; }
+.pause-move:hover { background: linear-gradient(110deg,#9f342c,#602920) !important; }
+.pause-details { border-left: 5px solid #c04436; background: linear-gradient(130deg,#fae9ce,#d8bd99); box-shadow: 5px 6px 0 #0a080b99; }
+.pause-tools input { background: #171116; border: 1px solid #97745d; }
+.combat-pause.match-pause .pause-panel { background: linear-gradient(110deg,#1a1218 0 48%,#f4e2c7 48% 100%); }
+.combat-pause.match-pause .pause-panel::after { text-shadow: 4px 4px #c9a98b; }
+.combat-pause.inspection .pause-panel { clip-path: none; }
+@media (max-width: 760px) { .pause-panel { padding: 16px; } .combat-pause.match-pause .pause-panel { background: linear-gradient(135deg,#382529,#171016); } }
+@media (prefers-reduced-motion: reduce) { .combat-pause button { transition: none; } }

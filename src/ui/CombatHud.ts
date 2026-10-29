@@ -24,6 +24,13 @@ export class CombatHud {
 
   constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = ['JOGADOR 1','JOGADOR 2'], stageName = '', private readonly training = false, private readonly practiceLabel = 'TREINO LIVRE') {
     const decoration=scene.add.graphics();
+    // The timer sits in a small angled ink badge; health rails remain continuous.
+    decoration.fillStyle(HUD.ink,.92).fillPoints([
+      {x:width/2-34,y:0},{x:width/2+34,y:0},{x:width/2+28,y:41},{x:width/2-28,y:41},
+    ],true);
+    decoration.fillStyle(HUD.players[0]).fillPoints([
+      {x:width/2-34,y:0},{x:width/2-29,y:0},{x:width/2-23,y:41},{x:width/2-28,y:41},
+    ],true);
     const labels=[scene.add.text(28,31,`P1  /  ${fighterNames[0].toUpperCase()}`,hudText(13,true)),
       scene.add.text(width-28,31,`P2  /  ${fighterNames[1].toUpperCase()}`,hudText(13,true)).setOrigin(1,0)];
     this.healthGraphics=scene.add.graphics();

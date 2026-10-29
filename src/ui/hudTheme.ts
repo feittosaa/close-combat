@@ -1,14 +1,14 @@
 import type Phaser from 'phaser';
 
-/** Shared ink, parchment and warm metal language of the approved menu. */
+/** Shared ink, parchment and accent colors for menus and combat HUD. */
 export const HUD = {
-  ink: 0x17131a, inset: 0x251d23, rail: 0x433039, gold: 0xb78c58, lightGold: 0xf1c98c,
-  ivory: '#f6e6ce', muted: '#c5ae94', goldText: '#e8bf81',
-  players: [0xc96b53, 0x65aaa2], playerText: ['#eca58a', '#8dd5ca'],
+  ink: 0x151114, inset: 0x21191b, rail: 0x281c20, gold: 0xd9c2a2, lightGold: 0xf4e6d0,
+  ivory: '#f5e8d5', muted: '#d2bdab', goldText: '#f1d9b9',
+  players: [0xc74436, 0x4d9e9e], playerText: ['#f2b19b', '#a1dfda'],
 } as const;
 
 export function hudText(size: number, title = false, color: string = HUD.ivory): Phaser.Types.GameObjects.Text.TextStyle {
-  return { fontFamily: title ? 'Georgia, serif' : 'Arial, sans-serif', fontSize: `${size}px`, color, resolution: 2, shadow: { offsetX: 0, offsetY: 1, color: '#100e12', blur: 2, fill: true } };
+  return { fontFamily: 'Arial, sans-serif', fontStyle: title ? 'bold' : 'normal', fontSize: `${size}px`, color, resolution: 2, shadow: { offsetX: 0, offsetY: 1, color: '#100e12', blur: 2, fill: true } };
 }
 export function drawHudPanel(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, accent: number = HUD.gold, alpha = .94): void {
   const c = 6;
