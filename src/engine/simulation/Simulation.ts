@@ -69,6 +69,7 @@ export class Simulation {
   private trainingAutoRestore = false;
   private quietFrames = 0;
   private jumpHeld = [false, false];
+  private ultimateHeld = [false, false];
   private previousAxis = [0, 0];
   private tapAxis = [0, 0];
   private tapFrame = [-Infinity, -Infinity];
@@ -97,7 +98,7 @@ export class Simulation {
   }
   clearInputHistory(): void {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
-    this.jumpHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
+    this.jumpHeld.fill(false); this.ultimateHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
     this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
   }
   isMatchOver(): boolean { return this.phase === 'match-over'; }
@@ -108,7 +109,7 @@ export class Simulation {
     this.resetRound(false);
   }
   fillTrainingRage(): void {
-    if (this.options.training) this.characters.forEach(character => { if (!character.ultimateUsed) character.rage = character.maxRage; });
+    if (this.options.training) this.characters.forEach(character => { if (!character.ultimateUsed || this.options.training) character.rage = character.maxRage; });
   }
   setTrainingAutoRestore(enabled: boolean): void { if (this.options.training) { this.trainingAutoRestore = enabled; this.quietFrames = 0; } }
 
@@ -410,8 +411,8 @@ export class Simulation {
       }
       const gain = this.definitions[attackerIndex].rage;
       const received = this.definitions[targetIndex].rage;
-      if (gain && !attacker.ultimateUsed && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
-      if (received && !target.ultimateUsed && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
+      if (gain && (!attacker.ultimateUsed || this.options.training) && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
+      if (received && (!target.ultimateUsed || this.options.training) && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
       const pushSign = (event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1;
       if (sourceMove.category === 'throw' && event.outcome === 'hit') {
         target.x = contactPositions[attackerIndex] + pushSign * (Math.abs(contactPositions[targetIndex] - contactPositions[attackerIndex]) + event.pushback);
@@ -469,7 +470,7 @@ export class Simulation {
         character.chain = this.recipePrefix(index, chain) ? chain : [move.id];
         if (character.hitSequence && heavyStrike(move)) character.hitSequence.heavy = true;
         character.rage = Math.max(0, character.rage - (move.rageCost ?? 0));
-        if (move.category === 'ultimate') { this.ultimateUsed[index] = true; character.ultimateUsed = true; }
+        if (move.category === 'ultimate' && !this.options.training) { this.ultimateUsed[index] = true; character.ultimateUsed = true; }
         character.attack = { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false,
           ...(move.category === 'throw' ? { throwDirection: this.pendingCommands[index]?.throwDirection ?? 'forward' } : {}) };
         character.crouching = Boolean(move.crouching); this.dashFrames[index] = 0;
@@ -482,6 +483,12 @@ export class Simulation {
   private readCommand(character: CharacterState, index: number, input: FrameInput): void {
     if (this.pendingCommands[index] && this.pendingCommands[index]!.expires < this.frame) this.pendingCommands[index] = undefined;
     const moves = this.definitions[index].moves;
+    const shortcut = Boolean(input.ultimate) && !this.ultimateHeld[index];
+    this.ultimateHeld[index] = Boolean(input.ultimate);
+    if (shortcut && !this.heldByUltimate(character)) {
+      const ultimates = moves.filter(move => move.category === 'ultimate');
+      if (ultimates.length === 1) { this.pendingCommands[index] = { move: ultimates[0], expires: this.frame + 6 }; return; }
+    }
     const command = this.parsers[index].update(input, this.frame, moves,
       { airborne: !character.grounded, crouching: input.direction.startsWith('D') && character.grounded });
     if (this.heldByUltimate(character) || (command && character.hitSequence?.heavy && !heavyStrike(command))) {
@@ -501,9 +508,12 @@ export class Simulation {
   }
   private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
     if (this.heldByUltimate(character)) return false;
-    if ((move.rageCost ?? 0) > character.rage || (move.category === 'ultimate' && character.ultimateUsed)) return false;
+    if ((move.rageCost ?? 0) > character.rage || (move.category === 'ultimate' && character.ultimateUsed && !this.options.training)) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;
+    if (previous?.hitOutcome === 'hit' && character.chain && this.definitions[index].combos?.some(recipe =>
+      !recipe.launch && recipe.moveIds.length === character.chain!.length &&
+      recipe.moveIds.every((id, i) => id === character.chain![i]) && heavyStrike(this.move(index, previous.moveId)!))) return false;
     if (character.hitSequence?.heavy && !heavyStrike(move)) return false;
     if (!previous) return true;
     // A chord completed within the input grace window replaces its uncommitted single.

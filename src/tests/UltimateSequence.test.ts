@@ -343,15 +343,13 @@ it.each([0,1])('allows one ultimate per fighter across rounds and restores it on
 });
 
 
-it.each([0,1])('does not refill rage after use, even through training refill and incoming hits: player %i', player => {
+it.each([0,1])('refills rage and permits repeated ultimates in training: player %i', player => {
   const sim=create(56);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  expect(sim.snapshot().characters[player]).toMatchObject({rage:0,ultimateUsed:true});
+  expect(sim.snapshot().characters[player]).toMatchObject({rage:0,ultimateUsed:false});
   wait(sim,350);sim.fillTrainingRage();
-  expect(sim.snapshot().characters[player].rage).toBe(0);
-  command(sim,'light-punch',1-player);wait(sim,50);
-  expect(sim.snapshot().characters[player].rage).toBe(0);
-  sim.resetMatch();sim.fillTrainingRage();
   expect(sim.snapshot().characters[player].rage).toBe(200);
+  command(sim,'wine-ultimate',player);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
 });
 
 it('preserves each fighter’s accumulated rage between rounds and clears it on match reset', () => {
@@ -367,4 +365,31 @@ it('preserves each fighter’s accumulated rage between rounds and clears it on 
   expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([10,15]);
   sim.resetMatch();
   expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
+});
+
+it.each([0,1])('uses the shortcut with full cinematic and the same resource rules: player %i', player => {
+  const sim=create(100);
+  step(sim,{...N,ultimate:true},player);
+  expect(sim.snapshot().ultimateActivation).toBeUndefined();
+  step(sim,N,player);sim.fillTrainingRage();
+  step(sim,{...N,ultimate:true},player);
+  expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
+  expect(sim.snapshot().characters[player].rage).toBe(0);
+  expect(sim.snapshot().projectiles).toHaveLength(0);
+});
+
+
+it.each([0,1])('starts the shortcut cinematic after two punches in a combo: player %i',player=>{
+  const sim=create(56);sim.fillTrainingRage();
+  for(let punch=0;punch<2;punch++){
+    step(sim,input('N',['1']),player);
+    for(let tick=0;tick<80;tick++){
+      if(sim.snapshot().hitEvents.some(e=>e.attackerId===`player-${player+1}` && e.moveId==='light-punch'))break;
+      step(sim,N,player);
+    }
+  }
+  step(sim,{...N,ultimate:true},player);
+  for(let tick=0;tick<30 && !sim.snapshot().ultimateActivation;tick++)step(sim,N,player);
+  expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
+  expect(sim.snapshot().projectiles).toHaveLength(0);
 });

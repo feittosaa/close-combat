@@ -181,3 +181,18 @@ it('lets the defender attack and the attacker guard on their shared recovery tic
   expect(sim.snapshot().hitEvents).toEqual([expect.objectContaining({attackerId:'player-2',outcome:'block',damage:0})]);
   expect(sim.snapshot().characters[0].health).toBe(1000);
 });
+
+it.each([0,1])('ends a confirmed heavy punch combo before any further attack: player %i', player => {
+  for (const followup of ['1','2','3','4'] as const) {
+    const sim=create();
+    for (const button of ['2','2','2'] as const) hit(sim,player,[button]);
+    step(sim,player,input([followup]));
+    wait(sim,CONTACT_HITSTOP_FRAMES+2);
+    expect(sim.snapshot().characters[player].attack?.moveId).toBe('heavy-punch');
+    expect(sim.snapshot().recentContacts).toHaveLength(3);
+    while(sim.snapshot().characters[player].attack)step(sim);
+    expect(sim.snapshot().characters.every(c=>c.mode==='neutral')).toBe(true);
+    step(sim,player,input([followup]));
+    expect(sim.snapshot().characters[player].attack).toBeDefined();
+  }
+});
