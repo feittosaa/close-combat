@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Recuperação bloqueada ampliada — 2026-10-29
+
+Branch `codex/fix-janela-punicao-maior`, baseada em `development` após a integração de menus e combate. O usuário relatou dificuldade para punir manualmente na janela anterior de 9/16 frames. Recuperação de golpes diretos bloqueados ampliada para oferecer ao defensor no mínimo 24 frames (0,4 s) contra leves e 36 frames (0,6 s) contra fortes, depois de terminar o blockstun. O atacante mantém sua recuperação vulnerável e não pode bloquear, agachar para evitar a resposta nem cancelar em outro golpe durante ela; os sprites usam a recuperação real até retornar ao estado normal. Acerto e erro mantêm os tempos anteriores; projéteis preservam a recuperação natural conforme escolha do usuário.
+
+Validação local: instalação reproduzível, 311 testes em 38 arquivos, build e diff aprovados. Regressões incluem resposta após atraso de 12 frames e aproximação, quatro básicos, ambos os lados e tentativas de defesa alta/baixa, além da exposição até o fim e retorno ao idle. No treino, o HUD mostrou −24F para o leve e −36F para o forte, com o defensor livre antes do atacante. Envio e CI remota a conferir; sem nova integração autorizada.
+
 ## Seleção compartilhada e pausa
 
 O usuário autorizou a integração das branches de menu e de punição em `development`. As duas foram integradas em `d0b680a`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40873483006), e encerradas localmente e no remoto após conferência de ancestralidade e ausência de outros checkouts. A aprovação artística permanece pendente. As observações de ausência de integração abaixo registram o estado anterior.
