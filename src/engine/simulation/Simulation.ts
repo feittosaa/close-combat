@@ -35,6 +35,13 @@ const wallInset = (state: CharacterState): number => state.mode === 'knockdown' 
 const neutral = (): FrameInput => ({ direction: 'N', buttons: new Set() });
 const chainStrike = (move: MoveDefinition): boolean => ['basic', 'crouching', 'power'].includes(move.category ?? '') && !move.projectile;
 const heavyStrike = (move: MoveDefinition): boolean => move.input.buttons.some(button => button === '2' || button === '4');
+const heavyButton = (move: MoveDefinition): '2' | '4' | undefined =>
+  move.input.buttons.length === 1 && (move.input.buttons[0] === '2' || move.input.buttons[0] === '4') ? move.input.buttons[0] : undefined;
+const permitsStrength = (sequence: CharacterState['hitSequence'], move: MoveDefinition): boolean => {
+  if (!sequence?.heavy || move.category === 'ultimate') return true;
+  if (!heavyStrike(move)) return false;
+  return !sequence.heavyButton || move.input.buttons.every(button => button === sequence.heavyButton);
+};
 const locked = (state: CharacterState): boolean => state.mode === 'hitstun' || state.mode === 'blockstun' || state.mode === 'knockdown';
 const axis = (input: FrameInput): number => input.direction.endsWith('F') ? 1 : input.direction.endsWith('B') ? -1 : 0;
 const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
@@ -400,7 +407,8 @@ export class Simulation {
         event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
       }
       if (event.outcome === 'hit' && !event.stage && chainStrike(sourceMove) && attacker.attack?.moveId === event.moveId) {
-        attacker.hitSequence = { targetId: target.characterId, heavy: !launcher && Boolean(attacker.hitSequence?.heavy || heavyStrike(sourceMove)) };
+        attacker.hitSequence = { targetId: target.characterId, heavy: !launcher && Boolean(attacker.hitSequence?.heavy || heavyStrike(sourceMove)),
+          ...(!launcher && (attacker.hitSequence?.heavyButton ?? heavyButton(sourceMove)) ? { heavyButton: attacker.hitSequence?.heavyButton ?? heavyButton(sourceMove) } : {}) };
         if (target.grounded && !target.juggle && target.mode !== 'knockdown') {
           const remaining = attackDurationFrames(sourceMove, attacker.attack) - attacker.attack.elapsedFrames;
           target.remainingStateFrames = remaining;
@@ -468,7 +476,10 @@ export class Simulation {
           move.input.buttons.length > previous.buttons.length;
         const chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), move.id] : [move.id];
         character.chain = this.recipePrefix(index, chain) ? chain : [move.id];
-        if (character.hitSequence && heavyStrike(move)) character.hitSequence.heavy = true;
+        if (character.hitSequence && heavyStrike(move)) {
+          character.hitSequence.heavy = true;
+          character.hitSequence.heavyButton ??= heavyButton(move);
+        }
         character.rage = Math.max(0, character.rage - (move.rageCost ?? 0));
         if (move.category === 'ultimate' && !this.options.training) { this.ultimateUsed[index] = true; character.ultimateUsed = true; }
         character.attack = { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false,
@@ -491,7 +502,7 @@ export class Simulation {
     }
     const command = this.parsers[index].update(input, this.frame, moves,
       { airborne: !character.grounded, crouching: input.direction.startsWith('D') && character.grounded });
-    if (this.heldByUltimate(character) || (command && character.hitSequence?.heavy && !heavyStrike(command))) {
+    if (this.heldByUltimate(character) || (command && !permitsStrength(character.hitSequence, command))) {
       this.pendingCommands[index] = undefined; return;
     }
     if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6,
@@ -514,7 +525,7 @@ export class Simulation {
     if (previous?.hitOutcome === 'hit' && character.chain && this.definitions[index].combos?.some(recipe =>
       !recipe.launch && recipe.moveIds.length === character.chain!.length &&
       recipe.moveIds.every((id, i) => id === character.chain![i]) && heavyStrike(this.move(index, previous.moveId)!))) return false;
-    if (character.hitSequence?.heavy && !heavyStrike(move)) return false;
+    if (!permitsStrength(character.hitSequence, move)) return false;
     if (!previous) return true;
     // A chord completed within the input grace window replaces its uncommitted single.
     if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
