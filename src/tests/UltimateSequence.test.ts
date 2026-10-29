@@ -27,6 +27,51 @@ function contact(sim:Simulation,stage:'confirm'|'explosion',player=0,target=N){
   throw new Error(`Missing ${stage} contact`);
 }
 
+it.each([0, 1])('plays the complete drinking activation when ultimate follows two confirmed punches: player %i', player => {
+  const sim=create(96); sim.fillTrainingRage();
+  for (let punch=0; punch<2; punch++) {
+    step(sim,input('N',['1']),player);
+    let hit=false;
+    for (let tick=0; tick<80; tick++) {
+      const event=sim.snapshot().hitEvents.find(e=>e.attackerId===`player-${player+1}` && e.moveId==='light-punch');
+      if (event) { expect(event.outcome).toBe('hit'); hit=true; break; }
+      step(sim,N,player);
+    }
+    expect(hit).toBe(true);
+  }
+  command(sim,'wine-ultimate',player);
+  for (let tick=0; tick<30 && !sim.snapshot().ultimateActivation; tick++) step(sim,N,player);
+  const started=sim.snapshot();
+  expect(started.ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
+  expect(started.characters[player].attack?.moveId).toBe('wine-ultimate');
+  expect(started.projectiles).toHaveLength(0);
+  for (let tick=1; tick<ULTIMATE_ACTIVATION_FRAMES; tick++) {
+    step(sim,N,player);
+    const frozen=sim.snapshot();
+    expect(frozen.ultimateActivation?.elapsedFrames).toBe(tick);
+    expect(frozen.characters).toEqual(started.characters);
+    expect(frozen.projectiles).toHaveLength(0);
+  }
+  step(sim,N,player);
+  expect(sim.snapshot().ultimateActivation).toBeUndefined();
+  const resumed=sim.snapshot();
+  expect(resumed.projectiles.length > 0 || resumed.hitEvents.some(event => event.stage === 'confirm')).toBe(true);
+});
+
+it('starts the cinematic when a buffered ultimate becomes available as a missed attack ends', () => {
+  const sim=create(400); sim.fillTrainingRage();
+  const jab=shoto.moves.find(move=>move.id==='light-punch')!;
+  command(sim,'light-punch');
+  wait(sim,jab.startup+jab.activeFrames+jab.recovery-6);
+  command(sim,'wine-ultimate');
+  for (let tick=0; tick<10 && !sim.snapshot().ultimateActivation; tick++) {
+    expect(sim.snapshot().projectiles).toHaveLength(0);
+    step(sim);
+  }
+  expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:['player-1'],elapsedFrames:0});
+  expect(sim.snapshot().characters[0].attack?.moveId).toBe('wine-ultimate');
+});
+
 it('freezes the round clock and entire world for 150 ticks of activation, for any ultimate',()=>{
   expect(ULTIMATE_ACTIVATION_FRAMES).toBe(150);
   const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:100}};

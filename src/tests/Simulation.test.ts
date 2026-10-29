@@ -35,7 +35,9 @@ describe('quatro básicos do Shoto', () => {
       const sim = practice(outcome === 'whiff' ? 300 : 64);
       const guard = outcome === 'block' ? input('B') : N;
       sim.stepFrame([input('N', [...move.input.buttons]), guard]);
-      const total = move.startup + move.activeFrames + move.recovery;
+      const punishWindow = move.input.buttons.some(button => button === '2' || button === '4') ? 36 : 24;
+      const recovery = outcome === 'block' ? Math.max(move.recovery, move.blockstun + punishWindow + 1 - move.activeFrames) : move.recovery;
+      const total = move.startup + move.activeFrames + recovery;
       advance(sim, total - 1 + (outcome === 'whiff' ? 0 : CONTACT_HITSTOP_FRAMES), [N, guard]);
       expect(sim.snapshot().characters[0]).toMatchObject({ mode: 'recovery', attack: { elapsedFrames: total - 1 } });
       sim.stepFrame([N, guard]);
@@ -50,7 +52,8 @@ describe('quatro básicos do Shoto', () => {
     expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', damage: 0 });
     expect(sim.snapshot().characters[0].attack).toBeDefined();
     const contact = sim.snapshot().hitEvents[0];
-    expect(contact.attackerRecoveryFrames).toBe(move.activeFrames + move.recovery - 1);
+    const punishWindow = move.input.buttons.some(button => button === '2' || button === '4') ? 36 : 24;
+    expect(contact.attackerRecoveryFrames).toBe(Math.max(move.activeFrames + move.recovery - 1, move.blockstun + punishWindow));
     expect(contact.frameAdvantage).toBe(contact.defenderStunFrames - contact.attackerRecoveryFrames);
   });
   it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name não repete enquanto o botão estiver mantido', move => {

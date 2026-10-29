@@ -4,13 +4,14 @@ import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
 import { FighterSelection } from '../ui/FighterSelection';
 import { renderFighterSelection } from '../ui/FighterSelectionView';
+import { renderStageSelection, updateStageSelection } from '../ui/StageSelectionView';
 import idlePortrait from '../assets/sprites/characters/shoto/idle.png';
 import '../ui/menu.css';
 
 import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
 import { playableCharacters } from '../engine/data/characters';
-import { defaultStage, selectableStages, stageTextureKey } from '../rendering/stages/stageCatalog';
+import { defaultStage, selectableStages } from '../rendering/stages/stageCatalog';
 import { opponentFor, isTrainingMode, type MatchMode } from './matchSetup';
 
 const MODES = [
@@ -71,7 +72,7 @@ export class MenuScene extends Phaser.Scene {
       else if (versus && event.code === 'Numpad1') this.confirmFighter(1);
       else if (key === 'Enter') this.confirmFighter();
     } else if (this.page === 'stage') {
-      if (key === 'ArrowLeft' || key === 'ArrowRight') this.chooseStage(key === 'ArrowLeft' ? -1 : 1);
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) this.chooseStage(key === 'ArrowLeft' || key === 'ArrowUp' ? -1 : 1);
       else if (key === 'Enter') this.startFight();
     }
   };
@@ -146,9 +147,6 @@ export class MenuScene extends Phaser.Scene {
   private text(x: number, y: number, label: string, size = 16, color = '#f8f0e4') {
     const text = this.add.text(x, y, label, { fontSize: `${size}px`, fontFamily: 'Arial, sans-serif', fontStyle: size >= 16 ? 'bold' : 'normal', color }); this.root!.add(text); return text;
   }
-  private box(x: number, y: number, w: number, h: number, color: number, alpha = 1) {
-    const box = this.add.rectangle(x, y, w, h, color, alpha).setOrigin(0); this.root!.add(box); return box;
-  }
   private button(x: number, y: number, w: number, label: string, action: () => void) {
     const plate = this.add.graphics(); this.root!.add(plate);
     const draw = (color: number): void => {
@@ -164,47 +162,23 @@ export class MenuScene extends Phaser.Scene {
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
     const { width, height } = LOGICAL_VIEW;
-    this.menuElement!.hidden = this.page !== 'home' && this.page !== 'fighter';
+    this.menuElement!.hidden = this.page === 'settings';
     this.chrome?.setVisible(this.menuElement!.hidden);
     this.idleImages.length = 0;
     this.menuElement!.replaceChildren();
     if (!this.menuElement!.hidden) { this.renderMenu(); return; }
     const titles = { home: '01 / MODOS', fighter: '02 / PERSONAGEM', stage: '03 / CENÁRIO', settings: 'CONFIGURAÇÕES' };
     this.text(width - 42, 40, titles[this.page], 13, '#fff0d2').setStroke('#171219', 3).setOrigin(1, 0);
-    if (this.page === 'stage') {
-      const stage = this.selectedStage;
-      const plate = this.add.graphics(); root.add(plate);
-      plate.fillStyle(0x0c0a10, .91); plate.fillPoints([{x: 78,y: 100},{x: 950,y: 75},{x: 919,y: 497},{x: 110,y: 513}], true);
-      plate.lineStyle(4, 0xc04436); plate.strokePoints([{x: 78,y: 100},{x: 950,y: 75},{x: 919,y: 497},{x: 110,y: 513}], true);
-      this.text(width / 2, 100, 'ESCOLHA O CENÁRIO', 28, '#fff0d2').setOrigin(.5, 0).setShadow(3, 4, '#701c19', 0, true, true);
-      const x = 225, y = 160, w = 574;
-      const scale = Math.min(w / stage.referenceSize.width, 265 / stage.referenceSize.height);
-      const imageX = x + (w - stage.referenceSize.width * scale) / 2;
-      this.box(x - 5, y - 5, w + 10, 275, 0xe5c69c);
-      for (const layer of [...stage.layers].sort((a, b) => a.depth - b.depth)) {
-        const content = layer.contentScale ?? 1, origin = layer.scaleOrigin ?? { x: 0, y: 0 };
-        const image = this.add.image(imageX + scale * (layer.x + origin.x * (1 - content)), y + scale * (layer.y + origin.y * (1 - content)), stageTextureKey(stage, layer)).setOrigin(0).setScale(scale * content); root.add(image);
-      }
-      const ribbon = this.add.graphics(); root.add(ribbon);
-      ribbon.fillStyle(0x171016, .94); ribbon.fillPoints([{x: 210,y: 378},{x: 814,y: 365},{x: 803,y: 429},{x: 200,y: 438}], true);
-      this.text(244, 390, stage.name.toUpperCase(), 25, '#f3d49e');
-      this.text(777, 399, 'CENÁRIO SELECIONADO', 11, '#c4b8c0').setOrigin(1, 0);
-      this.button(95, 280, 110, '← ANTERIOR', () => this.chooseStage(-1));
-      this.button(819, 280, 110, 'PRÓXIMO →', () => this.chooseStage(1));
-      this.text(56, height - 25, '← →  CENÁRIO     ENTER  COMEÇAR     ESC  VOLTAR', 11, '#d3bea3');
-      this.text(160, 463, `${this.fighters[this.fighterIndex].name.toUpperCase()}${this.mode === 'versus' ? ` × ${this.fighters[this.selection.indices[1]].name.toUpperCase()}` : ''} · ${MODES.find(m => m.id === this.mode)!.title}`, 14, '#d4b47d');
-      this.button(630, 450, 234, 'COMEÇAR LUTA', () => this.startFight());
-    } else {
-      this.text(56, 144, 'CONFIGURAÇÕES', 26);
-      this.text(56, 204, 'Configure as teclas no painel de controles.', 18, '#c4b8c0');
-      this.button(56, 288, 180, 'VOLTAR', () => this.back());
-      this.text(56, height - 25, 'ESC  VOLTAR AO MENU', 11, '#d3bea3');
-    }
+    this.text(56, 144, 'CONFIGURAÇÕES', 26);
+    this.text(56, 204, 'Configure as teclas no painel de controles.', 18, '#c4b8c0');
+    this.button(56, 288, 180, 'VOLTAR', () => this.back());
+    this.text(56, height - 25, 'ESC  VOLTAR AO MENU', 11, '#d3bea3');
     sharpenSceneText(this);
   }
   private renderMenu(): void {
     const root = this.menuElement!;
     root.classList.toggle('fighter-selection', this.page === 'fighter');
+    root.classList.toggle('stage-selection', this.page === 'stage');
     root.classList.toggle('arena-home', this.page === 'home');
     const node = (tag: string, className: string, text = ''): HTMLElement => {
       const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
@@ -223,7 +197,7 @@ export class MenuScene extends Phaser.Scene {
     };
     const header = node('header', 'arena-header');
     if (this.page === 'home') header.append(node('span', 'arena-brand', 'CLOSE COMBAT'));
-    else header.append(node('h1', 'arena-step', 'SELEÇÃO DE PERSONAGEM'));
+    else header.append(node('h1', 'arena-step', this.page === 'stage' ? 'SELEÇÃO DE CENÁRIO' : 'SELEÇÃO DE PERSONAGEM'));
     root.append(header);
     if (this.page === 'home') {
       const modes = node('nav', 'arena-modes'); modes.setAttribute('aria-label', 'Modos de jogo');
@@ -247,6 +221,9 @@ export class MenuScene extends Phaser.Scene {
       const controls = node('footer', 'arena-home-controls', '↑ ↓ ESCOLHER   ·   ENTER CONFIRMAR');
       root.append(modes, feature, hero, note, controls);
       this.selectHomeMode(this.modeIndex);
+    } else if (this.page === 'stage') {
+      renderStageSelection(root, { stages: selectableStages, selected: this.stageIndex,
+        select: index => this.selectStage(index), confirm: () => this.startFight(), back: () => this.back() });
     } else {
       renderFighterSelection(root, {
         fighters: this.fighters,
@@ -286,9 +263,15 @@ export class MenuScene extends Phaser.Scene {
       element.setAttribute('aria-current', String(itemIndex === index));
     });
   }
+  private selectStage(index: number): void {
+    if (index < 0 || index >= selectableStages.length) return;
+    this.stageIndex = index;
+    updateStageSelection(this.menuElement!, this.selectedStage, index);
+  }
   private chooseStage(direction: number): void {
-    this.stageIndex = (this.stageIndex + direction + selectableStages.length) % selectableStages.length;
-    this.render();
+    this.selectStage((this.stageIndex + direction + selectableStages.length) % selectableStages.length);
+    if (document.activeElement?.classList.contains('arena-stage-tile'))
+      this.menuElement?.querySelectorAll<HTMLButtonElement>('.arena-stage-tile')[this.stageIndex]?.focus();
   }
   private chooseMode(index: number): void {
     this.selection.reopen();

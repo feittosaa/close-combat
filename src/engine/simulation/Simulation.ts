@@ -212,7 +212,7 @@ export class Simulation {
       const wasLocked = lockedAtInput[index];
       character.movementDirection = undefined;
       const requested = commands[index];
-      if (!wasLocked && requested && this.canStart(character, index, requested)) {
+      if (!wasLocked && requested && requested.category !== 'ultimate' && this.canStart(character, index, requested)) {
         this.startMove(character,index,requested);
       }
       if (character.attack) {
@@ -272,9 +272,11 @@ export class Simulation {
           if (character.mode === 'knockdown' && juggleRules) {
             character.wakeupInvulnerabilityFrames = character.remainingStateFrames + juggleRules.wakeupInvulnerabilityFrames;
           }
-          // Air basics end at landing except after a block; rising grounded specials retain recovery.
+          // A missed air kick already in recovery remains vulnerable after landing.
           const landingMove = character.attack ? this.move(index, character.attack.moveId) : undefined;
-          if (landingMove?.airborne && character.attack?.hitOutcome !== 'block') {
+          const recoveringMissedKick = landingMove?.airborne && character.mode === 'recovery' &&
+            !character.attack?.hasHit && (landingMove.pose === 'light-kick' || landingMove.pose === 'heavy-kick');
+          if (landingMove?.airborne && character.attack?.hitOutcome !== 'block' && !recoveringMissedKick) {
             character.attack = undefined; character.chain = undefined; character.mode = 'neutral';
           }
           if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';
@@ -320,9 +322,12 @@ export class Simulation {
       const target = this.characters.find(character => character.characterId === event.targetId)!;
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
       const sourceMove = this.move(attackerIndex,event.moveId)!;
-      const launcher = this.definitions[attackerIndex].combos?.find(recipe =>
-        recipe.launch !== undefined && recipe.moveIds.length === attacker.chain?.length &&
-        recipe.moveIds.every((id, step) => attacker.chain![step] === id));
+      const completedCombo = this.definitions[attackerIndex].combos?.find(recipe =>
+        recipe.moveIds.length === attacker.chain?.length && recipe.moveIds.every((id, step) => attacker.chain![step] === id));
+      const launcher = completedCombo?.launch ? completedCombo : undefined;
+      if (event.outcome === 'hit' && !event.stage && completedCombo?.recoveryFrames !== undefined && attacker.attack?.moveId === event.moveId) {
+        attacker.attack.recoveryFrames = completedCombo.recoveryFrames;
+      }
       const juggleRules = this.definitions[targetIndex].juggle;
       const repeatedLauncher = Boolean(launcher && target.juggle);
       if (event.outcome === 'hit' && !event.stage && juggleRules && !repeatedLauncher) {
@@ -448,6 +453,12 @@ export class Simulation {
   }
   private startMove(character: CharacterState, index: number, move: MoveDefinition): void {
         const previous = character.attack;
+        const target = this.characters.find(candidate => candidate.characterId === character.hitSequence?.targetId);
+        if (previous?.hitOutcome === 'hit' && character.hitSequence && chainStrike(move) &&
+            target?.mode === 'hitstun' && target.grounded && !target.juggle && !target.ultimateCapture) {
+          // A continuation started during hitstun keeps the defender exposed through its contact window.
+          target.remainingStateFrames = Math.max(target.remainingStateFrames, move.startup + move.activeFrames + 1);
+        }
         const promotion = previous && previous.elapsedFrames <= 3 && !previous.hasHit &&
           move.input.buttons.length > previous.buttons.length;
         const chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), move.id] : [move.id];
@@ -499,7 +510,9 @@ export class Simulation {
       return previous.elapsedFrames >= previousMove.startup + previousMove.activeFrames && this.recipePrefix(index, chain);
     }
     if (previous.hitOutcome === 'block') return false;
-    if (previous.hitOutcome !== 'hit' || !character.hitSequence || !chainStrike(move)) return false;
+    if (previous.hitOutcome !== 'hit' || !character.hitSequence) return false;
+    if (move.category === 'ultimate') return true;
+    if (!chainStrike(move)) return false;
     const previousMove = this.move(index, previous.moveId)!;
     if (!chainStrike(previousMove)) return false;
     return previous.moveId !== move.id || this.recipePrefix(index, chain);

@@ -79,7 +79,7 @@ it.each([0,1])('launches only the confirmed final hit of 1,1,2: player %i', play
     const sim = new Simulation(config,undefined,{training:true,initialDistance:56});
     for(const button of buttons){step(sim,player,input('N',button));contact(sim,player);}
     expect(sim.snapshot().characters[1-player].grounded).toBe(true);
-    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBeUndefined();
+    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(buttons.length === 3 ? 30 : undefined);
   }
 });
 
@@ -96,5 +96,21 @@ it.each([0,1])('air basics block against legal air guard, whiff out of range, an
     for(let tick=0;tick<80;tick++)step(sim);
     expect(sim.snapshot().recentContacts).toHaveLength(0);
     sim.resetMatch();expect(sim.snapshot().characters.every(c=>c.grounded && !c.attack && c.verticalVelocity===0)).toBe(true);
+  }
+});
+
+it.each([0,1])('keeps a missed air kick vulnerable after landing during recovery: player %i', player => {
+  for (const button of ['3','4'] as const) {
+    const sim = new Simulation(config,undefined,{training:true,initialDistance:400});
+    step(sim,player,input('U'));
+    for (let tick=0;tick<10;tick++) step(sim);
+    step(sim,player,input('N',button));
+    for (let tick=0;tick<50 && !sim.snapshot().characters[player].grounded;tick++) step(sim,player,input('B'));
+    const landed = sim.snapshot().characters[player];
+    expect(landed).toMatchObject({grounded:true,mode:'recovery',attack:{hasHit:false}});
+    step(sim,player,input('B'));
+    expect(sim.snapshot().characters[player].mode).toBe('recovery');
+    for (let tick=0;tick<60 && sim.snapshot().characters[player].attack;tick++) step(sim,player,input('B'));
+    expect(sim.snapshot().characters[player].attack).toBeUndefined();
   }
 });

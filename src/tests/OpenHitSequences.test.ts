@@ -48,6 +48,42 @@ it.each([0,1])('connects 1,1,1 → 3 → 2,2,2 as an open sequence without addin
   throw new Error('Sequence never returned to neutral');
 });
 
+it.each([0,1])('keeps the defender exposed when a heavy string starts near the end of the light combo: player %i', player => {
+  const sim = create(96);
+  for (const button of ['1', '1', '1'] as const) hit(sim, player, [button]);
+  const light = sim.snapshot();
+  expect(light.characters[player].attack?.recoveryFrames).toBe(10);
+  expect(light.hitEvents[0].attackerRecoveryFrames).toBe(light.hitEvents[0].defenderStunFrames);
+  // Wait until only two frames of the original hit reaction remain before continuing.
+  wait(sim, CONTACT_HITSTOP_FRAMES + light.hitEvents[0].defenderStunFrames - 2);
+  expect(sim.snapshot().characters[1-player].remainingStateFrames).toBe(2);
+  for (const button of ['2', '2', '2'] as const) hit(sim, player, [button], true);
+  const strong = sim.snapshot();
+  expect(strong.characters[player].attack?.recoveryFrames).toBe(30);
+  expect(strong.hitEvents[0].defenderStunFrames).toBe(strong.hitEvents[0].attackerRecoveryFrames);
+  expect(strong.hitEvents[0].defenderStunFrames).toBeGreaterThan(light.hitEvents[0].defenderStunFrames);
+  for (let i = 0; i < 100 && sim.snapshot().characters[player].attack; i++) {
+    expect(sim.snapshot().characters[1-player].mode).toBe('hitstun');
+    step(sim, player, N, input([], 'B'));
+  }
+  expect(sim.snapshot().characters[1-player].remainingStateFrames).toBe(0);
+  step(sim);
+  expect(sim.snapshot().characters.map(character => character.mode)).toEqual(['neutral', 'neutral']);
+});
+
+it.each([['1', 10], ['2', 30]] as const)('returns both fighters to neutral together after a confirmed %s string', (button, recovery) => {
+  const sim = create(96);
+  for (let i = 0; i < 3; i++) hit(sim, 0, [button], i > 0);
+  const contact = sim.snapshot();
+  expect(contact.characters[0].attack?.recoveryFrames).toBe(recovery);
+  expect(contact.hitEvents[0].attackerRecoveryFrames).toBe(contact.hitEvents[0].defenderStunFrames);
+  for (let i = 0; i < 100 && sim.snapshot().characters[0].attack; i++) {
+    expect(sim.snapshot().characters[1].mode).toBe('hitstun');
+    step(sim);
+  }
+  expect(sim.snapshot().characters.map(character => character.mode)).toEqual(['neutral', 'neutral']);
+});
+
 it.each(['2','4'] as const)('blocks both weak buttons after strong %s, drops the rejected input and permits a fresh sequence after recovery', strong=>{
   for(const weak of ['1','3'] as const){
     const sim=create();const event=hit(sim,0,[strong]);
