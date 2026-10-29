@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Integração de tela e combate — 2026-10-29
+
+Por pedido explícito, `codex/feature-tela-adaptavel` foi integrada em `development`, incluindo tela adaptável, HUD, rage, atalho da ultimate e escolha do golpe forte. A validação local passou com 352 testes, build e diff; [CI da branch aprovada](https://github.com/feittosaa/close-combat/actions/runs/40920303484). Integração remota e sua CI em andamento. `sprites/shoto` continua separada.
+
 ## Escolha do golpe forte — 2026-10-29
 
 Na branch `codex/feature-tela-adaptavel`, após soco forte confirmado não se pode continuar com golpe fraco nem chute forte; após chute forte confirmado não se pode continuar com golpe fraco nem soco forte. A mesma opção forte respeita as receitas existentes; levantamento confirmado reinicia a sequência. Integração em `development` autorizada pelo usuário. Instalação reproduzível, 352 testes em 39 arquivos, build e diff aprovados; regressões verificam as quatro entradas após cada forte nos dois lados, retorno ao neutro, progressão fraco-forte e levantamento. Envio e CI em andamento.
