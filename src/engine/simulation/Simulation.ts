@@ -320,9 +320,12 @@ export class Simulation {
       const target = this.characters.find(character => character.characterId === event.targetId)!;
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
       const sourceMove = this.move(attackerIndex,event.moveId)!;
-      const launcher = this.definitions[attackerIndex].combos?.find(recipe =>
-        recipe.launch !== undefined && recipe.moveIds.length === attacker.chain?.length &&
-        recipe.moveIds.every((id, step) => attacker.chain![step] === id));
+      const completedCombo = this.definitions[attackerIndex].combos?.find(recipe =>
+        recipe.moveIds.length === attacker.chain?.length && recipe.moveIds.every((id, step) => attacker.chain![step] === id));
+      const launcher = completedCombo?.launch ? completedCombo : undefined;
+      if (event.outcome === 'hit' && !event.stage && completedCombo?.recoveryFrames !== undefined && attacker.attack?.moveId === event.moveId) {
+        attacker.attack.recoveryFrames = completedCombo.recoveryFrames;
+      }
       const juggleRules = this.definitions[targetIndex].juggle;
       const repeatedLauncher = Boolean(launcher && target.juggle);
       if (event.outcome === 'hit' && !event.stage && juggleRules && !repeatedLauncher) {
@@ -448,6 +451,12 @@ export class Simulation {
   }
   private startMove(character: CharacterState, index: number, move: MoveDefinition): void {
         const previous = character.attack;
+        const target = this.characters.find(candidate => candidate.characterId === character.hitSequence?.targetId);
+        if (previous?.hitOutcome === 'hit' && character.hitSequence && chainStrike(move) &&
+            target?.mode === 'hitstun' && target.grounded && !target.juggle && !target.ultimateCapture) {
+          // A continuation started during hitstun keeps the defender exposed through its contact window.
+          target.remainingStateFrames = Math.max(target.remainingStateFrames, move.startup + move.activeFrames + 1);
+        }
         const promotion = previous && previous.elapsedFrames <= 3 && !previous.hasHit &&
           move.input.buttons.length > previous.buttons.length;
         const chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), move.id] : [move.id];

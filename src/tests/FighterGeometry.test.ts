@@ -28,7 +28,7 @@ it.each(characters)('uses the larger physical body and mirrored boxes in every p
 it('the increased reach hits at the new boundary and still misses beyond it',()=>{
   const neutral:FrameInput={direction:'N',buttons:new Set()};
   const attack:FrameInput={...neutral,buttons:new Set(['1'])};
-  for(const [distance,damage] of [[108,20],[112,0]]){
+  for(const [distance,damage] of [[108,20],[114,20],[115,0]]){
     const sim=new Simulation(createGameConfig(1024,576),undefined,{training:true,initialDistance:distance});
     sim.stepFrame([attack,neutral]);
     for(let tick=0;tick<35;tick++)sim.stepFrame([neutral,neutral]);
