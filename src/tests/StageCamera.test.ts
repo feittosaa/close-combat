@@ -39,15 +39,16 @@ describe.each(stages)('camera and ground contract: $id', stage => {
 
   it('applies equal X/Y zoom and the same vertical scroll to scenery and fighters', () => {
     const camera = { removeBounds: vi.fn(), setOrigin: vi.fn(), setZoom: vi.fn(), setScroll: vi.fn() };
-    const layers = stage.layers.map(() => {
-      const image = { setOrigin: vi.fn(), setScale: vi.fn(), setDepth: vi.fn(), setScrollFactor: vi.fn(), destroy: vi.fn() };
-      Object.values(image).forEach(fn => fn.mockReturnValue(image));
+    const layers = stage.layers.flatMap(() => Array.from({length: 3}, () => {
+      const image = { setOrigin: vi.fn(), setScale: vi.fn(), setDepth: vi.fn(), setScrollFactor: vi.fn(), setFlipX: vi.fn(), setPosition: vi.fn(), width: stage.referenceSize.width, height: stage.referenceSize.height, destroy: vi.fn() };
+      Object.values(image).forEach(fn => { if (typeof fn === 'function') fn.mockReturnValue(image); });
       return image;
-    });
+    }));
+    const backdrop = { ...layers[0] };
     let index = 0;
     const scene = {
       textures: { get: () => ({ getSourceImage: () => stage.referenceSize }) },
-      add: { image: () => layers[index++] }, cameras: { main: camera },
+      add: { image: () => layers[index++] ?? backdrop }, cameras: { main: camera },
     } as unknown as Phaser.Scene;
     const layout = createStageLayout(stage, 1024, 576, 488);
     const view = new StageView(scene, stage, layout);
@@ -60,7 +61,7 @@ describe.each(stages)('camera and ground contract: $id', stage => {
       expect(projectedFeet).toBeCloseTo(488, 8);
     }
     expect(camera.removeBounds).toHaveBeenCalled();
-    stage.layers.forEach((layer, i) => expect(layers[i].setScrollFactor).toHaveBeenCalledWith(layer.parallax, 1));
+    stage.layers.forEach((layer, i) => expect(layers[i * 3 + 1].setScrollFactor).toHaveBeenCalledWith(layer.parallax, 1));
     view.destroy();
     expect(camera.setZoom).toHaveBeenLastCalledWith(1);
     expect(camera.setScroll).toHaveBeenLastCalledWith(0, 0);

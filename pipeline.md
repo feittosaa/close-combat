@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Tela adaptável — 2026-10-29
+
+Branch `codex/feature-tela-adaptavel`, criada a pedido a partir de `development`. Adaptar menus e cenário ao tamanho da janela, preservando escala relativa dos lutadores e HUD, câmera fixa e simulação. Manter `sprites/shoto` separada. Canvas acompanha a janela; HUD conserva a composição central e a escala, enquanto a câmera mantém zoom lógico e simulação. O cenário usa laterais espelhadas nas paredes e uma cópia de fundo para cobrir proporções extremas sem esticar a imagem. Instalação reproduzível, 334 testes em 39 arquivos, build e diff aprovados; navegador conferido em janela estreita/alta, menu e treino. Proporções largas verificadas por regressões geométricas, ainda sem conferência visual em monitor ultrawide; aprovação visual pendente. Envio e CI a conferir.
+
 ## Integração em development — 2026-10-29
 
 Por pedido explícito, integradas em `development` as branches encadeadas `codex/fix-janela-punicao-maior`, `codex/feature-selecao-cenarios-alcance`, `codex/fix-ultimate-combo-reinicio` e `codex/fix-chutes-alcance-controles`. A branch `sprites/shoto` permanece separada por orientação expressa e só será integrada a pedido. Por enquanto, não criar novas branches e trabalhar diretamente em `development`. Instalação reproduzível, 331 testes, build e diff aprovados. Integração enviada em `b47da23`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40902181768). Após conferir ancestralidade, ausência de outros checkouts e PRs abertos, as quatro branches integradas foram removidas localmente e no remoto. Aprovação visual permanece pendente.

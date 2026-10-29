@@ -2,7 +2,7 @@ import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { FIGHT_WORLD_SCALE } from '../engine/data/fightFraming';
 import { Simulation } from '../engine/simulation/Simulation';
 import { expect, it, vi } from 'vitest';
-import { LOGICAL_VIEW, RENDER_SIZE, configureUiCamera, projectCameraToOutput } from '../rendering/presentation';
+import { LOGICAL_VIEW, RENDER_SIZE, configureUiCamera, getUiViewport, projectCameraToOutput } from '../rendering/presentation';
 import { getFightCameraFrame, createStageLayout } from '../rendering/stages/stageLayout';
 import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createGameConfig } from '../engine/data/gameConfig';
@@ -98,4 +98,16 @@ it('amplia o desenho em mais 10% e deixa as silhuetas em pé próximas das borda
   const right=512+(positions[1]+silhouetteHalfWidth-frame.scrollX-512)*frame.zoom;
   expect(left).toBeGreaterThan(0);expect(left).toBeLessThan(65);
   expect(right).toBeLessThan(1024);expect(right).toBeGreaterThan(959);
+});
+
+
+it.each([{width: 2560, height: 1080}, {width: 3840, height: 1080}, {width: 1920, height: 1080}])('preserves fighter and HUD scale in a wide output: $width x $height', output => {
+  const viewport = getUiViewport(output);
+  expect(viewport.width).toBe(1920);
+  expect(viewport.height).toBe(1080);
+  expect(viewport.x).toBe((output.width - 1920) / 2);
+  const frame = projectCameraToOutput({zoom: FIGHT_WORLD_SCALE, scrollX: 0, scrollY: 0}, LOGICAL_VIEW, output);
+  expect(frame.zoom).toBe(FIGHT_WORLD_SCALE * 1.875);
+  const center = output.width / 2 + (512 - frame.scrollX - output.width / 2) * frame.zoom;
+  expect(center).toBeCloseTo(output.width / 2);
 });
