@@ -2,6 +2,8 @@
 
 ## Seleção compartilhada e pausa
 
+Pedido atual: fundo do menu principal preto provisoriamente; navegação e personagem mantidos. A ilustração anterior continua em uso nas telas de cenário e configurações.
+
 Revisão visual: grade de personagens centralizada em 3×3, caixa aleatória separada e título central; seleção de cenário com painéis e botões angulares, profundidade e imagens originais; pausas de treino e partida com superfícies em camadas e botões no mesmo estilo. Conferidos no jogo seleção solo/PvP, troca de cenário e pausas de treino/partida. Instalação, 298 testes, build e diff aprovados; aprovação visual do usuário pendente e CI remota a conferir.
 
 A seleção agora mantém nove caixas para personagens, incluindo vagas vazias, e uma caixa separada para escolha aleatória. A opção sorteia apenas personagens disponíveis ao confirmar, com seleção independente no PvP e navegação pelo teclado. Validação local: instalação reproduzível, 298 testes, build e diff; jogo conferido no treino e no PvP, inclusive confirmação aleatória dos dois jogadores. A aprovação visual permanece pendente; CI remota a conferir.
