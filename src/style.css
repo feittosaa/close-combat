@@ -94,3 +94,19 @@ canvas {
 .combat-pause.match-pause .pause-actions { display: grid; gap: 10px; }
 .combat-pause.match-pause button { text-align: left; padding: 16px 20px; border-left: 4px solid #c04436; }
 .combat-pause.match-pause button:first-child { background: #a6372e; border-color: #f0dfc4; }
+
+/* Pause uses the angular ink panels and warm accents of the main menu. */
+.combat-pause { background: #100d13e8; font-family: Arial,sans-serif; }
+.pause-panel { position: relative; border: 0; border-top: 4px solid #c04436; background: linear-gradient(120deg,#171016f5,#251a22ed); box-shadow: 0 24px 90px #000b; }
+.pause-panel h1 { font-weight: 900; text-transform: uppercase; letter-spacing: -.06em; }
+.pause-actions button { border: 0; border-left: 4px solid #c04436; background: #130f14; font-weight: 900; text-align: left; }
+.pause-actions button:hover, .pause-actions button:focus-visible { background: #c04436; }
+.pause-details { background: #f0dfc4; color: #171216; border: 0; }
+.pause-details .pause-eyebrow, .pause-details .pause-command { color: #a3382e; }
+.pause-details .pause-note { color: #584a4a; }
+.pause-details button { color: #fff0d2; }
+.combat-pause.match-pause .pause-panel { width: min(900px,100%); min-height: 390px; background: linear-gradient(110deg,#130f14 0 46%,#f0dfc4 46% 100%); }
+.combat-pause.match-pause header { width: 43%; }
+.combat-pause.match-pause .pause-panel::after { content: 'PAUSA'; position: absolute; right: 6%; top: 40%; color: #171216; font: 900 clamp(45px,8vw,110px)/.9 Arial,sans-serif; letter-spacing: -.07em; }
+.combat-pause.match-pause .pause-legend { position: absolute; right: 6%; bottom: 16%; color: #584a4a; }
+@media (max-width: 760px) { .combat-pause.match-pause .pause-panel { min-height: 0; background: #171016; } .combat-pause.match-pause header { width: 100%; } .combat-pause.match-pause .pause-panel::after { display: none; } .combat-pause.match-pause .pause-legend { position: static; color: #aaa5b6; } }
