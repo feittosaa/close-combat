@@ -4,6 +4,12 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Limpeza de branches antigas — 2026-10-28
+
+Por solicitação explícita, removidas localmente e no remoto dez branches anteriores: `codex/feature-arco-garrafa-ultimate`, `codex/feature-personagens-maiores`, `codex/feature-ritmo-combate`, `codex/feature-ritmo-combos-distancia`, `codex/feature-sequencias-abertas-shoto`, `codex/fix-agarrao-cores-originais`, `codex/fix-carregamento-impacto-aereo`, `codex/fix-recuperacao-launcher-garrafa`, `codex/fix-tempo-alcance-agarrao` e `codex/fix-trajetoria-juggle`.
+
+Antes da remoção, conferidos remoto atualizado, ausência de pull requests abertos, único checkout ativo e ancestralidade de cada ponta na branch atual `codex/fix-limite-levantamentos`; os commits e mudanças permanecem no histórico dessa branch. As entregas ainda não foram integradas em `development`. Preservadas a branch atual, `development`, `main` e as tags. As menções históricas à preservação das antigas referências descrevem o estado anterior a esta limpeza.
+
 ## Animação autorada dos três socos fracos — 2026-10-28
 
 Trabalho mantido em `codex/fix-limite-levantamentos`, conforme orientação vigente de não criar branches.
