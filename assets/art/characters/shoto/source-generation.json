@@ -153,6 +153,13 @@
       "posePrompt": "Create ONE in-between animation drawing, exactly halfway from image 1 (existing START key) to image 2 (existing NEXT key), not a new gait. Image 3 is original identity reference ONLY. This single drawing will be inserted BETWEEN these exact existing poses; match their drawn face, head/body size, ink, cream blazer shade, shirt, skin, shoes, dark charcoal trousers, brown goatee and ONE plain narrow GOLD BANGLE on EACH wrist, no watches or belt. Keep upper body very close to image 1, with only the tiny natural interpolated arm/hip movement needed toward image 2. Legs: swinging heel settles into the original starting contact to close the loop. Preserve anatomical leg identity, knee/ankle articulation and continuous travel between the two silhouettes; no foot teleport or swapped limbs. Side view facing RIGHT, walking IN PLACE, no run. SAME square framing and camera as images 1/2, full body, feet baseline at 93.75% of image height, body height approximately 82.4% of canvas, same SMALL head and tall slender anatomy. Do not zoom in, enlarge head or brighten blazer. Genuine TRANSPARENT background, one body only, no text, shadow, grid, floor, blur, extra limbs or magenta. Original source keys are immutable; output only the NEW midway pose.",
       "materialPrompt": "Color matching local retouch of image1. Image2 is an existing WALK key from the same character. The new frame in image1 has skin too YELLOW/GOLD and blazer too bright. Match ONLY those two material colors to image2: muted warm medium-brown SKIN, no yellow/orange cast (base #B47750, shadows #73482F, lights #C39168), and warm ivory CREAM blazer (base #D6C7AA, light #EADDC1, not white). Keep existing ink/fold shapes/shading detail, exact face/head/body/pose/placement, dark charcoal trousers, brown hair/goatee, shirt, gold bangles, brown shoes unchanged. No geometric changes. Single drawing identical squarecanvas on solid #FF00FF. A precise material color correction, not a redraw.",
       "tool": "built-in image_gen"
+    },
+    {
+      "source": "src/assets/sprites/characters/shoto/source/light-combo.png",
+      "tool": "user-supplied image",
+      "originalFilename": "Eight-Frame Fighter Combo Sprite Sheet.png",
+      "sha256": "67c72b67bea59b3a474a56ff293cb08330fe064b0937e875bbd33e0746f82ea4",
+      "preparation": "Original RGBA preserved. Authored regions and label-only alpha masks in alignment.json; uniform 1.75 scale and fixed roots. Original pose 5 excluded at user request; contact poses 3,6,7; idle entry/return poses 1,8."
     }
   ]
 }

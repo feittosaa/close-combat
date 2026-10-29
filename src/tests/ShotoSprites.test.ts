@@ -8,14 +8,14 @@ const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{
 vi.mock('phaser', () => ({ default: {} }));
 const initial = () => new Simulation(createGameConfig(1024,576)).snapshot().characters[0];
 
-it('entrega 134 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
+it('entrega 141 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
   const frames = Object.assign({},...Object.values(atlasFiles).map(a=>a.frames));
-  expect(Object.keys(frames)).toHaveLength(134);
-  for (let i=0;i<134;i++) {
+  expect(Object.keys(frames)).toHaveLength(141);
+  for (let i=0;i<141;i++) {
     const f = frames[String(i) as keyof typeof frames];
     expect(f).toBeDefined();
     expect(f.trimmed).toBe(false);
-    expect(f.frame.w).toBe(i>=84 && i<108?1152:768);
+    expect(f.frame.w).toBe((i>=84 && i<108)||i>=134?1152:768);
     expect(f.frame.h).toBe(shotoSpriteManifest.frameSize.height);
   }
   expect(shotoSpriteManifest.footAnchorY).toBe(720);

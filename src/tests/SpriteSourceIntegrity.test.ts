@@ -18,9 +18,9 @@ it('loads every official atlas and original PNG directly, without replacing text
   vi.stubGlobal('document',{createElement});
   try {
     const scene={textures,load:{atlas}} as unknown as Phaser.Scene;
-    preloadShotoSprites(scene);expect(atlas).toHaveBeenCalledTimes(23);
+    preloadShotoSprites(scene);expect(atlas).toHaveBeenCalledTimes(24);
     for(let match=0;match<10;match++)preloadShotoSprites(scene);
-    expect(atlas).toHaveBeenCalledTimes(23);
+    expect(atlas).toHaveBeenCalledTimes(24);
     expect(createElement).not.toHaveBeenCalled();
     expect(textures.remove).not.toHaveBeenCalled();expect(textures.addCanvas).not.toHaveBeenCalled();
   } finally {vi.unstubAllGlobals();}
