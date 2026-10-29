@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Ultimate em combo e atalho de reinício — 2026-10-29
+
+Branch `codex/fix-ultimate-combo-reinicio`, dependente de `codex/feature-selecao-cenarios-alcance` em `c53a2b8`, ainda não integrada. O atalho configurado de reinício atua apenas no treino livre; PvP, Arcade e tutoriais não reiniciam por ele. Removidas as instruções de reinício do HUD e do resultado do Arcade; pausa/retorno ao menu e progresso do Arcade preservados.
+
+Ultimates acionadas após acertos podem cancelar para a preparação cinematográfica completa; comandos armazenados durante uma ação também aguardam o caminho de ativação, evitando lançar o projétil sem beber. Regressões cobrem `1,1,ultimate` nos dois lados, os 150 ticks da ativação, ausência de projétil durante ela e comando armazenado até o fim de um golpe no vazio. No treino, conferida a animação de beber após socos; R reinicia o treino e não reinicia PvP ou Arcade. Instalação reproduzível, 325 testes em 39 arquivos, build e diff aprovados; envio e CI remota pendentes.
+
 ## Alcance, seleção de cenário e continuidade de combos — 2026-10-29
 
 Branch `codex/feature-selecao-cenarios-alcance`, dependente de `codex/fix-janela-punicao-maior` em `66fd55d`, ainda não integrada. Ampliar em 10% a largura horizontal das caixas corpo a corpo do Shoto, incluindo básicos, agachados, aéreos, potentes, agarrões e especiais diretos, sem alterar projéteis, hurtboxes ou tempos de contato. Regressão confirma punição após bloqueio à distância 114, antes fora do alcance do soco fraco, nos dois lados.

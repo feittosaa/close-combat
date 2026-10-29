@@ -53,9 +53,8 @@ export class CombatHud {
     this.timer.setText(this.training?'∞':String(Math.ceil(snapshot.roundFramesRemaining/60)).padStart(2,'0'));
     this.roundLabel.setText(this.training?this.practiceLabel:`ROUND ${snapshot.round}`).setFontSize(this.training?9:10);
     const winner=snapshot.characters.findIndex(c=>c.characterId===(snapshot.phase==='match-over'?snapshot.matchWinnerId:snapshot.roundWinnerId));
-    const reset=keyLabel(getSystemControls().reset);
     const outcome=snapshot.roundEndReason==='knockout'?'K.O.':snapshot.roundEndReason==='time'?'TEMPO':'EMPATE';
-    this.resultLabel.setText(snapshot.phase==='match-over' ? `${winner<0?'EMPATE':`P${winner+1} VENCE A LUTA`} · ${reset} REINICIAR`
+    this.resultLabel.setText(snapshot.phase==='match-over' ? `${winner<0?'EMPATE':`P${winner+1} VENCE A LUTA`}`
       : snapshot.phase==='round-over'?`${outcome}${winner<0?'':` · P${winner+1} VENCE`}`:'');
     this.pauseHint.setText(`${keyLabel(getSystemControls().pause)} / ESC · PAUSA`);
     const latest=snapshot.recentContacts[snapshot.recentContacts.length-1];

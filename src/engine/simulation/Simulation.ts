@@ -212,7 +212,7 @@ export class Simulation {
       const wasLocked = lockedAtInput[index];
       character.movementDirection = undefined;
       const requested = commands[index];
-      if (!wasLocked && requested && this.canStart(character, index, requested)) {
+      if (!wasLocked && requested && requested.category !== 'ultimate' && this.canStart(character, index, requested)) {
         this.startMove(character,index,requested);
       }
       if (character.attack) {
@@ -508,7 +508,9 @@ export class Simulation {
       return previous.elapsedFrames >= previousMove.startup + previousMove.activeFrames && this.recipePrefix(index, chain);
     }
     if (previous.hitOutcome === 'block') return false;
-    if (previous.hitOutcome !== 'hit' || !character.hitSequence || !chainStrike(move)) return false;
+    if (previous.hitOutcome !== 'hit' || !character.hitSequence) return false;
+    if (move.category === 'ultimate') return true;
+    if (!chainStrike(move)) return false;
     const previousMove = this.move(index, previous.moveId)!;
     if (!chainStrike(previousMove)) return false;
     return previous.moveId !== move.id || this.recipePrefix(index, chain);
