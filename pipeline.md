@@ -1,5 +1,31 @@
 # Close Combat — Pipeline
 
+## Chutes, alcance e controles — 2026-10-29
+
+Branch `codex/fix-chutes-alcance-controles`, dependente de `codex/fix-ultimate-combo-reinicio` em `88a548f`, ainda não integrada. Chutes aéreos que erram e aterrissam em recuperação preservam a recuperação vulnerável; chutes bloqueados continuam sem defesa durante a recuperação. Larguras horizontais das caixas corpo a corpo do Shoto aumentadas em mais 10%, incluindo agarrões e especiais diretos, sem mudar projéteis. Menu de controles atualizado com painéis e botões angulares da identidade dos demais menus. Instalação reproduzível, 331 testes em 39 arquivos, build e diff aprovados. Regressões cobrem chutes bloqueados dos dois lados e aterrissagem em recuperação no vazio. Conferidos no navegador o menu de controles, captura e cancelamento de tecla, retorno ao menu e acesso ao treino. Aprovação visual do usuário pendente; envio e CI em andamento.
+
+## Ultimate em combo e atalho de reinício — 2026-10-29
+
+Branch `codex/fix-ultimate-combo-reinicio`, dependente de `codex/feature-selecao-cenarios-alcance` em `c53a2b8`, ainda não integrada. O atalho configurado de reinício atua apenas no treino livre; PvP, Arcade e tutoriais não reiniciam por ele. Removidas as instruções de reinício do HUD e do resultado do Arcade; pausa/retorno ao menu e progresso do Arcade preservados.
+
+Ultimates acionadas após acertos podem cancelar para a preparação cinematográfica completa; comandos armazenados durante uma ação também aguardam o caminho de ativação, evitando lançar o projétil sem beber. Regressões cobrem `1,1,ultimate` nos dois lados, os 150 ticks da ativação, ausência de projétil durante ela e comando armazenado até o fim de um golpe no vazio. No treino, conferida a animação de beber após socos; R reinicia o treino e não reinicia PvP ou Arcade. Instalação reproduzível, 325 testes em 39 arquivos, build e diff aprovados. Implementação enviada em `555c65e`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40896774367).
+
+## Alcance, seleção de cenário e continuidade de combos — 2026-10-29
+
+Branch `codex/feature-selecao-cenarios-alcance`, dependente de `codex/fix-janela-punicao-maior` em `66fd55d`, ainda não integrada. Ampliar em 10% a largura horizontal das caixas corpo a corpo do Shoto, incluindo básicos, agachados, aéreos, potentes, agarrões e especiais diretos, sem alterar projéteis, hurtboxes ou tempos de contato. Regressão confirma punição após bloqueio à distância 114, antes fora do alcance do soco fraco, nos dois lados.
+
+Seleção de cenário substituída por grade central 3×3, com vagas vazias, prévia da arena em fundo ao passar o ponteiro ou navegar pelo teclado e confirmação do cenário selecionado. A seleção de personagem ocupa toda a área do jogo; personagens idle ficaram maiores e mais próximos das extremidades. Não há novas imagens nem recoloração. Conferência em Arcade e PvP: prévias do Bar e do Salão, ponteiro, teclado e início de luta no Salão. Áreas externas ao canvas permanecem sujeitas ao enquadramento proporcional da janela.
+
+Combos fechados de socos confirmados: recuperação final 10F em `1,1,1`, 30F em `2,2,2`; atacante e alvo no chão recuperam o controle juntos. Uma continuação iniciada enquanto o alvo ainda está em hitstun mantém a reação através do preparo e atividade do próximo golpe, inclusive se ele tentar defender, permitindo 1,1,1 → 2,2,2 quando a continuação começa perto do fim da reação. Sem criar novas receitas. Levantamento `1,1,2`, limite de força e recuperação da sequência no vazio preservados. Testes de regressão nos dois lados e com defesa pressionada; balanceamento permanece provisório.
+
+Validação local: instalação reproduzível, 317 testes em 38 arquivos, build e diff aprovados. Implementação enviada em `03a9945`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40893157022); aprovação artística e integração em `development` não inferidas.
+
+## Recuperação bloqueada ampliada — 2026-10-29
+
+Branch `codex/fix-janela-punicao-maior`, baseada em `development` após a integração de menus e combate. O usuário relatou dificuldade para punir manualmente na janela anterior de 9/16 frames. Recuperação de golpes diretos bloqueados ampliada para oferecer ao defensor no mínimo 24 frames (0,4 s) contra leves e 36 frames (0,6 s) contra fortes, depois de terminar o blockstun. O atacante mantém sua recuperação vulnerável e não pode bloquear, agachar para evitar a resposta nem cancelar em outro golpe durante ela; os sprites usam a recuperação real até retornar ao estado normal. Acerto e erro mantêm os tempos anteriores; projéteis preservam a recuperação natural conforme escolha do usuário.
+
+Validação local: instalação reproduzível, 311 testes em 38 arquivos, build e diff aprovados. Regressões incluem resposta após atraso de 12 frames e aproximação, quatro básicos, ambos os lados e tentativas de defesa alta/baixa, além da exposição até o fim e retorno ao idle. No treino, o HUD mostrou −24F para o leve e −36F para o forte, com o defensor livre antes do atacante. Envio e CI remota a conferir; sem nova integração autorizada.
+
 ## Seleção compartilhada e pausa
 
 O usuário autorizou a integração das branches de menu e de punição em `development`. As duas foram integradas em `d0b680a`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40873483006), e encerradas localmente e no remoto após conferência de ancestralidade e ausência de outros checkouts. A aprovação artística permanece pendente. As observações de ausência de integração abaixo registram o estado anterior.

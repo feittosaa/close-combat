@@ -41,6 +41,8 @@ O motor é a autoridade sobre contato, dano, posições e duração dos estados.
 
 Controles são remapeáveis, direções são relativas ao oponente e transições de pausa/reset/foco não devem reaproveitar comandos antigos. Ferramentas de treino e IA usam entradas legais e a mesma simulação das partidas, sem acertos ou vantagens forçados.
 
+O atalho de reinício de partida funciona somente no treino livre. PvP e Arcade preservam a partida ao receber essa tecla.
+
 Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É proibido ajustar suas cores por CSS ou código, incluindo filtros, tint, shaders, LUTs, recoloração de pixels ou pós-processamento. Correções artísticas pertencem à imagem fonte e exigem aprovação; recorte, transparência, escala, alinhamento e espelhamento técnicos não autorizam recoloração.
 
 ## Apresentação compartilhada
@@ -57,7 +59,13 @@ Acertos e bloqueios confirmados recebem uma micro pausa compartilhada na pose de
 
 Em sequências abertas de golpes confirmados, ataques fortes impedem o retorno a ataques fracos até o defensor recuperar o controle. Repetições pertencem às receitas autoradas. Receitas fechadas podem continuar mesmo sem contato, depois de concluir a atividade de cada golpe. Golpes bloqueados ou que erram não liberam continuação aberta. Quando o último golpe acertado mantém o alvo no chão, os dois recuperam o controle juntos, sem recuperação exposta do atacante. Levantamentos confirmados usam recuperação mais curta e reiniciam a sequência do atacante, liberando golpes fracos novamente para continuar o combo. Lançamentos preservam a trajetória e a recuperação aérea protegida; capturas cinematográficas mantêm suas regras próprias.
 
+Chutes aéreos que erram e aterrissam durante a recuperação mantêm o atacante vulnerável até o fim dessa recuperação.
+
+Uma continuação de golpes iniciada enquanto o alvo ainda reage mantém sua vulnerabilidade durante o preparo e a atividade do próximo golpe. Se a sequência de acertos terminar no chão, ambos recuperam o controle juntos; os tempos de recuperação de cada receita são definidos nos dados do personagem.
+
 A ativação de toda ultimate usa uma preparação cinematográfica prolongada com pausa global: somente a sequência de ativação do autor avança; adversários, projéteis, física, efeitos e relógio do round ficam congelados. Essa pausa é distinta da micro pausa de contato. Ativações simultâneas compartilham o mesmo intervalo, sem acumular tempo. O combate retoma ao terminar a animação de preparação, sem pular frames ou conservar esse estado após reset.
+
+Uma ultimate pode continuar uma sequência de golpes confirmados e deve executar a preparação cinematográfica completa antes de seus efeitos, inclusive quando seu comando fica armazenado durante outra ação.
 
 Fundos de combate são ultrawide, com proporção mínima 21:9. Preservar a proporção nativa e ajustar o enquadramento do cenário para evitar ampliação excessiva; a escala dos lutadores e o tamanho de saída da tela são decisões separadas. Não esticar a imagem nem aplicar zoom dinâmico.
 

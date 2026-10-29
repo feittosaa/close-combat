@@ -125,20 +125,10 @@ export class FightScene extends Phaser.Scene {
       mode: 'arcade', arcadeIndex: this.arcadeIndex + 1 });
   };
   private readonly handleRestart = (event: KeyboardEvent): void => {
-    if (event.code !== getSystemControls().reset) return;
-    if (!this.simulation) return;
+    if (this.mode !== 'training' || event.code !== getSystemControls().reset || !this.simulation) return;
     if (ControlSettings.active || event.repeat) return;
     event.preventDefault();
     this.handledTrainingEvents.add(event);
-    if (this.training) {
-      this.resetFight();
-      return;
-    }
-    if (this.mode === 'arcade' && this.simulation.snapshot().matchWinnerId === 'player-1' &&
-        this.arcadeIndex + 1 >= arcadeOpponents(this.selectedFighter.id).length) {
-      this.scene.restart({ fighterId: this.selectedFighter.id, stageId: this.selectedStage.id, mode: 'arcade', arcadeIndex: 0 });
-      return;
-    }
     this.resetFight();
   };
 
@@ -287,8 +277,8 @@ export class FightScene extends Phaser.Scene {
       let label = `ARCADE · LUTA ${this.arcadeIndex + 1}/${count} · COMPUTADOR`;
       if (snapshot.phase === 'match-over') {
         label = snapshot.matchWinnerId === 'player-1'
-          ? this.arcadeIndex + 1 < count ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'ARCADE CONCLUÍDO · R RECOMEÇAR · ESC PAUSA'
-          : snapshot.matchWinnerId ? 'FIM DE JOGO · R TENTAR NOVAMENTE · ESC PAUSA' : 'EMPATE · R REPETIR · ESC PAUSA';
+          ? this.arcadeIndex + 1 < count ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'ARCADE CONCLUÍDO · ESC PAUSA'
+          : snapshot.matchWinnerId ? 'FIM DE JOGO · ESC PAUSA' : 'EMPATE · ESC PAUSA';
       }
       this.arcadeInfo.setText(label);
     }

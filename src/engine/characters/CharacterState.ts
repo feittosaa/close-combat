@@ -10,7 +10,7 @@ export interface CharacterAttack {
   hasHit: boolean;
   throwDirection?: 'forward' | 'backward';
   hitOutcome?: 'hit' | 'block';
-  /** Recovery override for a confirmed launcher or a blocked strike. */
+  /** Recovery override for a confirmed combo or a blocked strike. */
   recoveryFrames?: number;
 }
 export interface CharacterState {

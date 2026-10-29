@@ -79,7 +79,7 @@ it.each([0,1])('delays both throws until frame fifteen and captures at expanded 
     }
     expect(sim.snapshot().characters[player].attack?.elapsedFrames).toBe(15);
     expect(sim.snapshot().hitEvents).toEqual([expect.objectContaining({moveId:move.id,outcome:'hit'})]);
-    const miss=new Simulation(config,undefined,{training:true,initialDistance:110});
+    const miss=new Simulation(config,undefined,{training:true,initialDistance:112});
     step(miss,player,input('N',move.input.buttons));
     for(let tick=0;tick<60;tick++)step(miss);
     expect(miss.snapshot().recentContacts).toHaveLength(0);

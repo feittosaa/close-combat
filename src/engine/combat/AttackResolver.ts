@@ -60,10 +60,10 @@ export class AttackResolver {
         (move.hitLevel === 'low' ? target.grounded && guard === 'DB' : guard === 'B' || guard === 'DB');
       const owner = characters[index];
       const ownerMove = owner.attack ? this.resolveMove(owner.fighterId, owner.attack.moveId) : undefined;
-      // A blocked strike leaves enough time for a quick response; stronger inputs are more punishable.
+      // Allow a manual response after guard stun: 0.4s for light inputs and 0.6s for heavy inputs.
       // Detached projectiles do not interrupt an owner who has already recovered or started another move.
       if (blocked && owner.attack === attack && !projectile) {
-        const window = move.input.buttons.some(button => button === '2' || button === '4') ? 16 : 9;
+        const window = move.input.buttons.some(button => button === '2' || button === '4') ? 36 : 24;
         const minimumRecovery = attack.elapsedFrames + move.blockstun + window + 1 - move.startup - move.activeFrames;
         attack.recoveryFrames = Math.max(attack.recoveryFrames ?? move.recovery, minimumRecovery);
       }

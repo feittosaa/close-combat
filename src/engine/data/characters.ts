@@ -20,6 +20,8 @@ export interface ComboRecipe {
   name: string;
   notation: string;
   moveIds: readonly string[];
+  /** Recovery after the final confirmed hit of this recipe. */
+  recoveryFrames?: number;
   /** Launch and shortened recovery applied only by the confirmed final hit of this exact recipe. */
   launch?: { velocity: number; recoveryFrames: number };
 }
