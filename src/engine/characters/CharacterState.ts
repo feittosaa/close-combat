@@ -40,7 +40,7 @@ export interface CharacterState {
   hitFlashFrames: number;
   chain?: string[];
   /** Confirmed pressure keeps its strength floor until the defender regains control. */
-  hitSequence?: { targetId: string; heavy: boolean };
+  hitSequence?: { targetId: string; heavy: boolean; heavyButton?: '2' | '4' };
   knockdown?: { velocityX: number };
   /** Confirmed launcher flight; independent of ordinary jumps and scripted captures. */
   juggle?: { gravityScale: number; airHits: number; suspensionFrames?: number };

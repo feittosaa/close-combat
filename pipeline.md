@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Escolha do golpe forte — 2026-10-29
+
+Na branch `codex/feature-tela-adaptavel`, após soco forte confirmado não se pode continuar com golpe fraco nem chute forte; após chute forte confirmado não se pode continuar com golpe fraco nem soco forte. A mesma opção forte respeita as receitas existentes; levantamento confirmado reinicia a sequência. Integração em `development` autorizada pelo usuário. Instalação reproduzível, 352 testes em 39 arquivos, build e diff aprovados; regressões verificam as quatro entradas após cada forte nos dois lados, retorno ao neutro, progressão fraco-forte e levantamento. Envio e CI em andamento.
+
 ## Treino, final forte e atalho de ultimate — 2026-10-29
 
 Na branch `codex/feature-tela-adaptavel`, o treino permite recuperar rage e repetir ultimate; os modos de combate mantêm o limite de uma ultimate e a rage bloqueada após uso. Combo fechado forte confirmado encerra a sequência até sua recuperação, sem impedir a continuação dos levantamentos. Atalho configurável de ultimate para cada jogador: U no P1 e Num5 no P2; o comando original continua disponível e ambos seguem as mesmas regras de rage e ativação. Instalação reproduzível, 348 testes em 39 arquivos, build e diff aprovados. Conferidos no jogo os atalhos configuráveis e a ativação com U; regressões cobrem repetição no treino, encerramento do combo forte, atalho após socos, os dois jogadores e migração dos controles existentes. Envio e CI a conferir.
