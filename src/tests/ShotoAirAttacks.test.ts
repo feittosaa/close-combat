@@ -1,3 +1,4 @@
+import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
@@ -59,10 +60,11 @@ it.each([0,1])('launches only the confirmed final hit of 1,1,2: player %i', play
       contact(sim,player,input(guard?'B':'N'));
     }
     const target = sim.snapshot().characters[1-player];
+    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(guard?undefined:6);
     expect(target.grounded).toBe(guard);
     expect(target.verticalVelocity).toBe(guard?0:-10);
     if(!guard) {
-      const y=target.y;step(sim);for(let tick=0;tick<5;tick++)step(sim);
+      const y=target.y;step(sim);for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++)step(sim);
       expect(sim.snapshot().characters[1-player].y).toBeLessThan(y);
     }
   }
@@ -70,6 +72,7 @@ it.each([0,1])('launches only the confirmed final hit of 1,1,2: player %i', play
     const sim = new Simulation(config,undefined,{training:true,initialDistance:56});
     for(const button of buttons){step(sim,player,input('N',button));contact(sim,player);}
     expect(sim.snapshot().characters[1-player].grounded).toBe(true);
+    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBeUndefined();
   }
 });
 
@@ -80,7 +83,7 @@ it.each([0,1])('air basics block against legal air guard, whiff out of range, an
     step(sim,player,input('N',move.input.buttons[0]),input('B'));
     expect(contact(sim,player,input('B'))).toMatchObject({moveId:move.id,outcome:'block',damage:0});
     const impact=sim.snapshot();
-    for(let tick=0;tick<5;tick++)step(sim);
+    for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++)step(sim);
     expect(sim.snapshot().characters).toEqual(impact.characters);
     sim.resetMatch(400);step(sim,player,input('U'));step(sim,player,input('N',move.input.buttons[0]));
     for(let tick=0;tick<80;tick++)step(sim);

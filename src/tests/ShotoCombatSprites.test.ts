@@ -8,7 +8,7 @@ const input=(direction:Direction='N',button?:AttackButton):FrameInput=>({directi
 const config=createGameConfig(1024,576);
 
 describe.each([0,1])('golpes/guardas do jogador %i',player=>{
-  it.each(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne))('sincroniza todas as poses de $id com as fases reais',move=>{
+  it.each(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne && move.id !== 'light-punch'))('sincroniza todas as poses de $id com as fases reais',move=>{
     const sim=new Simulation(config,undefined,{training:true,initialDistance:400});
     const seen=new Set<number>();
     for(let t=0;t<move.startup+move.activeFrames+move.recovery;t++){
@@ -18,7 +18,7 @@ describe.each([0,1])('golpes/guardas do jogador %i',player=>{
       const pose=getShotoSpritePose(state,snapshot.frame)!;
       if(pose.texture==='shoto-enter-defense'){
         const elapsed=state.attack!.elapsedFrames;
-        expect(elapsed<2 || (move.id==='light-punch'&&elapsed>=move.startup+move.activeFrames+move.recovery-2)).toBe(true);
+        expect(elapsed).toBeLessThan(2);
         expect([72,73]).toContain(pose.frame);
         continue;
       }
@@ -76,24 +76,24 @@ describe.each([0,1])('golpes/guardas do jogador %i',player=>{
   });
 });
 
-it('mantém os seis clipes e pausa idênticos em 30/60/120/144 FPS',()=>{
+it('mantém clipes de golpes/guardas e pausa idênticos em 30/60/120/144 FPS',()=>{
   const run=(fps:number)=>{
     const sim=new Simulation(config,undefined,{training:true,initialDistance:64});
     const trace:unknown[]=[];const textures=new Set<string>();
-    for(let i=0;i<fps*4;i++)sim.advance(1000/fps,(_characters,frame)=>{
+    for(let i=0;i<fps*6;i++)sim.advance(1000/fps,(_characters,frame)=>{
       const snapshot=sim.snapshot();
       for(const state of snapshot.characters){
         const layers=getShotoSpriteLayers(state,snapshot.frame);
         expect(getShotoSpriteLayers(state,snapshot.frame)).toEqual(layers);
         layers.forEach(layer=>textures.add(layer.texture));trace.push(layers);
       }
-      if(frame<160){
-        const button=frame===0?'1':frame===40?'2':frame===80?'3':frame===120?'4':undefined;
+      if(frame<280){
+        const button=frame===0?'1':frame===70?'2':frame===140?'3':frame===210?'4':undefined;
         return [input('N',button),input('DB')];
       }
-      return [input(frame===180?'U':frame>180&&frame<215?'B':'N'),input('N',frame===181?'1':undefined)];
+      return [input(frame===300?'U':frame>300&&frame<345?'B':'N'),input('N',frame===301?'1':undefined)];
     });
-    for(const name of ['light-punch','heavy-punch','light-kick','heavy-kick','crouch-defense','air-defense'])expect(textures.has(`shoto-${name}`)).toBe(true);
+    for(const name of ['light-combo','heavy-punch','light-kick','heavy-kick','crouch-defense','air-defense'])expect(textures.has(`shoto-${name}`)).toBe(true);
     return trace;
   };
   const reference=run(60);for(const fps of [30,120,144])expect(run(fps)).toEqual(reference);

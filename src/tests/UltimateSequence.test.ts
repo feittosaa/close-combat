@@ -1,3 +1,5 @@
+import { createProjectileHitbox } from '../engine/collision/projectileGeometry';
+import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { shoto } from '../engine/data/fighters/shoto';
@@ -18,15 +20,15 @@ function command(sim:Simulation,id:string,player=0,target=N){
   step(sim,input(sequence[sequence.length-1]??'N',move.input.buttons),player,target);
 }
 function contact(sim:Simulation,stage:'confirm'|'explosion',player=0,target=N){
-  for(let i=0;i<240;i++){
+  for(let i=0;i<400;i++){
     const event=sim.snapshot().hitEvents.find(e=>e.stage===stage&&e.attackerId===`player-${player+1}`);
     if(event)return event;step(sim,N,player,target);
   }
   throw new Error(`Missing ${stage} contact`);
 }
 
-it('freezes the round clock and entire world for two full seconds of activation, for any ultimate',()=>{
-  expect(ULTIMATE_ACTIVATION_FRAMES).toBe(120);
+it('freezes the round clock and entire world for 150 ticks of activation, for any ultimate',()=>{
+  expect(ULTIMATE_ACTIVATION_FRAMES).toBe(150);
   const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:100}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
@@ -51,7 +53,7 @@ it('freezes the round clock and entire world for two full seconds of activation,
 });
 
 it('freezes already flying projectiles, and simultaneous ultimates share one activation interval',()=>{
-  const sim=create(350);sim.fillTrainingRage();command(sim,'wine-bottle',1);wait(sim,20);
+  const sim=create(350);sim.fillTrainingRage();command(sim,'wine-bottle',1);wait(sim,30);
   expect(sim.snapshot().projectiles).toHaveLength(1);
   command(sim,'wine-ultimate');const started=sim.snapshot();
   for(let i=0;i<ULTIMATE_ACTIVATION_FRAMES-1;i++){step(sim);expect(sim.snapshot().projectiles).toEqual(started.projectiles);}
@@ -66,18 +68,18 @@ it('freezes already flying projectiles, and simultaneous ultimates share one act
 
 it.each([0,1])('bottle confirms, lighter explodes once for 280 and physically knocks player %i down',player=>{
   const sim=create();sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  expect(contact(sim,'confirm',player)).toMatchObject({damage:0,outcome:'hit',defenderStunFrames:120});
+  expect(contact(sim,'confirm',player)).toMatchObject({damage:0,outcome:'hit',defenderStunFrames:150});
   expect(sim.snapshot().characters[1-player].health).toBe(1000);
-  // Six combat frames of throw preparation, independently of the five hitstop ticks.
-  wait(sim,10);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
-  const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(44);
+  // Eight combat frames of throw preparation, independently of the shared contact pause.
+  wait(sim,CONTACT_HITSTOP_FRAMES+7);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
+  const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(50);
   const target=sim.snapshot().characters[1-player];
   expect(target).toMatchObject({health:720,mode:'knockdown',grounded:false});
   expect(target.verticalVelocity).toBe(-5);expect(target.knockdown).toBeDefined();
   expect(sim.snapshot().explosions).toHaveLength(1);
   const x=target.x;wait(sim,30);const down=sim.snapshot().characters[1-player];
   expect(Math.abs(down.x-x)).toBeGreaterThan(40);expect(down.grounded).toBe(true);expect(down.mode).toBe('knockdown');
-  wait(sim,30);expect(sim.snapshot().characters[1-player].mode).toBe('neutral');
+  wait(sim,50);expect(sim.snapshot().characters[1-player].mode).toBe('neutral');
   expect(sim.snapshot().characters[1-player].health).toBe(720);
   expect(sim.snapshot().explosions).toHaveLength(0);
 });
@@ -159,6 +161,8 @@ it('reaches both actual panorama walls when the opponent follows, without draggi
 it.each([0,1])('captures an airborne defender upright, waits for landing and explodes after the lighter: player %i',player=>{
   const sim=create(200);sim.fillTrainingRage();
   step(sim,input('U'),1-player);
+  // Meet the descending extended hurtbox rather than the compact apex silhouette.
+  wait(sim,10);
   command(sim,'wine-ultimate',player);
   contact(sim,'confirm',player);
   const confirmed=sim.snapshot().characters[1-player];
@@ -215,4 +219,59 @@ it('keeps the complete knocked-down body inside the fixed viewport at maximum se
       step(sim);
     }
   }
+});
+
+
+it.each([0,1])('launches a resized ultimate bottle at head height in a falling arc: player %i',player=>{
+  const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
+  wait(sim,ULTIMATE_ACTIVATION_FRAMES);
+  const initial=sim.snapshot();const bottle=initial.projectiles.find(p=>p.phase==='confirm')!;
+  const owner=initial.characters[player];const move=shoto.moves.find(m=>m.id==='wine-ultimate')!;
+  const box=createProjectileHitbox(bottle,move);
+  expect(box.width).toBe(60.72);expect(box.height).toBe(48.576);
+  // The first integration already moved the bottle upward by its launch velocity.
+  expect(box.y+box.height/2).toBeCloseTo(owner.y+owner.collision.hurtboxes.standing.offsetY-1.5);
+  expect(box.y).toBeLessThan(owner.y+owner.collision.hurtboxes.standing.offsetY);
+  const positions=[bottle.y];
+  for(let tick=0;tick<20;tick++){
+    const before=sim.snapshot().projectiles.find(p=>p.id===bottle.id)!;
+    step(sim);const after=sim.snapshot().projectiles.find(p=>p.id===bottle.id)!;
+    expect(after.x-before.x).toBeCloseTo(player===0?15:-15);
+    expect(after.y-before.y).toBeCloseTo(before.verticalVelocity!);
+    expect(after.verticalVelocity!-before.verticalVelocity!).toBeCloseTo(0.12);
+    positions.push(after.y);
+  }
+  expect(positions[5]).toBeLessThan(positions[0]);
+  expect(positions[20]).toBeGreaterThan(positions[15]);
+  expect(contact(sim,'explosion',player).damage).toBe(280);
+});
+
+it.each([0,1])('holds both players from bottle confirmation through lighter impact, then releases control: player %i',player=>{
+  const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
+  contact(sim,'confirm',player);
+  const positions=sim.snapshot().characters.map(c=>({x:c.x,y:c.y}));
+  let exploded=false;
+  for(let tick=0;tick<180;tick++){
+    const attempts=[input('F',['1']),input('B',['2']),input('UF',['3']),input('DB',['4'])];
+    step(sim,attempts[tick%attempts.length],player,attempts[(tick+2)%attempts.length]);
+    const snapshot=sim.snapshot();
+    if(snapshot.hitEvents.some(e=>e.stage==='explosion')){exploded=true;break;}
+    expect(snapshot.characters.map(c=>({x:c.x,y:c.y}))).toEqual(positions);
+    expect(snapshot.characters[player].attack?.moveId??'wine-ultimate').toBe('wine-ultimate');
+    expect(snapshot.characters[1-player].attack).toBeUndefined();
+    expect(snapshot.characters[1-player].ultimateCapture).toBeDefined();
+  }
+  expect(exploded).toBe(true);
+  expect(sim.snapshot().characters[1-player].ultimateCapture).toBeUndefined();
+  wait(sim,CONTACT_HITSTOP_FRAMES+1);
+  const before=sim.snapshot().characters[player].x;step(sim,input('F'),player);
+  expect(sim.snapshot().characters[player].x).not.toBe(before);
+  expect(sim.snapshot().characters[player].attack).toBeUndefined();
+  wait(sim,100);
+  const target=sim.snapshot().characters[1-player].x;step(sim,input('F'),1-player);
+  expect(sim.snapshot().characters[1-player].x).not.toBe(target);
+
+  sim.resetMatch();sim.fillTrainingRage();command(sim,'wine-ultimate',player);contact(sim,'confirm',player);
+  sim.resetMatch();const reset=sim.snapshot().characters[player].x;step(sim,input('F'),player);
+  expect(sim.snapshot().characters[player].x).not.toBe(reset);
 });

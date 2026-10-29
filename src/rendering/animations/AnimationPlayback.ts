@@ -95,7 +95,7 @@ export function getAttackAnimationFrame(
     duration = move.activeFrames;
   } else if (state.mode === 'recovery') {
     elapsed = state.attack.elapsedFrames - move.startup - move.activeFrames;
-    duration = recoveryFrames(move);
+    duration = recoveryFrames(move, state.attack);
   } else return undefined;
 
   const frames = getClipFrames(clip);

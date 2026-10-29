@@ -89,7 +89,7 @@ describe('quatro básicos do Shoto', () => {
     expect(sim.snapshot().recentContacts).toEqual([]); expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
   });
   it('resolve simultâneos como trade sem viés de ordem', () => {
-    const sim = practice(); sim.stepFrame([input('N', ['1']), input('N', ['1'])]); advance(sim, 6);
+    const sim = practice(); sim.stepFrame([input('N', ['1']), input('N', ['1'])]); advance(sim, 8);
     expect(sim.snapshot().hitEvents).toHaveLength(2);
     expect(sim.snapshot().characters.map(character => character.health)).toEqual([980, 980]);
     expect(sim.snapshot().characters.every(character => character.mode === 'hitstun' && !character.attack)).toBe(true);
@@ -97,7 +97,7 @@ describe('quatro básicos do Shoto', () => {
   it('altos passam sobre agachamento; chutes médios atingem e podem ser defendidos baixo', () => {
     for (const [button, direction, expected] of [['1', 'D', 'miss'], ['3', 'D', 'hit'], ['4', 'DB', 'block']] as const) {
       const sim = practice(); sim.stepFrame([input('N', [button]), input(direction)]);
-      advance(sim, 14, [N, input(direction)]);
+      advance(sim, 23, [N, input(direction)]);
       expect(sim.snapshot().recentContacts[0]?.event.outcome ?? 'miss').toBe(expected);
     }
   });
@@ -127,11 +127,11 @@ describe('fundação da simulação', () => {
     stream.forEach(value => { a.stepFrame([value, N]); b.stepFrame([value, N]); });
     expect(a.snapshot()).toEqual(b.snapshot());
     const copy = a.snapshot(); copy.characters[0].collision.bodyWidth = 999; copy.characters[0].health = 0;
-    expect(a.snapshot().characters[0].collision.bodyWidth).toBe(55.2);
+    expect(a.snapshot().characters[0].collision.bodyWidth).toBe(60.72);
     expect(a.snapshot().characters[0].health).toBe(1000);
   });
   it('reseta vida, entradas, registros e opções de distância no treino', () => {
-    const sim = practice(); sim.stepFrame([input('N', ['1']), N]); advance(sim, 8);
+    const sim = practice(); sim.stepFrame([input('N', ['1']), N]); advance(sim, 10);
     expect(sim.snapshot().characters[1].health).toBe(980);
     sim.resetMatch(144); const snapshot = sim.snapshot();
     expect(snapshot.frame).toBe(0); expect(snapshot.hitEvents).toEqual([]); expect(snapshot.recentContacts).toEqual([]);
@@ -141,21 +141,21 @@ describe('fundação da simulação', () => {
   it('restaura vida só após 90 frames tranquilos e não encerra treino por KO ou tempo', () => {
     const fragile = { ...shoto, maxHealth: 20 };
     const sim = new Simulation({ ...config, match: { ...config.match, roundDurationFrames: 1 } }, [shoto, fragile], { training: true, initialDistance: 64 });
-    sim.setTrainingAutoRestore(true); sim.stepFrame([input('N', ['1']), N]); advance(sim, 30);
+    sim.setTrainingAutoRestore(true); sim.stepFrame([input('N', ['1']), N]); advance(sim, 50);
     expect(sim.snapshot().characters[1].health).toBe(0); expect(sim.snapshot().phase).toBe('fight');
     advance(sim, 90); expect(sim.snapshot().characters[1].health).toBe(20);
     expect(sim.snapshot().roundFramesRemaining).toBe(1);
   });
   it('geometria é espelhada por personagem e não depende de arte', () => {
     const states = practice().snapshot().characters;
-    expect(createHurtbox(states[0]).width).toBe(55.2);
-    expect(createHurtbox({ ...states[1], crouching: true }).height).toBe(103.5);
+    expect(createHurtbox(states[0]).width).toBe(60.72);
+    expect(createHurtbox({ ...states[1], crouching: true }).height).toBe(113.85);
   });
   it('vence rounds por KO, conta vitórias e permite reinício da partida', () => {
     const fragile = { ...shoto, maxHealth: 20 };
     const sim = new Simulation({ ...config, match: { ...config.match, roundEndPauseFrames: 2 } }, [fragile, fragile], { initialDistance: 64 });
     for (let round = 1; round <= 2; round++) {
-      sim.stepFrame([input('N', ['1']), N]); advance(sim, 6 + CONTACT_HITSTOP_FRAMES);
+      sim.stepFrame([input('N', ['1']), N]); advance(sim, 8 + CONTACT_HITSTOP_FRAMES);
       expect(sim.snapshot()).toMatchObject({ phase: 'round-over', round, roundEndReason: 'knockout', roundWinnerId: 'player-1' });
       expect(sim.snapshot().activeHitboxes).toEqual([]);
       advance(sim, 2);

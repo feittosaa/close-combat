@@ -6,7 +6,7 @@ import type { Hitbox } from '../collision/types';
 import { createHitbox, createHurtbox } from '../collision/combatGeometry';
 import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { intersects } from '../collision/intersects';
-import { classifyHitContext, frameAdvantage, type HitContext } from './frameData';
+import { attackDurationFrames, classifyHitContext, frameAdvantage, type HitContext } from './frameData';
 
 export interface HitEvent {
   attackerId: string;
@@ -48,7 +48,7 @@ export class AttackResolver {
       const target = characters[1 - index];
       if (!attack || attack.hasHit || !move || (!projectile && (attacker.mode !== 'active' || move.projectile))) return [];
       if (targetId && target.characterId !== targetId) return [];
-      if (target.mode === 'knockdown') return [];
+      if (target.mode === 'knockdown' || (target.wakeupInvulnerabilityFrames ?? 0) > 0) return [];
       const defense = target.attack ? this.resolveMove(target.fighterId, target.attack.moveId)?.invulnerability : undefined;
       if (defense && target.attack!.elapsedFrames < defense.until && (defense.kind === 'all' || projectile)) return [];
       if (move.category === 'throw' && (!target.grounded || !attacker.grounded || target.mode === 'hitstun' || target.mode === 'blockstun')) return [];
@@ -60,12 +60,14 @@ export class AttackResolver {
         (move.hitLevel === 'low' ? target.grounded && guard === 'DB' : guard === 'B' || guard === 'DB');
       const owner = characters[index];
       const ownerMove = owner.attack ? this.resolveMove(owner.fighterId, owner.attack.moveId) : undefined;
-      const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, ownerMove.startup + ownerMove.activeFrames + ownerMove.recovery - owner.attack.elapsedFrames - 1) : 0) : move.startup + move.activeFrames + move.recovery - attack.elapsedFrames - 1;
+      const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, attackDurationFrames(ownerMove, owner.attack) - owner.attack.elapsedFrames - 1) : 0) : attackDurationFrames(move, attack) - attack.elapsedFrames - 1;
       const stun = blocked ? move.blockstun : phase === 'confirm' ? move.ultimateSequence!.confirmStun : move.hitstun;
+      const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward'
+        ? (attacker.facing === 'right' ? 'left' : 'right') : attacker.facing;
       const event: HitEvent = { attackerId: attacker.characterId, targetId: target.characterId, moveId: move.id,
         stage: phase === 'confirm' ? 'confirm' : phase === 'lighter' ? 'explosion' : undefined,
         damage: blocked || phase === 'confirm' ? 0 : Math.min(target.health, move.damage), outcome: blocked ? 'block' : 'hit',
-        pushback: phase === 'confirm' ? 0 : blocked ? move.pushback.block : move.pushback.hit, pushbackDirection: attacker.facing, attackerRecoveryFrames: recovery,
+        pushback: phase === 'confirm' ? 0 : blocked ? move.pushback.block : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
         defenderStunFrames: stun, frameAdvantage: frameAdvantage(recovery, stun),
         context: blocked ? undefined : classifyHitContext(target) };
       return [{ attack, target, event }];

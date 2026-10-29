@@ -121,6 +121,7 @@ export class PauseMenu {
     this.details.replaceChildren(el('p', this.fighters[this.fighterIndex].name, 'pause-eyebrow'), el('h2', formatMoveTitle(entry.title,layout)), commandLine);
     if (entry.move) {
       const move = entry.move;
+      if (move.category === 'throw') this.details.append(el('p', 'Ao iniciar o comando, segure frente para lançar à frente ou trás para lançar atrás. Sem direção, lança à frente.'));
       if (move.rageCost) this.details.append(el('p', `Exige ${move.rageCost} de rage; consome ao iniciar.`));
       if (move.invulnerability) this.details.append(el('p', `Invulnerável ${move.invulnerability.kind === 'all' ? 'a ataques' : 'a projéteis'} por ${move.invulnerability.until}F.`));
       if (move.projectile) this.details.append(el('p', `Projétil · velocidade ${move.projectile.speed} · duração ${move.projectile.life}F.`));
@@ -130,7 +131,7 @@ export class PauseMenu {
       for (const [label, frames, cls] of [['Preparo', move.startup, 'startup'], ['Atividade', move.activeFrames, 'active'], ['Recuperação', move.recovery, 'recovery']] as const) {
         const block = el('span', `${label} ${frames}F`, cls); block.style.flexGrow = String(frames); timeline.append(block);
       }
-      this.details.append(timeline, el('p', 'Valores provisórios para balanceamento. Cancelamentos somente nas rotas cadastradas após contato.', 'pause-note'));
+      this.details.append(timeline, el('p', 'Valores provisórios para balanceamento. Receitas fechadas funcionam também no vazio, após a atividade do golpe. Fora delas, só o acerto permite trocar de golpe e continuar. Forte impede voltar ao fraco até o fim da sequência; um levantamento acertado reinicia essa sequência.', 'pause-note'));
     }
     if (entry.combo) this.details.append(el('p', 'Receita manual aprovada pelo usuário.'));
     const pin = el('button', 'Fixar comando no treino'); pin.onclick = () => this.pin(entry,this.fighterIndex); this.details.append(pin);

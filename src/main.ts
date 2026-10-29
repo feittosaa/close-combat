@@ -1,6 +1,7 @@
 import { RENDER_SIZE } from './rendering/presentation';
 import Phaser from 'phaser';
 import './style.css';
+import { BootScene } from './scenes/BootScene';
 import { FightScene } from './scenes/FightScene';
 import { MenuScene } from './scenes/MenuScene';
 
@@ -26,7 +27,7 @@ const game = new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [MenuScene, FightScene],
+  scene: [BootScene, MenuScene, FightScene],
 });
 
 export default game;

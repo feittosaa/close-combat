@@ -39,7 +39,9 @@ export class TrainingSession {
   observe(snapshot: SimulationSnapshot): void {
     snapshot.characters.forEach((character, index) => {
       if (!character.attack || index > 1) return;
-      this.lastMoves[index] = getCharacterById(character.fighterId)?.moves.find(({ id }) => id === character.attack?.moveId);
+      const move = getCharacterById(character.fighterId)?.moves.find(({ id }) => id === character.attack?.moveId);
+      this.lastMoves[index] = move && character.attack.recoveryFrames !== undefined
+        ? { ...move, recovery: character.attack.recoveryFrames } : move;
     });
   }
 

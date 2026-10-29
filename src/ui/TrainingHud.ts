@@ -44,10 +44,10 @@ export class TrainingHud {
     this.progress.clear();
     snapshot.characters.forEach((character, index) => {
       const move = session.lastMoves[index];
-      const recovery = move ? recoveryFrames(move) : 0;
+      const recovery = move ? recoveryFrames(move, character.attack) : 0;
       const recoveryLabel = String(recovery);
       const lockedFrames = move && character.attack
-        ? move.startup + move.activeFrames + recoveryFrames(move) - character.attack.elapsedFrames
+        ? move.startup + move.activeFrames + recoveryFrames(move, character.attack) - character.attack.elapsedFrames
         : character.remainingStateFrames;
       const levels = { high: 'ALTO', mid: 'MÉDIO', low: 'BAIXO', air: 'AÉREO', throw: 'AGARRÃO', special: 'ESPECIAL' };
       const detail = move

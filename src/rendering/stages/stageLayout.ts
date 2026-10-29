@@ -42,7 +42,7 @@ export function getFightCameraFrame(layout: StageLayout, fighterPositions: reado
     : layout.worldWidth / 2;
   const centerX = Math.max(halfVisibleWidth, Math.min(layout.worldWidth - halfVisibleWidth, target));
   const highestRise = fighterYPositions.length ? Math.max(0, layout.floorY - Math.min(...fighterYPositions)) : 0;
-  const verticalTravel = Math.min(highestRise * 0.4, Math.max(0, (layout.worldHeight - layout.floorY - 16) / zoom));
+  const verticalTravel = Math.min(highestRise * 0.6, Math.max(0, (layout.worldHeight - layout.floorY - 16) / zoom));
   // Phaser zooms around the viewport center: screenY = centerY + (worldY - scrollY - centerY) * zoom.
   return {
     zoom,

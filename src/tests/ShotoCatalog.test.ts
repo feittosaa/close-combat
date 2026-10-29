@@ -1,3 +1,4 @@
+import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
@@ -23,7 +24,7 @@ function command(sim: Simulation, move: MoveDefinition, player = 0): void {
   step(sim, input(sequence[sequence.length-1] ?? (move.crouching ? 'D' : 'N'), move.input.buttons), player);
 }
 function untilContact(sim: Simulation, player = 0, guard = N, continuous = false): void {
-  for (let i = 0; i < 180; i++) {
+  for (let i = 0; i < 400; i++) {
     if (sim.snapshot().hitEvents.some(e => e.attackerId === `player-${player + 1}`)) return;
     if(continuous)expect(sim.snapshot().characters[1-player].mode, `Defender escaped combo: ${sim.snapshot().characters[player].attack?.moveId}`).toBe('hitstun');
     step(sim, N, player, guard);
@@ -33,17 +34,17 @@ function untilContact(sim: Simulation, player = 0, guard = N, continuous = false
 const move = (id: string) => shoto.moves.find(m => m.id === id)!;
 
 describe('manual Shoto catalogue', () => {
-  it('registers only the ten authored strings and the two-hit extension', () => {
+  it('registers only the four authored punch strings', () => {
     expect(shoto.combos?.map(c => c.notation)).toEqual([
-      '1,1,1','2,2,2','3,3,3','4,4,4','1,1,2','3,3,4','1,2,3,4','1,3,2,4','1,1,1+2','3,4,3+4','f,d,fd,3,4',
+      '1,1,1','2,2,2','1,1,2','1,1,1+2',
     ]);
     expect(formatCommand('b,bd,d,df,f,1+2')).toContain('←,↙,↓,↘,→,');
     expect(formatCommand('f,d,fd,4')).toContain('→,↓,↘,');
-    expect(fighterMoveList(shoto).filter(e => e.categories.includes('special'))).toHaveLength(6);
+    expect(fighterMoveList(shoto).filter(e => e.categories.includes('special'))).toHaveLength(5);
   });
 
   it.each([0,1])('executes every authored string with connected hits for player %i', player => {
-    for (const recipe of shoto.combos!.filter(c => c.id !== 'extended-reversal')) {
+    for (const recipe of shoto.combos!) {
       const sim = create(56), tutorial = new TutorialSession(shoto, 'combo-tutorial');
       tutorial.index = shoto.combos!.indexOf(recipe);
       for (const [index,id] of recipe.moveIds.entries()) {
@@ -68,8 +69,8 @@ describe('manual Shoto catalogue', () => {
     expect(sim.snapshot().recentContacts).toHaveLength(1);
     const miss=create(350);command(miss,move('light-punch'));wait(miss,7);command(miss,move('heavy-punch'));
     expect(miss.snapshot().characters[0].attack?.moveId).toBe('light-punch');
-    const wrong=create();command(wrong,move('light-punch'));untilContact(wrong);command(wrong,move('heavy-kick'));wait(wrong,6);
-    expect(wrong.snapshot().characters[0].attack?.moveId).toBe('light-punch');
+    const wrong=create();command(wrong,move('heavy-punch'));untilContact(wrong);command(wrong,move('light-kick'));wait(wrong,CONTACT_HITSTOP_FRAMES+1);
+    expect(wrong.snapshot().characters[0].attack?.moveId).toBe('heavy-punch');
   });
 
   it.each([0,1])('prioritizes crouching attacks and low guard correctly for player %i', player => {
@@ -114,13 +115,14 @@ describe('manual Shoto catalogue', () => {
     }
   });
 
-  it.each([0,1])('requires the first aerial kick before its two-hit extension for player %i', player => {
-    const sim=create(56);command(sim,move('reversal-light'),player);untilContact(sim,player);
-    command(sim,move('reversal-followup'),player);untilContact(sim,player);
-    expect(sim.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual(['reversal-light','reversal-followup']);
-    expect(sim.snapshot().characters[1-player].health).toBe(915);
-    const single=create(56);command(single,move('reversal-kick'),player);untilContact(single,player);
-    expect(single.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual(['reversal-kick']);
+  it.each([0,1])('keeps single reversal kicks without the removed aerial extension for player %i', player => {
+    for (const id of ['reversal-light','reversal-kick']) {
+      const sim=create(56);command(sim,move(id),player);untilContact(sim,player);
+      step(sim,input('N',['4']),player);wait(sim,CONTACT_HITSTOP_FRAMES+1);
+      expect(sim.snapshot().characters[player].attack?.moveId).toBe(id);
+      expect(sim.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual([id]);
+    }
+    expect(shoto.moves.some(m=>m.id==='reversal-followup')).toBe(false);
   });
 
   it('builds rage on real contacts, requires a full bar and consumes it on ultimate startup', () => {
@@ -146,27 +148,27 @@ describe('manual Shoto catalogue', () => {
     for(const id of ['reversal-kick','reversal-light']) {
       const sim=create(56);step(sim,input('N',['1']),1);
       command(sim,move(id));
-      for(let i=0;i<6;i++)step(sim);
+      for(let i=0;i<10;i++)step(sim);
       expect(sim.snapshot().characters[0].health).toBe(id==='reversal-kick'?1000:980);
     }
   });
 
   it('advancing knee passes through a real projectile, but is not immune to melee', () => {
     const sim=create(200);command(sim,move('wine-glass'),1);
-    wait(sim,10);command(sim,move('advancing-knee'));
+    wait(sim,20);command(sim,move('advancing-knee'));
     const start=sim.snapshot().characters[0].x;
-    for(let i=0;i<16;i++)step(sim);
+    for(let i=0;i<26;i++)step(sim);
     expect(sim.snapshot().characters[0].x).toBeGreaterThan(start);
     expect(sim.snapshot().characters[0].health).toBe(1000);
     expect(sim.snapshot().projectiles.some(p=>p.x < sim.snapshot().characters[0].x)).toBe(true);
-    const melee=create(56);step(melee,input('N',['1']),1);command(melee,move('advancing-knee'));wait(melee,3);
+    const melee=create(56);step(melee,input('N',['1']),1);command(melee,move('advancing-knee'));wait(melee,7);
     expect(melee.snapshot().characters[0].health).toBe(980);
   });
 
   it('a projectile contact triggers hitstop independently of the round clock and resets with the match', () => {
     const sim=new Simulation(config,undefined,{initialDistance:300});
     command(sim,move('wine-glass'));untilContact(sim);
-    const contact=sim.snapshot();expect(contact.hitstopFramesRemaining).toBe(5);
+    const contact=sim.snapshot();expect(contact.hitstopFramesRemaining).toBe(CONTACT_HITSTOP_FRAMES);
     step(sim);expect(sim.snapshot().frame).toBe(contact.frame);
     expect(sim.snapshot().roundFramesRemaining).toBe(contact.roundFramesRemaining-1);
     sim.resetMatch();expect(sim.snapshot().projectiles).toEqual([]);
@@ -192,17 +194,11 @@ describe('manual Shoto catalogue', () => {
   it('projectile continues after its owner is interrupted, then expires without contact', () => {
     const sim=create(56);command(sim,move('wine-bottle'));
     // Time a reversal to interrupt after bottle release while its invulnerability avoids contact.
-    wait(sim,13);command(sim,move('reversal-kick'),1);
+    wait(sim,move('wine-bottle').startup-7);command(sim,move('reversal-kick'),1);
     untilContact(sim,1);
     expect(sim.snapshot().characters[0].mode).toBe('hitstun');
     expect(sim.snapshot().projectiles.some(p=>p.ownerId==='player-1')).toBe(true);
     wait(sim,220);expect(sim.snapshot().projectiles).toHaveLength(0);
-  });
-
-  it('accepts the aerial extension with only a fresh 4 after the initial kick', () => {
-    const sim=create(56);command(sim,move('reversal-light'));untilContact(sim);
-    step(sim,input('N',['4']));untilContact(sim);
-    expect(sim.snapshot().recentContacts.map(e=>e.event.moveId)).toEqual(['reversal-light','reversal-followup']);
   });
 
   it.each([0,1])('gates ultimate and respects guard on either side for player %i', player => {

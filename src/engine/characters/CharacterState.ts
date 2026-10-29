@@ -5,11 +5,13 @@ export type CharacterMode = 'neutral' | 'moving' | 'dashing' | 'airborne' | 'cro
   'startup' | 'active' | 'recovery' | 'blocking' | 'hitstun' | 'blockstun' | 'knockdown';
 export interface CharacterAttack {
   moveId: string;
-  commandFrame?: number;
   buttons: readonly AttackButton[];
   elapsedFrames: number;
   hasHit: boolean;
+  throwDirection?: 'forward' | 'backward';
   hitOutcome?: 'hit' | 'block';
+  /** Recovery of this confirmed attack, when its authored launcher shortens the nominal move. */
+  recoveryFrames?: number;
 }
 export interface CharacterState {
   characterId: string;
@@ -29,14 +31,20 @@ export interface CharacterState {
   remainingStateFrames: number;
   /** Logical jump origin survives guard/stun pose changes; renderer never restarts a flight. */
   airborneStartedFrame?: number;
+  airborneElapsedFrames?: number;
   verticalVelocity: number;
   grounded: boolean;
   crouching: boolean;
   attack?: CharacterAttack;
   hitFlashFrames: number;
   chain?: string[];
-  chainLastFrame?: number;
+  /** Confirmed pressure keeps its strength floor until the defender regains control. */
+  hitSequence?: { targetId: string; heavy: boolean };
   knockdown?: { velocityX: number };
+  /** Confirmed launcher flight; independent of ordinary jumps and scripted captures. */
+  juggle?: { gravityScale: number; airHits: number; suspensionFrames?: number };
+  /** Counts combat ticks, including grounded getup, then a short protected return. */
+  wakeupInvulnerabilityFrames?: number;
   /** Bottle confirmation holds the defender until the lighter arrives, including landing. */
   ultimateCapture?: { ownerId: string };
   ultimateThrowStartedFrame?: number;
