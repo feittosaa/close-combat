@@ -8,20 +8,34 @@ const input = (direction: FrameInput['direction'] = 'N', ...buttons: AttackButto
 const neutral = input();
 
 describe('blocked attack recovery', () => {
-  it.each([0, 1])('allows a defender to punish a blocked light attack, player %i', attacker => {
+  it.each([[0, '1'], [1, '1'], [0, '2'], [1, '2']] as const)(
+    'punishes player %i after blocked attack %s even while they hold back', (attacker, attackButton) => {
     const sim = new Simulation(config, undefined, { training: true, initialDistance: 64 });
     const defender = 1 - attacker;
     const advance = (attack: FrameInput, defense: FrameInput) => {
       const frames = [neutral, neutral]; frames[attacker] = attack; frames[defender] = defense; sim.stepFrame(frames);
     };
-    advance(input('N', '1'), input('B'));
+    advance(input('N', attackButton), input('B'));
     for (let i = 0; i < 30 && !sim.snapshot().hitEvents.length; i++) advance(neutral, input('B'));
-    expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', moveId: 'light-punch' });
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', moveId: attackButton === '1' ? 'light-punch' : 'heavy-punch' });
     for (let i = 0; i < 30 && (sim.snapshot().hitstopFramesRemaining || sim.snapshot().characters[defender].mode === 'blockstun'); i++) advance(neutral, input('B'));
-    advance(input('N', '1'), input('D', '1'));
-    expect(sim.snapshot().characters[attacker].attack?.moveId).toBe('light-punch');
-    for (let i = 0; i < 12 && sim.snapshot().characters[attacker].health === 1000; i++) advance(neutral, neutral);
+    advance(input('B'), input('D', '1'));
+    expect(sim.snapshot().characters[attacker].mode).toBe('recovery');
+    for (let i = 0; i < 12 && sim.snapshot().characters[attacker].health === 1000; i++) advance(input('B'), neutral);
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'hit', targetId: sim.snapshot().characters[attacker].characterId });
     expect(sim.snapshot().characters[attacker].health).toBeLessThan(1000);
+  });
+
+  it('allows the attacker to block again after recovery finishes', () => {
+    const sim = new Simulation(config, undefined, { training: true, initialDistance: 64 });
+    sim.stepFrame([input('N', '1'), input('B')]);
+    for (let i = 0; i < 30 && !sim.snapshot().hitEvents.length; i++) sim.stepFrame([input('B'), input('B')]);
+    expect(sim.snapshot().hitEvents[0]?.outcome).toBe('block');
+    for (let i = 0; i < 60 && (sim.snapshot().characters[0].attack || sim.snapshot().hitstopFramesRemaining); i++) sim.stepFrame([input('B'), neutral]);
+    expect(sim.snapshot().characters[0].attack).toBeUndefined();
+    sim.stepFrame([input('B'), input('D', '1')]);
+    for (let i = 0; i < 20 && !sim.snapshot().hitEvents.length; i++) sim.stepFrame([input('B'), neutral]);
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', moveId: 'crouch-punch' });
   });
 
   it.each([['1', 'light-punch'], ['2', 'heavy-punch'], ['3', 'light-kick'], ['4', 'heavy-kick']] as const)(

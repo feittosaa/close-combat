@@ -6,7 +6,7 @@ Este é o único documento Markdown para estado de implementação, decisões de
 
 ## Punição após bloqueio
 
-Branch `codex/fix-punicao-bloqueio`, baseada em `main`. Ajuste: recuperação de golpes diretos bloqueados garante janela mínima de 9 frames para entradas leves e 16 para fortes; cancelamentos de receitas ficam indisponíveis após bloqueio, mantendo as receitas no acerto e no vazio. Golpes aéreos bloqueados mantêm recuperação ao aterrissar. Os números são provisórios. Por confirmação do usuário, projéteis mantêm recuperação natural e não interrompem o lançador após sua recuperação. No treino, soco leve bloqueado mostrou −9F e forte −16F para o atacante. Instalação reproduzível, testes, build e diff conferidos; envio e CI remota a verificar. Sem integração.
+Branch `codex/fix-punicao-bloqueio`, baseada em `main`. Ajuste: recuperação de golpes diretos bloqueados garante janela mínima de 9 frames para entradas leves e 16 para fortes; cancelamentos de receitas ficam indisponíveis após bloqueio, mantendo as receitas no acerto e no vazio. Golpes aéreos bloqueados mantêm recuperação ao aterrissar. Os números são provisórios. Por confirmação do usuário, projéteis mantêm recuperação natural e não interrompem o lançador após sua recuperação. No treino, soco leve bloqueado mostrou −9F e forte −16F para o atacante. Testes confirmam que o atacante é atingido mesmo segurando defesa durante essa janela, nos dois lados e para socos leves e fortes, e pode defender novamente após a recuperação. Instalação reproduzível, testes, build e diff conferidos; envio e CI remota a verificar. Sem integração.
 
 ## Limpeza de branches antigas — 2026-10-28
 
