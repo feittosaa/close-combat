@@ -1,0 +1,152 @@
+{
+  "frames": {
+    "134": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "135": {
+      "frame": {
+        "x": 1152,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "136": {
+      "frame": {
+        "x": 2304,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "137": {
+      "frame": {
+        "x": 3456,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "138": {
+      "frame": {
+        "x": 4608,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "139": {
+      "frame": {
+        "x": 5760,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    },
+    "140": {
+      "frame": {
+        "x": 6912,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1152,
+        "h": 768
+      },
+      "sourceSize": {
+        "w": 1152,
+        "h": 768
+      }
+    }
+  },
+  "meta": {
+    "image": "light-combo.png",
+    "size": {
+      "w": 8064,
+      "h": 768
+    },
+    "scale": "1"
+  }
+}

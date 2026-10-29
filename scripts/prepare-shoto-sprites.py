@@ -98,13 +98,13 @@ for name, spec in SPECS.items():
     sizes = np.bincount(components.ravel()); sizes[0]=0
     # Only walking drawings touch. Other strips have one independent body per pose.
     bodies=[]
-    if name!='walk':
+    if name!='walk' and 'sourceRegions' not in spec:
         for component in np.where(sizes>30000)[0]:
             ys,xs=np.where(components==component)
             bodies.append((float(xs.mean()),component))
         bodies.sort()
         if len(bodies)!=len(anchors): raise ValueError((name,'unexpected body count',len(bodies)))
-    else:
+    elif name=='walk':
         foot_seams=[400,550,812,1115,1420,1590,1850]
         upper_seams=[335,558,819,1080,1380,1590,1860]
         seams=[np.zeros(h,dtype=int)]+[seam(mask,c,f) for c,f in zip(upper_seams,foot_seams)]+[np.full(h,w,dtype=int)]
@@ -113,7 +113,13 @@ for name, spec in SPECS.items():
     metrics = []
     for i,anchor in enumerate(anchors):
         frame = rgba.copy()
-        if name=='walk':
+        if 'sourceRegions' in spec:
+            left,top,right,bottom=spec['sourceRegions'][i]
+            selected=(np.arange(w)[None,:]>=left)&(np.arange(w)[None,:]<right)&(np.arange(h)[:,None]>=top)&(np.arange(h)[:,None]<bottom)
+            frame[:,:,3][~selected]=0
+            for x0,y0,x1,y1 in spec.get('excludeRegions',[]):
+                frame[y0:y1,x0:x1,3]=0
+        elif name=='walk':
             selected=(np.arange(w)[None,:]>=seams[i][:,None]) & (np.arange(w)[None,:]<seams[i+1][:,None])
             frame[:,:,3][~selected]=0
             pieces,_=label(frame[:,:,3]>25)

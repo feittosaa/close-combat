@@ -9,7 +9,7 @@ vi.mock('phaser', () => ({ default: {} }));
 const input=(direction:Direction='N',button?:AttackButton):FrameInput=>({direction,buttons:new Set(button?[button]:[])});
 const neutral=[input(),input()];
 const config=createGameConfig(1024,576);
-const contactPoses:Record<string,number>={'light-punch':86,'heavy-punch':92,'light-kick':98,'heavy-kick':104};
+const contactPoses:Record<string,number>={'light-punch':136,'heavy-punch':92,'light-kick':98,'heavy-kick':104};
 
 it.each(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne))('$name pausa ambos no contato, conserva a pose máxima e mantém o relógio em hit e block',move=>{
   for(const player of [0,1])for(const outcome of ['hit','block'] as const){
@@ -23,7 +23,7 @@ it.each(defaultCharacter.moves.filter(move => move.category === 'basic' && !move
     expect(contact.hitEvents[0].outcome).toBe(outcome);
     expect(contact.hitstopFramesRemaining).toBe(CONTACT_HITSTOP_FRAMES);
     const pose=getShotoSpritePose(contact.characters[player],contact.frame);
-    expect(pose?.texture).toBe(`shoto-${move.id}`);
+    expect(pose?.texture).toBe(move.id==='light-punch'?'shoto-light-combo':`shoto-${move.id}`);
     expect(pose?.frame).toBe(contactPoses[move.id]);
     for(let tick=1;tick<=CONTACT_HITSTOP_FRAMES;tick++){
       // Even movement/jump inputs cannot change positions, physics, stun or pose during contact.
@@ -57,7 +57,7 @@ it('erro não pausa; o mesmo relógio avança em hit, bloqueio e erro',()=>{
 it('trade inicia uma única pausa compartilhada e reset não carrega pausa antiga',()=>{
   const sim=new Simulation(config,undefined,{training:true,initialDistance:64});
   sim.stepFrame([input('N','1'),input('N','1')]);
-  for(let i=0;i<6;i++)sim.stepFrame(neutral);
+  for(let i=0;i<8;i++)sim.stepFrame(neutral);
   expect(sim.snapshot().hitEvents).toHaveLength(2);
   expect(sim.snapshot().hitstopFramesRemaining).toBe(CONTACT_HITSTOP_FRAMES);
   sim.resetMatch();expect(sim.snapshot()).toMatchObject({frame:0,elapsedFrames:0,hitstopFramesRemaining:0});
@@ -65,8 +65,8 @@ it('trade inicia uma única pausa compartilhada e reset não carrega pausa antig
 });
 it.each([20,1000])('KO/time-up com %i HP conserva a micro pausa sem tempo extra no relógio',health=>{
   const fragile={...defaultCharacter,maxHealth:health};
-  const sim=new Simulation({...config,match:{...config.match,roundDurationFrames:9}},[fragile,fragile],{initialDistance:64});
-  sim.stepFrame([input('N','1'),input()]);for(let i=0;i<6;i++)sim.stepFrame(neutral);
+  const sim=new Simulation({...config,match:{...config.match,roundDurationFrames:11}},[fragile,fragile],{initialDistance:64});
+  sim.stepFrame([input('N','1'),input()]);for(let i=0;i<8;i++)sim.stepFrame(neutral);
   const pose=sim.snapshot().characters[0].attack;
   for(let i=0;i<CONTACT_HITSTOP_FRAMES-1;i++){
     sim.stepFrame(neutral);expect(sim.snapshot().phase).toBe('fight');
@@ -85,3 +85,5 @@ it('reproduz contatos, poses congeladas e relógio iguais em 30/60/120/144 FPS',
   };
   const reference=run(60);for(const fps of [30,120,144])expect(run(fps)).toEqual(reference);
 });
+
+it('uses seven fixed ticks for the requested impact pause',()=>expect(CONTACT_HITSTOP_FRAMES).toBe(7));

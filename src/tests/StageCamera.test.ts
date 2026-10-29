@@ -80,6 +80,7 @@ it.each(stages)('tracks the highest fighter and preserves scenery scale and cove
   expect(high.zoom).toBe(grounded.zoom);
   expect(high.scrollY).toBeLessThan(grounded.scrollY);
   const falling=getFightCameraFrame(layout,[400,500],[438,488]);
+  expect(grounded.scrollY-falling.scrollY).toBeCloseTo(30);
   expect(falling.scrollY).toBeGreaterThan(high.scrollY);
   expect(falling.scrollY).toBeLessThan(grounded.scrollY);
   expect(getFightCameraFrame(layout,[400,500],[488,488])).toEqual(grounded);

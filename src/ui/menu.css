@@ -14,7 +14,7 @@
 .arena-mode-hint { grid-column: 2 / -1; font-size: .95cqw; color: #d6c6ba; margin-top: .25cqw; }
 .arena-footer { position: absolute; inset: auto 0 0; padding: 1.1cqw 5%; background: #110f17ee; border-top: 1px solid #c8a77766; font-size: .95cqw; color: #d6bea0; }
 .arena-hero { position: absolute; left: 0; top: 17%; width: 31%; height: 73%; background: radial-gradient(ellipse at 50% 60%,#ae665b55,transparent 65%); }
-.arena-hero svg { position: relative; width: 100%; height: 100%; filter: drop-shadow(1cqw 1cqw 0 #0c0b1266); }
+.arena-hero svg { position: relative; width: 100%; height: 100%; }
 .arena-fighter-name { position: absolute; left: 5%; bottom: 9%; text-shadow: 0 3px 7px #000; }
 .arena-fighter-name h1 { font: italic 900 4cqw Arial,sans-serif; text-transform: uppercase; margin: .3cqw 0; letter-spacing: -.05em; }
 .arena-selection { position: absolute; top: 21%; left: 32%; width: 36%; padding: 1cqw; background: linear-gradient(120deg,#17131aee,#17131a99); border-top: 2px solid #c8a777; }

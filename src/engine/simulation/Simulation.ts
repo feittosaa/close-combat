@@ -1,4 +1,4 @@
-import type { CharacterState, CharacterAnimationState } from '../characters/CharacterState';
+import type { CharacterState, CharacterAnimationState, CharacterAttack } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import { defaultCharacter, type CharacterDefinition } from '../data/characters';
 import type { GameConfig } from '../data/gameConfig';
@@ -11,6 +11,8 @@ import { FixedStepClock } from './FixedStepClock';
 import type { ProjectileState } from '../combat/ProjectileState';
 import { ULTIMATE_ACTIVATION_FRAMES, type UltimateActivation, type PendingUltimateLighter, type ExplosionState } from '../combat/ultimateActivation';
 import { createProjectileHitbox } from '../collision/projectileGeometry';
+import { flightFramesRemaining } from '../combat/airPhysics';
+import { attackDurationFrames } from '../combat/frameData';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
@@ -31,6 +33,8 @@ export interface SimulationOptions { training?: boolean; initialDistance?: numbe
 const knockdownRadius = (state: CharacterState): number => state.collision.hurtboxes.knockdown.width / 2 + 8;
 const wallInset = (state: CharacterState): number => state.mode === 'knockdown' ? knockdownRadius(state) : state.collision.bodyWidth / 2;
 const neutral = (): FrameInput => ({ direction: 'N', buttons: new Set() });
+const chainStrike = (move: MoveDefinition): boolean => ['basic', 'crouching', 'power'].includes(move.category ?? '') && !move.projectile;
+const heavyStrike = (move: MoveDefinition): boolean => move.input.buttons.some(button => button === '2' || button === '4');
 const locked = (state: CharacterState): boolean => state.mode === 'hitstun' || state.mode === 'blockstun' || state.mode === 'knockdown';
 const axis = (input: FrameInput): number => input.direction.endsWith('F') ? 1 : input.direction.endsWith('B') ? -1 : 0;
 const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
@@ -46,7 +50,7 @@ export class Simulation {
   private explosions: ExplosionState[] = [];
   private projectiles: ProjectileState[] = [];
   private nextProjectileId = 0;
-  private pendingCommands: ({ move: MoveDefinition; expires: number } | undefined)[] = [undefined, undefined];
+  private pendingCommands: ({ move: MoveDefinition; expires: number; throwDirection?: CharacterAttack['throwDirection'] } | undefined)[] = [undefined, undefined];
   private frame = 0;
   private elapsedFrames = 0;
   private hitstopFramesRemaining = 0;
@@ -144,6 +148,7 @@ export class Simulation {
       }
       this.ultimateActivation = undefined;
     }
+    this.clearFinishedHitSequences();
     // Read before any world/timer mutation so activation freezes both players symmetrically.
     if (!this.hitstopFramesRemaining) {
       this.characters.forEach((character,index) => this.readCommand(character,index,inputs[index] ?? neutral()));
@@ -167,7 +172,7 @@ export class Simulation {
       this.characters.forEach((character, index) => this.readCommand(character, index, inputs[index] ?? neutral()));
       this.hitstopFramesRemaining -= 1;
       // Keep attacks/poses intact through the last impact tick, including KO/time-up.
-      if (!this.hitstopFramesRemaining && !this.options.training && !this.characters.some(c=>c.ultimateCapture || (c.knockdown && !c.grounded)) &&
+      if (!this.hitstopFramesRemaining && !this.options.training && !this.characters.some(c=>c.juggle || c.ultimateCapture || (c.knockdown && !c.grounded)) &&
         (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
       return;
     }
@@ -175,12 +180,16 @@ export class Simulation {
     const previousTransitions=this.characters.map(c=>c.animationTransition?{startedFrame:c.animationTransition.startedFrame,from:c.animationTransition.from}:undefined);
     const previousX = this.characters.map(character => character.x);
     const attackingAtInput = this.characters.map(character => Boolean(character.attack));
-    const lockedAtInput = this.characters.map(character => locked(character));
+    const lockedAtInput = this.characters.map(character => locked(character) || this.heldByUltimate(character));
     // Ler ambos os comandos antes de avaliar guarda evita viés por ordem dos jogadores.
     const commands = this.characters.map((character, index) => {
+      if (character.wakeupInvulnerabilityFrames) {
+        character.wakeupInvulnerabilityFrames -= 1;
+        if (!character.wakeupInvulnerabilityFrames) character.wakeupInvulnerabilityFrames = undefined;
+      }
       character.hitFlashFrames = Math.max(0, character.hitFlashFrames - 1);
       const holdLastStunFrame = character.remainingStateFrames === 1 &&
-        (character.ultimateCapture || (character.mode === 'knockdown' && !character.grounded));
+        (character.juggle || character.ultimateCapture || (character.mode === 'knockdown' && !character.grounded));
       if (locked(character) && character.remainingStateFrames > 0 && !holdLastStunFrame) {
         character.remainingStateFrames -= 1;
         if (!character.remainingStateFrames) { character.mode = character.grounded ? 'neutral' : 'airborne'; character.knockdown = undefined; }
@@ -188,10 +197,15 @@ export class Simulation {
       if (character.attack) {
         const move = this.move(index, character.attack.moveId)!;
         character.attack.elapsedFrames += 1;
-        if (character.attack.elapsedFrames >= move.startup + move.activeFrames + move.recovery) character.attack = undefined;
+        if (character.attack.elapsedFrames >= attackDurationFrames(move, character.attack)) character.attack = undefined;
       }
       return this.pendingCommands[index]?.move;
     });
+    // Both sides may act on the same tick that synchronized recovery reaches zero.
+    this.characters.forEach((character, index) => {
+      if (!locked(character) && this.characters.some(owner => owner.hitSequence?.targetId === character.characterId)) lockedAtInput[index] = false;
+    });
+    this.clearFinishedHitSequences();
     this.characters.forEach((character, index) => {
       const input = inputs[index] ?? neutral();
       const opponent = this.characters[1 - index];
@@ -204,7 +218,10 @@ export class Simulation {
       if (character.attack) {
         const move = this.move(index, character.attack.moveId)!;
         const elapsed = character.attack.elapsedFrames;
-        if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
+        if (!this.heldByUltimate(character)) {
+          if (!character.grounded && !move.movement) this.moveInDirection(character, axis(input), index);
+          if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
+        }
         if (move.projectile && elapsed === move.startup) {
           this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
             x: character.x + (character.facing === 'right' ? 1 : -1) * character.collision.bodyWidth * 7 / 12, y: character.y, facing: character.facing,
@@ -232,13 +249,32 @@ export class Simulation {
       }
       this.jumpHeld[index] = up;
       if (!character.grounded) {
-        character.y += character.verticalVelocity;
-        character.verticalVelocity += this.config.movement.gravity;
+        character.airborneElapsedFrames = this.frame + 1 - (character.airborneStartedFrame ?? this.frame);
+        if (character.juggle?.suspensionFrames) {
+          character.juggle.suspensionFrames -= 1;
+        } else {
+          character.y += character.verticalVelocity;
+          character.verticalVelocity += this.config.movement.gravity * (character.juggle?.gravityScale ?? 1);
+        }
         if (character.y >= this.config.arena.floorY) {
-          character.airborneStartedFrame=undefined;
+          character.airborneStartedFrame=undefined; character.airborneElapsedFrames=undefined;
           character.y = this.config.arena.floorY; character.grounded = true; character.verticalVelocity = 0;
+          const juggleRules = this.definitions[index].juggle;
+          if (character.juggle && juggleRules) {
+            character.juggle = undefined;
+            character.mode = 'knockdown'; character.attack = undefined;
+            const owner = this.characters.find(candidate => candidate.hitSequence?.targetId === character.characterId);
+            const move = owner?.attack ? this.move(this.characters.indexOf(owner), owner.attack.moveId) : undefined;
+            const recovery = move && owner?.attack ? attackDurationFrames(move, owner.attack) - owner.attack.elapsedFrames : 0;
+            character.remainingStateFrames = Math.max(juggleRules.getupFrames, recovery);
+            character.knockdown = { velocityX: 0 };
+          }
+          if (character.mode === 'knockdown' && juggleRules) {
+            character.wakeupInvulnerabilityFrames = character.remainingStateFrames + juggleRules.wakeupInvulnerabilityFrames;
+          }
           // Air basics end at landing; rising grounded specials retain their own recovery.
-          if (character.attack && this.move(index, character.attack.moveId)?.airborne && !this.move(index, character.attack.moveId)?.follows) {
+          const landingMove = character.attack ? this.move(index, character.attack.moveId) : undefined;
+          if (landingMove?.airborne) {
             character.attack = undefined; character.chain = undefined; character.mode = 'neutral';
           }
           if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';
@@ -246,6 +282,13 @@ export class Simulation {
       }
       if (character.attack || wasLocked || character.mode === 'blocking' || !character.grounded) this.previousAxis[index] = axis(input);
     });
+    // Landing can end an air basic early; release its grounded target at that same boundary.
+    for (const owner of this.characters) {
+      const target = this.characters.find(character => character.characterId === owner.hitSequence?.targetId);
+      if (!owner.attack && !locked(owner) && target?.grounded && target.mode === 'hitstun' && !target.juggle && !target.ultimateCapture) {
+        target.mode = 'neutral'; target.remainingStateFrames = 0; owner.hitSequence = undefined;
+      }
+    }
     this.resolveBodies(previousX); this.resolveScreenEdges(previousX); this.updateFacing();
     this.explosions = this.explosions.map(e => ({ ...e, remainingFrames: e.remainingFrames - 1 })).filter(e => e.remainingFrames > 0);
     this.updateLighters();
@@ -271,23 +314,54 @@ export class Simulation {
       return !p.attack.hasHit && p.remainingFrames > 0 && p.x >= this.config.arena.left - 100 && p.x <= this.config.arena.right + 100 && box.y+box.height <= this.config.arena.floorY;
     });
     if (this.lastHitEvents.length) this.hitstopFramesRemaining = CONTACT_HITSTOP_FRAMES;
+    const contactPositions = this.characters.map(character => character.x);
     this.lastHitEvents.forEach(event => {
       const attacker = this.characters.find(character => character.characterId === event.attackerId)!;
       const target = this.characters.find(character => character.characterId === event.targetId)!;
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
       const sourceMove = this.move(attackerIndex,event.moveId)!;
       const launcher = this.definitions[attackerIndex].combos?.find(recipe =>
-        recipe.launchVelocity !== undefined && recipe.moveIds.length === attacker.chain?.length &&
+        recipe.launch !== undefined && recipe.moveIds.length === attacker.chain?.length &&
         recipe.moveIds.every((id, step) => attacker.chain![step] === id));
-      if (launcher && event.outcome === 'hit' && !event.stage) {
-        target.grounded = false; target.crouching = false;
-        target.verticalVelocity = launcher.launchVelocity!;
-        target.airborneStartedFrame = this.frame;
-        target.remainingStateFrames = Math.max(target.remainingStateFrames, Math.ceil(-2 * launcher.launchVelocity! / this.config.movement.gravity) + 1);
-        event.defenderStunFrames = target.remainingStateFrames;
-        event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
+      const juggleRules = this.definitions[targetIndex].juggle;
+      const repeatedLauncher = Boolean(launcher && target.juggle);
+      if (event.outcome === 'hit' && !event.stage && juggleRules && !repeatedLauncher) {
+        if (target.juggle && !target.grounded) {
+          target.juggle.airHits += 1;
+          target.juggle.suspensionFrames = juggleRules.airHitSuspensionFrames;
+          target.juggle.gravityScale = Math.min(juggleRules.maximumGravityScale,
+            juggleRules.initialGravityScale + target.juggle.airHits * juggleRules.gravityScalePerHit);
+        } else if (launcher) {
+          target.juggle = { gravityScale: juggleRules.initialGravityScale, airHits: 0 };
+        }
       }
+      if (launcher && event.outcome === 'hit' && !event.stage) {
+        if (attacker.attack?.moveId === event.moveId) {
+          attacker.attack.recoveryFrames = launcher.launch!.recoveryFrames;
+          event.attackerRecoveryFrames = attackDurationFrames(sourceMove, attacker.attack) - attacker.attack.elapsedFrames;
+        }
+        attacker.chain = undefined;
+        target.crouching = false;
+        if (repeatedLauncher && juggleRules) {
+          target.y = this.config.arena.floorY;
+          target.grounded = true; target.verticalVelocity = 0;
+          target.airborneStartedFrame = undefined; target.airborneElapsedFrames = undefined;
+          target.juggle = undefined;
+          target.mode = 'knockdown'; target.attack = undefined;
+          target.knockdown = { velocityX: 0 };
+          target.remainingStateFrames = Math.max(juggleRules.getupFrames, event.attackerRecoveryFrames);
+          target.wakeupInvulnerabilityFrames = target.remainingStateFrames + juggleRules.wakeupInvulnerabilityFrames;
+          event.defenderStunFrames = target.remainingStateFrames;
+          event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
+        } else {
+          target.grounded = false;
+          target.verticalVelocity = launcher.launch!.velocity;
+          target.airborneStartedFrame = this.frame;
+        }
+      }
+
       if (event.stage === 'confirm' && event.outcome === 'hit') {
+        target.juggle = undefined;
         target.ultimateCapture = { ownerId: attacker.characterId };
         target.crouching = false;
         target.knockdown = undefined;
@@ -298,26 +372,45 @@ export class Simulation {
       }
       if (event.stage === 'explosion' && event.outcome === 'hit') {
         const sequence = sourceMove.ultimateSequence!;
+        target.juggle = undefined;
         target.ultimateCapture = undefined;
         target.mode = 'knockdown';
-        let flightFrames = 0, landingY = target.y, launchVelocity = sequence.launchSpeed;
-        do { landingY += launchVelocity; launchVelocity += this.config.movement.gravity; flightFrames += 1; } while (landingY < this.config.arena.floorY && flightFrames < 300);
-        target.remainingStateFrames = sequence.knockdownFrames + flightFrames;
+        target.remainingStateFrames = sequence.knockdownFrames + flightFramesRemaining(
+          target.y, sequence.launchSpeed, this.config.arena.floorY, this.config.movement.gravity);
         event.defenderStunFrames = target.remainingStateFrames; event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
         target.grounded = false; target.crouching = false; target.verticalVelocity = sequence.launchSpeed;
         target.airborneStartedFrame = this.frame;
         target.knockdown = { velocityX: sequence.knockbackSpeed * (event.pushbackDirection === 'right' ? 1 : -1) };
         this.explosions.push({x: target.x,y:target.y-85,remainingFrames:10});
       }
+      if (target.juggle && juggleRules) {
+        target.remainingStateFrames = juggleRules.getupFrames + (target.juggle.suspensionFrames ?? 0) + flightFramesRemaining(target.y, target.verticalVelocity,
+          this.config.arena.floorY, this.config.movement.gravity * target.juggle.gravityScale);
+        event.defenderStunFrames = target.remainingStateFrames;
+        event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
+      }
+      if (event.outcome === 'hit' && !event.stage && chainStrike(sourceMove) && attacker.attack?.moveId === event.moveId) {
+        attacker.hitSequence = { targetId: target.characterId, heavy: !launcher && Boolean(attacker.hitSequence?.heavy || heavyStrike(sourceMove)) };
+        if (target.grounded && !target.juggle && target.mode !== 'knockdown') {
+          const remaining = attackDurationFrames(sourceMove, attacker.attack) - attacker.attack.elapsedFrames;
+          target.remainingStateFrames = remaining;
+          event.attackerRecoveryFrames = remaining;
+          event.defenderStunFrames = remaining;
+          event.frameAdvantage = 0;
+        }
+      }
       const gain = this.definitions[attackerIndex].rage;
       const received = this.definitions[targetIndex].rage;
       if (gain && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
       if (received && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
-      target.x += event.pushback * ((event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1);
+      const pushSign = (event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1;
+      if (sourceMove.category === 'throw' && event.outcome === 'hit') {
+        target.x = contactPositions[attackerIndex] + pushSign * (Math.abs(contactPositions[targetIndex] - contactPositions[attackerIndex]) + event.pushback);
+      } else target.x += event.pushback * pushSign;
       this.recentContacts.push({ frame: this.frame, event });
     });
     this.recentContacts = this.recentContacts.filter(entry => this.frame - entry.frame < 180).slice(-20);
-    this.resolveBodies(); this.resolveScreenEdges(previousX);
+    this.resolveBodies(); this.resolveScreenEdges(previousX); this.updateFacing();
     this.characters.forEach((character,index)=>{
       if (!character.attack || locked(character)) character.chain = undefined;
       const previous=previousAnimationStates[index];
@@ -333,7 +426,7 @@ export class Simulation {
       this.quietFrames = quiet ? this.quietFrames + 1 : 0;
       if (this.trainingAutoRestore && this.quietFrames >= 90) this.characters.forEach(character => { character.health = character.maxHealth; });
     } else {
-      if (!this.hitstopFramesRemaining && !this.characters.some(c=>c.ultimateCapture || (c.knockdown && !c.grounded)) &&
+      if (!this.hitstopFramesRemaining && !this.characters.some(c=>c.juggle || c.ultimateCapture || (c.knockdown && !c.grounded)) &&
         (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
     }
     this.frame += 1;
@@ -357,10 +450,12 @@ export class Simulation {
         const previous = character.attack;
         const promotion = previous && previous.elapsedFrames <= 3 && !previous.hasHit &&
           move.input.buttons.length > previous.buttons.length;
-        character.chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), move.id] : [move.id];
-        character.chainLastFrame = this.frame;
+        const chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), move.id] : [move.id];
+        character.chain = this.recipePrefix(index, chain) ? chain : [move.id];
+        if (character.hitSequence && heavyStrike(move)) character.hitSequence.heavy = true;
         character.rage = Math.max(0, character.rage - (move.rageCost ?? 0));
-        character.attack = { moveId: move.id, commandFrame: this.frame, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false };
+        character.attack = { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false,
+          ...(move.category === 'throw' ? { throwDirection: this.pendingCommands[index]?.throwDirection ?? 'forward' } : {}) };
         character.crouching = Boolean(move.crouching); this.dashFrames[index] = 0;
         this.pendingCommands[index] = undefined;
         if (move.movement?.launch) {
@@ -370,27 +465,50 @@ export class Simulation {
   }
   private readCommand(character: CharacterState, index: number, input: FrameInput): void {
     if (this.pendingCommands[index] && this.pendingCommands[index]!.expires < this.frame) this.pendingCommands[index] = undefined;
-    const moves = this.definitions[index].moves.filter(move => !move.follows || character.attack?.moveId === move.follows)
-      .sort((left, right) => Number(Boolean(right.follows)) - Number(Boolean(left.follows)))
-      .map(move => move.follows ? { ...move, sequenceAfterFrame: character.attack?.commandFrame } : move);
+    const moves = this.definitions[index].moves;
     const command = this.parsers[index].update(input, this.frame, moves,
       { airborne: !character.grounded, crouching: input.direction.startsWith('D') && character.grounded });
-    if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6 };
+    if (this.heldByUltimate(character) || (command && character.hitSequence?.heavy && !heavyStrike(command))) {
+      this.pendingCommands[index] = undefined; return;
+    }
+    if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6,
+      ...(command.category === 'throw' ? { throwDirection: input.direction.endsWith('B') ? 'backward' : 'forward' } : {}) };
+  }
+  private clearFinishedHitSequences(): void {
+    for (const owner of this.characters) {
+      const target = this.characters.find(character => character.characterId === owner.hitSequence?.targetId);
+      if (locked(owner) || !target || !locked(target)) owner.hitSequence = undefined;
+    }
+  }
+  private heldByUltimate(character: CharacterState): boolean {
+    return Boolean(character.ultimateCapture || this.characters.some(target => target.ultimateCapture?.ownerId === character.characterId));
   }
   private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
+    if (this.heldByUltimate(character)) return false;
     if ((move.rageCost ?? 0) > character.rage) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;
-    if (move.follows) return previous?.moveId === move.follows && previous.hasHit && previous.elapsedFrames <= (move.followWindow ?? 36);
+    if (character.hitSequence?.heavy && !heavyStrike(move)) return false;
     if (!previous) return true;
     // A chord completed within the input grace window replaces its uncommitted single.
     if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
       previous.buttons.every(button => move.input.buttons.includes(button))) return true;
-    if (!previous.hasHit) return false;
     const chain = [...(character.chain ?? [previous.moveId]), move.id];
+    if (!previous.hasHit) {
+      const previousMove = this.move(index, previous.moveId)!;
+      return previous.elapsedFrames >= previousMove.startup + previousMove.activeFrames && this.recipePrefix(index, chain);
+    }
+    if (previous.hitOutcome === 'block') return this.recipePrefix(index, chain);
+    if (previous.hitOutcome !== 'hit' || !character.hitSequence || !chainStrike(move)) return false;
+    const previousMove = this.move(index, previous.moveId)!;
+    if (!chainStrike(previousMove)) return false;
+    return previous.moveId !== move.id || this.recipePrefix(index, chain);
+  }
+  private recipePrefix(index: number, chain: readonly string[]): boolean {
     return (this.definitions[index].combos ?? []).some(recipe =>
       chain.length <= recipe.moveIds.length && chain.every((id, step) => recipe.moveIds[step] === id));
   }
+
   private move(index: number, id: string): MoveDefinition | undefined { return this.definitions[index].moves.find(move => move.id === id); }
   private moveCharacter(character: CharacterState, input: FrameInput, index: number): void {
     const horizontal = axis(input);
@@ -419,10 +537,14 @@ export class Simulation {
       this.dashFrames[index] -= 1; character.mode = 'dashing';
     } else character.mode = !grounded ? 'airborne' : character.crouching ? 'crouching' : horizontal ? 'moving' : 'neutral';
     if (character.crouching) { moveAxis = 0; this.dashFrames[index] = 0; }
-    if (moveAxis) {
-      character.x += moveAxis * speed * (character.facing === 'right' ? 1 : -1);
-      character.movementDirection = moveAxis > 0 ? 'forward' : 'backward';
-    }
+    this.moveInDirection(character, moveAxis, index, speed);
+  }
+  private moveInDirection(character: CharacterState, direction: number, index: number, speed?: number): void {
+    if (!direction) return;
+    const movement = this.definitions[index].movement;
+    const movementSpeed = speed ?? (direction > 0 ? movement.walkSpeed : movement.backwardWalkSpeed);
+    character.x += direction * movementSpeed * (character.facing === 'right' ? 1 : -1);
+    character.movementDirection = direction > 0 ? 'forward' : 'backward';
   }
   /** Stop outward movement at the shared viewport edge; keep the other fighter anchored. */
   private resolveScreenEdges(previousX: readonly number[]): void {

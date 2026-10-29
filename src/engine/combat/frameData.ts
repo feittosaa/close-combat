@@ -1,5 +1,5 @@
 import type { MoveDefinition } from '../data/moves';
-import type { CharacterState } from '../characters/CharacterState';
+import type { CharacterState, CharacterAttack } from '../characters/CharacterState';
 export type HitContext = 'block-punish' | 'whiff-punish' | 'counter-hit';
 /** Contagens excluem o frame de contato; positivo favorece o atacante. */
 export function frameAdvantage(recovery: number, stun: number): number { return stun - recovery; }
@@ -9,5 +9,8 @@ export function classifyHitContext(target: CharacterState): HitContext | undefin
   if (target.mode === 'startup' || target.mode === 'active') return 'counter-hit';
   return undefined;
 }
-/** Recuperação nominal; rotas explicitamente cadastradas podem cancelar após contato. */
-export function recoveryFrames(move: MoveDefinition): number { return move.recovery; }
+/** Recuperação nominal; receitas fechadas e sequências abertas podem cancelar após contato. */
+export function recoveryFrames(move: MoveDefinition, attack?: CharacterAttack): number { return attack?.recoveryFrames ?? move.recovery; }
+export function attackDurationFrames(move: MoveDefinition, attack?: CharacterAttack): number {
+  return move.startup + move.activeFrames + recoveryFrames(move, attack);
+}

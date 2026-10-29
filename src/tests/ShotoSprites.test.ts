@@ -8,14 +8,14 @@ const atlasFiles=import.meta.glob<{frames:Record<string,{trimmed:boolean;frame:{
 vi.mock('phaser', () => ({ default: {} }));
 const initial = () => new Simulation(createGameConfig(1024,576)).snapshot().characters[0];
 
-it('entrega 134 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
+it('entrega 141 células fixas sem trim e com pivô/escala compartilhados entre as ações', () => {
   const frames = Object.assign({},...Object.values(atlasFiles).map(a=>a.frames));
-  expect(Object.keys(frames)).toHaveLength(134);
-  for (let i=0;i<134;i++) {
+  expect(Object.keys(frames)).toHaveLength(141);
+  for (let i=0;i<141;i++) {
     const f = frames[String(i) as keyof typeof frames];
     expect(f).toBeDefined();
     expect(f.trimmed).toBe(false);
-    expect(f.frame.w).toBe(i>=84 && i<108?1152:768);
+    expect(f.frame.w).toBe((i>=84 && i<108)||i>=134?1152:768);
     expect(f.frame.h).toBe(shotoSpriteManifest.frameSize.height);
   }
   expect(shotoSpriteManifest.footAnchorY).toBe(720);
@@ -140,13 +140,13 @@ it('keeps bottle-confirmed defenders upright and presents the independent lighte
   expect(getShotoSpritePose(throwing,28)?.texture).toBe('shoto-idle');
 });
 
-it('spreads all six drinking poses across the full two-second global pause',()=>{
+it('spreads all six drinking poses across the full 150-tick global pause',()=>{
   const counts=new Map<number,number>();
-  for(let tick=0;tick<120;tick++){
+  for(let tick=0;tick<150;tick++){
     const pose=getShotoUltimateActivationPose(tick,'right');
     counts.set(pose.frame,(counts.get(pose.frame)??0)+1);
     expect(getShotoUltimateActivationPose(tick,'left')).toEqual({...pose,flipX:true});
   }
-  expect([...counts]).toEqual([[128,20],[129,20],[130,20],[131,20],[132,20],[133,20]]);
-  expect(getShotoUltimateActivationPose(120,'right').frame).toBe(133);
+  expect([...counts]).toEqual([[128,25],[129,25],[130,25],[131,25],[132,25],[133,25]]);
+  expect(getShotoUltimateActivationPose(150,'right').frame).toBe(133);
 });
