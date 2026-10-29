@@ -8,7 +8,7 @@ const input = (direction: FrameInput['direction'] = 'N', ...buttons: AttackButto
 const neutral = input();
 
 describe('blocked attack recovery', () => {
-  it.each([[0, '1'], [1, '1'], [0, '2'], [1, '2']] as const)(
+  it.each([[0, '1'], [1, '1'], [0, '2'], [1, '2'], [0, '3'], [1, '3'], [0, '4'], [1, '4']] as const)(
     'punishes player %i after blocked attack %s even while they hold back', (attacker, attackButton) => {
     const sim = new Simulation(config, undefined, { training: true, initialDistance: 64 });
     const defender = 1 - attacker;
@@ -17,7 +17,7 @@ describe('blocked attack recovery', () => {
     };
     advance(input('N', attackButton), input('B'));
     for (let i = 0; i < 30 && !sim.snapshot().hitEvents.length; i++) advance(neutral, input('B'));
-    expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', moveId: attackButton === '1' ? 'light-punch' : 'heavy-punch' });
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', moveId: ({ '1': 'light-punch', '2': 'heavy-punch', '3': 'light-kick', '4': 'heavy-kick' })[attackButton] });
     for (let i = 0; i < 30 && (sim.snapshot().hitstopFramesRemaining || sim.snapshot().characters[defender].mode === 'blockstun'); i++) advance(neutral, input('B'));
     advance(input('B'), input('D', '1'));
     expect(sim.snapshot().characters[attacker].mode).toBe('recovery');
