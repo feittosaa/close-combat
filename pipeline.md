@@ -4,6 +4,10 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Fluxo temporário de trabalho — 2026-10-28
+
+Por pedido explícito do usuário, não criar novas branches até nova orientação. Manter os próximos commits e pushes automáticos exclusivamente na branch atual `codex/fix-limite-levantamentos`, após as validações aplicáveis. Essa orientação temporária prevalece sobre a regra geral de uma branch por objetivo; não autoriza merge, promoção ou release.
+
 ## Um levantamento por sequência — 2026-10-28
 
 Branch `codex/fix-limite-levantamentos`, dependente de `codex/feature-personagens-maiores` em `229a318`, ainda não integrada.
