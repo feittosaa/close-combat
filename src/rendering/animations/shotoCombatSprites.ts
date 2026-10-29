@@ -1,3 +1,4 @@
+import { getShotoLightComboPose } from './shotoLightCombo';
 import { recoveryFrames } from '../../engine/combat/frameData';
 import type { CharacterState } from '../../engine/characters/CharacterState';
 import { getCharacterById } from '../../engine/data/characters';
@@ -36,6 +37,8 @@ export function getShotoCombatPose(state:CharacterState,frame:number){
   if(state.attack){
     const move=getCharacterById(state.fighterId)?.moves.find(move=>move.id===state.attack!.moveId);
     if(!move)return undefined;
+    const lightCombo=getShotoLightComboPose(state,move);
+    if(lightCombo)return lightCombo;
     if(move.crouching)return pose('shoto-crouch',18);
     const source=shotoCombatSources.slice(0,4).find(source=>source.key===`shoto-${move.pose ?? move.id}`);
     if(!source)return undefined;
@@ -47,8 +50,6 @@ export function getShotoCombatPose(state:CharacterState,frame:number){
     }
     // Shared authored hand-close bridges idle to the attack without delaying contact.
     if(elapsed<2)return pose('shoto-enter-defense',72+elapsed);
-    const remaining=move.startup+move.activeFrames+recovery-elapsed;
-    if(move.id==='light-punch' && remaining<=2)return pose('shoto-enter-defense',71+remaining);
     const local=elapsed<move.startup?Math.min(1,Math.floor(elapsed*2/move.startup)):
       elapsed<move.startup+move.activeFrames?2:
       3+Math.min(2,Math.floor((elapsed-move.startup-move.activeFrames)*3/recovery));

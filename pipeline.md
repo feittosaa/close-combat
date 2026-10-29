@@ -4,6 +4,15 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Animação autorada dos três socos fracos — 2026-10-28
+
+Trabalho mantido em `codex/fix-limite-levantamentos`, conforme orientação vigente de não criar branches.
+
+- [x] Usuário confirmou três entradas: 1,1,1, sem quarto golpe. Folha RGBA fornecida com oito poses; por ajuste explícito, frame 5 retirado e sete poses preparadas com recorte, transparência técnica para retirar somente marcadores numéricos e alinhamento de raiz/pés, sem recoloração ou redesenho. Fonte ativa preservada para reprodução.
+- [x] Impactos nos frames originais 3 (ombrada), 6 (gancho) e 7 (tapa voltando); frame 1 sai do idle e frame 8 retorna ao idle. Cada entrada seleciona somente sua etapa; interromper após um ou dois socos executa a recuperação dessa etapa. 1,1,2 compartilha os dois primeiros desenhos e mantém o forte final existente. Receitas, dano, tempos e caixas não alterados; socos aéreos/abaixados e demais golpes preservados.
+- [x] npm ci, 297 testes/37 arquivos, build e diff aprovados. Preparo/verificação reproduzíveis: 141 células no conjunto, sete da folha nova, raízes/pés fixos e sem cortes no atlas. Regressões verificam impactos 3/6/7 e retorno 8 em ambos os lados, interrupção após 1/2/3 entradas, reinício por ombrada, 1,1,2 com forte final, hitstop e FPS determinísticos. Conferência no jogo por comandos legais de 1,1,1, retorno após soco isolado e ombrada espelhada do P2 em modo manual. Console sem erros/avisos; evidências /tmp/shoto-combo-impacto-3.png, /tmp/shoto-combo-impacto-6.png, /tmp/shoto-combo-impacto-7.png, /tmp/shoto-combo-retorno-8.png e /tmp/shoto-combo-espelhado.png. Fonte e cores originais preservadas; sem inferir homologação artística final.
+- [ ] Enviar na branch atual e conferir CI, sem merge, promoção ou release.
+
 ## Fluxo temporário de trabalho — 2026-10-28
 
 Por pedido explícito do usuário, não criar novas branches até nova orientação. Manter os próximos commits e pushes automáticos exclusivamente na branch atual `codex/fix-limite-levantamentos`, após as validações aplicáveis. Essa orientação temporária prevalece sobre a regra geral de uma branch por objetivo; não autoriza merge, promoção ou release.

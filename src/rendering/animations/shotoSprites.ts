@@ -1,3 +1,4 @@
+import { shotoLightComboSource, shotoLightComboClip } from './shotoLightCombo';
 import { ULTIMATE_ACTIVATION_FRAMES } from '../../engine/combat/ultimateActivation';
 import { shotoCombatSources, shotoCombatClips, getShotoCombatPose } from './shotoCombatSprites';
 import { shotoTransitionSources, transitionClips, transitionByAction } from './shotoTransitions';
@@ -29,7 +30,7 @@ const ultimateDrinkClip = {key:'shoto-ultimate-drink',start:128,end:133,frameRat
 
 /** Approved locomotion, four basics and posture guards. Roots and body scale are atlas-authored. */
 export const shotoSpriteManifest: CharacterAnimationManifest = {
-  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:134,
+  textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:141,
   footAnchorY:720,displaySize:{width:172.8*1.03*1.15*1.1,height:172.8*1.03*1.15*1.1},
   clips:[
     {key:'shoto-idle',start:0,end:7,frameRate:6,repeat:-1},
@@ -43,6 +44,7 @@ export const shotoSpriteManifest: CharacterAnimationManifest = {
     ...transitionClips,
     ...shotoCombatClips,
     ultimateDrinkClip,
+    shotoLightComboClip,
   ],
 };
 validateAnimationManifest(shotoSpriteManifest);
@@ -51,6 +53,7 @@ export function getShotoUltimateActivationPose(elapsedFrames: number, facing: Ch
   return {texture:ultimateDrinkClip.key,frame:getTimedAnimationFrame(ultimateDrinkClip,elapsedFrames),scale:1,alpha:1,flipX:facing==='left'};
 }
 const sources=[
+  shotoLightComboSource,
   {key:'shoto-ultimate-drink',image:drinkImage,atlas:drinkAtlas},
   {key:'shoto-idle',image:idleImage,atlas:idleAtlas},
   {key:'shoto-walk',image:walkImage,atlas:walkAtlas},

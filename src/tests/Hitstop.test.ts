@@ -9,7 +9,7 @@ vi.mock('phaser', () => ({ default: {} }));
 const input=(direction:Direction='N',button?:AttackButton):FrameInput=>({direction,buttons:new Set(button?[button]:[])});
 const neutral=[input(),input()];
 const config=createGameConfig(1024,576);
-const contactPoses:Record<string,number>={'light-punch':86,'heavy-punch':92,'light-kick':98,'heavy-kick':104};
+const contactPoses:Record<string,number>={'light-punch':136,'heavy-punch':92,'light-kick':98,'heavy-kick':104};
 
 it.each(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne))('$name pausa ambos no contato, conserva a pose máxima e mantém o relógio em hit e block',move=>{
   for(const player of [0,1])for(const outcome of ['hit','block'] as const){
@@ -23,7 +23,7 @@ it.each(defaultCharacter.moves.filter(move => move.category === 'basic' && !move
     expect(contact.hitEvents[0].outcome).toBe(outcome);
     expect(contact.hitstopFramesRemaining).toBe(CONTACT_HITSTOP_FRAMES);
     const pose=getShotoSpritePose(contact.characters[player],contact.frame);
-    expect(pose?.texture).toBe(`shoto-${move.id}`);
+    expect(pose?.texture).toBe(move.id==='light-punch'?'shoto-light-combo':`shoto-${move.id}`);
     expect(pose?.frame).toBe(contactPoses[move.id]);
     for(let tick=1;tick<=CONTACT_HITSTOP_FRAMES;tick++){
       // Even movement/jump inputs cannot change positions, physics, stun or pose during contact.

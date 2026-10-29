@@ -18,7 +18,7 @@ it('prepares every match resource before releasing the menu; every mode starts w
   boot.preload();
   for(const stage of stages)for(const layer of stage.layers)expect(queued.has(stageTextureKey(stage,layer))).toBe(true);
   expect(queued.has('menu-solar')).toBe(true);
-  expect(load.atlas).toHaveBeenCalledTimes(23);
+  expect(load.atlas).toHaveBeenCalledTimes(24);
   for(const key of queued)textures.set(key,{});queued.clear();
   boot.create();
   const start=(boot as unknown as {scene:{start:ReturnType<typeof vi.fn>}}).scene.start;
