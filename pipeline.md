@@ -4,6 +4,15 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Menus e HUD — 2026-10-28
+
+Branch `codex/feature-menu-hud`, criada a pedido do usuário a partir de `main` no merge `e38be82`. A branch anterior foi integrada em `development` no commit `010091a`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40808247508), e promovida para `main` com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40808411107). Após conferir ancestralidade e ausência de trabalho ativo, a branch anterior foi removida localmente e no remoto. Por decisão explícita do usuário, `development` permanece em `010091a`, sem receber o commit de merge de `main`. O pedido posterior encerra a restrição temporária anterior de criação de branches.
+
+- [x] Menu principal com modos em lista vertical à esquerda, destaque angular de grande escala, personagem do jogo e cenário original à direita. Hover, foco e setas atualizam a seleção, descrição e animação; Enter confirma a opção selecionada. A preferência por movimento reduzido desativa a transição e mantém o retrato estático. Nenhuma imagem foi recolorida ou criada.
+- [x] HUD usa a mesma paleta e tipografia, com marcador angular para o relógio; barras contínuas e métricas da simulação preservadas. Seleção de personagem/cenário, pausa e controles receberam ajustes de cor e tipografia coerentes.
+- [x] npm ci, 297 testes/37 arquivos, build e diff aprovados. No jogo a 1280×720: navegação por Tab/setas/Enter, seleção de modo longo, controles e retorno, treino, pausa, confirmação independente no PvP e seleção de cenário; HUD conferido com acerto e vida real. Console sem erros/avisos. Imagens locais: /tmp/close-combat-novo-menu.png, /tmp/close-combat-novo-hud.png e /tmp/close-combat-nova-pausa.png. A preferência de movimento reduzido é respeitada pelo código; confirmação artística do usuário permanece distinta da validação técnica.
+- [ ] Enviar a branch e conferir CI; a promoção futura deste novo trabalho requer pedido explícito.
+
 ## Limpeza de branches antigas — 2026-10-28
 
 Por solicitação explícita, removidas localmente e no remoto dez branches anteriores: `codex/feature-arco-garrafa-ultimate`, `codex/feature-personagens-maiores`, `codex/feature-ritmo-combate`, `codex/feature-ritmo-combos-distancia`, `codex/feature-sequencias-abertas-shoto`, `codex/fix-agarrao-cores-originais`, `codex/fix-carregamento-impacto-aereo`, `codex/fix-recuperacao-launcher-garrafa`, `codex/fix-tempo-alcance-agarrao` e `codex/fix-trajetoria-juggle`.
@@ -21,7 +30,7 @@ Trabalho mantido em `codex/fix-limite-levantamentos`, conforme orientação vige
 
 ## Fluxo temporário de trabalho — 2026-10-28
 
-Por pedido explícito do usuário, não criar novas branches até nova orientação. Manter os próximos commits e pushes automáticos exclusivamente na branch atual `codex/fix-limite-levantamentos`, após as validações aplicáveis. Essa orientação temporária prevalece sobre a regra geral de uma branch por objetivo; não autoriza merge, promoção ou release.
+Orientação anterior: não criar novas branches e manter pushes em `codex/fix-limite-levantamentos`. Encerrada por pedido explícito posterior de integrar essa branch em `development` e `main` e criar uma nova branch para menus e HUD.
 
 ## Um levantamento por sequência — 2026-10-28
 

@@ -31,14 +31,14 @@ canvas {
 
 .combat-pause[hidden] { display: none; }
 .combat-pause { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e12cc; backdrop-filter: blur(5px); color: #f6e6ce; }
-.pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #b7905c; background: linear-gradient(120deg,#302029,#17131a 65%); padding: 26px; border-top: 4px solid #dcaf71; box-shadow: 0 0 0 5px #16121ae0, 0 24px 90px #000b; }
+.pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #f0dfc477; background: linear-gradient(120deg,#25191d,#130f14 65%); padding: 26px; border-top: 4px solid #c04436; box-shadow: 0 0 0 5px #16121ae0, 0 24px 90px #000b; }
 .pause-panel header { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.pause-panel h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(20px, 3vw, 32px); }
+.pause-panel h1 { margin: 0; font: 900 clamp(20px, 3vw, 32px) Arial,sans-serif; letter-spacing: -.04em; }
 .pause-eyebrow { color: #efac66; font-size: 11px; letter-spacing: .14em; margin: 0; }
 .pause-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .combat-pause button, .combat-pause input { font: inherit; color: inherit; background: #33272b; border: 1px solid #8d6a47; padding: 10px 12px; border-radius: 0; }
 .combat-pause button { cursor: pointer; }
-.combat-pause button:hover, .combat-pause button[aria-pressed="true"] { background: #754835; border-color: #f1c98c; }
+.combat-pause button:hover, .combat-pause button[aria-pressed="true"] { background: #a6372e; border-color: #f0dfc4; }
 .combat-pause :focus-visible { outline: 2px solid #ffc485; outline-offset: 2px; }
 .pause-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 12px; }
 .pause-tools input { flex: 1; min-width: 180px; }
@@ -70,8 +70,8 @@ canvas {
 .command-notation { font-family: Arial, sans-serif; font-size: 1.1em; line-height: 1.65; }
 .command-button { display: inline-block; min-width: 1.35em; padding: 0 .17em; margin: 0 .1em; text-align: center; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; background: #10101a; }
 .control-settings { position: fixed; inset: 0; z-index: 200; background: #100e12df; display: grid; place-items: center; padding: 20px; color: #eee9f2; }
-.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: linear-gradient(135deg, #282024, #17151b); border: 2px solid #b7905c; box-shadow: 0 0 0 5px #171219, 0 24px 80px #000b; padding: 24px; }
-.controls-panel h1 { margin: 0; font-family: Georgia, serif; color: #ffe0a4; letter-spacing: .08em; }
+.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: linear-gradient(135deg, #282024, #17151b); border: 2px solid #c04436; box-shadow: 0 0 0 5px #171219, 0 24px 80px #000b; padding: 24px; }
+.controls-panel h1 { margin: 0; font-family: Arial, sans-serif; font-weight: 900; color: #f0dfc4; letter-spacing: .08em; }
 .controls-panel p { font-size: 13px; color: #c4bbc9; min-height: 1.5em; }
 .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .controls-grid h2 { font-size: 17px; }
@@ -92,5 +92,5 @@ canvas {
 .combat-pause.match-pause header { display: block; }
 .combat-pause.match-pause h1 { margin: 12px 0 28px; font-style: italic; font-size: clamp(26px,4vw,44px); }
 .combat-pause.match-pause .pause-actions { display: grid; gap: 10px; }
-.combat-pause.match-pause button { text-align: left; padding: 16px 20px; border-left: 4px solid #b7905c; }
-.combat-pause.match-pause button:first-child { background: #803e34; border-color: #f0c68a; }
+.combat-pause.match-pause button { text-align: left; padding: 16px 20px; border-left: 4px solid #c04436; }
+.combat-pause.match-pause button:first-child { background: #a6372e; border-color: #f0dfc4; }

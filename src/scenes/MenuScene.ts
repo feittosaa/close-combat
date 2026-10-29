@@ -36,6 +36,7 @@ export class MenuScene extends Phaser.Scene {
   private chrome?: Phaser.GameObjects.Container;
   private menuElement?: HTMLElement;
   private resizeObserver?: ResizeObserver;
+  private motionPreference?: MediaQueryList;
   private readonly alignMenu = (): void => {
     const rect = this.game.canvas.getBoundingClientRect();
     Object.assign(this.menuElement!.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
@@ -44,10 +45,15 @@ export class MenuScene extends Phaser.Scene {
   private readonly handleKey = (event: KeyboardEvent): void => {
     if (ControlSettings.active || event.repeat || this.transitioning) return;
     const key = event.key;
-    if (key === 'Enter' && event.target instanceof HTMLButtonElement) return;
+    if (key === 'Enter' && event.target instanceof HTMLButtonElement &&
+      !(this.page === 'home' && event.target.classList.contains('arena-mode'))) return;
     if (['Enter', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) event.preventDefault();
     if (this.page === 'home') {
-      if (key === 'ArrowDown' || key === 'ArrowUp') { this.modeIndex = (this.modeIndex + (key === 'ArrowDown' ? 1 : -1) + MODES.length) % MODES.length; this.render(); }
+      if (key === 'ArrowDown' || key === 'ArrowUp') {
+        this.selectHomeMode((this.modeIndex + (key === 'ArrowDown' ? 1 : -1) + MODES.length) % MODES.length);
+        if (event.target instanceof HTMLButtonElement && event.target.classList.contains('arena-mode'))
+          this.menuElement?.querySelectorAll<HTMLButtonElement>('.arena-mode')[this.modeIndex]?.focus();
+      }
       else if (key === 'Enter') this.chooseMode(this.modeIndex);
       else { const i = ['a', 'v', 't', 'b', 'o', 'c'].indexOf(key.toLowerCase()); if (i >= 0) this.chooseMode(i); }
     } else if (key === 'Escape') this.back();
@@ -88,7 +94,8 @@ export class MenuScene extends Phaser.Scene {
     const background = this.add.image(width / 2, height / 2, 'menu-solar');
     const cover = Math.max(width / background.width, height / background.height) * 1.045;
     background.setScale(cover);
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const reducedMotion = this.motionPreference.matches;
     if (!reducedMotion) {
       this.tweens.add({ targets: background, x: width / 2 - 9, y: height / 2 + 4,
         scaleX: cover * 1.012, scaleY: cover * 1.012, duration: 18000,
@@ -106,8 +113,8 @@ export class MenuScene extends Phaser.Scene {
     this.chrome = this.add.container(0, 0);
     this.chrome.add([
       this.add.rectangle(width / 2, height - 18, width, 36, 0x111016, .82),
-      this.add.rectangle(35, 49, 4, 46, 0xdab275),
-      this.add.text(55, 22, 'CLOSE COMBAT', { fontSize: '34px', fontStyle: 'bold', color: '#fff0d2', fontFamily: 'Georgia, serif', stroke: '#151017', strokeThickness: 2 }),
+      this.add.rectangle(35, 49, 4, 46, 0xc04436),
+      this.add.text(55, 22, 'CLOSE COMBAT', { fontSize: '34px', fontStyle: 'bold', color: '#fff0d2', fontFamily: 'Arial, sans-serif', stroke: '#151017', strokeThickness: 2 }),
       this.add.text(57, 65, 'ESCOLHA SUA LUTA', { fontSize: '10px', color: '#ddbd91', letterSpacing: 4 }),
     ]);
     this.menuElement = document.createElement('section');
@@ -132,19 +139,19 @@ export class MenuScene extends Phaser.Scene {
   update(time: number): void {
     if (!this.idleImages.length) return;
     const clip = shotoSpriteManifest.clips.find(entry => entry.key === 'shoto-idle')!;
-    const frame = getTimedAnimationFrame(clip, time * .06);
+    const frame = this.motionPreference?.matches ? clip.start : getTimedAnimationFrame(clip, time * .06);
     for (const image of this.idleImages) image.setAttribute('x', String(-frame * shotoSpriteManifest.frameSize.width));
   }
   private text(x: number, y: number, label: string, size = 16, color = '#f8f0e4') {
-    const text = this.add.text(x, y, label, { fontSize: `${size}px`, fontFamily: size >= 16 ? 'Georgia, serif' : 'Arial, sans-serif', color }); this.root!.add(text); return text;
+    const text = this.add.text(x, y, label, { fontSize: `${size}px`, fontFamily: 'Arial, sans-serif', fontStyle: size >= 16 ? 'bold' : 'normal', color }); this.root!.add(text); return text;
   }
   private box(x: number, y: number, w: number, h: number, color: number, alpha = 1) {
     const box = this.add.rectangle(x, y, w, h, color, alpha).setOrigin(0); this.root!.add(box); return box;
   }
   private button(x: number, y: number, w: number, label: string, action: () => void) {
-    const rect = this.box(x, y, w, 42, 0x843e35).setInteractive({ useHandCursor: true });
+    const rect = this.box(x, y, w, 42, 0xa6372e).setInteractive({ useHandCursor: true });
     this.text(x + w / 2, y + 12, label, 14).setOrigin(.5, 0);
-    rect.on('pointerover', () => rect.setFillStyle(0xa85440)).on('pointerout', () => rect.setFillStyle(0x843e35)).on('pointerdown', action);
+    rect.on('pointerover', () => rect.setFillStyle(0xc04436)).on('pointerout', () => rect.setFillStyle(0xa6372e)).on('pointerdown', action);
   }
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
@@ -158,11 +165,11 @@ export class MenuScene extends Phaser.Scene {
     this.text(width - 42, 40, titles[this.page], 13, '#fff0d2').setStroke('#171219', 3).setOrigin(1, 0);
     if (this.page === 'stage') {
       const stage = this.selectedStage;
-      this.text(56, 119, 'ONDE VAMOS LUTAR?', 23);
+      this.text(56, 119, 'ONDE VAMOS LUTAR?', 28);
       const x = 212, y = 168, w = 600;
       const scale = Math.min(w / stage.referenceSize.width, 300 / stage.referenceSize.height);
       const imageX = x + (w - stage.referenceSize.width * scale) / 2;
-      this.box(x - 2, y - 2, w + 4, 303, 0xa88859);
+      this.box(x - 2, y - 2, w + 4, 303, 0xc04436);
       for (const layer of [...stage.layers].sort((a, b) => a.depth - b.depth)) {
         const content = layer.contentScale ?? 1, origin = layer.scaleOrigin ?? { x: 0, y: 0 };
         const image = this.add.image(imageX + scale * (layer.x + origin.x * (1 - content)), y + scale * (layer.y + origin.y * (1 - content)), stageTextureKey(stage, layer)).setOrigin(0).setScale(scale * content); root.add(image);
@@ -187,6 +194,7 @@ export class MenuScene extends Phaser.Scene {
     const root = this.menuElement!;
     const fighter = this.fighters[this.fighterIndex];
     root.classList.remove('versus-selection');
+    root.classList.toggle('arena-home', this.page === 'home');
     const node = (tag: string, className: string, text = ''): HTMLElement => {
       const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
     };
@@ -208,13 +216,26 @@ export class MenuScene extends Phaser.Scene {
     root.append(header);
     if (this.page === 'home') {
       const modes = node('nav', 'arena-modes'); modes.setAttribute('aria-label', 'Modos de jogo');
+      const feature = node('div', 'arena-feature');
+      feature.setAttribute('aria-hidden', 'true');
+      const featureNumber = node('span', 'arena-feature-number');
+      const featureTitle = node('strong', 'arena-feature-title');
+      const featureHint = node('span', 'arena-feature-hint');
+      feature.append(featureNumber, featureTitle, featureHint);
       MODES.forEach((mode, index) => {
-        const item = button('', `arena-mode${index === this.modeIndex ? ' selected' : ''}`, () => this.chooseMode(index));
-        item.setAttribute('aria-current', String(index === this.modeIndex));
-        item.append(node('span', 'arena-number', String(index + 1).padStart(2, '0')), node('strong', '', mode.title), node('small', '', mode.tag), node('span', 'arena-mode-hint', mode.hint));
+        const item = button('', 'arena-mode', () => this.chooseMode(index));
+        item.append(node('span', 'arena-number', String(index + 1).padStart(2, '0')),
+          node('strong', '', mode.title), node('small', '', mode.tag), node('span', 'arena-mode-hint', mode.hint));
+        item.addEventListener('pointerenter', () => this.selectHomeMode(index));
+        item.addEventListener('focus', () => this.selectHomeMode(index));
         modes.append(item);
       });
-      root.append(modes);
+      const hero = node('div', 'arena-home-hero'); hero.setAttribute('aria-hidden', 'true');
+      hero.append(portrait('130 35 510 710', true));
+      const note = node('div', 'arena-home-note', 'ESCOLHA SUA LUTA');
+      const controls = node('footer', 'arena-home-controls', '↑ ↓ ESCOLHER   ·   ENTER CONFIRMAR');
+      root.append(modes, feature, hero, note, controls);
+      this.selectHomeMode(this.modeIndex);
     } else {
       const versus = this.mode === 'versus';
       root.classList.toggle('versus-selection', versus);
@@ -256,6 +277,28 @@ export class MenuScene extends Phaser.Scene {
     if (this.page === 'fighter') root.append(node('footer', 'arena-footer', this.mode === 'versus'
       ? 'P1: A / D · J CONFIRMAR     P2: ← / → · NUM1 CONFIRMAR     ENTER: CONFIRMAR VEZ     ESC: VOLTAR'
       : '← →  ESCOLHER     ENTER  CONFIRMAR     ESC  VOLTAR'));
+  }
+  private selectHomeMode(index: number): void {
+    const root = this.menuElement;
+    const featureNumber = root?.querySelector<HTMLElement>('.arena-feature-number');
+    const featureTitle = root?.querySelector<HTMLElement>('.arena-feature-title');
+    const featureHint = root?.querySelector<HTMLElement>('.arena-feature-hint');
+    if (!root || !featureNumber || !featureTitle || !featureHint) return;
+    const changed = index !== this.modeIndex;
+    this.modeIndex = index;
+    const mode = MODES[index];
+    featureNumber.textContent = `0${index + 1} / ${mode.tag}`;
+    featureTitle.textContent = mode.title;
+    featureTitle.classList.toggle('long', mode.title.length > 13);
+    featureHint.textContent = mode.hint;
+    if (changed && !this.motionPreference?.matches && typeof featureTitle.animate === 'function') {
+      featureTitle.animate([{ opacity: .35, transform: 'translateX(-18px)' }, { opacity: 1, transform: 'translateX(0)' }],
+        { duration: 200, easing: 'ease-out' });
+    }
+    root.querySelectorAll<HTMLButtonElement>('.arena-mode').forEach((element, itemIndex) => {
+      element.classList.toggle('selected', itemIndex === index);
+      element.setAttribute('aria-current', String(itemIndex === index));
+    });
   }
   private chooseStage(direction: number): void {
     this.stageIndex = (this.stageIndex + direction + selectableStages.length) % selectableStages.length;
