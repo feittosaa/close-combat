@@ -2,7 +2,8 @@ import { LOGICAL_VIEW, configureUiCamera, sharpenSceneText } from '../rendering/
 import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 
 import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
-import { FighterSelection, type SelectionPlayer } from '../ui/FighterSelection';
+import { FighterSelection } from '../ui/FighterSelection';
+import { renderFighterSelection } from '../ui/FighterSelectionView';
 import idlePortrait from '../assets/sprites/characters/shoto/idle.png';
 import '../ui/menu.css';
 
@@ -36,6 +37,7 @@ export class MenuScene extends Phaser.Scene {
   private chrome?: Phaser.GameObjects.Container;
   private menuElement?: HTMLElement;
   private resizeObserver?: ResizeObserver;
+  private motionPreference?: MediaQueryList;
   private readonly alignMenu = (): void => {
     const rect = this.game.canvas.getBoundingClientRect();
     Object.assign(this.menuElement!.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
@@ -44,10 +46,15 @@ export class MenuScene extends Phaser.Scene {
   private readonly handleKey = (event: KeyboardEvent): void => {
     if (ControlSettings.active || event.repeat || this.transitioning) return;
     const key = event.key;
-    if (key === 'Enter' && event.target instanceof HTMLButtonElement) return;
+    if (key === 'Enter' && event.target instanceof HTMLButtonElement &&
+      !(this.page === 'home' && event.target.classList.contains('arena-mode'))) return;
     if (['Enter', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) event.preventDefault();
     if (this.page === 'home') {
-      if (key === 'ArrowDown' || key === 'ArrowUp') { this.modeIndex = (this.modeIndex + (key === 'ArrowDown' ? 1 : -1) + MODES.length) % MODES.length; this.render(); }
+      if (key === 'ArrowDown' || key === 'ArrowUp') {
+        this.selectHomeMode((this.modeIndex + (key === 'ArrowDown' ? 1 : -1) + MODES.length) % MODES.length);
+        if (event.target instanceof HTMLButtonElement && event.target.classList.contains('arena-mode'))
+          this.menuElement?.querySelectorAll<HTMLButtonElement>('.arena-mode')[this.modeIndex]?.focus();
+      }
       else if (key === 'Enter') this.chooseMode(this.modeIndex);
       else { const i = ['a', 'v', 't', 'b', 'o', 'c'].indexOf(key.toLowerCase()); if (i >= 0) this.chooseMode(i); }
     } else if (key === 'Escape') this.back();
@@ -56,10 +63,10 @@ export class MenuScene extends Phaser.Scene {
       const p1Direction = key.toLowerCase() === 'a' ? -1 : key.toLowerCase() === 'd' ? 1 : 0;
       const arrowDirection = ['ArrowLeft', 'ArrowUp'].includes(key) ? -1 : ['ArrowRight', 'ArrowDown'].includes(key) ? 1 : 0;
       if (versus && p1Direction) {
-        this.selection.select(0, this.selection.indices[0] + p1Direction); this.render();
+        this.selection.move(0, p1Direction as -1 | 1); this.render();
       } else if (arrowDirection) {
         const player = versus ? 1 : 0;
-        this.selection.select(player, this.selection.indices[player] + arrowDirection); this.render();
+        this.selection.move(player, arrowDirection as -1 | 1); this.render();
       } else if (versus && key.toLowerCase() === 'j') this.confirmFighter(0);
       else if (versus && event.code === 'Numpad1') this.confirmFighter(1);
       else if (key === 'Enter') this.confirmFighter();
@@ -88,7 +95,8 @@ export class MenuScene extends Phaser.Scene {
     const background = this.add.image(width / 2, height / 2, 'menu-solar');
     const cover = Math.max(width / background.width, height / background.height) * 1.045;
     background.setScale(cover);
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const reducedMotion = this.motionPreference.matches;
     if (!reducedMotion) {
       this.tweens.add({ targets: background, x: width / 2 - 9, y: height / 2 + 4,
         scaleX: cover * 1.012, scaleY: cover * 1.012, duration: 18000,
@@ -106,8 +114,8 @@ export class MenuScene extends Phaser.Scene {
     this.chrome = this.add.container(0, 0);
     this.chrome.add([
       this.add.rectangle(width / 2, height - 18, width, 36, 0x111016, .82),
-      this.add.rectangle(35, 49, 4, 46, 0xdab275),
-      this.add.text(55, 22, 'CLOSE COMBAT', { fontSize: '34px', fontStyle: 'bold', color: '#fff0d2', fontFamily: 'Georgia, serif', stroke: '#151017', strokeThickness: 2 }),
+      this.add.rectangle(35, 49, 4, 46, 0xc04436),
+      this.add.text(55, 22, 'CLOSE COMBAT', { fontSize: '34px', fontStyle: 'bold', color: '#fff0d2', fontFamily: 'Arial, sans-serif', stroke: '#151017', strokeThickness: 2 }),
       this.add.text(57, 65, 'ESCOLHA SUA LUTA', { fontSize: '10px', color: '#ddbd91', letterSpacing: 4 }),
     ]);
     this.menuElement = document.createElement('section');
@@ -132,19 +140,26 @@ export class MenuScene extends Phaser.Scene {
   update(time: number): void {
     if (!this.idleImages.length) return;
     const clip = shotoSpriteManifest.clips.find(entry => entry.key === 'shoto-idle')!;
-    const frame = getTimedAnimationFrame(clip, time * .06);
+    const frame = this.motionPreference?.matches ? clip.start : getTimedAnimationFrame(clip, time * .06);
     for (const image of this.idleImages) image.setAttribute('x', String(-frame * shotoSpriteManifest.frameSize.width));
   }
   private text(x: number, y: number, label: string, size = 16, color = '#f8f0e4') {
-    const text = this.add.text(x, y, label, { fontSize: `${size}px`, fontFamily: size >= 16 ? 'Georgia, serif' : 'Arial, sans-serif', color }); this.root!.add(text); return text;
+    const text = this.add.text(x, y, label, { fontSize: `${size}px`, fontFamily: 'Arial, sans-serif', fontStyle: size >= 16 ? 'bold' : 'normal', color }); this.root!.add(text); return text;
   }
   private box(x: number, y: number, w: number, h: number, color: number, alpha = 1) {
     const box = this.add.rectangle(x, y, w, h, color, alpha).setOrigin(0); this.root!.add(box); return box;
   }
   private button(x: number, y: number, w: number, label: string, action: () => void) {
-    const rect = this.box(x, y, w, 42, 0x843e35).setInteractive({ useHandCursor: true });
+    const plate = this.add.graphics(); this.root!.add(plate);
+    const draw = (color: number): void => {
+      plate.clear();
+      plate.fillStyle(0x08070b, .7); plate.fillPoints([{x: x + 6,y: y + 5},{x: x + w + 6,y: y + 5},{x: x + w - 4,y: y + 47},{x: x - 3,y: y + 47}], true);
+      plate.fillStyle(color); plate.fillPoints([{x: x + 5,y},{x: x + w,y},{x: x + w - 10,y: y + 42},{x,y: y + 42}], true);
+    };
+    draw(0xa6372e);
+    const target = this.add.zone(x, y, w, 42).setOrigin(0).setInteractive({ useHandCursor: true }); this.root!.add(target);
     this.text(x + w / 2, y + 12, label, 14).setOrigin(.5, 0);
-    rect.on('pointerover', () => rect.setFillStyle(0xa85440)).on('pointerout', () => rect.setFillStyle(0x843e35)).on('pointerdown', action);
+    target.on('pointerover', () => draw(0xc04436)).on('pointerout', () => draw(0xa6372e)).on('pointerdown', action);
   }
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
@@ -158,23 +173,27 @@ export class MenuScene extends Phaser.Scene {
     this.text(width - 42, 40, titles[this.page], 13, '#fff0d2').setStroke('#171219', 3).setOrigin(1, 0);
     if (this.page === 'stage') {
       const stage = this.selectedStage;
-      this.text(56, 119, 'ONDE VAMOS LUTAR?', 23);
-      const x = 212, y = 168, w = 600;
-      const scale = Math.min(w / stage.referenceSize.width, 300 / stage.referenceSize.height);
+      const plate = this.add.graphics(); root.add(plate);
+      plate.fillStyle(0x0c0a10, .91); plate.fillPoints([{x: 78,y: 100},{x: 950,y: 75},{x: 919,y: 497},{x: 110,y: 513}], true);
+      plate.lineStyle(4, 0xc04436); plate.strokePoints([{x: 78,y: 100},{x: 950,y: 75},{x: 919,y: 497},{x: 110,y: 513}], true);
+      this.text(width / 2, 100, 'ESCOLHA O CENÁRIO', 28, '#fff0d2').setOrigin(.5, 0).setShadow(3, 4, '#701c19', 0, true, true);
+      const x = 225, y = 160, w = 574;
+      const scale = Math.min(w / stage.referenceSize.width, 265 / stage.referenceSize.height);
       const imageX = x + (w - stage.referenceSize.width * scale) / 2;
-      this.box(x - 2, y - 2, w + 4, 303, 0xa88859);
+      this.box(x - 5, y - 5, w + 10, 275, 0xe5c69c);
       for (const layer of [...stage.layers].sort((a, b) => a.depth - b.depth)) {
         const content = layer.contentScale ?? 1, origin = layer.scaleOrigin ?? { x: 0, y: 0 };
         const image = this.add.image(imageX + scale * (layer.x + origin.x * (1 - content)), y + scale * (layer.y + origin.y * (1 - content)), stageTextureKey(stage, layer)).setOrigin(0).setScale(scale * content); root.add(image);
       }
-      this.box(x, y + 245, w, 54, 0x101019, .90);
-      this.text(x + 20, y + 258, stage.name.toUpperCase(), 23, '#f3d49e');
-      this.text(x + w - 20, y + 267, 'CENÁRIO SELECIONADO', 11, '#c4b8c0').setOrigin(1, 0);
-      this.button(58, 310, 112, '← ANTERIOR', () => this.chooseStage(-1));
-      this.button(854, 310, 112, 'PRÓXIMO →', () => this.chooseStage(1));
+      const ribbon = this.add.graphics(); root.add(ribbon);
+      ribbon.fillStyle(0x171016, .94); ribbon.fillPoints([{x: 210,y: 378},{x: 814,y: 365},{x: 803,y: 429},{x: 200,y: 438}], true);
+      this.text(244, 390, stage.name.toUpperCase(), 25, '#f3d49e');
+      this.text(777, 399, 'CENÁRIO SELECIONADO', 11, '#c4b8c0').setOrigin(1, 0);
+      this.button(95, 280, 110, '← ANTERIOR', () => this.chooseStage(-1));
+      this.button(819, 280, 110, 'PRÓXIMO →', () => this.chooseStage(1));
       this.text(56, height - 25, '← →  CENÁRIO     ENTER  COMEÇAR     ESC  VOLTAR', 11, '#d3bea3');
-      this.text(160, 490, `${this.fighters[this.fighterIndex].name.toUpperCase()}${this.mode === 'versus' ? ` × ${this.fighters[this.selection.indices[1]].name.toUpperCase()}` : ''} · ${MODES.find(m => m.id === this.mode)!.title}`, 14, '#d4b47d');
-      this.button(630, 486, 234, 'COMEÇAR LUTA', () => this.startFight());
+      this.text(160, 463, `${this.fighters[this.fighterIndex].name.toUpperCase()}${this.mode === 'versus' ? ` × ${this.fighters[this.selection.indices[1]].name.toUpperCase()}` : ''} · ${MODES.find(m => m.id === this.mode)!.title}`, 14, '#d4b47d');
+      this.button(630, 450, 234, 'COMEÇAR LUTA', () => this.startFight());
     } else {
       this.text(56, 144, 'CONFIGURAÇÕES', 26);
       this.text(56, 204, 'Configure as teclas no painel de controles.', 18, '#c4b8c0');
@@ -185,8 +204,8 @@ export class MenuScene extends Phaser.Scene {
   }
   private renderMenu(): void {
     const root = this.menuElement!;
-    const fighter = this.fighters[this.fighterIndex];
-    root.classList.remove('versus-selection');
+    root.classList.toggle('fighter-selection', this.page === 'fighter');
+    root.classList.toggle('arena-home', this.page === 'home');
     const node = (tag: string, className: string, text = ''): HTMLElement => {
       const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
     };
@@ -203,59 +222,69 @@ export class MenuScene extends Phaser.Scene {
       svg.append(image); return svg;
     };
     const header = node('header', 'arena-header');
-    header.append(node('span', 'arena-brand', 'CLOSE COMBAT'));
-    if (this.page === 'fighter') header.append(node('span', 'arena-step', 'SELEÇÃO DE PERSONAGEM'));
+    if (this.page === 'home') header.append(node('span', 'arena-brand', 'CLOSE COMBAT'));
+    else header.append(node('h1', 'arena-step', 'SELEÇÃO DE PERSONAGEM'));
     root.append(header);
     if (this.page === 'home') {
       const modes = node('nav', 'arena-modes'); modes.setAttribute('aria-label', 'Modos de jogo');
+      const feature = node('div', 'arena-feature');
+      feature.setAttribute('aria-hidden', 'true');
+      const featureNumber = node('span', 'arena-feature-number');
+      const featureTitle = node('strong', 'arena-feature-title');
+      const featureHint = node('span', 'arena-feature-hint');
+      feature.append(featureNumber, featureTitle, featureHint);
       MODES.forEach((mode, index) => {
-        const item = button('', `arena-mode${index === this.modeIndex ? ' selected' : ''}`, () => this.chooseMode(index));
-        item.setAttribute('aria-current', String(index === this.modeIndex));
-        item.append(node('span', 'arena-number', String(index + 1).padStart(2, '0')), node('strong', '', mode.title), node('small', '', mode.tag), node('span', 'arena-mode-hint', mode.hint));
+        const item = button('', 'arena-mode', () => this.chooseMode(index));
+        item.append(node('span', 'arena-number', String(index + 1).padStart(2, '0')),
+          node('strong', '', mode.title), node('small', '', mode.tag), node('span', 'arena-mode-hint', mode.hint));
+        item.addEventListener('pointerenter', () => this.selectHomeMode(index));
+        item.addEventListener('focus', () => this.selectHomeMode(index));
         modes.append(item);
       });
-      root.append(modes);
+      const hero = node('div', 'arena-home-hero'); hero.setAttribute('aria-hidden', 'true');
+      hero.append(portrait('130 35 510 710', true));
+      const note = node('div', 'arena-home-note', 'ESCOLHA SUA LUTA');
+      const controls = node('footer', 'arena-home-controls', '↑ ↓ ESCOLHER   ·   ENTER CONFIRMAR');
+      root.append(modes, feature, hero, note, controls);
+      this.selectHomeMode(this.modeIndex);
     } else {
-      const versus = this.mode === 'versus';
-      root.classList.toggle('versus-selection', versus);
-      const addFighter = (player: SelectionPlayer): void => {
-        const entry = this.fighters[this.selection.indices[player]];
-        const side = player === 0 ? 'left' : 'right';
-        const hero = node('div', `arena-hero ${side}`); hero.append(portrait('130 35 510 710', true));
-        const name = node('div', `arena-fighter-name ${side}`);
-        name.append(node('span', 'arena-eyebrow', `PLAYER 0${player + 1}`), node('h1', '', entry.name));
-        if (versus) name.append(button(this.selection.ready[player] ? `P${player + 1} · PRONTO` : `ESCOLHER P${player + 1}`, 'arena-player-switch', () => { this.selection.activePlayer = player; this.render(); }));
-        root.append(hero, name);
-      };
-      addFighter(0);
-      if (versus) addFighter(1);
-      const selection = node('div', 'arena-selection');
-      selection.append(node('span', 'arena-eyebrow', MODES.find(mode => mode.id === this.mode)!.title), node('h2', '', versus ? `ESCOLHA DE P${this.selection.activePlayer + 1}` : 'ESCOLHA SEU LUTADOR'));
-      const grid = node('div', 'arena-roster'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'Personagens disponíveis');
-      this.fighters.forEach((entry, index) => {
-        const tile = button('', 'arena-portrait', () => { this.selection.select(this.selection.activePlayer, index); this.render(); });
-        tile.setAttribute('aria-label', entry.name); tile.setAttribute('aria-pressed', String(index === this.selection.indices[this.selection.activePlayer]));
-        tile.append(portrait('280 65 180 180'), node('span', '', entry.name));
-        if (versus) {
-          const cursors = node('div', 'arena-cursors');
-          for (const player of [0, 1] as const) if (this.selection.indices[player] === index) cursors.append(node('b', `cursor-p${player + 1}`, `P${player + 1}`));
-          tile.append(cursors);
-        }
-        grid.append(tile);
+      renderFighterSelection(root, {
+        fighters: this.fighters,
+        selection: this.selection,
+        opponent: opponentFor(this.fighters[this.fighterIndex].id, this.mode),
+        versus: this.mode === 'versus',
+        modeTitle: MODES.find(mode => mode.id === this.mode)!.title,
+        portrait,
+        refresh: () => this.render(),
+        confirm: () => this.confirmFighter(),
+        back: () => this.back(),
       });
-      for (let index = this.fighters.length; index < 12; index++) {
-        const slot = node('div', 'arena-empty', '—'); slot.setAttribute('aria-hidden', 'true'); grid.append(slot);
-      }
-      const status = node('p', 'arena-opponent', versus
-        ? `P1 ${this.selection.ready[0] ? 'PRONTO' : 'ESCOLHENDO'} · P2 ${this.selection.ready[1] ? 'PRONTO' : 'ESCOLHENDO'}`
-        : `P2 · ${opponentFor(fighter.id, this.mode).name} · ${this.mode === 'arcade' ? 'Computador' : 'Adversário de treino'}`);
-      status.setAttribute('role', 'status');
-      selection.append(grid, status, button(versus ? `CONFIRMAR P${this.selection.activePlayer + 1}  →` : 'CONFIRMAR PERSONAGEM  →', 'arena-confirm', () => this.confirmFighter()), button('← VOLTAR', 'arena-back', () => this.back()));
-      root.append(selection);
     }
     if (this.page === 'fighter') root.append(node('footer', 'arena-footer', this.mode === 'versus'
       ? 'P1: A / D · J CONFIRMAR     P2: ← / → · NUM1 CONFIRMAR     ENTER: CONFIRMAR VEZ     ESC: VOLTAR'
       : '← →  ESCOLHER     ENTER  CONFIRMAR     ESC  VOLTAR'));
+  }
+  private selectHomeMode(index: number): void {
+    const root = this.menuElement;
+    const featureNumber = root?.querySelector<HTMLElement>('.arena-feature-number');
+    const featureTitle = root?.querySelector<HTMLElement>('.arena-feature-title');
+    const featureHint = root?.querySelector<HTMLElement>('.arena-feature-hint');
+    if (!root || !featureNumber || !featureTitle || !featureHint) return;
+    const changed = index !== this.modeIndex;
+    this.modeIndex = index;
+    const mode = MODES[index];
+    featureNumber.textContent = `0${index + 1} / ${mode.tag}`;
+    featureTitle.textContent = mode.title;
+    featureTitle.classList.toggle('long', mode.title.length > 13);
+    featureHint.textContent = mode.hint;
+    if (changed && !this.motionPreference?.matches && typeof featureTitle.animate === 'function') {
+      featureTitle.animate([{ opacity: .35, transform: 'translateX(-18px)' }, { opacity: 1, transform: 'translateX(0)' }],
+        { duration: 200, easing: 'ease-out' });
+    }
+    root.querySelectorAll<HTMLButtonElement>('.arena-mode').forEach((element, itemIndex) => {
+      element.classList.toggle('selected', itemIndex === index);
+      element.setAttribute('aria-current', String(itemIndex === index));
+    });
   }
   private chooseStage(direction: number): void {
     this.stageIndex = (this.stageIndex + direction + selectableStages.length) % selectableStages.length;

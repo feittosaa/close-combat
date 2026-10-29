@@ -1,8 +1,29 @@
 # Close Combat — Pipeline
 
+## Seleção compartilhada e pausa
+
+Pedido atual: fundo do menu principal preto provisoriamente; navegação e personagem mantidos. A ilustração anterior continua em uso nas telas de cenário e configurações.
+
+Revisão visual: grade de personagens centralizada em 3×3, caixa aleatória separada e título central; seleção de cenário com painéis e botões angulares, profundidade e imagens originais; pausas de treino e partida com superfícies em camadas e botões no mesmo estilo. Conferidos no jogo seleção solo/PvP, troca de cenário e pausas de treino/partida. Instalação, 298 testes, build e diff aprovados; aprovação visual do usuário pendente e CI remota a conferir.
+
+A seleção agora mantém nove caixas para personagens, incluindo vagas vazias, e uma caixa separada para escolha aleatória. A opção sorteia apenas personagens disponíveis ao confirmar, com seleção independente no PvP e navegação pelo teclado. Validação local: instalação reproduzível, 298 testes, build e diff; jogo conferido no treino e no PvP, inclusive confirmação aleatória dos dois jogadores. A aprovação visual permanece pendente; CI remota a conferir.
+
+Branch `codex/feature-menu-hud`: seleção de personagem unificada para Arcade, PvP, treino e ambos os tutoriais, com dois painéis de lutadores e grade central inspirados na referência fornecida. PvP mantém confirmações independentes; nos demais modos o segundo painel apresenta o adversário. Pausa de partida e de treino atualizadas com a linguagem angular, cores e tipografia do menu principal, preservando os controles e ferramentas de treino. Sem nova arte ou alteração das cores dos sprites.
+
+Validação local: instalação reproduzível, 297 testes em 37 arquivos, build e verificação de diff. No navegador: seleção nos cinco modos, confirmações de ambos os jogadores no PvP, entrada na partida e pausas de partida e treino. A aprovação artística do usuário permanece pendente. Envio e CI remota a conferir.
+
 Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visual.md). Entrega: [docs/ci-cd.md](docs/ci-cd.md).
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
+
+## Menus e HUD — 2026-10-28
+
+Branch `codex/feature-menu-hud`, criada a pedido do usuário a partir de `main` no merge `e38be82`. A branch anterior foi integrada em `development` no commit `010091a`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40808247508), e promovida para `main` com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40808411107). Após conferir ancestralidade e ausência de trabalho ativo, a branch anterior foi removida localmente e no remoto. Por decisão explícita do usuário, `development` permanece em `010091a`, sem receber o commit de merge de `main`. O pedido posterior encerra a restrição temporária anterior de criação de branches.
+
+- [x] Menu principal com modos em lista vertical à esquerda, destaque angular de grande escala, personagem do jogo e cenário original à direita. Hover, foco e setas atualizam a seleção, descrição e animação; Enter confirma a opção selecionada. A preferência por movimento reduzido desativa a transição e mantém o retrato estático. Nenhuma imagem foi recolorida ou criada.
+- [x] HUD usa a mesma paleta e tipografia, com marcador angular para o relógio; barras contínuas e métricas da simulação preservadas. Seleção de personagem/cenário, pausa e controles receberam ajustes de cor e tipografia coerentes.
+- [x] npm ci, 297 testes/37 arquivos, build e diff aprovados. No jogo a 1280×720: navegação por Tab/setas/Enter, seleção de modo longo, controles e retorno, treino, pausa, confirmação independente no PvP e seleção de cenário; HUD conferido com acerto e vida real. Console sem erros/avisos. Imagens locais: /tmp/close-combat-novo-menu.png, /tmp/close-combat-novo-hud.png e /tmp/close-combat-nova-pausa.png. A preferência de movimento reduzido é respeitada pelo código; confirmação artística do usuário permanece distinta da validação técnica.
+- [x] Implementação enviada em `994f6e5e079602ba2e71a95e80d777ec230ef6b1`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40809334922). Branch pronta para revisão, sem integração do novo menu e HUD; fechamento documental com CI própria conferida antes do relato final.
 
 ## Limpeza de branches antigas — 2026-10-28
 
@@ -21,7 +42,7 @@ Trabalho mantido em `codex/fix-limite-levantamentos`, conforme orientação vige
 
 ## Fluxo temporário de trabalho — 2026-10-28
 
-Por pedido explícito do usuário, não criar novas branches até nova orientação. Manter os próximos commits e pushes automáticos exclusivamente na branch atual `codex/fix-limite-levantamentos`, após as validações aplicáveis. Essa orientação temporária prevalece sobre a regra geral de uma branch por objetivo; não autoriza merge, promoção ou release.
+Orientação anterior: não criar novas branches e manter pushes em `codex/fix-limite-levantamentos`. Encerrada por pedido explícito posterior de integrar essa branch em `development` e `main` e criar uma nova branch para menus e HUD.
 
 ## Um levantamento por sequência — 2026-10-28
 
