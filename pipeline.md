@@ -2,7 +2,7 @@
 
 ## Integração em development — 2026-10-29
 
-Por pedido explícito, integradas em `development` as branches encadeadas `codex/fix-janela-punicao-maior`, `codex/feature-selecao-cenarios-alcance`, `codex/fix-ultimate-combo-reinicio` e `codex/fix-chutes-alcance-controles`. A branch `sprites/shoto` permanece separada por orientação expressa e só será integrada a pedido. Por enquanto, não criar novas branches e trabalhar diretamente em `development`. Validação local e CI da integração em andamento; aprovação visual permanece pendente.
+Por pedido explícito, integradas em `development` as branches encadeadas `codex/fix-janela-punicao-maior`, `codex/feature-selecao-cenarios-alcance`, `codex/fix-ultimate-combo-reinicio` e `codex/fix-chutes-alcance-controles`. A branch `sprites/shoto` permanece separada por orientação expressa e só será integrada a pedido. Por enquanto, não criar novas branches e trabalhar diretamente em `development`. Instalação reproduzível, 331 testes, build e diff aprovados. Integração enviada em `b47da23`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40902181768). Após conferir ancestralidade, ausência de outros checkouts e PRs abertos, as quatro branches integradas foram removidas localmente e no remoto. Aprovação visual permanece pendente.
 
 ## Chutes, alcance e controles — 2026-10-29
 
