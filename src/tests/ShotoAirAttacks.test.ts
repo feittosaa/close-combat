@@ -58,9 +58,16 @@ it.each([0,1])('launches only the confirmed final hit of 1,1,2: player %i', play
     for (const button of ['1','1','2'] as const) {
       step(sim,player,input('N',button),input(guard?'B':'N'));
       contact(sim,player,input(guard?'B':'N'));
+      if (guard) {
+        step(sim,player,input('N','1'),input('B'));
+        const state = sim.snapshot().characters[player];
+        expect(state.attack?.moveId).toBe('light-punch');
+        expect(state.attack?.hitOutcome).toBe('block');
+        break;
+      }
     }
     const target = sim.snapshot().characters[1-player];
-    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(guard?undefined:6);
+    if (!guard) expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(6);
     expect(target.grounded).toBe(guard);
     expect(target.verticalVelocity).toBe(guard?0:-10);
     if(!guard) {

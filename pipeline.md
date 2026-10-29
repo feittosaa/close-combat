@@ -2,6 +2,8 @@
 
 ## Seleção compartilhada e pausa
 
+O usuário autorizou a integração das branches de menu e de punição em `development`; o resultado conjunto e sua CI estão em validação. As observações de ausência de integração abaixo registram o estado anterior.
+
 Pedido atual: fundo do menu principal preto provisoriamente; navegação e personagem mantidos. A ilustração anterior continua em uso nas telas de cenário e configurações.
 
 Revisão visual: grade de personagens centralizada em 3×3, caixa aleatória separada e título central; seleção de cenário com painéis e botões angulares, profundidade e imagens originais; pausas de treino e partida com superfícies em camadas e botões no mesmo estilo. Conferidos no jogo seleção solo/PvP, troca de cenário e pausas de treino/partida. Instalação, 298 testes, build e diff aprovados; aprovação visual do usuário pendente e CI remota a conferir.
@@ -24,6 +26,9 @@ Branch `codex/feature-menu-hud`, criada a pedido do usuário a partir de `main` 
 - [x] HUD usa a mesma paleta e tipografia, com marcador angular para o relógio; barras contínuas e métricas da simulação preservadas. Seleção de personagem/cenário, pausa e controles receberam ajustes de cor e tipografia coerentes.
 - [x] npm ci, 297 testes/37 arquivos, build e diff aprovados. No jogo a 1280×720: navegação por Tab/setas/Enter, seleção de modo longo, controles e retorno, treino, pausa, confirmação independente no PvP e seleção de cenário; HUD conferido com acerto e vida real. Console sem erros/avisos. Imagens locais: /tmp/close-combat-novo-menu.png, /tmp/close-combat-novo-hud.png e /tmp/close-combat-nova-pausa.png. A preferência de movimento reduzido é respeitada pelo código; confirmação artística do usuário permanece distinta da validação técnica.
 - [x] Implementação enviada em `994f6e5e079602ba2e71a95e80d777ec230ef6b1`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40809334922). Branch pronta para revisão, sem integração do novo menu e HUD; fechamento documental com CI própria conferida antes do relato final.
+## Punição após bloqueio
+
+Branch `codex/fix-punicao-bloqueio`, baseada em `main`. Ajuste: recuperação de golpes diretos bloqueados garante janela mínima de 9 frames para entradas leves e 16 para fortes; cancelamentos de receitas ficam indisponíveis após bloqueio, mantendo as receitas no acerto e no vazio. Golpes aéreos bloqueados mantêm recuperação ao aterrissar. Os números são provisórios. Por confirmação do usuário, projéteis mantêm recuperação natural e não interrompem o lançador após sua recuperação. No treino, soco leve bloqueado mostrou −9F e forte −16F para o atacante. Testes confirmam que o atacante é atingido mesmo segurando defesa durante essa janela, nos dois lados e para socos leves e fortes, e pode defender novamente após a recuperação. Instalação reproduzível, testes, build e diff conferidos; envio e CI remota a verificar. Sem integração.
 
 ## Limpeza de branches antigas — 2026-10-28
 
