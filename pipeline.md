@@ -2,6 +2,8 @@
 
 ## Seleção compartilhada e pausa
 
+Revisão visual: grade de personagens centralizada em 3×3, caixa aleatória separada e título central; seleção de cenário com painéis e botões angulares, profundidade e imagens originais; pausas de treino e partida com superfícies em camadas e botões no mesmo estilo. Conferidos no jogo seleção solo/PvP, troca de cenário e pausas de treino/partida. Instalação, 298 testes, build e diff aprovados; aprovação visual do usuário pendente e CI remota a conferir.
+
 A seleção agora mantém nove caixas para personagens, incluindo vagas vazias, e uma caixa separada para escolha aleatória. A opção sorteia apenas personagens disponíveis ao confirmar, com seleção independente no PvP e navegação pelo teclado. Validação local: instalação reproduzível, 298 testes, build e diff; jogo conferido no treino e no PvP, inclusive confirmação aleatória dos dois jogadores. A aprovação visual permanece pendente; CI remota a conferir.
 
 Branch `codex/feature-menu-hud`: seleção de personagem unificada para Arcade, PvP, treino e ambos os tutoriais, com dois painéis de lutadores e grade central inspirados na referência fornecida. PvP mantém confirmações independentes; nos demais modos o segundo painel apresenta o adversário. Pausa de partida e de treino atualizadas com a linguagem angular, cores e tipografia do menu principal, preservando os controles e ferramentas de treino. Sem nova arte ou alteração das cores dos sprites.
