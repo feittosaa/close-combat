@@ -110,3 +110,22 @@ canvas {
 .combat-pause.match-pause .pause-panel::after { content: 'PAUSA'; position: absolute; right: 6%; top: 40%; color: #171216; font: 900 clamp(45px,8vw,110px)/.9 Arial,sans-serif; letter-spacing: -.07em; }
 .combat-pause.match-pause .pause-legend { position: absolute; right: 6%; bottom: 16%; color: #584a4a; }
 @media (max-width: 760px) { .combat-pause.match-pause .pause-panel { min-height: 0; background: #171016; } .combat-pause.match-pause header { width: 100%; } .combat-pause.match-pause .pause-panel::after { display: none; } .combat-pause.match-pause .pause-legend { position: static; color: #aaa5b6; } }
+
+/* Angled, layered surfaces keep every pause mode in the same visual family. */
+.combat-pause { background: radial-gradient(ellipse at 50% 40%,#392329d9,#0c0a10ef 75%); }
+.pause-panel { background: linear-gradient(135deg,#382529,#171016 55%,#28191e); border-top: 0; box-shadow: 9px 12px 0 #08070bc9, 0 24px 90px #000b; clip-path: polygon(1% 1%,97% 0,100% 4%,99% 99%,3% 100%,0 96%); padding: 30px 34px; }
+.pause-panel::before { content: ''; position: absolute; inset: 0 0 auto; height: 5px; background: linear-gradient(90deg,#f0dfc4,#c04436 22%,#7d3029 75%,transparent); }
+.pause-panel header { position: relative; }
+.pause-panel h1 { text-shadow: 3px 3px #742c25; }
+.combat-pause button { transition: background .15s ease, transform .15s ease; }
+.pause-actions button, .pause-categories button, .pause-tools button, .pause-details button { clip-path: polygon(3% 0,100% 0,97% 100%,0 100%); border: 0; background: linear-gradient(135deg,#422b2d,#191319); box-shadow: inset 4px 0 #b94536; font-weight: 700; }
+.pause-actions button:hover, .pause-actions button:focus-visible, .pause-categories button:hover, .pause-categories button:focus-visible, .pause-categories button[aria-pressed="true"], .pause-tools button:hover, .pause-tools button:focus-visible, .pause-details button:hover, .pause-details button:focus-visible { background: linear-gradient(110deg,#9f342c,#ca5140); }
+.pause-move { border: 0 !important; border-left: 4px solid #966b56 !important; background: linear-gradient(110deg,#3b292c,#1a151a) !important; }
+.pause-move:hover { background: linear-gradient(110deg,#9f342c,#602920) !important; }
+.pause-details { border-left: 5px solid #c04436; background: linear-gradient(130deg,#fae9ce,#d8bd99); box-shadow: 5px 6px 0 #0a080b99; }
+.pause-tools input { background: #171116; border: 1px solid #97745d; }
+.combat-pause.match-pause .pause-panel { background: linear-gradient(110deg,#1a1218 0 48%,#f4e2c7 48% 100%); }
+.combat-pause.match-pause .pause-panel::after { text-shadow: 4px 4px #c9a98b; }
+.combat-pause.inspection .pause-panel { clip-path: none; }
+@media (max-width: 760px) { .pause-panel { padding: 16px; } .combat-pause.match-pause .pause-panel { background: linear-gradient(135deg,#382529,#171016); } }
+@media (prefers-reduced-motion: reduce) { .combat-pause button { transition: none; } }

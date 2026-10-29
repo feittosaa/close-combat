@@ -150,9 +150,16 @@ export class MenuScene extends Phaser.Scene {
     const box = this.add.rectangle(x, y, w, h, color, alpha).setOrigin(0); this.root!.add(box); return box;
   }
   private button(x: number, y: number, w: number, label: string, action: () => void) {
-    const rect = this.box(x, y, w, 42, 0xa6372e).setInteractive({ useHandCursor: true });
+    const plate = this.add.graphics(); this.root!.add(plate);
+    const draw = (color: number): void => {
+      plate.clear();
+      plate.fillStyle(0x08070b, .7); plate.fillPoints([{x: x + 6,y: y + 5},{x: x + w + 6,y: y + 5},{x: x + w - 4,y: y + 47},{x: x - 3,y: y + 47}], true);
+      plate.fillStyle(color); plate.fillPoints([{x: x + 5,y},{x: x + w,y},{x: x + w - 10,y: y + 42},{x,y: y + 42}], true);
+    };
+    draw(0xa6372e);
+    const target = this.add.zone(x, y, w, 42).setOrigin(0).setInteractive({ useHandCursor: true }); this.root!.add(target);
     this.text(x + w / 2, y + 12, label, 14).setOrigin(.5, 0);
-    rect.on('pointerover', () => rect.setFillStyle(0xc04436)).on('pointerout', () => rect.setFillStyle(0xa6372e)).on('pointerdown', action);
+    target.on('pointerover', () => draw(0xc04436)).on('pointerout', () => draw(0xa6372e)).on('pointerdown', action);
   }
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
@@ -166,23 +173,27 @@ export class MenuScene extends Phaser.Scene {
     this.text(width - 42, 40, titles[this.page], 13, '#fff0d2').setStroke('#171219', 3).setOrigin(1, 0);
     if (this.page === 'stage') {
       const stage = this.selectedStage;
-      this.text(56, 119, 'ONDE VAMOS LUTAR?', 28);
-      const x = 212, y = 168, w = 600;
-      const scale = Math.min(w / stage.referenceSize.width, 300 / stage.referenceSize.height);
+      const plate = this.add.graphics(); root.add(plate);
+      plate.fillStyle(0x0c0a10, .91); plate.fillPoints([{x: 78,y: 100},{x: 950,y: 75},{x: 919,y: 497},{x: 110,y: 513}], true);
+      plate.lineStyle(4, 0xc04436); plate.strokePoints([{x: 78,y: 100},{x: 950,y: 75},{x: 919,y: 497},{x: 110,y: 513}], true);
+      this.text(width / 2, 100, 'ESCOLHA O CENÁRIO', 28, '#fff0d2').setOrigin(.5, 0).setShadow(3, 4, '#701c19', 0, true, true);
+      const x = 225, y = 160, w = 574;
+      const scale = Math.min(w / stage.referenceSize.width, 265 / stage.referenceSize.height);
       const imageX = x + (w - stage.referenceSize.width * scale) / 2;
-      this.box(x - 2, y - 2, w + 4, 303, 0xc04436);
+      this.box(x - 5, y - 5, w + 10, 275, 0xe5c69c);
       for (const layer of [...stage.layers].sort((a, b) => a.depth - b.depth)) {
         const content = layer.contentScale ?? 1, origin = layer.scaleOrigin ?? { x: 0, y: 0 };
         const image = this.add.image(imageX + scale * (layer.x + origin.x * (1 - content)), y + scale * (layer.y + origin.y * (1 - content)), stageTextureKey(stage, layer)).setOrigin(0).setScale(scale * content); root.add(image);
       }
-      this.box(x, y + 245, w, 54, 0x101019, .90);
-      this.text(x + 20, y + 258, stage.name.toUpperCase(), 23, '#f3d49e');
-      this.text(x + w - 20, y + 267, 'CENÁRIO SELECIONADO', 11, '#c4b8c0').setOrigin(1, 0);
-      this.button(58, 310, 112, '← ANTERIOR', () => this.chooseStage(-1));
-      this.button(854, 310, 112, 'PRÓXIMO →', () => this.chooseStage(1));
+      const ribbon = this.add.graphics(); root.add(ribbon);
+      ribbon.fillStyle(0x171016, .94); ribbon.fillPoints([{x: 210,y: 378},{x: 814,y: 365},{x: 803,y: 429},{x: 200,y: 438}], true);
+      this.text(244, 390, stage.name.toUpperCase(), 25, '#f3d49e');
+      this.text(777, 399, 'CENÁRIO SELECIONADO', 11, '#c4b8c0').setOrigin(1, 0);
+      this.button(95, 280, 110, '← ANTERIOR', () => this.chooseStage(-1));
+      this.button(819, 280, 110, 'PRÓXIMO →', () => this.chooseStage(1));
       this.text(56, height - 25, '← →  CENÁRIO     ENTER  COMEÇAR     ESC  VOLTAR', 11, '#d3bea3');
-      this.text(160, 490, `${this.fighters[this.fighterIndex].name.toUpperCase()}${this.mode === 'versus' ? ` × ${this.fighters[this.selection.indices[1]].name.toUpperCase()}` : ''} · ${MODES.find(m => m.id === this.mode)!.title}`, 14, '#d4b47d');
-      this.button(630, 486, 234, 'COMEÇAR LUTA', () => this.startFight());
+      this.text(160, 463, `${this.fighters[this.fighterIndex].name.toUpperCase()}${this.mode === 'versus' ? ` × ${this.fighters[this.selection.indices[1]].name.toUpperCase()}` : ''} · ${MODES.find(m => m.id === this.mode)!.title}`, 14, '#d4b47d');
+      this.button(630, 450, 234, 'COMEÇAR LUTA', () => this.startFight());
     } else {
       this.text(56, 144, 'CONFIGURAÇÕES', 26);
       this.text(56, 204, 'Configure as teclas no painel de controles.', 18, '#c4b8c0');
@@ -211,8 +222,8 @@ export class MenuScene extends Phaser.Scene {
       svg.append(image); return svg;
     };
     const header = node('header', 'arena-header');
-    header.append(node('span', 'arena-brand', 'CLOSE COMBAT'));
-    if (this.page === 'fighter') header.append(node('span', 'arena-step', 'SELEÇÃO DE PERSONAGEM'));
+    if (this.page === 'home') header.append(node('span', 'arena-brand', 'CLOSE COMBAT'));
+    else header.append(node('h1', 'arena-step', 'SELEÇÃO DE PERSONAGEM'));
     root.append(header);
     if (this.page === 'home') {
       const modes = node('nav', 'arena-modes'); modes.setAttribute('aria-label', 'Modos de jogo');
