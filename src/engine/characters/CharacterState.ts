@@ -25,6 +25,7 @@ export interface CharacterState {
   maxHealth: number;
   rage: number;
   maxRage: number;
+  ultimateUsed: boolean;
   mode: CharacterMode;
   stateStartedFrame: number;
   animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };
@@ -39,7 +40,7 @@ export interface CharacterState {
   hitFlashFrames: number;
   chain?: string[];
   /** Confirmed pressure keeps its strength floor until the defender regains control. */
-  hitSequence?: { targetId: string; heavy: boolean };
+  hitSequence?: { targetId: string; heavy: boolean; heavyButton?: '2' | '4' };
   knockdown?: { velocityX: number };
   /** Confirmed launcher flight; independent of ordinary jumps and scripted captures. */
   juggle?: { gravityScale: number; airHits: number; suspensionFrames?: number };

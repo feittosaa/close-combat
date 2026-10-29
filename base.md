@@ -47,9 +47,11 @@ Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É 
 
 ## Apresentação compartilhada
 
-A saída padrão é Full HD 1920 × 1080, em 16:9, com composição lógica 1024 × 576 e projeção uniforme. A câmera de combate tem escala fixa, acompanha o combate no eixo horizontal e o personagem mais alto no eixo vertical durante a subida e a descida. O tamanho visual dos personagens é independente da escala do cenário; o enquadramento deve preservar ambos nos limites laterais. Não aplicar zoom dinâmico por distância, ação ou postura.
+A composição lógica de combate é 1024 × 576, com projeção uniforme; a saída acompanha o tamanho da janela, expondo mais cenário nas laterais sem mudar a escala relativa dos lutadores, do HUD ou das colisões. A câmera de combate tem escala fixa, acompanha o combate no eixo horizontal e o personagem mais alto no eixo vertical durante a subida e a descida. O tamanho visual dos personagens é independente da escala do cenário; o enquadramento deve preservar ambos nos limites laterais. Não aplicar zoom dinâmico por distância, ação ou postura.
 
 O piso, os lutadores e os cenários compartilham o mesmo espaço. O limite lateral da visão deve preservar ambos os lados sem arrastar um personagem parado. Mudanças autorizadas no tamanho dos lutadores exigem revisão proporcional de corpo, hurtboxes, hitboxes e seus deslocamentos nos dados de cada personagem. As caixas físicas não são inferidas automaticamente de silhuetas ou do desenho do cenário.
+
+Fora do treino, cada personagem pode ativar uma ultimate uma vez por combate; o limite persiste entre rounds e reinicia em uma nova partida. A rage acumulada permanece entre rounds; após a ativação, o personagem deixa de acumular rage até a próxima partida. No treino, ela pode voltar a encher e a ultimate pode ser repetida. A ultimate também pode ser acionada por uma tecla configurável, obedecendo às mesmas condições e animação do comando original.
 
 O HUD deve ser minimalista: barras de vida contínuas próximas ao topo, sem divisões verticais ou molduras grandes. Mostrar dados reais; detalhes de diagnóstico pertencem às ferramentas de treino. Animações decorativas respeitam movimento reduzido e não prejudicam leitura ou foco.
 
@@ -57,9 +59,11 @@ O HUD deve ser minimalista: barras de vida contínuas próximas ao topo, sem div
 
 Acertos e bloqueios confirmados recebem uma micro pausa compartilhada na pose de impacto; golpes que erram não pausam. A duração da pausa é compartilhada entre acerto e bloqueio e definida na configuração de contato. Durante ela, combate, física e animação ficam congelados, enquanto o relógio do round continua contando normalmente. Contatos simultâneos não somam pausas. A retomada não deve pular desenhos nem alterar os tempos próprios dos golpes. Reset e encerramento de round devem tratar esse intervalo de forma consistente.
 
-Em sequências abertas de golpes confirmados, ataques fortes impedem o retorno a ataques fracos até o defensor recuperar o controle. Repetições pertencem às receitas autoradas. Receitas fechadas podem continuar mesmo sem contato, depois de concluir a atividade de cada golpe. Golpes bloqueados ou que erram não liberam continuação aberta. Quando o último golpe acertado mantém o alvo no chão, os dois recuperam o controle juntos, sem recuperação exposta do atacante. Levantamentos confirmados usam recuperação mais curta e reiniciam a sequência do atacante, liberando golpes fracos novamente para continuar o combo. Lançamentos preservam a trajetória e a recuperação aérea protegida; capturas cinematográficas mantêm suas regras próprias.
+Em sequências abertas de golpes confirmados, um soco forte ou chute forte confirmado impede tanto o retorno a golpes fracos quanto a troca para o outro tipo de golpe forte até o defensor recuperar o controle. Repetições pertencem às receitas autoradas. Receitas fechadas podem continuar mesmo sem contato, depois de concluir a atividade de cada golpe. Golpes bloqueados ou que erram não liberam continuação aberta. Quando o último golpe acertado mantém o alvo no chão, os dois recuperam o controle juntos, sem recuperação exposta do atacante. Levantamentos confirmados usam recuperação mais curta e reiniciam a sequência do atacante, liberando golpes fracos novamente para continuar o combo. Lançamentos preservam a trajetória e a recuperação aérea protegida; capturas cinematográficas mantêm suas regras próprias.
 
 Chutes aéreos que erram e aterrissam durante a recuperação mantêm o atacante vulnerável até o fim dessa recuperação.
+
+Combos fechados de socos fortes confirmados terminam sem aceitar outros golpes até o fim da recuperação; levantamentos preservam sua regra de continuação.
 
 Uma continuação de golpes iniciada enquanto o alvo ainda reage mantém sua vulnerabilidade durante o preparo e a atividade do próximo golpe. Se a sequência de acertos terminar no chão, ambos recuperam o controle juntos; os tempos de recuperação de cada receita são definidos nos dados do personagem.
 

@@ -12,6 +12,7 @@ export class TutorialHud {
       backgroundColor: '#151521ee', padding: { x: 20, y: 10 }, wordWrap: { width: 650 },
     }).setOrigin(.5, 0).setScrollFactor(0).setDepth(125).setInteractive({ useHandCursor: true }).on('pointerdown', next);
   }
+  setCenter(x: number): void { this.panel.setX(x); }
   update(): void {
     const session = this.session, lesson = session.lesson;
     if (!lesson) { this.panel.setText('TREINO DE COMBOS\nNenhuma receita cadastrada. Aguardando seus combos manuais.\nESC abre o menu'); return; }

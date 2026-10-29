@@ -41,8 +41,8 @@ it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar
   expect(texts.some(t=>t.value==='250 / 1000')).toBe(true);
   expect(texts.some(t=>t.value==='99')).toBe(true);
   expect(commands).toContainEqual(['fillStyle',HUD.players[0]]);
-  expect(commands).toContainEqual(['fillRect',31,12,265.5,13]);
-  expect(commands).toContainEqual(['fillRect',904.5,12,88.5,13]);
+  expect(commands).toContainEqual(['fillRect',31,12,291,13]);
+  expect(commands).toContainEqual(['fillRect',896,12,97,13]);
   expect(commands.filter(c=>c[0]==='lineBetween'&&c[1]===c[3])).toEqual([]);
   expect(snapshot).toEqual(original);
   snapshot.characters[0].health=0;snapshot.phase='match-over';snapshot.matchWinnerId='player-2';
@@ -61,5 +61,20 @@ it('treino usa teclas remapeadas e mantém dados de contato e pausa legíveis',(
   expect(texts.some(t=>t.value.includes('PAUSADO')&&t.value.includes('25%'))).toBe(true);
   expect(texts.some(t=>t.value.includes('Q PAUSA')&&t.value.includes('E / F2 RESET'))).toBe(true);
   expect(texts.some(t=>t.value.includes('FRAME 0')&&t.value.includes('DISTÂNCIA'))).toBe(true);
+  hud.destroy();
+});
+it('anchors health and larger bottom rage rails to both sides of a wide HUD',()=>{
+  const {scene,commands}=mockScene();
+  const width=1365;
+  const hud=new CombatHud(scene,width);
+  const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
+  snapshot.characters[0].rage=100;snapshot.characters[1].rage=100;
+  hud.update(snapshot,width);
+  expect(commands).toContainEqual(['fillRect',28,10,564.5,17]);
+  expect(commands).toContainEqual(['fillRect',width-592.5,10,564.5,17]);
+  expect(commands).toContainEqual(['fillRect',35,538,250,8]);
+  expect(commands).toContainEqual(['fillRect',width-285,538,250,8]);
+  expect(commands).toContainEqual(['fillRect',35,538,125,8]);
+  expect(commands).toContainEqual(['fillRect',width-160,538,125,8]);
   hud.destroy();
 });

@@ -1,4 +1,4 @@
-import { LOGICAL_VIEW } from '../rendering/presentation';
+import { LOGICAL_VIEW, getHudLogicalWidth } from '../rendering/presentation';
 import { TutorialSession } from '../training/TutorialSession';
 import { TutorialHud } from '../ui/TutorialHud';
 import { ControlSettings } from '../ui/ControlSettings';
@@ -49,6 +49,7 @@ export class FightScene extends Phaser.Scene {
   private inputDisplays: PlayerInputDisplay[] = [];
   private hitboxView?: HitboxView;
   private hud?: CombatHud;
+  private hudWidth = 0;
   private tutorial?: TutorialSession;
   private tutorialHud?: TutorialHud;
   private training?: TrainingSession;
@@ -180,16 +181,11 @@ export class FightScene extends Phaser.Scene {
     ];
     this.hitboxView = new HitboxView(this);
     this.hitboxView.setVisible(this.training?.showGeometry ?? false);
-    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name], this.selectedStage.name, Boolean(this.training), this.mode === 'tutorial' ? 'TUTORIAL BÁSICO' : this.mode === 'combo-tutorial' ? 'TUTORIAL DE COMBOS' : 'TREINO LIVRE');
+    this.hudWidth = 0;
     if (this.mode === 'arcade') this.arcadeInfo = this.add.text(width / 2, 91, '', {
       color: '#f2d299', fontSize: '13px', align: 'center', fontStyle: 'bold',
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(110);
     if (this.training && !this.tutorial) {
-      this.inputDisplays = [
-        new PlayerInputDisplay(this, 18, 104, 'P1 · ENTRADAS', '#eca58a', 0),
-        new PlayerInputDisplay(this, width - 198, 104, 'P2 · ENTRADAS', '#8dd5ca', 1),
-      ];
-      this.trainingHud = new TrainingHud(this, width, height);
       this.trainingKeys.forEach(([key, handler]) => {
         const listener = (event: KeyboardEvent): void => {
           // Phaser can revisit a queued DOM event before the queue is cleared.
@@ -261,17 +257,37 @@ export class FightScene extends Phaser.Scene {
     this.syncViewsAndHud();
   }
 
+  private resizeHud(width: number): void {
+    if (Math.abs(width - this.hudWidth) < .01) return;
+    this.hudWidth = width;
+    this.hud?.destroy();
+    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name], this.selectedStage.name,
+      Boolean(this.training), this.mode === 'tutorial' ? 'TUTORIAL BÁSICO' : this.mode === 'combo-tutorial' ? 'TUTORIAL DE COMBOS' : 'TREINO LIVRE');
+    this.trainingHud?.destroy(); this.trainingHud = undefined;
+    this.inputDisplays.forEach(display => display.destroy()); this.inputDisplays = [];
+    if (this.training && !this.tutorial) {
+      this.trainingHud = new TrainingHud(this, width, LOGICAL_VIEW.height);
+      this.inputDisplays = [new PlayerInputDisplay(this, 18, 104, 'P1 · ENTRADAS', '#eca58a', 0),
+        new PlayerInputDisplay(this, width - 198, 104, 'P2 · ENTRADAS', '#8dd5ca', 1)];
+      this.inputDisplays.forEach(display => display.setVisible(this.training!.showInputs));
+    }
+    this.arcadeInfo?.setX(width / 2);
+    this.pinnedMove?.setX(width / 2);
+    this.tutorialHud?.setCenter(width / 2);
+  }
+
   private syncViewsAndHud(): void {
     const snapshot = this.simulation?.snapshot();
     if (!snapshot) return;
 
+    this.resizeHud(getHudLogicalWidth(this.scale));
     this.stageView?.sync(snapshot.characters.map(character => character.x), snapshot.characters.map(character => character.y));
     snapshot.characters.forEach((character, index) => {
       this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined);
     });
     this.projectileView?.sync(snapshot.projectiles,snapshot.explosions);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
-    this.hud?.update(snapshot, LOGICAL_VIEW.width);
+    this.hud?.update(snapshot, this.hudWidth);
     if (this.arcadeInfo) {
       const count = arcadeOpponents(this.selectedFighter.id).length;
       let label = `ARCADE · LUTA ${this.arcadeIndex + 1}/${count} · COMPUTADOR`;

@@ -74,10 +74,10 @@ it('starts the cinematic when a buffered ultimate becomes available as a missed 
 
 it('freezes the round clock and entire world for 150 ticks of activation, for any ultimate',()=>{
   expect(ULTIMATE_ACTIVATION_FRAMES).toBe(150);
-  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:100}};
+  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:200}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
-  expect(sim.snapshot().characters[0].rage).toBe(100);
+  expect(sim.snapshot().characters[0].rage).toBe(200);
   const motion=shoto.moves.find(m=>m.id==='wine-ultimate')!.input.sequence!;
   motion.slice(0,-1).forEach(d=>step(sim,input(d)));
   const before=sim.snapshot();step(sim,input('F',['1','2']),0,input('UF',['4']));
@@ -153,7 +153,7 @@ it('reset clears activation, confirmations, lighter, knockdown and explosion sta
 });
 
 it('keeps the KO launch alive until the defender reaches the floor',()=>{
-  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:100}};
+  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:200}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,80);command(sim,'wine-ultimate');contact(sim,'explosion');wait(sim,6);
   expect(sim.snapshot().phase).toBe('fight');
@@ -319,4 +319,77 @@ it.each([0,1])('holds both players from bottle confirmation through lighter impa
   sim.resetMatch();sim.fillTrainingRage();command(sim,'wine-ultimate',player);contact(sim,'confirm',player);
   sim.resetMatch();const reset=sim.snapshot().characters[player].x;step(sim,input('F'),player);
   expect(sim.snapshot().characters[player].x).not.toBe(reset);
+});
+
+it.each([0,1])('allows one ultimate per fighter across rounds and restores it on match reset: player %i', player => {
+  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:200}};
+  const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
+  command(sim,'light-punch',player);wait(sim,80);
+  expect(sim.snapshot().characters[player].rage).toBe(200);
+  command(sim,'wine-ultimate',player);
+  expect(sim.snapshot().characters[player].ultimateUsed).toBe(true);
+  expect(sim.snapshot().characters[1-player].ultimateUsed).toBe(false);
+  contact(sim,'explosion',player);
+  for(let i=0;i<400 && sim.snapshot().round===1;i++)step(sim);
+  expect(sim.snapshot()).toMatchObject({round:2,phase:'fight'});
+  expect(sim.snapshot().characters[player].ultimateUsed).toBe(true);
+  command(sim,'light-punch',player);wait(sim,80);
+  expect(sim.snapshot().characters[player].rage).toBe(0);
+  command(sim,'wine-ultimate',player);wait(sim,20);
+  expect(sim.snapshot().ultimateActivation).toBeUndefined();
+  expect(sim.snapshot().characters[player].attack?.moveId).not.toBe('wine-ultimate');
+  sim.resetMatch();
+  expect(sim.snapshot().characters.every(c=>!c.ultimateUsed)).toBe(true);
+});
+
+
+it.each([0,1])('refills rage and permits repeated ultimates in training: player %i', player => {
+  const sim=create(56);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
+  expect(sim.snapshot().characters[player]).toMatchObject({rage:0,ultimateUsed:false});
+  wait(sim,350);sim.fillTrainingRage();
+  expect(sim.snapshot().characters[player].rage).toBe(200);
+  command(sim,'wine-ultimate',player);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
+});
+
+it('preserves each fighter’s accumulated rage between rounds and clears it on match reset', () => {
+  const shortRound={...config,match:{...config.match,roundDurationFrames:90}};
+  const sim=new Simulation(shortRound,undefined,{initialDistance:56});
+  command(sim,'light-punch');
+  for(let i=0;i<200 && sim.snapshot().phase==='fight';i++)step(sim);
+  const before=sim.snapshot();
+  expect(before.phase).toBe('round-over');
+  expect(before.characters.map(c=>c.rage)).toEqual([10,15]);
+  for(let i=0;i<300 && sim.snapshot().round===1;i++)step(sim);
+  expect(sim.snapshot().round).toBe(2);
+  expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([10,15]);
+  sim.resetMatch();
+  expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
+});
+
+it.each([0,1])('uses the shortcut with full cinematic and the same resource rules: player %i', player => {
+  const sim=create(100);
+  step(sim,{...N,ultimate:true},player);
+  expect(sim.snapshot().ultimateActivation).toBeUndefined();
+  step(sim,N,player);sim.fillTrainingRage();
+  step(sim,{...N,ultimate:true},player);
+  expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
+  expect(sim.snapshot().characters[player].rage).toBe(0);
+  expect(sim.snapshot().projectiles).toHaveLength(0);
+});
+
+
+it.each([0,1])('starts the shortcut cinematic after two punches in a combo: player %i',player=>{
+  const sim=create(56);sim.fillTrainingRage();
+  for(let punch=0;punch<2;punch++){
+    step(sim,input('N',['1']),player);
+    for(let tick=0;tick<80;tick++){
+      if(sim.snapshot().hitEvents.some(e=>e.attackerId===`player-${player+1}` && e.moveId==='light-punch'))break;
+      step(sim,N,player);
+    }
+  }
+  step(sim,{...N,ultimate:true},player);
+  for(let tick=0;tick<30 && !sim.snapshot().ultimateActivation;tick++)step(sim,N,player);
+  expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
+  expect(sim.snapshot().projectiles).toHaveLength(0);
 });
