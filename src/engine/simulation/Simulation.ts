@@ -272,9 +272,9 @@ export class Simulation {
           if (character.mode === 'knockdown' && juggleRules) {
             character.wakeupInvulnerabilityFrames = character.remainingStateFrames + juggleRules.wakeupInvulnerabilityFrames;
           }
-          // Air basics end at landing; rising grounded specials retain their own recovery.
+          // Air basics end at landing except after a block; rising grounded specials retain recovery.
           const landingMove = character.attack ? this.move(index, character.attack.moveId) : undefined;
-          if (landingMove?.airborne) {
+          if (landingMove?.airborne && character.attack?.hitOutcome !== 'block') {
             character.attack = undefined; character.chain = undefined; character.mode = 'neutral';
           }
           if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';
@@ -498,7 +498,7 @@ export class Simulation {
       const previousMove = this.move(index, previous.moveId)!;
       return previous.elapsedFrames >= previousMove.startup + previousMove.activeFrames && this.recipePrefix(index, chain);
     }
-    if (previous.hitOutcome === 'block') return this.recipePrefix(index, chain);
+    if (previous.hitOutcome === 'block') return false;
     if (previous.hitOutcome !== 'hit' || !character.hitSequence || !chainStrike(move)) return false;
     const previousMove = this.move(index, previous.moveId)!;
     if (!chainStrike(previousMove)) return false;
