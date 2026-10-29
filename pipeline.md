@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Treino, final forte e atalho de ultimate — 2026-10-29
+
+Na branch `codex/feature-tela-adaptavel`, o treino permite recuperar rage e repetir ultimate; os modos de combate mantêm o limite de uma ultimate e a rage bloqueada após uso. Combo fechado forte confirmado encerra a sequência até sua recuperação, sem impedir a continuação dos levantamentos. Atalho configurável de ultimate para cada jogador: U no P1 e Num5 no P2; o comando original continua disponível e ambos seguem as mesmas regras de rage e ativação. Instalação reproduzível, 348 testes em 39 arquivos, build e diff aprovados. Conferidos no jogo os atalhos configuráveis e a ativação com U; regressões cobrem repetição no treino, encerramento do combo forte, atalho após socos, os dois jogadores e migração dos controles existentes. Envio e CI a conferir.
+
 ## Rage entre rounds e apresentação — 2026-10-29
 
 Na branch `codex/feature-tela-adaptavel`, a rage de cada personagem persiste entre rounds e é zerada ao reiniciar a partida. Após ultimate, continua sem recarregar. Barra de rage recebeu moldura angular, brilho e indicador de carga completa; título destacado no menu recebeu tipografia mais pesada. Instalação reproduzível, 340 testes em 39 arquivos, build e diff aprovados. Conferidos no navegador o destaque de Configurações e a barra no treino; regressão verifica a rage de ambos os lutadores entre rounds e após reset. Aprovação visual pendente; envio e CI a conferir.

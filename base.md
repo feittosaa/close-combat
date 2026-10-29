@@ -51,7 +51,7 @@ A composição lógica de combate é 1024 × 576, com projeção uniforme; a sa�
 
 O piso, os lutadores e os cenários compartilham o mesmo espaço. O limite lateral da visão deve preservar ambos os lados sem arrastar um personagem parado. Mudanças autorizadas no tamanho dos lutadores exigem revisão proporcional de corpo, hurtboxes, hitboxes e seus deslocamentos nos dados de cada personagem. As caixas físicas não são inferidas automaticamente de silhuetas ou do desenho do cenário.
 
-Cada personagem pode ativar uma ultimate uma vez por combate; o limite persiste entre rounds e reinicia em uma nova partida. A rage acumulada permanece entre rounds; após a ativação, o personagem deixa de acumular rage até a próxima partida.
+Fora do treino, cada personagem pode ativar uma ultimate uma vez por combate; o limite persiste entre rounds e reinicia em uma nova partida. A rage acumulada permanece entre rounds; após a ativação, o personagem deixa de acumular rage até a próxima partida. No treino, ela pode voltar a encher e a ultimate pode ser repetida. A ultimate também pode ser acionada por uma tecla configurável, obedecendo às mesmas condições e animação do comando original.
 
 O HUD deve ser minimalista: barras de vida contínuas próximas ao topo, sem divisões verticais ou molduras grandes. Mostrar dados reais; detalhes de diagnóstico pertencem às ferramentas de treino. Animações decorativas respeitam movimento reduzido e não prejudicam leitura ou foco.
 
@@ -62,6 +62,8 @@ Acertos e bloqueios confirmados recebem uma micro pausa compartilhada na pose de
 Em sequências abertas de golpes confirmados, ataques fortes impedem o retorno a ataques fracos até o defensor recuperar o controle. Repetições pertencem às receitas autoradas. Receitas fechadas podem continuar mesmo sem contato, depois de concluir a atividade de cada golpe. Golpes bloqueados ou que erram não liberam continuação aberta. Quando o último golpe acertado mantém o alvo no chão, os dois recuperam o controle juntos, sem recuperação exposta do atacante. Levantamentos confirmados usam recuperação mais curta e reiniciam a sequência do atacante, liberando golpes fracos novamente para continuar o combo. Lançamentos preservam a trajetória e a recuperação aérea protegida; capturas cinematográficas mantêm suas regras próprias.
 
 Chutes aéreos que erram e aterrissam durante a recuperação mantêm o atacante vulnerável até o fim dessa recuperação.
+
+Combos fechados de socos fortes confirmados terminam sem aceitar outros golpes até o fim da recuperação; levantamentos preservam sua regra de continuação.
 
 Uma continuação de golpes iniciada enquanto o alvo ainda reage mantém sua vulnerabilidade durante o preparo e a atividade do próximo golpe. Se a sequência de acertos terminar no chão, ambos recuperam o controle juntos; os tempos de recuperação de cada receita são definidos nos dados do personagem.
 

@@ -17,12 +17,12 @@ describe('controles configuráveis e apresentação',()=>{
   });
   it('persiste a tecla, usa a mesma no teclado e atualiza os rótulos',()=>{
     const layouts:[ReturnType<typeof getPlayerLayout>,ReturnType<typeof getPlayerLayout>]=[getPlayerLayout(0),getPlayerLayout(1)];
-    layouts[0].buttons['2']='KeyU';let saved='';
+    layouts[0].buttons['2']='KeyO';let saved='';
     expect(saveControls(layouts,{setItem:(_key,value)=>{saved=value;}})).toBe(true);
-    expect(loadControls({getItem:()=>saved})[0].buttons['2']).toBe('KeyU');
-    expect(formatCommand('df+2')).toBe('↘+U');
+    expect(loadControls({getItem:()=>saved})[0].buttons['2']).toBe('KeyO');
+    expect(formatCommand('df+2')).toBe('↘+O');
     const target=new EventTarget();const keyboard=new KeyboardInput(getPlayerLayout(),target as Window);
-    const event=new Event('keydown');Object.defineProperty(event,'code',{value:'KeyU'});target.dispatchEvent(event);
+    const event=new Event('keydown');Object.defineProperty(event,'code',{value:'KeyO'});target.dispatchEvent(event);
     expect([...keyboard.read().buttons]).toEqual(['2']);keyboard.destroy();
   });
   it('recusa teclas repetidas e atalhos reservados e ignora armazenamento inválido',()=>{
@@ -73,4 +73,16 @@ it('preserva proporção, piso projetado e limites do cenário do contato até a
     expect(frame.zoom).toBe(1.6);
     expect(frame.scrollY).toBeCloseTo(75);
   }
+});
+
+it('migrates existing player mappings without overwriting keys and validates ultimate shortcuts',()=>{
+  const original=[getPlayerLayout(0),getPlayerLayout(1)];
+  const old=original.map(({ultimate: _ultimate,...layout})=>layout);
+  old[0].buttons['2']='KeyU';
+  const migrated=loadControls({getItem:()=>JSON.stringify(old)});
+  expect(migrated[0].buttons['2']).toBe('KeyU');
+  expect(migrated[0].ultimate).not.toBe('KeyU');
+  expect(validateLayouts(migrated)).toBe(true);
+  migrated[0].ultimate=migrated[1].ultimate;
+  expect(validateLayouts(migrated)).toBe(false);
 });
