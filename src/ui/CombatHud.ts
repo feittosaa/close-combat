@@ -37,7 +37,7 @@ export class CombatHud {
     this.healthGraphics=scene.add.graphics();
     this.healthLabels=[scene.add.text(this.sidePadding+this.barWidth,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
       scene.add.text(width-this.sidePadding-this.barWidth,33,'',hudText(10,false,HUD.goldText))];
-    this.rageLabels=[scene.add.text(30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,false,HUD.goldText)),scene.add.text(width-30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,false,HUD.goldText)).setOrigin(1,0)];
+    this.rageLabels=[scene.add.text(30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)),scene.add.text(width-30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)).setOrigin(1,0)];
     this.modeLabels=[scene.add.text(30,49,'',hudText(10,false,HUD.muted)),
       scene.add.text(width-30,49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
     this.timer=scene.add.text(width/2,6,'99',hudText(30,true)).setOrigin(.5,0);
@@ -77,9 +77,17 @@ export class CombatHud {
       for(let round=0;round<2;round++)drawDiamond(g,index===0?width/2-70+round*16:width/2+70-round*16,19,3,HUD.lightGold,snapshot.roundWins[index]>round);
       if(character.maxRage>0){
         const rageWidth=260, rageX=index===0?30:width-30-rageWidth, rageY=heightForRage(this.training);
-        const fill=healthBarFill(character.rage,character.maxRage,rageX,rageWidth,index===1);
-        g.fillStyle(HUD.rail).fillRect(rageX,rageY,rageWidth,10);
-        g.fillStyle(character.rage>=character.maxRage?HUD.lightGold:HUD.players[index]).fillRect(fill.x,rageY,fill.width,10);
+        const outline = [{x:rageX+5,y:rageY-2},{x:rageX+rageWidth,y:rageY-2},
+          {x:rageX+rageWidth-5,y:rageY+12},{x:rageX,y:rageY+12}];
+        g.fillStyle(HUD.ink,.95).fillPoints(outline,true);
+        g.lineStyle(1,HUD.gold,.85).strokePoints(outline,true);
+        g.fillStyle(HUD.rail).fillRect(rageX+5,rageY+1,rageWidth-10,8);
+        const inner=healthBarFill(character.rage,character.maxRage,rageX+5,rageWidth-10,index===1);
+        if (inner.width > 0) {
+          g.fillStyle(character.rage>=character.maxRage?HUD.lightGold:HUD.players[index]).fillRect(inner.x,rageY+1,inner.width,8);
+          g.fillStyle(HUD.lightGold,.5).fillRect(inner.x,rageY+1,inner.width,1);
+        }
+        drawDiamond(g,index===0?rageX+rageWidth+7:rageX-7,rageY+5,4,HUD.gold,!character.ultimateUsed && character.rage>=character.maxRage);
       }
       this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}${character.ultimateUsed?' · USADA':character.rage>=character.maxRage?' · PRONTA':''}`:'');
       this.healthLabels[index]?.setText(`${Math.max(0,character.health)} / ${character.maxHealth}`);

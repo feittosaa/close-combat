@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Rage entre rounds e apresentação — 2026-10-29
+
+Na branch `codex/feature-tela-adaptavel`, a rage de cada personagem persiste entre rounds e é zerada ao reiniciar a partida. Após ultimate, continua sem recarregar. Barra de rage recebeu moldura angular, brilho e indicador de carga completa; título destacado no menu recebeu tipografia mais pesada. Instalação reproduzível, 340 testes em 39 arquivos, build e diff aprovados. Conferidos no navegador o destaque de Configurações e a barra no treino; regressão verifica a rage de ambos os lutadores entre rounds e após reset. Aprovação visual pendente; envio e CI a conferir.
+
 ## Menu, HUD e rage — 2026-10-29
 
 Na branch `codex/feature-tela-adaptavel`, o destaque do menu usa tamanho uniforme e impede quebra de linha. HUD ocupa a largura disponível: vida, rage e entradas de treino ficam nas extremidades, mantendo a escala; barra de rage maior junto à parte inferior. Shoto passa de 100 para 200 de capacidade e custo, com ganhos por contato inalterados. Após usar a ultimate, não acumula mais rage naquela partida; o limite é restabelecido ao reiniciar. Barras de vida avançam em direção ao cronômetro. Cada jogador pode ativar uma ultimate por partida, inclusive ao trocar de round; reiniciar a partida libera nova ativação. No treino, reiniciar também libera outra ativação. Instalação reproduzível, 339 testes em 39 arquivos, build e diff aprovados. Conferidos no jogo o destaque de Configurações, as barras de vida e a rage 0/200 no treino; regressões cobrem HUD largo, uso da ultimate entre rounds e bloqueio de recarga nos dois lados, inclusive no treino. Aprovação visual pendente; envio e CI em andamento.

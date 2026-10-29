@@ -72,9 +72,9 @@ it('anchors health and larger bottom rage rails to both sides of a wide HUD',()=
   hud.update(snapshot,width);
   expect(commands).toContainEqual(['fillRect',28,10,564.5,17]);
   expect(commands).toContainEqual(['fillRect',width-592.5,10,564.5,17]);
-  expect(commands).toContainEqual(['fillRect',30,537,260,10]);
-  expect(commands).toContainEqual(['fillRect',width-290,537,260,10]);
-  expect(commands).toContainEqual(['fillRect',30,537,130,10]);
-  expect(commands).toContainEqual(['fillRect',width-160,537,130,10]);
+  expect(commands).toContainEqual(['fillRect',35,538,250,8]);
+  expect(commands).toContainEqual(['fillRect',width-285,538,250,8]);
+  expect(commands).toContainEqual(['fillRect',35,538,125,8]);
+  expect(commands).toContainEqual(['fillRect',width-160,538,125,8]);
   hud.destroy();
 });

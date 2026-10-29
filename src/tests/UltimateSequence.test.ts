@@ -353,3 +353,18 @@ it.each([0,1])('does not refill rage after use, even through training refill and
   sim.resetMatch();sim.fillTrainingRage();
   expect(sim.snapshot().characters[player].rage).toBe(200);
 });
+
+it('preserves each fighter’s accumulated rage between rounds and clears it on match reset', () => {
+  const shortRound={...config,match:{...config.match,roundDurationFrames:90}};
+  const sim=new Simulation(shortRound,undefined,{initialDistance:56});
+  command(sim,'light-punch');
+  for(let i=0;i<200 && sim.snapshot().phase==='fight';i++)step(sim);
+  const before=sim.snapshot();
+  expect(before.phase).toBe('round-over');
+  expect(before.characters.map(c=>c.rage)).toEqual([10,15]);
+  for(let i=0;i<300 && sim.snapshot().round===1;i++)step(sim);
+  expect(sim.snapshot().round).toBe(2);
+  expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([10,15]);
+  sim.resetMatch();
+  expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
+});

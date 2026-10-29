@@ -105,7 +105,7 @@ export class Simulation {
     if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
     this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
     this.ultimateUsed = [false, false];
-    this.resetRound();
+    this.resetRound(false);
   }
   fillTrainingRage(): void {
     if (this.options.training) this.characters.forEach(character => { if (!character.ultimateUsed) character.rage = character.maxRage; });
@@ -125,8 +125,10 @@ export class Simulation {
       grounded: true, crouching: false, hitFlashFrames: 0,
     })) as [CharacterState, CharacterState];
   }
-  private resetRound(): void {
-    this.clearInputHistory(); this.characters = this.createCharacters(); this.roundFramesRemaining = this.config.match.roundDurationFrames;
+  private resetRound(preserveRage = true): void {
+    const rage = preserveRage ? this.characters.map(character => character.rage) : [0, 0];
+    this.clearInputHistory(); this.characters = this.createCharacters();
+    this.characters.forEach((character, index) => { character.rage = rage[index]; }); this.roundFramesRemaining = this.config.match.roundDurationFrames;
     this.roundWinnerId = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
     this.lastHitEvents = []; this.recentContacts = []; this.quietFrames = 0;
     this.hitstopFramesRemaining = 0; this.ultimateActivation = undefined; this.pendingLighters = []; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
