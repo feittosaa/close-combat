@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { FighterSelection } from '../ui/FighterSelection';
 
 describe('fighter selection', () => {
@@ -45,4 +45,22 @@ describe('fighter selection', () => {
   it('requires only P1 confirmation in a solo mode', () => {
     expect(new FighterSelection(3).confirm(0, false)).toBe(true);
   });
+  it('navigates to random and resolves it only when the player confirms', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.8);
+    try {
+      const selection = new FighterSelection(3);
+      selection.move(0, -1);
+      expect(selection.random[0]).toBe(true);
+      expect(selection.indices[0]).toBe(0);
+      expect(selection.confirm(0, true)).toBe(false);
+      expect(selection.indices[0]).toBe(2);
+      expect(selection.random[0]).toBe(false);
+      expect(selection.ready).toEqual([true, false]);
+      selection.selectRandom(1);
+      selection.move(1, 1);
+      expect(selection.random[1]).toBe(false);
+      expect(selection.indices[1]).toBe(0);
+    } finally { random.mockRestore(); }
+  });
+
 });

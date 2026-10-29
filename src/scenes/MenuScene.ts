@@ -63,10 +63,10 @@ export class MenuScene extends Phaser.Scene {
       const p1Direction = key.toLowerCase() === 'a' ? -1 : key.toLowerCase() === 'd' ? 1 : 0;
       const arrowDirection = ['ArrowLeft', 'ArrowUp'].includes(key) ? -1 : ['ArrowRight', 'ArrowDown'].includes(key) ? 1 : 0;
       if (versus && p1Direction) {
-        this.selection.select(0, this.selection.indices[0] + p1Direction); this.render();
+        this.selection.move(0, p1Direction as -1 | 1); this.render();
       } else if (arrowDirection) {
         const player = versus ? 1 : 0;
-        this.selection.select(player, this.selection.indices[player] + arrowDirection); this.render();
+        this.selection.move(player, arrowDirection as -1 | 1); this.render();
       } else if (versus && key.toLowerCase() === 'j') this.confirmFighter(0);
       else if (versus && event.code === 'Numpad1') this.confirmFighter(1);
       else if (key === 'Enter') this.confirmFighter();

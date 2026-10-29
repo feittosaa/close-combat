@@ -36,19 +36,32 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
   const grid = node('div', 'arena-roster'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'Personagens disponíveis');
   fighters.forEach((entry, index) => {
     const tile = button('', 'arena-portrait', () => { selection.select(selection.activePlayer, index); options.refresh(); });
-    tile.setAttribute('aria-label', entry.name); tile.setAttribute('aria-pressed', String(index === selection.indices[selection.activePlayer]));
+    tile.setAttribute('aria-label', entry.name); tile.setAttribute('aria-pressed', String(!selection.random[selection.activePlayer] && index === selection.indices[selection.activePlayer]));
     tile.append(portrait('280 65 180 180'), node('span', '', entry.name));
     if (versus) {
       const cursors = node('div', 'arena-cursors');
-      for (const player of [0, 1] as const) if (selection.indices[player] === index) cursors.append(node('b', `cursor-p${player + 1}`, `P${player + 1}`));
+      for (const player of [0, 1] as const) if (!selection.random[player] && selection.indices[player] === index) cursors.append(node('b', `cursor-p${player + 1}`, `P${player + 1}`));
       tile.append(cursors);
     }
     grid.append(tile);
   });
+  for (let index = fighters.length; index < 9; index++) {
+    const empty = node('div', 'arena-empty');
+    empty.setAttribute('aria-hidden', 'true');
+    grid.append(empty);
+  }
+  const random = button('?', 'arena-random', () => { selection.selectRandom(selection.activePlayer); options.refresh(); });
+  random.setAttribute('aria-label', 'Personagem aleatório');
+  random.setAttribute('aria-pressed', String(selection.random[selection.activePlayer]));
+  if (versus) {
+    const cursors = node('div', 'arena-cursors');
+    for (const player of [0, 1] as const) if (selection.random[player]) cursors.append(node('b', `cursor-p${player + 1}`, `P${player + 1}`));
+    random.append(cursors);
+  }
   const status = node('p', 'arena-opponent', versus
     ? `P1 ${selection.ready[0] ? 'PRONTO' : 'ESCOLHENDO'} · P2 ${selection.ready[1] ? 'PRONTO' : 'ESCOLHENDO'}`
     : `P2 · ${options.opponent.name} · ${options.modeTitle}`);
   status.setAttribute('role', 'status');
-  panel.append(grid, status, button(versus ? `CONFIRMAR P${selection.activePlayer + 1}  →` : 'CONFIRMAR PERSONAGEM  →', 'arena-confirm', options.confirm), button('← VOLTAR', 'arena-back', options.back));
+  panel.append(grid, random, status, button(versus ? `CONFIRMAR P${selection.activePlayer + 1}  →` : 'CONFIRMAR PERSONAGEM  →', 'arena-confirm', options.confirm), button('← VOLTAR', 'arena-back', options.back));
   root.append(panel);
 }
