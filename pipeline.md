@@ -2,7 +2,7 @@
 
 ## Integração de tela e combate — 2026-10-29
 
-Por pedido explícito, `codex/feature-tela-adaptavel` foi integrada em `development`, incluindo tela adaptável, HUD, rage, atalho da ultimate e escolha do golpe forte. A validação local passou com 352 testes, build e diff; [CI da branch aprovada](https://github.com/feittosaa/close-combat/actions/runs/40920303484). Integração remota e sua CI em andamento. `sprites/shoto` continua separada.
+Por pedido explícito, `codex/feature-tela-adaptavel` foi integrada em `development`, incluindo tela adaptável, HUD, rage, atalho da ultimate e escolha do golpe forte. A validação local passou com 352 testes, build e diff; [CI da branch aprovada](https://github.com/feittosaa/close-combat/actions/runs/40920303484). Integração enviada em `5813bf3`, com [CI de development aprovada](https://github.com/feittosaa/close-combat/actions/runs/40920495118). Após conferir ancestralidade e ausência de outros checkouts e PRs abertos, a branch integrada foi encerrada localmente e no remoto. `sprites/shoto` continua separada.
 
 ## Escolha do golpe forte — 2026-10-29
 
