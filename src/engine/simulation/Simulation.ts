@@ -54,6 +54,7 @@ export class Simulation {
   private frame = 0;
   private elapsedFrames = 0;
   private hitstopFramesRemaining = 0;
+  private ultimateUsed: [boolean, boolean] = [false, false];
   private round = 1;
   private phase: SimulationSnapshot['phase'] = 'fight';
   private roundWins: [number, number] = [0, 0];
@@ -103,6 +104,7 @@ export class Simulation {
   resetMatch(distance?: number): void {
     if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
     this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
+    this.ultimateUsed = [false, false];
     this.resetRound();
   }
   fillTrainingRage(): void {
@@ -118,7 +120,7 @@ export class Simulation {
     return this.definitions.map((fighter, index) => ({
       characterId: `player-${index + 1}`, fighterId: fighter.id, collision: structuredClone(fighter.collision),
       x: clamp(center + (index === 0 ? -1 : 1) * distance / 2, left + fighter.collision.bodyWidth / 2, right - fighter.collision.bodyWidth / 2),
-      y: floorY, facing: index === 0 ? 'right' : 'left', health: fighter.maxHealth, maxHealth: fighter.maxHealth, rage: 0, maxRage: fighter.rage?.maximum ?? 0,
+      y: floorY, facing: index === 0 ? 'right' : 'left', health: fighter.maxHealth, maxHealth: fighter.maxHealth, rage: 0, maxRage: fighter.rage?.maximum ?? 0, ultimateUsed: this.ultimateUsed[index],
       mode: 'neutral', stateStartedFrame: this.frame, remainingStateFrames: 0, verticalVelocity: 0,
       grounded: true, crouching: false, hitFlashFrames: 0,
     })) as [CharacterState, CharacterState];
@@ -465,6 +467,7 @@ export class Simulation {
         character.chain = this.recipePrefix(index, chain) ? chain : [move.id];
         if (character.hitSequence && heavyStrike(move)) character.hitSequence.heavy = true;
         character.rage = Math.max(0, character.rage - (move.rageCost ?? 0));
+        if (move.category === 'ultimate') { this.ultimateUsed[index] = true; character.ultimateUsed = true; }
         character.attack = { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false,
           ...(move.category === 'throw' ? { throwDirection: this.pendingCommands[index]?.throwDirection ?? 'forward' } : {}) };
         character.crouching = Boolean(move.crouching); this.dashFrames[index] = 0;
@@ -496,7 +499,7 @@ export class Simulation {
   }
   private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
     if (this.heldByUltimate(character)) return false;
-    if ((move.rageCost ?? 0) > character.rage) return false;
+    if ((move.rageCost ?? 0) > character.rage || (move.category === 'ultimate' && character.ultimateUsed)) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;
     if (character.hitSequence?.heavy && !heavyStrike(move)) return false;

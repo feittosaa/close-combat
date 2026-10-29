@@ -63,3 +63,18 @@ it('treino usa teclas remapeadas e mantém dados de contato e pausa legíveis',(
   expect(texts.some(t=>t.value.includes('FRAME 0')&&t.value.includes('DISTÂNCIA'))).toBe(true);
   hud.destroy();
 });
+it('anchors health and larger bottom rage rails to both sides of a wide HUD',()=>{
+  const {scene,commands}=mockScene();
+  const width=1365;
+  const hud=new CombatHud(scene,width);
+  const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
+  snapshot.characters[0].rage=75;snapshot.characters[1].rage=75;
+  hud.update(snapshot,width);
+  expect(commands).toContainEqual(['fillRect',28,10,360,17]);
+  expect(commands).toContainEqual(['fillRect',width-388,10,360,17]);
+  expect(commands).toContainEqual(['fillRect',30,537,260,10]);
+  expect(commands).toContainEqual(['fillRect',width-290,537,260,10]);
+  expect(commands).toContainEqual(['fillRect',30,537,130,10]);
+  expect(commands).toContainEqual(['fillRect',width-160,537,130,10]);
+  hud.destroy();
+});

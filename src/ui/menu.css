@@ -83,7 +83,7 @@
   padding: 1.5% 7% 1.5% 9%; box-sizing: border-box;
 }
 .arena-feature-number { font: 900 1cqw Arial,sans-serif; letter-spacing: .12em; color: #a3382e; }
-.arena-feature-title { display: block; max-width: 100%; margin: .8cqw 0; font: 900 clamp(20px,7cqw,110px)/.91 Arial,sans-serif; letter-spacing: -.07em; overflow-wrap: anywhere; }
+.arena-feature-title { display: block; max-width: 100%; margin: .8cqw 0; font: 900 clamp(12px,2.5cqw,44px)/1 Arial,sans-serif; letter-spacing: -.04em; white-space: nowrap; }
 .arena-feature-hint { max-width: 75%; font: 700 1cqw/1.3 Arial,sans-serif; }
 .arena-home-hero { position: absolute; z-index: 3; right: -3%; bottom: 2%; width: 33%; height: 88%; pointer-events: none; }
 .arena-home-hero::before { content: ''; position: absolute; inset: 9% -20% 6% 0; background: #b64435; clip-path: polygon(15% 0,100% 11%,100% 86%,0 100%); opacity: .85; }
@@ -93,4 +93,3 @@
 @media (prefers-reduced-motion: reduce) { .arena-home .arena-mode { transition: none; } }
 
 .arena-home .arena-mode-hint { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-.arena-feature-title.long { font-size: 3.3cqw; letter-spacing: -.055em; }

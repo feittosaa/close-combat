@@ -126,11 +126,11 @@ describe('manual Shoto catalogue', () => {
   });
 
   it('builds rage on real contacts, requires a full bar and consumes it on ultimate startup', () => {
-    const fastCharge={...shoto,rage:{...shoto.rage!,onHit:100}};
+    const fastCharge={...shoto,rage:{...shoto.rage!,onHit:150}};
     const noRage=create(300);command(noRage,move('wine-ultimate'));
     expect(noRage.snapshot().characters[0].attack).toBeUndefined();
     const sim=create(56,fastCharge);command(sim,move('light-punch'));untilContact(sim);
-    expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([100,15]);wait(sim);
+    expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([150,15]);wait(sim);
     command(sim,move('wine-ultimate'));
     expect(sim.snapshot().characters[0]).toMatchObject({rage:0,attack:{moveId:'wine-ultimate'}});
     untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'wine-ultimate',stage:'confirm',damage:0});
@@ -178,7 +178,7 @@ describe('manual Shoto catalogue', () => {
     const fight=new Simulation(config);fight.fillTrainingRage();
     expect(fight.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
     const practice=create();practice.fillTrainingRage();
-    expect(practice.snapshot().characters.map(c=>c.rage)).toEqual([100,100]);
+    expect(practice.snapshot().characters.map(c=>c.rage)).toEqual([150,150]);
     const miss=create(350);command(miss,move('heavy-punch'));wait(miss);
     expect(miss.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
     const blocked=create();command(blocked,move('light-punch'));untilContact(blocked,0,input('B'));

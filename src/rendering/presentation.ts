@@ -21,7 +21,12 @@ export function getUiViewport(output: { width: number; height: number }) {
   const scale = Math.min(output.width / LOGICAL_VIEW.width, output.height / LOGICAL_VIEW.height);
   const width = LOGICAL_VIEW.width * scale;
   const height = LOGICAL_VIEW.height * scale;
-  return { x: (output.width - width) / 2, y: (output.height - height) / 2, width, height };
+  return { x: 0, y: (output.height - height) / 2, width: Math.max(width, output.width), height };
+}
+
+export function getHudLogicalWidth(output: { width: number; height: number }): number {
+  const scale = Math.min(output.width / LOGICAL_VIEW.width, output.height / LOGICAL_VIEW.height);
+  return output.width / scale;
 }
 
 export function configureUiCamera(camera: Phaser.Cameras.Scene2D.Camera, output: { width: number; height: number }): void {

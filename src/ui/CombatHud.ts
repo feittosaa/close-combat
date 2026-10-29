@@ -36,7 +36,7 @@ export class CombatHud {
     this.healthGraphics=scene.add.graphics();
     this.healthLabels=[scene.add.text(388,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
       scene.add.text(width-388,33,'',hudText(10,false,HUD.goldText))];
-    this.rageLabels=[scene.add.text(30,72,'',hudText(9,false,HUD.goldText)),scene.add.text(width-30,72,'',hudText(9,false,HUD.goldText)).setOrigin(1,0)];
+    this.rageLabels=[scene.add.text(30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,false,HUD.goldText)),scene.add.text(width-30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,false,HUD.goldText)).setOrigin(1,0)];
     this.modeLabels=[scene.add.text(30,49,'',hudText(10,false,HUD.muted)),
       scene.add.text(width-30,49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
     this.timer=scene.add.text(width/2,6,'99',hudText(30,true)).setOrigin(.5,0);
@@ -75,11 +75,12 @@ export class CombatHud {
       g.lineStyle(1,HUD.gold,.9).strokeRect(x,10,this.barWidth,17);
       for(let round=0;round<2;round++)drawDiamond(g,index===0?420+round*16:width-420-round*16,19,3,HUD.lightGold,snapshot.roundWins[index]>round);
       if(character.maxRage>0){
-        const rageX=index===0?30:width-180;
-        g.fillStyle(HUD.rail).fillRect(rageX,64,150,4);
-        g.fillStyle(character.rage>=character.maxRage?HUD.lightGold:HUD.players[index]).fillRect(rageX,64,150*character.rage/character.maxRage,4);
+        const rageWidth=260, rageX=index===0?30:width-30-rageWidth, rageY=heightForRage(this.training);
+        const fill=healthBarFill(character.rage,character.maxRage,rageX,rageWidth,index===1);
+        g.fillStyle(HUD.rail).fillRect(rageX,rageY,rageWidth,10);
+        g.fillStyle(character.rage>=character.maxRage?HUD.lightGold:HUD.players[index]).fillRect(fill.x,rageY,fill.width,10);
       }
-      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}${character.rage>=character.maxRage?' · PRONTA':''}`:'');
+      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}${character.ultimateUsed?' · USADA':character.rage>=character.maxRage?' · PRONTA':''}`:'');
       this.healthLabels[index]?.setText(`${Math.max(0,character.health)} / ${character.maxHealth}`);
       this.modeLabels[index]?.setText(this.training?MODE_LABELS[character.mode]:index===0?'JOGADOR 1':'JOGADOR 2')
         .setColor(character.mode==='hitstun'?'#f09a84':character.mode==='blockstun'||character.mode==='blocking'?'#95d7d0':HUD.muted);
@@ -87,3 +88,5 @@ export class CombatHud {
   }
   destroy():void{this.root.destroy(true);}
 }
+
+function heightForRage(training: boolean): number { return LOGICAL_VIEW.height - (training ? 122 : 39); }
