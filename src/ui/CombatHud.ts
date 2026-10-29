@@ -19,10 +19,11 @@ export class CombatHud {
   private readonly pauseHint: Phaser.GameObjects.Text;
   private lastImpactLabel = '';
   private lastImpactFrame = Number.NEGATIVE_INFINITY;
-  private readonly barWidth = 360;
+  private readonly barWidth: number;
   private readonly sidePadding = 28;
 
   constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = ['JOGADOR 1','JOGADOR 2'], stageName = '', private readonly training = false, private readonly practiceLabel = 'TREINO LIVRE') {
+    this.barWidth = Math.max(360, width / 2 - this.sidePadding - 90);
     const decoration=scene.add.graphics();
     // The timer sits in a small angled ink badge; health rails remain continuous.
     decoration.fillStyle(HUD.ink,.92).fillPoints([
@@ -34,8 +35,8 @@ export class CombatHud {
     const labels=[scene.add.text(28,31,`P1  /  ${fighterNames[0].toUpperCase()}`,hudText(13,true)),
       scene.add.text(width-28,31,`P2  /  ${fighterNames[1].toUpperCase()}`,hudText(13,true)).setOrigin(1,0)];
     this.healthGraphics=scene.add.graphics();
-    this.healthLabels=[scene.add.text(388,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
-      scene.add.text(width-388,33,'',hudText(10,false,HUD.goldText))];
+    this.healthLabels=[scene.add.text(this.sidePadding+this.barWidth,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
+      scene.add.text(width-this.sidePadding-this.barWidth,33,'',hudText(10,false,HUD.goldText))];
     this.rageLabels=[scene.add.text(30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,false,HUD.goldText)),scene.add.text(width-30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,false,HUD.goldText)).setOrigin(1,0)];
     this.modeLabels=[scene.add.text(30,49,'',hudText(10,false,HUD.muted)),
       scene.add.text(width-30,49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
@@ -73,7 +74,7 @@ export class CombatHud {
         g.fillStyle(0x000000,.22).fillRect(fill.x,24,fill.width,1);
       }
       g.lineStyle(1,HUD.gold,.9).strokeRect(x,10,this.barWidth,17);
-      for(let round=0;round<2;round++)drawDiamond(g,index===0?420+round*16:width-420-round*16,19,3,HUD.lightGold,snapshot.roundWins[index]>round);
+      for(let round=0;round<2;round++)drawDiamond(g,index===0?width/2-70+round*16:width/2+70-round*16,19,3,HUD.lightGold,snapshot.roundWins[index]>round);
       if(character.maxRage>0){
         const rageWidth=260, rageX=index===0?30:width-30-rageWidth, rageY=heightForRage(this.training);
         const fill=healthBarFill(character.rage,character.maxRage,rageX,rageWidth,index===1);

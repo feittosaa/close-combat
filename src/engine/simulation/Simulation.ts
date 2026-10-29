@@ -108,7 +108,7 @@ export class Simulation {
     this.resetRound();
   }
   fillTrainingRage(): void {
-    if (this.options.training) this.characters.forEach(character => { character.rage = character.maxRage; });
+    if (this.options.training) this.characters.forEach(character => { if (!character.ultimateUsed) character.rage = character.maxRage; });
   }
   setTrainingAutoRestore(enabled: boolean): void { if (this.options.training) { this.trainingAutoRestore = enabled; this.quietFrames = 0; } }
 
@@ -408,8 +408,8 @@ export class Simulation {
       }
       const gain = this.definitions[attackerIndex].rage;
       const received = this.definitions[targetIndex].rage;
-      if (gain && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
-      if (received && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
+      if (gain && !attacker.ultimateUsed && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
+      if (received && !target.ultimateUsed && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
       const pushSign = (event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1;
       if (sourceMove.category === 'throw' && event.outcome === 'hit') {
         target.x = contactPositions[attackerIndex] + pushSign * (Math.abs(contactPositions[targetIndex] - contactPositions[attackerIndex]) + event.pushback);
