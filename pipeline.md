@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Seleção compartilhada e pausa
+
+Branch `codex/feature-menu-hud`: seleção de personagem unificada para Arcade, PvP, treino e ambos os tutoriais, com dois painéis de lutadores e grade central inspirados na referência fornecida. PvP mantém confirmações independentes; nos demais modos o segundo painel apresenta o adversário. Pausa de partida e de treino atualizadas com a linguagem angular, cores e tipografia do menu principal, preservando os controles e ferramentas de treino. Sem nova arte ou alteração das cores dos sprites.
+
+Validação local: instalação reproduzível, 297 testes em 37 arquivos, build e verificação de diff. No navegador: seleção nos cinco modos, confirmações de ambos os jogadores no PvP, entrada na partida e pausas de partida e treino. A aprovação artística do usuário permanece pendente. Envio e CI remota a conferir.
+
 Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visual.md). Entrega: [docs/ci-cd.md](docs/ci-cd.md).
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.

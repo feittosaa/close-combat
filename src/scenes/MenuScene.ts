@@ -2,7 +2,8 @@ import { LOGICAL_VIEW, configureUiCamera, sharpenSceneText } from '../rendering/
 import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 
 import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
-import { FighterSelection, type SelectionPlayer } from '../ui/FighterSelection';
+import { FighterSelection } from '../ui/FighterSelection';
+import { renderFighterSelection } from '../ui/FighterSelectionView';
 import idlePortrait from '../assets/sprites/characters/shoto/idle.png';
 import '../ui/menu.css';
 
@@ -192,8 +193,7 @@ export class MenuScene extends Phaser.Scene {
   }
   private renderMenu(): void {
     const root = this.menuElement!;
-    const fighter = this.fighters[this.fighterIndex];
-    root.classList.remove('versus-selection');
+    root.classList.toggle('fighter-selection', this.page === 'fighter');
     root.classList.toggle('arena-home', this.page === 'home');
     const node = (tag: string, className: string, text = ''): HTMLElement => {
       const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
@@ -237,42 +237,17 @@ export class MenuScene extends Phaser.Scene {
       root.append(modes, feature, hero, note, controls);
       this.selectHomeMode(this.modeIndex);
     } else {
-      const versus = this.mode === 'versus';
-      root.classList.toggle('versus-selection', versus);
-      const addFighter = (player: SelectionPlayer): void => {
-        const entry = this.fighters[this.selection.indices[player]];
-        const side = player === 0 ? 'left' : 'right';
-        const hero = node('div', `arena-hero ${side}`); hero.append(portrait('130 35 510 710', true));
-        const name = node('div', `arena-fighter-name ${side}`);
-        name.append(node('span', 'arena-eyebrow', `PLAYER 0${player + 1}`), node('h1', '', entry.name));
-        if (versus) name.append(button(this.selection.ready[player] ? `P${player + 1} · PRONTO` : `ESCOLHER P${player + 1}`, 'arena-player-switch', () => { this.selection.activePlayer = player; this.render(); }));
-        root.append(hero, name);
-      };
-      addFighter(0);
-      if (versus) addFighter(1);
-      const selection = node('div', 'arena-selection');
-      selection.append(node('span', 'arena-eyebrow', MODES.find(mode => mode.id === this.mode)!.title), node('h2', '', versus ? `ESCOLHA DE P${this.selection.activePlayer + 1}` : 'ESCOLHA SEU LUTADOR'));
-      const grid = node('div', 'arena-roster'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'Personagens disponíveis');
-      this.fighters.forEach((entry, index) => {
-        const tile = button('', 'arena-portrait', () => { this.selection.select(this.selection.activePlayer, index); this.render(); });
-        tile.setAttribute('aria-label', entry.name); tile.setAttribute('aria-pressed', String(index === this.selection.indices[this.selection.activePlayer]));
-        tile.append(portrait('280 65 180 180'), node('span', '', entry.name));
-        if (versus) {
-          const cursors = node('div', 'arena-cursors');
-          for (const player of [0, 1] as const) if (this.selection.indices[player] === index) cursors.append(node('b', `cursor-p${player + 1}`, `P${player + 1}`));
-          tile.append(cursors);
-        }
-        grid.append(tile);
+      renderFighterSelection(root, {
+        fighters: this.fighters,
+        selection: this.selection,
+        opponent: opponentFor(this.fighters[this.fighterIndex].id, this.mode),
+        versus: this.mode === 'versus',
+        modeTitle: MODES.find(mode => mode.id === this.mode)!.title,
+        portrait,
+        refresh: () => this.render(),
+        confirm: () => this.confirmFighter(),
+        back: () => this.back(),
       });
-      for (let index = this.fighters.length; index < 12; index++) {
-        const slot = node('div', 'arena-empty', '—'); slot.setAttribute('aria-hidden', 'true'); grid.append(slot);
-      }
-      const status = node('p', 'arena-opponent', versus
-        ? `P1 ${this.selection.ready[0] ? 'PRONTO' : 'ESCOLHENDO'} · P2 ${this.selection.ready[1] ? 'PRONTO' : 'ESCOLHENDO'}`
-        : `P2 · ${opponentFor(fighter.id, this.mode).name} · ${this.mode === 'arcade' ? 'Computador' : 'Adversário de treino'}`);
-      status.setAttribute('role', 'status');
-      selection.append(grid, status, button(versus ? `CONFIRMAR P${this.selection.activePlayer + 1}  →` : 'CONFIRMAR PERSONAGEM  →', 'arena-confirm', () => this.confirmFighter()), button('← VOLTAR', 'arena-back', () => this.back()));
-      root.append(selection);
     }
     if (this.page === 'fighter') root.append(node('footer', 'arena-footer', this.mode === 'versus'
       ? 'P1: A / D · J CONFIRMAR     P2: ← / → · NUM1 CONFIRMAR     ENTER: CONFIRMAR VEZ     ESC: VOLTAR'
