@@ -47,7 +47,7 @@ Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É 
 
 ## Apresentação compartilhada
 
-A saída padrão é Full HD 1920 × 1080, em 16:9, com composição lógica 1024 × 576 e projeção uniforme. A câmera de combate tem escala fixa, acompanha o combate no eixo horizontal e o personagem mais alto no eixo vertical durante a subida e a descida. O tamanho visual dos personagens é independente da escala do cenário; o enquadramento deve preservar ambos nos limites laterais. Não aplicar zoom dinâmico por distância, ação ou postura.
+A composição lógica de combate é 1024 × 576, com projeção uniforme; a saída acompanha o tamanho da janela, expondo mais cenário nas laterais sem mudar a escala relativa dos lutadores, do HUD ou das colisões. A câmera de combate tem escala fixa, acompanha o combate no eixo horizontal e o personagem mais alto no eixo vertical durante a subida e a descida. O tamanho visual dos personagens é independente da escala do cenário; o enquadramento deve preservar ambos nos limites laterais. Não aplicar zoom dinâmico por distância, ação ou postura.
 
 O piso, os lutadores e os cenários compartilham o mesmo espaço. O limite lateral da visão deve preservar ambos os lados sem arrastar um personagem parado. Mudanças autorizadas no tamanho dos lutadores exigem revisão proporcional de corpo, hurtboxes, hitboxes e seus deslocamentos nos dados de cada personagem. As caixas físicas não são inferidas automaticamente de silhuetas ou do desenho do cenário.
 
