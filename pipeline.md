@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Integração em development — 2026-10-29
+
+Por pedido explícito, integradas em `development` as branches encadeadas `codex/fix-janela-punicao-maior`, `codex/feature-selecao-cenarios-alcance`, `codex/fix-ultimate-combo-reinicio` e `codex/fix-chutes-alcance-controles`. A branch `sprites/shoto` permanece separada por orientação expressa e só será integrada a pedido. Por enquanto, não criar novas branches e trabalhar diretamente em `development`. Validação local e CI da integração em andamento; aprovação visual permanece pendente.
+
 ## Chutes, alcance e controles — 2026-10-29
 
 Branch `codex/fix-chutes-alcance-controles`, dependente de `codex/fix-ultimate-combo-reinicio` em `88a548f`, ainda não integrada. Chutes aéreos que erram e aterrissam em recuperação preservam a recuperação vulnerável; chutes bloqueados continuam sem defesa durante a recuperação. Larguras horizontais das caixas corpo a corpo do Shoto aumentadas em mais 10%, incluindo agarrões e especiais diretos, sem mudar projéteis. Menu de controles atualizado com painéis e botões angulares da identidade dos demais menus. Instalação reproduzível, 331 testes em 39 arquivos, build e diff aprovados. Regressões cobrem chutes bloqueados dos dois lados e aterrissagem em recuperação no vazio. Conferidos no navegador o menu de controles, captura e cancelamento de tecla, retorno ao menu e acesso ao treino. Aprovação visual do usuário pendente; envio e CI em andamento.
