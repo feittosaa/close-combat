@@ -272,9 +272,11 @@ export class Simulation {
           if (character.mode === 'knockdown' && juggleRules) {
             character.wakeupInvulnerabilityFrames = character.remainingStateFrames + juggleRules.wakeupInvulnerabilityFrames;
           }
-          // Air basics end at landing except after a block; rising grounded specials retain recovery.
+          // A missed air kick already in recovery remains vulnerable after landing.
           const landingMove = character.attack ? this.move(index, character.attack.moveId) : undefined;
-          if (landingMove?.airborne && character.attack?.hitOutcome !== 'block') {
+          const recoveringMissedKick = landingMove?.airborne && character.mode === 'recovery' &&
+            !character.attack?.hasHit && (landingMove.pose === 'light-kick' || landingMove.pose === 'heavy-kick');
+          if (landingMove?.airborne && character.attack?.hitOutcome !== 'block' && !recoveringMissedKick) {
             character.attack = undefined; character.chain = undefined; character.mode = 'neutral';
           }
           if (!locked(character) && !character.attack && character.mode !== 'blocking') character.mode = 'neutral';

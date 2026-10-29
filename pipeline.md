@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Chutes, alcance e controles — 2026-10-29
+
+Branch `codex/fix-chutes-alcance-controles`, dependente de `codex/fix-ultimate-combo-reinicio` em `88a548f`, ainda não integrada. Chutes aéreos que erram e aterrissam em recuperação preservam a recuperação vulnerável; chutes bloqueados continuam sem defesa durante a recuperação. Larguras horizontais das caixas corpo a corpo do Shoto aumentadas em mais 10%, incluindo agarrões e especiais diretos, sem mudar projéteis. Menu de controles atualizado com painéis e botões angulares da identidade dos demais menus. Instalação reproduzível, 331 testes em 39 arquivos, build e diff aprovados. Regressões cobrem chutes bloqueados dos dois lados e aterrissagem em recuperação no vazio. Conferidos no navegador o menu de controles, captura e cancelamento de tecla, retorno ao menu e acesso ao treino. Aprovação visual do usuário pendente; envio e CI em andamento.
+
 ## Ultimate em combo e atalho de reinício — 2026-10-29
 
 Branch `codex/fix-ultimate-combo-reinicio`, dependente de `codex/feature-selecao-cenarios-alcance` em `c53a2b8`, ainda não integrada. O atalho configurado de reinício atua apenas no treino livre; PvP, Arcade e tutoriais não reiniciam por ele. Removidas as instruções de reinício do HUD e do resultado do Arcade; pausa/retorno ao menu e progresso do Arcade preservados.

@@ -59,6 +59,8 @@ Acertos e bloqueios confirmados recebem uma micro pausa compartilhada na pose de
 
 Em sequências abertas de golpes confirmados, ataques fortes impedem o retorno a ataques fracos até o defensor recuperar o controle. Repetições pertencem às receitas autoradas. Receitas fechadas podem continuar mesmo sem contato, depois de concluir a atividade de cada golpe. Golpes bloqueados ou que erram não liberam continuação aberta. Quando o último golpe acertado mantém o alvo no chão, os dois recuperam o controle juntos, sem recuperação exposta do atacante. Levantamentos confirmados usam recuperação mais curta e reiniciam a sequência do atacante, liberando golpes fracos novamente para continuar o combo. Lançamentos preservam a trajetória e a recuperação aérea protegida; capturas cinematográficas mantêm suas regras próprias.
 
+Chutes aéreos que erram e aterrissam durante a recuperação mantêm o atacante vulnerável até o fim dessa recuperação.
+
 Uma continuação de golpes iniciada enquanto o alvo ainda reage mantém sua vulnerabilidade durante o preparo e a atividade do próximo golpe. Se a sequência de acertos terminar no chão, ambos recuperam o controle juntos; os tempos de recuperação de cada receita são definidos nos dados do personagem.
 
 A ativação de toda ultimate usa uma preparação cinematográfica prolongada com pausa global: somente a sequência de ativação do autor avança; adversários, projéteis, física, efeitos e relógio do round ficam congelados. Essa pausa é distinta da micro pausa de contato. Ativações simultâneas compartilham o mesmo intervalo, sem acumular tempo. O combate retoma ao terminar a animação de preparação, sem pular frames ou conservar esse estado após reset.

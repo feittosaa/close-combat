@@ -69,24 +69,28 @@ canvas {
 .combat-pause.inspection button { padding: 8px; font-size: 12px; }
 .command-notation { font-family: Arial, sans-serif; font-size: 1.1em; line-height: 1.65; }
 .command-button { display: inline-block; min-width: 1.35em; padding: 0 .17em; margin: 0 .1em; text-align: center; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; background: #10101a; }
-.control-settings { position: fixed; inset: 0; z-index: 200; background: #100e12df; display: grid; place-items: center; padding: 20px; color: #eee9f2; }
-.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: linear-gradient(135deg, #282024, #17151b); border: 2px solid #c04436; box-shadow: 0 0 0 5px #171219, 0 24px 80px #000b; padding: 24px; }
-.controls-panel h1 { margin: 0; font-family: Arial, sans-serif; font-weight: 900; color: #f0dfc4; letter-spacing: .08em; }
-.controls-panel p { font-size: 13px; color: #c4bbc9; min-height: 1.5em; }
-.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.controls-grid h2 { font-size: 17px; }
-.controls-grid > div > div { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 14px; }
-.controls-panel button { color: #fff1da; background: #48302b; border: 1px solid #b7905c; border-radius: 0; padding: 9px 14px; cursor: pointer; min-width: 100px; font: inherit; }
-.controls-panel button:focus-visible { outline: 2px solid #ffd68b; }
-.controls-panel footer { display: flex; justify-content: flex-end; gap: 12px; }
-@media(max-width:600px) { .controls-grid {grid-template-columns:1fr;} }
+/* Controls share the layered panels and angular buttons used by the other menus. */
+.control-settings { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 20px; color: #f6e6ce; background: radial-gradient(ellipse at 50% 40%,#392329ed,#0c0a10fa 75%); font-family: Arial,sans-serif; }
+.controls-panel { position: relative; width: min(920px,100%); max-height: calc(100dvh - 40px); overflow: auto; padding: 28px 34px; background: linear-gradient(135deg,#382529,#171016 55%,#28191e); box-shadow: 9px 12px 0 #08070bc9, 0 24px 90px #000b; clip-path: polygon(1% 1%,97% 0,100% 4%,99% 99%,3% 100%,0 96%); }
+.controls-panel::before { content: ''; position: absolute; inset: 0 0 auto; height: 5px; background: linear-gradient(90deg,#f0dfc4,#c04436 22%,#7d3029 75%,transparent); }
+.controls-panel h1 { margin: 0; color: #f0dfc4; font: italic 900 clamp(26px,4vw,42px)/1 Arial,sans-serif; letter-spacing: -.06em; text-shadow: 3px 3px #742c25; }
+.controls-panel p { color: #d6bea0; font-size: 13px; line-height: 1.4; min-height: 1.5em; }
+.controls-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.controls-grid > div { padding: 12px 16px; background: #130f14b8; border-left: 4px solid #c04436; }
+.controls-panel h2 { margin: 8px 0 12px; color: #ead3ad; font: 900 16px Arial,sans-serif; text-transform: uppercase; letter-spacing: -.02em; }
+.controls-grid > div > div, .control-system-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; font-size: 14px; }
+.control-system-row { max-width: 420px; }
+.controls-panel button { min-width: 100px; padding: 8px 14px; border: 0; border-radius: 0; color: #fff1da; background: linear-gradient(135deg,#422b2d,#191319); box-shadow: inset 4px 0 #b94536; clip-path: polygon(3% 0,100% 0,97% 100%,0 100%); cursor: pointer; font: 700 14px Arial,sans-serif; }
+.controls-panel button:hover, .controls-panel button:focus-visible { background: linear-gradient(110deg,#9f342c,#ca5140); }
+.controls-panel button:focus-visible { outline: 2px solid #ffc485; outline-offset: -3px; }
+.controls-panel footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.controls-panel footer button:last-child { background: #a6372e; }
+@media (max-width: 600px) { .control-settings { padding: 8px; } .controls-panel { padding: 20px; max-height: calc(100dvh - 16px); } .controls-grid { grid-template-columns: 1fr; } }
 .pause-move .command-notation { font-size: 18px; }
 .pause-move .command-notation > span { font-size: inherit; color: inherit; }
 .pause-command .command-notation { font-size: 21px; }
 .command-direction { font-weight: 700; letter-spacing: .08em; }
 
-.controls-panel button:hover { background: #793f32; border-color: #f0c68a; }
-.controls-panel h2 { color: #ead3ad; font-family: Georgia, serif; }
 
 .combat-pause.match-pause .pause-panel { width: min(640px,100%); padding: 38px; }
 .combat-pause.match-pause header { display: block; }
