@@ -8,7 +8,7 @@ Seleção de cenário substituída por grade central 3×3, com vagas vazias, pr�
 
 Combos fechados de socos confirmados: recuperação final 10F em `1,1,1`, 30F em `2,2,2`; atacante e alvo no chão recuperam o controle juntos. Uma continuação iniciada enquanto o alvo ainda está em hitstun mantém a reação através do preparo e atividade do próximo golpe, inclusive se ele tentar defender, permitindo 1,1,1 → 2,2,2 quando a continuação começa perto do fim da reação. Sem criar novas receitas. Levantamento `1,1,2`, limite de força e recuperação da sequência no vazio preservados. Testes de regressão nos dois lados e com defesa pressionada; balanceamento permanece provisório.
 
-Validação local: instalação reproduzível, 317 testes em 38 arquivos, build e diff aprovados. Envio e CI remota pendentes; aprovação artística e integração em `development` não inferidas.
+Validação local: instalação reproduzível, 317 testes em 38 arquivos, build e diff aprovados. Implementação enviada em `03a9945`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40893157022); aprovação artística e integração em `development` não inferidas.
 
 ## Recuperação bloqueada ampliada — 2026-10-29
 
