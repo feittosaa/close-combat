@@ -48,6 +48,7 @@ it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar
   snapshot.characters[0].health=0;snapshot.phase='match-over';snapshot.matchWinnerId='player-2';
   hud.update(snapshot,1024);
   expect(texts.some(t=>t.value.includes('P2 VENCE A LUTA'))).toBe(true);
+  expect(texts.every(t=>!t.value.includes('REINICIAR'))).toBe(true);
   hud.destroy();
 });
 it('treino usa teclas remapeadas e mantém dados de contato e pausa legíveis',()=>{
