@@ -181,3 +181,42 @@ it('lets the defender attack and the attacker guard on their shared recovery tic
   expect(sim.snapshot().hitEvents).toEqual([expect.objectContaining({attackerId:'player-2',outcome:'block',damage:0})]);
   expect(sim.snapshot().characters[0].health).toBe(1000);
 });
+
+it.each([0,1])('ends a confirmed heavy punch combo before any further attack: player %i', player => {
+  for (const followup of ['1','2','3','4'] as const) {
+    const sim=create();
+    for (const button of ['2','2','2'] as const) hit(sim,player,[button]);
+    step(sim,player,input([followup]));
+    wait(sim,CONTACT_HITSTOP_FRAMES+2);
+    expect(sim.snapshot().characters[player].attack?.moveId).toBe('heavy-punch');
+    expect(sim.snapshot().recentContacts).toHaveLength(3);
+    while(sim.snapshot().characters[player].attack)step(sim);
+    expect(sim.snapshot().characters.every(c=>c.mode==='neutral')).toBe(true);
+    step(sim,player,input([followup]));
+    expect(sim.snapshot().characters[player].attack).toBeDefined();
+  }
+});
+
+it.each([0,1])('locks the strong strike choice until neutral, for player %i', player=>{
+  for(const [first,forbidden] of [['2',['1','3','4']],['4',['1','3','2']]] as const) {
+    for(const button of forbidden) {
+      const sim=create();hit(sim,player,[first]);
+      step(sim,player,input([button]));wait(sim,CONTACT_HITSTOP_FRAMES+2);
+      expect(sim.snapshot().characters[player].attack?.moveId).toBe(first==='2'?'heavy-punch':'heavy-kick');
+      expect(sim.snapshot().recentContacts).toHaveLength(1);
+      for(let i=0;i<100 && sim.snapshot().characters[player].attack;i++)step(sim);
+      expect(sim.snapshot().characters.every(c=>c.mode==='neutral')).toBe(true);
+      step(sim,player,input([button]));
+      expect(sim.snapshot().characters[player].attack?.buttons).toEqual([button]);
+    }
+  }
+});
+
+it.each([0,1])('allows weak hits into either strong choice and keeps the existing strong punch recipe, player %i',player=>{
+  for(const strong of ['2','4'] as const){
+    const sim=create();hit(sim,player,['1']);hit(sim,player,[strong],true);
+    expect(sim.snapshot().characters[player].hitSequence).toMatchObject({heavy:true,heavyButton:strong});
+  }
+  const sim=create();for(let i=0;i<3;i++)hit(sim,player,['2'],i>0);
+  expect(sim.snapshot().recentContacts).toHaveLength(3);
+});
