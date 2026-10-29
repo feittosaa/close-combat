@@ -4,6 +4,10 @@ Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visua
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
+## Punição após bloqueio
+
+Branch `codex/fix-punicao-bloqueio`, baseada em `main`. Ajuste: recuperação de golpes diretos bloqueados garante janela mínima de 9 frames para entradas leves e 16 para fortes; cancelamentos de receitas ficam indisponíveis após bloqueio, mantendo as receitas no acerto e no vazio. Golpes aéreos bloqueados mantêm recuperação ao aterrissar. Os números são provisórios. Por confirmação do usuário, projéteis mantêm recuperação natural e não interrompem o lançador após sua recuperação. No treino, soco leve bloqueado mostrou −9F e forte −16F para o atacante. Instalação reproduzível, testes, build e diff conferidos; envio e CI remota a verificar. Sem integração.
+
 ## Limpeza de branches antigas — 2026-10-28
 
 Por solicitação explícita, removidas localmente e no remoto dez branches anteriores: `codex/feature-arco-garrafa-ultimate`, `codex/feature-personagens-maiores`, `codex/feature-ritmo-combate`, `codex/feature-ritmo-combos-distancia`, `codex/feature-sequencias-abertas-shoto`, `codex/fix-agarrao-cores-originais`, `codex/fix-carregamento-impacto-aereo`, `codex/fix-recuperacao-launcher-garrafa`, `codex/fix-tempo-alcance-agarrao` e `codex/fix-trajetoria-juggle`.
