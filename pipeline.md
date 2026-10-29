@@ -11,7 +11,7 @@ Branch `codex/feature-menu-hud`, criada a pedido do usuário a partir de `main` 
 - [x] Menu principal com modos em lista vertical à esquerda, destaque angular de grande escala, personagem do jogo e cenário original à direita. Hover, foco e setas atualizam a seleção, descrição e animação; Enter confirma a opção selecionada. A preferência por movimento reduzido desativa a transição e mantém o retrato estático. Nenhuma imagem foi recolorida ou criada.
 - [x] HUD usa a mesma paleta e tipografia, com marcador angular para o relógio; barras contínuas e métricas da simulação preservadas. Seleção de personagem/cenário, pausa e controles receberam ajustes de cor e tipografia coerentes.
 - [x] npm ci, 297 testes/37 arquivos, build e diff aprovados. No jogo a 1280×720: navegação por Tab/setas/Enter, seleção de modo longo, controles e retorno, treino, pausa, confirmação independente no PvP e seleção de cenário; HUD conferido com acerto e vida real. Console sem erros/avisos. Imagens locais: /tmp/close-combat-novo-menu.png, /tmp/close-combat-novo-hud.png e /tmp/close-combat-nova-pausa.png. A preferência de movimento reduzido é respeitada pelo código; confirmação artística do usuário permanece distinta da validação técnica.
-- [ ] Enviar a branch e conferir CI; a promoção futura deste novo trabalho requer pedido explícito.
+- [x] Implementação enviada em `994f6e5e079602ba2e71a95e80d777ec230ef6b1`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40809334922). Branch pronta para revisão, sem integração do novo menu e HUD; fechamento documental com CI própria conferida antes do relato final.
 
 ## Limpeza de branches antigas — 2026-10-28
 
