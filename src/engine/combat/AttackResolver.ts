@@ -60,6 +60,13 @@ export class AttackResolver {
         (move.hitLevel === 'low' ? target.grounded && guard === 'DB' : guard === 'B' || guard === 'DB');
       const owner = characters[index];
       const ownerMove = owner.attack ? this.resolveMove(owner.fighterId, owner.attack.moveId) : undefined;
+      // A blocked strike leaves enough time for a quick response; stronger inputs are more punishable.
+      // Detached projectiles do not interrupt an owner who has already recovered or started another move.
+      if (blocked && owner.attack === attack && !projectile) {
+        const window = move.input.buttons.some(button => button === '2' || button === '4') ? 16 : 9;
+        const minimumRecovery = attack.elapsedFrames + move.blockstun + window + 1 - move.startup - move.activeFrames;
+        attack.recoveryFrames = Math.max(attack.recoveryFrames ?? move.recovery, minimumRecovery);
+      }
       const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, attackDurationFrames(ownerMove, owner.attack) - owner.attack.elapsedFrames - 1) : 0) : attackDurationFrames(move, attack) - attack.elapsedFrames - 1;
       const stun = blocked ? move.blockstun : phase === 'confirm' ? move.ultimateSequence!.confirmStun : move.hitstun;
       const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward'
