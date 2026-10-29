@@ -2,7 +2,7 @@
 
 ## Seleção compartilhada e pausa
 
-O usuário autorizou a integração das branches de menu e de punição em `development`; o resultado conjunto e sua CI estão em validação. As observações de ausência de integração abaixo registram o estado anterior.
+O usuário autorizou a integração das branches de menu e de punição em `development`. As duas foram integradas em `d0b680a`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/40873483006), e encerradas localmente e no remoto após conferência de ancestralidade e ausência de outros checkouts. A aprovação artística permanece pendente. As observações de ausência de integração abaixo registram o estado anterior.
 
 Pedido atual: fundo do menu principal preto provisoriamente; navegação e personagem mantidos. A ilustração anterior continua em uso nas telas de cenário e configurações.
 
