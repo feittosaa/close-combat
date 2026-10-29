@@ -20,7 +20,7 @@ export const shoto: CharacterDefinition = {
   },
   juggle: { initialGravityScale: 0.7, gravityScalePerHit: 0.15, maximumGravityScale: 1.6,
     getupFrames: 24, wakeupInvulnerabilityFrames: 8, airHitSuspensionFrames: 6 },
-  rage: { maximum: 150, onHit: 10, onDamage: 15, onBlock: 5 },
+  rage: { maximum: 200, onHit: 10, onDamage: 15, onBlock: 5 },
   combos: [
     { id: 'simple-1', name: 'Combo simples · 1,1,1', notation: '1,1,1', moveIds: ['light-punch','light-punch','light-punch'], recoveryFrames: 10 },
     { id: 'simple-2', name: 'Combo simples · 2,2,2', notation: '2,2,2', moveIds: ['heavy-punch','heavy-punch','heavy-punch'], recoveryFrames: 30 },
@@ -95,7 +95,7 @@ export const shoto: CharacterDefinition = {
       movement: { speed: 3.2, until: 26 }, invulnerability: { kind: 'projectile', until: 26 },
       hitbox: { forward: 15.18, yOffset: -132.825, width: 97.962, height: 75.9 } },
     { id: 'wine-ultimate', name: 'Ultimate — Coquetel molotov', category: 'ultimate', pose: 'heavy-punch', notation: 'b,bd,d,df,f,1+2', input: { buttons: ['1','2'], sequence: ['B','DB','D','DF','F'] },
-      rageCost: 150, startup: 1, activeFrames: 1, recovery: 48, damage: 280, hitstun: 55, blockstun: 25, pushback: { hit: 24, block: 14 }, hitLevel: 'mid',
+      rageCost: 200, startup: 1, activeFrames: 1, recovery: 48, damage: 280, hitstun: 55, blockstun: 25, pushback: { hit: 24, block: 14 }, hitLevel: 'mid',
       ultimateSequence: { lighterHitbox: { forward: 0, yOffset: -126.5, width: 10.12, height: 15.18 }, lighterDelay: 8, lighterSpeed: 7.5, confirmStun: 150, knockbackSpeed: 8, launchSpeed: -5, knockdownFrames: 30 },
       projectile: { speed: 15, life: 150, verticalSpeed: -1.5, gravity: 0.12, visual: 'bottle' }, hitbox: { forward: 0, yOffset: -206.448, width: 60.72, height: 48.576 } },
   ],
