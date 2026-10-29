@@ -44,13 +44,8 @@
 
 /* Home: a compact stack of choices opens into one oversized, angled feature. */
 .arena-home {
-  background: linear-gradient(120deg,#100d13ef 0 35%,#171016a6 72%,#100d1388);
+  background: #000;
   isolation: isolate;
-}
-.arena-home::before {
-  content: ''; position: absolute; inset: -12% -8%;
-  background: repeating-linear-gradient(130deg,transparent 0 5.5cqw,#eacb9d0b 5.5cqw 5.65cqw);
-  transform: rotate(-4deg); pointer-events: none;
 }
 .arena-home .arena-header { z-index: 5; border: 0; inset: 4% 4% auto; }
 .arena-home .arena-brand { font: 900 2.2cqw Arial,sans-serif; letter-spacing: -.06em; color: #f4e7d2; text-shadow: .16cqw .16cqw #7d3029; }
