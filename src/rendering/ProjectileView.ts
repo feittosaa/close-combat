@@ -18,7 +18,9 @@ export class ProjectileView {
       const x = 0, y = 0;
       g.save().translateCanvas(box.x + box.width / 2, box.y + box.height / 2).scaleCanvas(size, size);
       g.lineStyle(1.5, 0xf4dfb0, 1);
-      if (p.visual === 'lighter') {
+      if (p.visual === 'bullet') {
+        g.fillStyle(0xe7b65b).fillRoundedRect(-12, -5, 24, 10, 5);
+      } else if (p.visual === 'lighter') {
         g.fillStyle(0xc7b79d).fillRect(x-3,y-5,6,10);
         g.fillStyle(0xffc65c).fillTriangle(x-3,y-6,x+3,y-6,x,y-15);
       } else if (p.visual === 'glass') {

@@ -14,6 +14,6 @@ export interface ProjectileState {
   phase?: 'confirm' | 'lighter';
   targetId?: string;
   remainingFrames: number;
-  visual: 'glass' | 'bottle' | 'molotov' | 'lighter';
+  visual: 'glass' | 'bottle' | 'molotov' | 'bullet' | 'lighter';
   attack: CharacterAttack;
 }

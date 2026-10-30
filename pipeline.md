@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy zoner — 2026-10-30
+
+Branch `codex/feature-cowboy-zoner`, baseada em `origin/development`. Protótipo jogável com quatro básicos em pé, quatro aéreos, quatro abaixados, antiaéreo, dois disparos e golpe próximo de afastamento. Hitboxes, hurtboxes, dano, tempos e comandos são provisórios e aguardam revisão de design e balanceamento. Nenhuma receita de combo foi criada. Ainda não há ultimate nem arte própria; seleção identifica a arte pendente e o combate usa geometria de diagnóstico, sem reutilizar sprites do Shoto.
+
+Comandos provisórios: `d,df,f,1` disparo rápido; `d,df,f,2` disparo pesado; `d,df,f,4` afastamento; `d+2` antiaéreo. Instalação reproduzível, 356 testes em 40 arquivos e build aprovados. No navegador, seleção e entrada no treino com Cowboy conferidas; geometria temporária visível nos dois lados. Aprovação artística e balanceamento pendentes. CI remota e integração não presumidas; integração exige autorização explícita.
+
 ## Integração de tela e combate — 2026-10-29
 
 Por pedido explícito, `codex/feature-tela-adaptavel` foi integrada em `development`, incluindo tela adaptável, HUD, rage, atalho da ultimate e escolha do golpe forte. A validação local passou com 352 testes, build e diff; [CI da branch aprovada](https://github.com/feittosaa/close-combat/actions/runs/40920303484). Integração enviada em `5813bf3`, com [CI de development aprovada](https://github.com/feittosaa/close-combat/actions/runs/40920495118). Após conferir ancestralidade e ausência de outros checkouts e PRs abertos, a branch integrada foi encerrada localmente e no remoto. `sprites/shoto` continua separada.
