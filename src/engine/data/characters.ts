@@ -1,5 +1,6 @@
 import type { MoveDefinition } from './moves';
 import { shoto } from './fighters/shoto';
+import { cowboy } from './fighters/cowboy';
 
 export interface CharacterHurtbox {
   offsetX: number;
@@ -41,7 +42,7 @@ export interface CharacterDefinition {
   collision: CharacterCollisionProfile;
 }
 export const DEFAULT_CHARACTER_ID = 'shoto';
-export const characters: readonly CharacterDefinition[] = [shoto];
+export const characters: readonly CharacterDefinition[] = [shoto, cowboy];
 export const playableCharacters = characters;
 export const defaultCharacter = shoto;
 export function getCharacterById(id: string): CharacterDefinition | undefined {
