@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy projectile zoner — 2026-10-30
+
+Continuação em `codex/feature-cowboy-zoner`: altura da hurtbox em pé 157,54 contra 182,16 do Shoto (proporção 1,60/1,85); corpo e demais posturas ajustados. Socos básicos em pé disparam horizontalmente, socos aéreos em diagonal para baixo, e `d+2` dispara em diagonal para cima. `d+1` é coronhada próxima; chutes em pé e abaixados têm alcance curto e atingem baixo, com `d+3` rápido e `d+4` como rasteira que derruba apenas no acerto. Chutes aéreos mantêm contato próximo. Queda usa recuperação e invencibilidade de retorno do alvo. Especiais anteriores de disparo e afastamento permanecem. Sem novas receitas, arte ou ultimate; geometria e balanceamento são provisórios.
+
+Instalação reproduzível, 361 testes em 40 arquivos, build e diff conferidos. Regressões cobrem direção dos disparos nos dois lados, proporção, alcance baixo e rasteira no acerto, bloqueio e erro. Treino e geometria provisória conferidos no navegador; aprovação visual e balanceamento seguem pendentes. Envio e CI remota a verificar.
+
 ## Cowboy zoner — 2026-10-30
 
 Branch `codex/feature-cowboy-zoner`, baseada em `origin/development`. Protótipo jogável com quatro básicos em pé, quatro aéreos, quatro abaixados, antiaéreo, dois disparos e golpe próximo de afastamento. Hitboxes, hurtboxes, dano, tempos e comandos são provisórios e aguardam revisão de design e balanceamento. Nenhuma receita de combo foi criada. Ainda não há ultimate nem arte própria; seleção identifica a arte pendente e o combate usa geometria de diagnóstico, sem reutilizar sprites do Shoto.

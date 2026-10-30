@@ -377,6 +377,15 @@ export class Simulation {
         }
       }
 
+      if (sourceMove.knockdown && event.outcome === 'hit' && !event.stage && target.grounded) {
+        target.mode = 'knockdown'; target.attack = undefined; target.crouching = false;
+        target.knockdown = { velocityX: 0 };
+        target.remainingStateFrames = Math.max(juggleRules?.getupFrames ?? 24, event.attackerRecoveryFrames);
+        target.wakeupInvulnerabilityFrames = target.remainingStateFrames + (juggleRules?.wakeupInvulnerabilityFrames ?? 0);
+        event.defenderStunFrames = target.remainingStateFrames;
+        event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
+      }
+
       if (event.stage === 'confirm' && event.outcome === 'hit') {
         target.juggle = undefined;
         target.ultimateCapture = { ownerId: attacker.characterId };

@@ -18,6 +18,8 @@ export interface MoveDefinition {
   projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'glass' | 'bottle' | 'molotov' | 'bullet' };
   ultimateSequence?: { lighterHitbox: MoveDefinition['hitbox']; lighterDelay: number; lighterSpeed: number; confirmStun: number; knockbackSpeed: number; launchSpeed: number; knockdownFrames: number };
   rageCost?: number;
+  /** Derruba no chão apenas quando o golpe acerta. */
+  knockdown?: boolean;
   startup: number;
   activeFrames: number;
   recovery: number;
