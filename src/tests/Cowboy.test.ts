@@ -468,6 +468,32 @@ it.each([0, 1])('tiros especiais têm dano alto e alcance curto: jogador %i', pl
   }
 });
 
+it.each([0, 1])('permite segurar os especiais e soltar para disparar: jogador %i', player => {
+  for (const [button,id,damage] of [['1','quick-shot',120],['2','heavy-shot',140]] as const) {
+    const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
+    const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
+    const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+    for (const direction of ['D','DF','F'] as const) step(input(direction));
+    for(let tick=0;tick<60;tick++)step(input('F',button));
+    expect(sim.snapshot().characters[player].attack).toMatchObject({moveId:id,chargeFrames:60});
+    expect(sim.snapshot().projectiles).toHaveLength(0);
+    step();
+    for(let tick=0;tick<70&&!sim.snapshot().hitEvents.length;tick++)step();
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:id,outcome:'hit',damage});
+  }
+});
+
+it.each([0, 1])('dispara automaticamente os especiais após dois segundos: jogador %i', player => {
+  for (const [button,id] of [['1','quick-shot'],['2','heavy-shot']] as const) {
+    const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
+    const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
+    const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+    for (const direction of ['D','DF','F'] as const) step(input(direction));
+    for(let tick=0;tick<125;tick++)step(input('F',button));
+    expect(sim.snapshot().characters[player].attack).toMatchObject({moveId:id,chargeFrames:120,chargeReleased:true});
+  }
+});
+
 it.each([0, 1])('tiro especial forte alcança adversário no ar próximo: jogador %i', player => {
   const definitions = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
   const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: 85 });

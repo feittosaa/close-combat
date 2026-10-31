@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — especiais seguráveis e controles — 2026-10-31
+
+Branch `codex/feature-cowboy-especiais-carregados`, dependente de `codex/feature-cowboy-animacoes` ainda não integrada. Os efeitos de tiro e areia criados na entrega anterior já estão conectados ao jogo. Os dois especiais à queima-roupa podem ser segurados por até 120 quadros, disparando ao soltar ou automaticamente no limite; o dano permanece inalterado. O projétil horizontal dura nove quadros e o antiaéreo onze, ampliando moderadamente o alcance. As configurações incluem todos os atalhos de treino, além da ultimate e provocação de cada jogador; rejeitam conflitos entre jogadores, luta e treino, e atualizam o rodapé do treino.
+
+Instalação reproduzível, 478 testes em 42 arquivos, build e checagem de diff aprovados localmente. No jogo, um atalho de caixas foi remapeado e testado no treino; os especiais segurados foram verificados por simulação nos dois lados, com revisão visual integral ainda pendente. A instalação informou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). O envio e a CI devem ser conferidos no remoto; não há autorização para merge.
+
 ## Cowboy — efeitos, provocação e ultimate — 2026-10-31
 
 Continuação em `codex/feature-cowboy-animacoes`, dependente dos trabalhos anteriores ainda não integrados. O histórico de golpes recebeu painéis no estilo do HUD. As fontes e atlas dos efeitos de tiro e areia foram substituídos por desenhos estilizados; projéteis diagonais reutilizam o efeito horizontal rotacionado. A provocação retorna ao repouso por uma nova sequência, também usada na transição entre a preparação e a ultimate. Durante os seis disparos, a Cowboy alterna poses de arminha enquanto os projéteis continuam saindo das armas espectrais. A folha do especial horizontal já apresenta dois braços na preparação e recuperação; o especial antiaéreo permanece inalterado.

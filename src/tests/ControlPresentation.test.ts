@@ -1,6 +1,6 @@
 import { createStageLayout, getFightCameraFrame } from '../rendering/stages/stageLayout';
 import { afterEach, describe, expect, it } from 'vitest';
-import { getPlayerLayout, getSystemControls, keyLabel, loadControls, resetControls, saveControls, saveSystemControls, validateLayouts, validateSystemControls, BUTTON_COLORS } from '../input/controlSettings';
+import { getPlayerLayout, getSystemControls, keyLabel, loadControls, resetControls, saveControls, saveSystemControls, validateLayouts, validateSystemControls, validateControlSet, getTrainingControls, BUTTON_COLORS } from '../input/controlSettings';
 import { commandTokens, formatCommand, screenDirection, formatCommandProse } from '../ui/commandNotation';
 import { InputHistory } from '../training/InputHistory';
 import { KeyboardInput } from '../input/KeyboardInput';
@@ -36,17 +36,24 @@ describe('controles configuráveis e apresentação',()=>{
     expect(keyboard.read().taunt).toBe(true);keyboard.destroy();
   });
   it('recusa teclas repetidas e atalhos reservados e ignora armazenamento inválido',()=>{
-    const layouts=[getPlayerLayout(0),getPlayerLayout(1)];layouts[0].buttons['1']='KeyP';expect(validateLayouts(layouts)).toBe(false);
+    const layouts=[getPlayerLayout(0),getPlayerLayout(1)];layouts[0].buttons['1']='KeyP';expect(validateControlSet(layouts as [typeof layouts[0],typeof layouts[0]],getSystemControls(),getTrainingControls())).toBe(false);
     layouts[0].buttons['1']='Numpad1';expect(validateLayouts(layouts)).toBe(false);
     expect(loadControls({getItem:()=>'{bad json'})).toEqual([getPlayerLayout(0),getPlayerLayout(1)]);
     expect(keyLabel('Numpad2')).toBe('Num2');
+  });
+  it('permite remapear atalhos de treino e rejeita conflitos entre todos os comandos',()=>{
+    const players:[ReturnType<typeof getPlayerLayout>,ReturnType<typeof getPlayerLayout>]=[getPlayerLayout(0),getPlayerLayout(1)];
+    const training={...getTrainingControls(), geometry:'KeyX', inputs:'KeyC'};
+    players[0].ultimate='KeyH'; players[0].taunt='KeyI';
+    expect(validateControlSet(players,getSystemControls(),training)).toBe(true);
+    expect(validateControlSet(players,getSystemControls(),{...training,inputs:'KeyH'})).toBe(false);
   });
   it('configura pausa e reinício sem sobrepor controles dos jogadores ou atalhos de treino',()=>{
     let saved='';
     expect(saveSystemControls({pause:'KeyP',reset:'KeyR'},{setItem:(_key,value)=>{saved=value;}})).toBe(true);
     expect(JSON.parse(saved)).toEqual({pause:'KeyP',reset:'KeyR'});
     expect(saveSystemControls({pause:'KeyJ',reset:'KeyR'})).toBe(false);
-    expect(validateSystemControls({pause:'KeyG',reset:'KeyR'})).toBe(false);
+    expect(validateControlSet([getPlayerLayout(0),getPlayerLayout(1)],{pause:'KeyG',reset:'KeyR'},getTrainingControls())).toBe(false);
     expect(validateSystemControls({pause:'KeyP',reset:'KeyP'})).toBe(false);
     expect(getSystemControls()).toEqual({pause:'KeyP',reset:'KeyR'});
   });

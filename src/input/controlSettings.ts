@@ -4,7 +4,31 @@ import type { AttackButton } from './types';
 export type ControlLayouts = [KeyboardLayout, KeyboardLayout];
 export interface SystemControlLayout { pause: string; reset: string }
 const defaults = (): ControlLayouts => structuredClone([PLAYER_ONE_KEYS, PLAYER_TWO_KEYS]);
-const reserved = new Set(['Escape','Enter','Tab','Space','Period','KeyG','KeyH','KeyI','KeyL','F1','F2','F3','F4']);
+const reserved = new Set(['Escape','Enter','Tab','Space','F1']);
+export const defaultTrainingControls = () => ({ step:'Period', speed:'KeyL', reset:'F2', autoLife:'F3', distance:'F4', opponent:'KeyG', geometry:'KeyH', inputs:'KeyI' });
+export type TrainingControls = ReturnType<typeof defaultTrainingControls>;
+const trainingStorageKey = 'close-combat-training-controls-v1';
+const validKey = (code: unknown) => typeof code === 'string' && /^(Key[A-Z]|Digit[0-9]|Numpad[0-9]|Arrow(Up|Down|Left|Right)|Period|F[2-9]|F1[0-2])$/.test(code) && !reserved.has(code);
+export function validateTrainingControls(value: unknown): value is TrainingControls {
+  if (!value || typeof value !== 'object') return false;
+  const controls = value as TrainingControls;
+  const keys = Object.keys(defaultTrainingControls()) as (keyof TrainingControls)[];
+  const values = keys.map(key => controls[key]);
+  return values.every(validKey) && new Set(values).size === keys.length;
+}
+let trainingControls: TrainingControls = (() => { try { const value = JSON.parse(globalThis.localStorage?.getItem(trainingStorageKey) ?? 'null'); return validateTrainingControls(value) ? value : defaultTrainingControls(); } catch { return defaultTrainingControls(); } })();
+export const getTrainingControls = (): TrainingControls => ({ ...trainingControls });
+export function saveTrainingControls(value: TrainingControls): boolean {
+  if (!validateTrainingControls(value)) return false;
+  trainingControls = { ...value };
+  try { globalThis.localStorage?.setItem(trainingStorageKey, JSON.stringify(value)); } catch { /* Session mapping remains available. */ }
+  return true;
+}
+export function validateControlSet(players: ControlLayouts, system: SystemControlLayout, training: TrainingControls): boolean {
+  if (!validateLayouts(players) || !validateSystemControls(system) || !validateTrainingControls(training)) return false;
+  const keys = [...players.flatMap(layout => [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt]), ...Object.values(system), ...Object.values(training)];
+  return new Set(keys).size === keys.length;
+}
 const systemDefaultKeys = new Set(['KeyP','KeyR']);
 const storageKey = 'close-combat-controls-v1';
 const systemStorageKey = 'close-combat-system-controls-v1';
@@ -13,7 +37,7 @@ let systemControls = defaultSystem();
 export function validateSystemControls(value: unknown): value is SystemControlLayout {
   if (!value || typeof value !== 'object') return false;
   const controls = value as SystemControlLayout;
-  const valid = (code: unknown) => typeof code === 'string' && /^(Key[A-Z]|Digit[0-9]|Numpad[0-9]|Arrow(Up|Down|Left|Right))$/.test(code) && !reserved.has(code);
+  const valid = validKey;
   return valid(controls.pause) && valid(controls.reset) && controls.pause !== controls.reset;
 }
 export function validateLayouts(value: unknown): value is ControlLayouts {
@@ -22,7 +46,7 @@ export function validateLayouts(value: unknown): value is ControlLayouts {
   return value.every(layout => layout && ['left','right','up','down'].every(key => typeof layout.directions?.[key] === 'string') &&
     ['1','2','3','4'].every(key => typeof layout.buttons?.[key] === 'string') && typeof layout.ultimate === 'string' && typeof layout.taunt === 'string' &&
     [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt].every(code => {
-      if (typeof code !== 'string' || !/^(Key[A-Z]|Digit[0-9]|Numpad[0-9]|Arrow(Up|Down|Left|Right))$/.test(code) || reserved.has(code) || systemDefaultKeys.has(code) || seen.has(code)) return false;
+      if (typeof code !== 'string' || !validKey(code) || seen.has(code)) return false;
       seen.add(code); return true;
     }));
 }
@@ -49,7 +73,7 @@ export function saveControls(value: ControlLayouts, storage?: Pick<Storage,'setI
   try { (storage ?? globalThis.localStorage)?.setItem(storageKey, JSON.stringify(value)); } catch { /* Session mapping still works when storage is unavailable. */ }
   return true;
 }
-export function resetControls(): void { saveControls(defaults()); }
+export function resetControls(): void { saveControls(defaults()); saveSystemControls(defaultSystem()); saveTrainingControls(defaultTrainingControls()); }
 systemControls = (() => { try { const v = JSON.parse(globalThis.localStorage?.getItem(systemStorageKey) ?? 'null'); return validateSystemControls(v) ? v : defaultSystem(); } catch { return defaultSystem(); } })();
 export function getSystemControls(): SystemControlLayout { return { ...systemControls }; }
 export function saveSystemControls(value: SystemControlLayout, storage?: Pick<Storage,'setItem'>): boolean {
@@ -61,6 +85,6 @@ export function keyLabel(code: string): string {
   if (code.startsWith('Key')) return code.slice(3);
   if (code.startsWith('Digit')) return code.slice(5);
   if (code.startsWith('Numpad')) return `Num${code.slice(6)}`;
-  return ({ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→'} as Record<string,string>)[code] ?? code;
+  return ({ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',Period:'.'} as Record<string,string>)[code] ?? code;
 }
 export const BUTTON_COLORS: Record<AttackButton,string> = { '1':'#72c4ff','2':'#ff929e','3':'#8cdeb0','4':'#ffda80' };
