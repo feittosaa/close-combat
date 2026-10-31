@@ -68,6 +68,10 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const startup = state.attack.startupFrames ?? move.startup;
     const activeEnd = startup + move.activeFrames;
     const recovery = recoveryFrames(move, state.attack);
+    if (move.id === 'heavy-punch' && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) {
+      const frames = [2,3,4,5,4,3];
+      return pose('charge-heavy-punch', frames[Math.floor(((state.attack.chargeFrames ?? 0) - startup) / 8) % frames.length], state);
+    }
     if (move.screenVolley) {
       if (elapsed < 12) return pose('taunt', Math.max(0, 5 - Math.floor(elapsed / 2)), state);
       return pose('idle', sample('idle', elapsed), state);
@@ -84,7 +88,8 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const safeStartup = Array.from({length:active}, (_, index) => index);
     const rhythm = attackRhythm[move.id];
     const before = elapsed < startup ? getPhaseAnimationFrame(safeStartup, rhythm.startup, elapsed, startup) : active;
-    const recoveryPoses = Array.from({length:5-active}, (_, index) => active+index+1);
+    const recoveryPoses = move.id === 'push-away' ? [3,1,0] :
+      move.id === 'heavy-kick' ? [3,4,1] : Array.from({length:5-active}, (_, index) => active+index+1);
     const after = elapsed >= activeEnd ? getPhaseAnimationFrame(recoveryPoses, rhythm.recovery, elapsed-activeEnd, recovery) : before;
     const combo = move.id === 'heavy-punch' && state.chain?.[0] === 'light-punch' &&
       state.chain.every((id,index)=>id === (index ? 'heavy-punch' : 'light-punch'));
@@ -157,6 +162,7 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
   const elapsed = state.attack.elapsedFrames;
   const startup = state.attack.startupFrames ?? move.startup;
   const activeEnd = startup + move.activeFrames;
+  if (move.charge && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) return [character];
   let effectFrame: number | undefined;
   if (elapsed >= Math.max(0, startup - 6) && elapsed < startup) effectFrame = sample('magic', elapsed - Math.max(0, startup - 6));
   if (elapsed >= startup && elapsed < activeEnd && ['light-punch','heavy-punch','air-light-punch','air-heavy-punch'].includes(move.id)) effectFrame = 2;

@@ -1697,6 +1697,38 @@
     "magic-volley": {
       "source": "magic-volley.png",
       "background": "magenta"
+    },
+    "charge-heavy-punch": {
+      "source": "charge-heavy-punch.png",
+      "anchorX": [
+        270,
+        750,
+        1250,
+        260,
+        750,
+        1250
+      ],
+      "roots": [
+        507,
+        507,
+        507,
+        491,
+        491,
+        491
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
     }
   }
 }

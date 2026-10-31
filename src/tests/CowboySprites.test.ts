@@ -4,6 +4,14 @@ import { createGameConfig } from '../engine/data/gameConfig';
 import { cowboy } from '../engine/data/fighters/cowboy';
 import { getCowboySpriteLayers, getCowboySpritePose } from '../rendering/animations/cowboySprites';
 
+it('anima a postura de carga e retorna ao tiro ao soltar', () => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
+  const charging = {...state,attack:{moveId:'heavy-punch',buttons:['2'] as const,elapsedFrames:13,hasHit:false,chargeFrames:14}};
+  expect(getCowboySpritePose(charging,14)).toMatchObject({texture:'cowboy-charge-heavy-punch',frame:2});
+  expect(getCowboySpritePose({...charging,attack:{...charging.attack,chargeFrames:22}},22)).toMatchObject({texture:'cowboy-charge-heavy-punch',frame:3});
+  expect(getCowboySpritePose({...charging,attack:{...charging.attack,chargeReleased:true}},23)?.texture).toBe('cowboy-heavy-punch');
+});
+
 it('uses the standing grabbed reaction until the throw pulls the fighter away', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const captured = {...state, mode:'knockdown' as const, grabbedStartedFrame:40};
