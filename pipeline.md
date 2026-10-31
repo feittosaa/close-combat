@@ -6,7 +6,7 @@ Continuação na branch `codex/feature-cowboy-animacoes`, dependente de `codex/f
 
 Adicionado histórico dos últimos 12 combos, acumulando acertos e dano por atacante até a vítima recuperar a defesa; bloqueios não contam. O treino mostra os três registros recentes de cada jogador, enquanto os demais modos mostram temporariamente a contagem e o dano de sequências com múltiplos acertos. A pausa de contato compartilhada caiu de sete para seis quadros de 60 Hz, a aproximação inteira mais próxima de 20%. Foram conferidos no jogo o menu e a contagem após um acerto no treino; as folhas do especial e as transições completas continuam sujeitas a revisão artística do usuário.
 
-Instalação reproduzível, 465 testes em 42 arquivos, build e diff aprovados localmente. O envio da branch ao repositório público foi solicitado pelo usuário após informação da visibilidade; estado remoto e CI devem ser conferidos após o push. Não há autorização para merge em development.
+Instalação reproduzível, 465 testes em 42 arquivos, build e diff aprovados localmente. O commit `f6c50e5` foi enviado à branch remota; a [CI 41245444069](https://github.com/feittosaa/close-combat/actions/runs/41245444069) passou. O fechamento documental seguinte também requer sua própria CI. Não há autorização para merge em development.
 
 ## Cowboy — chutes e carga do soco forte — 2026-10-31
 
