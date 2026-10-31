@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Menu e tiro horizontal da Cowboy — 2026-10-31
+
+Continuação na `codex/feature-cowboy-animacoes`, dependente das alterações anteriores ainda não integradas. O menu principal alinha a imagem à direita, calcula sua cobertura pela proporção real da janela e aplica o degradê preto solicitado à esquerda. A fonte e o atlas do especial horizontal `d,df,f,1` receberam novas poses inicial e final com ambos os braços visíveis, substituindo a pose de uma mão; o especial antiaéreo não foi alterado nesta revisão.
+
+Instalação reproduzível, 469 testes em 42 arquivos e build aprovados; testes cobrem a cobertura em quatro proporções, inclusive janela ultralarga. No jogo foram observados o menu e o especial horizontal com caixas de colisão; o ciclo completo em ambas as direções e a proporção ultralarga real ainda aguardam revisão visual do usuário. O envio e a CI devem ser conferidos no remoto; não há autorização para merge.
+
 ## Cowboy — carga no combo, referência e histórico — 2026-10-31
 
 Continuação na branch `codex/feature-cowboy-animacoes`, dependente de `codex/feature-cowboy-zoner` e das alterações anteriores ainda não integradas. O soco forte pode ser carregado durante `1,2,2,2`, preservando as folhas alternadas de tiros do combo; o tiro mantém o dano conforme a carga. A fonte do especial forte foi corrigida com dois braços humanos e gestos de arminha; o novo turnaround fornecido substitui a referência canônica em `assets/art/characters/cowboy/turnaround.png` sem modificar o arquivo. A ilustração fornecida foi conectada ao fundo do menu principal; a referência anterior permanece usada nas outras telas.
