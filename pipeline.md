@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — ritmo do chute potente e provocação — 2026-10-31
+
+Branch `codex/fix-cowboy-ritmo-chute-potente`, dependente de `codex/feature-cowboy-especiais-carregados` e seus antecedentes ainda não integrados. O chute potente passa de 20 para 18 quadros de preparação e de 34 para 30 de recuperação, preservando atividade, dano e caixa. A provocação passa de 48 para 60 quadros de simulação, mantendo os mesmos desenhos, a entrada e a transição de saída; sua duração não altera a ativação da ultimate.
+
+Instalação reproduzível, 480 testes em 42 arquivos e build aprovados; o treino exibiu o chute com caixas e a provocação. A avaliação artística completa permanece pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI devem ser conferidos; não há autorização para merge.
+
 ## Cowboy — braços durante os especiais segurados — 2026-10-31
 
 Continuação na `codex/feature-cowboy-especiais-carregados`, dependente das branches anteriores ainda não integradas. Os dois especiais agora disparam ao soltar o botão ou atingir 60 quadros, sem bônus de dano. Durante a espera, os braços espectrais permanecem visíveis e alternam poses, horizontais no especial fraco e diagonais no forte.

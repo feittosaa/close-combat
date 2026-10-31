@@ -282,7 +282,7 @@ export class Simulation {
       const tauntPressed = Boolean(input.taunt) && !this.tauntHeld[index];
       this.tauntHeld[index] = Boolean(input.taunt);
       if (character.fighterId === 'cowboy' && tauntPressed && character.mode === 'neutral' && !character.attack) character.tauntStartedFrame = this.frame;
-      if (character.tauntStartedFrame !== undefined && (character.mode !== 'neutral' || character.attack || this.frame - character.tauntStartedFrame >= 48)) character.tauntStartedFrame = undefined;
+      if (character.tauntStartedFrame !== undefined && (character.mode !== 'neutral' || character.attack || this.frame - character.tauntStartedFrame >= 60)) character.tauntStartedFrame = undefined;
       if (character.knockdown) { character.x += character.knockdown.velocityX; character.knockdown.velocityX *= .94; }
       if (character.throwPull) {
         const pull = character.throwPull;
