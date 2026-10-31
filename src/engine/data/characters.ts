@@ -21,6 +21,8 @@ export interface ComboRecipe {
   name: string;
   notation: string;
   moveIds: readonly string[];
+  /** Optional authored timing and contact rules for a projectile recipe. */
+  projectileSequence?: { startupFrames: readonly number[]; continueOnBlock: boolean; };
   /** Recovery after the final confirmed hit of this recipe. */
   recoveryFrames?: number;
   /** Launch and shortened recovery applied only by the confirmed final hit of this exact recipe. */

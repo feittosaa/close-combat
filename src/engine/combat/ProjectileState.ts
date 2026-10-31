@@ -4,6 +4,8 @@ import type { CharacterAttack } from '../characters/CharacterState';
 export interface ProjectileState {
   id: number;
   ownerId: string;
+  comboId?: number;
+  comboStep?: number;
   fighterId: string;
   x: number;
   y: number;
