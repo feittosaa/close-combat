@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Menu — imagem em alta resolução — 2026-10-31
+
+Na branch `codex/feature-cowboy-zoner`, o wallpaper do menu foi substituído pelo PNG fornecido pelo usuário, de 4758 × 2976 pixels, mantendo a proporção e o enquadramento existentes. O arquivo ocupa aproximadamente 24,5 MB. O menu foi conferido no navegador com cobertura integral e degradê à esquerda; a aprovação visual final cabe ao usuário.
+
+Instalação reproduzível, 482 testes em 42 arquivos e build aprovados; a instalação informou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). O envio e a CI devem ser conferidos. Sem autorização para integrar em `development`.
+
 ## Cowboy — duração da provocação e giro da ultimate — 2026-10-31
 
 Continuação em `codex/feature-cowboy-zoner`. A provocação mantém as mesmas poses e transições, com duração ampliada de 60 para 90 quadros. A preparação da ultimate conserva 150 quadros: a entrada ganhou tempo e as poses existentes do giro avançam mais rapidamente, incluindo uma segunda volta, antes da mesma saída.
