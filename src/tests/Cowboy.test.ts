@@ -150,6 +150,21 @@ it.each([0, 1])('carrega o soco forte por até dois segundos e dispara automatic
   }
 });
 
+it.each([0,1])('carrega um soco forte no combo de tiros sem trocar a receita: jogador %i', player => {
+  const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
+  const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+  step(input('N','1'));
+  for(let tick=0;tick<60&&!sim.snapshot().hitEvents.length;tick++)step();
+  expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'light-punch',outcome:'hit'});
+  while(sim.snapshot().hitstopFramesRemaining)step();
+  for(let tick=0;tick<60;tick++)step(input('N','2'));
+  expect(sim.snapshot().characters[player]).toMatchObject({chain:['light-punch','heavy-punch'],attack:{moveId:'heavy-punch',chargeFrames:60}});
+  step();
+  for(let tick=0;tick<80&&!sim.snapshot().hitEvents.length;tick++)step();
+  expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'heavy-punch',outcome:'hit',damage:46});
+});
+
 it.each([0, 1])('executa as receitas aéreas com uma entrada por tiro: jogador %i', player => {
   for (const buttons of [['1', '1', '2'], ['2', '2']] as const) {
     const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;

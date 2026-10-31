@@ -22,6 +22,8 @@ export function preloadCowboySprites(scene: Phaser.Scene): void {
 const pose = (name: string, frame: number, state: CharacterState) => ({
   texture: `cowboy-${name}`, frame, scale: 1, alpha: 1, flipX: state.facing === 'left',
 });
+const isShotCombo = (state: CharacterState) => state.attack?.moveId === 'heavy-punch' &&
+  state.chain?.[0] === 'light-punch' && state.chain.every((id,index) => id === (index ? 'heavy-punch' : 'light-punch'));
 /** Per-action drawing cadence in simulation ticks; contact remains tied to combat. */
 export const cowboyAnimationClips: Readonly<Record<string, AnimationClip>> = {
   idle: {key:'idle',start:0,end:5,frameRate:4,frameDurations:[15,12,12,15,12,12],repeat:-1},
@@ -68,7 +70,7 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const startup = state.attack.startupFrames ?? move.startup;
     const activeEnd = startup + move.activeFrames;
     const recovery = recoveryFrames(move, state.attack);
-    if (move.id === 'heavy-punch' && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) {
+    if (move.id === 'heavy-punch' && !isShotCombo(state) && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) {
       const frames = [2,3,4,5,4,3];
       return pose('charge-heavy-punch', frames[Math.floor(((state.attack.chargeFrames ?? 0) - startup) / 8) % frames.length], state);
     }
@@ -91,8 +93,7 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const recoveryPoses = move.id === 'push-away' ? [3,1,0] :
       move.id === 'heavy-kick' ? [3,4,1] : Array.from({length:5-active}, (_, index) => active+index+1);
     const after = elapsed >= activeEnd ? getPhaseAnimationFrame(recoveryPoses, rhythm.recovery, elapsed-activeEnd, recovery) : before;
-    const combo = move.id === 'heavy-punch' && state.chain?.[0] === 'light-punch' &&
-      state.chain.every((id,index)=>id === (index ? 'heavy-punch' : 'light-punch'));
+    const combo = isShotCombo(state);
     const texture = combo ? state.chain!.length % 2 === 0 ? 'combo-left-shot' : 'combo-right-shot' : move.category === 'throw' ? 'throw' : move.id;
     return pose(texture, after, state);
   }
@@ -162,7 +163,7 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
   const elapsed = state.attack.elapsedFrames;
   const startup = state.attack.startupFrames ?? move.startup;
   const activeEnd = startup + move.activeFrames;
-  if (move.charge && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) return [character];
+  if (move.charge && !isShotCombo(state) && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) return [character];
   let effectFrame: number | undefined;
   if (elapsed >= Math.max(0, startup - 6) && elapsed < startup) effectFrame = sample('magic', elapsed - Math.max(0, startup - 6));
   if (elapsed >= startup && elapsed < activeEnd && ['light-punch','heavy-punch','air-light-punch','air-heavy-punch'].includes(move.id)) effectFrame = 2;

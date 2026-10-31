@@ -36,6 +36,7 @@ export class MenuScene extends Phaser.Scene {
   private set fighterIndex(index: number) { this.selection.select(0, index); }
   private root?: Phaser.GameObjects.Container;
   private chrome?: Phaser.GameObjects.Container;
+  private background?: Phaser.GameObjects.Image;
   private menuElement?: HTMLElement;
   private resizeObserver?: ResizeObserver;
   private motionPreference?: MediaQueryList;
@@ -94,6 +95,7 @@ export class MenuScene extends Phaser.Scene {
     // Overscan keeps the slow camera drift inside the illustration at every phase.
     this.textures.get('menu-solar').setFilter(Phaser.Textures.FilterMode.LINEAR);
     const background = this.add.image(width / 2, height / 2, 'menu-solar');
+    this.background = background;
     const cover = Math.max(width / background.width, height / background.height) * 1.045;
     background.setScale(cover);
     this.motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -108,10 +110,6 @@ export class MenuScene extends Phaser.Scene {
           duration: 6500 + i * 470, delay: i * 480, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
       }
     }
-    // A left-only ink wash protects text without covering the sun and gateway.
-    const wash = this.add.graphics();
-    wash.fillGradientStyle(0x111016, 0x111016, 0x111016, 0x111016, .88, 0, .94, 0);
-    wash.fillRect(0, 0, 740, height);
     this.chrome = this.add.container(0, 0);
     this.chrome.add([
       this.add.rectangle(width / 2, height - 18, width, 36, 0x111016, .82),
@@ -161,6 +159,7 @@ export class MenuScene extends Phaser.Scene {
   }
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
+    this.background?.setTexture(this.page === 'home' ? 'menu-solar' : 'menu-reference');
     const { width, height } = LOGICAL_VIEW;
     this.menuElement!.hidden = this.page === 'settings';
     this.chrome?.setVisible(this.menuElement!.hidden);
@@ -215,11 +214,9 @@ export class MenuScene extends Phaser.Scene {
         item.addEventListener('focus', () => this.selectHomeMode(index));
         modes.append(item);
       });
-      const hero = node('div', 'arena-home-hero'); hero.setAttribute('aria-hidden', 'true');
-      hero.append(portrait('130 35 510 710', true));
       const note = node('div', 'arena-home-note', 'ESCOLHA SUA LUTA');
       const controls = node('footer', 'arena-home-controls', '↑ ↓ ESCOLHER   ·   ENTER CONFIRMAR');
-      root.append(modes, feature, hero, note, controls);
+      root.append(modes, feature, note, controls);
       this.selectHomeMode(this.modeIndex);
     } else if (this.page === 'stage') {
       renderStageSelection(root, { stages: selectableStages, selected: this.stageIndex,

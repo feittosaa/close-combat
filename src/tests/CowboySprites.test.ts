@@ -12,6 +12,13 @@ it('anima a postura de carga e retorna ao tiro ao soltar', () => {
   expect(getCowboySpritePose({...charging,attack:{...charging.attack,chargeReleased:true}},23)?.texture).toBe('cowboy-heavy-punch');
 });
 
+it.each([2,3,4])('mantém a folha alternada do combo durante a carga no golpe %i', length => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
+  const charging = {...state,chain:['light-punch',...Array(length-1).fill('heavy-punch')],
+    attack:{moveId:'heavy-punch',buttons:['2'] as const,elapsedFrames:9,startupFrames:10,hasHit:false,chargeFrames:80}};
+  expect(getCowboySpritePose(charging,80)?.texture).toBe(length % 2 ? 'cowboy-combo-right-shot' : 'cowboy-combo-left-shot');
+});
+
 it('uses the standing grabbed reaction until the throw pulls the fighter away', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const captured = {...state, mode:'knockdown' as const, grabbedStartedFrame:40};
