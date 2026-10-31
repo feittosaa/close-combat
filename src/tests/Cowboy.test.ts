@@ -244,6 +244,41 @@ it.each([0, 1])('usa chute potente médio e agarrões que lançam para longe: jo
   }
 });
 
+it.each([0, 1])('carrega o alcance do laço sem mudar o dano: jogador %i', player => {
+  for (const [buttons,id] of [[['1','3'],'throw-13'],[['2','4'],'throw-24']] as const) {
+    const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
+    const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:200});
+    const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+    const chord: FrameInput = {direction:'N',buttons:new Set(buttons)};
+    const move = cowboy.moves.find(candidate=>candidate.id===id)!;
+    step(chord);
+    const initial = createHitbox(sim.snapshot().characters[player],move);
+    for(let tick=1;tick<30;tick++) step(chord);
+    const halfway = createHitbox(sim.snapshot().characters[player],move);
+    expect(halfway.width).toBeGreaterThan(initial.width);
+    expect(halfway.width).toBeLessThan(move.hitbox.width * 1.3);
+    for(let tick=30;tick<60;tick++) step(chord);
+    const full = sim.snapshot().characters[player];
+    expect(full.attack).toMatchObject({moveId:id,chargeFrames:60,chargeReleased:true});
+    expect(createHitbox(full,move).width).toBeCloseTo(move.hitbox.width * 1.3);
+    for(let tick=0;tick<15&&!sim.snapshot().hitEvents.length;tick++)step();
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:id,outcome:'hit',damage:move.damage});
+  }
+});
+
+it.each([0, 1])('soltar qualquer botão libera o agarrão com o alcance acumulado: jogador %i', player => {
+  const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:200});
+  const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+  for(let tick=0;tick<30;tick++)step({direction:'N',buttons:new Set(['1','3'])});
+  const move = cowboy.moves.find(candidate=>candidate.id==='throw-13')!;
+  const chargedWidth = createHitbox(sim.snapshot().characters[player],move).width;
+  step(input('N','1'));
+  const released=sim.snapshot().characters[player];
+  expect(released.attack).toMatchObject({moveId:'throw-13',chargeFrames:30,chargeReleased:true});
+  expect(createHitbox(released,move).width).toBe(chargedWidth);
+});
+
 it.each([0, 1])('arremessa gradualmente para trás sem mover quem laçou: jogador %i', player => {
   const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});

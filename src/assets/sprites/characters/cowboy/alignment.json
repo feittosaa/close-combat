@@ -1819,6 +1819,38 @@
       "rowY": 512,
       "scale": 1.04,
       "background": "magenta"
+    },
+    "charge-throw": {
+      "source": "charge-throw.png",
+      "anchorX": [
+        250,
+        765,
+        1275,
+        260,
+        775,
+        1280
+      ],
+      "roots": [
+        497,
+        497,
+        497,
+        480,
+        480,
+        480
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.05,
+      "background": "magenta"
     }
   }
 }

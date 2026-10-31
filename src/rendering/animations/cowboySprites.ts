@@ -38,7 +38,7 @@ export const cowboyAnimationClips: Readonly<Record<string, AnimationClip>> = {
   magic: {key:'magic',start:0,end:2,frameRate:30,repeat:0},
   magicExit: {key:'magic-exit',start:3,end:5,frameRate:30,repeat:0},
   taunt: {key:'taunt',start:0,end:5,frameRate:10,frameDurations:[6,6,6,6,6,6],repeat:0},
-  turn: {key:'turn',start:0,end:5,frameRate:30,frameDurations:[2,2,2,2,2,2],repeat:0},
+  turn: {key:'turn',start:0,end:5,frameRate:24,frameDurations:[2,3,2,3,2,3],repeat:0},
   enterWalk: {key:'enter-walk',start:0,end:5,frameRate:30,frameDurations:[2,2,2,2,2,2],repeat:0},
   hurt: {key:'hurt',start:0,end:5,frameRate:16,frameDurations:[2,3,3,4,5,5],repeat:0},
 };
@@ -79,6 +79,9 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const startup = state.attack.startupFrames ?? move.startup;
     const activeEnd = startup + move.activeFrames;
     const recovery = recoveryFrames(move, state.attack);
+    if (move.category === 'throw' && !state.attack.chargeReleased && elapsed === startup - 1 && (state.attack.chargeFrames ?? 0) >= startup - 1) {
+      return pose('charge-throw', Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 5) % 6, state);
+    }
     if (move.id === 'heavy-punch' && !isShotCombo(state) && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) {
       const frames = [2,3,4,5,4,3];
       return pose('charge-heavy-punch', frames[Math.floor(((state.attack.chargeFrames ?? 0) - startup) / 8) % frames.length], state);
@@ -123,7 +126,7 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
   const transition = state.animationTransition;
   const elapsed = Math.max(0, frame - (transition?.startedFrame ?? state.stateStartedFrame));
   const turn = state.facingTransition;
-  if (turn && frame >= turn.startedFrame && frame - turn.startedFrame < 12 && state.mode !== 'blocking' && state.mode !== 'blockstun') {
+  if (turn && frame >= turn.startedFrame && frame - turn.startedFrame < 15 && state.mode !== 'blocking' && state.mode !== 'blockstun') {
     const name = !state.grounded ? 'turn-air' : state.crouching ? 'turn-crouch' : state.mode === 'moving' ? 'turn-walk' : 'turn-idle';
     return {...pose(name, sample('turn', frame - turn.startedFrame), state), flipX:turn.from === 'left'};
   }
@@ -174,12 +177,13 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
   const activeEnd = startup + move.activeFrames;
   const holdingSpecial = (move.id === 'quick-shot' || move.id === 'heavy-shot') &&
     !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup - 1;
-  if (move.charge && !holdingSpecial && !isShotCombo(state) && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) return [character];
+  const holdingHeavy = move.id === 'heavy-punch' && !state.attack.chargeReleased &&
+    (state.attack.chargeFrames ?? 0) >= startup - 1;
   let effectFrame: number | undefined;
   if (elapsed >= Math.max(0, startup - 6) && elapsed < startup) effectFrame = sample('magic', elapsed - Math.max(0, startup - 6));
   if (elapsed >= startup && elapsed < activeEnd && ['light-punch','heavy-punch','air-light-punch','air-heavy-punch'].includes(move.id)) effectFrame = 2;
   if (elapsed >= activeEnd && elapsed < activeEnd + 6) effectFrame = sample('magicExit', elapsed - activeEnd);
-  if (holdingSpecial) effectFrame = 2 + Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 8) % 2;
+  if (holdingSpecial || holdingHeavy) effectFrame = 2 + Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 8) % 2;
   const direction = (move.projectile.verticalSpeed ?? 0) < 0 ? 'up' : (move.projectile.verticalSpeed ?? 0) > 0 ? 'down' : 'horizontal';
   return effectFrame === undefined ? [character] : [{...pose(`magic-${direction}`, effectFrame, state), scale:1.25}, character];
 }

@@ -156,8 +156,8 @@ it.each(['idle','walk','crouch','air'] as const)('uses the authored %s turn in e
     const turning = {...state, facing, facingTransition:{from,startedFrame:20},
       grounded:kind !== 'air', crouching:kind === 'crouch', mode:kind === 'walk' ? 'moving' as const : 'neutral' as const};
     expect(getCowboySpritePose(turning,20)).toMatchObject({texture:`cowboy-turn-${kind}`,frame:0,flipX:from === 'left'});
-    expect(getCowboySpritePose(turning,30)).toMatchObject({texture:`cowboy-turn-${kind}`,frame:5,flipX:from === 'left'});
-    expect(getCowboySpritePose(turning,32)?.texture).not.toBe(`cowboy-turn-${kind}`);
+    expect(getCowboySpritePose(turning,32)).toMatchObject({texture:`cowboy-turn-${kind}`,frame:5,flipX:from === 'left'});
+    expect(getCowboySpritePose(turning,35)?.texture).not.toBe(`cowboy-turn-${kind}`);
     expect(turning.facing).toBe(facing);
   }
 });
@@ -202,6 +202,20 @@ it.each([0, 1])('keeps the correctly oriented spectral arms during both special 
       expect(layers[1]).toMatchObject({texture:`cowboy-${moveId}`,frame:1});
     }
   }
+});
+
+it.each([0, 1])('anima o laço e os braços do soco forte durante a carga: jogador %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  for (const [moveId,buttons] of [['throw-13',['1','3']],['throw-24',['2','4']]] as const) {
+    const held = {...state,attack:{moveId,buttons,elapsedFrames:18,chargeFrames:24,hasHit:false}};
+    expect(getCowboySpritePose(held,24)).toMatchObject({texture:'cowboy-charge-throw',frame:1,flipX:player===1});
+    expect(getCowboySpritePose({...held,attack:{...held.attack,chargeReleased:true}},24)?.texture).toBe('cowboy-throw');
+  }
+  const heavy = {...state,attack:{moveId:'heavy-punch',buttons:['2'] as const,elapsedFrames:13,chargeFrames:30,hasHit:false}};
+  expect(getCowboySpriteLayers(heavy,30)[0]).toMatchObject({texture:'cowboy-magic-horizontal',flipX:player===1});
+  const combo = {...heavy,chain:['light-punch','heavy-punch']};
+  expect(getCowboySpriteLayers(combo,30)).toHaveLength(2);
+  expect(getCowboySpriteLayers(combo,30)[0].texture).toBe('cowboy-magic-horizontal');
 });
 
 it('keeps Cowboy animation cadence deterministic at different display rates', () => {
