@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Cowboy — turnaround canônico — 2026-10-30
+
+O usuário definiu a imagem fornecida como referência canônica da Cowboy. Arquivo original preservado sem alterações em [turnaround.png](assets/art/characters/cowboy/turnaround.png), com vistas, figurino e elementos espectrais para orientar futuras artes. Esta referência não é uma spritesheet nem foi integrada à apresentação do jogo; a geometria temporária continua em uso. A aprovação da referência não implica aprovação de animações futuras. Instalação reproduzível, 375 testes, build e diff aprovados; envio e CI remota a conferir.
+
 ## Cowboy — combos de chutes e tiros — 2026-10-30
 
 Na branch `codex/feature-cowboy-zoner`, adicionadas manualmente as receitas `3,3,3` e `1,2,2,2`, com uma entrada por golpe. Na sequência de tiros os preparos provisórios são 8, 10, 32 e 32 frames. Os dois tiros finais preservam a confirmação quando os anteriores acertam, inclusive com projéteis em voo; após bloqueio a receita pode continuar e o preparo expõe uma janela de punição. O defensor que soltar a guarda também pode ser atingido. A extensão de recuperação da receita considera o tempo de deslocamento dos projéteis; balanceamento e sensação dos tempos aguardam avaliação.
