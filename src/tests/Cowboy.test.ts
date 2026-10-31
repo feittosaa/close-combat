@@ -14,7 +14,7 @@ describe('Cowboy protótipo', () => {
     expect(cowboy.combos).toEqual([]);
   });
   it.each([0, 1])('executa os disparos e o afastamento do lado %i', player => {
-    for (const [button, id, distance] of [['1', 'quick-shot', 300], ['2', 'heavy-shot', 300], ['4', 'push-away', 56]] as const) {
+    for (const [button, id, distance] of [['1', 'quick-shot', 65], ['2', 'heavy-shot', 65], ['4', 'push-away', 56]] as const) {
       const definitions = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
       const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: distance });
       const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
@@ -74,4 +74,37 @@ it('usa proporção de altura de 1,60 m para 1,85 m e chutes curtos', () => {
     expect(move.hitLevel).toBe('low');
     expect(move.hitbox.width).toBeLessThanOrEqual(70);
   }
+});
+
+it.each([0, 1])('tiros especiais têm dano alto e alcance curto: jogador %i', player => {
+  for (const [button, id, damage] of [['1', 'quick-shot', 120], ['2', 'heavy-shot', 140]] as const) {
+    for (const [distance, defense, expected] of [[65, 'N', 'hit'], [65, 'B', 'block'], [300, 'N', 'miss'], [65, 'D', 'miss']] as const) {
+      const definitions = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+      const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: distance });
+      const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input(defense)] : [input(defense), value]);
+      for (const direction of ['D', 'DF', 'F'] as const) step(input(direction));
+      step(input('F', button));
+      let outcome = 'miss';
+      for (let tick = 0; tick < 70; tick++) {
+        step(input());
+        const event = sim.snapshot().hitEvents.find(hit => hit.moveId === id);
+        if (event) { outcome = event.outcome; expect(event.damage).toBe(expected === 'hit' ? damage : 0); break; }
+      }
+      expect(outcome).toBe(expected);
+    }
+  }
+});
+
+it.each([0, 1])('tiro especial forte alcança adversário no ar próximo: jogador %i', player => {
+  const definitions = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: 85 });
+  const step = (value: FrameInput, target: FrameInput) => sim.stepFrame(player === 0 ? [value, target] : [target, value]);
+  for (const direction of ['D', 'DF', 'F'] as const) step(input(direction), input());
+  step(input('F', '2'), input('U'));
+  let hit = false;
+  for (let tick = 0; tick < 45; tick++) {
+    step(input(), input());
+    if (sim.snapshot().hitEvents.some(event => event.moveId === 'heavy-shot' && event.outcome === 'hit')) { hit = true; break; }
+  }
+  expect(hit).toBe(true);
 });

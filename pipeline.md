@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — tiros especiais de perto — 2026-10-30
+
+Na branch `codex/feature-cowboy-zoner`, `d,df,f,1` passa a ser tiro alto à queima-roupa (120 de dano provisório), e `d,df,f,2` um tiro alto antiaéreo de perto (140 de dano provisório). Ambos são projéteis de vida curta; o segundo sobe em diagonal. Eles erram alvos agachados e podem ser bloqueados. Os socos básicos e o especial de afastamento permanecem. Dano, alcance e tempos aguardam revisão de balanceamento.
+
+Instalação reproduzível, 365 testes em 40 arquivos, build e diff aprovados. Regressões verificam dano, bloqueio, erro à distância e contra agachado, além de acerto antiaéreo próximo, nos dois lados. Arte e aprovação visual continuam pendentes; envio e CI remota a verificar.
+
 ## Cowboy projectile zoner — 2026-10-30
 
 Continuação em `codex/feature-cowboy-zoner`: altura da hurtbox em pé 157,54 contra 182,16 do Shoto (proporção 1,60/1,85); corpo e demais posturas ajustados. Socos básicos em pé disparam horizontalmente, socos aéreos em diagonal para baixo, e `d+2` dispara em diagonal para cima. `d+1` é coronhada próxima; chutes em pé e abaixados têm alcance curto e atingem baixo, com `d+3` rápido e `d+4` como rasteira que derruba apenas no acerto. Chutes aéreos mantêm contato próximo. Queda usa recuperação e invencibilidade de retorno do alvo. Especiais anteriores de disparo e afastamento permanecem. Sem novas receitas, arte ou ultimate; geometria e balanceamento são provisórios.
