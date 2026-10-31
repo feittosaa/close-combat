@@ -16,6 +16,7 @@ import { attackDurationFrames } from '../combat/frameData';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
+export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number }
 export interface SimulationSnapshot {
   /** frame is combat/animation time; elapsedFrames counts every fixed tick, including hitstop. */
   frame: number; elapsedFrames: number; round: number; roundFramesRemaining: number;
@@ -28,6 +29,7 @@ export interface SimulationSnapshot {
   characters: readonly CharacterState[]; activeHitboxes: readonly Hitbox[];
   projectiles: readonly ProjectileState[];
   hitEvents: readonly HitEvent[]; recentContacts: readonly CombatLogEntry[];
+  comboHistory: readonly ComboRecord[];
 }
 export interface SimulationOptions { training?: boolean; initialDistance?: number }
 const knockdownRadius = (state: CharacterState): number => state.collision.hurtboxes.knockdown.width / 2 + 8;
@@ -72,6 +74,7 @@ export class Simulation {
   private transitionFrames = 0;
   private lastHitEvents: HitEvent[] = [];
   private recentContacts: CombatLogEntry[] = [];
+  private comboHistory: ComboRecord[] = [];
   private trainingDistance?: number;
   private trainingAutoRestore = false;
   private quietFrames = 0;
@@ -102,7 +105,7 @@ export class Simulation {
       roundEndReason: this.roundEndReason, matchWinnerId: this.matchWinnerId,
       characters: structuredClone(this.characters), activeHitboxes: this.phase === 'fight' ? this.resolver.activeHitboxes(this.characters, this.projectiles) : [],
       projectiles: structuredClone(this.projectiles),
-      hitEvents: this.lastHitEvents.map(event => ({ ...event })), recentContacts: this.recentContacts.map(entry => ({ frame: entry.frame, event: { ...entry.event } })) };
+      hitEvents: this.lastHitEvents.map(event => ({ ...event })), recentContacts: this.recentContacts.map(entry => ({ frame: entry.frame, event: { ...entry.event } })), comboHistory: structuredClone(this.comboHistory) };
   }
   clearInputHistory(): void {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
@@ -139,7 +142,7 @@ export class Simulation {
     this.clearInputHistory(); this.characters = this.createCharacters();
     this.characters.forEach((character, index) => { character.rage = rage[index]; }); this.roundFramesRemaining = this.config.match.roundDurationFrames;
     this.roundWinnerId = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
-    this.lastHitEvents = []; this.recentContacts = []; this.quietFrames = 0;
+    this.lastHitEvents = []; this.recentContacts = []; this.comboHistory = []; this.quietFrames = 0;
     this.hitstopFramesRemaining = 0; this.ultimateActivation = undefined; this.pendingLighters = []; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
   }
   private step(inputs: readonly FrameInput[]): void {
@@ -365,7 +368,21 @@ export class Simulation {
       projectile.verticalVelocity = (projectile.verticalVelocity ?? 0) + (projectile.gravity ?? 0);
       projectile.remainingFrames -= 1;
     });
+    for (const combo of this.comboHistory) {
+      const target = this.characters.find(character => character.characterId === combo.targetId);
+      if (combo.active && target && !['hitstun','knockdown'].includes(target.mode)) combo.active = false;
+    }
     this.lastHitEvents = this.resolver.resolve(this.characters, inputs, this.projectiles);
+    for (const hit of this.lastHitEvents) {
+      if (hit.outcome !== 'hit' || hit.damage <= 0) continue;
+      let combo = this.comboHistory.find(entry => entry.active && entry.attackerId === hit.attackerId && entry.targetId === hit.targetId);
+      if (!combo) {
+        combo = { attackerId:hit.attackerId,targetId:hit.targetId,hits:0,damage:0,active:true,lastFrame:this.frame };
+        this.comboHistory.push(combo);
+      }
+      combo.hits += 1; combo.damage += hit.damage; combo.lastFrame = this.frame;
+    }
+    this.comboHistory = this.comboHistory.slice(-12);
     for (const projectile of this.projectiles) {
       if (!projectile.attack.hasHit) continue;
       const owner = this.characters.find(character => character.characterId === projectile.ownerId);

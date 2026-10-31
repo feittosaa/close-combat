@@ -55,7 +55,7 @@
 
 /* Home: a compact stack of choices opens into one oversized, angled feature. */
 .arena-home {
-  background: #000;
+  background: transparent;
   isolation: isolate;
 }
 .arena-home .arena-header { z-index: 5; border: 0; inset: 4% 4% auto; }
@@ -85,11 +85,13 @@
 .arena-feature-number { font: 900 1cqw Arial,sans-serif; letter-spacing: .12em; color: #a3382e; }
 .arena-feature-title { display: block; max-width: 100%; margin: .8cqw 0; font: 900 clamp(12px,2.5cqw,44px)/1 'Arial Black',Impact,Arial,sans-serif; letter-spacing: -.04em; -webkit-text-stroke: .04em currentColor; white-space: nowrap; }
 .arena-feature-hint { max-width: 75%; font: 700 1cqw/1.3 Arial,sans-serif; }
-.arena-home-hero { position: absolute; z-index: 3; right: -3%; bottom: 2%; width: 33%; height: 88%; pointer-events: none; }
-.arena-home-hero::before { content: ''; position: absolute; inset: 9% -20% 6% 0; background: #b64435; clip-path: polygon(15% 0,100% 11%,100% 86%,0 100%); opacity: .85; }
-.arena-home-hero svg { position: relative; width: 100%; height: 100%; }
 .arena-home-note { position: absolute; z-index: 4; left: 4%; top: 12%; font: 900 .85cqw Arial,sans-serif; color: #eacaa3; letter-spacing: .18em; }
 .arena-home-controls { position: absolute; z-index: 5; left: 4%; bottom: 3%; color: #ead8bf; font: 700 .85cqw Arial,sans-serif; letter-spacing: .08em; }
 @media (prefers-reduced-motion: reduce) { .arena-home .arena-mode { transition: none; } }
 
 .arena-home .arena-mode-hint { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* The character illustration provides the home background. */
+.arena-home .arena-feature { left: 4%; top: 78%; width: 33%; height: 12%; padding: .6% 1%; color: #fff0d2; background: #130f14e8; clip-path: none; }
+.arena-home .arena-feature-title { font-size: 1.4cqw; margin: .2cqw 0; }
+.arena-home .arena-feature-hint { max-width: 100%; font-size: .8cqw; }

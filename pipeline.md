@@ -1,5 +1,13 @@
 # Close Combat — Pipeline
 
+## Cowboy — carga no combo, referência e histórico — 2026-10-31
+
+Continuação na branch `codex/feature-cowboy-animacoes`, dependente de `codex/feature-cowboy-zoner` e das alterações anteriores ainda não integradas. O soco forte pode ser carregado durante `1,2,2,2`, preservando as folhas alternadas de tiros do combo; o tiro mantém o dano conforme a carga. A fonte do especial forte foi corrigida com dois braços humanos e gestos de arminha; o novo turnaround fornecido substitui a referência canônica em `assets/art/characters/cowboy/turnaround.png` sem modificar o arquivo. A ilustração fornecida foi conectada ao fundo do menu principal; a referência anterior permanece usada nas outras telas.
+
+Adicionado histórico dos últimos 12 combos, acumulando acertos e dano por atacante até a vítima recuperar a defesa; bloqueios não contam. O treino mostra os três registros recentes de cada jogador, enquanto os demais modos mostram temporariamente a contagem e o dano de sequências com múltiplos acertos. A pausa de contato compartilhada caiu de sete para seis quadros de 60 Hz, a aproximação inteira mais próxima de 20%. Foram conferidos no jogo o menu e a contagem após um acerto no treino; as folhas do especial e as transições completas continuam sujeitas a revisão artística do usuário.
+
+Instalação reproduzível, 465 testes em 42 arquivos, build e diff aprovados localmente. O envio da branch ao repositório público foi solicitado pelo usuário após informação da visibilidade; estado remoto e CI devem ser conferidos após o push. Não há autorização para merge em development.
+
 ## Cowboy — chutes e carga do soco forte — 2026-10-31
 
 Continuação na branch `codex/feature-cowboy-animacoes`, dependente dos trabalhos anteriores ainda não integrados. As fontes dos chutes forte e de afastamento foram revisadas para manter a mesma perna de apoio e a mesma perna de ataque; a recuperação do afastamento pula o quadro com braço encoberto. A folha do especial forte foi refeita mantendo dois braços humanos e os braços espectrais azuis no disparo. Criada uma folha própria para a postura de carga do soco forte, sem braços espectrais antes do disparo.
