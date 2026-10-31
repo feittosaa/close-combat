@@ -234,14 +234,17 @@ export class Simulation {
           if (!character.grounded && !move.movement) this.moveInDirection(character, axis(input), index);
           if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
         }
-        if (move.projectile && elapsed === move.startup) {
+        if (move.projectile && elapsed === (character.attack.startupFrames ?? move.startup)) {
+          character.attack.projectileId = this.nextProjectileId;
           this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
             x: character.x + (character.facing === 'right' ? 1 : -1) * character.collision.bodyWidth * 7 / 12, y: character.y, facing: character.facing,
+            ...(this.projectileRecipe(index, character.chain ?? []) ? { comboId: character.projectileComboId, comboStep: (character.chain?.length ?? 1) - 1 } : {}),
             velocity: move.projectile.speed * (character.facing === 'right' ? 1 : -1), remainingFrames: move.projectile.life,
             verticalVelocity: move.projectile.verticalSpeed ?? 0, gravity: move.projectile.gravity ?? 0, phase: move.ultimateSequence ? 'confirm' : undefined,
             visual: move.projectile.visual, attack: { ...character.attack, hasHit: false } });
         }
-        character.mode = elapsed < move.startup ? 'startup' : elapsed < move.startup + move.activeFrames ? 'active' : 'recovery';
+        const startup = character.attack.startupFrames ?? move.startup;
+        character.mode = elapsed < startup ? 'startup' : elapsed < startup + move.activeFrames ? 'active' : 'recovery';
       } else if (!wasLocked) {
         character.crouching = character.grounded && input.direction.startsWith('D');
         const threatening = Boolean(attackingAtInput[1 - index] || opponent.attack || commands[1 - index] || this.projectiles.some(p => p.ownerId === opponent.characterId));
@@ -322,6 +325,19 @@ export class Simulation {
       projectile.remainingFrames -= 1;
     });
     this.lastHitEvents = this.resolver.resolve(this.characters, inputs, this.projectiles);
+    for (const projectile of this.projectiles) {
+      if (!projectile.attack.hasHit) continue;
+      const owner = this.characters.find(character => character.characterId === projectile.ownerId);
+      if (!owner) continue;
+      if (owner.attack?.projectileId === projectile.id) {
+        owner.attack.hasHit = true;
+        owner.attack.hitOutcome = projectile.attack.hitOutcome;
+      }
+      if (projectile.comboId !== undefined && owner.projectileComboId === projectile.comboId &&
+          projectile.comboStep !== undefined && projectile.attack.hitOutcome === 'hit') {
+        owner.projectileComboHits = (owner.projectileComboHits ?? 0) | (1 << projectile.comboStep);
+      }
+    }
     this.projectiles = this.projectiles.filter(p => {
       const move = this.definitions.find(f=>f.id===p.fighterId)!.moves.find(m=>m.id===p.attack.moveId)!;
       const box = createProjectileHitbox(p,move);
@@ -334,6 +350,14 @@ export class Simulation {
       const target = this.characters.find(character => character.characterId === event.targetId)!;
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
       const sourceMove = this.move(attackerIndex,event.moveId)!;
+      const current = attacker.attack;
+      const currentMove = current && this.move(attackerIndex, current.moveId);
+      if (event.outcome === 'hit' && current && currentMove?.projectile && attacker.chain &&
+          this.projectileRecipe(attackerIndex, attacker.chain) && (attacker.projectileComboHits ?? 0) === (1 << (attacker.chain.length - 1)) - 1 &&
+          attacker.chain.length > 1 && target.grounded) {
+        const travel = Math.ceil(Math.abs(target.x - attacker.x) / currentMove.projectile.speed);
+        target.remainingStateFrames = Math.max(target.remainingStateFrames, Math.max(0, (current.startupFrames ?? currentMove.startup) - current.elapsedFrames) + travel + 2);
+      }
       const completedCombo = this.definitions[attackerIndex].combos?.find(recipe =>
         recipe.moveIds.length === attacker.chain?.length && recipe.moveIds.every((id, step) => attacker.chain![step] === id));
       const launcher = completedCombo?.launch ? completedCombo : undefined;
@@ -485,6 +509,16 @@ export class Simulation {
           move.input.buttons.length > previous.buttons.length;
         const chain = previous && !promotion ? [...(character.chain ?? [previous.moveId]), move.id] : [move.id];
         character.chain = this.recipePrefix(index, chain) ? chain : [move.id];
+        const projectileRecipe = this.projectileRecipe(index, character.chain);
+        if (character.chain.length === 1) { character.projectileComboHits = 0; character.projectileComboId = this.frame; }
+        const startupFrames = projectileRecipe?.projectileSequence?.startupFrames[character.chain.length - 1];
+        const projectileTarget = this.characters[1 - index];
+        if (projectileRecipe && ((character.projectileComboHits ?? 0) & ((1 << (character.chain.length - 1)) - 1)) === (1 << (character.chain.length - 1)) - 1 &&
+            character.chain.length > 1 && projectileTarget.mode === 'hitstun' && projectileTarget.grounded && move.projectile) {
+          const distance = Math.abs(projectileTarget.x - character.x);
+          const travel = Math.ceil(distance / move.projectile.speed);
+          projectileTarget.remainingStateFrames = Math.max(projectileTarget.remainingStateFrames, (startupFrames ?? move.startup) + travel + 2);
+        }
         if (character.hitSequence && heavyStrike(move)) {
           character.hitSequence.heavy = true;
           character.hitSequence.heavyButton ??= heavyButton(move);
@@ -492,6 +526,10 @@ export class Simulation {
         character.rage = Math.max(0, character.rage - (move.rageCost ?? 0));
         if (move.category === 'ultimate' && !this.options.training) { this.ultimateUsed[index] = true; character.ultimateUsed = true; }
         character.attack = { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false,
+          ...(startupFrames !== undefined ? { startupFrames } : {}),
+          ...(projectileRecipe && character.chain.length > 1 && move.projectile ? {
+            recoveryFrames: Math.max(move.recovery, Math.ceil(Math.abs(projectileTarget.x - character.x) / move.projectile.speed) + 8 - move.activeFrames),
+          } : {}),
           ...(move.category === 'throw' ? { throwDirection: this.pendingCommands[index]?.throwDirection ?? 'forward' } : {}) };
         character.crouching = Boolean(move.crouching); this.dashFrames[index] = 0;
         this.pendingCommands[index] = undefined;
@@ -540,9 +578,12 @@ export class Simulation {
     if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
       previous.buttons.every(button => move.input.buttons.includes(button))) return true;
     const chain = [...(character.chain ?? [previous.moveId]), move.id];
+    const projectileRecipe = this.projectileRecipe(index, chain);
+    if (projectileRecipe && previous.hitOutcome === 'block' && projectileRecipe.projectileSequence!.continueOnBlock) return true;
+    if (projectileRecipe && previous.hitOutcome === 'hit') return true;
     if (!previous.hasHit) {
       const previousMove = this.move(index, previous.moveId)!;
-      return previous.elapsedFrames >= previousMove.startup + previousMove.activeFrames && this.recipePrefix(index, chain);
+      return previous.elapsedFrames >= (previous.startupFrames ?? previousMove.startup) + previousMove.activeFrames && this.recipePrefix(index, chain);
     }
     if (previous.hitOutcome === 'block') return false;
     if (previous.hitOutcome !== 'hit' || !character.hitSequence) return false;
@@ -551,6 +592,10 @@ export class Simulation {
     const previousMove = this.move(index, previous.moveId)!;
     if (!chainStrike(previousMove)) return false;
     return previous.moveId !== move.id || this.recipePrefix(index, chain);
+  }
+  private projectileRecipe(index: number, chain: readonly string[]) {
+    return this.definitions[index].combos?.find(recipe => recipe.projectileSequence &&
+      chain.length <= recipe.moveIds.length && chain.every((id, step) => recipe.moveIds[step] === id));
   }
   private recipePrefix(index: number, chain: readonly string[]): boolean {
     return (this.definitions[index].combos ?? []).some(recipe =>

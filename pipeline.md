@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — combos de chutes e tiros — 2026-10-30
+
+Na branch `codex/feature-cowboy-zoner`, adicionadas manualmente as receitas `3,3,3` e `1,2,2,2`, com uma entrada por golpe. Na sequência de tiros os preparos provisórios são 8, 10, 32 e 32 frames. Os dois tiros finais preservam a confirmação quando os anteriores acertam, inclusive com projéteis em voo; após bloqueio a receita pode continuar e o preparo expõe uma janela de punição. O defensor que soltar a guarda também pode ser atingido. A extensão de recuperação da receita considera o tempo de deslocamento dos projéteis; balanceamento e sensação dos tempos aguardam avaliação.
+
+Instalação reproduzível, 375 testes em 40 arquivos, build e diff aprovados. Regressões verificam entradas individuais, acertos em curta e longa distância, punição após bloqueio e soltura da guarda, nos dois lados. No navegador, treino e primeiros dois tiros foram conferidos; a execução manual completa dos combos ainda precisa de conferência. Arte própria e aprovação artística pendentes; envio e CI remota a verificar.
+
 ## Cowboy — tiros especiais de perto — 2026-10-30
 
 Na branch `codex/feature-cowboy-zoner`, `d,df,f,1` passa a ser tiro alto à queima-roupa (120 de dano provisório), e `d,df,f,2` um tiro alto antiaéreo de perto (140 de dano provisório). Ambos são projéteis de vida curta; o segundo sobe em diagonal. Eles erram alvos agachados e podem ser bloqueados. Os socos básicos e o especial de afastamento permanecem. Dano, alcance e tempos aguardam revisão de balanceamento.

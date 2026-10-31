@@ -15,7 +15,10 @@ export const cowboy: CharacterDefinition = {
   },
   juggle: { initialGravityScale: 0.7, gravityScalePerHit: 0.15, maximumGravityScale: 1.6, getupFrames: 24, wakeupInvulnerabilityFrames: 8, airHitSuspensionFrames: 6 },
   rage: { maximum: 200, onHit: 10, onDamage: 15, onBlock: 5 },
-  combos: [],
+  combos: [
+    { id: 'rapid-kicks', name: 'Chutes rápidos', notation: '3,3,3', moveIds: ['light-kick', 'light-kick', 'light-kick'] },
+    { id: 'delayed-shots', name: 'Sequência de tiros', notation: '1,2,2,2', moveIds: ['light-punch', 'heavy-punch', 'heavy-punch', 'heavy-punch'], projectileSequence: { startupFrames: [8, 10, 32, 32], continueOnBlock: true } },
+  ],
   moves: [
     { id: 'light-punch', name: 'Soco fraco', category: 'basic', input: { buttons: ['1'] }, startup: 8, activeFrames: 3, recovery: 17, damage: 20, hitstun: 16, blockstun: 8, pushback: { hit: 3, block: 4 }, hitLevel: 'mid', projectile: { speed: 9, life: 100, visual: 'bullet' }, hitbox: { forward: 0, yOffset: -120, width: 28, height: 18 } },
     { id: 'heavy-punch', name: 'Soco forte', category: 'basic', input: { buttons: ['2'] }, startup: 14, activeFrames: 4, recovery: 26, damage: 38, hitstun: 20, blockstun: 10, pushback: { hit: 5, block: 6 }, hitLevel: 'mid', projectile: { speed: 6, life: 150, visual: 'bullet' }, hitbox: { forward: 0, yOffset: -120, width: 36, height: 22 } },

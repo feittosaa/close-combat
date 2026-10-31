@@ -8,10 +8,10 @@ import type { AttackButton, Direction, FrameInput } from '../input/types';
 const input = (direction: Direction = 'N', button?: AttackButton): FrameInput => ({ direction, buttons: new Set(button ? [button] : []) });
 
 describe('Cowboy protótipo', () => {
-  it('tem quatro básicos por postura aérea e no chão e nenhuma receita inventada', () => {
+  it('tem quatro básicos por postura aérea e no chão e apenas as receitas autoradas', () => {
     expect(cowboy.moves.filter(move => move.category === 'basic' && !move.airborne)).toHaveLength(4);
     expect(cowboy.moves.filter(move => move.category === 'basic' && move.airborne)).toHaveLength(4);
-    expect(cowboy.combos).toEqual([]);
+    expect(cowboy.combos?.map(combo => combo.notation)).toEqual(['3,3,3', '1,2,2,2']);
   });
   it.each([0, 1])('executa os disparos e o afastamento do lado %i', player => {
     for (const [button, id, distance] of [['1', 'quick-shot', 65], ['2', 'heavy-shot', 65], ['4', 'push-away', 56]] as const) {
@@ -107,4 +107,111 @@ it.each([0, 1])('tiro especial forte alcança adversário no ar próximo: jogado
     if (sim.snapshot().hitEvents.some(event => event.moveId === 'heavy-shot' && event.outcome === 'hit')) { hit = true; break; }
   }
   expect(hit).toBe(true);
+});
+
+it.each([0, 1])('executa 3,3,3 com entradas e acertos separados: jogador %i', player => {
+  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 65 });
+  const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
+  for (let strike = 0; strike < 3; strike++) {
+    step(input('N', '3'));
+    let hit = false;
+    for (let tick = 0; tick < 50; tick++) {
+      step(input());
+      if (sim.snapshot().hitEvents.some(event => event.moveId === 'light-kick' && event.outcome === 'hit')) { hit = true; break; }
+    }
+    expect(hit).toBe(true);
+    while (sim.snapshot().hitstopFramesRemaining) step(input());
+  }
+  expect(sim.snapshot().characters[1 - player].health).toBe(928);
+});
+
+it.each([0, 1])('encadeia 1,2,2,2 com dois tiros atrasados após acertos: jogador %i', player => {
+  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 100 });
+  const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input('B')] : [input('B'), value]);
+  // Defender só começa a defender após o primeiro impacto.
+  const first = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
+  first(input('N', '1'));
+  while (!sim.snapshot().hitEvents.length) first(input());
+  while (sim.snapshot().hitstopFramesRemaining) first(input());
+  for (const startup of [10, 32, 32]) {
+    step(input('N', '2'));
+    expect(sim.snapshot().characters[player].attack?.startupFrames).toBe(startup);
+    let hit = false;
+    for (let tick = 0; tick < 100; tick++) {
+      step(input());
+      if (sim.snapshot().hitEvents.some(event => event.moveId === 'heavy-punch' && event.outcome === 'hit')) { hit = true; break; }
+    }
+    expect(hit).toBe(true);
+    while (sim.snapshot().hitstopFramesRemaining) step(input());
+  }
+  expect(sim.snapshot().characters[1 - player].health).toBe(866);
+});
+
+it.each([0, 1])('permite punir entre os tiros quando os primeiros foram bloqueados: jogador %i', player => {
+  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 65 });
+  const step = (value: FrameInput, guard: FrameInput = input('B')) => sim.stepFrame(player === 0 ? [value, guard] : [guard, value]);
+  for (const button of ['1', '2'] as const) {
+    step(input('N', button));
+    let blocked = false;
+    for (let tick = 0; tick < 80; tick++) {
+      step(input());
+      if (sim.snapshot().hitEvents.some(event => event.outcome === 'block')) { blocked = true; break; }
+    }
+    expect(blocked).toBe(true);
+    while (sim.snapshot().hitstopFramesRemaining) step(input());
+  }
+  step(input('N', '2'));
+  expect(sim.snapshot().characters[player].attack?.startupFrames).toBe(32);
+  let punished = false;
+  for (let tick = 0; tick < 30; tick++) {
+    const target = sim.snapshot().characters[1 - player];
+    step(input(), target.mode === 'blockstun' ? input('B') : input('N', '1'));
+    if (sim.snapshot().hitEvents.some(event => event.attackerId === `player-${2 - player}` && event.outcome === 'hit')) { punished = true; break; }
+  }
+  expect(punished).toBe(true);
+});
+
+it.each([0, 1])('tiro atrasado acerta quem solta a guarda depois dos dois primeiros: jogador %i', player => {
+  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 65 });
+  const step = (value: FrameInput, guard: FrameInput = input('B')) => sim.stepFrame(player === 0 ? [value, guard] : [guard, value]);
+  for (const button of ['1', '2'] as const) {
+    step(input('N', button));
+    for (let tick = 0; tick < 80; tick++) { step(input()); if (sim.snapshot().hitEvents.some(event => event.outcome === 'block')) break; }
+    expect(sim.snapshot().hitEvents[0]?.outcome).toBe('block');
+    while (sim.snapshot().hitstopFramesRemaining) step(input());
+  }
+  step(input('N', '2'));
+  let hit = false;
+  for (let tick = 0; tick < 60; tick++) {
+    step(input(), input());
+    if (sim.snapshot().hitEvents.some(event => event.moveId === 'heavy-punch' && event.outcome === 'hit')) { hit = true; break; }
+  }
+  expect(hit).toBe(true);
+});
+
+it.each([0, 1])('mantém confirmação dos projéteis em voo na sequência de longa distância: jogador %i', player => {
+  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 300 });
+  const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
+  step(input('N', '1'));
+  for (let tick = 0; tick < 12; tick++) step(input());
+  step(input('N', '2'));
+  for (let tick = 0; tick < 80 && !((sim.snapshot().characters[player].projectileComboHits ?? 0) & 2); tick++) step(input());
+  expect((sim.snapshot().characters[player].projectileComboHits ?? 0) & 3).toBe(3);
+  while (sim.snapshot().hitstopFramesRemaining) step(input());
+  for (let shot = 0; shot < 2; shot++) {
+    step(input('N', '2'));
+    expect(sim.snapshot().characters[player].attack?.startupFrames).toBe(32);
+    let hit = false;
+    for (let tick = 0; tick < 100; tick++) {
+      step(input());
+      if (sim.snapshot().hitEvents.some(event => event.moveId === 'heavy-punch' && event.outcome === 'hit')) { hit = true; break; }
+    }
+    expect(hit).toBe(true);
+    while (sim.snapshot().hitstopFramesRemaining) step(input());
+  }
 });

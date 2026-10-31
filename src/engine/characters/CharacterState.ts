@@ -8,6 +8,8 @@ export interface CharacterAttack {
   buttons: readonly AttackButton[];
   elapsedFrames: number;
   hasHit: boolean;
+  startupFrames?: number;
+  projectileId?: number;
   throwDirection?: 'forward' | 'backward';
   hitOutcome?: 'hit' | 'block';
   /** Recovery override for a confirmed combo or a blocked strike. */
@@ -39,6 +41,9 @@ export interface CharacterState {
   attack?: CharacterAttack;
   hitFlashFrames: number;
   chain?: string[];
+  /** Consecutive confirmed hits in an authored projectile sequence. */
+  projectileComboHits?: number;
+  projectileComboId?: number;
   /** Confirmed pressure keeps its strength floor until the defender regains control. */
   hitSequence?: { targetId: string; heavy: boolean; heavyButton?: '2' | '4' };
   knockdown?: { velocityX: number };
