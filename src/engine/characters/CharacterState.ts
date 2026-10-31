@@ -10,6 +10,8 @@ export interface CharacterAttack {
   hasHit: boolean;
   startupFrames?: number;
   projectileId?: number;
+  chargeFrames?: number;
+  chargeReleased?: boolean;
   throwDirection?: 'forward' | 'backward';
   hitOutcome?: 'hit' | 'block';
   /** Recovery override for a confirmed combo or a blocked strike. */
@@ -31,15 +33,20 @@ export interface CharacterState {
   mode: CharacterMode;
   stateStartedFrame: number;
   animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };
+  facingTransition?: { startedFrame: number; from: 'left' | 'right' };
   remainingStateFrames: number;
   /** Logical jump origin survives guard/stun pose changes; renderer never restarts a flight. */
   airborneStartedFrame?: number;
   airborneElapsedFrames?: number;
+  airDashUsed?: boolean;
   verticalVelocity: number;
   grounded: boolean;
   crouching: boolean;
+  tauntStartedFrame?: number;
   attack?: CharacterAttack;
   hitFlashFrames: number;
+  hitReaction?: { level: 'low' | 'mid' | 'high'; startedFrame: number };
+  grabbedStartedFrame?: number;
   chain?: string[];
   /** Consecutive confirmed hits in an authored projectile sequence. */
   projectileComboHits?: number;
@@ -47,6 +54,9 @@ export interface CharacterState {
   /** Confirmed pressure keeps its strength floor until the defender regains control. */
   hitSequence?: { targetId: string; heavy: boolean; heavyButton?: '2' | '4' };
   knockdown?: { velocityX: number };
+  pushbackMotion?: { distancePerFrame: number; remainingFrames: number };
+  throwFlight?: boolean;
+  throwPull?: { distancePerFrame: number; remainingFrames: number; launchDistance: number; launchFrames: number; liftSpeed: number };
   /** Confirmed launcher flight; independent of ordinary jumps and scripted captures. */
   juggle?: { gravityScale: number; airHits: number; suspensionFrames?: number };
   /** Counts combat ticks, including grounded getup, then a short protected return. */

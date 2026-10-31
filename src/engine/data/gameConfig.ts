@@ -1,7 +1,7 @@
 import { maximumFighterSeparation } from './fightFraming';
 // src/engine/data/gameConfig.ts
 export interface GameConfig {
-  arena: { left: number; right: number; floorY: number; maxSeparation?: number };
+  arena: { left: number; right: number; floorY: number; maxSeparation?: number; viewportWidth?: number };
   movement: {
     walkSpeed: number;
     jumpImpulse: number;
@@ -21,6 +21,7 @@ export function createGameConfig(width: number, height: number): GameConfig {
       left: arenaInset,
       right: width - arenaInset,
       floorY: height - 88,
+      viewportWidth: width,
       maxSeparation: maximumFighterSeparation(width),
     },
     movement: {

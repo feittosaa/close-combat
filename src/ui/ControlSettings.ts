@@ -6,7 +6,7 @@ export class ControlSettings {
   private readonly root = document.createElement('section');
   private draft: ControlLayouts = [getPlayerLayout(0),getPlayerLayout(1)];
   private systemDraft: SystemControlLayout = getSystemControls();
-  private capture?: { player?: number; group?: 'directions'|'buttons'|'ultimate'; action: string; system?: true; button: HTMLButtonElement };
+  private capture?: { player?: number; group?: 'directions'|'buttons'|'ultimate'|'taunt'; action: string; system?: true; button: HTMLButtonElement };
   private readonly status = document.createElement('p');
   private readonly previousFocus = document.activeElement as HTMLElement | null;
   constructor(private readonly close: () => void) {
@@ -27,11 +27,14 @@ export class ControlSettings {
         button.onclick=()=> { if (this.capture) this.capture.button.textContent=''; this.capture={player,group:kind,action,button}; button.textContent='Pressione…'; this.status.textContent='Esc cancela a captura. Atalhos do treino aparecem na tela de treino.'; };
         row.append(caption,button); group.append(row);
       });
-      const row = document.createElement('div'); const caption = document.createElement('span'); caption.textContent = 'Ultimate';
-      const button = document.createElement('button'); button.textContent = keyLabel(layout.ultimate);
-      button.setAttribute('aria-label', `P${player+1} Ultimate: ${button.textContent}`);
-      button.onclick = () => { this.capture = {player,group:'ultimate',action:'ultimate',button}; button.textContent='Pressione…'; this.status.textContent='Esc cancela a captura.'; };
-      row.append(caption,button); group.append(row); grid.append(group);
+      for (const [action,label] of [['ultimate','Ultimate'],['taunt','Provocação']] as const) {
+        const row = document.createElement('div'); const caption = document.createElement('span'); caption.textContent = label;
+        const button = document.createElement('button'); button.textContent = keyLabel(layout[action]);
+        button.setAttribute('aria-label', `P${player+1} ${label}: ${button.textContent}`);
+        button.onclick = () => { this.capture = {player,group:action,action,button}; button.textContent='Pressione…'; this.status.textContent='Esc cancela a captura.'; };
+        row.append(caption,button); group.append(row);
+      }
+      grid.append(group);
     }); panel.append(grid);
     const systemHeading=document.createElement('h2');systemHeading.textContent='Comandos da luta';panel.append(systemHeading);
     ( [['pause','Pausar luta'],['reset','Reiniciar treino']] as const).forEach(([action,label])=>{const row=document.createElement('div');row.className='control-system-row';const caption=document.createElement('span');caption.textContent=label;const button=document.createElement('button');button.textContent=keyLabel(this.systemDraft[action]);button.onclick=()=>{this.capture={action,system:true,button};button.textContent='Pressione…';this.status.textContent='Esc cancela a captura. Atalhos do treino aparecem na tela de treino.';};row.append(caption,button);panel.append(row);});
@@ -50,9 +53,9 @@ export class ControlSettings {
     if(event.code==='Escape'){event.preventDefault(); if(this.capture){this.capture=undefined;this.render();}else this.destroy();return;}
     if(!this.capture || event.repeat)return;
     event.preventDefault(); const {player,group,action}=this.capture;
-    if(this.capture.system){const candidate={...this.systemDraft,[action]:event.code};const gameKeys=new Set(this.draft.flatMap(layout=>[...Object.values(layout.directions),...Object.values(layout.buttons),layout.ultimate]));const trainingKeys=new Set(['Period','F2','F3','F4','KeyG','KeyH','KeyI','KeyL']);if(!validateSystemControls(candidate)||gameKeys.has(event.code)||trainingKeys.has(event.code)){this.status.textContent='Tecla repetida, reservada ou não suportada. Escolha outra.';return;}this.systemDraft=candidate;this.capture=undefined;this.status.textContent='Comando alterado. Salve para aplicar.';this.render();return;}
+    if(this.capture.system){const candidate={...this.systemDraft,[action]:event.code};const gameKeys=new Set(this.draft.flatMap(layout=>[...Object.values(layout.directions),...Object.values(layout.buttons),layout.ultimate,layout.taunt]));const trainingKeys=new Set(['Period','F2','F3','F4','KeyG','KeyH','KeyI','KeyL']);if(!validateSystemControls(candidate)||gameKeys.has(event.code)||trainingKeys.has(event.code)){this.status.textContent='Tecla repetida, reservada ou não suportada. Escolha outra.';return;}this.systemDraft=candidate;this.capture=undefined;this.status.textContent='Comando alterado. Salve para aplicar.';this.render();return;}
     if(player===undefined||group===undefined)return;
-    const candidate=structuredClone(this.draft);if (group === 'ultimate') candidate[player].ultimate = event.code; else (candidate[player][group] as Record<string,string>)[action]=event.code;
+    const candidate=structuredClone(this.draft);if (group === 'ultimate' || group === 'taunt') candidate[player][group] = event.code; else (candidate[player][group] as Record<string,string>)[action]=event.code;
     // Validation is pure; saving happens only on explicit Save.
     if(!validate(candidate)){this.status.textContent='Tecla repetida, reservada ou não suportada. Escolha outra.';return;}
     this.draft=candidate;this.capture=undefined;this.status.textContent='Tecla alterada. Salve para aplicar.';this.render();

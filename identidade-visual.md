@@ -20,6 +20,8 @@ Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É 
 
 ## Animação
 
+Buscar a cadência expressiva da animação tradicional desenhada à mão, com referências de ritmo como desenhos clássicos dos anos 1960 e Skullgirls, sem copiar sua identidade ou seus desenhos. Cada ação pode ter velocidade e duração de quadros próprias: alternar antecipação, acento, contato legível e recuperação conforme a intenção da pose. A velocidade de reprodução visual não altera o relógio determinístico nem as regras de combate.
+
 Antecipação, contato e recuperação precisam ser legíveis. Usar transições autoradas, continuidade dos membros, apoios estáveis e proporções constantes. A raiz não deriva com braços, roupas ou variação da silhueta. Locomoção real pertence à simulação.
 
 Preservar uma pose opaca quando misturas de alpha criarem transparência ou piscadas. Não alongar regras de combate para acomodar uma folha. Holds, orientação, escala, células e pivôs são declarados nos manifestos, sem inferência de gameplay a partir dos pixels. Processo geral em [docs/animacao.md](docs/animacao.md).
@@ -34,6 +36,6 @@ HUD e menus usam sombras de tinta, acentos contidos, títulos com serifa e núme
 
 Imagens exploratórias dependem de aval manual antes da integração. Manter no checkout somente arte consumida pelo jogo, fontes ativas necessárias para reproduzi-la e referências canônicas vigentes. Variantes substituídas e propostas rejeitadas ficam no histórico Git.
 
-Exportar sprites em PNG RGBA com alpha verdadeiro, enquadramento fixo e margens suficientes. Fundos opacos podem ser RGB. Preservar a procedência e os parâmetros de preparação em metadados; detalhes de uma peça e seu estado de aprovação ficam na pipeline.
+Gerar novas spritesheets de personagens com fundo magenta uniforme (#FF00FF), para facilitar a remoção do fundo. Exportar sprites para o jogo em PNG RGBA com alpha verdadeiro, enquadramento fixo e margens suficientes. Fundos opacos podem ser RGB. Preservar a procedência e os parâmetros de preparação em metadados; detalhes de uma peça e seu estado de aprovação ficam na pipeline.
 
 Revisar no jogo em velocidade normal, câmera lenta e passo único: silhueta, contraste, proporções, rosto, materiais, transições, direção, pés, contato, ciclos, extremos da arena e dois lados. Testes e build não substituem essa revisão nem a aprovação artística manual.

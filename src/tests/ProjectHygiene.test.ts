@@ -44,6 +44,8 @@ describe('Project asset and documentation hygiene', () => {
         }
       }
     }
+    const cowboyAtlases = import.meta.glob('../assets/sprites/characters/cowboy/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
+    for (const key of Object.keys(cowboyAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
     const canonical = import.meta.glob('../../assets/art/characters/*/turnaround.png', { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(canonical)) used.add(projectPath(key));
     expect([...new Set(Object.keys(images).map(projectPath))].sort()).toEqual([...used].sort());

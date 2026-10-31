@@ -16,6 +16,7 @@ import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
 import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
+import { preloadCowboySprites } from '../rendering/animations/cowboySprites';
 import { ProjectileView } from '../rendering/ProjectileView';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
@@ -156,6 +157,7 @@ export class FightScene extends Phaser.Scene {
   preload(): void {
     preloadStage(this, this.selectedStage);
     preloadShotoSprites(this);
+    preloadCowboySprites(this);
   }
 
   create(): void {
@@ -285,7 +287,7 @@ export class FightScene extends Phaser.Scene {
     snapshot.characters.forEach((character, index) => {
       this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined);
     });
-    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions);
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,snapshot.frame,snapshot.hitEvents,snapshot.characters);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
     if (this.arcadeInfo) {

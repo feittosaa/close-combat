@@ -1,3 +1,4 @@
+import cowboyPortrait from '../assets/sprites/characters/cowboy/idle.png';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FighterSelection, SelectionPlayer } from './FighterSelection';
 
@@ -22,11 +23,19 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
   const button = (label: string, className: string, action: () => void): HTMLButtonElement => {
     const element = document.createElement('button'); element.className = className; element.textContent = label; element.onclick = action; return element;
   };
+  const fighterPortrait = (id: string, small: boolean): SVGSVGElement => {
+    if (id === 'shoto') return portrait(small ? '280 65 180 180' : '130 35 510 710', !small);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', small ? '125 25 375 275' : '0 0 640 640');
+    svg.setAttribute('aria-hidden', 'true');
+    const image = document.createElementNS(svg.namespaceURI, 'image');
+    image.setAttribute('href', cowboyPortrait); image.setAttribute('width', '3840'); image.setAttribute('height', '640');
+    svg.append(image); return svg;
+  };
   for (const player of [0, 1] as const satisfies readonly SelectionPlayer[]) {
     const entry = player === 1 && !versus ? options.opponent : fighters[selection.indices[player]];
     const side = player === 0 ? 'left' : 'right';
-    const hero = node('div', `arena-hero ${side}`); if (entry.id === 'shoto') hero.append(portrait('130 35 510 710', true));
-    else hero.append(node('div', 'arena-placeholder', 'ARTE PENDENTE'));
+    const hero = node('div', `arena-hero ${side}`); hero.append(fighterPortrait(entry.id, false));
     const name = node('div', `arena-fighter-name ${side}`);
     name.append(node('span', 'arena-eyebrow', player === 1 && !versus ? 'ADVERSÁRIO' : `PLAYER 0${player + 1}`), node('h1', '', entry.name));
     if (versus) name.append(button(selection.ready[player] ? `P${player + 1} · PRONTO` : `ESCOLHER P${player + 1}`, 'arena-player-switch', () => { selection.activePlayer = player; options.refresh(); }));
@@ -38,7 +47,7 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
   fighters.forEach((entry, index) => {
     const tile = button('', 'arena-portrait', () => { selection.select(selection.activePlayer, index); options.refresh(); });
     tile.setAttribute('aria-label', entry.name); tile.setAttribute('aria-pressed', String(!selection.random[selection.activePlayer] && index === selection.indices[selection.activePlayer]));
-    if (entry.id === 'shoto') tile.append(portrait('280 65 180 180'));
+    tile.append(fighterPortrait(entry.id, true));
     tile.append(node('span', '', entry.name));
     if (versus) {
       const cursors = node('div', 'arena-cursors');
