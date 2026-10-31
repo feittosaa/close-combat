@@ -25,7 +25,7 @@ it('mantém escala fixa e o piso em Full HD', () => {
   expect(y(config.arena.floorY)).toBeCloseTo(915);
   expect(y(config.arena.floorY-144)).toBeGreaterThan(220);
   expect(y(config.arena.floorY)-y(config.arena.floorY-144)).toBeCloseTo(432);
-  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:499.2});
+  expect(config.arena).toEqual({left:24,right:1000,floorY:488,viewportWidth:1024,maxSeparation:499.2});
 });
 it('mantém ambos os lados visíveis ao afastar e trocar lutadores de lado em 1080p',()=>{
   const layout=createStageLayout(defaultStage,1024,576,488);

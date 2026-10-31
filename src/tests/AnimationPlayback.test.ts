@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest';
-import { getTimedAnimationFrame, getAttackAnimationFrame, getStateAnimationFrame, shouldFlipAnimation, validateAnimationManifest, type AnimationClip } from '../rendering/animations/AnimationPlayback';
+import { getTimedAnimationFrame, getAttackAnimationFrame, getPhaseAnimationFrame, getStateAnimationFrame, shouldFlipAnimation, validateAnimationManifest, type AnimationClip } from '../rendering/animations/AnimationPlayback';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { defaultCharacter as shoto } from '../engine/data/characters';
@@ -9,6 +9,14 @@ it('mantém holds e o retorno de um clipe genérico sem depender de assets retir
   expect(getTimedAnimationFrame({ ...loop, repeat: 0 }, 100)).toBe(1);
   expect(shouldFlipAnimation('left', loop)).toBe(true);
   expect(shouldFlipAnimation('left', { ...loop, sourceFacesLeft: true })).toBe(false);
+});
+it('permite velocidades independentes e pausas diferentes sem alterar o relógio de combate', () => {
+  const slow = {...loop, frames:[0,1,2], frameDurations:undefined, frameRate:4};
+  const fast = {...slow, frameRate:8};
+  expect([0,7,8,14,15,30].map(t=>getTimedAnimationFrame(slow,t))).toEqual([0,0,0,0,1,2]);
+  expect([0,7,8,14,15,30].map(t=>getTimedAnimationFrame(fast,t))).toEqual([0,0,1,1,2,1]);
+  expect(Array.from({length:8},(_,t)=>getPhaseAnimationFrame([0,1],[3,1],t,8))).toEqual([0,0,0,0,0,0,1,1]);
+  expect(()=>getPhaseAnimationFrame([0,1],[1],0,8)).toThrow();
 });
 it('amostra fases a partir do frame lógico, incluindo recuperação em acerto', () => {
   const state = new Simulation(createGameConfig(1024, 576)).snapshot().characters[0];

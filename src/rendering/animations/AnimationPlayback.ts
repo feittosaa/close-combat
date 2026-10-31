@@ -51,6 +51,16 @@ function poseAtTime(frames: readonly number[], durations: readonly number[], tim
   return frames[frames.length - 1];
 }
 
+/** Authored holds are relative weights when a pose sequence must fit a combat phase. */
+export function getPhaseAnimationFrame(frames: readonly number[], weights: readonly number[], elapsed: number, duration: number): number {
+  if (!frames.length || frames.length !== weights.length || weights.some(weight => !Number.isFinite(weight) || weight <= 0)) {
+    throw new Error('Sequência de animação inválida');
+  }
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  const time = Math.max(0, Math.min(Math.max(0, duration - 1), elapsed)) * total / Math.max(1, duration);
+  return poseAtTime(frames, weights, time);
+}
+
 /** Shared by arena states and menu previews so authored holds have the same cadence. */
 export function getTimedAnimationFrame(clip: AnimationClip, elapsedFrames: number): number {
   const frames = getClipFrames(clip);
@@ -85,24 +95,23 @@ export function getAttackAnimationFrame(
   move?: MoveDefinition,
 ): number | undefined {
   if (!state.attack || !move) return undefined;
+  const startup = state.attack.startupFrames ?? move.startup;
   let elapsed: number;
   let duration: number;
   if (state.mode === 'startup') {
     elapsed = state.attack.elapsedFrames;
-    duration = move.startup;
+    duration = startup;
   } else if (state.mode === 'active') {
-    elapsed = state.attack.elapsedFrames - move.startup;
+    elapsed = state.attack.elapsedFrames - startup;
     duration = move.activeFrames;
   } else if (state.mode === 'recovery') {
-    elapsed = state.attack.elapsedFrames - move.startup - move.activeFrames;
+    elapsed = state.attack.elapsedFrames - startup - move.activeFrames;
     duration = recoveryFrames(move, state.attack);
   } else return undefined;
 
   const frames = getClipFrames(clip);
   const weights = clip.frameDurations ?? frames.map(() => 1);
-  const total = weights.reduce((sum, weight) => sum + weight, 0);
-  const time = Math.max(0, Math.min(duration - 1, elapsed)) * total / Math.max(1, duration);
-  return poseAtTime(frames, weights, time);
+  return getPhaseAnimationFrame(frames, weights, elapsed, duration);
 }
 
 /** Reject invalid delivery data before a match starts instead of silently showing unrelated frames. */

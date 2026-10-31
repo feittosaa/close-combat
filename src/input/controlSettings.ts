@@ -20,20 +20,26 @@ export function validateLayouts(value: unknown): value is ControlLayouts {
   if (!Array.isArray(value) || value.length !== 2) return false;
   const seen = new Set<string>();
   return value.every(layout => layout && ['left','right','up','down'].every(key => typeof layout.directions?.[key] === 'string') &&
-    ['1','2','3','4'].every(key => typeof layout.buttons?.[key] === 'string') && typeof layout.ultimate === 'string' &&
-    [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate].every(code => {
+    ['1','2','3','4'].every(key => typeof layout.buttons?.[key] === 'string') && typeof layout.ultimate === 'string' && typeof layout.taunt === 'string' &&
+    [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt].every(code => {
       if (typeof code !== 'string' || !/^(Key[A-Z]|Digit[0-9]|Numpad[0-9]|Arrow(Up|Down|Left|Right))$/.test(code) || reserved.has(code) || systemDefaultKeys.has(code) || seen.has(code)) return false;
       seen.add(code); return true;
     }));
 }
 export function loadControls(storage?: Pick<Storage,'getItem'>): ControlLayouts {
-  try { const data = JSON.parse((storage ?? globalThis.localStorage)?.getItem(storageKey) ?? 'null'); if (Array.isArray(data) && data.length === 2 && data.every(layout => layout && !('ultimate' in layout))) {
-    const used = new Set(data.flatMap(layout => [...Object.values(layout.directions ?? {}), ...Object.values(layout.buttons ?? {})]));
-    for (const [index, layout] of data.entries()) {
-      const key = [defaults()[index].ultimate, ...'UYOQZXCVB'.split('').map(letter => `Key${letter}`), 'Numpad5','Numpad6','Numpad7'].find(code => !used.has(code) && !reserved.has(code) && !systemDefaultKeys.has(code));
-      if (!key) return defaults(); layout.ultimate = key; used.add(key);
+  try {
+    const data = JSON.parse((storage ?? globalThis.localStorage)?.getItem(storageKey) ?? 'null');
+    if (Array.isArray(data) && data.length === 2 && data.every(layout => layout && typeof layout === 'object')) {
+      const used = new Set(data.flatMap(layout => [...Object.values(layout.directions ?? {}), ...Object.values(layout.buttons ?? {}), layout.ultimate, layout.taunt].filter(Boolean)));
+      for (const [index, layout] of data.entries()) for (const action of ['ultimate', 'taunt'] as const) {
+        if (typeof layout[action] === 'string') continue;
+        const key = [defaults()[index][action], ...'TUYOQZXCVB'.split('').map(letter => `Key${letter}`), 'Numpad5','Numpad6','Numpad7'].find(code => !used.has(code) && !reserved.has(code) && !systemDefaultKeys.has(code));
+        if (!key) return defaults();
+        layout[action] = key; used.add(key);
+      }
     }
-  } return validateLayouts(data) ? data : defaults(); } catch { return defaults(); }
+    return validateLayouts(data) ? data : defaults();
+  } catch { return defaults(); }
 }
 let layouts = loadControls();
 export function getPlayerLayout(index = 0): KeyboardLayout { return structuredClone(layouts[index === 1 ? 1 : 0]); }
@@ -48,7 +54,7 @@ systemControls = (() => { try { const v = JSON.parse(globalThis.localStorage?.ge
 export function getSystemControls(): SystemControlLayout { return { ...systemControls }; }
 export function saveSystemControls(value: SystemControlLayout, storage?: Pick<Storage,'setItem'>): boolean {
   if (!validateSystemControls(value)) return false;
-  if ([...Object.values(layouts[0].directions), ...Object.values(layouts[0].buttons), ...Object.values(layouts[1].directions), ...Object.values(layouts[1].buttons), layouts[0].ultimate, layouts[1].ultimate].some(code => code === value.pause || code === value.reset)) return false;
+  if (layouts.flatMap(layout => [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt]).some(code => code === value.pause || code === value.reset)) return false;
   systemControls = { ...value }; try { (storage ?? globalThis.localStorage)?.setItem(systemStorageKey, JSON.stringify(value)); } catch { /* Runtime mapping remains usable for this session. */ } return true;
 }
 export function keyLabel(code: string): string {

@@ -25,6 +25,16 @@ describe('controles configuráveis e apresentação',()=>{
     const event=new Event('keydown');Object.defineProperty(event,'code',{value:'KeyO'});target.dispatchEvent(event);
     expect([...keyboard.read().buttons]).toEqual(['2']);keyboard.destroy();
   });
+  it('usa T como provocação padrão e migra layouts antigos sem perder teclas',()=>{
+    const original=[getPlayerLayout(0),getPlayerLayout(1)];
+    const old=original.map(({taunt: _taunt,...layout})=>layout);
+    const migrated=loadControls({getItem:()=>JSON.stringify(old)});
+    expect(migrated[0].taunt).toBe('KeyT');
+    expect(validateLayouts(migrated)).toBe(true);
+    const target=new EventTarget();const keyboard=new KeyboardInput(migrated[0],target as Window);
+    const event=new Event('keydown');Object.defineProperty(event,'code',{value:'KeyT'});target.dispatchEvent(event);
+    expect(keyboard.read().taunt).toBe(true);keyboard.destroy();
+  });
   it('recusa teclas repetidas e atalhos reservados e ignora armazenamento inválido',()=>{
     const layouts=[getPlayerLayout(0),getPlayerLayout(1)];layouts[0].buttons['1']='KeyP';expect(validateLayouts(layouts)).toBe(false);
     layouts[0].buttons['1']='Numpad1';expect(validateLayouts(layouts)).toBe(false);

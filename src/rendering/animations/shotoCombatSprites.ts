@@ -2,7 +2,7 @@ import { getShotoLightComboPose } from './shotoLightCombo';
 import { recoveryFrames } from '../../engine/combat/frameData';
 import type { CharacterState } from '../../engine/characters/CharacterState';
 import { getCharacterById } from '../../engine/data/characters';
-import { getTimedAnimationFrame, type AnimationClip } from './AnimationPlayback';
+import { getPhaseAnimationFrame, getTimedAnimationFrame, type AnimationClip } from './AnimationPlayback';
 import image0 from '../../assets/sprites/characters/shoto/light-punch.png';
 import atlas0 from '../../assets/sprites/characters/shoto/light-punch.atlas.json';
 import image1 from '../../assets/sprites/characters/shoto/heavy-punch.png';
@@ -30,6 +30,12 @@ export const shotoCombatClips: AnimationClip[] = shotoCombatSources.map((source,
   ...(index>=4?{frames:[2,3,4,5,4,3].map(frame=>source.start+frame)}:{}),
   frameRate:6,repeat:index<4?0:-1,
 }));
+const strikeRhythms: Readonly<Record<string, {startup: readonly number[]; recovery: readonly number[]}>> = {
+  'shoto-light-punch':{startup:[2,1],recovery:[1,2,3]},
+  'shoto-heavy-punch':{startup:[3,2],recovery:[1,2,3]},
+  'shoto-light-kick':{startup:[2,1],recovery:[1,2,3]},
+  'shoto-heavy-kick':{startup:[3,2],recovery:[1,2,3]},
+};
 
 /** Strike contact is held throughout activity; preparation/recovery use the actual move timing. */
 export function getShotoCombatPose(state:CharacterState,frame:number){
@@ -50,9 +56,10 @@ export function getShotoCombatPose(state:CharacterState,frame:number){
     }
     // Shared authored hand-close bridges idle to the attack without delaying contact.
     if(elapsed<2)return pose('shoto-enter-defense',72+elapsed);
-    const local=elapsed<move.startup?Math.min(1,Math.floor(elapsed*2/move.startup)):
+    const rhythm=strikeRhythms[source.key];
+    const local=elapsed<move.startup?getPhaseAnimationFrame([0,1],rhythm.startup,elapsed,move.startup):
       elapsed<move.startup+move.activeFrames?2:
-      3+Math.min(2,Math.floor((elapsed-move.startup-move.activeFrames)*3/recovery));
+      getPhaseAnimationFrame([3,4,5],rhythm.recovery,elapsed-move.startup-move.activeFrames,recovery);
     return pose(source.key,source.start+local);
   }
   if((state.mode==='blocking'||state.mode==='blockstun')&&(!state.grounded||state.crouching)){
