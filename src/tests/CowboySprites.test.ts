@@ -22,6 +22,19 @@ it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate
   }
 });
 
+it.each([0,1])('distribui as poses intermediárias da ativação sem alterar início e fim: jogador %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  expect(getCowboyUltimateActivationPose(state,0)).toMatchObject({texture:'cowboy-enter-taunt',frame:0});
+  expect(getCowboyUltimateActivationPose(state,29)).toMatchObject({texture:'cowboy-enter-taunt',frame:5});
+  for (let frame = 0; frame < 6; frame++) {
+    for (let tick = 30 + frame * 17; tick < 30 + (frame + 1) * 17; tick++) {
+      expect(getCowboyUltimateActivationPose(state,tick)).toMatchObject({texture:'cowboy-taunt',frame,flipX:player===1});
+    }
+  }
+  expect(getCowboyUltimateActivationPose(state,132)).toMatchObject({texture:'cowboy-exit-taunt',frame:0});
+  expect(getCowboyUltimateActivationPose(state,149)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
+});
+
 it('anima a postura de carga e retorna ao tiro ao soltar', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const charging = {...state,attack:{moveId:'heavy-punch',buttons:['2'] as const,elapsedFrames:13,hasHit:false,chargeFrames:14}};
