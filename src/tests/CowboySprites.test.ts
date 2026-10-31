@@ -7,10 +7,13 @@ import { getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivation
 it('completa a provocação antes de retornar gradualmente ao repouso', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const taunt={...state,tauntStartedFrame:0};
-  expect(getCowboySpritePose(taunt,47)).toMatchObject({texture:'cowboy-taunt',frame:5});
-  expect(getCowboySpritePose(taunt,48)).toMatchObject({texture:'cowboy-exit-taunt',frame:0});
-  expect(getCowboySpritePose(taunt,59)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
-  expect(getCowboySpritePose({...state,tauntStartedFrame:undefined},60)?.texture).toBe('cowboy-idle');
+  for (let frame=0; frame<6; frame++) {
+    expect(getCowboySpritePose(taunt,12 + frame * 11)).toMatchObject({texture:'cowboy-taunt',frame});
+    expect(getCowboySpritePose(taunt,22 + frame * 11)).toMatchObject({texture:'cowboy-taunt',frame});
+  }
+  expect(getCowboySpritePose(taunt,78)).toMatchObject({texture:'cowboy-exit-taunt',frame:0});
+  expect(getCowboySpritePose(taunt,89)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
+  expect(getCowboySpritePose({...state,tauntStartedFrame:undefined},90)?.texture).toBe('cowboy-idle');
 });
 
 it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate do jogador %i',player => {
@@ -22,15 +25,17 @@ it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate
   }
 });
 
-it.each([0,1])('distribui as poses intermediárias da ativação sem alterar início e fim: jogador %i', player => {
+it.each([0,1])('desacelera a entrada e mantém o giro em movimento na ativação: jogador %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
   expect(getCowboyUltimateActivationPose(state,0)).toMatchObject({texture:'cowboy-enter-taunt',frame:0});
-  expect(getCowboyUltimateActivationPose(state,29)).toMatchObject({texture:'cowboy-enter-taunt',frame:5});
-  for (let frame = 0; frame < 6; frame++) {
-    for (let tick = 30 + frame * 17; tick < 30 + (frame + 1) * 17; tick++) {
-      expect(getCowboyUltimateActivationPose(state,tick)).toMatchObject({texture:'cowboy-taunt',frame,flipX:player===1});
+  expect(getCowboyUltimateActivationPose(state,41)).toMatchObject({texture:'cowboy-enter-taunt',frame:5});
+  let tick = 42;
+  for (const [frame,duration] of [[0,12],[1,8],[2,8],[3,8],[1,8],[2,8],[3,8],[4,10],[5,20]] as const) {
+    for (let offset=0; offset<duration; offset++) {
+      expect(getCowboyUltimateActivationPose(state,tick++)).toMatchObject({texture:'cowboy-taunt',frame,flipX:player===1});
     }
   }
+  expect(tick).toBe(132);
   expect(getCowboyUltimateActivationPose(state,132)).toMatchObject({texture:'cowboy-exit-taunt',frame:0});
   expect(getCowboyUltimateActivationPose(state,149)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
 });

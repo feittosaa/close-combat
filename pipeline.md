@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — duração da provocação e giro da ultimate — 2026-10-31
+
+Continuação em `codex/feature-cowboy-zoner`. A provocação mantém as mesmas poses e transições, com duração ampliada de 60 para 90 quadros. A preparação da ultimate conserva 150 quadros: a entrada ganhou tempo e as poses existentes do giro avançam mais rapidamente, incluindo uma segunda volta, antes da mesma saída.
+
+Instalação reproduzível, 482 testes em 42 arquivos, build e checagem de diff aprovados localmente; provocação e preparação foram observadas no treino. A avaliação artística integral permanece pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI remota devem ser conferidos; não há autorização para merge em `development`.
+
 ## Cowboy — ritmo da preparação da ultimate — 2026-10-31
 
 Correção reunida na branch `codex/feature-cowboy-zoner`, junto às branches de animações, especiais e ritmo ainda não integradas em `development`. A preparação mantém seus 150 quadros e as sequências de entrada e saída; as seis poses intermediárias agora ocupam 17 quadros cada, eliminando a permanência mais longa na última pose. O fluxo de trabalho passa a manter correções na branch ativa, criando novas branches somente por pedido explícito do usuário.
