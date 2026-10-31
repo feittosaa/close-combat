@@ -474,8 +474,8 @@ it.each([0, 1])('permite segurar os especiais e soltar para disparar: jogador %i
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     for (const direction of ['D','DF','F'] as const) step(input(direction));
-    for(let tick=0;tick<60;tick++)step(input('F',button));
-    expect(sim.snapshot().characters[player].attack).toMatchObject({moveId:id,chargeFrames:60});
+    for(let tick=0;tick<59;tick++)step(input('F',button));
+    expect(sim.snapshot().characters[player].attack).toMatchObject({moveId:id,chargeFrames:59});
     expect(sim.snapshot().projectiles).toHaveLength(0);
     step();
     for(let tick=0;tick<70&&!sim.snapshot().hitEvents.length;tick++)step();
@@ -483,14 +483,14 @@ it.each([0, 1])('permite segurar os especiais e soltar para disparar: jogador %i
   }
 });
 
-it.each([0, 1])('dispara automaticamente os especiais após dois segundos: jogador %i', player => {
+it.each([0, 1])('dispara automaticamente os especiais após um segundo: jogador %i', player => {
   for (const [button,id] of [['1','quick-shot'],['2','heavy-shot']] as const) {
     const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
     const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     for (const direction of ['D','DF','F'] as const) step(input(direction));
-    for(let tick=0;tick<125;tick++)step(input('F',button));
-    expect(sim.snapshot().characters[player].attack).toMatchObject({moveId:id,chargeFrames:120,chargeReleased:true});
+    for(let tick=0;tick<65;tick++)step(input('F',button));
+    expect(sim.snapshot().characters[player].attack).toMatchObject({moveId:id,chargeFrames:60,chargeReleased:true});
   }
 });
 

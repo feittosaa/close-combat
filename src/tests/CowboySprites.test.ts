@@ -173,6 +173,19 @@ it.each([0, 1])('materializes arms around shots without making the fighter trans
   expect(getCowboySpriteLayers(state,0)).toHaveLength(1);
 });
 
+it.each([0, 1])('keeps the correctly oriented spectral arms during both special holds: player %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  for (const [moveId, button, startup, direction] of [['quick-shot','1',14,'horizontal'],['heavy-shot','2',23,'up']] as const) {
+    for (const [chargeFrames, effectFrame] of [[startup-1,2],[startup+7,3],[startup+15,2]] as const) {
+      const held = {...state, attack:{moveId,buttons:[button],elapsedFrames:startup-1,chargeFrames,hasHit:false}};
+      const layers = getCowboySpriteLayers(held,chargeFrames);
+      expect(layers).toHaveLength(2);
+      expect(layers[0]).toMatchObject({texture:`cowboy-magic-${direction}`,frame:effectFrame,flipX:player===1});
+      expect(layers[1]).toMatchObject({texture:`cowboy-${moveId}`,frame:1});
+    }
+  }
+});
+
 it('keeps Cowboy animation cadence deterministic at different display rates', () => {
   const run = (fps: number) => {
     const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true,initialDistance:80});

@@ -166,11 +166,14 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
   const elapsed = state.attack.elapsedFrames;
   const startup = state.attack.startupFrames ?? move.startup;
   const activeEnd = startup + move.activeFrames;
-  if (move.charge && !isShotCombo(state) && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) return [character];
+  const holdingSpecial = (move.id === 'quick-shot' || move.id === 'heavy-shot') &&
+    !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup - 1;
+  if (move.charge && !holdingSpecial && !isShotCombo(state) && !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup) return [character];
   let effectFrame: number | undefined;
   if (elapsed >= Math.max(0, startup - 6) && elapsed < startup) effectFrame = sample('magic', elapsed - Math.max(0, startup - 6));
   if (elapsed >= startup && elapsed < activeEnd && ['light-punch','heavy-punch','air-light-punch','air-heavy-punch'].includes(move.id)) effectFrame = 2;
   if (elapsed >= activeEnd && elapsed < activeEnd + 6) effectFrame = sample('magicExit', elapsed - activeEnd);
+  if (holdingSpecial) effectFrame = 2 + Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 8) % 2;
   const direction = (move.projectile.verticalSpeed ?? 0) < 0 ? 'up' : (move.projectile.verticalSpeed ?? 0) > 0 ? 'down' : 'horizontal';
   return effectFrame === undefined ? [character] : [{...pose(`magic-${direction}`, effectFrame, state), scale:1.25}, character];
 }

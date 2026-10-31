@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — braços durante os especiais segurados — 2026-10-31
+
+Continuação na `codex/feature-cowboy-especiais-carregados`, dependente das branches anteriores ainda não integradas. Os dois especiais agora disparam ao soltar o botão ou atingir 60 quadros, sem bônus de dano. Durante a espera, os braços espectrais permanecem visíveis e alternam poses, horizontais no especial fraco e diagonais no forte.
+
+Instalação reproduzível, 480 testes em 42 arquivos e build aprovados. No treino foi observado o especial horizontal segurado com braços e hitboxes; testes verificam as duas direções, ambos os jogadores, limite e dano. A revisão visual completa do antiaéreo e a aprovação artística permanecem pendentes. A instalação informou quatro vulnerabilidades de dependências (duas moderadas e duas críticas); envio e CI remota devem ser conferidos, sem merge autorizado.
+
 ## Cowboy — especiais seguráveis e controles — 2026-10-31
 
 Branch `codex/feature-cowboy-especiais-carregados`, dependente de `codex/feature-cowboy-animacoes` ainda não integrada. Os efeitos de tiro e areia criados na entrega anterior já estão conectados ao jogo. Os dois especiais à queima-roupa podem ser segurados por até 120 quadros, disparando ao soltar ou automaticamente no limite; o dano permanece inalterado. O projétil horizontal dura nove quadros e o antiaéreo onze, ampliando moderadamente o alcance. As configurações incluem todos os atalhos de treino, além da ultimate e provocação de cada jogador; rejeitam conflitos entre jogadores, luta e treino, e atualizam o rodapé do treino.
