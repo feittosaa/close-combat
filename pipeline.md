@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — efeitos, provocação e ultimate — 2026-10-31
+
+Continuação em `codex/feature-cowboy-animacoes`, dependente dos trabalhos anteriores ainda não integrados. O histórico de golpes recebeu painéis no estilo do HUD. As fontes e atlas dos efeitos de tiro e areia foram substituídos por desenhos estilizados; projéteis diagonais reutilizam o efeito horizontal rotacionado. A provocação retorna ao repouso por uma nova sequência, também usada na transição entre a preparação e a ultimate. Durante os seis disparos, a Cowboy alterna poses de arminha enquanto os projéteis continuam saindo das armas espectrais. A folha do especial horizontal já apresenta dois braços na preparação e recuperação; o especial antiaéreo permanece inalterado.
+
+Instalação reproduzível, 473 testes em 42 arquivos e build aprovados localmente. No treino foram observados o painel de dano, a poeira do pisão e uma fase da ultimate com caixas visíveis. A revisão artística e a conferência dos ciclos completos, direções e bordas permanecem pendentes. O envio e a CI remota devem ser conferidos; não há autorização para merge.
+
 ## Menu e tiro horizontal da Cowboy — 2026-10-31
 
 Continuação na `codex/feature-cowboy-animacoes`, dependente das alterações anteriores ainda não integradas. O menu principal alinha a imagem à direita, calcula sua cobertura pela proporção real da janela e aplica o degradê preto solicitado à esquerda. A fonte e o atlas do especial horizontal `d,df,f,1` receberam novas poses inicial e final com ambos os braços visíveis, substituindo a pose de uma mão; o especial antiaéreo não foi alterado nesta revisão.

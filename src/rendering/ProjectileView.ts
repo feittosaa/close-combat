@@ -12,8 +12,6 @@ function cowboyProjectile(id: string): boolean { return ['light-punch','heavy-pu
 const effectClips: Readonly<Record<string, AnimationClip>> = {
   close:{key:'close',start:0,end:4,frameRate:30,frameDurations:[1,2,2,2,3],repeat:0},
   shot:{key:'shot',start:0,end:5,frameRate:20,frameDurations:[2,3,3,3,3,3],repeat:-1},
-  down:{key:'down',start:0,end:5,frameRate:18,frameDurations:[3,3,3,3,3,3],repeat:-1},
-  up:{key:'up',start:0,end:5,frameRate:18,frameDurations:[3,3,3,3,3,3],repeat:-1},
   impact:{key:'impact',start:0,end:5,frameRate:30,frameDurations:[1,2,3,2,2,2],repeat:0},
 };
 
@@ -48,8 +46,7 @@ export class ProjectileView {
         continue;
       }
       if (p.fighterId === 'cowboy' && p.visual === 'bullet') {
-        const effect = move.id === 'quick-shot' || move.id === 'heavy-shot' ? 'close' :
-          (p.verticalVelocity ?? 0) > 0 ? 'down' : (p.verticalVelocity ?? 0) < 0 ? 'up' : 'shot';
+        const effect = move.id === 'quick-shot' || move.id === 'heavy-shot' ? 'close' : 'shot';
         const key = `cowboy-effect-${effect}`;
         if (this.scene.textures.exists(key)) {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0,0,key,'0').setDepth(11);
@@ -60,7 +57,7 @@ export class ProjectileView {
             .setPosition(box.x + box.width/2,box.y + box.height/2)
             .setDisplaySize(effect === 'close' ? 110 : 80, effect === 'close' ? 90 : 65)
             .setFlipX(p.facing === 'left')
-            .setAngle(effect === 'close' && (p.verticalVelocity ?? 0) < 0 ? (p.facing === 'left' ? 45 : -45) : 0).setVisible(true);
+            .setAngle((p.verticalVelocity ?? 0) === 0 ? 0 : Math.sign(p.verticalVelocity!) * (p.facing === 'left' ? -45 : 45)).setVisible(true);
           continue;
         }
       }

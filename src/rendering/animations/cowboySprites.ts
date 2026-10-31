@@ -57,6 +57,9 @@ const attackRhythm: Readonly<Record<string, {startup: readonly number[]; recover
 const sample = (name: string, elapsed: number) => getTimedAnimationFrame(cowboyAnimationClips[name], elapsed);
 
 export function getCowboyUltimateActivationPose(state: CharacterState, elapsed: number) {
+  if (elapsed >= ULTIMATE_ACTIVATION_FRAMES - 18) {
+    return pose('exit-taunt', Math.min(5, Math.floor((elapsed - (ULTIMATE_ACTIVATION_FRAMES - 18)) / 3)), state);
+  }
   const age = Math.min(47, Math.floor(elapsed * 60 / ULTIMATE_ACTIVATION_FRAMES));
   return age < 12 ? pose('enter-taunt', sample('enterWalk', age), state) : pose('taunt', sample('taunt', age - 12), state);
 }
@@ -75,8 +78,7 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
       return pose('charge-heavy-punch', frames[Math.floor(((state.attack.chargeFrames ?? 0) - startup) / 8) % frames.length], state);
     }
     if (move.screenVolley) {
-      if (elapsed < 12) return pose('taunt', Math.max(0, 5 - Math.floor(elapsed / 2)), state);
-      return pose('idle', sample('idle', elapsed), state);
+      return pose('ultimate-body', Math.min(5, Math.max(0, Math.floor((elapsed - startup) / move.screenVolley.interval))), state);
     }
     if (move.id === 'light-kick') {
       const step = Math.min(2, Math.max(0, (state.chain?.length ?? 1) - 1));
@@ -148,7 +150,8 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
   }
   if (state.tauntStartedFrame !== undefined) {
     const age = frame - state.tauntStartedFrame;
-    return age < 12 ? pose('enter-taunt', sample('enterWalk', age), state) : pose('taunt', sample('taunt', age - 12), state);
+    if (age >= 36) return pose('exit-taunt', Math.min(5, Math.floor((age - 36) / 2)), state);
+    return age < 12 ? pose('enter-taunt', sample('enterWalk', age), state) : pose('taunt', sample('taunt', Math.floor((age - 12) * 1.5)), state);
   }
   return pose('idle', sample('idle', frame - state.stateStartedFrame), state);
 }

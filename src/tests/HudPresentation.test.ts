@@ -51,6 +51,15 @@ it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar
   expect(texts.every(t=>!t.value.includes('REINICIAR'))).toBe(true);
   hud.destroy();
 });
+it('apresenta o histórico de combo no painel com a cor do jogador',()=>{
+  const {scene,texts,commands}=mockScene();
+  const hud=new CombatHud(scene,1024,['Cowboy','Shoto'],'Sala',true);
+  const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
+  hud.update({...snapshot,comboHistory:[{attackerId:'player-1',targetId:'player-2',hits:3,damage:72,active:true,lastFrame:0}]},1024);
+  expect(texts.some(text=>text.value==='3 HITS · 72 DANO')).toBe(true);
+  expect(commands).toContainEqual(['lineStyle',1,HUD.players[0],.85]);
+  hud.destroy();
+});
 it('treino usa teclas remapeadas e mantém dados de contato e pausa legíveis',()=>{
   saveSystemControls({pause:'KeyQ',reset:'KeyE'});
   const {scene,texts}=mockScene();

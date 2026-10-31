@@ -3,7 +3,7 @@ import type Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { contactLabel, MODE_LABELS } from './combatLabels';
 import { getSystemControls, keyLabel } from '../input/controlSettings';
-import { HUD, hudText, drawDiamond, healthBarFill } from './hudTheme';
+import { HUD, hudText, drawDiamond, drawHudPanel, healthBarFill } from './hudTheme';
 
 /** Minimal HUD; all values and round markers reflect the same simulation snapshot. */
 export class CombatHud {
@@ -17,6 +17,7 @@ export class CombatHud {
   private readonly rageLabels: Phaser.GameObjects.Text[];
   private readonly healthLabels: Phaser.GameObjects.Text[];
   private readonly comboLabels: Phaser.GameObjects.Text[];
+  private readonly comboGraphics: Phaser.GameObjects.Graphics;
   private readonly pauseHint: Phaser.GameObjects.Text;
   private lastImpactLabel = '';
   private lastImpactFrame = Number.NEGATIVE_INFINITY;
@@ -45,12 +46,13 @@ export class CombatHud {
     this.roundLabel=scene.add.text(width/2,41,'ROUND 1',hudText(10,false,HUD.goldText)).setOrigin(.5,0);
     const stageLabel=scene.add.text(width/2,61,stageName.toUpperCase(),hudText(9,false,HUD.muted)).setOrigin(.5,0);
     this.hitLabel=scene.add.text(width/2,78,'',{...hudText(11,false,HUD.goldText),align:'center',wordWrap:{width:540}}).setOrigin(.5,0).setVisible(training);
-    this.comboLabels=[scene.add.text(30,76,'',hudText(13,true,HUD.goldText)),
-      scene.add.text(width-30,76,'',{...hudText(13,true,HUD.goldText),align:'right'}).setOrigin(1,0)];
+    this.comboGraphics=scene.add.graphics();
+    this.comboLabels=[scene.add.text(training?217:42,82,'',hudText(12,true,HUD.goldText)),
+      scene.add.text(training?width-217:width-42,82,'',{...hudText(12,true,HUD.goldText),align:'right'}).setOrigin(1,0)];
     this.resultLabel=scene.add.text(width/2,98,'',{...hudText(17,true),stroke:'#17131a',strokeThickness:4,align:'center'}).setOrigin(.5,0);
     this.pauseHint=scene.add.text(width/2,LOGICAL_VIEW.height-18,'',hudText(10,false,HUD.muted)).setOrigin(.5).setVisible(!training);
     this.root=scene.add.container(0,0,[decoration,...labels,this.healthGraphics,...this.healthLabels,...this.modeLabels,...this.rageLabels,
-      this.timer,this.roundLabel,stageLabel,this.hitLabel,...this.comboLabels,this.resultLabel,this.pauseHint]).setScrollFactor(0).setDepth(100);
+      this.timer,this.roundLabel,stageLabel,this.hitLabel,this.comboGraphics,...this.comboLabels,this.resultLabel,this.pauseHint]).setScrollFactor(0).setDepth(100);
   }
 
   update(snapshot: SimulationSnapshot, width: number): void {
@@ -65,9 +67,11 @@ export class CombatHud {
     if(snapshot.frame<this.lastImpactFrame){this.lastImpactLabel='';this.lastImpactFrame=Number.NEGATIVE_INFINITY;}
     if(latest&&latest.frame>this.lastImpactFrame){this.lastImpactLabel=contactLabel(latest.event);this.lastImpactFrame=latest.frame;}
     this.hitLabel.setText(snapshot.frame-this.lastImpactFrame<=90?this.lastImpactLabel:'');
+    this.comboGraphics.clear();
     this.comboLabels.forEach((label,index) => {
       const records = snapshot.comboHistory.filter(combo => combo.attackerId === snapshot.characters[index].characterId);
       const visible = this.training ? records.slice(-3).reverse() : records.slice(-1).filter(combo => combo.hits > 1 && (combo.active || snapshot.frame - combo.lastFrame <= 180));
+      if (visible.length) drawHudPanel(this.comboGraphics, index === 0 ? (this.training ? 205 : 30) : width-(this.training ? 365 : 190),76,160,14+visible.length*15,HUD.players[index]);
       label.setText(visible.map(combo => `${combo.hits} HIT${combo.hits === 1 ? '' : 'S'} · ${combo.damage} DANO`).join('\n'));
     });
     this.healthGraphics.clear();

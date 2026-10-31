@@ -404,21 +404,47 @@
       "background": "magenta"
     },
     "effect-close": {
-      "source": "effect-close.png"
-    },
-    "effect-down": {
-      "source": "effect-down.png",
-      "background": "magenta"
+      "source": "effect-close.png",
+      "background": "magenta",
+      "discardComponents": {
+        "2": [
+          [
+            60,
+            230,
+            110,
+            265
+          ]
+        ],
+        "4": [
+          [
+            60,
+            215,
+            85,
+            260
+          ],
+          [
+            60,
+            300,
+            120,
+            355
+          ]
+        ],
+        "5": [
+          [
+            60,
+            270,
+            95,
+            315
+          ]
+        ]
+      }
     },
     "effect-impact": {
-      "source": "effect-impact.png"
+      "source": "effect-impact.png",
+      "background": "magenta"
     },
     "effect-shot": {
       "source": "effect-shot.png",
-      "background": "magenta"
-    },
-    "effect-up": {
-      "source": "effect-up.png",
       "background": "magenta"
     },
     "guard": {
@@ -1511,10 +1537,10 @@
       "discardComponents": {
         "1": [
           [
-            520,
+            535,
             500,
-            590,
-            560
+            585,
+            555
           ]
         ]
       }
@@ -1728,6 +1754,70 @@
       ],
       "rowY": 512,
       "scale": 1,
+      "background": "magenta"
+    },
+    "ultimate-body": {
+      "source": "ultimate-body.png",
+      "anchorX": [
+        290,
+        775,
+        1265,
+        280,
+        765,
+        1260
+      ],
+      "roots": [
+        490,
+        490,
+        490,
+        490,
+        490,
+        490
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.04,
+      "background": "magenta"
+    },
+    "exit-taunt": {
+      "source": "exit-taunt.png",
+      "anchorX": [
+        290,
+        775,
+        1285,
+        290,
+        775,
+        1285
+      ],
+      "roots": [
+        490,
+        490,
+        490,
+        490,
+        490,
+        490
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.04,
       "background": "magenta"
     }
   }
