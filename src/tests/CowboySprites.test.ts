@@ -2,7 +2,25 @@ import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { cowboy } from '../engine/data/fighters/cowboy';
-import { getCowboySpriteLayers, getCowboySpritePose } from '../rendering/animations/cowboySprites';
+import { getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
+
+it('completa a provocação antes de retornar gradualmente ao repouso', () => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
+  const taunt={...state,tauntStartedFrame:0};
+  expect(getCowboySpritePose(taunt,35)).toMatchObject({texture:'cowboy-taunt',frame:5});
+  expect(getCowboySpritePose(taunt,36)).toMatchObject({texture:'cowboy-exit-taunt',frame:0});
+  expect(getCowboySpritePose(taunt,47)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
+  expect(getCowboySpritePose({...state,tauntStartedFrame:undefined},48)?.texture).toBe('cowboy-idle');
+});
+
+it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate do jogador %i',player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  expect(getCowboyUltimateActivationPose(state,149)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
+  for(let shot=0;shot<6;shot++) {
+    const attacking={...state,attack:{moveId:'bulls-eye',buttons:[] as const,elapsedFrames:1+shot*18,hasHit:false}};
+    expect(getCowboySpritePose(attacking,shot*18)).toMatchObject({texture:'cowboy-ultimate-body',frame:shot,flipX:player===1});
+  }
+});
 
 it('anima a postura de carga e retorna ao tiro ao soltar', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
@@ -72,7 +90,7 @@ it('selects a distinct prepared texture for every authored attack through its ac
   for (const move of cowboy.moves) {
     const action = {...state,attack:{moveId:move.id,buttons:move.input.buttons,elapsedFrames:move.startup,hasHit:false}};
     const pose = getCowboySpritePose(action,move.startup);
-    expect(pose?.texture,move.id).toBe(`cowboy-${move.category === 'throw' ? 'throw' : move.screenVolley ? 'taunt' : move.id}`);
+    expect(pose?.texture,move.id).toBe(`cowboy-${move.category === 'throw' ? 'throw' : move.screenVolley ? 'ultimate-body' : move.id}`);
     expect(pose!.frame,move.id).toBeGreaterThanOrEqual(0);
     expect(pose!.frame,move.id).toBeLessThan(6);
   }
