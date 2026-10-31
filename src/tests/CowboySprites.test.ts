@@ -7,10 +7,10 @@ import { getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivation
 it('completa a provocação antes de retornar gradualmente ao repouso', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const taunt={...state,tauntStartedFrame:0};
-  expect(getCowboySpritePose(taunt,35)).toMatchObject({texture:'cowboy-taunt',frame:5});
-  expect(getCowboySpritePose(taunt,36)).toMatchObject({texture:'cowboy-exit-taunt',frame:0});
-  expect(getCowboySpritePose(taunt,47)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
-  expect(getCowboySpritePose({...state,tauntStartedFrame:undefined},48)?.texture).toBe('cowboy-idle');
+  expect(getCowboySpritePose(taunt,47)).toMatchObject({texture:'cowboy-taunt',frame:5});
+  expect(getCowboySpritePose(taunt,48)).toMatchObject({texture:'cowboy-exit-taunt',frame:0});
+  expect(getCowboySpritePose(taunt,59)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
+  expect(getCowboySpritePose({...state,tauntStartedFrame:undefined},60)?.texture).toBe('cowboy-idle');
 });
 
 it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate do jogador %i',player => {
