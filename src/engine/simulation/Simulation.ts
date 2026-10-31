@@ -213,7 +213,7 @@ export class Simulation {
       if (character.attack) {
         const move = this.move(index, character.attack.moveId)!;
         const attack = character.attack;
-        let held = Boolean(move.charge && !attack.chargeReleased && (inputs[index] ?? neutral()).buttons.has(move.input.buttons[0]));
+        let held = Boolean(move.charge && !attack.chargeReleased && move.input.buttons.every(button => (inputs[index] ?? neutral()).buttons.has(button)));
         if (move.charge && !attack.chargeReleased) {
           if (held) {
             attack.chargeFrames = Math.min((attack.chargeFrames ?? 0) + 1, move.charge.framesPerStep * move.charge.maxSteps);

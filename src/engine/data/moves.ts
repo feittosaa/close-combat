@@ -14,7 +14,7 @@ export interface MoveDefinition {
   /** A confirmed hit can start another authored combo while the target is stunned. */
   startsComboOnHit?: boolean;
   /** Hold the button to charge; thresholds use simulation frames. */
-  charge?: { framesPerStep: number; maxSteps: number; damagePerStep: number };
+  charge?: { framesPerStep: number; maxSteps: number; damagePerStep: number; maxRangeBonus?: number };
   category?: 'basic' | 'crouching' | 'power' | 'throw' | 'special' | 'ultimate';
   crouching?: boolean;
   airborne?: boolean;

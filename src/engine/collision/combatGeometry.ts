@@ -4,9 +4,13 @@ import type { Hitbox, Hurtbox } from './types';
 
 /** Geometria única para resolvedor e inspeção; nunca inferida dos desenhos. */
 export function createHitbox(character: CharacterState, move: MoveDefinition): Hitbox {
+  const chargeDuration = (move.charge?.framesPerStep ?? 0) * (move.charge?.maxSteps ?? 0);
+  const chargeProgress = character.attack?.moveId === move.id && chargeDuration > 1
+    ? Math.max(0, Math.min(1, ((character.attack.chargeFrames ?? 1) - 1) / (chargeDuration - 1))) : 0;
+  const width = move.hitbox.width * (1 + (move.charge?.maxRangeBonus ?? 0) * chargeProgress);
   return { ownerId: character.characterId, attackId: move.id,
-    x: character.facing === 'right' ? character.x + move.hitbox.forward : character.x - move.hitbox.forward - move.hitbox.width,
-    y: character.y + move.hitbox.yOffset, width: move.hitbox.width, height: move.hitbox.height };
+    x: character.facing === 'right' ? character.x + move.hitbox.forward : character.x - move.hitbox.forward - width,
+    y: character.y + move.hitbox.yOffset, width, height: move.hitbox.height };
 }
 export function createHurtbox(character: CharacterState): Hurtbox {
   let box = character.collision.hurtboxes[character.mode === 'knockdown' && character.grounded && !character.throwPull ? 'knockdown' : !character.grounded ? 'airborne' : character.crouching ? 'crouching' : 'standing'];

@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — carga do laço, soco forte e virada — 2026-10-31
+
+Continuação na `codex/feature-cowboy-zoner`. As viradas de repouso, caminhada, agachada e aérea passam de 12 para 15 quadros mantendo as mesmas poses. Os dois agarrões podem ser segurados mantendo os botões do comando: soltar qualquer botão lança o laço, com disparo automático após 60 quadros. O alcance cresce gradualmente até 30%, com a mesma geometria no resolvedor e na inspeção; dano e arremesso permanecem inalterados. Nova folha de seis poses mostra o laço girando. Os braços espectrais acompanham a carga do soco forte, inclusive no combo.
+
+Instalação reproduzível, 488 testes em 42 arquivos e build aprovados; conferidos no treino a mudança de lado, a carga do laço, a hitbox e os braços do soco. A avaliação artística completa das transições e direções permanece pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI remota devem ser conferidos; sem autorização para merge em `development`.
+
 ## Menu — imagem em alta resolução — 2026-10-31
 
 Na branch `codex/feature-cowboy-zoner`, o wallpaper do menu foi substituído pelo PNG fornecido pelo usuário, de 4758 × 2976 pixels, mantendo a proporção e o enquadramento existentes. O arquivo ocupa aproximadamente 24,5 MB. O menu foi conferido no navegador com cobertura integral e degradê à esquerda; a aprovação visual final cabe ao usuário.
