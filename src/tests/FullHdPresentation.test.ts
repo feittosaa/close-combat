@@ -2,10 +2,18 @@ import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { FIGHT_WORLD_SCALE } from '../engine/data/fightFraming';
 import { Simulation } from '../engine/simulation/Simulation';
 import { expect, it, vi } from 'vitest';
-import { LOGICAL_VIEW, RENDER_SIZE, configureUiCamera, getUiViewport, projectCameraToOutput } from '../rendering/presentation';
+import { LOGICAL_VIEW, RENDER_SIZE, configureUiCamera, getHudLogicalWidth, getRightAlignedCover, getUiViewport, projectCameraToOutput } from '../rendering/presentation';
 import { getFightCameraFrame, createStageLayout } from '../rendering/stages/stageLayout';
 import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createGameConfig } from '../engine/data/gameConfig';
+
+it.each([{width:1848,height:966},{width:1920,height:1080},{width:2560,height:1080},{width:800,height:1000}])('cobre o menu inteiro com a imagem alinhada à direita em $width x $height', output => {
+  const image={width:1586,height:992};
+  const cover=getRightAlignedCover(output,image);
+  expect(cover.x).toBe(getHudLogicalWidth(output));
+  expect(cover.x-image.width*cover.scale).toBeLessThanOrEqual(0);
+  expect(image.height*cover.scale).toBeGreaterThanOrEqual(LOGICAL_VIEW.height);
+});
 
 it('mapeia todos os cantos do menu lógico para um canvas real 1920x1080 sem deformar', () => {
   expect(RENDER_SIZE).toEqual({width:1920,height:1080});

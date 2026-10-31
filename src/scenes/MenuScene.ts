@@ -1,4 +1,4 @@
-import { LOGICAL_VIEW, configureUiCamera, sharpenSceneText } from '../rendering/presentation';
+import { LOGICAL_VIEW, configureUiCamera, getRightAlignedCover, sharpenSceneText } from '../rendering/presentation';
 import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 
 import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
@@ -43,6 +43,11 @@ export class MenuScene extends Phaser.Scene {
   private readonly alignMenu = (): void => {
     const rect = this.game.canvas.getBoundingClientRect();
     Object.assign(this.menuElement!.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+    if (rect.width && rect.height && this.background) {
+      const frame = getRightAlignedCover(rect, this.background.frame);
+      this.background.setPosition(frame.x, frame.y).setScale(frame.scale);
+      configureUiCamera(this.cameras.main, rect);
+    }
   };
   private transitioning = false;
   private readonly handleKey = (event: KeyboardEvent): void => {
@@ -92,18 +97,12 @@ export class MenuScene extends Phaser.Scene {
   create(): void {
     configureUiCamera(this.cameras.main, this.scale);
     const { width, height } = LOGICAL_VIEW;
-    // Overscan keeps the slow camera drift inside the illustration at every phase.
     this.textures.get('menu-solar').setFilter(Phaser.Textures.FilterMode.LINEAR);
-    const background = this.add.image(width / 2, height / 2, 'menu-solar');
+    const background = this.add.image(width, height / 2, 'menu-solar').setOrigin(1, .5);
     this.background = background;
-    const cover = Math.max(width / background.width, height / background.height) * 1.045;
-    background.setScale(cover);
     this.motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const reducedMotion = this.motionPreference.matches;
     if (!reducedMotion) {
-      this.tweens.add({ targets: background, x: width / 2 - 9, y: height / 2 + 4,
-        scaleX: cover * 1.012, scaleY: cover * 1.012, duration: 18000,
-        ease: 'Sine.inOut', yoyo: true, repeat: -1 });
       for (let i = 0; i < 9; i++) {
         const mote = this.add.circle(620 + (i * 47) % 370, 155 + (i * 61) % 350, i % 3 === 0 ? 1.6 : 1, 0xffdc95, .35);
         this.tweens.add({ targets: mote, y: mote.y - 32, x: mote.x + 10, alpha: .05,
@@ -160,6 +159,7 @@ export class MenuScene extends Phaser.Scene {
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
     this.background?.setTexture(this.page === 'home' ? 'menu-solar' : 'menu-reference');
+    this.alignMenu();
     const { width, height } = LOGICAL_VIEW;
     this.menuElement!.hidden = this.page === 'settings';
     this.chrome?.setVisible(this.menuElement!.hidden);

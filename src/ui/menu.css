@@ -55,7 +55,7 @@
 
 /* Home: a compact stack of choices opens into one oversized, angled feature. */
 .arena-home {
-  background: transparent;
+  background: linear-gradient(to right, rgba(0, 0, 0, .9) 0%, rgba(0, 0, 0, .78) 20%, rgba(0, 0, 0, .42) 38%, transparent 65%);
   isolation: isolate;
 }
 .arena-home .arena-header { z-index: 5; border: 0; inset: 4% 4% auto; }
