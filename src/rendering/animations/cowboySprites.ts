@@ -60,8 +60,12 @@ export function getCowboyUltimateActivationPose(state: CharacterState, elapsed: 
   if (elapsed >= ULTIMATE_ACTIVATION_FRAMES - 18) {
     return pose('exit-taunt', Math.min(5, Math.floor((elapsed - (ULTIMATE_ACTIVATION_FRAMES - 18)) / 3)), state);
   }
-  const age = Math.min(47, Math.floor(elapsed * 60 / ULTIMATE_ACTIVATION_FRAMES));
-  return age < 12 ? pose('enter-taunt', sample('enterWalk', age), state) : pose('taunt', sample('taunt', age - 12), state);
+  const entranceDuration = 30;
+  if (elapsed < entranceDuration) {
+    return pose('enter-taunt', sample('enterWalk', Math.floor(elapsed * 12 / entranceDuration)), state);
+  }
+  const middleDuration = ULTIMATE_ACTIVATION_FRAMES - 18 - entranceDuration;
+  return pose('taunt', Math.min(5, Math.floor((elapsed - entranceDuration) * 6 / middleDuration)), state);
 }
 
 export function getCowboySpritePose(state: CharacterState, frame: number) {

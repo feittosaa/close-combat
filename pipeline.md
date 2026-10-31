@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — ritmo da preparação da ultimate — 2026-10-31
+
+Correção reunida na branch `codex/feature-cowboy-zoner`, junto às branches de animações, especiais e ritmo ainda não integradas em `development`. A preparação mantém seus 150 quadros e as sequências de entrada e saída; as seis poses intermediárias agora ocupam 17 quadros cada, eliminando a permanência mais longa na última pose. O fluxo de trabalho passa a manter correções na branch ativa, criando novas branches somente por pedido explícito do usuário.
+
+Instalação reproduzível, 482 testes em 42 arquivos e build aprovados localmente; a ativação foi observada no treino. A avaliação artística integral permanece pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). O envio e a CI devem ser conferidos; não há autorização para integrar em `development`.
+
 ## Cowboy — ritmo do chute potente e provocação — 2026-10-31
 
 Branch `codex/fix-cowboy-ritmo-chute-potente`, dependente de `codex/feature-cowboy-especiais-carregados` e seus antecedentes ainda não integrados. O chute potente passa de 20 para 18 quadros de preparação e de 34 para 30 de recuperação, preservando atividade, dano e caixa. A provocação passa de 48 para 60 quadros de simulação, mantendo os mesmos desenhos, a entrada e a transição de saída; sua duração não altera a ativação da ultimate.
