@@ -20,6 +20,14 @@ it('divide a vulnerabilidade em cabeça, barriga e pernas sem mudar sua área to
   expect(createHurtbox({...state,grounded:false}).width).toBeGreaterThan(createHurtbox(state).width);
 });
 
+it.each([0,1])('dispara no limite mesmo mantendo o botão pressionado: jogador %i', player => {
+  const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
+  const held = input('N','2');
+  for (let tick=0;tick<145 && !sim.snapshot().hitEvents.length;tick++) sim.stepFrame(player===0?[held,input()]:[input(),held]);
+  expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'heavy-punch',outcome:'hit',damage:53});
+});
+
 it.each([0,1])('permite os três pisões defendidos sem reiniciar o combo: jogador %i', player => {
   const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
@@ -128,17 +136,17 @@ it('dá mais antecipação e recuperação à coronhada', () => {
   expect(strike).toMatchObject({startup: 11, activeFrames: 3, recovery: 20});
 });
 
-it.each([0, 1])('carrega o soco forte até soltar, com dano limitado a três segundos: jogador %i', player => {
-  for (const [heldFrames, expectedDamage] of [[1,38],[59,38],[60,42],[120,46],[180,49],[300,49]] as const) {
+it.each([0, 1])('carrega o soco forte por até dois segundos e dispara automaticamente: jogador %i', player => {
+  for (const [heldFrames, expectedDamage] of [[1,38],[59,38],[60,46],[119,46],[120,53]] as const) {
     const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
     const sim = new Simulation(createGameConfig(1024,576), defs, {training:true,initialDistance:100});
     const step = (value:FrameInput) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
     for (let tick=0; tick<heldFrames; tick++) step(input('N','2'));
     expect(sim.snapshot().projectiles).toHaveLength(0);
     expect(sim.snapshot().characters[player].attack?.chargeFrames).toBe(heldFrames);
-    step(input());
+    if (!sim.snapshot().hitEvents.length) step(input());
     for(let tick=0;tick<80 && !sim.snapshot().hitEvents.length;tick++)step(input());
-    expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'heavy-punch',outcome:'hit',damage:expectedDamage});
+    expect(sim.snapshot().hitEvents[0], `tempo ${heldFrames}`).toMatchObject({moveId:'heavy-punch',outcome:'hit',damage:expectedDamage});
   }
 });
 

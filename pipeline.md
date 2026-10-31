@@ -1,5 +1,11 @@
 # Close Combat — Pipeline
 
+## Cowboy — chutes e carga do soco forte — 2026-10-31
+
+Continuação na branch `codex/feature-cowboy-animacoes`, dependente dos trabalhos anteriores ainda não integrados. As fontes dos chutes forte e de afastamento foram revisadas para manter a mesma perna de apoio e a mesma perna de ataque; a recuperação do afastamento pula o quadro com braço encoberto. A folha do especial forte foi refeita mantendo dois braços humanos e os braços espectrais azuis no disparo. Criada uma folha própria para a postura de carga do soco forte, sem braços espectrais antes do disparo.
+
+O soco forte carrega por até 120 quadros e dispara automaticamente no limite: +20% ao completar 60 quadros e +40% ao completar 120, com arredondamento do dano. Regressões cobrem os dois jogadores, limiares, liberação e disparo mantendo o botão pressionado. Conferidos no treino a carga e acertos do chute forte, do afastamento e do especial forte com caixas visíveis; os ciclos completos em ambos os lados ainda exigem revisão artística. `npm ci`, 458 testes em 41 arquivos, build e `git diff --check` passaram localmente. O remoto configurado é público; o envio anterior foi rejeitado pela revisão automática e continua sem autorização específica de publicação. Sem CI remota ou merge.
+
 ## Cowboy — áreas de contato, dash e ultimate — 2026-10-31
 
 Continuação na `codex/feature-cowboy-animacoes`, com dependência de `codex/feature-cowboy-zoner` e de todo o trabalho de animação anterior ainda não integrado. O dash aéreo mantém a altura e é limitado a uma utilização por salto, restaurada ao pousar. As caixas agachada e aérea foram ampliadas horizontalmente; a vulnerabilidade da Cowboy está dividida em cabeça, tronco e pernas, com região baixa mais larga, e o contato seleciona a reação correspondente sem alterar a regra de bloqueio. Receber agarrão usa uma nova folha em pé durante a puxada. As receitas existentes podem continuar após defesa, sem reiniciar o combo de três pisões.
