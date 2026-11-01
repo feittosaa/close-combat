@@ -232,8 +232,8 @@ it.each([0, 1])('encerra a provocação naturalmente após 132 quadros: jogador 
   expect(sim.snapshot().characters[player].tauntStartedFrame).toBeUndefined();
 });
 
-it.each([0, 1])('usa chute potente médio e agarrões que lançam para longe: jogador %i', player => {
-  for (const [buttons, id] of [[['3','4'], 'power-kick'], [['1','3'], 'throw-13'], [['2','4'], 'throw-24']] as const) {
+it.each([0, 1])('usa chute potente médio e laço que lança para longe: jogador %i', player => {
+  for (const [buttons, id] of [[['3','4'], 'power-kick'], [['1','3'], 'throw-13']] as const) {
     const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
     const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});
     const chord: FrameInput = {direction:'N', buttons:new Set(buttons)};
@@ -256,7 +256,7 @@ it.each([0, 1])('usa chute potente médio e agarrões que lançam para longe: jo
 });
 
 it.each([0, 1])('carrega o alcance do laço sem mudar o dano: jogador %i', player => {
-  for (const [buttons,id] of [[['1','3'],'throw-13'],[['2','4'],'throw-24']] as const) {
+  for (const [buttons,id] of [[['1','3'],'throw-13']] as const) {
     const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:200});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
@@ -869,5 +869,92 @@ it.each([0,1])('permite quebrar o laço com o mesmo comando durante a captura: j
     for(let i=0;i<30;i++)send();
     expect(sim.snapshot().characters[1-player].health).toBe(health);
     expect(sim.snapshot().recentContacts.filter(c=>c.event.moveId.startsWith('throw'))).toHaveLength(0);
+  }
+});
+
+it.each([0,1])('mantém a captura por 15 quadros antes do arremesso: jogador %i', player => {
+  const defs=player===0?[cowboy,cowboy] as const:[cowboy,cowboy] as const;
+  const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
+  const send=(attacker:FrameInput=input(),defender:FrameInput=input())=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
+  send({direction:'N',buttons:new Set(['1','3'])}); send();
+  for(let i=0;i<40 && sim.snapshot().characters[1-player].grabbedStartedFrame===undefined;i++)send();
+  const before=sim.snapshot().characters[1-player];
+  for(let i=0;i<14;i++) {
+    send();
+    expect(sim.snapshot().characters[1-player]).toMatchObject({health:before.health, mode:'hitstun', grounded:true});
+    expect(sim.snapshot().hitEvents).toHaveLength(0);
+  }
+  send();
+  expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'throw-13',outcome:'hit',damage:75});
+  expect(sim.snapshot().characters[1-player].mode).toBe('knockdown');
+});
+
+it.each([0,1])('a direção para trás arremessa com 1+3 para o outro lado: jogador %i', player => {
+  for (const buttons of [['1','3']] as AttackButton[][]) {
+    const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
+    const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+    const initial=sim.snapshot().characters;
+    const sign=initial[player].facing==='right'?1:-1;
+    step({direction:'B',buttons:new Set(buttons)});
+    for(let tick=0;tick<80&&!sim.snapshot().hitEvents.length;tick++)step();
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({outcome:'hit',pushbackDirection:sign>0?'left':'right'});
+    for(let tick=0;tick<45;tick++)step();
+    const states=sim.snapshot().characters;
+    expect((states[1-player].x-states[player].x)*sign).toBeLessThan(0);
+  }
+});
+
+it.each([0,1])('a dinamite explode no ar ao acertar ou terminar o alcance: jogador %i', player => {
+  for (const [button,moveId] of [['1','quick-shot'],['2','heavy-shot']] as const) for (const distance of [65,300]) {
+    const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
+    const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+    for(const direction of ['D','DF','F'] as const)step(input(direction));
+    step(input('F',button));
+    let blast=false, hit=false;
+    for(let tick=0;tick<100&&!blast;tick++) {
+      step(); const snapshot=sim.snapshot();
+      hit ||= snapshot.hitEvents.some(event=>event.moveId===moveId && event.outcome==='hit');
+      const explosion=snapshot.explosions.find(item=>item.kind==='dynamite');
+      if(explosion) { expect(explosion.y).toBeLessThan(createGameConfig(1024,576).arena.floorY); blast=true; }
+    }
+    expect(blast).toBe(true);
+    expect(hit).toBe(distance===65);
+  }
+});
+
+it.each([0,1])('cada laço aceita apenas um botão correto na primeira tentativa: jogador %i', player => {
+  for (const [chord,allowed,wrong] of [[['1','3'],['1','3'],['2','4']], [['2','4'],['2','4'],['1','3']]] as AttackButton[][][]) {
+    for (const button of [...allowed,...wrong]) {
+      const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+      const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
+      const step=(attacker:FrameInput=input(),defender:FrameInput=input())=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
+      step({direction:'N',buttons:new Set(chord)}); step();
+      for(let t=0;t<50&&sim.snapshot().characters[1-player].grabbedStartedFrame===undefined;t++)step();
+      expect(sim.snapshot().characters[1-player].mode).toBe('hitstun');
+      const health=sim.snapshot().characters[1-player].health;
+      step(input(),input('N',button));
+      if(wrong.includes(button)) { step(); step(input(),input('N',allowed[0])); }
+      for(let t=0;t<30;t++)step();
+      const target=sim.snapshot().characters[1-player];
+      expect(target.health,`${chord.join('+')} e botão ${button}`).toBe(health-(wrong.includes(button)?(chord[0]==='1'?75:85):0));
+    }
+  }
+});
+
+it.each([0,1])('o laço 2+4 é rápido, baixo, curto e não carrega: jogador %i', player => {
+  const low=cowboy.moves.find(move=>move.id==='throw-24')!, normal=cowboy.moves.find(move=>move.id==='throw-13')!;
+  expect(low.hitLevel).toBe('low'); expect(low.startup).toBeLessThan(normal.startup);
+  expect(low.hitbox.width).toBeLessThan(normal.hitbox.width); expect(low.charge).toBeUndefined();
+  for (const [distance,shouldHit] of [[65,true],[120,true],[160,false]] as const) {
+    const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
+    const held:FrameInput={direction:'N',buttons:new Set(['2','4'])};
+    const step=()=>sim.stepFrame(player===0?[held,input()]:[input(),held]);
+    let capture=false;for(let t=0;t<55;t++){step(); if(sim.snapshot().characters[1-player].grabbedStartedFrame!==undefined)capture=true;}
+    expect(capture).toBe(shouldHit);
+    expect(sim.snapshot().characters[1-player].health).toBe(shouldHit?915:1000);
+    if(shouldHit) expect(sim.snapshot().recentContacts.some(c=>c.event.moveId==='throw-24'&&c.event.outcome==='hit')).toBe(true);
   }
 });

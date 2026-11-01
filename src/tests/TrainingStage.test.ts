@@ -8,7 +8,7 @@ it('disponibiliza apenas a sala animada em todos os modos',()=>{
   expect(defaultStage).toBe(trainingStage);
   expect(getStageById('bar-anoitecer')).toBeUndefined();
   expect(getStageById('salao-treino')).toBeUndefined();
-  expect(trainingStage.referenceSize).toEqual({width:712,height:344});
+  expect(trainingStage.referenceSize).toEqual({width:1424,height:688});
   expect(trainingStage.layers[0].frames).toHaveLength(4);
   expect(trainingStage.layers[0].frameDuration).toBe(12);
 });

@@ -1,6 +1,7 @@
 """Prepare approved preview sheets as fixed-cell atlases without recoloring their pixels."""
 from pathlib import Path
 import json
+import sys
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -8,6 +9,8 @@ from scipy import ndimage
 ROOT = Path(__file__).resolve().parents[1] / 'src/assets/sprites/characters/cowboy'
 ALIGNMENT = json.loads((ROOT / 'alignment.json').read_text())['clips']
 for source in sorted((ROOT / 'source').glob('*.png')):
+    if len(sys.argv) > 1 and source.stem not in sys.argv[1:]:
+        continue
     SIZE = ALIGNMENT[source.stem].get('frameSize', 640)
     FOOT = round(465 * SIZE / 640)
     magic = source.stem.startswith('magic-')
@@ -82,6 +85,7 @@ for source in sorted((ROOT / 'source').glob('*.png')):
             crop = Image.fromarray(cell)
             crop.thumbnail((SIZE,SIZE),Image.Resampling.LANCZOS)
             x, y = (SIZE-crop.width)//2, (SIZE-crop.height)//2
+            y += ALIGNMENT[source.stem].get('effectOffsetsY', [0] * 6)[i]
         else:
             # Grid coordinates define a fixed origin; moving limbs never recenter a frame.
             components, _ = ndimage.label(alpha > 0)

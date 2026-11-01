@@ -129,19 +129,19 @@
       "source": "anti-air.png",
       "anchorX": [
         256,
-        752,
-        1204,
-        200,
-        723,
-        1215
+        750,
+        1235,
+        240,
+        750,
+        1240
       ],
       "roots": [
-        487,
-        487,
-        487,
-        475,
-        475,
-        475
+        489,
+        489,
+        489,
+        454,
+        454,
+        454
       ],
       "seams": [
         [
@@ -153,25 +153,9 @@
           1024
         ]
       ],
-      "rowY": 489,
+      "rowY": 512,
       "scale": 0.84,
-      "background": "magenta",
-      "discardComponents": {
-        "4": [
-          [
-            150,
-            115,
-            190,
-            150
-          ],
-          [
-            150,
-            145,
-            230,
-            195
-          ]
-        ]
-      }
+      "background": "magenta"
     },
     "backward": {
       "source": "backward.png",
@@ -403,49 +387,29 @@
       "scale": 1,
       "background": "magenta"
     },
-    "effect-close": {
-      "source": "effect-close.png",
-      "background": "magenta",
-      "discardComponents": {
-        "2": [
-          [
-            60,
-            230,
-            110,
-            265
-          ]
-        ],
-        "4": [
-          [
-            60,
-            215,
-            85,
-            260
-          ],
-          [
-            60,
-            300,
-            120,
-            355
-          ]
-        ],
-        "5": [
-          [
-            60,
-            270,
-            95,
-            315
-          ]
-        ]
-      }
-    },
     "effect-impact": {
       "source": "effect-impact.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -20,
+        -20,
+        -20,
+        15,
+        15,
+        15
+      ]
     },
     "effect-shot": {
       "source": "effect-shot.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -35,
+        -35,
+        -35,
+        26,
+        26,
+        26
+      ]
     },
     "guard": {
       "source": "guard.png",
@@ -552,48 +516,6 @@
       "scale": 1,
       "background": "magenta",
       "rowY": 512
-    },
-    "heavy-shot": {
-      "source": "heavy-shot.png",
-      "anchorX": [
-        241,
-        680,
-        1155,
-        243,
-        729,
-        1249
-      ],
-      "roots": [
-        507,
-        507,
-        507,
-        496,
-        496,
-        496
-      ],
-      "seams": [
-        [
-          512,
-          990
-        ],
-        [
-          512,
-          1024
-        ]
-      ],
-      "rowY": 508,
-      "scale": 1,
-      "background": "magenta",
-      "discardComponents": {
-        "3": [
-          [
-            -100,
-            60,
-            35,
-            115
-          ]
-        ]
-      }
     },
     "idle": {
       "source": "idle.png",
@@ -752,38 +674,6 @@
         ]
       ],
       "rowY": 519,
-      "scale": 1,
-      "background": "magenta"
-    },
-    "quick-shot": {
-      "source": "quick-shot.png",
-      "anchorX": [
-        214,
-        714,
-        1196,
-        211,
-        719,
-        1227
-      ],
-      "roots": [
-        506,
-        506,
-        506,
-        488,
-        488,
-        488
-      ],
-      "seams": [
-        [
-          512,
-          1024
-        ],
-        [
-          512,
-          1024
-        ]
-      ],
-      "rowY": 508,
       "scale": 1,
       "background": "magenta"
     },
@@ -951,17 +841,17 @@
         196,
         698,
         1168,
-        167,
-        725,
-        1209
+        190,
+        700,
+        1200
       ],
       "roots": [
-        498,
-        498,
-        498,
-        483,
-        483,
-        483
+        500,
+        500,
+        500,
+        463,
+        463,
+        463
       ],
       "seams": [
         [
@@ -973,19 +863,9 @@
           994
         ]
       ],
-      "rowY": 501,
+      "rowY": 527,
       "scale": 0.85,
-      "background": "magenta",
-      "discardComponents": {
-        "4": [
-          [
-            140,
-            215,
-            260,
-            305
-          ]
-        ]
-      }
+      "background": "magenta"
     },
     "taunt": {
       "source": "taunt.png",
@@ -1461,7 +1341,15 @@
     },
     "effect-block": {
       "source": "effect-block.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -20,
+        -20,
+        -20,
+        15,
+        15,
+        15
+      ]
     },
     "enter-taunt": {
       "source": "enter-taunt.png",
@@ -1529,21 +1417,27 @@
     },
     "effect-dust-light": {
       "source": "effect-dust-light.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -60,
+        -61,
+        -58,
+        -3,
+        -1,
+        -2
+      ]
     },
     "effect-dust-power": {
       "source": "effect-dust-power.png",
       "background": "magenta",
-      "discardComponents": {
-        "1": [
-          [
-            535,
-            500,
-            585,
-            555
-          ]
-        ]
-      }
+      "effectOffsetsY": [
+        26,
+        26,
+        26,
+        73,
+        73,
+        73
+      ]
     },
     "hurt-high": {
       "source": "hurt-high.png",
@@ -1676,7 +1570,15 @@
     },
     "effect-volley": {
       "source": "effect-volley.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -45,
+        -45,
+        -45,
+        20,
+        20,
+        20
+      ]
     },
     "grabbed": {
       "source": "grabbed.png",
@@ -1919,6 +1821,106 @@
     },
     "effect-lasso": {
       "source": "effect-lasso.png",
+      "background": "magenta"
+    },
+    "dynamite-throw": {
+      "source": "dynamite-throw.png",
+      "anchorX": [
+        235,
+        731,
+        1236,
+        247,
+        741,
+        1246
+      ],
+      "roots": [
+        501,
+        501,
+        501,
+        475,
+        475,
+        475
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "magic-throw": {
+      "source": "magic-throw.png",
+      "background": "magenta"
+    },
+    "effect-dynamite": {
+      "source": "effect-dynamite.png",
+      "background": "magenta",
+      "effectOffsetsY": [
+        32,
+        17,
+        -9,
+        7,
+        10,
+        20
+      ]
+    },
+    "effect-dynamite-blast": {
+      "source": "effect-dynamite-blast.png",
+      "background": "magenta",
+      "effectOffsetsY": [
+        -27,
+        -16,
+        -19,
+        10,
+        5,
+        -2
+      ]
+    },
+    "magic-throw-up": {
+      "source": "magic-throw-up.png",
+      "background": "magenta"
+    },
+    "throw-low": {
+      "source": "throw-low.png",
+      "anchorX": [
+        230,
+        730,
+        1245,
+        232,
+        733,
+        1245
+      ],
+      "roots": [
+        489,
+        489,
+        489,
+        476,
+        476,
+        476
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "effect-lasso-low": {
+      "source": "effect-lasso-low.png",
       "background": "magenta"
     }
   }
