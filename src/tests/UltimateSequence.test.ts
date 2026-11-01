@@ -175,17 +175,13 @@ it('gives the glass a shallow arc and bottle a visibly higher arc, using the sam
   expect(heights[1]).toBeGreaterThan(heights[0]*3);
 });
 
-it('requires ultrawide backgrounds, removes every bar prop and compensates the background magnification',()=>{
+it('valida proporções e camadas do cenário',()=>{
   for(const stage of stages){
-    expect(stage.referenceSize.width/stage.referenceSize.height).toBeGreaterThanOrEqual(21/9);
-    const layout=createStageLayout(stage,1024,576,488);
-    // At output resolution, backgrounds expand at most 1.6x instead of the old ~2x close crop.
-    expect(layout.scale*1.6*1920/1024).toBeLessThan(1.6);
-    expect(()=>validateStage({...stage,referenceSize:{width:1920,height:1080}})).toThrow();
+    expect(stage.referenceSize.width/stage.referenceSize.height).toBeGreaterThanOrEqual(16/9);
+    expect(()=>validateStage({...stage,referenceSize:{width:100,height:100}})).toThrow();
   }
-  expect(defaultStage.layers.map(l=>l.id)).toEqual(['bar']);
+  expect(defaultStage.layers.map(l=>l.id)).toEqual(['sala']);
 });
-
 
 it('reaches both actual panorama walls when the opponent follows, without dragging a stationary fighter',()=>{
   for(const stage of stages){

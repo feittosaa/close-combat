@@ -51,7 +51,7 @@ export class TrainingHud {
         : character.remainingStateFrames;
       const levels = { high: 'ALTO', mid: 'MÉDIO', low: 'BAIXO', air: 'AÉREO', throw: 'AGARRÃO', special: 'ESPECIAL' };
       const detail = move
-        ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${levels[move.hitLevel]} · DANO ${move.damage}`
+        ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${move.screenVolley?.firstHitLevel ? `${levels[move.screenVolley.firstHitLevel]} / ` : ''}${levels[move.hitLevel]} · DANO ${move.damage}`
         : 'S: preparo · A: ativo · R: recuperação';
       this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]} · ${lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);

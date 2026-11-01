@@ -126,7 +126,8 @@ export class PauseMenu {
       if (move.invulnerability) this.details.append(el('p', `Invulnerável ${move.invulnerability.kind === 'all' ? 'a ataques' : 'a projéteis'} por ${move.invulnerability.until}F.`));
       if (move.projectile) this.details.append(el('p', `Projétil · velocidade ${move.projectile.speed} · duração ${move.projectile.life}F.`));
       const levels = { high: 'Alto', mid: 'Médio', low: 'Baixo', air: 'Aéreo', throw: 'Agarrão', special: 'Especial' };
-      this.details.append(el('p', `${levels[move.hitLevel]} · dano ${move.damage}`));
+      const hitLevel = move.screenVolley?.firstHitLevel ? `${levels[move.screenVolley.firstHitLevel]} no primeiro tiro · ${levels[move.hitLevel]} nos demais` : levels[move.hitLevel];
+      this.details.append(el('p', `${hitLevel} · dano ${move.damage}`));
       const timeline = el('div', undefined, 'pause-timeline');
       for (const [label, frames, cls] of [['Preparo', move.startup, 'startup'], ['Atividade', move.activeFrames, 'active'], ['Recuperação', move.recovery, 'recovery']] as const) {
         const block = el('span', `${label} ${frames}F`, cls); block.style.flexGrow = String(frames); timeline.append(block);

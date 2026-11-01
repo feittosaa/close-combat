@@ -6,6 +6,7 @@ export interface ProjectileState {
   ownerId: string;
   comboId?: number;
   comboStep?: number;
+  volleyStep?: number;
   fighterId: string;
   x: number;
   y: number;

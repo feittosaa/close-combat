@@ -280,7 +280,7 @@ export class FightScene extends Phaser.Scene {
     if (!snapshot) return;
 
     this.resizeHud(getHudLogicalWidth(this.scale));
-    this.stageView?.sync(snapshot.characters.map(character => character.x), snapshot.characters.map(character => character.y));
+    this.stageView?.sync(snapshot.characters.map(character => character.x), snapshot.characters.map(character => character.y), snapshot.frame);
     snapshot.characters.forEach((character, index) => {
       this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined);
     });

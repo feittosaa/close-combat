@@ -1,5 +1,12 @@
 # Close Combat — Pipeline
 
+
+## Cowboy e sala de treino animada — 2026-11-01
+
+Continuação na `codex/feature-cowboy-zoner`: ultimate aceita a sequência de combo e o comando b,bd,d,df,f,1+2; primeiro disparo é baixo, os seis levantam o alvo e o último causa queda. O laço tem alcance visual ajustado à hitbox, nova recuperação ao errar e janela de 15 quadros para o defensor quebrar com o mesmo comando (1+3 ou 2+4), antes de dano e arremesso. A carga do laço recebeu ajuste técnico de escala, o golpe agachado ficou mais lento, a provocação dura 132 quadros e a repetição infinita de 1 após 3,3,3 na mesma sequência foi bloqueada.
+
+A sala fornecida possui cinco quadros sincronizados com o tempo de combate e substitui os cenários anteriores em treino e seleção dos demais modos. Foram geradas novas folhas para laço ativo, laço separado e erro, usando a referência canônica da Cowboy e preservando as cores originais; requerem avaliação artística final. O cenário e o laço foram observados no treino. A instalação reproduzível reportou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Validação, envio, CI e integração autorizada em `development` devem ser confirmados no fechamento.
+
 ## Cowboy — provocação em 2,5 segundos — 2026-10-31
 
 Na `codex/feature-cowboy-zoner`, a provocação mantém as mesmas poses e passa a durar 150 quadros, com 50 para cada etapa de entrada, ação e saída. Instalação reproduzível, 490 testes em 42 arquivos e build aprovados; provocação observada no treino, com avaliação artística final pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI devem ser conferidos; sem autorização de merge em `development`.

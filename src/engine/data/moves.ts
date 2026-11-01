@@ -24,7 +24,7 @@ export interface MoveDefinition {
   invulnerability?: { kind: 'all' | 'projectile'; until: number };
   projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'glass' | 'bottle' | 'molotov' | 'bullet' };
   ultimateSequence?: { lighterHitbox: MoveDefinition['hitbox']; lighterDelay: number; lighterSpeed: number; confirmStun: number; knockbackSpeed: number; launchSpeed: number; knockdownFrames: number };
-  screenVolley?: { shots: number; interval: number; bandHeight: number };
+  screenVolley?: { shots: number; interval: number; bandHeight: number; firstHitLevel?: HitLevel };
   rageCost?: number;
   /** Derruba no chão apenas quando o golpe acerta. */
   knockdown?: boolean;

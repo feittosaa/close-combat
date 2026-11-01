@@ -7,10 +7,10 @@ import { getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivation
 it('completa a provocação antes de retornar gradualmente ao repouso', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const taunt={...state,tauntStartedFrame:0};
-  for (const [offset,texture] of [[0,'cowboy-enter-taunt'],[50,'cowboy-taunt'],[100,'cowboy-exit-taunt']] as const) {
-    for (let tick=0; tick<50; tick++) expect(getCowboySpritePose(taunt,offset + tick)).toMatchObject({texture,frame:Math.floor(tick * 6 / 50)});
+  for (const [offset,texture] of [[0,'cowboy-enter-taunt'],[44,'cowboy-taunt'],[88,'cowboy-exit-taunt']] as const) {
+    for (let tick=0; tick<44; tick++) expect(getCowboySpritePose(taunt,offset + tick)).toMatchObject({texture,frame:Math.floor(tick * 6 / 44)});
   }
-  expect(getCowboySpritePose({...state,tauntStartedFrame:undefined},150)?.texture).toBe('cowboy-idle');
+  expect(getCowboySpritePose({...state,tauntStartedFrame:undefined},132)?.texture).toBe('cowboy-idle');
 });
 
 it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate do jogador %i',player => {
@@ -105,7 +105,7 @@ it('selects a distinct prepared texture for every authored attack through its ac
   for (const move of cowboy.moves) {
     const action = {...state,attack:{moveId:move.id,buttons:move.input.buttons,elapsedFrames:move.startup,hasHit:false}};
     const pose = getCowboySpritePose(action,move.startup);
-    expect(pose?.texture,move.id).toBe(`cowboy-${move.category === 'throw' ? 'throw' : move.screenVolley ? 'ultimate-body' : move.id}`);
+    expect(pose?.texture,move.id).toBe(`cowboy-${move.category === 'throw' ? 'throw-active' : move.screenVolley ? 'ultimate-body' : move.id}`);
     expect(pose!.frame,move.id).toBeGreaterThanOrEqual(0);
     expect(pose!.frame,move.id).toBeLessThan(6);
   }
@@ -213,6 +213,17 @@ it.each([0, 1])('anima o laço e os braços do soco forte durante a carga: jogad
   const combo = {...heavy,chain:['light-punch','heavy-punch']};
   expect(getCowboySpriteLayers(combo,30)).toHaveLength(2);
   expect(getCowboySpriteLayers(combo,30)[0].texture).toBe('cowboy-magic-horizontal');
+});
+
+it.each([0, 1])('usa recuperação própria apenas quando o laço erra: jogador %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  for (const [moveId,buttons] of [['throw-13',['1','3']],['throw-24',['2','4']]] as const) {
+    const attack = {moveId,buttons,elapsedFrames:22,hasHit:false,chargeReleased:true};
+    const missed = {...state,attack};
+    expect(getCowboySpritePose(missed,22)).toMatchObject({texture:'cowboy-throw-miss',frame:0,flipX:player===1});
+    expect(getCowboySpritePose({...missed,attack:{...attack,elapsedFrames:55}},55)?.frame).toBe(5);
+    expect(getCowboySpritePose({...missed,attack:{...attack,hasHit:true,hitOutcome:'hit' as const}},22)?.texture).toBe('cowboy-throw');
+  }
 });
 
 it('keeps Cowboy animation cadence deterministic at different display rates', () => {
