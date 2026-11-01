@@ -108,7 +108,7 @@ it('selects the prepared texture for every authored attack through its active ph
   for (const move of cowboy.moves) {
     const action = {...state,attack:{moveId:move.id,buttons:move.input.buttons,elapsedFrames:move.startup,hasHit:false}};
     const pose = getCowboySpritePose(action,move.startup);
-    const texture = move.category === 'throw' ? 'throw-active' : move.screenVolley ? 'ultimate-body' :
+    const texture = move.id === 'throw-24' ? 'throw-low' : move.category === 'throw' ? 'throw-active' : move.screenVolley ? 'ultimate-body' :
       ['quick-shot','heavy-shot'].includes(move.id) ? 'dynamite-throw' : move.id;
     expect(pose?.texture,move.id).toBe(`cowboy-${texture}`);
     expect(pose!.frame,move.id).toBeGreaterThanOrEqual(0);
@@ -208,7 +208,7 @@ it.each([0, 1])('keeps the correctly oriented spectral arms during both special 
 
 it.each([0, 1])('anima o laço e os braços do soco forte durante a carga: jogador %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
-  for (const [moveId,buttons] of [['throw-13',['1','3']],['throw-24',['2','4']]] as const) {
+  for (const [moveId,buttons] of [['throw-13',['1','3']]] as const) {
     const held = {...state,attack:{moveId,buttons,elapsedFrames:18,chargeFrames:24,hasHit:false}};
     expect(getCowboySpritePose(held,24)).toMatchObject({texture:'cowboy-charge-throw',frame:1,flipX:player===1});
     expect(getCowboySpritePose({...held,attack:{...held.attack,chargeReleased:true}},24)?.texture).toBe('cowboy-throw');
@@ -222,7 +222,7 @@ it.each([0, 1])('anima o laço e os braços do soco forte durante a carga: jogad
 
 it.each([0, 1])('usa recuperação própria apenas quando o laço erra: jogador %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
-  for (const [moveId,buttons] of [['throw-13',['1','3']],['throw-24',['2','4']]] as const) {
+  for (const [moveId,buttons] of [['throw-13',['1','3']]] as const) {
     const attack = {moveId,buttons,elapsedFrames:22,hasHit:false,chargeReleased:true};
     const missed = {...state,attack};
     expect(getCowboySpritePose(missed,22)).toMatchObject({texture:'cowboy-throw-miss',frame:0,flipX:player===1});

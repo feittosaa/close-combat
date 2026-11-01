@@ -5,7 +5,7 @@ import type { GameConfig } from '../data/gameConfig';
 import { FIGHT_SIDE_MARGIN, FIGHT_WORLD_SCALE } from '../data/fightFraming';
 import type { MoveDefinition } from '../data/moves';
 import { CommandParser } from '../../input/CommandBuffer';
-import type { FrameInput } from '../../input/types';
+import type { AttackButton, FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
 import type { ProjectileState } from '../combat/ProjectileState';
@@ -75,7 +75,7 @@ export class Simulation {
   private lastHitEvents: HitEvent[] = [];
   private recentContacts: CombatLogEntry[] = [];
   private comboHistory: ComboRecord[] = [];
-  private pendingThrow?: { event: HitEvent; remaining: number; previousHeld: boolean };
+  private pendingThrow?: { event: HitEvent; remaining: number; previousButtons: Set<AttackButton>; attempted: boolean };
   private trainingDistance?: number;
   private trainingAutoRestore = false;
   private quietFrames = 0;
@@ -200,8 +200,11 @@ export class Simulation {
       const targetIndex = 1 - attackerIndex;
       const target = this.characters[targetIndex], attacker = this.characters[attackerIndex];
       const move = this.move(attackerIndex, pending.event.moveId)!;
-      const held = move.input.buttons.every(button => (inputs[targetIndex] ?? neutral()).buttons.has(button));
-      if (held && !pending.previousHeld) {
+      const buttons = (inputs[targetIndex] ?? neutral()).buttons;
+      const pressed = [...buttons].filter(button => !pending.previousButtons.has(button));
+      const breaksThrow = !pending.attempted && pressed.length > 0 && pressed.every(button => move.input.buttons.includes(button));
+      if (pressed.length) pending.attempted = true;
+      if (breaksThrow) {
         target.mode = 'hitstun'; target.remainingStateFrames = 1; target.grabbedStartedFrame = undefined;
         this.pendingCommands[targetIndex] = undefined; this.parsers[targetIndex].clear();
         attacker.attack = undefined; attacker.mode = 'neutral'; attacker.remainingStateFrames = 0;
@@ -211,7 +214,7 @@ export class Simulation {
         target.health = Math.max(0, target.health - confirmedThrow.damage);
         target.mode = 'hitstun'; target.remainingStateFrames = confirmedThrow.defenderStunFrames;
         this.pendingThrow = undefined;
-      } else pending.previousHeld = held;
+      } else pending.previousButtons = new Set(buttons);
     }
     const previousAnimationStates:CharacterAnimationState[]=this.characters.map(c=>({mode:c.mode,stateStartedFrame:c.stateStartedFrame,grounded:c.grounded,crouching:c.crouching,movementDirection:c.movementDirection,facing:c.facing,verticalVelocity:c.verticalVelocity}));
     const previousTransitions=this.characters.map(c=>c.animationTransition?{startedFrame:c.animationTransition.startedFrame,from:c.animationTransition.from}:undefined);
@@ -400,7 +403,7 @@ export class Simulation {
       const targetIndex = 1 - attackerIndex, target = this.characters[targetIndex];
       target.health += event.damage;
       target.mode = 'hitstun'; target.remainingStateFrames = 16; target.grabbedStartedFrame = this.frame;
-      this.pendingThrow = { event, remaining: 15, previousHeld: move.input.buttons.every(button => (inputs[targetIndex] ?? neutral()).buttons.has(button)) };
+      this.pendingThrow = { event, remaining: 15, previousButtons: new Set((inputs[targetIndex] ?? neutral()).buttons), attempted: false };
       return false;
     });
     if (confirmedThrow) this.lastHitEvents.push(confirmedThrow);
@@ -575,7 +578,7 @@ export class Simulation {
           target.pushbackMotion = { distancePerFrame: (destination - target.x) / sourceMove.throwFlight.frames, remainingFrames: sourceMove.throwFlight.frames };
           target.grounded = false; target.verticalVelocity = sourceMove.throwFlight.liftSpeed; target.airborneStartedFrame = this.frame;
         }
-      } else if (sourceMove.category === 'throw' && event.outcome === 'hit') {
+      } else if (sourceMove.category === 'throw' && event.outcome === 'hit' && event.pushback !== 0) {
         target.x = contactPositions[attackerIndex] + pushSign * (Math.abs(contactPositions[targetIndex] - contactPositions[attackerIndex]) + event.pushback);
       } else if (event.outcome === 'hit' && sourceMove.hitPushbackFrames && event.pushback) {
         target.pushbackMotion = { distancePerFrame: event.pushback * pushSign / sourceMove.hitPushbackFrames, remainingFrames: sourceMove.hitPushbackFrames };
