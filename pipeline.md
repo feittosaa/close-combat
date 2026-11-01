@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Cowboy — duração equilibrada da provocação — 2026-10-31
+
+Na `codex/feature-cowboy-zoner`, a provocação usa as mesmas dezoito poses de entrada, ação e saída, distribuídas uniformemente em 198 quadros: 66 por etapa e 11 por pose. A ativação da ultimate mantém seu próprio ritmo. Instalação reproduzível, 490 testes em 42 arquivos e build aprovados; provocação observada no treino, com avaliação artística final pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI devem ser conferidos; sem autorização de merge em `development`.
+
 ## Cowboy — carga do laço, soco forte e virada — 2026-10-31
 
 Continuação na `codex/feature-cowboy-zoner`. As viradas de repouso, caminhada, agachada e aérea passam de 12 para 15 quadros mantendo as mesmas poses. Os dois agarrões podem ser segurados mantendo os botões do comando: soltar qualquer botão lança o laço, com disparo automático após 60 quadros. O alcance cresce gradualmente até 30%, com a mesma geometria no resolvedor e na inspeção; dano e arremesso permanecem inalterados. Nova folha de seis poses mostra o laço girando. Os braços espectrais acompanham a carga do soco forte, inclusive no combo.
