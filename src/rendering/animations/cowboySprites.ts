@@ -45,7 +45,7 @@ export const cowboyAnimationClips: Readonly<Record<string, AnimationClip>> = {
 const attackRhythm: Readonly<Record<string, {startup: readonly number[]; recovery: readonly number[]}>> = {
   'light-punch':{startup:[3,1],recovery:[1,2,3]}, 'heavy-punch':{startup:[3,2],recovery:[1,2,3]},
   'air-light-punch':{startup:[2,1],recovery:[1,2,3]}, 'air-heavy-punch':{startup:[2,1],recovery:[1,2,3]},
-  'anti-air':{startup:[3,2,1],recovery:[1,2]}, 'quick-shot':{startup:[3,1],recovery:[1,2,3]},
+  'anti-air':{startup:[3,2],recovery:[1,2,3]}, 'quick-shot':{startup:[3,1],recovery:[1,2,3]},
   'heavy-shot':{startup:[3,2],recovery:[1,2,3]}, 'crouch-combo-shot':{startup:[3,2,1],recovery:[1,2]},
   'heavy-kick':{startup:[3,1],recovery:[1,2,3]}, 'air-light-kick':{startup:[2,1],recovery:[1,2,3]},
   'air-heavy-kick':{startup:[3,1],recovery:[1,2,3]}, 'crouch-punch':{startup:[2,1],recovery:[1,2,3]},
@@ -110,7 +110,7 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     if (move.category === 'throw' && !state.attack.hasHit && elapsed >= activeEnd) {
       return pose('throw-miss', getPhaseAnimationFrame([0,1,2,3,4,5],[1,1,1,1,1,1],elapsed-activeEnd,recovery), state);
     }
-    const firingFrame: Record<string, number> = { 'anti-air': 3, 'crouch-combo-shot': 3, 'power-kick': 3, 'throw-13': 3, 'throw-24': 3 };
+    const firingFrame: Record<string, number> = { 'anti-air': 2, 'crouch-combo-shot': 3, 'power-kick': 3, 'throw-13': 3, 'throw-24': 3 };
     const active = firingFrame[move.id] ?? 2;
     const safeStartup = Array.from({length:active}, (_, index) => index);
     const rhythm = attackRhythm[move.id];
@@ -202,7 +202,7 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
   }
   let effectFrame: number | undefined;
   if (elapsed >= Math.max(0, startup - 6) && elapsed < startup) effectFrame = sample('magic', elapsed - Math.max(0, startup - 6));
-  if (elapsed >= startup && elapsed < activeEnd && ['light-punch','heavy-punch','air-light-punch','air-heavy-punch'].includes(move.id)) effectFrame = 2;
+  if (elapsed >= startup && elapsed < activeEnd && ['light-punch','heavy-punch','air-light-punch','air-heavy-punch','anti-air'].includes(move.id)) effectFrame = 2;
   if (elapsed >= activeEnd && elapsed < activeEnd + 6) effectFrame = sample('magicExit', elapsed - activeEnd);
   if (holdingHeavy) effectFrame = 2 + Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 8) % 2;
   const direction = (move.projectile.verticalSpeed ?? 0) < 0 ? 'up' : (move.projectile.verticalSpeed ?? 0) > 0 ? 'down' : 'horizontal';

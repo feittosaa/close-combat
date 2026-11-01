@@ -1,5 +1,12 @@
 # Close Combat — Pipeline
 
+## Cowboy — laços e antiaéreo agachado — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, o laço baixo 2+4 ganhou 15 unidades de alcance e mantém a volta visível durante a fase ativa e o começo da recuperação. A corda visual do 1+3 foi alongada para acompanhar melhor sua área de contato, inclusive ao carregar. O antiaéreo agachado tem nova folha de seis poses a partir da referência canônica, com as duas mãos humanas e gesto de arminha; as mãos mágicas diagonais existentes aparecem também durante o disparo ativo. Folha anterior substituída e quadros alinhados tecnicamente.
+
+Instalação reproduzível, 503 testes em 42 arquivos, build e diff aprovados. No treino foram observados o antiaéreo, suas mãos espectrais e o laço baixo com a hitbox. A aprovação artística final depende do usuário. Envio e CI remota serão conferidos.
+
+
 ## Cowboy — quebra e laço rasteiro — 2026-11-01
 
 Na `codex/fix-sala-treino-agarrao`, a quebra tem uma única tentativa durante a captura: 1 ou 3 escapam do 1+3, e 2 ou 4 escapam do 2+4; um botão de ataque incorreto impede novas tentativas naquela captura. O 2+4 é um laço baixo, mais rápido e de menor alcance, sem carga, que derruba no local. O 1+3 mantém a carga e o arremesso direcional. Duas folhas novas, com poses e corda baixa, foram geradas a partir da referência canônica e preparadas com transparência e alinhamento técnico.

@@ -947,7 +947,7 @@ it.each([0,1])('o laço 2+4 é rápido, baixo, curto e não carrega: jogador %i'
   const low=cowboy.moves.find(move=>move.id==='throw-24')!, normal=cowboy.moves.find(move=>move.id==='throw-13')!;
   expect(low.hitLevel).toBe('low'); expect(low.startup).toBeLessThan(normal.startup);
   expect(low.hitbox.width).toBeLessThan(normal.hitbox.width); expect(low.charge).toBeUndefined();
-  for (const [distance,shouldHit] of [[65,true],[160,false]] as const) {
+  for (const [distance,shouldHit] of [[65,true],[120,true],[160,false]] as const) {
     const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
     const held:FrameInput={direction:'N',buttons:new Set(['2','4'])};

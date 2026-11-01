@@ -245,3 +245,16 @@ it('keeps Cowboy animation cadence deterministic at different display rates', ()
   const reference=run(60);
   for (const fps of [30,120,144]) expect(run(fps)).toEqual(reference);
 });
+
+it.each([0,1])('mantém mãos espectrais diagonais durante o disparo antiaéreo do jogador %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  const move = cowboy.moves.find(candidate => candidate.id === 'anti-air')!;
+  const attack = {...state, crouching:true, attack:{moveId:move.id,buttons:['2'] as const,elapsedFrames:move.startup,hasHit:false}};
+  for (let elapsed=0; elapsed<move.startup+move.activeFrames+move.recovery; elapsed++) {
+    expect(() => getCowboySpriteLayers({...attack,attack:{...attack.attack,elapsedFrames:elapsed}},elapsed)).not.toThrow();
+  }
+  expect(getCowboySpriteLayers(attack,move.startup)).toMatchObject([
+    {texture:'cowboy-magic-up',frame:2,flipX:player===1},
+    {texture:'cowboy-anti-air',frame:2,flipX:player===1},
+  ]);
+});
