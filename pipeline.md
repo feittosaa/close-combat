@@ -7,7 +7,7 @@
 
 Na `codex/fix-sala-treino-agarrao`, foram refeitas as sete folhas de efeito de tiro normal, tiro à queima-roupa, ultimate, impacto, bloqueio e areias leve/potente. São efeitos originais gerados a partir das referências fornecidas: animação 2D simples, cores chapadas e sem contornos escuros marcados; tiros e impactos azuis, bloqueio e areia brancos. Os quadros foram tecnicamente alinhados e preparados com transparência a partir de fundos magenta. O efeito de impacto azul cobre ataques da Cowboy e acompanha a altura do contato quando disponível; os seis quadros dos tiros especiais são utilizados. Nenhuma mecânica ou hitbox foi alterada.
 
-Conferência no treino: pisão e chute potente com areia junto ao chão, disparo e impacto azul; seis quadros de cada folha também foram inspecionados. Instalação reproduzível, 493 testes em 42 arquivos, build e diff aprovados. A revisão artística final de todos os golpes continua sujeita à aprovação do usuário; envio e CI serão conferidos.
+Conferência no treino: pisão e chute potente com areia junto ao chão, disparo e impacto azul; seis quadros de cada folha também foram inspecionados. Instalação reproduzível, 493 testes em 42 arquivos, build e diff aprovados. A revisão artística final de todos os golpes continua sujeita à aprovação do usuário. Implementação enviada em `de8efd7`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/41274424233); este registro possui CI própria. A branch continua aberta, sem integração autorizada.
 
 ## Sala de treino e reação ao agarrão — 2026-11-01
 
