@@ -406,46 +406,38 @@
     "effect-close": {
       "source": "effect-close.png",
       "background": "magenta",
-      "discardComponents": {
-        "2": [
-          [
-            60,
-            230,
-            110,
-            265
-          ]
-        ],
-        "4": [
-          [
-            60,
-            215,
-            85,
-            260
-          ],
-          [
-            60,
-            300,
-            120,
-            355
-          ]
-        ],
-        "5": [
-          [
-            60,
-            270,
-            95,
-            315
-          ]
-        ]
-      }
+      "effectOffsetsY": [
+        -40,
+        -40,
+        -40,
+        10,
+        10,
+        10
+      ]
     },
     "effect-impact": {
       "source": "effect-impact.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -20,
+        -20,
+        -20,
+        15,
+        15,
+        15
+      ]
     },
     "effect-shot": {
       "source": "effect-shot.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -35,
+        -35,
+        -35,
+        26,
+        26,
+        26
+      ]
     },
     "guard": {
       "source": "guard.png",
@@ -1461,7 +1453,15 @@
     },
     "effect-block": {
       "source": "effect-block.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -20,
+        -20,
+        -20,
+        15,
+        15,
+        15
+      ]
     },
     "enter-taunt": {
       "source": "enter-taunt.png",
@@ -1529,21 +1529,27 @@
     },
     "effect-dust-light": {
       "source": "effect-dust-light.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -60,
+        -61,
+        -58,
+        -3,
+        -1,
+        -2
+      ]
     },
     "effect-dust-power": {
       "source": "effect-dust-power.png",
       "background": "magenta",
-      "discardComponents": {
-        "1": [
-          [
-            535,
-            500,
-            585,
-            555
-          ]
-        ]
-      }
+      "effectOffsetsY": [
+        26,
+        26,
+        26,
+        73,
+        73,
+        73
+      ]
     },
     "hurt-high": {
       "source": "hurt-high.png",
@@ -1676,7 +1682,15 @@
     },
     "effect-volley": {
       "source": "effect-volley.png",
-      "background": "magenta"
+      "background": "magenta",
+      "effectOffsetsY": [
+        -45,
+        -45,
+        -45,
+        20,
+        20,
+        20
+      ]
     },
     "grabbed": {
       "source": "grabbed.png",

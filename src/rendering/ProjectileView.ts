@@ -8,9 +8,8 @@ import type { CharacterState } from '../engine/characters/CharacterState';
 import type { ProjectileState } from '../engine/combat/ProjectileState';
 import { getTimedAnimationFrame, type AnimationClip } from './animations/AnimationPlayback';
 
-function cowboyProjectile(id: string): boolean { return ['light-punch','heavy-punch','air-light-punch','air-heavy-punch','anti-air','quick-shot','heavy-shot','crouch-combo-shot','bulls-eye'].includes(id); }
 const effectClips: Readonly<Record<string, AnimationClip>> = {
-  close:{key:'close',start:0,end:4,frameRate:30,frameDurations:[1,2,2,2,3],repeat:0},
+  close:{key:'close',start:0,end:5,frameRate:30,frameDurations:[1,2,2,2,2,3],repeat:0},
   shot:{key:'shot',start:0,end:5,frameRate:20,frameDurations:[2,3,3,3,3,3],repeat:-1},
   impact:{key:'impact',start:0,end:5,frameRate:30,frameDurations:[1,2,3,2,2,2],repeat:0},
 };
@@ -35,7 +34,7 @@ export class ProjectileView {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, key, '0').setDepth(11);
           this.sprites.set(p.id, sprite);
           const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
-          const effectFrame = age < 3 ? 0 : 1 + Math.floor((age - 3) / 4) % 3;
+          const effectFrame = age < 3 ? 0 : 1 + Math.floor((age - 3) / 4) % 5;
           sprite.setTexture(key, String(effectFrame)).setPosition(box.x + box.width / 2, box.y + box.height / 2)
             .setDisplaySize(box.width, box.height).setFlipX(p.facing === 'left').setVisible(true);
           continue;
@@ -83,14 +82,15 @@ export class ProjectileView {
     }
     const hit = hits[0];
     const shooter = hit && characters.find(character => character.characterId === hit.attackerId);
-    const effect = hit?.outcome === 'block' ? 'block' : shooter?.fighterId === 'cowboy' && cowboyProjectile(hit?.moveId ?? '') ? 'impact' : undefined;
+    const effect = hit?.outcome === 'block' ? 'block' : shooter?.fighterId === 'cowboy' ? 'impact' : undefined;
     const texture = `cowboy-effect-${effect}`;
     if (hit && effect && this.impact?.eventFrame !== frame && this.scene.textures.exists(texture)) {
       const target = characters.find(character => character.characterId === hit.targetId);
       if (target) {
         this.impact?.sprite.destroy();
         const box = createHurtbox(target);
-        const sprite = this.scene.add.image(box.x + box.width / 2,box.y + box.height / 2,texture,'0').setDepth(12).setDisplaySize(80,80);
+        const heightRatio = hit.contactHeight === 'low' ? .84 : hit.contactHeight === 'high' ? .18 : .5;
+        const sprite = this.scene.add.image(box.x + box.width / 2,box.y + box.height * heightRatio,texture,'0').setDepth(12).setDisplaySize(80,80);
         this.impact = { sprite, started: frame, eventFrame: frame, texture };
       }
     }
