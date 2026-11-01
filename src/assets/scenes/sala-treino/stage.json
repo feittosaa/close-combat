@@ -2,20 +2,27 @@
   "id": "sala-treino",
   "name": "Sala de Treino",
   "referenceSize": {
-    "width": 2172,
-    "height": 904
+    "width": 712,
+    "height": 344
   },
-  "groundY": 795,
+  "groundY": 300,
   "minimumScale": 0.01,
   "layers": [
     {
       "id": "sala",
-      "file": "layers/sala.png",
+      "file": "layers/sala-1.png",
+      "frames": [
+        "layers/sala-2.png",
+        "layers/sala-3.png",
+        "layers/sala-4.png",
+        "layers/sala-5.png"
+      ],
+      "frameDuration": 12,
       "depth": -300,
       "parallax": 1,
       "x": 0,
       "y": 0
     }
   ],
-  "topExtension": 180
+  "source": "source/training-room-sheet.png"
 }

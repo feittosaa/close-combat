@@ -16,7 +16,7 @@ import { attackDurationFrames } from '../combat/frameData';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
-export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number }
+export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number; usedLightPunch?: boolean }
 export interface SimulationSnapshot {
   /** frame is combat/animation time; elapsedFrames counts every fixed tick, including hitstop. */
   frame: number; elapsedFrames: number; round: number; roundFramesRemaining: number;
@@ -75,6 +75,7 @@ export class Simulation {
   private lastHitEvents: HitEvent[] = [];
   private recentContacts: CombatLogEntry[] = [];
   private comboHistory: ComboRecord[] = [];
+  private pendingThrow?: { event: HitEvent; remaining: number; previousHeld: boolean };
   private trainingDistance?: number;
   private trainingAutoRestore = false;
   private quietFrames = 0;
@@ -142,7 +143,7 @@ export class Simulation {
     this.clearInputHistory(); this.characters = this.createCharacters();
     this.characters.forEach((character, index) => { character.rage = rage[index]; }); this.roundFramesRemaining = this.config.match.roundDurationFrames;
     this.roundWinnerId = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
-    this.lastHitEvents = []; this.recentContacts = []; this.comboHistory = []; this.quietFrames = 0;
+    this.lastHitEvents = []; this.recentContacts = []; this.comboHistory = []; this.pendingThrow = undefined; this.quietFrames = 0;
     this.hitstopFramesRemaining = 0; this.ultimateActivation = undefined; this.pendingLighters = []; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
   }
   private step(inputs: readonly FrameInput[]): void {
@@ -192,6 +193,26 @@ export class Simulation {
         (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
       return;
     }
+    let confirmedThrow: HitEvent | undefined;
+    if (this.pendingThrow) {
+      const pending = this.pendingThrow;
+      const attackerIndex = this.characters.findIndex(c => c.characterId === pending.event.attackerId);
+      const targetIndex = 1 - attackerIndex;
+      const target = this.characters[targetIndex], attacker = this.characters[attackerIndex];
+      const move = this.move(attackerIndex, pending.event.moveId)!;
+      const held = move.input.buttons.every(button => (inputs[targetIndex] ?? neutral()).buttons.has(button));
+      if (held && !pending.previousHeld) {
+        target.mode = 'hitstun'; target.remainingStateFrames = 1; target.grabbedStartedFrame = undefined;
+        this.pendingCommands[targetIndex] = undefined; this.parsers[targetIndex].clear();
+        attacker.attack = undefined; attacker.mode = 'neutral'; attacker.remainingStateFrames = 0;
+        this.pendingThrow = undefined;
+      } else if (--pending.remaining <= 0) {
+        confirmedThrow = pending.event;
+        target.health = Math.max(0, target.health - confirmedThrow.damage);
+        target.mode = 'hitstun'; target.remainingStateFrames = confirmedThrow.defenderStunFrames;
+        this.pendingThrow = undefined;
+      } else pending.previousHeld = held;
+    }
     const previousAnimationStates:CharacterAnimationState[]=this.characters.map(c=>({mode:c.mode,stateStartedFrame:c.stateStartedFrame,grounded:c.grounded,crouching:c.crouching,movementDirection:c.movementDirection,facing:c.facing,verticalVelocity:c.verticalVelocity}));
     const previousTransitions=this.characters.map(c=>c.animationTransition?{startedFrame:c.animationTransition.startedFrame,from:c.animationTransition.from}:undefined);
     const previousX = this.characters.map(character => character.x);
@@ -221,7 +242,7 @@ export class Simulation {
           }
           else attack.chargeReleased = true;
         }
-        if (!held || attack.elapsedFrames < (attack.startupFrames ?? move.startup) - 1) attack.elapsedFrames += 1;
+        if ((!held || attack.elapsedFrames < (attack.startupFrames ?? move.startup) - 1) && this.pendingThrow?.event.attackerId !== character.characterId) attack.elapsedFrames += 1;
         if (character.attack.elapsedFrames >= attackDurationFrames(move, character.attack)) character.attack = undefined;
       }
       return this.pendingCommands[index]?.move;
@@ -253,12 +274,11 @@ export class Simulation {
         if (move.projectile && (volley ? volleyShot >= 0 && volleyShot < volley.shots : elapsed === (character.attack.startupFrames ?? move.startup))) {
           const recoil = !character.grounded && (character.chain?.length ?? 0) > 1 ? this.projectileRecipe(index, character.chain ?? [])?.projectileSequence?.airRecoil : undefined;
           if (recoil) character.verticalVelocity = recoil.liftSpeed;
-          const halfView = (this.config.arena.viewportWidth ?? this.config.arena.right - this.config.arena.left) / (2 * FIGHT_WORLD_SCALE);
-          const center = clamp((this.characters[0].x + this.characters[1].x) / 2, this.config.arena.left + halfView, this.config.arena.right - halfView);
-          const volleyOrigin = character.facing === 'right' ? center - halfView + 156 : center + halfView - 156;
+          const volleyOrigin = this.volleyOrigin(character);
           character.attack.projectileId = this.nextProjectileId;
           this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
             x: volley ? volleyOrigin : character.x + (character.facing === 'right' ? 1 : -1) * character.collision.bodyWidth * 7 / 12, y: volley ? this.config.arena.floorY - (volleyShot + 1) * volley.bandHeight : character.y, facing: character.facing,
+            ...(volley ? { volleyStep: volleyShot } : {}),
             ...(this.projectileRecipe(index, character.chain ?? []) ? { comboId: character.projectileComboId, comboStep: (character.chain?.length ?? 1) - 1 } : {}),
             velocity: move.projectile.speed * (character.facing === 'right' ? 1 : -1), remainingFrames: move.projectile.life,
             verticalVelocity: move.projectile.verticalSpeed ?? 0, gravity: move.projectile.gravity ?? 0, phase: move.ultimateSequence ? 'confirm' : undefined,
@@ -282,7 +302,7 @@ export class Simulation {
       const tauntPressed = Boolean(input.taunt) && !this.tauntHeld[index];
       this.tauntHeld[index] = Boolean(input.taunt);
       if (character.fighterId === 'cowboy' && tauntPressed && character.mode === 'neutral' && !character.attack) character.tauntStartedFrame = this.frame;
-      if (character.tauntStartedFrame !== undefined && (character.mode !== 'neutral' || character.attack || this.frame - character.tauntStartedFrame >= 150)) character.tauntStartedFrame = undefined;
+      if (character.tauntStartedFrame !== undefined && (character.mode !== 'neutral' || character.attack || this.frame - character.tauntStartedFrame >= 132)) character.tauntStartedFrame = undefined;
       if (character.knockdown) { character.x += character.knockdown.velocityX; character.knockdown.velocityX *= .94; }
       if (character.throwPull) {
         const pull = character.throwPull;
@@ -373,6 +393,17 @@ export class Simulation {
       if (combo.active && target && !['hitstun','knockdown'].includes(target.mode)) combo.active = false;
     }
     this.lastHitEvents = this.resolver.resolve(this.characters, inputs, this.projectiles);
+    this.lastHitEvents = this.lastHitEvents.filter(event => {
+      const attackerIndex = this.characters.findIndex(c => c.characterId === event.attackerId);
+      const move = this.move(attackerIndex, event.moveId);
+      if (this.characters[attackerIndex].fighterId !== 'cowboy' || move?.category !== 'throw' || event.outcome !== 'hit' || this.pendingThrow) return true;
+      const targetIndex = 1 - attackerIndex, target = this.characters[targetIndex];
+      target.health += event.damage;
+      target.mode = 'hitstun'; target.remainingStateFrames = 16; target.grabbedStartedFrame = this.frame;
+      this.pendingThrow = { event, remaining: 15, previousHeld: move.input.buttons.every(button => (inputs[targetIndex] ?? neutral()).buttons.has(button)) };
+      return false;
+    });
+    if (confirmedThrow) this.lastHitEvents.push(confirmedThrow);
     for (const hit of this.lastHitEvents) {
       if (hit.outcome !== 'hit' || hit.damage <= 0) continue;
       let combo = this.comboHistory.find(entry => entry.active && entry.attackerId === hit.attackerId && entry.targetId === hit.targetId);
@@ -381,6 +412,7 @@ export class Simulation {
         this.comboHistory.push(combo);
       }
       combo.hits += 1; combo.damage += hit.damage; combo.lastFrame = this.frame;
+      if (hit.moveId === 'light-punch' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'cowboy') combo.usedLightPunch = true;
     }
     this.comboHistory = this.comboHistory.slice(-12);
     for (const projectile of this.projectiles) {
@@ -408,6 +440,17 @@ export class Simulation {
       const target = this.characters.find(character => character.characterId === event.targetId)!;
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
       const sourceMove = this.move(attackerIndex,event.moveId)!;
+      if (sourceMove.screenVolley && event.outcome === 'hit') {
+        target.grounded = false; target.crouching = false;
+        target.airborneStartedFrame ??= this.frame;
+        target.verticalVelocity = -6.5;
+        if (event.volleyStep === 5) {
+          target.mode = 'knockdown';
+          target.knockdown = { velocityX: 0 };
+          target.remainingStateFrames = (this.definitions[targetIndex].juggle?.getupFrames ?? 24) +
+            flightFramesRemaining(target.y, target.verticalVelocity, this.config.arena.floorY, this.config.movement.gravity);
+        }
+      }
       if (event.outcome === 'hit') target.hitReaction = { level: event.contactHeight ?? sourceMove.hitLevel, startedFrame: this.frame };
       if (event.outcome === 'hit' && sourceMove.category === 'throw') target.grabbedStartedFrame = this.frame;
       const current = attacker.attack;
@@ -575,8 +618,19 @@ export class Simulation {
       return false;
     });
   }
+  private volleyOrigin(character: CharacterState): number {
+    const halfView = (this.config.arena.viewportWidth ?? this.config.arena.right - this.config.arena.left) / (2 * FIGHT_WORLD_SCALE);
+    const center = clamp((this.characters[0].x + this.characters[1].x) / 2, this.config.arena.left + halfView, this.config.arena.right - halfView);
+    return character.facing === 'right' ? center - halfView + 156 : center + halfView - 156;
+  }
   private startMove(character: CharacterState, index: number, move: MoveDefinition): void {
         const previous = character.attack;
+        const opponent = this.characters[1 - index];
+        if (move.screenVolley && move.projectile && previous?.hitOutcome === 'hit' && opponent.mode === 'hitstun' && opponent.grounded) {
+          const origin = this.volleyOrigin(character);
+          const travel = Math.ceil(Math.abs(opponent.x - origin) / move.projectile.speed);
+          opponent.remainingStateFrames = Math.max(opponent.remainingStateFrames, move.startup + travel + 2);
+        }
         const continuingRecipe = this.canContinueRecipe(character, index, move);
         const target = continuingRecipe ? this.characters[1 - index] : this.characters.find(candidate => candidate.characterId === character.hitSequence?.targetId);
         if (previous?.hitOutcome === 'hit' && (character.hitSequence || continuingRecipe) && (chainStrike(move) || continuingRecipe) &&
@@ -660,7 +714,10 @@ export class Simulation {
     if ((move.rageCost ?? 0) > character.rage || (move.category === 'ultimate' && character.ultimateUsed && !this.options.training)) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;
-    if (previous?.hitOutcome === 'hit' && character.chain && this.definitions[index].combos?.some(recipe =>
+    if (this.definitions[index].id === 'cowboy' && move.id === 'light-punch' && previous?.hitOutcome === 'hit' &&
+        character.chain?.length === 3 && character.chain.every(id => id === 'light-kick') && this.characters[1-index].mode === 'hitstun' &&
+        this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedLightPunch)) return false;
+    if (!move.screenVolley && previous?.hitOutcome === 'hit' && character.chain && this.definitions[index].combos?.some(recipe =>
       !recipe.launch && recipe.moveIds.length === character.chain!.length &&
       recipe.moveIds.every((id, i) => id === character.chain![i]) && heavyStrike(this.move(index, previous.moveId)!))) return false;
     if (!permitsStrength(character.hitSequence, move)) return false;
@@ -678,6 +735,7 @@ export class Simulation {
       return previous.elapsedFrames >= (previous.startupFrames ?? previousMove.startup) + previousMove.activeFrames && this.recipePrefix(index, chain);
     }
     if (previous.hitOutcome === 'block') return this.definitions[index].id === 'cowboy' && this.recipePrefix(index, chain);
+    if (move.screenVolley && previous.hitOutcome === 'hit' && this.characters[1-index].mode === 'hitstun') return true;
     if (previous.hitOutcome !== 'hit' || !character.hitSequence) return false;
     if (move.category === 'ultimate') return true;
     if (!chainStrike(move)) return false;

@@ -1849,7 +1849,76 @@
         ]
       ],
       "rowY": 512,
+      "scale": 1.18,
+      "background": "magenta",
+      "frameSize": 768
+    },
+    "throw-miss": {
+      "source": "throw-miss.png",
+      "anchorX": [
+        255,
+        765,
+        1275,
+        260,
+        770,
+        1280
+      ],
+      "roots": [
+        490,
+        490,
+        490,
+        468,
+        468,
+        468
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
       "scale": 1.05,
+      "background": "magenta"
+    },
+    "throw-active": {
+      "source": "throw-active.png",
+      "anchorX": [
+        260,
+        772,
+        1284,
+        260,
+        772,
+        1284
+      ],
+      "roots": [
+        490,
+        490,
+        490,
+        490,
+        490,
+        490
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.9,
+      "background": "magenta"
+    },
+    "effect-lasso": {
+      "source": "effect-lasso.png",
       "background": "magenta"
     }
   }

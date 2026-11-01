@@ -6,10 +6,10 @@ from PIL import Image
 from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parents[1] / 'src/assets/sprites/characters/cowboy'
-SIZE = 640
-FOOT = 465
 ALIGNMENT = json.loads((ROOT / 'alignment.json').read_text())['clips']
 for source in sorted((ROOT / 'source').glob('*.png')):
+    SIZE = ALIGNMENT[source.stem].get('frameSize', 640)
+    FOOT = round(465 * SIZE / 640)
     magic = source.stem.startswith('magic-')
     effect = source.stem.startswith('effect-') or magic
     keyed = ALIGNMENT[source.stem].get('background') == 'magenta'

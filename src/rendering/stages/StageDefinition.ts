@@ -1,6 +1,8 @@
 export interface StageLayer {
   id: string;
   file: string;
+  frames?: readonly string[];
+  frameDuration?: number;
   /** Ordem de desenho: negativos ficam atrás dos lutadores, que usam depth 0. */
   depth: number;
   /** Fração do movimento horizontal da câmera: 0 fixa, 1 acompanha o chão. */
@@ -28,7 +30,7 @@ export interface StageDefinition {
 export function validateStage(stage: StageDefinition): void {
   const { width, height } = stage.referenceSize;
   if (!stage.id || !stage.name || !Number.isFinite(width) || width <= 0 ||
-      !Number.isFinite(height) || height <= 0 || width / height < 21 / 9 || !Number.isFinite(stage.groundY) ||
+      !Number.isFinite(height) || height <= 0 || width / height < 16 / 9 || !Number.isFinite(stage.groundY) ||
       stage.groundY <= 0 || stage.groundY >= height || !Number.isFinite(stage.minimumScale) ||
       stage.minimumScale <= 0 || !stage.layers.length ||
       (stage.topExtension !== undefined && (!Number.isFinite(stage.topExtension) || stage.topExtension < 0 || stage.topExtension >= stage.groundY))) {
@@ -37,6 +39,7 @@ export function validateStage(stage: StageDefinition): void {
   const ids = new Set<string>();
   stage.layers.forEach((layer) => {
     if (!layer.id || ids.has(layer.id) || !/^layers\/[\w-]+\.png$/.test(layer.file) ||
+        (layer.frames !== undefined && (!layer.frames.length || layer.frames.some(file => !/^layers\/[\w-]+\.png$/.test(file)) || !Number.isInteger(layer.frameDuration) || layer.frameDuration! <= 0)) ||
         ![layer.depth, layer.parallax, layer.x, layer.y].every(Number.isFinite) ||
         layer.parallax < 0 || layer.parallax > 1 ||
         (layer.contentScale !== undefined && (!Number.isFinite(layer.contentScale) || layer.contentScale <= 0)) ||

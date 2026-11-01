@@ -11,5 +11,5 @@ export function isTrainingMode(mode:MatchMode):boolean {
 }
 /** Practice stays in its room, including when a general stage is requested. */
 export function stageForMatch(mode:MatchMode,requestedId?:string){
-  return isTrainingMode(mode)?trainingStage:(requestedId === trainingStage.id ? defaultStage : getStageById(requestedId??'')??defaultStage);
+  return isTrainingMode(mode)?trainingStage:(getStageById(requestedId??'')??defaultStage);
 }

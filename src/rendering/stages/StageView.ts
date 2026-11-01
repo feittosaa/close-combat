@@ -9,6 +9,10 @@ export function preloadStage(scene: Phaser.Scene, stage: StageDefinition): void 
   stage.layers.forEach((layer) => {
     const key = stageTextureKey(stage, layer);
     if (!scene.textures.exists(key)) scene.load.image(key, getStageLayerUrl(stage, layer));
+    layer.frames?.forEach((file, index) => {
+      const frameKey = `${key}:frame:${index + 1}`;
+      if (!scene.textures.exists(frameKey)) scene.load.image(frameKey, getStageLayerUrl(stage, layer, file));
+    });
   });
 }
 
@@ -17,6 +21,8 @@ export class StageView {
   private hudCamera?: Phaser.Cameras.Scene2D.Camera;
   private readonly images: Phaser.GameObjects.Image[];
   private readonly backdrop: Phaser.GameObjects.Image;
+  private readonly backdropKey: string;
+  private readonly animated: { images: Phaser.GameObjects.Image[]; key: string; duration: number; count: number; current: number }[] = [];
 
   constructor(private readonly scene: Phaser.Scene, stage: StageDefinition, private readonly layout: StageLayout) {
     this.images = [...stage.layers].sort((a, b) => a.depth - b.depth).flatMap((layer) => {
@@ -28,14 +34,17 @@ export class StageView {
       const placement = getLayerPlacement(layer, layout);
       const width = source.width * placement.scale;
       // Mirrored copies extend the scenery past the arena walls without moving them.
-      return [-1, 0, 1].map(side => {
+      const images = [-1, 0, 1].map(side => {
         const image = scene.add.image(placement.x + side * width, placement.y, key).setOrigin(0, 0)
           .setScale(placement.scale).setDepth(layer.depth).setScrollFactor(layer.parallax, 1);
         if (side !== 0) image.setFlipX(true);
         return image;
       });
+      if (layer.frames) this.animated.push({ images, key, duration: layer.frameDuration!, count: layer.frames.length + 1, current: 0 });
+      return images;
     });
     const backLayer = [...stage.layers].sort((a, b) => a.depth - b.depth)[0];
+    this.backdropKey = stageTextureKey(stage, backLayer);
     this.backdrop = scene.add.image(0, 0, stageTextureKey(stage, backLayer))
       .setOrigin(.5, .5).setDepth(backLayer.depth - 1).setScrollFactor(0);
     // Bounds are calculated with zoom in getFightCameraFrame; Phaser must not clamp Y afterwards.
@@ -44,7 +53,15 @@ export class StageView {
     this.sync([]);
   }
 
-  sync(fighterPositions: readonly number[], fighterYPositions: readonly number[] = []): void {
+  sync(fighterPositions: readonly number[], fighterYPositions: readonly number[] = [], animationFrame = 0): void {
+    this.animated.forEach(animation => {
+      const index = Math.floor(animationFrame / animation.duration) % animation.count;
+      if (index === animation.current) return;
+      const key = index ? `${animation.key}:frame:${index}` : animation.key;
+      animation.images.forEach(image => image.setTexture(key));
+      if (animation.key === this.backdropKey) this.backdrop.setTexture(key);
+      animation.current = index;
+    });
     const logicalFrame = getFightCameraFrame(this.layout, fighterPositions, fighterYPositions);
     const frame = projectCameraToOutput(logicalFrame,
       { width: this.layout.viewportWidth, height: this.layout.worldHeight },
