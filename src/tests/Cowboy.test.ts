@@ -871,3 +871,20 @@ it.each([0,1])('permite quebrar o laço com o mesmo comando durante a captura: j
     expect(sim.snapshot().recentContacts.filter(c=>c.event.moveId.startsWith('throw'))).toHaveLength(0);
   }
 });
+
+it.each([0,1])('mantém a captura por 15 quadros antes do arremesso: jogador %i', player => {
+  const defs=player===0?[cowboy,cowboy] as const:[cowboy,cowboy] as const;
+  const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
+  const send=(attacker:FrameInput=input(),defender:FrameInput=input())=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
+  send({direction:'N',buttons:new Set(['1','3'])}); send();
+  for(let i=0;i<40 && sim.snapshot().characters[1-player].grabbedStartedFrame===undefined;i++)send();
+  const before=sim.snapshot().characters[1-player];
+  for(let i=0;i<14;i++) {
+    send();
+    expect(sim.snapshot().characters[1-player]).toMatchObject({health:before.health, mode:'hitstun', grounded:true});
+    expect(sim.snapshot().hitEvents).toHaveLength(0);
+  }
+  send();
+  expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'throw-13',outcome:'hit',damage:75});
+  expect(sim.snapshot().characters[1-player].mode).toBe('knockdown');
+});

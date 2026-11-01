@@ -52,12 +52,15 @@ it.each([2,3,4])('mantém a folha alternada do combo durante a carga no golpe %i
   expect(getCowboySpritePose(charging,80)?.texture).toBe(length % 2 ? 'cowboy-combo-right-shot' : 'cowboy-combo-left-shot');
 });
 
-it('uses the standing grabbed reaction until the throw pulls the fighter away', () => {
+it('holds the initial grab pose throughout the escape window, then falls', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
-  const captured = {...state, mode:'knockdown' as const, grabbedStartedFrame:40};
-  expect(getCowboySpritePose(captured,40)?.texture).toBe('cowboy-grabbed');
-  expect(getCowboySpritePose(captured,47)?.texture).toBe('cowboy-grabbed');
-  expect(getCowboySpritePose(captured,48)?.texture).toBe('cowboy-knockdown');
+  const captured = {...state, mode:'hitstun' as const, grabbedStartedFrame:40};
+  for (let frame = 40; frame < 55; frame++) {
+    expect(getCowboySpritePose(captured, frame)).toMatchObject({ texture:'cowboy-grabbed', frame: 0 });
+  }
+  const pulled = {...captured, mode:'knockdown' as const, throwPull:{distancePerFrame:1,remainingFrames:5,launchDistance:100,launchFrames:20,liftSpeed:-5}};
+  expect(getCowboySpritePose(pulled,55)).toMatchObject({ texture:'cowboy-grabbed', frame:0 });
+  expect(getCowboySpritePose({...captured, mode:'knockdown'},55)?.texture).toBe('cowboy-knockdown');
 });
 
 it.each([['low','hurt-low'],['mid','hurt'],['high','hurt-high']] as const)('selects %s damage artwork and restarts it at each hit', (level, texture) => {
