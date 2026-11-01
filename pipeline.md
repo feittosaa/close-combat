@@ -6,7 +6,7 @@
 
 Branch `codex/fix-sala-treino-agarrao`, criada mediante autorização do usuário após o encerramento das branches anteriores. A sala usa os cinco desenhos fornecidos, ampliados com Upscayl em modo high fidelity; somente as bandeiras variam, com chão, paredes e objetos estabilizados. A referência e o procedimento de preparação ficam no repositório. A Cowboy permanece na primeira pose de captura durante a janela de quebra de 15 quadros e, depois, segue a reação do arremesso; as poses com braço estendido deixam de ser exibidas nessa reação.
 
-Instalação reproduzível, 493 testes em 42 arquivos, build e diff aprovados. No jogo foram observados o ciclo da sala e o primeiro quadro da captura; a comparação dos cinco arquivos confirmou piso idêntico, pixel a pixel, e bandeiras diferentes. A validação artística final depende do usuário. Envio e CI da branch devem ser conferidos.
+Instalação reproduzível, 493 testes em 42 arquivos, build e diff aprovados. No jogo foram observados o ciclo da sala e o primeiro quadro da captura; a comparação dos cinco arquivos confirmou piso idêntico, pixel a pixel, e bandeiras diferentes. A validação artística final depende do usuário. Implementação enviada em `4c3d834`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/41272692795); este registro tem sua própria CI. A branch permanece aberta para revisão e futura integração autorizada.
 
 ## Cowboy e sala de treino animada — 2026-11-01
 
