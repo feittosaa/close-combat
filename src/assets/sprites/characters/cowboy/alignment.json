@@ -1912,6 +1912,42 @@
     "magic-throw-up": {
       "source": "magic-throw-up.png",
       "background": "magenta"
+    },
+    "throw-low": {
+      "source": "throw-low.png",
+      "anchorX": [
+        230,
+        730,
+        1245,
+        232,
+        733,
+        1245
+      ],
+      "roots": [
+        489,
+        489,
+        489,
+        476,
+        476,
+        476
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "effect-lasso-low": {
+      "source": "effect-lasso-low.png",
+      "background": "magenta"
     }
   }
 }

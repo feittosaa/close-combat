@@ -1,5 +1,12 @@
 # Close Combat — Pipeline
 
+## Cowboy — quebra e laço rasteiro — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, a quebra tem uma única tentativa durante a captura: 1 ou 3 escapam do 1+3, e 2 ou 4 escapam do 2+4; um botão de ataque incorreto impede novas tentativas naquela captura. O 2+4 é um laço baixo, mais rápido e de menor alcance, sem carga, que derruba no local. O 1+3 mantém a carga e o arremesso direcional. Duas folhas novas, com poses e corda baixa, foram geradas a partir da referência canônica e preparadas com transparência e alinhamento técnico.
+
+Instalação reproduzível, 501 testes em 42 arquivos e build aprovados; o 2+4, sua caixa de contato e a queda foram conferidos no treino. Avaliação artística final pendente. Envio e CI remota serão conferidos.
+
+
 
 
 

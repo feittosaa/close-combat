@@ -79,6 +79,11 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const startup = state.attack.startupFrames ?? move.startup;
     const activeEnd = startup + move.activeFrames;
     const recovery = recoveryFrames(move, state.attack);
+    if (move.id === 'throw-24') {
+      const lowFrame = elapsed < startup ? getPhaseAnimationFrame([0,1],[2,3],elapsed,startup) :
+        elapsed < activeEnd ? 2 : getPhaseAnimationFrame([3,4,5],[1,2,3],elapsed-activeEnd,recovery);
+      return pose('throw-low', lowFrame, state);
+    }
     if (move.category === 'throw' && !state.attack.chargeReleased && elapsed === startup - 1 && (state.attack.chargeFrames ?? 0) >= startup - 1) {
       return pose('charge-throw', Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 5) % 6, state);
     }

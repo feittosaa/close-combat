@@ -47,16 +47,17 @@ export class CombatantView {
       this.graphics.clear();
       const move = state.fighterId === 'cowboy' && state.attack
         ? getCharacterById(state.fighterId)?.moves.find(candidate => candidate.id === state.attack!.moveId) : undefined;
-      if (move?.category === 'throw' && state.mode === 'active' && this.scene.textures.exists('cowboy-effect-lasso')) {
+      const lassoTexture = move?.id === 'throw-24' ? 'cowboy-effect-lasso-low' : 'cowboy-effect-lasso';
+      if (move?.category === 'throw' && state.mode === 'active' && this.scene.textures.exists(lassoTexture)) {
         const box = createHitbox(state, move);
         const sign = state.facing === 'right' ? 1 : -1;
-        const hand = state.x + sign * 58;
+        const hand = state.x + sign * (move.id === 'throw-24' ? 30 : 58);
         const tip = state.facing === 'right' ? box.x + box.width : box.x;
         const width = Math.max(1, Math.abs(tip - hand)) * 640 / 491;
         const left = state.facing === 'right' ? hand - width * 64 / 640 : tip - width * 85 / 640;
-        const lasso = this.lasso ??= this.scene.add.image(0,0,'cowboy-effect-lasso','2').setDepth(11);
-        lasso.setTexture('cowboy-effect-lasso','2').setOrigin(0,.5).setDisplaySize(width,120)
-          .setPosition(left,state.y - 99).setFlipX(state.facing === 'left').setVisible(true);
+        const lasso = this.lasso ??= this.scene.add.image(0,0,lassoTexture,'2').setDepth(11);
+        lasso.setTexture(lassoTexture,'2').setOrigin(0,.5).setDisplaySize(width,move.id === 'throw-24' ? 80 : 120)
+          .setPosition(left,state.y - (move.id === 'throw-24' ? 38 : 99)).setFlipX(state.facing === 'left').setVisible(true);
       } else this.lasso?.setVisible(false);
       const dustKind = move?.id === 'power-kick' ? 'power' :
         move && (move.id === 'light-kick' || move.id === 'crouch-light-kick') ? 'light' : undefined;

@@ -232,8 +232,8 @@ it.each([0, 1])('encerra a provocação naturalmente após 132 quadros: jogador 
   expect(sim.snapshot().characters[player].tauntStartedFrame).toBeUndefined();
 });
 
-it.each([0, 1])('usa chute potente médio e agarrões que lançam para longe: jogador %i', player => {
-  for (const [buttons, id] of [[['3','4'], 'power-kick'], [['1','3'], 'throw-13'], [['2','4'], 'throw-24']] as const) {
+it.each([0, 1])('usa chute potente médio e laço que lança para longe: jogador %i', player => {
+  for (const [buttons, id] of [[['3','4'], 'power-kick'], [['1','3'], 'throw-13']] as const) {
     const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
     const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});
     const chord: FrameInput = {direction:'N', buttons:new Set(buttons)};
@@ -256,7 +256,7 @@ it.each([0, 1])('usa chute potente médio e agarrões que lançam para longe: jo
 });
 
 it.each([0, 1])('carrega o alcance do laço sem mudar o dano: jogador %i', player => {
-  for (const [buttons,id] of [[['1','3'],'throw-13'],[['2','4'],'throw-24']] as const) {
+  for (const [buttons,id] of [[['1','3'],'throw-13']] as const) {
     const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:200});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
@@ -889,8 +889,8 @@ it.each([0,1])('mantém a captura por 15 quadros antes do arremesso: jogador %i'
   expect(sim.snapshot().characters[1-player].mode).toBe('knockdown');
 });
 
-it.each([0,1])('a direção para trás arremessa com ambos os laços para o outro lado: jogador %i', player => {
-  for (const buttons of [['1','3'], ['2','4']] as AttackButton[][]) {
+it.each([0,1])('a direção para trás arremessa com 1+3 para o outro lado: jogador %i', player => {
+  for (const buttons of [['1','3']] as AttackButton[][]) {
     const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
@@ -921,5 +921,40 @@ it.each([0,1])('a dinamite explode no ar ao acertar ou terminar o alcance: jogad
     }
     expect(blast).toBe(true);
     expect(hit).toBe(distance===65);
+  }
+});
+
+it.each([0,1])('cada laço aceita apenas um botão correto na primeira tentativa: jogador %i', player => {
+  for (const [chord,allowed,wrong] of [[['1','3'],['1','3'],['2','4']], [['2','4'],['2','4'],['1','3']]] as AttackButton[][][]) {
+    for (const button of [...allowed,...wrong]) {
+      const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+      const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
+      const step=(attacker:FrameInput=input(),defender:FrameInput=input())=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
+      step({direction:'N',buttons:new Set(chord)}); step();
+      for(let t=0;t<50&&sim.snapshot().characters[1-player].grabbedStartedFrame===undefined;t++)step();
+      expect(sim.snapshot().characters[1-player].mode).toBe('hitstun');
+      const health=sim.snapshot().characters[1-player].health;
+      step(input(),input('N',button));
+      if(wrong.includes(button)) { step(); step(input(),input('N',allowed[0])); }
+      for(let t=0;t<30;t++)step();
+      const target=sim.snapshot().characters[1-player];
+      expect(target.health,`${chord.join('+')} e botão ${button}`).toBe(health-(wrong.includes(button)?(chord[0]==='1'?75:85):0));
+    }
+  }
+});
+
+it.each([0,1])('o laço 2+4 é rápido, baixo, curto e não carrega: jogador %i', player => {
+  const low=cowboy.moves.find(move=>move.id==='throw-24')!, normal=cowboy.moves.find(move=>move.id==='throw-13')!;
+  expect(low.hitLevel).toBe('low'); expect(low.startup).toBeLessThan(normal.startup);
+  expect(low.hitbox.width).toBeLessThan(normal.hitbox.width); expect(low.charge).toBeUndefined();
+  for (const [distance,shouldHit] of [[65,true],[160,false]] as const) {
+    const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
+    const held:FrameInput={direction:'N',buttons:new Set(['2','4'])};
+    const step=()=>sim.stepFrame(player===0?[held,input()]:[input(),held]);
+    let capture=false;for(let t=0;t<55;t++){step(); if(sim.snapshot().characters[1-player].grabbedStartedFrame!==undefined)capture=true;}
+    expect(capture).toBe(shouldHit);
+    expect(sim.snapshot().characters[1-player].health).toBe(shouldHit?915:1000);
+    if(shouldHit) expect(sim.snapshot().recentContacts.some(c=>c.event.moveId==='throw-24'&&c.event.outcome==='hit')).toBe(true);
   }
 });
