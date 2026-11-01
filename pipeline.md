@@ -2,6 +2,13 @@
 
 
 
+
+## Cowboy — efeitos clássicos em HD — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, foram refeitas as sete folhas de efeito de tiro normal, tiro à queima-roupa, ultimate, impacto, bloqueio e areias leve/potente. São efeitos originais gerados a partir das referências fornecidas: animação 2D simples, cores chapadas e sem contornos escuros marcados; tiros e impactos azuis, bloqueio e areia brancos. Os quadros foram tecnicamente alinhados e preparados com transparência a partir de fundos magenta. O efeito de impacto azul cobre ataques da Cowboy e acompanha a altura do contato quando disponível; os seis quadros dos tiros especiais são utilizados. Nenhuma mecânica ou hitbox foi alterada.
+
+Conferência no treino: pisão e chute potente com areia junto ao chão, disparo e impacto azul; seis quadros de cada folha também foram inspecionados. Instalação reproduzível, 493 testes em 42 arquivos, build e diff aprovados. A revisão artística final de todos os golpes continua sujeita à aprovação do usuário; envio e CI serão conferidos.
+
 ## Sala de treino e reação ao agarrão — 2026-11-01
 
 Branch `codex/fix-sala-treino-agarrao`, criada mediante autorização do usuário após o encerramento das branches anteriores. A sala usa os cinco desenhos fornecidos, ampliados com Upscayl em modo high fidelity; somente as bandeiras variam, com chão, paredes e objetos estabilizados. A referência e o procedimento de preparação ficam no repositório. A Cowboy permanece na primeira pose de captura durante a janela de quebra de 15 quadros e, depois, segue a reação do arremesso; as poses com braço estendido deixam de ser exibidas nessa reação.
