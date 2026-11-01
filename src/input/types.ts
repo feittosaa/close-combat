@@ -8,5 +8,6 @@ export interface FrameInput {
   /** One-shot double-tap request captured even between two simulation ticks. */
   dash?: 'F' | 'B';
   ultimate?: boolean;
+  taunt?: boolean;
   buttons: ReadonlySet<AttackButton>;
 }

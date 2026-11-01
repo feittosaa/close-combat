@@ -16,6 +16,8 @@ Este processo se aplica a qualquer personagem. Regras gerais em [base.md](../bas
 
 A animação acompanha o tempo lógico de combate. Pausa, micro pausa de contato, passo único, reset e espelhamento devem preservar sua fase. O tempo do round é independente do tempo de animação quando a regra de contato o exige.
 
+Cada clipe pode declarar sua própria taxa de desenhos por segundo ou durações individuais em quadros lógicos. Em fases de golpe com duração definida pelo combate, pesos autorados distribuem as poses dentro da fase; o desenho de contato permanece visível durante a atividade e os pesos não modificam a duração do golpe. Cadências são escolhas de apresentação, não uma taxa global para todos os estados.
+
 A simulação aplica locomoção e gravidade. Atlas não devem acrescentar deriva artificial ao personagem. A raiz deve seguir um apoio autorado, sem centralização automática pela silhueta variável. Manter membros consistentes entre preparação, extensão, recolhimento e retorno.
 
 Usar transições desenhadas quando a troca direta produzir estalo. Interrupções devem retornar a partir da profundidade já alcançada, sem saltar para poses que não ocorreram. Misturas não podem produzir transparência, imagens duplas ou piscadas.
@@ -23,5 +25,7 @@ Usar transições desenhadas quando a troca direta produzir estalo. Interrupçõ
 ## Conferência
 
 Rever ambos os lados, mudanças de direção, entrada e saída dos estados, ciclos completos e sua junção. Conferir contato, bloqueio e erro, pausas, reinício e extremos da câmera. Sobrepor caixas quando necessário, preservando a distinção entre desenho e regras físicas.
+
+Em toda alteração de animação de personagem, conferir as hitboxes e hurtboxes em jogo nos dois lados, incluindo entrada, contato, recuperação e transições. Verificar que as caixas representam a ação e que a raiz e o corpo não saltam entre quadros sem deslocamento autorizado pela simulação.
 
 Validar determinismo em diferentes FPS e correspondência entre fase lógica e pose. Fontes de preparação devem reproduzir os atlas ativos; alterações somente documentais ou limpeza de arquivos não devem mudar seus pixels. Aproximações e estados sem arte precisam ser explícitos na pipeline, nunca apresentados como animação final.

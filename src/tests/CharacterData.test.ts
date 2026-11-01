@@ -4,9 +4,9 @@ import { fighterMoveList, filterMoveList } from '../training/MoveList';
 import { arcadeOpponents, opponentFor } from '../scenes/matchSetup';
 
 describe('elenco reiniciado', () => {
-  it('registra somente Shoto, preservando os quatro básicos e o catálogo manual', () => {
-    expect(characters.map(fighter => fighter.id)).toEqual(['shoto']);
-    expect(playableCharacters).toEqual([defaultCharacter]);
+  it('registra Cowboy e Shoto, preservando os quatro básicos e o catálogo manual', () => {
+    expect(characters.map(fighter => fighter.id)).toEqual(['shoto', 'cowboy']);
+    expect(playableCharacters).toEqual(characters);
     expect(defaultCharacter.name).toBe('Shoto');
     expect(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne).map(move => [move.name, move.input.buttons])).toEqual([
       ['Soco fraco', ['1']], ['Soco forte', ['2']], ['Chute fraco', ['3']], ['Chute forte', ['4']],

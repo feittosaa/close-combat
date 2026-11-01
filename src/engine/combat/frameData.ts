@@ -12,5 +12,5 @@ export function classifyHitContext(target: CharacterState): HitContext | undefin
 /** Recuperação nominal; receitas fechadas e sequências abertas podem cancelar após contato. */
 export function recoveryFrames(move: MoveDefinition, attack?: CharacterAttack): number { return attack?.recoveryFrames ?? move.recovery; }
 export function attackDurationFrames(move: MoveDefinition, attack?: CharacterAttack): number {
-  return move.startup + move.activeFrames + recoveryFrames(move, attack);
+  return (attack?.startupFrames ?? move.startup) + move.activeFrames + recoveryFrames(move, attack);
 }

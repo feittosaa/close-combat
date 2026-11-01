@@ -4,7 +4,7 @@ import { getPlayerLayout, keyLabel } from '../input/controlSettings';
 import { recoveryFrames } from '../engine/combat/frameData';
 import type Phaser from 'phaser';
 import { HUD, hudText, drawHudPanel } from './hudTheme';
-import { getSystemControls } from '../input/controlSettings';
+import { getSystemControls, getTrainingControls } from '../input/controlSettings';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import type { TrainingSession } from '../training/TrainingSession';
 import { OPPONENT_LABELS } from '../training/TrainingSession';
@@ -39,8 +39,8 @@ export class TrainingHud {
 
   update(snapshot: SimulationSnapshot, session: TrainingSession): void {
     this.status.setText(`TREINO  /  ${session.paused ? 'PAUSADO' : 'EM CURSO'} · ${session.speed * 100}% · ${OPPONENT_LABELS[session.opponentMode].replace(/\b[1-4]\b/g,button=>keyLabel(getPlayerLayout(1).buttons[button as AttackButton]))} · VIDA AUTO ${session.autoRestore ? 'ON' : 'OFF'}`);
-    const controls=getSystemControls();
-    this.footer.setText(`${keyLabel(controls.pause)} PAUSA · . FRAME · L VELOCIDADE · ${keyLabel(controls.reset)} / F2 RESET · F3 VIDA AUTO · F4 DISTÂNCIA · G ADVERSÁRIO · H COLISÕES · I ENTRADAS · ESC PAUSA`);
+    const controls=getSystemControls(), trainingKeys=getTrainingControls();
+    this.footer.setText(`${keyLabel(controls.pause)} PAUSA · ${keyLabel(trainingKeys.step)} FRAME · ${keyLabel(trainingKeys.speed)} VELOCIDADE · ${keyLabel(controls.reset)} / ${keyLabel(trainingKeys.reset)} RESET · ${keyLabel(trainingKeys.autoLife)} VIDA AUTO · ${keyLabel(trainingKeys.distance)} DISTÂNCIA · ${keyLabel(trainingKeys.opponent)} ADVERSÁRIO · ${keyLabel(trainingKeys.geometry)} COLISÕES · ${keyLabel(trainingKeys.inputs)} ENTRADAS · ESC PAUSA`);
     this.progress.clear();
     snapshot.characters.forEach((character, index) => {
       const move = session.lastMoves[index];
@@ -51,7 +51,7 @@ export class TrainingHud {
         : character.remainingStateFrames;
       const levels = { high: 'ALTO', mid: 'MÉDIO', low: 'BAIXO', air: 'AÉREO', throw: 'AGARRÃO', special: 'ESPECIAL' };
       const detail = move
-        ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${levels[move.hitLevel]} · DANO ${move.damage}`
+        ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${move.screenVolley?.firstHitLevel ? `${levels[move.screenVolley.firstHitLevel]} / ` : ''}${levels[move.hitLevel]} · DANO ${move.damage}`
         : 'S: preparo · A: ativo · R: recuperação';
       this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]} · ${lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);

@@ -1,0 +1,1925 @@
+{
+  "clips": {
+    "air-heavy-kick": {
+      "source": "air-heavy-kick.png",
+      "anchorX": [
+        230,
+        735,
+        1210,
+        230,
+        735,
+        1210
+      ],
+      "roots": [
+        450,
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "seams": [
+        [
+          512,
+          990
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "scale": 0.85,
+      "background": "magenta"
+    },
+    "air-heavy-punch": {
+      "source": "air-heavy-punch.png",
+      "anchorX": [
+        253,
+        720,
+        1187,
+        256,
+        732,
+        1208
+      ],
+      "roots": [
+        513,
+        513,
+        513,
+        496,
+        496,
+        496
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "scale": 0.8,
+      "background": "magenta"
+    },
+    "air-light-kick": {
+      "source": "air-light-kick.png",
+      "anchorX": [
+        276,
+        761,
+        1202,
+        257,
+        724,
+        1259
+      ],
+      "roots": [
+        480,
+        480,
+        480,
+        455,
+        455,
+        455
+      ],
+      "seams": [
+        [
+          512,
+          980
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "scale": 0.8,
+      "background": "magenta",
+      "rowY": 500
+    },
+    "air-light-punch": {
+      "source": "air-light-punch.png",
+      "anchorX": [
+        246,
+        750,
+        1253,
+        264,
+        766,
+        1261
+      ],
+      "roots": [
+        500,
+        500,
+        500,
+        480,
+        480,
+        480
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "scale": 0.8,
+      "background": "magenta"
+    },
+    "anti-air": {
+      "source": "anti-air.png",
+      "anchorX": [
+        256,
+        752,
+        1204,
+        200,
+        723,
+        1215
+      ],
+      "roots": [
+        487,
+        487,
+        487,
+        475,
+        475,
+        475
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 489,
+      "scale": 0.84,
+      "background": "magenta",
+      "discardComponents": {
+        "4": [
+          [
+            150,
+            115,
+            190,
+            150
+          ],
+          [
+            150,
+            145,
+            230,
+            195
+          ]
+        ]
+      }
+    },
+    "backward": {
+      "source": "backward.png",
+      "anchorX": [
+        250,
+        747,
+        1244,
+        250,
+        747,
+        1244
+      ],
+      "roots": [
+        500,
+        500,
+        500,
+        495,
+        495,
+        495
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 527,
+      "scale": 0.9,
+      "background": "magenta"
+    },
+    "crouch-guard": {
+      "source": "crouch-guard.png",
+      "anchorX": [
+        229,
+        708,
+        1204,
+        222,
+        727,
+        1211
+      ],
+      "roots": [
+        509,
+        509,
+        509,
+        489,
+        489,
+        489
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 511,
+      "scale": 0.68,
+      "background": "magenta"
+    },
+    "crouch-heavy-kick": {
+      "source": "crouch-heavy-kick.png",
+      "anchorX": [
+        187,
+        693,
+        1163,
+        193,
+        734,
+        1227
+      ],
+      "roots": [
+        481,
+        481,
+        481,
+        462,
+        462,
+        462
+      ],
+      "seams": [
+        [
+          512,
+          930
+        ],
+        [
+          560,
+          1024
+        ]
+      ],
+      "rowY": 485,
+      "scale": 0.75,
+      "background": "magenta",
+      "discardComponents": {
+        "1": [
+          [
+            510,
+            250,
+            640,
+            470
+          ]
+        ],
+        "4": [
+          [
+            145,
+            420,
+            190,
+            465
+          ]
+        ]
+      }
+    },
+    "crouch-light-kick": {
+      "source": "crouch-light-kick.png",
+      "anchorX": [
+        191,
+        708,
+        1185,
+        192,
+        733,
+        1209
+      ],
+      "roots": [
+        475,
+        475,
+        475,
+        477,
+        477,
+        477
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          565,
+          1024
+        ]
+      ],
+      "rowY": 477,
+      "scale": 0.72,
+      "background": "magenta",
+      "discardComponents": {
+        "4": [
+          [
+            145,
+            410,
+            195,
+            460
+          ]
+        ]
+      }
+    },
+    "crouch-punch": {
+      "source": "crouch-punch.png",
+      "anchorX": [
+        209,
+        699,
+        1159,
+        221,
+        696,
+        1181
+      ],
+      "roots": [
+        495,
+        495,
+        495,
+        498,
+        498,
+        498
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 497,
+      "scale": 0.78,
+      "background": "magenta",
+      "discardComponents": {
+        "1": [
+          [
+            515,
+            390,
+            532,
+            412
+          ]
+        ]
+      }
+    },
+    "crouch": {
+      "source": "crouch.png",
+      "anchorX": [
+        273,
+        731,
+        1221,
+        257,
+        739,
+        1247
+      ],
+      "roots": [
+        498,
+        498,
+        498,
+        500,
+        500,
+        500
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 499,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "effect-close": {
+      "source": "effect-close.png",
+      "background": "magenta",
+      "discardComponents": {
+        "2": [
+          [
+            60,
+            230,
+            110,
+            265
+          ]
+        ],
+        "4": [
+          [
+            60,
+            215,
+            85,
+            260
+          ],
+          [
+            60,
+            300,
+            120,
+            355
+          ]
+        ],
+        "5": [
+          [
+            60,
+            270,
+            95,
+            315
+          ]
+        ]
+      }
+    },
+    "effect-impact": {
+      "source": "effect-impact.png",
+      "background": "magenta"
+    },
+    "effect-shot": {
+      "source": "effect-shot.png",
+      "background": "magenta"
+    },
+    "guard": {
+      "source": "guard.png",
+      "anchorX": [
+        311,
+        726,
+        1186,
+        284,
+        744,
+        1198
+      ],
+      "roots": [
+        518,
+        518,
+        518,
+        507,
+        507,
+        507
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 520,
+      "scale": 0.95,
+      "background": "magenta"
+    },
+    "heavy-kick": {
+      "source": "heavy-kick.png",
+      "anchorX": [
+        229,
+        666,
+        1137,
+        233,
+        725,
+        1176
+      ],
+      "roots": [
+        497,
+        497,
+        497,
+        512,
+        512,
+        512
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          515,
+          994
+        ]
+      ],
+      "rowY": 501,
+      "scale": 0.95,
+      "background": "magenta",
+      "discardComponents": {
+        "4": [
+          [
+            120,
+            380,
+            140,
+            410
+          ]
+        ]
+      }
+    },
+    "heavy-punch": {
+      "source": "heavy-punch.png",
+      "anchorX": [
+        283,
+        735,
+        1230,
+        270,
+        748,
+        1226
+      ],
+      "roots": [
+        507,
+        507,
+        507,
+        491,
+        491,
+        497
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "scale": 1,
+      "background": "magenta",
+      "rowY": 512
+    },
+    "heavy-shot": {
+      "source": "heavy-shot.png",
+      "anchorX": [
+        241,
+        680,
+        1155,
+        243,
+        729,
+        1249
+      ],
+      "roots": [
+        507,
+        507,
+        507,
+        496,
+        496,
+        496
+      ],
+      "seams": [
+        [
+          512,
+          990
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 508,
+      "scale": 1,
+      "background": "magenta",
+      "discardComponents": {
+        "3": [
+          [
+            -100,
+            60,
+            35,
+            115
+          ]
+        ]
+      }
+    },
+    "idle": {
+      "source": "idle.png",
+      "anchorX": [
+        313,
+        747,
+        1186,
+        320,
+        750,
+        1182
+      ],
+      "roots": [
+        505,
+        505,
+        505,
+        514,
+        514,
+        514
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 506,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "jump": {
+      "source": "jump.png",
+      "anchorX": [
+        236,
+        703,
+        1199,
+        228,
+        705,
+        1200
+      ],
+      "roots": [
+        498,
+        498,
+        498,
+        415,
+        485,
+        504
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 506,
+      "scale": 0.88,
+      "background": "magenta"
+    },
+    "light-kick": {
+      "source": "light-kick.png",
+      "anchorX": [
+        253,
+        696,
+        1180,
+        245,
+        713,
+        1165
+      ],
+      "roots": [
+        514,
+        514,
+        514,
+        514,
+        514,
+        514
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 516,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "light-punch": {
+      "source": "light-punch.png",
+      "anchorX": [
+        288,
+        759,
+        1220,
+        288,
+        751,
+        1223
+      ],
+      "roots": [
+        507,
+        508,
+        508,
+        500,
+        500,
+        500
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "scale": 1,
+      "background": "magenta",
+      "rowY": 512
+    },
+    "push-away": {
+      "source": "push-away.png",
+      "anchorX": [
+        257,
+        718,
+        1125,
+        261,
+        731,
+        1209
+      ],
+      "roots": [
+        517,
+        517,
+        517,
+        511,
+        511,
+        511
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 519,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "quick-shot": {
+      "source": "quick-shot.png",
+      "anchorX": [
+        214,
+        714,
+        1196,
+        211,
+        719,
+        1227
+      ],
+      "roots": [
+        506,
+        506,
+        506,
+        488,
+        488,
+        488
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 508,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "walk": {
+      "source": "walk.png",
+      "anchorX": [
+        256,
+        741,
+        1241,
+        258,
+        744,
+        1250
+      ],
+      "roots": [
+        485,
+        485,
+        486,
+        483,
+        480,
+        483
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "dash-forward": {
+      "source": "dash-forward.png",
+      "roots": [
+        503,
+        503,
+        503,
+        464,
+        464,
+        464
+      ],
+      "anchorX": [
+        260,
+        740,
+        1230,
+        260,
+        740,
+        1230
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          556,
+          1030
+        ]
+      ],
+      "scale": 1.0,
+      "background": "magenta"
+    },
+    "dash-backward": {
+      "source": "dash-backward.png",
+      "roots": [
+        498,
+        498,
+        498,
+        493,
+        493,
+        493
+      ],
+      "anchorX": [
+        250,
+        740,
+        1250,
+        250,
+        740,
+        1250
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "scale": 1.0,
+      "background": "magenta"
+    },
+    "combo-left-shot": {
+      "source": "combo-left-shot.png",
+      "anchorX": [
+        255,
+        724,
+        1161,
+        248,
+        727,
+        1189
+      ],
+      "roots": [
+        520,
+        520,
+        520,
+        506,
+        506,
+        506
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 522,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "combo-right-shot": {
+      "source": "combo-right-shot.png",
+      "anchorX": [
+        248,
+        740,
+        1202,
+        267,
+        749,
+        1264
+      ],
+      "roots": [
+        491,
+        491,
+        491,
+        499,
+        499,
+        499
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 492,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "crouch-combo-shot": {
+      "source": "crouch-combo-shot.png",
+      "anchorX": [
+        196,
+        698,
+        1168,
+        167,
+        725,
+        1209
+      ],
+      "roots": [
+        498,
+        498,
+        498,
+        483,
+        483,
+        483
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 501,
+      "scale": 0.85,
+      "background": "magenta",
+      "discardComponents": {
+        "4": [
+          [
+            140,
+            215,
+            260,
+            305
+          ]
+        ]
+      }
+    },
+    "taunt": {
+      "source": "taunt.png",
+      "anchorX": [
+        295,
+        781,
+        1284,
+        295,
+        781,
+        1284
+      ],
+      "roots": [
+        491,
+        491,
+        491,
+        490,
+        490,
+        490
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.04,
+      "background": "magenta"
+    },
+    "hurt": {
+      "source": "hurt.png",
+      "anchorX": [
+        290,
+        755,
+        1245,
+        284,
+        770,
+        1255
+      ],
+      "roots": [
+        497,
+        497,
+        497,
+        489,
+        490,
+        491
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "throw": {
+      "source": "throw.png",
+      "anchorX": [
+        250,
+        750,
+        1260,
+        200,
+        740,
+        1260
+      ],
+      "roots": [
+        499,
+        497,
+        497,
+        460,
+        463,
+        494
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          560,
+          1040
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.05,
+      "background": "magenta"
+    },
+    "power-kick": {
+      "source": "power-kick.png",
+      "anchorX": [
+        260,
+        742,
+        1255,
+        230,
+        740,
+        1260
+      ],
+      "roots": [
+        486,
+        486,
+        486,
+        456,
+        458,
+        460
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.05,
+      "background": "magenta"
+    },
+    "magic-horizontal": {
+      "source": "magic-horizontal.png",
+      "background": "magenta"
+    },
+    "magic-up": {
+      "source": "magic-up.png",
+      "background": "magenta"
+    },
+    "magic-down": {
+      "source": "magic-down.png",
+      "background": "magenta"
+    },
+    "turn-idle": {
+      "source": "turn-idle.png",
+      "anchorX": [
+        385,
+        770,
+        1150,
+        385,
+        770,
+        1150
+      ],
+      "roots": [
+        505,
+        505,
+        505,
+        498,
+        498,
+        498
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "turn-walk": {
+      "source": "turn-walk.png",
+      "anchorX": [
+        300,
+        770,
+        1230,
+        300,
+        765,
+        1220
+      ],
+      "roots": [
+        505,
+        505,
+        505,
+        495,
+        495,
+        495
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "turn-crouch": {
+      "source": "turn-crouch.png",
+      "anchorX": [
+        245,
+        755,
+        1270,
+        250,
+        770,
+        1280
+      ],
+      "roots": [
+        475,
+        475,
+        475,
+        470,
+        470,
+        470
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.7,
+      "background": "magenta"
+    },
+    "turn-air": {
+      "source": "turn-air.png",
+      "anchorX": [
+        250,
+        750,
+        1250,
+        250,
+        750,
+        1250
+      ],
+      "roots": [
+        475,
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.8,
+      "background": "magenta"
+    },
+    "enter-walk": {
+      "source": "enter-walk.png",
+      "anchorX": [
+        285,
+        760,
+        1240,
+        285,
+        760,
+        1240
+      ],
+      "roots": [
+        503,
+        503,
+        503,
+        491,
+        491,
+        491
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "enter-backward": {
+      "source": "enter-backward.png",
+      "anchorX": [
+        285,
+        760,
+        1240,
+        285,
+        760,
+        1240
+      ],
+      "roots": [
+        501,
+        501,
+        501,
+        483,
+        483,
+        483
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "enter-jump": {
+      "source": "enter-jump.png",
+      "anchorX": [
+        310,
+        770,
+        1250,
+        275,
+        765,
+        1250
+      ],
+      "roots": [
+        508,
+        508,
+        508,
+        474,
+        460,
+        435
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.88,
+      "background": "magenta"
+    },
+    "air-hurt": {
+      "source": "air-hurt.png",
+      "anchorX": [
+        260,
+        760,
+        1250,
+        250,
+        760,
+        1250
+      ],
+      "roots": [
+        480,
+        480,
+        480,
+        450,
+        450,
+        450
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.8,
+      "background": "magenta",
+      "inset": 3
+    },
+    "crouch-hurt": {
+      "source": "crouch-hurt.png",
+      "anchorX": [
+        260,
+        760,
+        1250,
+        260,
+        760,
+        1250
+      ],
+      "roots": [
+        485,
+        485,
+        485,
+        480,
+        480,
+        480
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.7,
+      "background": "magenta",
+      "inset": 3
+    },
+    "knockdown": {
+      "source": "knockdown.png",
+      "anchorX": [
+        270,
+        735,
+        1245,
+        250,
+        760,
+        1285
+      ],
+      "roots": [
+        489,
+        490,
+        497,
+        479,
+        472,
+        479
+      ],
+      "seams": [
+        [
+          512,
+          970
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 500,
+      "scale": 1,
+      "background": "magenta",
+      "discardComponents": {
+        "0": [
+          [
+            515,
+            240,
+            545,
+            275
+          ]
+        ]
+      }
+    },
+    "effect-block": {
+      "source": "effect-block.png",
+      "background": "magenta"
+    },
+    "enter-taunt": {
+      "source": "enter-taunt.png",
+      "anchorX": [
+        311,
+        776,
+        1257,
+        311,
+        778,
+        1258
+      ],
+      "roots": [
+        491,
+        491,
+        491,
+        490,
+        490,
+        490
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.04,
+      "background": "magenta"
+    },
+    "hurt-low": {
+      "source": "hurt-low.png",
+      "anchorX": [
+        300,
+        760,
+        1245,
+        300,
+        760,
+        1245
+      ],
+      "roots": [
+        499,
+        499,
+        499,
+        481,
+        481,
+        481
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "effect-dust-light": {
+      "source": "effect-dust-light.png",
+      "background": "magenta"
+    },
+    "effect-dust-power": {
+      "source": "effect-dust-power.png",
+      "background": "magenta",
+      "discardComponents": {
+        "1": [
+          [
+            535,
+            500,
+            585,
+            555
+          ]
+        ]
+      }
+    },
+    "hurt-high": {
+      "source": "hurt-high.png",
+      "anchorX": [
+        300,
+        760,
+        1245,
+        300,
+        760,
+        1245
+      ],
+      "roots": [
+        495,
+        495,
+        495,
+        486,
+        486,
+        486
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "crouch-hurt-low": {
+      "source": "crouch-hurt-low.png",
+      "anchorX": [
+        260,
+        760,
+        1250,
+        260,
+        760,
+        1250
+      ],
+      "roots": [
+        485,
+        485,
+        485,
+        480,
+        480,
+        480
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.7,
+      "background": "magenta",
+      "inset": 3
+    },
+    "air-dash-forward": {
+      "source": "air-dash-forward.png",
+      "anchorX": [
+        260,
+        765,
+        1260,
+        280,
+        770,
+        1260
+      ],
+      "roots": [
+        450,
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          590,
+          1060
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.85,
+      "background": "magenta"
+    },
+    "air-dash-backward": {
+      "source": "air-dash-backward.png",
+      "anchorX": [
+        260,
+        765,
+        1260,
+        280,
+        770,
+        1260
+      ],
+      "roots": [
+        450,
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.85,
+      "background": "magenta"
+    },
+    "effect-volley": {
+      "source": "effect-volley.png",
+      "background": "magenta"
+    },
+    "grabbed": {
+      "source": "grabbed.png",
+      "anchorX": [
+        250,
+        700,
+        1105,
+        230,
+        690,
+        1130
+      ],
+      "roots": [
+        505,
+        505,
+        505,
+        505,
+        505,
+        505
+      ],
+      "seams": [
+        [
+          497,
+          994
+        ],
+        [
+          497,
+          994
+        ]
+      ],
+      "rowY": 527,
+      "scale": 1,
+      "background": "magenta",
+      "discardComponents": {
+        "4": [
+          [
+            565,
+            425,
+            600,
+            460
+          ]
+        ]
+      }
+    },
+    "magic-volley": {
+      "source": "magic-volley.png",
+      "background": "magenta"
+    },
+    "charge-heavy-punch": {
+      "source": "charge-heavy-punch.png",
+      "anchorX": [
+        270,
+        750,
+        1250,
+        260,
+        750,
+        1250
+      ],
+      "roots": [
+        507,
+        507,
+        507,
+        491,
+        491,
+        491
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1,
+      "background": "magenta"
+    },
+    "ultimate-body": {
+      "source": "ultimate-body.png",
+      "anchorX": [
+        290,
+        775,
+        1265,
+        280,
+        765,
+        1260
+      ],
+      "roots": [
+        490,
+        490,
+        490,
+        490,
+        490,
+        490
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.04,
+      "background": "magenta"
+    },
+    "exit-taunt": {
+      "source": "exit-taunt.png",
+      "anchorX": [
+        290,
+        775,
+        1285,
+        290,
+        775,
+        1285
+      ],
+      "roots": [
+        490,
+        490,
+        490,
+        490,
+        490,
+        490
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.04,
+      "background": "magenta"
+    },
+    "charge-throw": {
+      "source": "charge-throw.png",
+      "anchorX": [
+        250,
+        765,
+        1275,
+        260,
+        775,
+        1280
+      ],
+      "roots": [
+        497,
+        497,
+        497,
+        480,
+        480,
+        480
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.18,
+      "background": "magenta",
+      "frameSize": 768
+    },
+    "throw-miss": {
+      "source": "throw-miss.png",
+      "anchorX": [
+        255,
+        765,
+        1275,
+        260,
+        770,
+        1280
+      ],
+      "roots": [
+        490,
+        490,
+        490,
+        468,
+        468,
+        468
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 1.05,
+      "background": "magenta"
+    },
+    "throw-active": {
+      "source": "throw-active.png",
+      "anchorX": [
+        260,
+        772,
+        1284,
+        260,
+        772,
+        1284
+      ],
+      "roots": [
+        490,
+        490,
+        490,
+        490,
+        490,
+        490
+      ],
+      "seams": [
+        [
+          512,
+          1024
+        ],
+        [
+          512,
+          1024
+        ]
+      ],
+      "rowY": 512,
+      "scale": 0.9,
+      "background": "magenta"
+    },
+    "effect-lasso": {
+      "source": "effect-lasso.png",
+      "background": "magenta"
+    }
+  }
+}

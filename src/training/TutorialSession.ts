@@ -14,7 +14,8 @@ export class TutorialSession {
   readonly lessons: readonly TutorialLesson[];
   constructor(fighter: CharacterDefinition, kind: 'tutorial' | 'combo-tutorial') {
     this.lessons = kind === 'combo-tutorial' ? (fighter.combos ?? []).map(combo => ({
-      title: combo.name, instruction: 'Conecte os golpes na ordem da receita aprovada.', notation: combo.notation, moves: combo.moveIds, distance: 64,
+      title: combo.name, instruction: 'Conecte os golpes na ordem da receita aprovada.', notation: combo.notation,
+      moves: combo.finisherMoveId ? [...combo.moveIds.slice(0,-1),combo.finisherMoveId] : combo.moveIds, distance: 64,
     })) : [
       { title: 'Mover', instruction: 'Ande para frente ou para trás para ajustar a distância.', notation: 'F / B', distance: 110, movement: true },
       ...fighter.moves.filter(move => !move.airborne && (!move.category || move.category === 'basic')).map(move => ({ title: move.name, instruction: 'Aproxime-se e acerte. Solte o botão antes de atacar novamente.', notation: move.input.buttons.join('+'), moves: [move.id], distance: 64 })),

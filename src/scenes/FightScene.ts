@@ -2,7 +2,7 @@ import { LOGICAL_VIEW, getHudLogicalWidth } from '../rendering/presentation';
 import { TutorialSession } from '../training/TutorialSession';
 import { TutorialHud } from '../ui/TutorialHud';
 import { ControlSettings } from '../ui/ControlSettings';
-import { getPlayerLayout, getSystemControls } from '../input/controlSettings';
+import { getPlayerLayout, getSystemControls, getTrainingControls } from '../input/controlSettings';
 import { InputHistory } from '../training/InputHistory';
 import { formatCommand, formatMoveTitle } from '../ui/commandNotation';
 import { PauseMenu } from '../ui/PauseMenu';
@@ -16,6 +16,7 @@ import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
 import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
+import { preloadCowboySprites } from '../rendering/animations/cowboySprites';
 import { ProjectileView } from '../rendering/ProjectileView';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
@@ -60,26 +61,26 @@ export class FightScene extends Phaser.Scene {
   private readonly trainingListeners = new Map<string, (event: KeyboardEvent) => void>();
   private readonly handledTrainingEvents = new WeakSet<KeyboardEvent>();
   private readonly trainingKeys: ReadonlyArray<readonly [string, () => void]> = [
-    ['keydown-PERIOD', () => this.advanceOneFrame()],
-    ['keydown-F2', () => { if (this.training) this.resetFight(); }],
-    ['keydown-G', () => { this.training?.cycleOpponent(); }],
-    ['keydown-L', () => { this.training?.cycleSpeed(); }],
-    ['keydown-F3', () => {
+    ['step', () => this.advanceOneFrame()],
+    ['reset', () => { if (this.training) this.resetFight(); }],
+    ['opponent', () => { this.training?.cycleOpponent(); }],
+    ['speed', () => { this.training?.cycleSpeed(); }],
+    ['autoLife', () => {
       if (!this.training) return;
       this.training.autoRestore = !this.training.autoRestore;
       this.simulation?.setTrainingAutoRestore(this.training.autoRestore);
     }],
-    ['keydown-F4', () => {
+    ['distance', () => {
       if (!this.training) return;
       this.training.cycleDistance();
       this.resetFight();
     }],
-    ['keydown-H', () => {
+    ['geometry', () => {
       if (!this.training) return;
       this.training.showGeometry = !this.training.showGeometry;
       this.hitboxView?.setVisible(this.training.showGeometry);
     }],
-    ['keydown-I', () => {
+    ['inputs', () => {
       if (!this.training) return;
       this.training.showInputs = !this.training.showInputs;
       this.inputDisplays.forEach((display) => display.setVisible(this.training!.showInputs));
@@ -113,9 +114,6 @@ export class FightScene extends Phaser.Scene {
     this.simulation?.clearInputHistory();
     this.pauseMenu?.setVisible(this.paused);
     // DOM search must receive text normally, including letters used by training hotkeys.
-    const keys = ['PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L'];
-    if (this.paused) this.input.keyboard?.removeCapture(keys);
-    else if (this.training) this.input.keyboard?.addCapture(keys);
   }
   private readonly handleContinue = (): void => {
     if (this.tutorial && !this.paused && this.tutorial.next()) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.resetFight(); return; }
@@ -156,6 +154,7 @@ export class FightScene extends Phaser.Scene {
   preload(): void {
     preloadStage(this, this.selectedStage);
     preloadShotoSprites(this);
+    preloadCowboySprites(this);
   }
 
   create(): void {
@@ -190,14 +189,14 @@ export class FightScene extends Phaser.Scene {
         const listener = (event: KeyboardEvent): void => {
           // Phaser can revisit a queued DOM event before the queue is cleared.
           // In particular, a single-step event must never advance twice.
-          if (ControlSettings.active || this.pauseMenu?.isEditing() || event.repeat || this.handledTrainingEvents.has(event)) return;
+          if (event.code !== getTrainingControls()[key as keyof ReturnType<typeof getTrainingControls>] || ControlSettings.active || this.pauseMenu?.isEditing() || event.repeat || this.handledTrainingEvents.has(event)) return;
+          event.preventDefault();
           this.handledTrainingEvents.add(event);
           handler();
         };
         this.trainingListeners.set(key, listener);
-        this.input.keyboard?.on(key, listener);
+        window.addEventListener('keydown', listener);
       });
-      this.input.keyboard?.addCapture(['PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
     }
 
     this.pinnedMove = this.add.text(width / 2, 155, '', { color: '#ffe0ab', backgroundColor: '#15151fdd', fontSize: '12px', wordWrap: { width: width - 80 }, align: 'center' }).setOrigin(.5, 0).setDepth(120).setScrollFactor(0);
@@ -281,11 +280,11 @@ export class FightScene extends Phaser.Scene {
     if (!snapshot) return;
 
     this.resizeHud(getHudLogicalWidth(this.scale));
-    this.stageView?.sync(snapshot.characters.map(character => character.x), snapshot.characters.map(character => character.y));
+    this.stageView?.sync(snapshot.characters.map(character => character.x), snapshot.characters.map(character => character.y), snapshot.frame);
     snapshot.characters.forEach((character, index) => {
       this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined);
     });
-    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions);
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,snapshot.frame,snapshot.hitEvents,snapshot.characters);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
     if (this.arcadeInfo) {
@@ -318,9 +317,8 @@ export class FightScene extends Phaser.Scene {
     this.paused = false;
     window.removeEventListener('keydown', this.handleRestart);
     this.input.keyboard?.off('keydown-ENTER', this.handleContinue);
-    this.trainingListeners.forEach((listener, key) => this.input.keyboard?.off(key, listener));
+    this.trainingListeners.forEach(listener => window.removeEventListener('keydown', listener));
     this.trainingListeners.clear();
-    if (this.training) this.input.keyboard?.removeCapture(['PERIOD', 'F2', 'F3', 'F4', 'G', 'H', 'I', 'L']);
     this.keyboardInputs.forEach((input) => input.destroy());
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());
