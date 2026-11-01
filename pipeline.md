@@ -8,7 +8,7 @@
 
 Na branch `codex/fix-sala-treino-agarrao`, os projéteis normais e especiais foram ampliados visualmente, assim como os seis tiros da ultimate. As areias dos chutes ficaram maiores e um pouco mais baixas, próximas ao chão. A escala é apenas visual: hitboxes e regras de combate continuam inalteradas.
 
-O agarrão para trás existente foi confirmado: pressionar para trás ao executar 1+3 ou 2+4 captura essa direção e joga o alvo para o outro lado. Testes cobrem ambos os jogadores e comandos. Instalação reproduzível, 495 testes em 42 arquivos, build e diff aprovados; areias e disparo observados no treino. Avaliação artística final e CI do envio pendentes.
+O agarrão para trás existente foi confirmado: pressionar para trás ao executar 1+3 ou 2+4 captura essa direção e joga o alvo para o outro lado. Testes cobrem ambos os jogadores e comandos. Instalação reproduzível, 495 testes em 42 arquivos, build e diff aprovados; areias e disparo observados no treino. Avaliação artística final pendente. Implementação enviada em `0f6cec5` com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/41275339959); este registro possui CI própria.
 
 ## Cowboy — efeitos clássicos em HD — 2026-11-01
 
