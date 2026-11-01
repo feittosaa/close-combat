@@ -904,3 +904,22 @@ it.each([0,1])('a direção para trás arremessa com ambos os laços para o outr
     expect((states[1-player].x-states[player].x)*sign).toBeLessThan(0);
   }
 });
+
+it.each([0,1])('a dinamite explode no ar ao acertar ou terminar o alcance: jogador %i', player => {
+  for (const [button,moveId] of [['1','quick-shot'],['2','heavy-shot']] as const) for (const distance of [65,300]) {
+    const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
+    const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+    for(const direction of ['D','DF','F'] as const)step(input(direction));
+    step(input('F',button));
+    let blast=false, hit=false;
+    for(let tick=0;tick<100&&!blast;tick++) {
+      step(); const snapshot=sim.snapshot();
+      hit ||= snapshot.hitEvents.some(event=>event.moveId===moveId && event.outcome==='hit');
+      const explosion=snapshot.explosions.find(item=>item.kind==='dynamite');
+      if(explosion) { expect(explosion.y).toBeLessThan(createGameConfig(1024,576).arena.floorY); blast=true; }
+    }
+    expect(blast).toBe(true);
+    expect(hit).toBe(distance===65);
+  }
+});

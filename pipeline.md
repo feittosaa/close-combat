@@ -4,6 +4,13 @@
 
 
 
+
+## Cowboy — dinamite espectral e projétil da ultimate — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, os disparos dos especiais d,df,f,1 e d,df,f,2 foram substituídos por uma dinamite azul lançada por uma mão espectral, horizontal no fraco e diagonal ascendente no forte. A dinamite detona no ar ao tocar o adversário ou ao terminar o alcance, com explosão azul; os comandos, valores, geometria de colisão, duração da carga e capacidade antiaérea foram preservados. O tamanho visual dos projéteis da ultimate aumentou de 1,12 para 1,45 vezes suas caixas de contato.
+
+Cinco novas folhas foram geradas pela ferramenta integrada de imagem usando a referência canônica da Cowboy e a mão espectral existente: corpo lançando, mãos horizontal e diagonal, dinamite azul e explosão azul simples em estilo de desenho clássico. As fontes magenta estão em `src/assets/sprites/characters/cowboy/source/`; as folhas substituídas foram removidas do checkout. A preparação mantém as cores originais e alinha os sprites ao ponto de apoio. Instalação reproduzível, 497 testes em 42 arquivos, build e diff aprovados; as duas versões e as hitboxes foram conferidas no treino. Aprovação artística final depende do usuário; envio e CI serão verificados.
+
 ## Cowboy — escala dos efeitos e agarrão direcional — 2026-11-01
 
 Na branch `codex/fix-sala-treino-agarrao`, os projéteis normais e especiais foram ampliados visualmente, assim como os seis tiros da ultimate. As areias dos chutes ficaram maiores e um pouco mais baixas, próximas ao chão. A escala é apenas visual: hitboxes e regras de combate continuam inalteradas.

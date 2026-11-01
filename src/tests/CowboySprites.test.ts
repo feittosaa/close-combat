@@ -97,18 +97,20 @@ it.each([0, 1])('uses approved shots and three distinct stomp phases, mirrored f
 it('uses the corrected two-gun anti-air during activity and the rising jump pose', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const attack = {...state,attack:{moveId:'heavy-shot',buttons:['2'] as const,elapsedFrames:23,hasHit:false}};
-  expect(getCowboySpritePose(attack,23)).toMatchObject({texture:'cowboy-heavy-shot',frame:2});
+  expect(getCowboySpritePose(attack,23)).toMatchObject({texture:'cowboy-dynamite-throw',frame:2});
   attack.attack.elapsedFrames=24;
   expect(getCowboySpritePose(attack,24)?.frame).toBe(3);
   expect(getCowboySpritePose({...state,grounded:false,verticalVelocity:-3,airborneElapsedFrames:12},12)?.frame).toBe(2);
 });
 
-it('selects a distinct prepared texture for every authored attack through its active phase', () => {
+it('selects the prepared texture for every authored attack through its active phase', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   for (const move of cowboy.moves) {
     const action = {...state,attack:{moveId:move.id,buttons:move.input.buttons,elapsedFrames:move.startup,hasHit:false}};
     const pose = getCowboySpritePose(action,move.startup);
-    expect(pose?.texture,move.id).toBe(`cowboy-${move.category === 'throw' ? 'throw-active' : move.screenVolley ? 'ultimate-body' : move.id}`);
+    const texture = move.category === 'throw' ? 'throw-active' : move.screenVolley ? 'ultimate-body' :
+      ['quick-shot','heavy-shot'].includes(move.id) ? 'dynamite-throw' : move.id;
+    expect(pose?.texture,move.id).toBe(`cowboy-${texture}`);
     expect(pose!.frame,move.id).toBeGreaterThanOrEqual(0);
     expect(pose!.frame,move.id).toBeLessThan(6);
   }
@@ -193,13 +195,13 @@ it.each([0, 1])('materializes arms around shots without making the fighter trans
 
 it.each([0, 1])('keeps the correctly oriented spectral arms during both special holds: player %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
-  for (const [moveId, button, startup, direction] of [['quick-shot','1',14,'horizontal'],['heavy-shot','2',23,'up']] as const) {
-    for (const [chargeFrames, effectFrame] of [[startup-1,2],[startup+7,3],[startup+15,2]] as const) {
+  for (const [moveId, button, startup, direction] of [['quick-shot','1',14,'throw'],['heavy-shot','2',23,'throw-up']] as const) {
+    for (const [chargeFrames, effectFrame] of [[startup-1,2],[startup+7,2],[startup+15,2]] as const) {
       const held = {...state, attack:{moveId,buttons:[button],elapsedFrames:startup-1,chargeFrames,hasHit:false}};
       const layers = getCowboySpriteLayers(held,chargeFrames);
       expect(layers).toHaveLength(2);
       expect(layers[0]).toMatchObject({texture:`cowboy-magic-${direction}`,frame:effectFrame,flipX:player===1});
-      expect(layers[1]).toMatchObject({texture:`cowboy-${moveId}`,frame:1});
+      expect(layers[1]).toMatchObject({texture:'cowboy-dynamite-throw',frame:1});
     }
   }
 });

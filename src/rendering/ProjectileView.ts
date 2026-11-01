@@ -9,7 +9,6 @@ import type { ProjectileState } from '../engine/combat/ProjectileState';
 import { getTimedAnimationFrame, type AnimationClip } from './animations/AnimationPlayback';
 
 const effectClips: Readonly<Record<string, AnimationClip>> = {
-  close:{key:'close',start:0,end:5,frameRate:30,frameDurations:[1,2,2,2,2,3],repeat:0},
   shot:{key:'shot',start:0,end:5,frameRate:20,frameDurations:[2,3,3,3,3,3],repeat:-1},
   impact:{key:'impact',start:0,end:5,frameRate:30,frameDurations:[1,2,3,2,2,2],repeat:0},
 };
@@ -18,6 +17,7 @@ const effectClips: Readonly<Record<string, AnimationClip>> = {
 export class ProjectileView {
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly sprites = new Map<number, Phaser.GameObjects.Image>();
+  private readonly dynamiteExplosions = new Map<number, Phaser.GameObjects.Image>();
   private impact?: { sprite: Phaser.GameObjects.Image; started: number; eventFrame: number; texture: string };
   constructor(private readonly scene: Phaser.Scene) { this.graphics = scene.add.graphics().setDepth(11); }
   sync(projectiles: readonly ProjectileState[], explosions: readonly ExplosionState[] = [], frame = 0, hits: readonly HitEvent[] = [], characters: readonly CharacterState[] = []): void {
@@ -36,7 +36,7 @@ export class ProjectileView {
           const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
           const effectFrame = age < 3 ? 0 : 1 + Math.floor((age - 3) / 4) % 5;
           sprite.setTexture(key, String(effectFrame)).setPosition(box.x + box.width / 2, box.y + box.height / 2)
-            .setDisplaySize(box.width * 1.12, box.height * 1.12).setFlipX(p.facing === 'left').setVisible(true);
+            .setDisplaySize(box.width * 1.45, box.height * 1.45).setFlipX(p.facing === 'left').setVisible(true);
           continue;
         }
         const y = box.y + box.height / 2;
@@ -44,17 +44,17 @@ export class ProjectileView {
         g.fillStyle(0xbdefff, .9).fillRoundedRect(box.x, y - box.height * .16, box.width, box.height * .32, box.height * .16);
         continue;
       }
-      if (p.fighterId === 'cowboy' && p.visual === 'bullet') {
-        const effect = move.id === 'quick-shot' || move.id === 'heavy-shot' ? 'close' : 'shot';
+      if (p.fighterId === 'cowboy' && (p.visual === 'bullet' || p.visual === 'dynamite')) {
+        const effect = p.visual === 'dynamite' ? 'dynamite' : 'shot';
         const key = `cowboy-effect-${effect}`;
         if (this.scene.textures.exists(key)) {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0,0,key,'0').setDepth(11);
           this.sprites.set(p.id, sprite);
           const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
-          const effectFrame = getTimedAnimationFrame(effectClips[effect], age);
+          const effectFrame = effect === 'dynamite' ? Math.min(5, Math.floor(age / 2)) : getTimedAnimationFrame(effectClips.shot, age);
           sprite.setTexture(key, String(effectFrame))
             .setPosition(box.x + box.width/2,box.y + box.height/2)
-            .setDisplaySize(effect === 'close' ? 126 : 96, effect === 'close' ? 104 : 78)
+            .setDisplaySize(effect === 'dynamite' ? 92 : 96, effect === 'dynamite' ? 92 : 78)
             .setFlipX(p.facing === 'left')
             .setAngle((p.verticalVelocity ?? 0) === 0 ? 0 : Math.sign(p.verticalVelocity!) * (p.facing === 'left' ? -45 : 45)).setVisible(true);
           continue;
@@ -99,11 +99,22 @@ export class ProjectileView {
       if (age >= 12) { this.impact.sprite.destroy(); this.impact = undefined; }
       else this.impact.sprite.setTexture(this.impact.texture,String(getTimedAnimationFrame(effectClips.impact,age)));
     }
+    const activeExplosions = new Set(explosions.filter(e => e.kind === 'dynamite').map(e => e.id!));
+    for (const [id,sprite] of this.dynamiteExplosions) if (!activeExplosions.has(id)) { sprite.destroy(); this.dynamiteExplosions.delete(id); }
     for (const explosion of explosions) {
+      if (explosion.kind === 'dynamite') {
+        if (this.scene.textures.exists('cowboy-effect-dynamite-blast')) {
+          const sprite = this.dynamiteExplosions.get(explosion.id!) ?? this.scene.add.image(explosion.x, explosion.y, 'cowboy-effect-dynamite-blast', '0').setDepth(11);
+          this.dynamiteExplosions.set(explosion.id!, sprite);
+          sprite.setTexture('cowboy-effect-dynamite-blast', String(Math.min(5, Math.floor((12 - explosion.remainingFrames) / 2))))
+            .setPosition(explosion.x, explosion.y).setDisplaySize(130, 130);
+        }
+        continue;
+      }
       const radius = 18 + (10-explosion.remainingFrames)*3;
       g.fillStyle(0xf77b32,explosion.remainingFrames/12).fillCircle(explosion.x,explosion.y,radius);
       g.lineStyle(2,0xffdda0,explosion.remainingFrames/10).strokeCircle(explosion.x,explosion.y,radius+5);
     }
   }
-  destroy(): void { this.sprites.forEach(sprite => sprite.destroy()); this.impact?.sprite.destroy(); this.graphics.destroy(); }
+  destroy(): void { this.sprites.forEach(sprite => sprite.destroy()); this.dynamiteExplosions.forEach(sprite => sprite.destroy()); this.impact?.sprite.destroy(); this.graphics.destroy(); }
 }

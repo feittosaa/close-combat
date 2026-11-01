@@ -20,7 +20,7 @@ it('prepares every match resource before releasing the menu; every mode starts w
   expect(queued.has('menu-solar')).toBe(true);
   expect(queued.has('cowboy-idle')).toBe(true);
   expect(queued.has('cowboy-effect-shot')).toBe(true);
-  expect(load.atlas).toHaveBeenCalledTimes(90);
+  expect(load.atlas).toHaveBeenCalledTimes(92);
   for(const key of queued)textures.set(key,{});queued.clear();
   boot.create();
   const start=(boot as unknown as {scene:{start:ReturnType<typeof vi.fn>}}).scene.start;
