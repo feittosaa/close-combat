@@ -8,7 +8,7 @@ Este manifesto rege a entrega de mudanças. `base.md` continua sendo a raiz das 
 
 - `development`: integração das features concluídas e validadas.
 - `main`: versões estáveis, promovidas a partir de `development` após validação conjunta.
-- Uma branch por objetivo, criada a partir de `origin/development` atualizado. Uma dependência ainda não integrada pode servir de base quando necessária para preservar a versão em revisão; registrar essa dependência na pipeline. Usar `codex/feature-<nome>`, `codex/fix-<nome>` ou `codex/chore-<nome>` conforme a mudança. Não misturar objetivos independentes.
+- Continuar correções e refinamentos na branch ativa da feature. Criar uma nova branch somente quando o usuário pedir explicitamente; ao criá-la, partir de `origin/development` atualizado ou da dependência ainda não integrada necessária, registrando essa dependência na pipeline. Usar `codex/feature-<nome>`, `codex/fix-<nome>` ou `codex/chore-<nome>` conforme a mudança.
 - Antes de começar, conferir branch, remoto e alterações locais. Preservar trabalho existente; não carregar mudanças de outra tarefa por acidente.
 - Não desenvolver diretamente em `development` ou `main`. Não usar force push nas branches compartilhadas nem substituir tags publicadas.
 

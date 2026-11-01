@@ -6,6 +6,7 @@ export interface KeyboardLayout {
   directions: { left: string; right: string; up: string; down: string };
   buttons: Record<AttackButton, string>;
   ultimate: string;
+  taunt: string;
 }
 
 /** Adaptador mínimo de teclado. O layout configurado é independente dos comandos do motor. */
@@ -59,7 +60,7 @@ export class KeyboardInput {
     }
     const dashCode=this.pendingDashCode;this.pendingDashCode=undefined;
     const dash=dashCode ? ((dashCode===this.layout.directions.right)===(facing==='right')?'F':'B') : undefined;
-    return {direction,buttons,...(dash ? {dash} : {}), ...(this.pressed.has(this.layout.ultimate) ? {ultimate: true} : {})};
+    return {direction,buttons,...(dash ? {dash} : {}), ...(this.pressed.has(this.layout.ultimate) ? {ultimate: true} : {}), ...(this.pressed.has(this.layout.taunt) ? {taunt: true} : {})};
   }
 
   isSystemPressed(action: 'pause' | 'reset'): boolean { return this.pressed.has(getSystemControls()[action]); }

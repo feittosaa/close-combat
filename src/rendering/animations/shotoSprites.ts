@@ -33,9 +33,9 @@ export const shotoSpriteManifest: CharacterAnimationManifest = {
   textureKey:'shoto-idle',frameSize:{width:768,height:768},totalFrames:141,
   footAnchorY:720,displaySize:{width:172.8*1.03*1.15*1.1,height:172.8*1.03*1.15*1.1},
   clips:[
-    {key:'shoto-idle',start:0,end:7,frameRate:6,repeat:-1},
-    {key:'shoto-walk',start:8,end:127,frames:[8,120,9,121,10,122,11,123,12,124,13,125,14,126,15,127],frameRate:20,repeat:-1},
-    {key:'shoto-crouch',start:16,end:21,frames:[16,17,18,19,20,21,20,19,18,17],frameRate:6,repeat:-1},
+    {key:'shoto-idle',start:0,end:7,frameRate:4,frameDurations:[15,12,12,15,15,12,12,15],repeat:-1},
+    {key:'shoto-walk',start:8,end:127,frames:[8,120,9,121,10,122,11,123,12,124,13,125,14,126,15,127],frameRate:20,frameDurations:[4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2],repeat:-1},
+    {key:'shoto-crouch',start:16,end:21,frames:[16,17,18,19,20,21,20,19,18,17],frameRate:5,frameDurations:[15,12,10,10,12,15,12,10,10,12],repeat:-1},
     {key:'shoto-jump',start:22,end:29,frameDurations:[2,4,6,10,6,4,4,2],frameRate:13,repeat:0},
     {key:'shoto-defense',start:30,end:35,frames:[32,33,34,35,34,33],frameRate:8,repeat:-1},
     {key:'shoto-walk-backward',start:36,end:43,frameRate:10,repeat:-1},

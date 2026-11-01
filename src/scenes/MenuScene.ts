@@ -1,4 +1,4 @@
-import { LOGICAL_VIEW, configureUiCamera, sharpenSceneText } from '../rendering/presentation';
+import { LOGICAL_VIEW, configureUiCamera, getRightAlignedCover, sharpenSceneText } from '../rendering/presentation';
 import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 
 import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
@@ -36,12 +36,18 @@ export class MenuScene extends Phaser.Scene {
   private set fighterIndex(index: number) { this.selection.select(0, index); }
   private root?: Phaser.GameObjects.Container;
   private chrome?: Phaser.GameObjects.Container;
+  private background?: Phaser.GameObjects.Image;
   private menuElement?: HTMLElement;
   private resizeObserver?: ResizeObserver;
   private motionPreference?: MediaQueryList;
   private readonly alignMenu = (): void => {
     const rect = this.game.canvas.getBoundingClientRect();
     Object.assign(this.menuElement!.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+    if (rect.width && rect.height && this.background) {
+      const frame = getRightAlignedCover(rect, this.background.frame);
+      this.background.setPosition(frame.x, frame.y).setScale(frame.scale);
+      configureUiCamera(this.cameras.main, rect);
+    }
   };
   private transitioning = false;
   private readonly handleKey = (event: KeyboardEvent): void => {
@@ -91,27 +97,18 @@ export class MenuScene extends Phaser.Scene {
   create(): void {
     configureUiCamera(this.cameras.main, this.scale);
     const { width, height } = LOGICAL_VIEW;
-    // Overscan keeps the slow camera drift inside the illustration at every phase.
     this.textures.get('menu-solar').setFilter(Phaser.Textures.FilterMode.LINEAR);
-    const background = this.add.image(width / 2, height / 2, 'menu-solar');
-    const cover = Math.max(width / background.width, height / background.height) * 1.045;
-    background.setScale(cover);
+    const background = this.add.image(width, height / 2, 'menu-solar').setOrigin(1, .5);
+    this.background = background;
     this.motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const reducedMotion = this.motionPreference.matches;
     if (!reducedMotion) {
-      this.tweens.add({ targets: background, x: width / 2 - 9, y: height / 2 + 4,
-        scaleX: cover * 1.012, scaleY: cover * 1.012, duration: 18000,
-        ease: 'Sine.inOut', yoyo: true, repeat: -1 });
       for (let i = 0; i < 9; i++) {
         const mote = this.add.circle(620 + (i * 47) % 370, 155 + (i * 61) % 350, i % 3 === 0 ? 1.6 : 1, 0xffdc95, .35);
         this.tweens.add({ targets: mote, y: mote.y - 32, x: mote.x + 10, alpha: .05,
           duration: 6500 + i * 470, delay: i * 480, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
       }
     }
-    // A left-only ink wash protects text without covering the sun and gateway.
-    const wash = this.add.graphics();
-    wash.fillGradientStyle(0x111016, 0x111016, 0x111016, 0x111016, .88, 0, .94, 0);
-    wash.fillRect(0, 0, 740, height);
     this.chrome = this.add.container(0, 0);
     this.chrome.add([
       this.add.rectangle(width / 2, height - 18, width, 36, 0x111016, .82),
@@ -161,6 +158,8 @@ export class MenuScene extends Phaser.Scene {
   }
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
+    this.background?.setTexture(this.page === 'home' ? 'menu-solar' : 'menu-reference');
+    this.alignMenu();
     const { width, height } = LOGICAL_VIEW;
     this.menuElement!.hidden = this.page === 'settings';
     this.chrome?.setVisible(this.menuElement!.hidden);
@@ -215,11 +214,9 @@ export class MenuScene extends Phaser.Scene {
         item.addEventListener('focus', () => this.selectHomeMode(index));
         modes.append(item);
       });
-      const hero = node('div', 'arena-home-hero'); hero.setAttribute('aria-hidden', 'true');
-      hero.append(portrait('130 35 510 710', true));
       const note = node('div', 'arena-home-note', 'ESCOLHA SUA LUTA');
       const controls = node('footer', 'arena-home-controls', '↑ ↓ ESCOLHER   ·   ENTER CONFIRMAR');
-      root.append(modes, feature, hero, note, controls);
+      root.append(modes, feature, note, controls);
       this.selectHomeMode(this.modeIndex);
     } else if (this.page === 'stage') {
       renderStageSelection(root, { stages: selectableStages, selected: this.stageIndex,

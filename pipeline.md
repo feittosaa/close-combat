@@ -1,5 +1,206 @@
 # Close Combat — Pipeline
 
+
+## Cowboy e sala de treino animada — 2026-11-01
+
+Continuação na `codex/feature-cowboy-zoner`: ultimate aceita a sequência de combo e o comando b,bd,d,df,f,1+2; primeiro disparo é baixo, os seis levantam o alvo e o último causa queda. O laço tem alcance visual ajustado à hitbox, nova recuperação ao errar e janela de 15 quadros para o defensor quebrar com o mesmo comando (1+3 ou 2+4), antes de dano e arremesso. A carga do laço recebeu ajuste técnico de escala, o golpe agachado ficou mais lento, a provocação dura 132 quadros e a repetição infinita de 1 após 3,3,3 na mesma sequência foi bloqueada.
+
+A sala fornecida possui cinco quadros sincronizados com o tempo de combate e substitui os cenários anteriores em treino e seleção dos demais modos. Foram geradas novas folhas para laço ativo, laço separado e erro, usando a referência canônica da Cowboy e preservando as cores originais; requerem avaliação artística final. O cenário e o laço foram observados no treino. A instalação reproduzível reportou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Validação, envio, CI e integração autorizada em `development` devem ser confirmados no fechamento.
+
+## Cowboy — provocação em 2,5 segundos — 2026-10-31
+
+Na `codex/feature-cowboy-zoner`, a provocação mantém as mesmas poses e passa a durar 150 quadros, com 50 para cada etapa de entrada, ação e saída. Instalação reproduzível, 490 testes em 42 arquivos e build aprovados; provocação observada no treino, com avaliação artística final pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI devem ser conferidos; sem autorização de merge em `development`.
+
+## Cowboy — duração equilibrada da provocação — 2026-10-31
+
+Na `codex/feature-cowboy-zoner`, a provocação usa as mesmas dezoito poses de entrada, ação e saída, distribuídas uniformemente em 198 quadros: 66 por etapa e 11 por pose. A ativação da ultimate mantém seu próprio ritmo. Instalação reproduzível, 490 testes em 42 arquivos e build aprovados; provocação observada no treino, com avaliação artística final pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI devem ser conferidos; sem autorização de merge em `development`.
+
+## Cowboy — carga do laço, soco forte e virada — 2026-10-31
+
+Continuação na `codex/feature-cowboy-zoner`. As viradas de repouso, caminhada, agachada e aérea passam de 12 para 15 quadros mantendo as mesmas poses. Os dois agarrões podem ser segurados mantendo os botões do comando: soltar qualquer botão lança o laço, com disparo automático após 60 quadros. O alcance cresce gradualmente até 30%, com a mesma geometria no resolvedor e na inspeção; dano e arremesso permanecem inalterados. Nova folha de seis poses mostra o laço girando. Os braços espectrais acompanham a carga do soco forte, inclusive no combo.
+
+Instalação reproduzível, 488 testes em 42 arquivos e build aprovados; conferidos no treino a mudança de lado, a carga do laço, a hitbox e os braços do soco. A avaliação artística completa das transições e direções permanece pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI remota devem ser conferidos; sem autorização para merge em `development`.
+
+## Menu — imagem em alta resolução — 2026-10-31
+
+Na branch `codex/feature-cowboy-zoner`, o wallpaper do menu foi substituído pelo PNG fornecido pelo usuário, de 4758 × 2976 pixels, mantendo a proporção e o enquadramento existentes. O arquivo ocupa aproximadamente 24,5 MB. O menu foi conferido no navegador com cobertura integral e degradê à esquerda; a aprovação visual final cabe ao usuário.
+
+Instalação reproduzível, 482 testes em 42 arquivos e build aprovados; a instalação informou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). O envio e a CI devem ser conferidos. Sem autorização para integrar em `development`.
+
+## Cowboy — duração da provocação e giro da ultimate — 2026-10-31
+
+Continuação em `codex/feature-cowboy-zoner`. A provocação mantém as mesmas poses e transições, com duração ampliada de 60 para 90 quadros. A preparação da ultimate conserva 150 quadros: a entrada ganhou tempo e as poses existentes do giro avançam mais rapidamente, incluindo uma segunda volta, antes da mesma saída.
+
+Instalação reproduzível, 482 testes em 42 arquivos, build e checagem de diff aprovados localmente; provocação e preparação foram observadas no treino. A avaliação artística integral permanece pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI remota devem ser conferidos; não há autorização para merge em `development`.
+
+## Cowboy — ritmo da preparação da ultimate — 2026-10-31
+
+Correção reunida na branch `codex/feature-cowboy-zoner`, junto às branches de animações, especiais e ritmo ainda não integradas em `development`. A preparação mantém seus 150 quadros e as sequências de entrada e saída; as seis poses intermediárias agora ocupam 17 quadros cada, eliminando a permanência mais longa na última pose. O fluxo de trabalho passa a manter correções na branch ativa, criando novas branches somente por pedido explícito do usuário.
+
+Instalação reproduzível, 482 testes em 42 arquivos e build aprovados localmente; a ativação foi observada no treino. A avaliação artística integral permanece pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). O envio e a CI devem ser conferidos; não há autorização para integrar em `development`.
+
+## Cowboy — ritmo do chute potente e provocação — 2026-10-31
+
+Branch `codex/fix-cowboy-ritmo-chute-potente`, dependente de `codex/feature-cowboy-especiais-carregados` e seus antecedentes ainda não integrados. O chute potente passa de 20 para 18 quadros de preparação e de 34 para 30 de recuperação, preservando atividade, dano e caixa. A provocação passa de 48 para 60 quadros de simulação, mantendo os mesmos desenhos, a entrada e a transição de saída; sua duração não altera a ativação da ultimate.
+
+Instalação reproduzível, 480 testes em 42 arquivos e build aprovados; o treino exibiu o chute com caixas e a provocação. A avaliação artística completa permanece pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI devem ser conferidos; não há autorização para merge.
+
+## Cowboy — braços durante os especiais segurados — 2026-10-31
+
+Continuação na `codex/feature-cowboy-especiais-carregados`, dependente das branches anteriores ainda não integradas. Os dois especiais agora disparam ao soltar o botão ou atingir 60 quadros, sem bônus de dano. Durante a espera, os braços espectrais permanecem visíveis e alternam poses, horizontais no especial fraco e diagonais no forte.
+
+Instalação reproduzível, 480 testes em 42 arquivos e build aprovados. No treino foi observado o especial horizontal segurado com braços e hitboxes; testes verificam as duas direções, ambos os jogadores, limite e dano. A revisão visual completa do antiaéreo e a aprovação artística permanecem pendentes. A instalação informou quatro vulnerabilidades de dependências (duas moderadas e duas críticas); envio e CI remota devem ser conferidos, sem merge autorizado.
+
+## Cowboy — especiais seguráveis e controles — 2026-10-31
+
+Branch `codex/feature-cowboy-especiais-carregados`, dependente de `codex/feature-cowboy-animacoes` ainda não integrada. Os efeitos de tiro e areia criados na entrega anterior já estão conectados ao jogo. Os dois especiais à queima-roupa podem ser segurados por até 120 quadros, disparando ao soltar ou automaticamente no limite; o dano permanece inalterado. O projétil horizontal dura nove quadros e o antiaéreo onze, ampliando moderadamente o alcance. As configurações incluem todos os atalhos de treino, além da ultimate e provocação de cada jogador; rejeitam conflitos entre jogadores, luta e treino, e atualizam o rodapé do treino.
+
+Instalação reproduzível, 478 testes em 42 arquivos, build e checagem de diff aprovados localmente. No jogo, um atalho de caixas foi remapeado e testado no treino; os especiais segurados foram verificados por simulação nos dois lados, com revisão visual integral ainda pendente. A instalação informou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). O envio e a CI devem ser conferidos no remoto; não há autorização para merge.
+
+## Cowboy — efeitos, provocação e ultimate — 2026-10-31
+
+Continuação em `codex/feature-cowboy-animacoes`, dependente dos trabalhos anteriores ainda não integrados. O histórico de golpes recebeu painéis no estilo do HUD. As fontes e atlas dos efeitos de tiro e areia foram substituídos por desenhos estilizados; projéteis diagonais reutilizam o efeito horizontal rotacionado. A provocação retorna ao repouso por uma nova sequência, também usada na transição entre a preparação e a ultimate. Durante os seis disparos, a Cowboy alterna poses de arminha enquanto os projéteis continuam saindo das armas espectrais. A folha do especial horizontal já apresenta dois braços na preparação e recuperação; o especial antiaéreo permanece inalterado.
+
+Instalação reproduzível, 473 testes em 42 arquivos e build aprovados localmente. No treino foram observados o painel de dano, a poeira do pisão e uma fase da ultimate com caixas visíveis. A revisão artística e a conferência dos ciclos completos, direções e bordas permanecem pendentes. O envio e a CI remota devem ser conferidos; não há autorização para merge.
+
+## Menu e tiro horizontal da Cowboy — 2026-10-31
+
+Continuação na `codex/feature-cowboy-animacoes`, dependente das alterações anteriores ainda não integradas. O menu principal alinha a imagem à direita, calcula sua cobertura pela proporção real da janela e aplica o degradê preto solicitado à esquerda. A fonte e o atlas do especial horizontal `d,df,f,1` receberam novas poses inicial e final com ambos os braços visíveis, substituindo a pose de uma mão; o especial antiaéreo não foi alterado nesta revisão.
+
+Instalação reproduzível, 469 testes em 42 arquivos e build aprovados; testes cobrem a cobertura em quatro proporções, inclusive janela ultralarga. No jogo foram observados o menu e o especial horizontal com caixas de colisão; o ciclo completo em ambas as direções e a proporção ultralarga real ainda aguardam revisão visual do usuário. O envio e a CI devem ser conferidos no remoto; não há autorização para merge.
+
+## Cowboy — carga no combo, referência e histórico — 2026-10-31
+
+Continuação na branch `codex/feature-cowboy-animacoes`, dependente de `codex/feature-cowboy-zoner` e das alterações anteriores ainda não integradas. O soco forte pode ser carregado durante `1,2,2,2`, preservando as folhas alternadas de tiros do combo; o tiro mantém o dano conforme a carga. A fonte do especial forte foi corrigida com dois braços humanos e gestos de arminha; o novo turnaround fornecido substitui a referência canônica em `assets/art/characters/cowboy/turnaround.png` sem modificar o arquivo. A ilustração fornecida foi conectada ao fundo do menu principal; a referência anterior permanece usada nas outras telas.
+
+Adicionado histórico dos últimos 12 combos, acumulando acertos e dano por atacante até a vítima recuperar a defesa; bloqueios não contam. O treino mostra os três registros recentes de cada jogador, enquanto os demais modos mostram temporariamente a contagem e o dano de sequências com múltiplos acertos. A pausa de contato compartilhada caiu de sete para seis quadros de 60 Hz, a aproximação inteira mais próxima de 20%. Foram conferidos no jogo o menu e a contagem após um acerto no treino; as folhas do especial e as transições completas continuam sujeitas a revisão artística do usuário.
+
+Instalação reproduzível, 465 testes em 42 arquivos, build e diff aprovados localmente. O commit `f6c50e5` foi enviado à branch remota; a [CI 41245444069](https://github.com/feittosaa/close-combat/actions/runs/41245444069) passou. O fechamento documental seguinte também requer sua própria CI. Não há autorização para merge em development.
+
+## Cowboy — chutes e carga do soco forte — 2026-10-31
+
+Continuação na branch `codex/feature-cowboy-animacoes`, dependente dos trabalhos anteriores ainda não integrados. As fontes dos chutes forte e de afastamento foram revisadas para manter a mesma perna de apoio e a mesma perna de ataque; a recuperação do afastamento pula o quadro com braço encoberto. A folha do especial forte foi refeita mantendo dois braços humanos e os braços espectrais azuis no disparo. Criada uma folha própria para a postura de carga do soco forte, sem braços espectrais antes do disparo.
+
+O soco forte carrega por até 120 quadros e dispara automaticamente no limite: +20% ao completar 60 quadros e +40% ao completar 120, com arredondamento do dano. Regressões cobrem os dois jogadores, limiares, liberação e disparo mantendo o botão pressionado. Conferidos no treino a carga e acertos do chute forte, do afastamento e do especial forte com caixas visíveis; os ciclos completos em ambos os lados ainda exigem revisão artística. `npm ci`, 458 testes em 41 arquivos, build e `git diff --check` passaram localmente. O remoto configurado é público; o envio anterior foi rejeitado pela revisão automática e continua sem autorização específica de publicação. Sem CI remota ou merge.
+
+## Cowboy — áreas de contato, dash e ultimate — 2026-10-31
+
+Continuação na `codex/feature-cowboy-animacoes`, com dependência de `codex/feature-cowboy-zoner` e de todo o trabalho de animação anterior ainda não integrado. O dash aéreo mantém a altura e é limitado a uma utilização por salto, restaurada ao pousar. As caixas agachada e aérea foram ampliadas horizontalmente; a vulnerabilidade da Cowboy está dividida em cabeça, tronco e pernas, com região baixa mais larga, e o contato seleciona a reação correspondente sem alterar a regra de bloqueio. Receber agarrão usa uma nova folha em pé durante a puxada. As receitas existentes podem continuar após defesa, sem reiniciar o combo de três pisões.
+
+A provocação teve âncoras corrigidas. A ativação da ultimate retorna pela provocação antes do repouso; seis mãos individuais disparam de baixo para cima, com projéteis emitidos junto às armas e faixas verticais limitadas ao espaço entre o chão e abaixo do HUD. Foi ampliado o alcance do laço. A folha de idle e a personagem foram conferidas no treino: as duas pernas estavam visíveis, portanto o desaparecimento relatado não foi reproduzido. Uma proposta para ampliar visualmente o laço atravessou os limites das células e não substituiu a folha atual; a coerência visual do extremo do alcance ainda precisa de refinamento.
+
+Instalação reproduzível, testes e build verificados localmente. Conferência no treino incluiu as três áreas de vulnerabilidade, o agarre em pé e as mãos/tiros da ultimate; o ciclo completo em ambos os lados, as bordas e a revisão artística ainda precisam de conferência. O estado de envio e CI deve ser confirmado no remoto; não houve autorização de integração em development.
+
+## Cowboy — dash aéreo, impacto e efeitos — 2026-10-31
+
+Continuação local em `codex/feature-cowboy-animacoes`, dependente do trabalho anterior ainda não integrado. Dash aéreo para frente e para trás usa a mesma entrada de dash e preserva gravidade e hitbox aérea; o pouso encerra o dash. Novas folhas magenta para os dois dashes, chute forte aéreo, reação média na barriga, poeiras em estilo de desenho e projétil azul da ultimate foram preparadas e conectadas. A provocação teve âncoras e escala ajustadas; a preparação visual da ultimate percorre suas poses mais rapidamente, mantendo a duração de ativação compartilhada. Três pares de braços e seis projéteis sequenciais continuam seguindo o comportamento existente; os projéteis usam efeito próprio e a poeira acompanha a região do golpe e o chão.
+
+Instalação reproduzível, 449 testes em 41 arquivos, build e diff aprovados localmente. No treino, observados o dash aéreo para frente e a hitbox; as folhas foram examinadas individualmente. Ainda falta conferir no jogo o ciclo completo dos novos efeitos, os dois sentidos, bordas e transições, e obter revisão artística; permanecem pendências anteriores da branch. Sem commit, push, CI remota ou integração.
+
+## Cowboy — ritmo de projéteis e ultimate — 2026-10-31
+
+Continuação local de `codex/feature-cowboy-animacoes`, dependente do trabalho anterior ainda não integrado. O soco fraco confirmado não cancela para outro soco fraco, preservando a transição para as receitas autoradas. Os agarrões passam de 15 para 19 quadros de preparação e de 80 para 120 unidades de largura na caixa; os valores são provisórios. A reação alta usa desde o impacto uma pose mais clara de recuo da cabeça; a escala do chute forte aéreo foi reduzida uniformemente e as âncoras horizontais das folhas de provocação foram alinhadas.
+
+A animação da provocação também é usada na ativação da ultimate, com duração compartilhada preservada. Os pares de braços espectrais surgem e desaparecem gradualmente. Cada um dos seis projéteis nasce em uma altura diferente, de baixo para cima, e viaja horizontalmente a 24 unidades por quadro; o intervalo passa de 12 para 18 quadros. A hitbox acompanha cada projétil, sem atingir a arena inteira instantaneamente. Os efeitos de areia foram ancorados ao solo e permanecem por até 12 quadros, independentemente da atividade do golpe.
+
+Instalação reproduzível, 444 testes em 41 arquivos, build e diff aprovados. No treino foram observados o pisão com areia e a ultimate com braços e projétil em movimento; os testes cobrem ambos os lados, repetição do soco, reação alta, sequência dos seis projéteis e atraso até o contato. Ainda faltam revisão completa das animações e hitboxes, bordas, ritmo e aprovação artística, além das pendências anteriores de caminhada. Sem commit, push, CI remota ou integração.
+
+## Cowboy — reações e areia — 2026-10-31
+
+Continuação local na `codex/feature-cowboy-animacoes`, dependente de todas as alterações anteriores ainda não integradas. Ajustadas as escalas uniformes das folhas de recuo e chute forte aéreo; corrigido o recorte que deixava um fragmento azul no especial forte. Criadas duas folhas independentes para areia dos pisões e do chute potente, exibidas na área do golpe durante a atividade. Removido o efeito amarelo genérico de acerto.
+
+Cada acerto passa a registrar altura e instante para reiniciar a reação mesmo durante um combo. A Cowboy usa folhas distintas para dano baixo, médio e alto em pé e para dano baixo agachada; as reações aéreas preservam sua própria folha. Em treino foi observada a reação baixa e a areia do pisão com hitbox visível; a areia potente foi vista antes do último ajuste de leitura. Faltam conferir a versão final de todos os quadros, as bordas e ambos os lados no jogo. As tentativas de refazer as caminhadas continuaram repetindo passos e não substituíram as folhas atuais: refinamento das duas caminhadas segue pendente, assim como revisão artística e os itens anteriores da branch. Instalação reproduzível, 440 testes em 41 arquivos, build e diff aprovados localmente. Sem commit, push ou CI remota.
+
+## Cowboy — revisão de golpes, arte e ultimate — 2026-10-31
+
+Continuação local de `codex/feature-cowboy-animacoes`, ainda dependente das alterações anteriores não integradas. O idle usa uma única folha para evitar mistura de cores e adereços; caminhada, recuo, chute potente, especial fraco, chute forte aéreo e provocação receberam correções nas fontes. A provocação ganhou seis poses de entrada sem alterar seus 48 quadros de duração. Recortes retiram fragmentos dos antiaéreos; as escalas do agarrão, ultimate, chute potente e chute aéreo foram revistas. Poeira é desenhada acima do personagem e dentro das hitboxes dos chutes.
+
+O combo `3,3,3` não reinicia imediatamente com outro `3`; continua permitindo soco ou chute forte. O alcance dos agarrões aumentou; o arremesso para frente puxa antes do chute, e o para trás mantém o lançamento. Na ultimate, seis disparos visuais percorrem a tela de baixo para cima e a colisão de cada um cobre a arena; três pares dos braços espectrais são posicionados atrás da luta. A ativação mantém a duração compartilhada do Shoto. As alterações são provisórias e requerem revisão visual completa, inclusive ritmo, alinhamento, ambos os lados, bordas e a aparência dos braços da ultimate na versão atual. Nenhuma aprovação artística é inferida.
+
+Validação local: `npm ci`, 434 testes em 41 arquivos, build e `git diff --check` aprovados. O treino foi aberto e a versão anterior da ultimate foi observada, mas a conferência visual da última alteração da câmera e de todos os novos recortes ainda está pendente. Sem commit, push, CI remota ou integração; preservar a branch até terminar a revisão.
+
+## Cowboy — continuação de combate e animação — 2026-10-31
+
+Trabalho local em `codex/feature-cowboy-animacoes`, dependente do protótipo da Cowboy ainda não integrado. Foram conectados novos ciclos e transições de movimento e virada, reações, provocação, braços espectrais direcionais e efeitos de disparo; as fontes e atlas ativos permanecem no diretório da personagem. Corrigidos fragmentos de quadros adjacentes no chute potente e na queda. A revisão artística completa das folhas e transições segue pendente, inclusive a alternância das pernas nas caminhadas e a ultimate.
+
+Implementados golpes e sequências solicitados, incluindo tiros aéreos com recuo, continuação confirmada dos combos, soco forte carregável por tempo ilimitado com bônus de 10% por segundo até 30%, agarrões com laço e arremesso gradual, e seis disparos da ultimate. Os valores e a apresentação dependem de conferência em jogo. As verificações automatizadas cobrem ambos os jogadores, acertos, bloqueios, carregamento, combos e trajetória dos agarrões; uma inspeção parcial no treino conferiu repouso e um disparo com caixas visíveis. Falta verificar todas as ações, transições, hitboxes e bordas em jogo. Nenhuma aprovação artística é presumida.
+
+Instalação reproduzível realizada; 426 testes, build e checagem de diff aprovados localmente. Ainda faltam a validação final conjunta, commit, push e CI remota; nenhum merge autorizado.
+
+## Cowboy — correções de quadros e recuperação — 2026-10-31
+
+Continuação local de `codex/feature-cowboy-animacoes`, dependente do trabalho ainda não commitado de animação e de `codex/feature-cowboy-zoner`. O preparo de atlas usa uma escala única por folha, eliminando a diferença de escala introduzida entre linhas; escalas dos golpes agachados foram aproximadas à postura de agachamento. Recortes foram ajustados para manter pés e braços espectrais dentro do quadro correto e remover fragmentos desconectados de quadros adjacentes. O salto foi editado com a ferramenta integrada de geração de imagens, a partir da folha existente e da referência canônica, para remover a dobra extra do chapéu. As propostas geradas para caminhada não apresentaram alternância suficiente e não substituíram as fontes existentes: caminhada e recuo seguem pendentes.
+
+Após ataques agachados a reprodução retorna diretamente ao ciclo agachado em vez de reiniciar a entrada em pé; regressão cobre ambos os jogadores. A coronhada passou de 7 para 11 quadros de preparo e de 16 para 20 de recuperação, valores provisórios. A poeira dos chutes fracos ficou maior e animada dentro da hitbox ativa, inclusive nos três pisões. No treino, idle, agachamento e acerto do chute fraco agachado foram observados com caixas visíveis; a verificação quadro a quadro de todas as poses, do especial antiaéreo, do combo inteiro, ambos os lados e bordas, além da aprovação artística, continua pendente. Sem commit, push ou CI remota; não integrar sem autorização explícita.
+
+Uma ponta do clarão do especial forte ainda está cortada na imagem fonte; uma tentativa de substituição criou braços espectrais soltos e foi descartada. A conferência no treino antecedeu o último ajuste de escala dos chutes agachados, que ainda precisa ser verificado em execução. Instalação reproduzível, 403 testes, build e diff aprovados localmente; o instalador informa quatro vulnerabilidades nas dependências (duas moderadas e duas críticas), sem atualização automática fora do escopo.
+
+## Cowboy — revisão de arte, combo agachado e mobilidade — 2026-10-31
+
+Continuação na `codex/feature-cowboy-animacoes`, dependente das alterações locais anteriores e de `codex/feature-cowboy-zoner`. Recriadas com a ferramenta integrada de imagens e a referência canônica as folhas de repouso, pulo, guarda, caminhada, golpes agachados, especiais, afastamento e tiros do combo, entre outras; as fontes usam fundo magenta e seus atlas usam transparência. Os prompts pediram poses e proporções consistentes, apoio estável, mãos humanas completas e disparos azuis; o pulo teve o ornamento extra do chapéu removido. Ajustadas âncoras e cadência das poses, inclusive no pulo e na recuperação dos especiais. As caminhadas ainda precisam de revisão artística: a alternância das pernas continua pouco evidente. A alternância de mãos e as transições de todos os golpes também precisam de conferência visual completa.
+
+Adicionado o combo manual agachado `1,1,1`: duas coronhadas seguidas de tiro azul, com folha própria para a finalização e cada entrada exigida separadamente. A velocidade de movimentação e a altura do pulo aumentaram; o chute de afastamento empurra 100 unidades ao longo de 12 quadros e derruba no acerto, sem derrubar na defesa. Os valores são provisórios. O projétil substituto também é azul.
+
+No treino foram conferidos parcialmente repouso, agachamento, coronhada, especial e antiaéreo com caixas visíveis; testes automatizados cobrem ambos os lados, afastamento, defesa e combo. Ainda faltam conferir visualmente o ciclo completo das animações, o combo inteiro, os dois lados e as bordas, além de aprovar a arte e o balanceamento. Instalação reproduzível, 400 testes, build e diff aprovados localmente. Sem commit, push ou CI remota; não integrar sem autorização explícita.
+
+## Cowboy — caixas e animações recriadas — 2026-10-31
+
+Continuação em `codex/feature-cowboy-animacoes`, preservando o trabalho local dependente de `codex/feature-cowboy-zoner`. A pedido do usuário, recriadas com a ferramenta integrada de geração de imagens e a referência canônica as folhas de socos em pé, quatro básicos aéreos, entrada/saída de agachamento e tiro de outra mão; fontes magenta e atlas ativos ficam em `src/assets/sprites/characters/cowboy`. Os prompts pediram identidade e tamanho consistentes, quadros separados, apoio estável, pernas recolhidas no ar, tiro aéreo diagonal e retorno à postura. As folhas de soco sem braços incorporados usam a camada espectral existente também durante a atividade. As fontes substituídas e a folha antiga de combo sem uso foram retiradas; o ciclo agachado usa os quadros da própria transição para manter a mesma proporção.
+
+Os dois dashes distribuem suas seis poses pelos 24 quadros do deslocamento; tiros do combo usam uma folha distinta nas entradas 2 e 4 e animam recuperação após a atividade. A rasteira passa de 16/32 para 10/26 quadros de preparação/recuperação, preservando dano, alcance e queda; a hurtbox aérea passa de 147,03 para 125 unidades de altura. Uma poeira procedimental fica dentro da hitbox ativa dos chutes fracos em pé e agachado. `docs/animacao.md` registra a conferência de caixas e ausência de teleporte como procedimento para futuras alterações.
+
+Revisão visual no treino: pose agachada, soco em pé, tiro aéreo e poeira do chute fraco no P1, com caixas visíveis; a caixa aérea foi revista após o ajuste. Testes cobrem raiz e geometria para os dois jogadores, espelhamento, progressão de dash, recuperação e alternância de textura do combo, e queda da rasteira. Ainda falta conferir visualmente todas as fases e extremos dos dois lados, executar o combo completo em jogo e aprovar sua legibilidade artística; a troca de mãos da arte precisa de verificação humana. Instalação reproduzível, 391 testes, build e diff aprovados localmente. Sem commit, push ou CI remota; não integrar sem autorização explícita.
+
+## Cadência de animação por ação — 2026-10-30
+
+Continuação local na `codex/feature-cowboy-animacoes`, dependente do trabalho ainda não commitado das animações da Cowboy e da branch `codex/feature-cowboy-zoner`; não há base limpa para separar esta entrega sem transportar esse trabalho. O usuário pediu cadências independentes inspiradas na animação tradicional e em Skullgirls. A reprodução compartilha amostragem por taxa ou duração de cada desenho; fases com duração de combate fixa usam pesos autorados para antecipação e recuperação, preservando contato e simulação em 60 Hz. Cadências distintas aplicadas aos ciclos do Shoto e da Cowboy, golpes e combo do Shoto, golpes da Cowboy e efeitos de projétil e impacto. Valores são provisórios, sujeitos a avaliação do usuário.
+
+Algumas poses ainda não têm sequências próprias, incluindo reações e golpes agachados do Shoto; partes especiais de transição e combos da Cowboy continuam com seleção por fase específica. As caminhadas e o combo visual da Cowboy ainda precisam de arte corrigida, conforme a seção seguinte. A revisão visual alcançou treino e um disparo da Cowboy; ainda falta conferir todas as ações, ambos os lados, bordas e o ritmo completo em jogo. Instalação reproduzível, 386 testes, build e diff aprovados localmente; sem commit, push ou CI remota. Nenhuma aprovação artística de ritmo foi presumida; a entrega permanece em andamento e não deve ser integrada sem autorização.
+
+## Cowboy — revisão de movimento e afastamento — 2026-10-30
+
+Continuação local na branch `codex/feature-cowboy-animacoes`, com as alterações anteriores preservadas. O idle recebeu âncoras horizontais individuais no manifesto e atlas regenerado; falta revisar o alinhamento dos demais movimentos. No acerto, o chute de afastamento agora desloca 70 unidades ao longo de 12 quadros de combate, depois do hitstop; bloqueio permanece com seu deslocamento anterior. Testes cobrem os dois lados e a pausa no impacto. O padrão de fundo magenta para futuras fontes de personagem foi registrado em `identidade-visual.md`.
+
+O usuário aprovou e pediu a integração das quatro propostas: agachamento contínuo, dash frontal, dash traseiro e materialização espectral. As fontes magenta e os atlas transparentes são preparados pelo mesmo script; o efeito aparece como camada independente atrás do personagem antes e após as poses de disparo. Na inspeção em treino foram observados agachamento, dash frontal, dash traseiro e disparo; escala do agachamento e corte do dash frontal foram corrigidos e revistos. Ainda falta conferir ciclos completos, todos os disparos, ambos os lados e extremos da arena.
+
+As propostas anteriores de caminhada, recuo e combo não representam claramente os passos alternados e a troca de mãos, respectivamente, e precisam ser refeitas. A revisão de alinhamento dos demais movimentos, novas caminhadas e combo revisado continua pendente. Instalação reproduzível, 384 testes e build aprovados localmente; alterações ainda sem commit ou push e sem CI remota. Esta branch contém trabalho em andamento e depende da branch de personagem ainda não integrada; não integrar em development sem autorização explícita.
+
+## Cowboy — animações aprovadas — 2026-10-30
+
+Branch `codex/feature-cowboy-animacoes`, dependente de `codex/feature-cowboy-zoner` em `0084b86`, ainda não integrada a development. O usuário aprovou a integração das propostas e suas correções. Fontes de 23 folhas de personagem e cinco de efeitos preservadas em `src/assets/sprites/characters/cowboy/source`; atlas reproduzíveis pelo script `scripts/prepare-cowboy-sprites.py`, com recorte, transparência, escala, separação de quadros e raízes registrados em `alignment.json`. Nenhuma alteração de colisão, dano ou tempos. Usadas as versões corrigidas dos socos, tiros aéreos, três pisões, chute frontal de afastamento e especial antiaéreo com duas armas. Efeitos de tiro horizontal, diagonal, rajada e impacto acompanham projéteis e relógio da simulação.
+
+Seleção e combate usam sprites da Cowboy; idle, caminhada, recuo, agachamento, salto, defesas, básicos, especiais e combos têm mapeamento por fase. O quadro do salto com chapéu cortado foi omitido; reações sem arte própria usam idle, dash/backstep usam caminhada e guarda aérea usa defesa em pé. A proporção de folhas foi ajustada tecnicamente em relação ao idle; a arte do usuário e suas cores permanecem inalteradas. Revisão no build de produção: seleção, idle nos dois lados, salto, movimento e um disparo com impacto; ainda é necessária revisão manual completa das demais ações e transições em ambos os lados e bordas. Isso não invalida a aprovação das imagens, mas é uma limitação da conferência de animação em jogo.
+
+Instalação reproduzível, 380 testes em 41 arquivos, build e diff aprovados. Regressões cobrem carregamento dos atlas, seleção de poses nas fases de ataque, três pisões, entrada em agachamento e guarda, espelhamento e ausência do quadro de salto cortado. Branch local com alterações ainda sem commit ou push, pois a revisão visual completa em jogo permanece pendente; CI remota não executada. Não integrar em development sem autorização explícita.
+
+## Cowboy — turnaround canônico — 2026-10-30
+
+O usuário definiu a imagem fornecida como referência canônica da Cowboy. Arquivo original preservado sem alterações em [turnaround.png](assets/art/characters/cowboy/turnaround.png), com vistas, figurino e elementos espectrais para orientar futuras artes. Esta referência não é uma spritesheet nem foi integrada à apresentação do jogo; a geometria temporária continua em uso. A aprovação da referência não implica aprovação de animações futuras. Instalação reproduzível, 375 testes, build e diff aprovados; envio e CI remota a conferir.
+
+## Cowboy — combos de chutes e tiros — 2026-10-30
+
+Na branch `codex/feature-cowboy-zoner`, adicionadas manualmente as receitas `3,3,3` e `1,2,2,2`, com uma entrada por golpe. Na sequência de tiros os preparos provisórios são 8, 10, 32 e 32 frames. Os dois tiros finais preservam a confirmação quando os anteriores acertam, inclusive com projéteis em voo; após bloqueio a receita pode continuar e o preparo expõe uma janela de punição. O defensor que soltar a guarda também pode ser atingido. A extensão de recuperação da receita considera o tempo de deslocamento dos projéteis; balanceamento e sensação dos tempos aguardam avaliação.
+
+Instalação reproduzível, 375 testes em 40 arquivos, build e diff aprovados. Regressões verificam entradas individuais, acertos em curta e longa distância, punição após bloqueio e soltura da guarda, nos dois lados. No navegador, treino e primeiros dois tiros foram conferidos; a execução manual completa dos combos ainda precisa de conferência. Arte própria e aprovação artística pendentes; envio e CI remota a verificar.
+
+## Cowboy — tiros especiais de perto — 2026-10-30
+
+Na branch `codex/feature-cowboy-zoner`, `d,df,f,1` passa a ser tiro alto à queima-roupa (120 de dano provisório), e `d,df,f,2` um tiro alto antiaéreo de perto (140 de dano provisório). Ambos são projéteis de vida curta; o segundo sobe em diagonal. Eles erram alvos agachados e podem ser bloqueados. Os socos básicos e o especial de afastamento permanecem. Dano, alcance e tempos aguardam revisão de balanceamento.
+
+Instalação reproduzível, 365 testes em 40 arquivos, build e diff aprovados. Regressões verificam dano, bloqueio, erro à distância e contra agachado, além de acerto antiaéreo próximo, nos dois lados. Arte e aprovação visual continuam pendentes; envio e CI remota a verificar.
+
+## Cowboy projectile zoner — 2026-10-30
+
+Continuação em `codex/feature-cowboy-zoner`: altura da hurtbox em pé 157,54 contra 182,16 do Shoto (proporção 1,60/1,85); corpo e demais posturas ajustados. Socos básicos em pé disparam horizontalmente, socos aéreos em diagonal para baixo, e `d+2` dispara em diagonal para cima. `d+1` é coronhada próxima; chutes em pé e abaixados têm alcance curto e atingem baixo, com `d+3` rápido e `d+4` como rasteira que derruba apenas no acerto. Chutes aéreos mantêm contato próximo. Queda usa recuperação e invencibilidade de retorno do alvo. Especiais anteriores de disparo e afastamento permanecem. Sem novas receitas, arte ou ultimate; geometria e balanceamento são provisórios.
+
+Instalação reproduzível, 361 testes em 40 arquivos, build e diff conferidos. Regressões cobrem direção dos disparos nos dois lados, proporção, alcance baixo e rasteira no acerto, bloqueio e erro. Treino e geometria provisória conferidos no navegador; aprovação visual e balanceamento seguem pendentes. Envio e CI remota a verificar.
+
+## Cowboy zoner — 2026-10-30
+
+Branch `codex/feature-cowboy-zoner`, baseada em `origin/development`. Protótipo jogável com quatro básicos em pé, quatro aéreos, quatro abaixados, antiaéreo, dois disparos e golpe próximo de afastamento. Hitboxes, hurtboxes, dano, tempos e comandos são provisórios e aguardam revisão de design e balanceamento. Nenhuma receita de combo foi criada. Ainda não há ultimate nem arte própria; seleção identifica a arte pendente e o combate usa geometria de diagnóstico, sem reutilizar sprites do Shoto.
+
+Comandos provisórios: `d,df,f,1` disparo rápido; `d,df,f,2` disparo pesado; `d,df,f,4` afastamento; `d+2` antiaéreo. Instalação reproduzível, 356 testes em 40 arquivos e build aprovados. No navegador, seleção e entrada no treino com Cowboy conferidas; geometria temporária visível nos dois lados. Aprovação artística e balanceamento pendentes. CI remota e integração não presumidas; integração exige autorização explícita.
+
 ## Integração de tela e combate — 2026-10-29
 
 Por pedido explícito, `codex/feature-tela-adaptavel` foi integrada em `development`, incluindo tela adaptável, HUD, rage, atalho da ultimate e escolha do golpe forte. A validação local passou com 352 testes, build e diff; [CI da branch aprovada](https://github.com/feittosaa/close-combat/actions/runs/40920303484). Integração enviada em `5813bf3`, com [CI de development aprovada](https://github.com/feittosaa/close-combat/actions/runs/40920495118). Após conferir ancestralidade e ausência de outros checkouts e PRs abertos, a branch integrada foi encerrada localmente e no remoto. `sprites/shoto` continua separada.

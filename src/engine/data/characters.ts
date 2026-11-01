@@ -1,5 +1,6 @@
 import type { MoveDefinition } from './moves';
 import { shoto } from './fighters/shoto';
+import { cowboy } from './fighters/cowboy';
 
 export interface CharacterHurtbox {
   offsetX: number;
@@ -20,6 +21,12 @@ export interface ComboRecipe {
   name: string;
   notation: string;
   moveIds: readonly string[];
+  /** Replaces only the final authored input with a dedicated move. */
+  finisherMoveId?: string;
+  /** Optional authored timing and contact rules for a projectile recipe. */
+  projectileSequence?: { startupFrames: readonly number[]; continueOnBlock: boolean; airRecoil?: { liftSpeed: number; gravityScale: number } };
+  /** A confirmed final hit may begin another explicitly authored recipe. */
+  continueOnHit?: boolean;
   /** Recovery after the final confirmed hit of this recipe. */
   recoveryFrames?: number;
   /** Launch and shortened recovery applied only by the confirmed final hit of this exact recipe. */
@@ -29,7 +36,7 @@ export interface CharacterDefinition {
   id: string;
   name: string;
   maxHealth: number;
-  movement: { walkSpeed: number; backwardWalkSpeed: number; jumpVelocity: number; dashSpeed: number; backdashSpeed: number };
+  movement: { walkSpeed: number; backwardWalkSpeed: number; jumpVelocity: number; dashSpeed: number; backdashSpeed: number; airDash?: boolean };
   moves: readonly MoveDefinition[];
   juggle?: {
     initialGravityScale: number; gravityScalePerHit: number; maximumGravityScale: number;
@@ -41,7 +48,7 @@ export interface CharacterDefinition {
   collision: CharacterCollisionProfile;
 }
 export const DEFAULT_CHARACTER_ID = 'shoto';
-export const characters: readonly CharacterDefinition[] = [shoto];
+export const characters: readonly CharacterDefinition[] = [shoto, cowboy];
 export const playableCharacters = characters;
 export const defaultCharacter = shoto;
 export function getCharacterById(id: string): CharacterDefinition | undefined {

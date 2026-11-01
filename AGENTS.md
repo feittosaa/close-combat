@@ -3,7 +3,7 @@
 - Ler `base.md` como documentação raiz e seguir `pipeline.md`.
 - Priorizar código limpo, legível e bem organizado: nomes claros, responsabilidades coesas e a solução mais simples que atenda ao escopo. Não incluir código morto, duplicações, abstrações especulativas, dependências, arquivos ou conteúdo sem necessidade comprovada.
 - `base.md`, `identidade-visual.md`, READMEs, este arquivo e os demais Markdown contêm somente princípios duradouros, contratos gerais e processos aplicáveis ao projeto inteiro. Estado de implementação, tarefas atuais, personagens, cenários, números específicos, pendências, validações e histórico ficam exclusivamente em `pipeline.md`. Não espalhar fichas ou diários de entrega por novos Markdown.
-- Seguir `docs/ci-cd.md`: uma branch por objetivo, validação antes do push, integração em `development` e promoção posterior para `main` somente mediante autorização explícita. Dependências de branches ainda não integradas devem ser registradas na pipeline.
+- Seguir `docs/ci-cd.md`: continuar correções e refinamentos na branch ativa da feature; criar uma nova branch somente mediante pedido explícito do usuário. Validar antes do push; integração em `development` e promoção para `main` exigem autorização explícita. Dependências ainda não integradas devem ser registradas na pipeline.
 - O usuário autoriza commits e push das branches concluídas após validação. Qualquer merge/integração, promoção para `main` ou release exige pedido explícito. CI verde não substitui essa autorização.
 - Preservar alterações existentes. Não fazer force push nem reescrever tags publicadas.
 - Antes de concluir: instalação reproduzível, testes, build e checagem de diff. Mudanças visuais ou de controles exigem também conferência no jogo.
