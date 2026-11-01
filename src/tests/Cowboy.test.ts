@@ -221,11 +221,11 @@ it.each([0, 1])('provocação é acionada uma vez e interrompida por movimento: 
   expect(sim.snapshot().characters[player].tauntStartedFrame).toBeUndefined();
 });
 
-it.each([0, 1])('encerra a provocação naturalmente após 198 quadros: jogador %i', player => {
+it.each([0, 1])('encerra a provocação naturalmente após 150 quadros: jogador %i', player => {
   const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true});
   const step = (value:FrameInput) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   step({...input(),taunt:true});
-  for(let tick=0;tick<197;tick++)step(input());
+  for(let tick=0;tick<149;tick++)step(input());
   expect(sim.snapshot().characters[player].tauntStartedFrame).toBeDefined();
   step(input());
   expect(sim.snapshot().characters[player].tauntStartedFrame).toBeUndefined();

@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Cowboy — provocação em 2,5 segundos — 2026-10-31
+
+Na `codex/feature-cowboy-zoner`, a provocação mantém as mesmas poses e passa a durar 150 quadros, com 50 para cada etapa de entrada, ação e saída. Instalação reproduzível, 490 testes em 42 arquivos e build aprovados; provocação observada no treino, com avaliação artística final pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI devem ser conferidos; sem autorização de merge em `development`.
+
 ## Cowboy — duração equilibrada da provocação — 2026-10-31
 
 Na `codex/feature-cowboy-zoner`, a provocação usa as mesmas dezoito poses de entrada, ação e saída, distribuídas uniformemente em 198 quadros: 66 por etapa e 11 por pose. A ativação da ultimate mantém seu próprio ritmo. Instalação reproduzível, 490 testes em 42 arquivos e build aprovados; provocação observada no treino, com avaliação artística final pendente. A instalação apontou quatro vulnerabilidades de dependências (duas moderadas e duas críticas). Envio e CI devem ser conferidos; sem autorização de merge em `development`.
