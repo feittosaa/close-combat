@@ -221,6 +221,16 @@ it.each([0, 1])('provocação é acionada uma vez e interrompida por movimento: 
   expect(sim.snapshot().characters[player].tauntStartedFrame).toBeUndefined();
 });
 
+it.each([0, 1])('encerra a provocação naturalmente após 198 quadros: jogador %i', player => {
+  const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true});
+  const step = (value:FrameInput) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
+  step({...input(),taunt:true});
+  for(let tick=0;tick<197;tick++)step(input());
+  expect(sim.snapshot().characters[player].tauntStartedFrame).toBeDefined();
+  step(input());
+  expect(sim.snapshot().characters[player].tauntStartedFrame).toBeUndefined();
+});
+
 it.each([0, 1])('usa chute potente médio e agarrões que lançam para longe: jogador %i', player => {
   for (const [buttons, id] of [[['3','4'], 'power-kick'], [['1','3'], 'throw-13'], [['2','4'], 'throw-24']] as const) {
     const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
