@@ -159,8 +159,8 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
   }
   if (state.tauntStartedFrame !== undefined) {
     const age = frame - state.tauntStartedFrame;
-    if (age >= 132) return pose('exit-taunt', Math.min(5, Math.floor((age - 132) / 11)), state);
-    return age < 66 ? pose('enter-taunt', Math.floor(age / 11), state) : pose('taunt', Math.floor((age - 66) / 11), state);
+    if (age >= 100) return pose('exit-taunt', Math.min(5, Math.floor((age - 100) * 6 / 50)), state);
+    return age < 50 ? pose('enter-taunt', Math.floor(age * 6 / 50), state) : pose('taunt', Math.floor((age - 50) * 6 / 50), state);
   }
   return pose('idle', sample('idle', frame - state.stateStartedFrame), state);
 }
