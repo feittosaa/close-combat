@@ -431,7 +431,9 @@ export class Simulation {
     this.projectiles = this.projectiles.filter(p => {
       const move = this.definitions.find(f=>f.id===p.fighterId)!.moves.find(m=>m.id===p.attack.moveId)!;
       const box = createProjectileHitbox(p,move);
-      return (!p.attack.hasHit || p.visual === 'volley') && p.remainingFrames > 0 && p.x >= this.config.arena.left - 100 && p.x <= this.config.arena.right + 100 && box.y+box.height <= this.config.arena.floorY;
+      const alive = (!p.attack.hasHit || p.visual === 'volley') && p.remainingFrames > 0 && p.x >= this.config.arena.left - 100 && p.x <= this.config.arena.right + 100 && box.y+box.height <= this.config.arena.floorY;
+      if (!alive && p.visual === 'dynamite') this.explosions.push({ x:box.x + box.width / 2, y:box.y + box.height / 2, remainingFrames:12, kind:'dynamite', id:p.id });
+      return alive;
     });
     if (this.lastHitEvents.length) this.hitstopFramesRemaining = CONTACT_HITSTOP_FRAMES;
     const contactPositions = this.characters.map(character => character.x);

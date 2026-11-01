@@ -12,4 +12,4 @@ export interface PendingUltimateLighter {
   moveId: string;
   remainingFrames: number;
 }
-export interface ExplosionState { x: number; y: number; remainingFrames: number }
+export interface ExplosionState { x: number; y: number; remainingFrames: number; kind?: 'dynamite'; id?: number }

@@ -90,6 +90,11 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     if (move.screenVolley) {
       return pose('ultimate-body', Math.min(5, Math.max(0, Math.floor((elapsed - startup) / move.screenVolley.interval))), state);
     }
+    if (move.id === 'quick-shot' || move.id === 'heavy-shot') {
+      const bodyFrame = elapsed < startup ? getPhaseAnimationFrame([0,1],[2,3],elapsed,startup) :
+        elapsed < activeEnd ? 2 : getPhaseAnimationFrame([3,4,5],[1,2,3],elapsed-activeEnd,recovery);
+      return pose('dynamite-throw', bodyFrame, state);
+    }
     if (move.id === 'light-kick') {
       const step = Math.min(2, Math.max(0, (state.chain?.length ?? 1) - 1));
       return pose('light-kick', step * 2 + (elapsed >= startup ? 1 : 0), state);
@@ -184,11 +189,17 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
     !state.attack.chargeReleased && (state.attack.chargeFrames ?? 0) >= startup - 1;
   const holdingHeavy = move.id === 'heavy-punch' && !state.attack.chargeReleased &&
     (state.attack.chargeFrames ?? 0) >= startup - 1;
+  if (move.id === 'quick-shot' || move.id === 'heavy-shot') {
+    const armFrame = holdingSpecial ? 2 : elapsed < startup - 6 ? undefined : elapsed < startup - 3 ? 0 :
+      elapsed < startup ? 2 : elapsed < activeEnd + 3 ? 4 : elapsed < activeEnd + 6 ? 5 : undefined;
+    const arm = move.id === 'heavy-shot' ? 'magic-throw-up' : 'magic-throw';
+    return armFrame === undefined ? [character] : [{...pose(arm, armFrame, state), scale:1.25}, character];
+  }
   let effectFrame: number | undefined;
   if (elapsed >= Math.max(0, startup - 6) && elapsed < startup) effectFrame = sample('magic', elapsed - Math.max(0, startup - 6));
   if (elapsed >= startup && elapsed < activeEnd && ['light-punch','heavy-punch','air-light-punch','air-heavy-punch'].includes(move.id)) effectFrame = 2;
   if (elapsed >= activeEnd && elapsed < activeEnd + 6) effectFrame = sample('magicExit', elapsed - activeEnd);
-  if (holdingSpecial || holdingHeavy) effectFrame = 2 + Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 8) % 2;
+  if (holdingHeavy) effectFrame = 2 + Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 8) % 2;
   const direction = (move.projectile.verticalSpeed ?? 0) < 0 ? 'up' : (move.projectile.verticalSpeed ?? 0) > 0 ? 'down' : 'horizontal';
   return effectFrame === undefined ? [character] : [{...pose(`magic-${direction}`, effectFrame, state), scale:1.25}, character];
 }

@@ -22,7 +22,7 @@ export interface MoveDefinition {
   pose?: 'light-punch' | 'heavy-punch' | 'light-kick' | 'heavy-kick';
   movement?: { speed: number; until: number; launch?: number };
   invulnerability?: { kind: 'all' | 'projectile'; until: number };
-  projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'glass' | 'bottle' | 'molotov' | 'bullet' };
+  projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'glass' | 'bottle' | 'molotov' | 'bullet' | 'dynamite' };
   ultimateSequence?: { lighterHitbox: MoveDefinition['hitbox']; lighterDelay: number; lighterSpeed: number; confirmStun: number; knockbackSpeed: number; launchSpeed: number; knockdownFrames: number };
   screenVolley?: { shots: number; interval: number; bandHeight: number; firstHitLevel?: HitLevel };
   rageCost?: number;
