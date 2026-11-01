@@ -258,3 +258,16 @@ it.each([0,1])('mantém mãos espectrais diagonais durante o disparo antiaéreo 
     {texture:'cowboy-anti-air',frame:2,flipX:player===1},
   ]);
 });
+
+it.each([0,1])('anima o tiro final agachado com mãos espectrais horizontais para o jogador %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  const move = cowboy.moves.find(candidate => candidate.id === 'crouch-combo-shot')!;
+  const attack = {...state,crouching:true,attack:{moveId:move.id,buttons:['1'] as const,elapsedFrames:move.startup,hasHit:false}};
+  for (let elapsed=0; elapsed<move.startup+move.activeFrames+move.recovery; elapsed++) {
+    expect(() => getCowboySpriteLayers({...attack,attack:{...attack.attack,elapsedFrames:elapsed}},elapsed)).not.toThrow();
+  }
+  expect(getCowboySpriteLayers(attack,move.startup)).toMatchObject([
+    {texture:'cowboy-magic-horizontal',frame:2,offsetY:50,flipX:player===1},
+    {texture:'cowboy-crouch-combo-shot',frame:2,flipX:player===1},
+  ]);
+});

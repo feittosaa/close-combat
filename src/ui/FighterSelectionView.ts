@@ -1,4 +1,5 @@
-import cowboyPortrait from '../assets/sprites/characters/cowboy/idle.png';
+import cowboyIcon from '../assets/art/characters/cowboy/selection-icon.png';
+import cowboyPortrait from '../assets/art/characters/cowboy/selection-portrait.png';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FighterSelection, SelectionPlayer } from './FighterSelection';
 
@@ -23,14 +24,13 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
   const button = (label: string, className: string, action: () => void): HTMLButtonElement => {
     const element = document.createElement('button'); element.className = className; element.textContent = label; element.onclick = action; return element;
   };
-  const fighterPortrait = (id: string, small: boolean): SVGSVGElement => {
+  const fighterPortrait = (id: string, small: boolean): SVGSVGElement | HTMLImageElement => {
     if (id === 'shoto') return portrait(small ? '280 65 180 180' : '130 35 510 710', !small);
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', small ? '125 25 375 275' : '0 0 640 640');
-    svg.setAttribute('aria-hidden', 'true');
-    const image = document.createElementNS(svg.namespaceURI, 'image');
-    image.setAttribute('href', cowboyPortrait); image.setAttribute('width', '3840'); image.setAttribute('height', '640');
-    svg.append(image); return svg;
+    const image = document.createElement('img');
+    image.src = small ? cowboyIcon : cowboyPortrait;
+    image.alt = '';
+    image.className = 'cowboy-selection-art';
+    return image;
   };
   for (const player of [0, 1] as const satisfies readonly SelectionPlayer[]) {
     const entry = player === 1 && !versus ? options.opponent : fighters[selection.indices[player]];
