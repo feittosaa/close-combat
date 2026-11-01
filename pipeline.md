@@ -1,5 +1,12 @@
 # Close Combat — Pipeline
 
+## Cowboy — disparos agachados e artes de seleção — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, as mãos espectrais dos disparos agachados foram reposicionadas em direção à origem dos projéteis, mantendo suas trajetórias e caixas de colisão. O final 1,1,1 agachado usa uma nova folha de seis poses com gesto de arminha e camada separada de mãos espectrais horizontais. As duas imagens fornecidas pelo usuário substituem o recorte do idle no ícone central e no retrato grande da Cowboy, com cores originais.
+
+Instalação reproduzível, 505 testes em 42 arquivos, build e diff aprovados; seleção, antiaéreo e o final do combo observados no jogo; aprovação artística final depende do usuário. Envio e CI remota serão conferidos.
+
+
 ## Cowboy — laços e antiaéreo agachado — 2026-11-01
 
 Na `codex/fix-sala-treino-agarrao`, o laço baixo 2+4 ganhou 15 unidades de alcance e mantém a volta visível durante a fase ativa e o começo da recuperação. A corda visual do 1+3 foi alongada para acompanhar melhor sua área de contato, inclusive ao carregar. O antiaéreo agachado tem nova folha de seis poses a partir da referência canônica, com as duas mãos humanas e gesto de arminha; as mãos mágicas diagonais existentes aparecem também durante o disparo ativo. Folha anterior substituída e quadros alinhados tecnicamente.

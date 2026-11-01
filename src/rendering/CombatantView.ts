@@ -41,7 +41,7 @@ export class CombatantView {
           .setOrigin(.5,down && state.fighterId !== 'cowboy' ?.5:state.fighterId === 'cowboy' ? cowboyFootAnchor : shotoSpriteManifest.footAnchorY!/shotoSpriteManifest.frameSize.height)
           .setScale((state.fighterId === 'cowboy' ? cowboyDisplayHeight / 640 : shotoSpriteManifest.displaySize!.height/shotoSpriteManifest.frameSize.height)*pose.scale)
           .setAngle(down && state.fighterId !== 'cowboy'?(state.facing==='right'?-90:90):0)
-          .setPosition(state.x,state.y-(down && state.fighterId !== 'cowboy'?(state.grounded?18:65):0)).setFlipX(pose.flipX).setAlpha(pose.alpha).setVisible(true);
+          .setPosition(state.x,state.y-(down && state.fighterId !== 'cowboy'?(state.grounded?18:65):0)+('offsetY' in pose && typeof pose.offsetY === 'number' ? pose.offsetY : 0)).setFlipX(pose.flipX).setAlpha(pose.alpha).setVisible(true);
       });
       this.sprites.slice(layers.length).forEach(sprite=>sprite.setVisible(false));
       this.graphics.clear();
