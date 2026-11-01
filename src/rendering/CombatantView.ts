@@ -41,22 +41,24 @@ export class CombatantView {
           .setOrigin(.5,down && state.fighterId !== 'cowboy' ?.5:state.fighterId === 'cowboy' ? cowboyFootAnchor : shotoSpriteManifest.footAnchorY!/shotoSpriteManifest.frameSize.height)
           .setScale((state.fighterId === 'cowboy' ? cowboyDisplayHeight / 640 : shotoSpriteManifest.displaySize!.height/shotoSpriteManifest.frameSize.height)*pose.scale)
           .setAngle(down && state.fighterId !== 'cowboy'?(state.facing==='right'?-90:90):0)
-          .setPosition(state.x,state.y-(down && state.fighterId !== 'cowboy'?(state.grounded?18:65):0)).setFlipX(pose.flipX).setAlpha(pose.alpha).setVisible(true);
+          .setPosition(state.x,state.y-(down && state.fighterId !== 'cowboy'?(state.grounded?18:65):0)+('offsetY' in pose && typeof pose.offsetY === 'number' ? pose.offsetY : 0)).setFlipX(pose.flipX).setAlpha(pose.alpha).setVisible(true);
       });
       this.sprites.slice(layers.length).forEach(sprite=>sprite.setVisible(false));
       this.graphics.clear();
       const move = state.fighterId === 'cowboy' && state.attack
         ? getCharacterById(state.fighterId)?.moves.find(candidate => candidate.id === state.attack!.moveId) : undefined;
-      if (move?.category === 'throw' && state.mode === 'active' && this.scene.textures.exists('cowboy-effect-lasso')) {
+      const lassoTexture = move?.id === 'throw-24' ? 'cowboy-effect-lasso-low' : 'cowboy-effect-lasso';
+      const lowLassoVisible = move?.id === 'throw-24' && state.attack && state.attack.elapsedFrames >= (state.attack.startupFrames ?? move.startup) && state.attack.elapsedFrames < (state.attack.startupFrames ?? move.startup) + move.activeFrames + 12;
+      if (move?.category === 'throw' && (state.mode === 'active' || lowLassoVisible) && this.scene.textures.exists(lassoTexture)) {
         const box = createHitbox(state, move);
         const sign = state.facing === 'right' ? 1 : -1;
-        const hand = state.x + sign * 58;
+        const hand = state.x + sign * (move.id === 'throw-24' ? 30 : 58);
         const tip = state.facing === 'right' ? box.x + box.width : box.x;
-        const width = Math.max(1, Math.abs(tip - hand)) * 640 / 491;
+        const width = Math.max(1, Math.abs(tip - hand)) * 640 / 491 * (move.id === 'throw-13' ? 1.15 : 1);
         const left = state.facing === 'right' ? hand - width * 64 / 640 : tip - width * 85 / 640;
-        const lasso = this.lasso ??= this.scene.add.image(0,0,'cowboy-effect-lasso','2').setDepth(11);
-        lasso.setTexture('cowboy-effect-lasso','2').setOrigin(0,.5).setDisplaySize(width,120)
-          .setPosition(left,state.y - 99).setFlipX(state.facing === 'left').setVisible(true);
+        const lasso = this.lasso ??= this.scene.add.image(0,0,lassoTexture,'2').setDepth(11);
+        lasso.setTexture(lassoTexture,'2').setOrigin(0,.5).setDisplaySize(width,move.id === 'throw-24' ? 80 : 120)
+          .setPosition(left,state.y - (move.id === 'throw-24' ? 38 : 99)).setFlipX(state.facing === 'left').setVisible(true);
       } else this.lasso?.setVisible(false);
       const dustKind = move?.id === 'power-kick' ? 'power' :
         move && (move.id === 'light-kick' || move.id === 'crouch-light-kick') ? 'light' : undefined;
@@ -64,10 +66,10 @@ export class CombatantView {
       if (dustKind && move && dustAge >= 0 && dustAge < 12 && this.scene.textures.exists(`cowboy-effect-dust-${dustKind}`)) {
         const box = createHitbox(state, move);
         const effect = this.dust ??= this.scene.add.image(0, 0, `cowboy-effect-dust-${dustKind}`, '0').setDepth(11);
-        const height = dustKind === 'power' ? box.height * 1.1 : box.height * 1.3;
+        const height = box.height * (dustKind === 'power' ? 1.375 : 1.625);
         effect.setTexture(`cowboy-effect-dust-${dustKind}`, String(Math.min(5, dustKind === 'light' ? 1 + Math.floor(dustAge / 3) : Math.floor(dustAge / 2))))
-          .setOrigin(.5, 1).setDisplaySize(box.width, height)
-          .setPosition(box.x + box.width / 2, state.y + height * (dustKind === 'power' ? .15 : .24))
+          .setOrigin(.5, 1).setDisplaySize(box.width * 1.25, height)
+          .setPosition(box.x + box.width / 2, state.y + height * (dustKind === 'power' ? .15 : .24) + 4)
           .setFlipX(state.facing === 'left').setVisible(true);
       } else this.dust?.setVisible(false);
       return;

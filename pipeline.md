@@ -1,5 +1,54 @@
 # Close Combat — Pipeline
 
+## Cowboy — disparos agachados e artes de seleção — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, as mãos espectrais dos disparos agachados foram reposicionadas em direção à origem dos projéteis, mantendo suas trajetórias e caixas de colisão. O final 1,1,1 agachado usa uma nova folha de seis poses com gesto de arminha e camada separada de mãos espectrais horizontais. As duas imagens fornecidas pelo usuário substituem o recorte do idle no ícone central e no retrato grande da Cowboy, com cores originais.
+
+Instalação reproduzível, 505 testes em 42 arquivos, build e diff aprovados; seleção, antiaéreo e o final do combo observados no jogo; aprovação artística final depende do usuário. Envio e CI remota serão conferidos.
+
+
+## Cowboy — laços e antiaéreo agachado — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, o laço baixo 2+4 ganhou 15 unidades de alcance e mantém a volta visível durante a fase ativa e o começo da recuperação. A corda visual do 1+3 foi alongada para acompanhar melhor sua área de contato, inclusive ao carregar. O antiaéreo agachado tem nova folha de seis poses a partir da referência canônica, com as duas mãos humanas e gesto de arminha; as mãos mágicas diagonais existentes aparecem também durante o disparo ativo. Folha anterior substituída e quadros alinhados tecnicamente.
+
+Instalação reproduzível, 503 testes em 42 arquivos, build e diff aprovados. No treino foram observados o antiaéreo, suas mãos espectrais e o laço baixo com a hitbox. A aprovação artística final depende do usuário. Envio e CI remota serão conferidos.
+
+
+## Cowboy — quebra e laço rasteiro — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, a quebra tem uma única tentativa durante a captura: 1 ou 3 escapam do 1+3, e 2 ou 4 escapam do 2+4; um botão de ataque incorreto impede novas tentativas naquela captura. O 2+4 é um laço baixo, mais rápido e de menor alcance, sem carga, que derruba no local. O 1+3 mantém a carga e o arremesso direcional. Duas folhas novas, com poses e corda baixa, foram geradas a partir da referência canônica e preparadas com transparência e alinhamento técnico.
+
+Instalação reproduzível, 501 testes em 42 arquivos e build aprovados; o 2+4, sua caixa de contato e a queda foram conferidos no treino. Avaliação artística final pendente. Envio e CI remota serão conferidos.
+
+
+
+
+
+
+
+## Cowboy — dinamite espectral e projétil da ultimate — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, os disparos dos especiais d,df,f,1 e d,df,f,2 foram substituídos por uma dinamite azul lançada por uma mão espectral, horizontal no fraco e diagonal ascendente no forte. A dinamite detona no ar ao tocar o adversário ou ao terminar o alcance, com explosão azul; os comandos, valores, geometria de colisão, duração da carga e capacidade antiaérea foram preservados. O tamanho visual dos projéteis da ultimate aumentou de 1,12 para 1,45 vezes suas caixas de contato.
+
+Cinco novas folhas foram geradas pela ferramenta integrada de imagem usando a referência canônica da Cowboy e a mão espectral existente: corpo lançando, mãos horizontal e diagonal, dinamite azul e explosão azul simples em estilo de desenho clássico. As fontes magenta estão em `src/assets/sprites/characters/cowboy/source/`; as folhas substituídas foram removidas do checkout. A preparação mantém as cores originais e alinha os sprites ao ponto de apoio. Instalação reproduzível, 497 testes em 42 arquivos, build e diff aprovados; as duas versões e as hitboxes foram conferidas no treino. Aprovação artística final depende do usuário; envio e CI serão verificados.
+
+## Cowboy — escala dos efeitos e agarrão direcional — 2026-11-01
+
+Na branch `codex/fix-sala-treino-agarrao`, os projéteis normais e especiais foram ampliados visualmente, assim como os seis tiros da ultimate. As areias dos chutes ficaram maiores e um pouco mais baixas, próximas ao chão. A escala é apenas visual: hitboxes e regras de combate continuam inalteradas.
+
+O agarrão para trás existente foi confirmado: pressionar para trás ao executar 1+3 ou 2+4 captura essa direção e joga o alvo para o outro lado. Testes cobrem ambos os jogadores e comandos. Instalação reproduzível, 495 testes em 42 arquivos, build e diff aprovados; areias e disparo observados no treino. Avaliação artística final pendente. Implementação enviada em `0f6cec5` com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/41275339959); este registro possui CI própria.
+
+## Cowboy — efeitos clássicos em HD — 2026-11-01
+
+Na `codex/fix-sala-treino-agarrao`, foram refeitas as sete folhas de efeito de tiro normal, tiro à queima-roupa, ultimate, impacto, bloqueio e areias leve/potente. São efeitos originais gerados a partir das referências fornecidas: animação 2D simples, cores chapadas e sem contornos escuros marcados; tiros e impactos azuis, bloqueio e areia brancos. Os quadros foram tecnicamente alinhados e preparados com transparência a partir de fundos magenta. O efeito de impacto azul cobre ataques da Cowboy e acompanha a altura do contato quando disponível; os seis quadros dos tiros especiais são utilizados. Nenhuma mecânica ou hitbox foi alterada.
+
+Conferência no treino: pisão e chute potente com areia junto ao chão, disparo e impacto azul; seis quadros de cada folha também foram inspecionados. Instalação reproduzível, 493 testes em 42 arquivos, build e diff aprovados. A revisão artística final de todos os golpes continua sujeita à aprovação do usuário. Implementação enviada em `de8efd7`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/41274424233); este registro possui CI própria. A branch continua aberta, sem integração autorizada.
+
+## Sala de treino e reação ao agarrão — 2026-11-01
+
+Branch `codex/fix-sala-treino-agarrao`, criada mediante autorização do usuário após o encerramento das branches anteriores. A sala usa os cinco desenhos fornecidos, ampliados com Upscayl em modo high fidelity; somente as bandeiras variam, com chão, paredes e objetos estabilizados. A referência e o procedimento de preparação ficam no repositório. A Cowboy permanece na primeira pose de captura durante a janela de quebra de 15 quadros e, depois, segue a reação do arremesso; as poses com braço estendido deixam de ser exibidas nessa reação.
+
+Instalação reproduzível, 493 testes em 42 arquivos, build e diff aprovados. No jogo foram observados o ciclo da sala e o primeiro quadro da captura; a comparação dos cinco arquivos confirmou piso idêntico, pixel a pixel, e bandeiras diferentes. A validação artística final depende do usuário. Implementação enviada em `4c3d834`, com [CI aprovada](https://github.com/feittosaa/close-combat/actions/runs/41272692795); este registro tem sua própria CI. A branch permanece aberta para revisão e futura integração autorizada.
 
 ## Cowboy e sala de treino animada — 2026-11-01
 
