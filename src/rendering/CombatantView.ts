@@ -48,12 +48,13 @@ export class CombatantView {
       const move = state.fighterId === 'cowboy' && state.attack
         ? getCharacterById(state.fighterId)?.moves.find(candidate => candidate.id === state.attack!.moveId) : undefined;
       const lassoTexture = move?.id === 'throw-24' ? 'cowboy-effect-lasso-low' : 'cowboy-effect-lasso';
-      if (move?.category === 'throw' && state.mode === 'active' && this.scene.textures.exists(lassoTexture)) {
+      const lowLassoVisible = move?.id === 'throw-24' && state.attack && state.attack.elapsedFrames >= (state.attack.startupFrames ?? move.startup) && state.attack.elapsedFrames < (state.attack.startupFrames ?? move.startup) + move.activeFrames + 12;
+      if (move?.category === 'throw' && (state.mode === 'active' || lowLassoVisible) && this.scene.textures.exists(lassoTexture)) {
         const box = createHitbox(state, move);
         const sign = state.facing === 'right' ? 1 : -1;
         const hand = state.x + sign * (move.id === 'throw-24' ? 30 : 58);
         const tip = state.facing === 'right' ? box.x + box.width : box.x;
-        const width = Math.max(1, Math.abs(tip - hand)) * 640 / 491;
+        const width = Math.max(1, Math.abs(tip - hand)) * 640 / 491 * (move.id === 'throw-13' ? 1.15 : 1);
         const left = state.facing === 'right' ? hand - width * 64 / 640 : tip - width * 85 / 640;
         const lasso = this.lasso ??= this.scene.add.image(0,0,lassoTexture,'2').setDepth(11);
         lasso.setTexture(lassoTexture,'2').setOrigin(0,.5).setDisplaySize(width,move.id === 'throw-24' ? 80 : 120)
