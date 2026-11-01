@@ -64,10 +64,10 @@ export class CombatantView {
       if (dustKind && move && dustAge >= 0 && dustAge < 12 && this.scene.textures.exists(`cowboy-effect-dust-${dustKind}`)) {
         const box = createHitbox(state, move);
         const effect = this.dust ??= this.scene.add.image(0, 0, `cowboy-effect-dust-${dustKind}`, '0').setDepth(11);
-        const height = dustKind === 'power' ? box.height * 1.1 : box.height * 1.3;
+        const height = box.height * (dustKind === 'power' ? 1.375 : 1.625);
         effect.setTexture(`cowboy-effect-dust-${dustKind}`, String(Math.min(5, dustKind === 'light' ? 1 + Math.floor(dustAge / 3) : Math.floor(dustAge / 2))))
-          .setOrigin(.5, 1).setDisplaySize(box.width, height)
-          .setPosition(box.x + box.width / 2, state.y + height * (dustKind === 'power' ? .15 : .24))
+          .setOrigin(.5, 1).setDisplaySize(box.width * 1.25, height)
+          .setPosition(box.x + box.width / 2, state.y + height * (dustKind === 'power' ? .15 : .24) + 4)
           .setFlipX(state.facing === 'left').setVisible(true);
       } else this.dust?.setVisible(false);
       return;

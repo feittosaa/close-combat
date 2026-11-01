@@ -36,7 +36,7 @@ export class ProjectileView {
           const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
           const effectFrame = age < 3 ? 0 : 1 + Math.floor((age - 3) / 4) % 5;
           sprite.setTexture(key, String(effectFrame)).setPosition(box.x + box.width / 2, box.y + box.height / 2)
-            .setDisplaySize(box.width, box.height).setFlipX(p.facing === 'left').setVisible(true);
+            .setDisplaySize(box.width * 1.12, box.height * 1.12).setFlipX(p.facing === 'left').setVisible(true);
           continue;
         }
         const y = box.y + box.height / 2;
@@ -54,7 +54,7 @@ export class ProjectileView {
           const effectFrame = getTimedAnimationFrame(effectClips[effect], age);
           sprite.setTexture(key, String(effectFrame))
             .setPosition(box.x + box.width/2,box.y + box.height/2)
-            .setDisplaySize(effect === 'close' ? 110 : 80, effect === 'close' ? 90 : 65)
+            .setDisplaySize(effect === 'close' ? 126 : 96, effect === 'close' ? 104 : 78)
             .setFlipX(p.facing === 'left')
             .setAngle((p.verticalVelocity ?? 0) === 0 ? 0 : Math.sign(p.verticalVelocity!) * (p.facing === 'left' ? -45 : 45)).setVisible(true);
           continue;

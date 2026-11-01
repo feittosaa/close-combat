@@ -888,3 +888,19 @@ it.each([0,1])('mantém a captura por 15 quadros antes do arremesso: jogador %i'
   expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'throw-13',outcome:'hit',damage:75});
   expect(sim.snapshot().characters[1-player].mode).toBe('knockdown');
 });
+
+it.each([0,1])('a direção para trás arremessa com ambos os laços para o outro lado: jogador %i', player => {
+  for (const buttons of [['1','3'], ['2','4']] as AttackButton[][]) {
+    const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
+    const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+    const initial=sim.snapshot().characters;
+    const sign=initial[player].facing==='right'?1:-1;
+    step({direction:'B',buttons:new Set(buttons)});
+    for(let tick=0;tick<80&&!sim.snapshot().hitEvents.length;tick++)step();
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({outcome:'hit',pushbackDirection:sign>0?'left':'right'});
+    for(let tick=0;tick<45;tick++)step();
+    const states=sim.snapshot().characters;
+    expect((states[1-player].x-states[player].x)*sign).toBeLessThan(0);
+  }
+});
