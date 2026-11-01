@@ -1,6 +1,13 @@
 # Close Combat — Pipeline
 
 
+
+## Sala de treino e reação ao agarrão — 2026-11-01
+
+Branch `codex/fix-sala-treino-agarrao`, criada mediante autorização do usuário após o encerramento das branches anteriores. A sala usa os cinco desenhos fornecidos, ampliados com Upscayl em modo high fidelity; somente as bandeiras variam, com chão, paredes e objetos estabilizados. A referência e o procedimento de preparação ficam no repositório. A Cowboy permanece na primeira pose de captura durante a janela de quebra de 15 quadros e, depois, segue a reação do arremesso; as poses com braço estendido deixam de ser exibidas nessa reação.
+
+Instalação reproduzível, 493 testes em 42 arquivos, build e diff aprovados. No jogo foram observados o ciclo da sala e o primeiro quadro da captura; a comparação dos cinco arquivos confirmou piso idêntico, pixel a pixel, e bandeiras diferentes. A validação artística final depende do usuário. Envio e CI da branch devem ser conferidos.
+
 ## Cowboy e sala de treino animada — 2026-11-01
 
 Continuação na `codex/feature-cowboy-zoner`: ultimate aceita a sequência de combo e o comando b,bd,d,df,f,1+2; primeiro disparo é baixo, os seis levantam o alvo e o último causa queda. O laço tem alcance visual ajustado à hitbox, nova recuperação ao errar e janela de 15 quadros para o defensor quebrar com o mesmo comando (1+3 ou 2+4), antes de dano e arremesso. A carga do laço recebeu ajuste técnico de escala, o golpe agachado ficou mais lento, a provocação dura 132 quadros e a repetição infinita de 1 após 3,3,3 na mesma sequência foi bloqueada.

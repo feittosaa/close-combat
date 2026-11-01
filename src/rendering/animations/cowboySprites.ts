@@ -113,16 +113,14 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     return pose(texture, after, state);
   }
   if (state.mode === 'knockdown') {
-    if (state.grounded && state.grabbedStartedFrame !== undefined && frame - state.grabbedStartedFrame < 8) {
-      return pose('grabbed', Math.min(5, Math.floor((frame - state.grabbedStartedFrame) * 6 / 8)), state);
-    }
+    if (state.grounded && state.throwPull) return pose('grabbed', 0, state);
     if (!state.grounded) return pose('air-hurt', 1, state);
     const remaining = state.remainingStateFrames;
     return pose('knockdown', remaining > 12 ? 2 : remaining > 8 ? 3 : remaining > 4 ? 4 : 5, state);
   }
   if (state.mode === 'hitstun') {
     if (state.grounded && state.grabbedStartedFrame !== undefined && frame - state.grabbedStartedFrame < 16) {
-      return pose('grabbed', Math.min(5, Math.floor((frame - state.grabbedStartedFrame) * 6 / 16)), state);
+      return pose('grabbed', 0, state);
     }
     const reaction = state.hitReaction;
     const name = reaction?.level === 'high' ? 'hurt-high' : !state.grounded ? 'air-hurt' : state.crouching ? (reaction?.level === 'low' ? 'crouch-hurt-low' : 'crouch-hurt') : reaction?.level === 'low' ? 'hurt-low' : 'hurt';
