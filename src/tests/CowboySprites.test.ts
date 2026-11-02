@@ -168,10 +168,13 @@ it('holds the initial grab pose throughout the escape window, then falls', () =>
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const captured = {...state, mode:'hitstun' as const, grabbedStartedFrame:40};
   for (let frame = 40; frame < 55; frame++) {
-    expect(getCowboySpritePose(captured, frame)).toMatchObject({ texture:'cowboy-grabbed', frame: 0 });
+    expect(getCowboySpritePose({...captured, grabbedHold:true}, frame)).toMatchObject({ texture:'cowboy-grabbed', frame: 0, scale: 1 });
   }
   const pulled = {...captured, mode:'knockdown' as const, throwPull:{distancePerFrame:1,remainingFrames:5,launchDistance:100,launchFrames:20,liftSpeed:-5}};
-  expect(getCowboySpritePose(pulled,55)).toMatchObject({ texture:'cowboy-grabbed', frame:0 });
+  expect(getCowboySpritePose(pulled,55)).toMatchObject({ texture:'cowboy-grabbed', frame:0, scale:1 });
+  const normal = getCowboySpritePose({...captured, grabbedStartedFrame:undefined},60)!;
+  const held = getCowboySpritePose({...captured, grabbedHold:true},60)!;
+  expect(held.scale).toBeCloseTo(normal.scale * 1.05);
   expect(getCowboySpritePose({...captured, mode:'knockdown'},55)?.texture).toBe('cowboy-knockdown');
 });
 

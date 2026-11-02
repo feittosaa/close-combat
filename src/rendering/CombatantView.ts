@@ -3,6 +3,7 @@ import { cowboyDisplayHeight, cowboyFootAnchor, cowboyFrameSize, getCowboyRoundE
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
+import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
 
 /** Fighters without body artwork retain diagnostic geometry. */
 export class CombatantView {
@@ -20,15 +21,16 @@ export class CombatantView {
     if (presentation) state = presentation.state;
     const grabAge = state.attack?.moveId === 'throw-24' && state.attack.throwConfirmedFrame !== undefined
       ? frame - state.attack.throwConfirmedFrame : -1;
-    if (grabAge >= 0 && grabAge < 8 && this.scene.textures.exists('cowboy-effect-shot')) {
+    const shotIndex = COWBOY_GRAB_SHOTS.findIndex(start => grabAge >= start && grabAge < start + 7);
+    if (shotIndex >= 0 && this.scene.textures.exists('cowboy-effect-shot')) {
       const sign = state.facing === 'right' ? 1 : -1;
-      for (let i = 0; i < 2; i++) {
-        const shot = this.grabShots[i] ??= this.scene.add.image(0, 0, 'cowboy-effect-shot', '0').setDepth(11);
-        const travel = grabAge;
-        shot.setTexture('cowboy-effect-shot', String(Math.min(5, travel)))
-          .setDisplaySize(54, 44).setPosition(state.x + sign * (35 + i * 15 + travel * 3), state.y - 114 + i * 10 + travel * 3)
-          .setFlipX(sign < 0).setAngle(sign * 45).setVisible(true);
-      }
+      const shot = this.grabShots[0] ??= this.scene.add.image(0, 0, 'cowboy-effect-shot', '0').setDepth(11);
+      const travel = grabAge - COWBOY_GRAB_SHOTS[shotIndex];
+      const horizontal = shotIndex === 2;
+      shot.setTexture('cowboy-effect-shot', String(Math.min(5, travel)))
+        .setDisplaySize(horizontal ? 90 : 54, horizontal ? 70 : 44)
+        .setPosition(state.x + sign * (35 + travel * 3), state.y - 114 + (horizontal ? 0 : travel * 3))
+        .setFlipX(sign < 0).setAngle(horizontal ? 0 : sign * 45).setVisible(true);
     } else this.grabShots.forEach(shot => shot.setVisible(false));
     const volley = state.fighterId === 'cowboy' && state.attack?.moveId === 'bulls-eye' && activationFrame === undefined;
     if (volley && this.scene.textures.exists('cowboy-magic-volley')) {

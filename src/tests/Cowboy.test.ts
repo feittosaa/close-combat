@@ -971,7 +971,7 @@ it.each([0,1])('cada laço aceita apenas um botão correto na primeira tentativa
       const health=sim.snapshot().characters[1-player].health;
       step(input(),input('N',button));
       if(wrong.includes(button)) { step(); step(input(),input('N',allowed[0])); }
-      for(let t=0;t<30;t++)step();
+      for(let t=0;t<75;t++)step();
       const target=sim.snapshot().characters[1-player];
       expect(target.health,`${chord.join('+')} e botão ${button}`).toBe(health-(wrong.includes(button)?(chord[0]==='1'?75:85):0));
     }
@@ -989,7 +989,7 @@ it.each([0,1])('o agarrão 2+4 é próximo, rápido e não carrega: jogador %i',
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
     const held:FrameInput={direction:'N',buttons:new Set(['2','4'])};
     const step=()=>sim.stepFrame(player===0?[held,input()]:[input(),held]);
-    let capture=false;for(let t=0;t<55;t++){step(); if(sim.snapshot().characters[1-player].grabbedStartedFrame!==undefined)capture=true;}
+    let capture=false;for(let t=0;t<100;t++){step(); if(sim.snapshot().characters[1-player].grabbedStartedFrame!==undefined)capture=true;}
     expect(capture).toBe(shouldHit);
     expect(sim.snapshot().characters[1-player].health).toBe(shouldHit?915:1000);
     if (shouldHit) expect(sim.snapshot().characters[1-player].x > sim.snapshot().characters[player].x).toBe(player === 0);
@@ -1002,20 +1002,43 @@ it.each([0,1])('o agarrão 2+4 mantém a captura, dispara e lança o alvo: jogad
   const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step=(attack:FrameInput=input())=>sim.stepFrame(player===0?[attack,input()]:[input(),attack]);
   step({direction:'B',buttons:new Set(['2','4'])});
-  let held=false, magic=false, launched=false, landed=false;
+  let held=false, magic=false, horizontal=false, launched=false, landed=false;
   for(let tick=0;tick<110;tick++) {
     step(); const snapshot=sim.snapshot(), attacker=snapshot.characters[player], target=snapshot.characters[1-player];
     if(attacker.attack?.throwCapturedFrame!==undefined && attacker.attack.throwConfirmedFrame===undefined) {
       held=true; expect(target.health).toBe(1000); expect(target.grounded).toBe(true);
     }
     if(getCowboySpriteLayers(attacker,snapshot.frame).some(layer=>layer.texture==='cowboy-magic-down')) magic=true;
+    if(getCowboySpriteLayers(attacker,snapshot.frame).some(layer=>layer.texture==='cowboy-magic-horizontal')) horizontal=true;
+    if (attacker.attack?.throwConfirmedFrame !== undefined && snapshot.frame - attacker.attack.throwConfirmedFrame < 40) {
+      expect(target.grounded).toBe(true);
+      expect(target.health).toBe(1000);
+    }
     if(attacker.attack?.throwConfirmedFrame!==undefined && !target.grounded) {
       launched=true; expect(target.mode).toBe('knockdown');
       expect(Math.sign(target.x-attacker.x)).toBe(player===0?1:-1);
     }
     if(launched && target.grounded && target.mode==='knockdown') landed=true;
   }
-  expect({held,magic,launched,landed}).toEqual({held:true,magic:true,launched:true,landed:true});
+  expect({held,magic,horizontal,launched,landed}).toEqual({held:true,magic:true,horizontal:true,launched:true,landed:true});
+});
+
+it.each([0,1])('amplia somente a pose intermediária da vítima cowboy no agarrão 2+4: jogador %i', player => {
+  const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true,initialDistance:65});
+  const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+  step({direction:'N',buttons:new Set(['2','4'])});
+  let initial=false, middle=false, released=false;
+  for (let tick=0; tick<120; tick++) {
+    step(); const snapshot=sim.snapshot(), target=snapshot.characters[1-player];
+    if (target.grabbedHold && target.grabbedStartedFrame !== undefined) {
+      const age=snapshot.frame-target.grabbedStartedFrame;
+      const pose=getCowboySpriteLayers(target,snapshot.frame)[0];
+      if (age<16) { initial=true; expect(pose.scale).toBe(1); }
+      if (age>=16) { middle=true; expect(pose.scale).toBeCloseTo(.94*.96*.96*1.02*1.05); }
+    }
+    if (middle && !target.grabbedHold) { released=true; break; }
+  }
+  expect({initial,middle,released}).toEqual({initial:true,middle:true,released:true});
 });
 
 it.each([0,1])('permite ao adversário pular durante a preparação do agarrão 2+4: jogador %i', player => {

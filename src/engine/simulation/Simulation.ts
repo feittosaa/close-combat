@@ -14,6 +14,7 @@ import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { flightFramesRemaining } from '../combat/airPhysics';
 import { attackDurationFrames } from '../combat/frameData';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
+import { COWBOY_GRAB_LAUNCH } from '../combat/cowboyGrab';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
 export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number; usedLightPunch?: boolean; usedStandingLightKick?: boolean }
@@ -84,7 +85,7 @@ export class Simulation {
   private recentContacts: CombatLogEntry[] = [];
   private comboHistory: ComboRecord[] = [];
   private volleyPriorHits = new Map<string, number>();
-  private pendingThrow?: { event: HitEvent; remaining: number; previousButtons: Set<AttackButton>; attempted: boolean };
+  private pendingThrow?: { event: HitEvent; remaining: number; previousButtons: Set<AttackButton>; attempted: boolean; confirmed?: boolean };
   private trainingDistance?: number;
   private trainingAutoRestore = false;
   private quietFrames = 0;
@@ -216,18 +217,29 @@ export class Simulation {
       const pressed = [...buttons].filter(button => !pending.previousButtons.has(button));
       const breaksThrow = !pending.attempted && pressed.length > 0 && pressed.every(button => move.input.buttons.includes(button));
       if (pressed.length) pending.attempted = true;
-      if (breaksThrow) {
-        target.mode = 'hitstun'; target.remainingStateFrames = 1; target.grabbedStartedFrame = undefined;
+      if (!attacker.attack || locked(attacker)) {
+        target.remainingStateFrames = 1; target.grabbedStartedFrame = undefined; target.grabbedHold = undefined;
+        this.pendingThrow = undefined;
+      } else if (!pending.confirmed && breaksThrow) {
+        target.mode = 'hitstun'; target.remainingStateFrames = 1; target.grabbedStartedFrame = undefined; target.grabbedHold = undefined;
         this.pendingCommands[targetIndex] = undefined; this.parsers[targetIndex].clear();
         attacker.attack = undefined; attacker.mode = 'neutral'; attacker.remainingStateFrames = 0;
         this.pendingThrow = undefined;
-      } else if (--pending.remaining <= 0) {
+      } else if (--pending.remaining <= 0 && !pending.confirmed && attacker.fighterId === 'cowboy' && move.id === 'throw-24') {
+        pending.confirmed = true; pending.remaining = COWBOY_GRAB_LAUNCH;
+        attacker.attack.throwConfirmedFrame = this.frame;
+        target.remainingStateFrames = 2;
+      } else if (pending.remaining <= 0) {
         confirmedThrow = pending.event;
-        if (attacker.attack) attacker.attack.throwConfirmedFrame = this.frame;
+        if (attacker.attack) attacker.attack.throwConfirmedFrame ??= this.frame;
         target.health = Math.max(0, target.health - confirmedThrow.damage);
+        target.grabbedHold = undefined;
         target.mode = 'hitstun'; target.remainingStateFrames = confirmedThrow.defenderStunFrames;
         this.pendingThrow = undefined;
-      } else pending.previousButtons = new Set(buttons);
+      } else {
+        if (pending.confirmed) target.remainingStateFrames = 2;
+        pending.previousButtons = new Set(buttons);
+      }
     }
     const previousAnimationStates:CharacterAnimationState[]=this.characters.map(c=>({mode:c.mode,stateStartedFrame:c.stateStartedFrame,grounded:c.grounded,crouching:c.crouching,movementDirection:c.movementDirection,facing:c.facing,verticalVelocity:c.verticalVelocity}));
     const previousTransitions=this.characters.map(c=>c.animationTransition?{startedFrame:c.animationTransition.startedFrame,from:c.animationTransition.from}:undefined);
@@ -437,6 +449,7 @@ export class Simulation {
       if (attacker.attack) attacker.attack.throwCapturedFrame = this.frame;
       target.health += event.damage;
       target.mode = 'hitstun'; target.remainingStateFrames = 16; target.grabbedStartedFrame = this.frame;
+      if (move.id === 'throw-24') target.grabbedHold = true;
       this.pendingThrow = { event, remaining: 15, previousButtons: new Set((inputs[targetIndex] ?? neutral()).buttons), attempted: false };
       return false;
     });
