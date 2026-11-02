@@ -1,4 +1,3 @@
-import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { FIGHT_WORLD_SCALE } from '../engine/data/fightFraming';
 import { Simulation } from '../engine/simulation/Simulation';
 import { expect, it, vi } from 'vitest';
@@ -92,22 +91,6 @@ it('acompanha a subida e a descida do salto real com zoom fixo',()=>{
   expect(airborne).toBe(true);
   expect(sim.snapshot().characters[0].grounded).toBe(true);
 });
-
-it('amplia o desenho em mais 10% e deixa as silhuetas em pé próximas das bordas sem mudar o zoom',()=>{
-  expect(shotoSpriteManifest.displaySize!.height).toBeCloseTo(172.8*1.03*1.15*1.1);
-  const config=createGameConfig(1024,576);
-  const layout=createStageLayout(defaultStage,1024,576,488);
-  const positions=[layout.worldWidth/2-config.arena.maxSeparation!/2,layout.worldWidth/2+config.arena.maxSeparation!/2];
-  expect(positions[1]-positions[0]).toBeCloseTo(config.arena.maxSeparation!);
-  const frame=getFightCameraFrame(layout,positions);
-  // Visible neutral body extends at most 140 source pixels from the root, not the transparent cell edge.
-  const silhouetteHalfWidth=140*shotoSpriteManifest.displaySize!.width/768;
-  const left=512+(positions[0]-silhouetteHalfWidth-frame.scrollX-512)*frame.zoom;
-  const right=512+(positions[1]+silhouetteHalfWidth-frame.scrollX-512)*frame.zoom;
-  expect(left).toBeGreaterThan(0);expect(left).toBeLessThan(65);
-  expect(right).toBeLessThan(1024);expect(right).toBeGreaterThan(959);
-});
-
 
 it.each([{width: 2560, height: 1080}, {width: 3840, height: 1080}, {width: 1920, height: 1080}])('preserves fighter and HUD scale in a wide output: $width x $height', output => {
   const viewport = getUiViewport(output);

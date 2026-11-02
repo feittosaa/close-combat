@@ -15,8 +15,7 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
-import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
-import { preloadCowboySprites } from '../rendering/animations/cowboySprites';
+import { getCowboyRoundEndPresentation, preloadCowboySprites } from '../rendering/animations/cowboySprites';
 import { ProjectileView } from '../rendering/ProjectileView';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
@@ -24,6 +23,7 @@ import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
 import { preloadStage, StageView } from '../rendering/stages/StageView';
 import { CombatHud } from '../ui/CombatHud';
+import { preloadFighterIcons } from '../ui/fighterArt';
 import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
@@ -51,6 +51,8 @@ export class FightScene extends Phaser.Scene {
   private hitboxView?: HitboxView;
   private hud?: CombatHud;
   private hudWidth = 0;
+  private resultFloorY = 0;
+  private resultGravity = 0;
   private tutorial?: TutorialSession;
   private tutorialHud?: TutorialHud;
   private training?: TrainingSession;
@@ -152,17 +154,16 @@ export class FightScene extends Phaser.Scene {
   }
 
   preload(): void {
+    preloadFighterIcons(this);
     preloadStage(this, this.selectedStage);
-    preloadShotoSprites(this);
     preloadCowboySprites(this);
   }
 
   create(): void {
-    for (const key of ['shoto-idle', 'shoto-walk', 'shoto-crouch']) {
-      if (this.textures.exists(key)) this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
-    }
     const { width, height } = LOGICAL_VIEW;
     const config = createGameConfig(width, height);
+    this.resultFloorY = config.arena.floorY;
+    this.resultGravity = config.movement.gravity;
     const stageLayout = createStageLayout(this.selectedStage, width, height, config.arena.floorY);
     // The full panorama defines the walls; shared viewport separation still limits lone retreat.
     Object.assign(config.arena,getStageArenaBounds(stageLayout));
@@ -261,7 +262,7 @@ export class FightScene extends Phaser.Scene {
     this.hudWidth = width;
     this.hud?.destroy();
     this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name], this.selectedStage.name,
-      Boolean(this.training), this.mode === 'tutorial' ? 'TUTORIAL BÁSICO' : this.mode === 'combo-tutorial' ? 'TUTORIAL DE COMBOS' : 'TREINO LIVRE');
+      Boolean(this.training), this.mode === 'tutorial' ? 'TUTORIAL BÁSICO' : this.mode === 'combo-tutorial' ? 'TUTORIAL DE COMBOS' : 'TREINO LIVRE', [this.selectedFighter.id,this.opponentFighter.id]);
     this.trainingHud?.destroy(); this.trainingHud = undefined;
     this.inputDisplays.forEach(display => display.destroy()); this.inputDisplays = [];
     if (this.training && !this.tutorial) {
@@ -280,9 +281,15 @@ export class FightScene extends Phaser.Scene {
     if (!snapshot) return;
 
     this.resizeHud(getHudLogicalWidth(this.scale));
-    this.stageView?.sync(snapshot.characters.map(character => character.x), snapshot.characters.map(character => character.y), snapshot.frame);
+    const resultElapsed = snapshot.phase !== 'fight' && snapshot.roundWinnerId && snapshot.roundEndedFrame !== undefined
+      ? snapshot.frame - snapshot.roundEndedFrame : undefined;
+    const cameraCharacters = resultElapsed === undefined ? snapshot.characters : snapshot.characters.map(character =>
+      getCowboyRoundEndPresentation(character, resultElapsed, this.resultFloorY, this.resultGravity).state);
+    this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), snapshot.frame);
     snapshot.characters.forEach((character, index) => {
-      this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined);
+      const result = resultElapsed !== undefined
+        ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed, floorY: this.resultFloorY, gravity: this.resultGravity} : undefined;
+      this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result);
     });
     this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,snapshot.frame,snapshot.hitEvents,snapshot.characters);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);

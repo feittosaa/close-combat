@@ -43,6 +43,8 @@ export interface CharacterState {
   grounded: boolean;
   crouching: boolean;
   tauntStartedFrame?: number;
+  /** Start of uninterrupted, grounded neutral time for the idle animation. */
+  idleStartedFrame?: number;
   attack?: CharacterAttack;
   hitFlashFrames: number;
   hitReaction?: { level: 'low' | 'mid' | 'high'; startedFrame: number };

@@ -17,7 +17,7 @@ const markdown = import.meta.glob<string>(
 );
 
 describe('Project asset and documentation hygiene', () => {
-  it('keeps only consumed images, active preparation sources and canonical references', () => {
+  it('keeps only consumed images and canonical references', () => {
     const images = import.meta.glob<string>(
       ['../../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg,bmp}', '../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg,bmp}', '../../docs/**/*.{png,jpg,jpeg,webp,avif,gif,svg,bmp}'],
       { eager: true, query: '?url', import: 'default' },
@@ -35,15 +35,6 @@ describe('Project asset and documentation hygiene', () => {
       const stage = JSON.parse(source) as { source?: string; layers: { file: string; frames?: string[] }[] };
       if (stage.source) used.add(relativeTo(projectPath(key), stage.source));
       for (const layer of stage.layers) for (const file of [layer.file, ...(layer.frames ?? [])]) used.add(relativeTo(projectPath(key), file));
-    }
-    const alignments = import.meta.glob<string>('../assets/sprites/characters/*/alignment.json', { eager: true, query: '?raw', import: 'default' });
-    for (const [key, source] of Object.entries(alignments)) {
-      const alignment = JSON.parse(source) as { clips: Record<string, { source?: string; sourceFrames?: string[] }> };
-      for (const clip of Object.values(alignment.clips)) {
-        for (const file of [...(clip.source ? [clip.source] : []), ...(clip.sourceFrames ?? [])]) {
-          used.add(relativeTo(projectPath(key), `source/${file}`));
-        }
-      }
     }
     const cowboyAtlases = import.meta.glob('../assets/sprites/characters/cowboy/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
     for (const key of Object.keys(cowboyAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));

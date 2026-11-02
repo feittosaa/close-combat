@@ -1,5 +1,72 @@
 # Close Combat — Pipeline
 
+## Seleção proporcional e retirada visual do Shoto — 2026-11-01
+
+Os retratos de seleção usam altura visível proporcional a 160 cm para Cowboy, 170 cm para Shoto, 175 cm para Puppet e 205 cm para Grappler, com a mesma linha de apoio e compensação das margens transparentes. A escala de todos foi ampliada em 25%, sem limitar a largura dos retratos; a composição foi reposicionada para manter os pés dentro da janela, podendo ficar atrás das caixas de nome. As folhas de animação antigas do Shoto, seus carregadores e testes exclusivamente visuais foram removidos; ele continua jogável com geometria provisória e mantém golpes, combos e efeitos. Os 487 testes restantes, build e diff passaram antes da ampliação; sete testes direcionados de seleção e build passaram depois. A conferência visual no jogo permanece bloqueada pela política do navegador; alterações locais na branch ativa, sem commit, push ou CI remota.
+
+## Artes de seleção e ícones de vida — 2026-11-01
+
+As oito imagens fornecidas foram preparadas com transparência no fundo magenta, preservando as cores da arte. Os novos ícones e retratos substituem os anteriores de Shoto e Cowboy; Grappler e Puppet aparecem na grade e suas artes de corpo inteiro podem ser visualizadas como personagens em desenvolvimento, sem habilitar kits de combate inexistentes. O HUD usa os ícones dos lutadores nas extremidades externas das barras de vida, carregados antes da seleção. A transparência das oito artes foi inspecionada em composição; os 524 testes e o build passaram. A conferência visual no jogo segue bloqueada pela política do navegador do ambiente. Alterações locais na branch ativa com trabalho anterior pendente, sem commit, push ou CI remota.
+
+## Cowboy — limite do chute fraco em combo — 2026-11-01
+
+Após um chute fraco em pé acertar, o chute fraco agachado não pode iniciar enquanto o mesmo combo permanecer ativo. A restrição termina quando o defensor se recupera; os demais golpes e a sequência de três chutes em pé permanecem disponíveis conforme suas regras. Testes cobrem um e três chutes confirmados, retomada após recuperação e ambos os jogadores. Os 523 testes e o build passaram; alterações locais junto do trabalho em andamento, sem commit, push ou CI remota.
+
+## Cowboy — dano da ultimate — em andamento — 2026-11-01
+
+A ultimate causa 360 de dano em seis tiros quando iniciada sem golpes anteriores no mesmo combo. Para cada acerto anterior ao primeiro tiro, reduz 20 do total da rajada, distribuindo o resultado inteiro entre os disparos e limitando o dano mínimo a zero. O histórico de combo conta os tiros mesmo quando chegam ao mínimo de dano. Foram verificados os dois lados, a ultimate isolada, continuações com três e quatro golpes e o cálculo para seis golpes anteriores. Instalação reproduzível, 521 testes, build e diff passaram. Alterações locais na branch ativa, junto do trabalho visual pendente; sem commit, push ou CI remota.
+
+## Cowboy — reação baixa — 2026-11-02
+
+A reação baixa foi ampliada em 1% em relação à escala anterior, sem alterar a colisão. Instalação reproduzível, 488 testes, build e diff aprovados localmente. Conferência visual em jogo ainda pendente: a abertura do navegador foi bloqueada pelo ambiente. Envio para a branch ativa autorizado; CI remota e aprovação artística ainda não verificadas.
+
+## Cowboy — ajuste de guarda e reações — 2026-11-02
+
+A reação a golpe médio foi reduzida em mais 4%, a reação alta em mais 2% e a guarda em pé ampliada em 1%, em relação aos tamanhos anteriores; colisões preservadas. Os 488 testes e o build passaram. A inspeção no jogo permanece pendente por bloqueio do navegador; alterações locais sem commit, push ou CI remota.
+
+## Cowboy — escala do laço, ultimate e reações — 2026-11-02
+
+A apresentação do laço normal ao acertar ou errar e o chute após o acerto foram reduzidos em 2%; a escala do mesmo chute quando usado como especial independente foi preservada. A rajada da ultimate foi reduzida em 1%, a guarda em pé em 2%, a reação média em 4%, a alta em 2% e a baixa ampliada em 1%, sempre em relação às escalas anteriores. As colisões não foram alteradas. Os 488 testes, build e diff passaram; a instalação reproduzível já havia sido concluída. A conferência visual no jogo permanece pendente pelo bloqueio do navegador. Trabalho local na branch ativa, sem commit, push ou CI remota.
+
+## Cowboy — escala de reações e transições — 2026-11-02
+
+A caminhada para trás foi ampliada em 2% e a folha de preparação do laço em 5%. O trecho intermediário compartilhado entre provocação e ativação da ultimate foi ampliado de 1,04 para 1,08, mantendo os ajustes horizontais. A defesa em pé foi reduzida em 4%, a reação média em 6% e as reações baixa e alta em 3%, sem modificar colisões. Os 488 testes, build e diff passaram; instalação reproduzível já havia sido concluída. Conferência visual em jogo permanece pendente pelo bloqueio do navegador; mudanças locais sem commit ou push.
+
+## Cowboy — proporções e carga do laço — 2026-11-01
+
+A caminhada para trás recebeu nova folha com proporções revistas. Corrigida a definição de células da carga do laço, que ainda usava 768 × 768 para uma imagem de células 640 × 640; um teste cobre os seis quadros. O tiro final agachado foi reduzido em 10%, os chutes fraco agachado e forte em pé ampliados em 4% e o chute de afastamento reduzido em 2%. As poses centrais da provocação, compartilhadas com a preparação da ultimate, foram ampliadas em 4% e alinhadas horizontalmente, com ajuste da entrada. Colisões mantidas. Os 488 testes, build e diff passaram; instalação reproduzível já havia sido concluída. Conferência visual no jogo e aprovação artística permanecem pendentes por bloqueio de abertura do navegador; alterações locais, sem commit ou push.
+
+## Cowboy — atualização do chapéu — em andamento — 2026-11-01
+
+O turnaround canônico da Cowboy usa chapéu clássico baixo e arredondado, sem ponta triangular. A pedido do usuário, as 55 folhas corporais devem ser refeitas do zero, preservando ao máximo as poses, os golpes e as proporções; a tentativa anterior de máscara foi abandonada.
+
+Foram preparadas folhas para repouso, deslocamentos e entradas, defesas, parte das viradas, golpes básicos e especiais, combos e reações. Há também folhas novas para vitória, derrota e espera após cinco segundos de repouso. O chute forte usa um quadro de smear antes do contato, seguido de uma pose legível, sem alterar a hitbox. A revisão das folhas identificou um quadro de recuperação do tiro agachado que ocultava um braço e uma postura de recuo do soco fraco que se afastava do original; ambas foram substituídas por outras propostas geradas, mais coerentes com as poses de referência.
+
+Após a captura enviada pelo usuário, a caminhada foi deslocada tecnicamente para trás e sua entrada recebeu uma transição gradual desse deslocamento. Os quadros agachados também foram reposicionados horizontalmente, com transição gradual, aproximando o corpo do centro de colisão. O repouso em pé, o repouso especial e a vitória receberam escala uniforme com a mesma âncora dos pés, aproximando o topo do chapéu da altura de referência. Posteriormente, a escala do agachamento e dos golpes agachados foi reduzida, com compensação entre os dois quadros de repouso para diminuir a oscilação; a fluidez ainda precisa de conferência visual. A conferência visual dessas alterações no jogo ainda está pendente; os 55 testes direcionados de sprites e higiene passaram.
+
+Após esses ajustes, os 60 testes direcionados de sprites e higiene passaram e o build compilou. A espera especial foi verificada com movimento, agachamento e salto: em cada caso o contador retorna a zero e exige novamente cinco segundos em repouso; os 57 testes direcionados da Cowboy passaram.
+
+A folha de derrota recebeu escala uniforme com a âncora dos pés preservada para aproximar sua pose inicial da altura do repouso atualizado. Os testes direcionados de sprites e higiene passaram; a continuidade da queda e a escala ainda precisam de conferência visual no jogo.
+
+O usuário identificou cabeça desproporcional na caminhada para trás, na carga do soco forte e nos dashes terrestres. Essas quatro folhas foram regeneradas do zero e substituídas; a entrada da caminhada para trás e a pose ativa do laço também receberam novas folhas com chapéu clássico. A defesa em pé e os dois chutes aéreos foram reduzidos em 5%; o chute potente foi ampliado em cerca de 3%. O pulo foi reduzido em 5%, com transição na entrada; o soco fraco foi ampliado em 2%. Os socos fortes do combo tiveram o tamanho ajustado novamente a pedido do usuário, preservando o primeiro tiro e a âncora dos pés. Os testes direcionados passaram; a compatibilidade visual com mãos espectrais e hitboxes ainda requer conferência no jogo.
+
+As folhas restantes de laço, dashes aéreos, viradas, provocação e corpo da ultimate foram regeneradas com o chapéu clássico e preparadas com transparência, escala e alinhamento técnico; a saída da provocação foi recortada por pose para não invadir o quadro seguinte. Todas as folhas corporais ativas foram substituídas, mas isso não comprova a qualidade ou continuidade visual no jogo. Quando o round termina com a Cowboy no ar, a apresentação simula sua trajetória até o chão antes da pose de resultado, sem modificar o estado de combate. A instalação reproduzível foi concluída fora do isolamento após EPERM do esbuild; há quatro vulnerabilidades reportadas nas dependências. Após a reinstalação, os 487 testes, o build e a checagem do diff passaram. A leitura dos consumidores e testes confirmou que vitória e derrota são selecionadas no encerramento do round e que a espera alternativa é acionada após 300 quadros neutros, reiniciando após movimento ou provocação; queda e resultado permanecem dependentes da revisão visual. As etapas da provocação e as poses corporais da ultimate foram inspecionadas nas folhas para verificar mãos, chapéu e recorte entre quadros; o ritmo e a continuidade em movimento ainda precisam ser vistos no jogo. Uma inspeção direta dos PNGs confirmou as dimensões esperadas e ausência de pixels opacos nas bordas de células; uma amostra visual do terceiro quadro de cada folha também foi conferida, sem substituir a revisão da animação completa. A abertura do jogo no navegador foi bloqueada pela política do ambiente: faltam a conferência no jogo das transições, proporções, efeitos e hitboxes, e a avaliação artística. Alterações locais na branch ativa, sem commit, push ou CI remota; preservar as demais alterações locais anteriores.
+
+
+## Limpeza de assets sem uso em execução — 2026-11-01
+
+Na `codex/feature-menus-design`, removidas folhas-fonte de personagens e cenário que não são carregadas pelo jogo, junto dos metadados e preparadores que dependiam dessas fontes, além de registros antigos de geração sem consumidores. Foram preservados os quatro turnarounds oficiais, folhas finais carregadas, retratos, efeitos e cenário em uso. A auditoria automatizada exige que as imagens restantes sejam consumidas ou turnarounds canônicos. O histórico Git mantém os arquivos rastreados removidos; folhas-fonte novas ainda não versionadas não estão disponíveis no Git.
+
+Instalação reproduzível, 507 testes em 42 arquivos, build e diff aprovados. A limpeza está local junto das alterações em andamento de referências, seleção e reações; retirada do visual antigo do Shoto e conferência completa dos ajustes da Cowboy continuam pendentes. Sem commit, push ou CI para estas alterações.
+
+
+## Referências, seleção e reações — em andamento — 2026-11-01
+
+Na `codex/feature-menus-design`, foram registradas as novas referências canônicas de grappler, Cowboy, puppet e Shoto. Os retratos de seleção da Cowboy e do Shoto usam as imagens fornecidas; os retratos de corpo inteiro tiveram o fundo magenta removido sem recoloração. A folha corporal do laço baixo foi substituída por poses sem corda integrada e a corda separada ganhou recolhimento; há uma nova folha de queda para a Cowboy durante empurrões.
+
+Os 507 testes e o build passaram; os retratos e uma captura do laço foram observados no jogo. Ainda faltam retirar as folhas antigas e dependências visuais do Shoto preservando seus golpes, conferir a queda e o laço corrigido em ambos os resultados e lados, revisar alinhamento/hitboxes e completar instalação reproduzível e validação final. Alterações locais sem commit ou envio; nenhuma aprovação artística presumida.
+
+
 ## Cowboy — disparos agachados e artes de seleção — 2026-11-01
 
 Na `codex/fix-sala-treino-agarrao`, as mãos espectrais dos disparos agachados foram reposicionadas em direção à origem dos projéteis, mantendo suas trajetórias e caixas de colisão. O final 1,1,1 agachado usa uma nova folha de seis poses com gesto de arminha e camada separada de mãos espectrais horizontais. As duas imagens fornecidas pelo usuário substituem o recorte do idle no ícone central e no retrato grande da Cowboy, com cores originais.

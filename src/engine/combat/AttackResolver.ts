@@ -36,7 +36,7 @@ export class AttackResolver {
       return owner && move ? [createProjectileHitbox(projectile, move)] : [];
     }));
   }
-  resolve(characters: CharacterState[], inputs: readonly FrameInput[], projectiles: readonly ProjectileState[] = []): HitEvent[] {
+  resolve(characters: CharacterState[], inputs: readonly FrameInput[], projectiles: readonly ProjectileState[] = [], damageOverride?: (attackerId: string, targetId: string, move: MoveDefinition, volleyStep: number) => number): HitEvent[] {
     // Capturar todos os contatos antes de aplicar dano mantém trades simétricos.
     const sources = [
       ...characters.map((attacker, index) => ({ attacker, index, attack: attacker.attack, projectile: false, phase: undefined as ProjectileState['phase'], targetId: undefined as string | undefined, volleyStep: undefined as number | undefined })),
@@ -77,7 +77,9 @@ export class AttackResolver {
       const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward'
         ? (attacker.facing === 'right' ? 'left' : 'right') : attacker.facing;
       const chargeSteps = move.charge ? Math.min(move.charge.maxSteps, Math.floor((attack.chargeFrames ?? 0) / move.charge.framesPerStep)) : 0;
-      const damage = Math.round(move.damage * (1 + chargeSteps * (move.charge?.damagePerStep ?? 0)));
+      const damage = !blocked && volleyStep !== undefined && damageOverride
+        ? damageOverride(attacker.characterId, target.characterId, move, volleyStep)
+        : Math.round(move.damage * (1 + chargeSteps * (move.charge?.damagePerStep ?? 0)));
       const event: HitEvent = { attackerId: attacker.characterId, targetId: target.characterId, moveId: move.id,
         stage: phase === 'confirm' ? 'confirm' : phase === 'lighter' ? 'explosion' : undefined,
         ...(volleyStep !== undefined ? { volleyStep } : {}),
