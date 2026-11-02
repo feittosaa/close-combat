@@ -1,11 +1,8 @@
 import { LOGICAL_VIEW, configureUiCamera, getRightAlignedCover, sharpenSceneText } from '../rendering/presentation';
-import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 
-import { getTimedAnimationFrame } from '../rendering/animations/AnimationPlayback';
 import { FighterSelection } from '../ui/FighterSelection';
 import { renderFighterSelection } from '../ui/FighterSelectionView';
 import { renderStageSelection, updateStageSelection } from '../ui/StageSelectionView';
-import idlePortrait from '../assets/sprites/characters/shoto/idle.png';
 import '../ui/menu.css';
 
 import { ControlSettings } from '../ui/ControlSettings';
@@ -31,7 +28,6 @@ export class MenuScene extends Phaser.Scene {
   private stageIndex = 0;
   private get selectedStage() { return selectableStages[this.stageIndex]; }
   private readonly selection = new FighterSelection(playableCharacters.length);
-  private readonly idleImages: SVGImageElement[] = [];
   private get fighterIndex(): number { return this.selection.indices[0]; }
   private set fighterIndex(index: number) { this.selection.select(0, index); }
   private root?: Phaser.GameObjects.Container;
@@ -130,16 +126,9 @@ export class MenuScene extends Phaser.Scene {
       window.removeEventListener('keydown', this.handleKey);
       this.resizeObserver?.disconnect();
       window.removeEventListener('resize', this.alignMenu);
-      this.idleImages.length = 0;
       this.menuElement?.remove(); this.menuElement = undefined;
       this.root = undefined;
     });
-  }
-  update(time: number): void {
-    if (!this.idleImages.length) return;
-    const clip = shotoSpriteManifest.clips.find(entry => entry.key === 'shoto-idle')!;
-    const frame = this.motionPreference?.matches ? clip.start : getTimedAnimationFrame(clip, time * .06);
-    for (const image of this.idleImages) image.setAttribute('x', String(-frame * shotoSpriteManifest.frameSize.width));
   }
   private text(x: number, y: number, label: string, size = 16, color = '#f8f0e4') {
     const text = this.add.text(x, y, label, { fontSize: `${size}px`, fontFamily: 'Arial, sans-serif', fontStyle: size >= 16 ? 'bold' : 'normal', color }); this.root!.add(text); return text;
@@ -163,7 +152,6 @@ export class MenuScene extends Phaser.Scene {
     const { width, height } = LOGICAL_VIEW;
     this.menuElement!.hidden = this.page === 'settings';
     this.chrome?.setVisible(this.menuElement!.hidden);
-    this.idleImages.length = 0;
     this.menuElement!.replaceChildren();
     if (!this.menuElement!.hidden) { this.renderMenu(); return; }
     const titles = { home: '01 / MODOS', fighter: '02 / PERSONAGEM', stage: '03 / CENÁRIO', settings: 'CONFIGURAÇÕES' };
@@ -185,14 +173,6 @@ export class MenuScene extends Phaser.Scene {
     const button = (label: string, className: string, action: () => void): HTMLButtonElement => {
       const element = document.createElement('button'); element.className = className; element.textContent = label;
       element.onclick = action; return element;
-    };
-    const portrait = (crop: string, animated = false): SVGSVGElement => {
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', crop); svg.setAttribute('aria-hidden', 'true');
-      const image = document.createElementNS(svg.namespaceURI, 'image');
-      image.setAttribute('href', idlePortrait); image.setAttribute('width', '6144'); image.setAttribute('height', '768');
-      if (animated) this.idleImages.push(image as SVGImageElement);
-      svg.append(image); return svg;
     };
     const header = node('header', 'arena-header');
     if (this.page === 'home') header.append(node('span', 'arena-brand', 'CLOSE COMBAT'));
@@ -228,7 +208,6 @@ export class MenuScene extends Phaser.Scene {
         opponent: opponentFor(this.fighters[this.fighterIndex].id, this.mode),
         versus: this.mode === 'versus',
         modeTitle: MODES.find(mode => mode.id === this.mode)!.title,
-        portrait,
         refresh: () => this.render(),
         confirm: () => this.confirmFighter(),
         back: () => this.back(),

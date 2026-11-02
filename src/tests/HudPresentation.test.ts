@@ -12,18 +12,32 @@ afterEach(()=>resetControls());
 function mockScene(){
   const texts:{value:string;style:unknown;setText:(s:string)=>unknown}[]=[];
   const commands:unknown[][]=[];
+  const images: {x:number;y:number;key:string;width:number;height:number}[]=[];
   const graphics=Object.fromEntries(['fillStyle','fillRect','fillPoints','strokePoints','lineStyle','lineBetween','strokeRect','clear','destroy'].map(k=>[k,(...args:unknown[])=>{commands.push([k,...args]);return graphics;}]));
   const add={
     graphics:()=>graphics,
     rectangle:()=>graphics,
+    image:(x:number,y:number,key:string)=>{
+      const image={x,y,key,width:0,height:0,setDisplaySize:(width:number,height:number)=>{image.width=width;image.height=height;return image;}};
+      images.push(image);return image;
+    },
     text:(_x:number,_y:number,value:string,style:unknown)=>{
       const text={value,style,setText:(s:string)=>{text.value=s;return text;},setColor:()=>text,setFontSize:()=>text,setOrigin:()=>text,setVisible:()=>text};
       texts.push(text);return text;
     },
     container:()=>{const c={setDepth:()=>c,setScrollFactor:()=>c,destroy:vi.fn()};return c;},
   };
-  return {scene:{add} as unknown as Phaser.Scene,texts,commands};
+  return {scene:{add} as unknown as Phaser.Scene,texts,commands,images};
 }
+it('positions each fighter icon at the outer edge of the health bar',()=>{
+  const {scene,images}=mockScene();
+  const hud=new CombatHud(scene,1024,['Cowboy','Shoto'],'Sala',false,'TREINO LIVRE',['cowboy','shoto']);
+  expect(images.map(({x,y,key,width,height})=>({x,y,key,width,height}))).toEqual([
+    {x:28,y:19,key:'fighter-icon-cowboy',width:38,height:38},
+    {x:996,y:19,key:'fighter-icon-shoto',width:38,height:38},
+  ]);
+  hud.destroy();
+});
 it('barra representa zero, máximo e dano simétrico sem ultrapassar o trilho',()=>{
   expect(healthBarFill(750,1000,28,360,false)).toEqual({x:28,width:270,ratio:.75});
   expect(healthBarFill(750,1000,636,360,true)).toEqual({x:726,width:270,ratio:.75});

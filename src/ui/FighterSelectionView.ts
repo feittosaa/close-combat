@@ -1,5 +1,4 @@
-import cowboyIcon from '../assets/art/characters/cowboy/selection-icon.png';
-import cowboyPortrait from '../assets/art/characters/cowboy/selection-portrait.png';
+import { fighterArt, selectionPortraitSize } from './fighterArt';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FighterSelection, SelectionPlayer } from './FighterSelection';
 
@@ -9,7 +8,6 @@ interface SelectionViewOptions {
   opponent: CharacterDefinition;
   versus: boolean;
   modeTitle: string;
-  portrait: (crop: string, animated?: boolean) => SVGSVGElement;
   refresh: () => void;
   confirm: () => void;
   back: () => void;
@@ -17,20 +15,25 @@ interface SelectionViewOptions {
 
 /** One selection layout for every mode, with mode-specific confirmation only. */
 export function renderFighterSelection(root: HTMLElement, options: SelectionViewOptions): void {
-  const { fighters, selection, versus, portrait } = options;
+  const { fighters, selection, versus } = options;
   const node = (tag: string, className: string, text = ''): HTMLElement => {
     const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
   };
   const button = (label: string, className: string, action: () => void): HTMLButtonElement => {
     const element = document.createElement('button'); element.className = className; element.textContent = label; element.onclick = action; return element;
   };
-  const fighterPortrait = (id: string, small: boolean): SVGSVGElement | HTMLImageElement => {
-    if (id === 'shoto') return portrait(small ? '280 65 180 180' : '130 35 510 710', !small);
+  const fighterPortrait = (id: string, small: boolean): HTMLImageElement => {
     const image = document.createElement('img');
-    image.src = small ? cowboyIcon : cowboyPortrait;
+    image.src = small ? fighterArt[id].icon : fighterArt[id].portrait;
     image.alt = '';
     image.className = 'cowboy-selection-art';
+    if (!small) sizePortrait(image,id);
     return image;
+  };
+  const sizePortrait = (image: HTMLImageElement, id: string): void => {
+    const size = selectionPortraitSize(id);
+    image.style.height = `${size.height}%`;
+    image.style.bottom = `${size.bottom}%`;
   };
   for (const player of [0, 1] as const satisfies readonly SelectionPlayer[]) {
     const entry = player === 1 && !versus ? options.opponent : fighters[selection.indices[player]];
@@ -56,7 +59,23 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
     }
     grid.append(tile);
   });
-  for (let index = fighters.length; index < 9; index++) {
+  const upcoming = Object.entries(fighterArt).filter(([id]) => !fighters.some(fighter => fighter.id === id));
+  for (const [id, art] of upcoming) {
+    const tile = button('', 'arena-portrait', () => {
+      const side = selection.activePlayer === 0 ? 'left' : 'right';
+      const hero = root.querySelector(`.arena-hero.${side} img`) as HTMLImageElement | null;
+      const heading = root.querySelector(`.arena-fighter-name.${side} h1`);
+      const status = root.querySelector('.arena-opponent');
+      if (hero) { hero.src = art.portrait; sizePortrait(hero,id); }
+      if (heading) heading.textContent = `${art.name} · EM DESENVOLVIMENTO`;
+      if (status) status.textContent = `VISUALIZANDO ${art.name.toUpperCase()} · INDISPONÍVEL PARA LUTA`;
+    });
+    tile.setAttribute('aria-label', `${art.name} · em desenvolvimento`);
+    tile.title = 'Ver arte · indisponível para luta';
+    tile.append(fighterPortrait(id, true), node('span', '', art.name));
+    grid.append(tile);
+  }
+  for (let index = fighters.length + upcoming.length; index < 9; index++) {
     const empty = node('div', 'arena-empty');
     empty.setAttribute('aria-hidden', 'true');
     grid.append(empty);

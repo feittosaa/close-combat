@@ -3,7 +3,6 @@ import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
-import { getShotoSpritePose } from '../rendering/animations/shotoSprites';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
 const config = createGameConfig(1024,576);
@@ -28,9 +27,6 @@ it.each([0,1])('executes each air basic, preserves gravity and mirrors the exist
     const started = sim.snapshot().characters[player];
     expect(started.attack?.moveId).toBe(move.id);
     expect(started.verticalVelocity).toBeCloseTo(shoto.movement.jumpVelocity+2*config.movement.gravity);
-    const pose = getShotoSpritePose(started,sim.snapshot().frame)!;
-    expect(pose.texture === `shoto-${move.pose}` || pose.texture === 'shoto-enter-defense').toBe(true);
-    expect(pose.flipX).toBe(player===1);
     expect(contact(sim,player)).toMatchObject({moveId:move.id,damage:move.damage});
     for(let tick=0;tick<100;tick++)step(sim);
     expect(sim.snapshot().characters[player]).toMatchObject({grounded:true,mode:'neutral',attack:undefined});

@@ -4,6 +4,7 @@ import { cowboy } from '../../engine/data/fighters/cowboy';
 import { recoveryFrames } from '../../engine/combat/frameData';
 import { getPhaseAnimationFrame, getTimedAnimationFrame, type AnimationClip } from './AnimationPlayback';
 import { ULTIMATE_ACTIVATION_FRAMES } from '../../engine/combat/ultimateActivation';
+import { flightFramesRemaining } from '../../engine/combat/airPhysics';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/cowboy/*.png', { eager: true, query: '?url', import: 'default' });
 const atlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/cowboy/*.atlas.json', { eager: true, import: 'default' });
@@ -19,9 +20,23 @@ export function preloadCowboySprites(scene: Phaser.Scene): void {
     if (atlas && !scene.textures.exists(key)) scene.load.atlas(key, image, atlas);
   }
 }
-const pose = (name: string, frame: number, state: CharacterState) => ({
-  texture: `cowboy-${name}`, frame, scale: 1, alpha: 1, flipX: state.facing === 'left', offsetY: 0,
-});
+const pose = (name: string, frame: number, state: CharacterState) => {
+  const scales: Record<string, number> = {
+    backward: 1.02, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
+    'ultimate-body': .99, taunt: 1.08, guard: .96 * .98 * 1.01,
+    hurt: .94 * .96 * .96, 'hurt-low': .97 * 1.01 * 1.01, 'hurt-high': .97 * .98 * .98,
+    'crouch-combo-shot': .9, 'crouch-light-kick': 1.04, 'heavy-kick': 1.04, 'push-away': .98,
+  };
+  const horizontal: Record<string, readonly number[]> = {
+    'enter-taunt': [-4, -5, -5, -11, -16, -30],
+    taunt: [-1, -8, -11, 9, 29, 42],
+  };
+  const direction = state.facing === 'left' ? -1 : 1;
+  return {
+    texture: `cowboy-${name}`, frame, scale: scales[name] ?? 1, alpha: 1,
+    flipX: direction === -1, offsetX: (horizontal[name]?.[frame] ?? 0) * cowboyDisplayHeight / 640 * direction, offsetY: 0,
+  };
+};
 const isShotCombo = (state: CharacterState) => state.attack?.moveId === 'heavy-punch' &&
   state.chain?.[0] === 'light-punch' && state.chain.every((id,index) => id === (index ? 'heavy-punch' : 'light-punch'));
 /** Per-action drawing cadence in simulation ticks; contact remains tied to combat. */
@@ -38,6 +53,7 @@ export const cowboyAnimationClips: Readonly<Record<string, AnimationClip>> = {
   magic: {key:'magic',start:0,end:2,frameRate:30,repeat:0},
   magicExit: {key:'magic-exit',start:3,end:5,frameRate:30,repeat:0},
   taunt: {key:'taunt',start:0,end:5,frameRate:10,frameDurations:[6,6,6,6,6,6],repeat:0},
+  idleSpecial: {key:'idle-special',start:0,end:5,frameRate:8,frameDurations:[9,8,12,10,10,9],repeat:0},
   turn: {key:'turn',start:0,end:5,frameRate:24,frameDurations:[2,3,2,3,2,3],repeat:0},
   enterWalk: {key:'enter-walk',start:0,end:5,frameRate:30,frameDurations:[2,2,2,2,2,2],repeat:0},
   hurt: {key:'hurt',start:0,end:5,frameRate:16,frameDurations:[2,3,3,4,5,5],repeat:0},
@@ -68,6 +84,26 @@ export function getCowboyUltimateActivationPose(state: CharacterState, elapsed: 
   const frames = [0,1,2,3,1,2,3,4,5];
   const durations = [12,8,8,8,8,8,8,10,20];
   return pose('taunt', getPhaseAnimationFrame(frames,durations,elapsed - entranceDuration,middleDuration), state);
+}
+
+/** Round-end drawings are presentation only and never change combat geometry. */
+export function getCowboyRoundEndPresentation(state: CharacterState, elapsed: number, floorY: number, gravity: number) {
+  if (state.fighterId !== 'cowboy' || state.grounded) return { state, elapsed };
+  const landing = flightFramesRemaining(state.y, state.verticalVelocity, floorY, gravity);
+  const ticks = Math.min(Math.max(0, elapsed), landing);
+  const y = Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2);
+  const landed = ticks >= landing;
+  return {
+    state: { ...state, y: landed ? floorY : y, grounded: landed, verticalVelocity: landed ? 0 : state.verticalVelocity + gravity * ticks },
+    elapsed: Math.max(0, elapsed - landing),
+  };
+}
+
+export function getCowboyRoundEndPose(state: CharacterState, winner: boolean, elapsed: number) {
+  if (state.fighterId !== 'cowboy' || !state.grounded) return undefined;
+  if (!winner && state.mode === 'knockdown') return pose('defeat', 5, state);
+  const durations = winner ? [10, 9, 14, 12, 11, 24] : [8, 8, 10, 10, 12, 32];
+  return pose(winner ? 'victory' : 'defeat', getPhaseAnimationFrame([0,1,2,3,4,5], durations, Math.max(0, elapsed), 80), state);
 }
 
 export function getCowboySpritePose(state: CharacterState, frame: number) {
@@ -104,8 +140,15 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
       const step = Math.min(2, Math.max(0, (state.chain?.length ?? 1) - 1));
       return pose('light-kick', step * 2 + (elapsed >= startup ? 1 : 0), state);
     }
+    if (move.id === 'heavy-kick') {
+      const frame = elapsed < startup - 1 ? getPhaseAnimationFrame([0,1], [3,1], elapsed, startup - 1) :
+        elapsed < startup ? 2 : elapsed < activeEnd ? 3 :
+          getPhaseAnimationFrame([4,1,0], [1,2,3], elapsed - activeEnd, recovery);
+      return pose('heavy-kick', frame, state);
+    }
     if (move.category === 'throw' && state.attack.hitOutcome === 'hit' && state.attack.throwDirection !== 'backward' && elapsed >= startup + 8) {
-      return pose('push-away', Math.min(5, 2 + Math.floor((elapsed - startup - 8) / 6)), state);
+      const kick = pose('push-away', Math.min(5, 2 + Math.floor((elapsed - startup - 8) / 6)), state);
+      return { ...kick, scale: kick.scale * .98 };
     }
     if (move.category === 'throw' && !state.attack.hasHit && elapsed >= activeEnd) {
       return pose('throw-miss', getPhaseAnimationFrame([0,1,2,3,4,5],[1,1,1,1,1,1],elapsed-activeEnd,recovery), state);
@@ -115,14 +158,16 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const safeStartup = Array.from({length:active}, (_, index) => index);
     const rhythm = attackRhythm[move.id];
     const before = elapsed < startup ? getPhaseAnimationFrame(safeStartup, rhythm.startup, elapsed, startup) : active;
-    const recoveryPoses = move.id === 'push-away' ? [3,1,0] :
-      move.id === 'heavy-kick' ? [3,4,1] : Array.from({length:5-active}, (_, index) => active+index+1);
+    const recoveryPoses = move.id === 'push-away' ? [3,1,0] : Array.from({length:5-active}, (_, index) => active+index+1);
     const after = elapsed >= activeEnd ? getPhaseAnimationFrame(recoveryPoses, rhythm.recovery, elapsed-activeEnd, recovery) : before;
     const combo = isShotCombo(state);
     const texture = combo ? state.chain!.length % 2 === 0 ? 'combo-left-shot' : 'combo-right-shot' : move.category === 'throw' ? 'throw' : move.id;
     return pose(texture, after, state);
   }
   if (state.mode === 'knockdown') {
+    if (state.grounded && state.pushbackMotion && !state.throwFlight) {
+      return pose('push-fall', Math.min(5, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 2)), state);
+    }
     if (state.grounded && state.throwPull) return pose('grabbed', 0, state);
     if (!state.grounded) return pose('air-hurt', 1, state);
     const remaining = state.remainingStateFrames;
@@ -177,6 +222,8 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     if (age >= 88) return pose('exit-taunt', Math.min(5, Math.floor((age - 88) * 6 / 44)), state);
     return age < 44 ? pose('enter-taunt', Math.floor(age * 6 / 44), state) : pose('taunt', Math.floor((age - 44) * 6 / 44), state);
   }
+  const idleAge = frame - (state.idleStartedFrame ?? state.stateStartedFrame);
+  if (idleAge >= 300 && idleAge < 358) return pose('idle-special', sample('idleSpecial', idleAge - 300), state);
   return pose('idle', sample('idle', frame - state.stateStartedFrame), state);
 }
 

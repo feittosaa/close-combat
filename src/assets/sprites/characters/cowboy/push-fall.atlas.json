@@ -1,131 +1,131 @@
 {
   "frames": {
-    "50": {
+    "0": {
       "frame": {
         "x": 0,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "51": {
+    "1": {
       "frame": {
-        "x": 768,
+        "x": 640,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "52": {
+    "2": {
       "frame": {
-        "x": 1536,
+        "x": 1280,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "53": {
+    "3": {
       "frame": {
-        "x": 2304,
+        "x": 1920,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "54": {
+    "4": {
       "frame": {
-        "x": 3072,
+        "x": 2560,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "55": {
+    "5": {
       "frame": {
-        "x": 3840,
+        "x": 3200,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 768,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     }
   },
   "meta": {
-    "image": "backstep.png",
+    "image": "push-fall.png",
     "size": {
-      "w": 4608,
-      "h": 768
+      "w": 3840,
+      "h": 640
     },
     "scale": "1"
   }

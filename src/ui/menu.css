@@ -13,8 +13,9 @@
 .fighter-selection::after { right: 0; background: linear-gradient(215deg,#275353,#172e33); clip-path: polygon(14% 0,100% 0,100% 100%,0 100%); }
 .fighter-selection .arena-header { z-index: 4; inset: 3% 0 auto; justify-content: center; border: 0; text-shadow: .18cqw .18cqw #70271f, 0 .3cqw .5cqw #000; }
 .fighter-selection .arena-step { margin: 0; color: #fff0d2; font: italic 900 2.4cqw/1 Arial,sans-serif; letter-spacing: -.03em; }
-.arena-hero { position: absolute; left: 0; top: 9%; width: 34%; height: 78%; }
+.arena-hero { position: absolute; left: 0; top: 22%; width: 34%; height: 78%; }
 .arena-hero svg, .arena-hero img { width: 100%; height: 100%; object-fit: contain; }
+.arena-hero img { position: absolute; left: 50%; width: auto; max-width: none; transform: translateX(-50%); }
 .arena-hero.right { left: auto; right: 0; }
 .arena-hero.right svg { transform: scaleX(-1); }
 .arena-fighter-name { position: absolute; left: 3%; top: 76%; width: 30%; padding: .8cqw 1.5cqw; box-sizing: border-box; background: #130f14; border-left: .4cqw solid #e9caa2; transform: skew(-8deg); }

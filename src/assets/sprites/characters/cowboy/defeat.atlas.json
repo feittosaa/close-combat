@@ -1,131 +1,131 @@
 {
   "frames": {
-    "84": {
+    "0": {
       "frame": {
         "x": 0,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "85": {
+    "1": {
       "frame": {
-        "x": 1152,
+        "x": 640,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "86": {
+    "2": {
       "frame": {
-        "x": 2304,
+        "x": 1280,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "87": {
+    "3": {
       "frame": {
-        "x": 3456,
+        "x": 1920,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "88": {
+    "4": {
       "frame": {
-        "x": 4608,
+        "x": 2560,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     },
-    "89": {
+    "5": {
       "frame": {
-        "x": 5760,
+        "x": 3200,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       },
       "sourceSize": {
-        "w": 1152,
-        "h": 768
+        "w": 640,
+        "h": 640
       }
     }
   },
   "meta": {
-    "image": "light-punch.png",
+    "image": "defeat.png",
     "size": {
-      "w": 6912,
-      "h": 768
+      "w": 3840,
+      "h": 640
     },
     "scale": "1"
   }
