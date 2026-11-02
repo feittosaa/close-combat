@@ -1,0 +1,132 @@
+{
+  "frames": {
+    "0": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "sourceSize": {
+        "w": 1280,
+        "h": 1280
+      }
+    },
+    "1": {
+      "frame": {
+        "x": 1280,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "sourceSize": {
+        "w": 1280,
+        "h": 1280
+      }
+    },
+    "2": {
+      "frame": {
+        "x": 2560,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "sourceSize": {
+        "w": 1280,
+        "h": 1280
+      }
+    },
+    "3": {
+      "frame": {
+        "x": 0,
+        "y": 1280,
+        "w": 1280,
+        "h": 1280
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "sourceSize": {
+        "w": 1280,
+        "h": 1280
+      }
+    },
+    "4": {
+      "frame": {
+        "x": 1280,
+        "y": 1280,
+        "w": 1280,
+        "h": 1280
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "sourceSize": {
+        "w": 1280,
+        "h": 1280
+      }
+    },
+    "5": {
+      "frame": {
+        "x": 2560,
+        "y": 1280,
+        "w": 1280,
+        "h": 1280
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 1280
+      },
+      "sourceSize": {
+        "w": 1280,
+        "h": 1280
+      }
+    }
+  },
+  "meta": {
+    "image": "enter-taunt.png",
+    "size": {
+      "w": 3840,
+      "h": 2560
+    },
+    "scale": "1"
+  }
+}

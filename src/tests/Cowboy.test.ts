@@ -5,6 +5,7 @@ import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation, volleyShotDamage } from '../engine/simulation/Simulation';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 import { contactHeight, createHitbox, createHurtbox, createHurtZones } from '../engine/collision/combatGeometry';
+import { getCowboySpriteLayers } from '../rendering/animations/cowboySprites';
 
 it('divide a vulnerabilidade em cabeça, barriga e pernas sem mudar sua área total', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
@@ -893,7 +894,7 @@ it.each([0, 1])('mantém confirmação dos projéteis em voo na sequência de lo
 it.each([0,1])('permite quebrar o laço com o mesmo comando durante a captura: jogador %i', player => {
   for (const buttons of [['1','3'],['2','4']] as AttackButton[][]) {
     const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
-    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
+    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:buttons[0] === '2' ? 65 : 100});
     const send=(attacker:FrameInput=input(),defender:FrameInput=input())=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
     send({direction:'N',buttons:new Set(buttons)}); send();
     for(let i=0;i<40 && sim.snapshot().characters[1-player].grabbedStartedFrame===undefined;i++)send();
@@ -977,11 +978,13 @@ it.each([0,1])('cada laço aceita apenas um botão correto na primeira tentativa
   }
 });
 
-it.each([0,1])('o laço 2+4 é rápido, baixo, curto e não carrega: jogador %i', player => {
+it.each([0,1])('o agarrão 2+4 é próximo, rápido e não carrega: jogador %i', player => {
   const low=cowboy.moves.find(move=>move.id==='throw-24')!, normal=cowboy.moves.find(move=>move.id==='throw-13')!;
-  expect(low.hitLevel).toBe('low'); expect(low.startup).toBeLessThan(normal.startup);
+  expect(low.startup).toBe(18);
+  expect(low.hitbox.forward + low.hitbox.width).toBeCloseTo((15 + 40) * 1.2);
+  expect(low.hitLevel).toBe('mid'); expect(low.startup).toBeLessThan(normal.startup);
   expect(low.hitbox.width).toBeLessThan(normal.hitbox.width); expect(low.charge).toBeUndefined();
-  for (const [distance,shouldHit] of [[65,true],[120,true],[160,false]] as const) {
+  for (const [distance,shouldHit] of [[65,true],[120,false],[160,false]] as const) {
     const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
     const held:FrameInput={direction:'N',buttons:new Set(['2','4'])};
@@ -989,6 +992,38 @@ it.each([0,1])('o laço 2+4 é rápido, baixo, curto e não carrega: jogador %i'
     let capture=false;for(let t=0;t<55;t++){step(); if(sim.snapshot().characters[1-player].grabbedStartedFrame!==undefined)capture=true;}
     expect(capture).toBe(shouldHit);
     expect(sim.snapshot().characters[1-player].health).toBe(shouldHit?915:1000);
+    if (shouldHit) expect(sim.snapshot().characters[1-player].x > sim.snapshot().characters[player].x).toBe(player === 0);
     if(shouldHit) expect(sim.snapshot().recentContacts.some(c=>c.event.moveId==='throw-24'&&c.event.outcome==='hit')).toBe(true);
   }
+});
+
+it.each([0,1])('o agarrão 2+4 mantém a captura, dispara e lança o alvo: jogador %i', player => {
+  const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+  const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
+  const step=(attack:FrameInput=input())=>sim.stepFrame(player===0?[attack,input()]:[input(),attack]);
+  step({direction:'B',buttons:new Set(['2','4'])});
+  let held=false, magic=false, launched=false, landed=false;
+  for(let tick=0;tick<110;tick++) {
+    step(); const snapshot=sim.snapshot(), attacker=snapshot.characters[player], target=snapshot.characters[1-player];
+    if(attacker.attack?.throwCapturedFrame!==undefined && attacker.attack.throwConfirmedFrame===undefined) {
+      held=true; expect(target.health).toBe(1000); expect(target.grounded).toBe(true);
+    }
+    if(getCowboySpriteLayers(attacker,snapshot.frame).some(layer=>layer.texture==='cowboy-magic-down')) magic=true;
+    if(attacker.attack?.throwConfirmedFrame!==undefined && !target.grounded) {
+      launched=true; expect(target.mode).toBe('knockdown');
+      expect(Math.sign(target.x-attacker.x)).toBe(player===0?1:-1);
+    }
+    if(launched && target.grounded && target.mode==='knockdown') landed=true;
+  }
+  expect({held,magic,launched,landed}).toEqual({held:true,magic:true,launched:true,landed:true});
+});
+
+it.each([0,1])('permite ao adversário pular durante a preparação do agarrão 2+4: jogador %i', player => {
+  const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+  const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
+  const step=(attacker:FrameInput, defender:FrameInput)=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
+  step({direction:'N',buttons:new Set(['2','4'])},input('U'));
+  for(let tick=0;tick<35;tick++) step(input(),input());
+  expect(sim.snapshot().characters[1-player].health).toBe(1000);
+  expect(sim.snapshot().recentContacts.some(c=>c.event.moveId==='throw-24')).toBe(false);
 });

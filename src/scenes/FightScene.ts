@@ -29,6 +29,9 @@ import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
 import { ArcadeController } from '../engine/combat/ArcadeController';
 import { arcadeOpponents, opponentFor, stageForMatch, type FightSetup, type MatchMode } from './matchSetup';
+import { FightSounds } from '../audio/FightSounds';
+import type { HitEvent } from '../engine/combat/AttackResolver';
+import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 
 export class FightScene extends Phaser.Scene {
   private selectedFighter = defaultCharacter;
@@ -41,6 +44,8 @@ export class FightScene extends Phaser.Scene {
   private selectedStage = defaultStage;
   private stageView?: StageView;
   private simulation?: Simulation;
+  private fightSounds?: FightSounds;
+  private pendingVisualHits: HitEvent[] = [];
   private keyboardInputs: KeyboardInput[] = [];
   private inputHistories = [new InputHistory(), new InputHistory()];
   private commandBuffers: [CommandBuffer, CommandBuffer] = [new CommandBuffer(), new CommandBuffer()];
@@ -92,6 +97,7 @@ export class FightScene extends Phaser.Scene {
     if (!this.training?.paused || !this.simulation) return;
     const snapshot = this.simulation.snapshot();
     this.simulation.stepFrame(this.readInputs(snapshot.characters, snapshot.frame));
+    this.observeFrame(this.simulation.snapshot());
     this.syncViewsAndHud();
   }
   private readonly handleEscape = (event: KeyboardEvent): void => { this.pauseKey(event); };
@@ -170,6 +176,7 @@ export class FightScene extends Phaser.Scene {
     this.stageView = new StageView(this, this.selectedStage, stageLayout);
     this.simulation = new Simulation(config, [this.selectedFighter, this.opponentFighter], this.training
       ? { training: true, initialDistance: this.training.initialDistance } : {});
+    this.fightSounds = new FightSounds(this);
     this.simulation.setTrainingAutoRestore(this.training?.autoRestore ?? false);
     this.keyboardInputs = [new KeyboardInput(getPlayerLayout(0)), new KeyboardInput(getPlayerLayout(1))];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
@@ -217,8 +224,13 @@ export class FightScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     if (!this.simulation) return;
 
-    if (!this.paused && !this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame));
+    if (!this.paused && !this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame), snapshot => this.observeFrame(snapshot));
     this.syncViewsAndHud();
+  }
+
+  private observeFrame(snapshot: SimulationSnapshot): void {
+    this.fightSounds?.observe(snapshot);
+    this.pendingVisualHits.push(...snapshot.hitEvents);
   }
 
   private readInputs(characters: readonly CharacterState[], frame: number): readonly FrameInput[] {
@@ -246,6 +258,8 @@ export class FightScene extends Phaser.Scene {
 
   private resetFight(): void {
     this.simulation?.resetMatch(this.training?.initialDistance);
+    this.fightSounds?.reset();
+    this.pendingVisualHits = [];
     this.bot?.reset();
     this.tutorial?.resetAttempt();
     this.botRound = 0;
@@ -291,7 +305,7 @@ export class FightScene extends Phaser.Scene {
         ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed, floorY: this.resultFloorY, gravity: this.resultGravity} : undefined;
       this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result);
     });
-    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,snapshot.frame,snapshot.hitEvents,snapshot.characters);
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,snapshot.frame,this.pendingVisualHits.splice(0),snapshot.characters);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
     if (this.arcadeInfo) {
@@ -347,6 +361,7 @@ export class FightScene extends Phaser.Scene {
     this.stageView?.destroy();
     this.stageView = undefined;
     this.simulation = undefined;
+    this.fightSounds = undefined;
     this.commandBuffers.forEach((buffer) => buffer.clear());
     this.inputHistories.forEach(history => history.clear());
   }

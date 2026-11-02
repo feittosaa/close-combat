@@ -1,5 +1,6 @@
 import { getPlayerLayout, getSystemControls, keyLabel, resetControls, saveControls, saveSystemControls, type ControlLayouts, type SystemControlLayout, BUTTON_COLORS, getTrainingControls, defaultTrainingControls, saveTrainingControls, validateControlSet, type TrainingControls } from '../input/controlSettings';
 import type { AttackButton } from '../input/types';
+import { loadGraphicsQuality, saveGraphicsQuality, type GraphicsQuality } from './graphicsSettings';
 const actions = [['directions','left','← Esquerda'],['directions','right','→ Direita'],['directions','up','↑ Cima'],['directions','down','↓ Baixo'],['buttons','1','Soco esquerdo'],['buttons','2','Soco direito'],['buttons','3','Chute esquerdo'],['buttons','4','Chute direito']] as const;
 export class ControlSettings {
   static active = false;
@@ -7,6 +8,7 @@ export class ControlSettings {
   private draft: ControlLayouts = [getPlayerLayout(0),getPlayerLayout(1)];
   private systemDraft: SystemControlLayout = getSystemControls();
   private trainingDraft: TrainingControls = getTrainingControls();
+  private graphicsDraft: GraphicsQuality = loadGraphicsQuality();
   private capture?: { player?: number; group?: 'directions'|'buttons'|'ultimate'|'taunt'; action: string; system?: true; training?: true; button: HTMLButtonElement };
   private readonly status = document.createElement('p');
   private readonly previousFocus = document.activeElement as HTMLElement | null;
@@ -17,6 +19,16 @@ export class ControlSettings {
   private render(): void {
     this.root.replaceChildren(); const panel = document.createElement('div'); panel.className = 'controls-panel';
     const title = document.createElement('h1'); title.textContent = 'CONTROLES'; panel.append(title);
+    const graphicsRow = document.createElement('label'); graphicsRow.className = 'control-system-row';
+    const graphicsLabel = document.createElement('span'); graphicsLabel.textContent = 'Qualidade gráfica';
+    const graphicsSelect = document.createElement('select'); graphicsSelect.setAttribute('aria-label', 'Qualidade gráfica');
+    for (const [value, text] of [['low', 'Baixa'], ['high', 'Alta']] as const) {
+      const option = document.createElement('option'); option.value = value; option.textContent = text; graphicsSelect.append(option);
+    }
+    graphicsSelect.value = this.graphicsDraft;
+    graphicsSelect.onchange = () => { this.graphicsDraft = graphicsSelect.value as GraphicsQuality; };
+    graphicsRow.append(graphicsLabel, graphicsSelect); panel.append(graphicsRow);
+    const graphicsHint = document.createElement('p'); graphicsHint.textContent = 'Alterar a qualidade reinicia o jogo e retorna ao menu.'; panel.append(graphicsHint);
     const hint = document.createElement('p'); hint.textContent = 'Escolha uma ação e pressione a nova tecla. Cada tecla pertence a uma única ação nos dois jogadores.'; panel.append(hint);
     const grid = document.createElement('div'); grid.className = 'controls-grid';
     this.draft.forEach((layout,player) => {
@@ -43,15 +55,16 @@ export class ControlSettings {
     ( [['step','Avançar quadro'],['speed','Velocidade'],['reset','Reiniciar treino (atalho)'],['autoLife','Vida automática'],['distance','Distância'],['opponent','Adversário'],['geometry','Caixas de colisão'],['inputs','Histórico de entradas']] as const).forEach(([action,label])=>{const row=document.createElement('div');row.className='control-system-row';const caption=document.createElement('span');caption.textContent=label;const button=document.createElement('button');button.textContent=keyLabel(this.trainingDraft[action]);button.onclick=()=>{this.capture={action,training:true,button};button.textContent='Pressione…';this.status.textContent='Esc cancela a captura.';};row.append(caption,button);panel.append(row);});
     this.status.setAttribute('role','status'); panel.append(this.status);
     const actionsRow = document.createElement('footer');
-    for (const [text,action] of [['Restaurar padrão',()=>{resetControls();this.draft=[getPlayerLayout(0),getPlayerLayout(1)];this.systemDraft=getSystemControls();this.trainingDraft=defaultTrainingControls();this.capture=undefined;this.status.textContent='Padrão restaurado.';this.render();}],['Salvar e voltar',()=>{if(validateControlSet(this.draft,this.systemDraft,this.trainingDraft)&&saveControls(this.draft)&&saveSystemControls(this.systemDraft)&&saveTrainingControls(this.trainingDraft))this.destroy();else this.status.textContent='Escolha teclas válidas, sem repetição nem atalhos reservados.';}]] as const) {
+    for (const [text,action] of [['Restaurar padrão',()=>{resetControls();this.draft=[getPlayerLayout(0),getPlayerLayout(1)];this.systemDraft=getSystemControls();this.trainingDraft=defaultTrainingControls();this.capture=undefined;this.status.textContent='Padrão restaurado.';this.render();}],['Salvar e voltar',()=>{if(!validateControlSet(this.draft,this.systemDraft,this.trainingDraft)){this.status.textContent='Escolha teclas válidas, sem repetição nem atalhos reservados.';return;} const changed=this.graphicsDraft!==loadGraphicsQuality(); if(changed&&!saveGraphicsQuality(this.graphicsDraft)){this.status.textContent='Não foi possível salvar a qualidade gráfica.';return;} if(saveControls(this.draft)&&saveSystemControls(this.systemDraft)&&saveTrainingControls(this.trainingDraft)){if(changed)window.location.reload();else this.destroy();}else this.status.textContent='Não foi possível salvar as configurações.';}]] as const) {
       const button=document.createElement('button');button.textContent=text;button.onclick=action;actionsRow.append(button);
     } panel.append(actionsRow);this.root.append(panel);this.root.querySelector('button')?.focus();
   }
   private readonly onKey=(event:KeyboardEvent):void=> {
     if (event.code==='Tab' && !this.capture) {
-      const buttons=[...this.root.querySelectorAll('button')]; const index=buttons.indexOf(document.activeElement as HTMLButtonElement);
+      const buttons=[...this.root.querySelectorAll<HTMLElement>('button, select')]; const index=buttons.indexOf(document.activeElement as HTMLElement);
       if(event.shiftKey && index===0){event.preventDefault();buttons[buttons.length-1]?.focus();}else if(!event.shiftKey && index===buttons.length-1){event.preventDefault();buttons[0]?.focus();} return;
     }
+    if(!this.capture && event.target instanceof HTMLSelectElement && event.code !== 'Escape') return;
     event.stopImmediatePropagation();
     if(event.code==='Escape'){event.preventDefault(); if(this.capture){this.capture=undefined;this.render();}else this.destroy();return;}
     if(!this.capture || event.repeat)return;

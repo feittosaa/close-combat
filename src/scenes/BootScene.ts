@@ -6,6 +6,7 @@ import { preloadCowboySprites } from '../rendering/animations/cowboySprites';
 import { stages } from '../rendering/stages/stageCatalog';
 import { preloadStage } from '../rendering/stages/StageView';
 import { preloadFighterIcons } from '../ui/fighterArt';
+import { preloadFightSounds } from '../audio/FightSounds';
 
 /** Shared match assets are ready before character selection becomes interactive. */
 export class BootScene extends Phaser.Scene {
@@ -19,6 +20,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-reference', menuReference);
     stages.forEach(stage => preloadStage(this, stage));
     preloadCowboySprites(this);
+    preloadFightSounds(this);
     preloadFighterIcons(this);
   }
   create(): void {

@@ -14,6 +14,7 @@ export interface HitEvent {
   moveId: string;
   damage: number;
   outcome: 'hit' | 'block';
+  perfectBlock?: boolean;
   pushback: number;
   pushbackDirection?: 'left' | 'right';
   attackerRecoveryFrames: number;
@@ -74,7 +75,7 @@ export class AttackResolver {
       }
       const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, attackDurationFrames(ownerMove, owner.attack) - owner.attack.elapsedFrames - 1) : 0) : attackDurationFrames(move, attack) - attack.elapsedFrames - 1;
       const stun = blocked ? move.blockstun : phase === 'confirm' ? move.ultimateSequence!.confirmStun : move.hitstun;
-      const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward'
+      const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward' && !(attacker.fighterId === 'cowboy' && move.id === 'throw-24')
         ? (attacker.facing === 'right' ? 'left' : 'right') : attacker.facing;
       const chargeSteps = move.charge ? Math.min(move.charge.maxSteps, Math.floor((attack.chargeFrames ?? 0) / move.charge.framesPerStep)) : 0;
       const damage = !blocked && volleyStep !== undefined && damageOverride

@@ -28,15 +28,16 @@ export class StageView {
     this.images = [...stage.layers].sort((a, b) => a.depth - b.depth).flatMap((layer) => {
       const key = stageTextureKey(stage, layer);
       const source = scene.textures.get(key).getSourceImage();
-      if (source.width !== stage.referenceSize.width || source.height !== stage.referenceSize.height) {
+      const resolutionScale = source.width / stage.referenceSize.width;
+      if (![1, 2].includes(resolutionScale) || source.height !== stage.referenceSize.height * resolutionScale) {
         throw new Error(`A camada ${stage.id}/${layer.id} deve ter ${stage.referenceSize.width}×${stage.referenceSize.height} pixels.`);
       }
       const placement = getLayerPlacement(layer, layout);
-      const width = source.width * placement.scale;
+      const width = stage.referenceSize.width * placement.scale;
       // Mirrored copies extend the scenery past the arena walls without moving them.
       const images = [-1, 0, 1].map(side => {
         const image = scene.add.image(placement.x + side * width, placement.y, key).setOrigin(0, 0)
-          .setScale(placement.scale).setDepth(layer.depth).setScrollFactor(layer.parallax, 1);
+          .setScale(placement.scale / resolutionScale).setDepth(layer.depth).setScrollFactor(layer.parallax, 1);
         if (side !== 0) image.setFlipX(true);
         return image;
       });
