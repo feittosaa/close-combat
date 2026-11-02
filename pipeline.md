@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Menus e áudio — 2026-11-02
+
+Branch `codex/feature-menus-audio` criada a partir de `origin/development` para o trabalho de menus e áudio. Primeiro ajuste: o som de aterrissagem continua acionado no contato com o chão, mas as três variantes começam cerca de 25 ms antes dos picos medidos (0,300 s, 0,411 s e 0,535 s), sem modificar os arquivos originais. Instalação reproduzível, 530 testes, build e diff passaram localmente; a avaliação auditiva no jogo permanece pendente. Demais mudanças de menus e áudio aguardam definição.
+
 ## Cowboy — sincronia de áudio e tamanho na captura — 2026-11-02
 
 Os sons de impacto forte começam por variante perto dos picos medidos, preservando cerca de 25 ms de ataque; os arquivos originais permanecem intactos. O saque da pistola ocorre 36 quadros (0,6 s) após o início da provocação ou da ultimate e é cancelado se a ação for interrompida. A reação média foi ampliada em 2%. Durante o segundo agarrão da Cowboy, a vítima Cowboy mantém a escala original nos quadros iniciais e aumenta 5% no restante da captura, sem alterar colisão; o tamanho da atacante foi preservado. Instalação reproduzível, 527 testes, build e diff passaram. O usuário solicitou envio, integração em `development` e encerramento da branch após a validação. A conferência visual e sonora no jogo segue pendente pelo bloqueio anterior do navegador.
