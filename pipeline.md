@@ -1,5 +1,21 @@
 # Close Combat — Pipeline
 
+## Cowboy — sincronia de áudio e tamanho na captura — 2026-11-02
+
+Os sons de impacto forte começam por variante perto dos picos medidos, preservando cerca de 25 ms de ataque; os arquivos originais permanecem intactos. O saque da pistola ocorre 36 quadros (0,6 s) após o início da provocação ou da ultimate e é cancelado se a ação for interrompida. A reação média foi ampliada em 2%. Durante o segundo agarrão da Cowboy, a vítima Cowboy mantém a escala original nos quadros iniciais e aumenta 5% no restante da captura, sem alterar colisão; o tamanho da atacante foi preservado. Instalação reproduzível, 527 testes, build e diff passaram. O usuário solicitou envio, integração em `development` e encerramento da branch após a validação. A conferência visual e sonora no jogo segue pendente pelo bloqueio anterior do navegador.
+
+## Novos áudios de combate — 2026-11-02
+
+Novos sons de impacto forte, contra-ataque, pouso, laço, empurrão, saque da pistola, ativação de ultimate, aviso de dez segundos, nocaute, tempo esgotado e vitória foram integrados aos eventos correspondentes. O saque toca na provocação e na ativação da ultimate da Cowboy. A quinta variação de acerto leve usa `hit_6`; os pesos são 50/25/15/5/5. Grupos com até quatro variações mantêm 50/25/15/10 normalizados. Os dois sons de combo breaker ficam carregados e reservados até a mecânica existir; o arquivo de origem com nome `combro_breaker_2` foi copiado como `combo_breaker_2`. Instalação reproduzível, 520 testes, build e diff passaram. Conferência auditiva no jogo pendente pelo bloqueio anterior da abertura do navegador; alterações locais na branch ativa, sem commit, push ou CI remota nesta revisão.
+
+## Cowboy — pose ao sofrer agarrão — 2026-11-02
+
+A interpretação anterior da imagem foi corrigida pelo usuário: o ajuste pretendido é na vítima durante a captura, após os primeiros quadros. Os resultados de validação desta seção referem-se à revisão anterior.
+
+## Cowboy — sequência do segundo agarrão — 2026-11-02
+
+A caminhada frontal foi reduzida em 1% e as poses do segundo agarrão ampliadas em 1%. Após os 15 quadros de quebra, o agarrão 2+4 mantém o adversário capturado por mais 40 quadros: mãos diagonais disparam duas vezes, desaparecem, dão lugar a mãos horizontais e um terceiro tiro antecede o lançamento e a queda. O dano permanece 85, acima dos 75 do laço 1+3; o dano é aplicado ao final da captura. Os sons dos três tiros são independentes. Instalação reproduzível, 516 testes, build e diff passaram. A conferência visual e sonora no jogo permanece pendente pelo bloqueio anterior da abertura do navegador; alterações locais, sem commit, push ou CI remota nesta revisão.
+
 ## Entrega da branch de menus e Cowboy — 2026-11-02
 
 O usuário solicitou o envio do conjunto atual e a integração em `development`, preservando `codex/feature-menus-design` para continuação. A instalação reproduzível, 515 testes, build e diff passaram localmente. Conferência no jogo das alterações visuais e sonoras permanece pendente após bloqueio do navegador pela revisão automática; não há aprovação artística ou de mixagem inferida dos testes. O resultado da CI remota e da integração deve ser verificado no remoto.

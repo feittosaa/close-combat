@@ -51,6 +51,7 @@ export interface CharacterState {
   hitFlashFrames: number;
   hitReaction?: { level: 'low' | 'mid' | 'high'; startedFrame: number };
   grabbedStartedFrame?: number;
+  grabbedHold?: boolean;
   chain?: string[];
   /** Consecutive confirmed hits in an authored projectile sequence. */
   projectileComboHits?: number;

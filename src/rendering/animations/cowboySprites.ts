@@ -29,9 +29,10 @@ export function preloadCowboySprites(scene: Phaser.Scene): void {
 }
 const pose = (name: string, frame: number, state: CharacterState) => {
   const scales: Record<string, number> = {
-    backward: 1.02, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
+    backward: 1.02, walk: .99, 'enter-walk': .99, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
+    'throw-low': 1.01 * 1.05, 'throw-close-anticipation': 1.01,
     'ultimate-body': .99, taunt: 1.08, guard: .96 * .98 * 1.01,
-    hurt: .94 * .96 * .96, 'hurt-low': .97 * 1.01 * 1.01, 'hurt-high': .97 * .98 * .98,
+    hurt: .94 * .96 * .96 * 1.02, 'hurt-low': .97 * 1.01 * 1.01, 'hurt-high': .97 * .98 * .98,
     'dash-forward': .97, 'dash-backward': .97, 'air-dash-forward': .97, 'air-dash-backward': .97,
     'combo-left-shot': .98, 'combo-right-shot': .98,
     'crouch-combo-shot': .9, 'crouch-light-kick': 1.04, 'heavy-kick': 1.04, 'push-away': .98,
@@ -128,7 +129,7 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
       if (elapsed < startup) return pose('throw-close-anticipation', getPhaseAnimationFrame([0,1,2,3,4,5],[3,4,4,3,2,2],elapsed,startup), state);
       const shotAge = state.attack.throwConfirmedFrame === undefined ? -1 : frame - state.attack.throwConfirmedFrame;
       const grabFrame = !state.attack.hasHit ? getPhaseAnimationFrame([1,5],[1,2],elapsed-startup,move.activeFrames + recovery) :
-        shotAge < 0 ? 2 : shotAge < 4 ? 3 : shotAge < 10 ? 4 : 5;
+        shotAge < 8 ? 2 : shotAge < 24 ? 3 : shotAge < 34 ? 4 : 5;
       return pose('throw-low', grabFrame, state);
     }
     if (move.category === 'throw' && !state.attack.chargeReleased && elapsed === startup - 1 && (state.attack.chargeFrames ?? 0) >= startup - 1) {
@@ -196,7 +197,8 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const name = reaction?.level === 'high' ? 'hurt-high' : !state.grounded ? 'air-hurt' : state.crouching ? (reaction?.level === 'low' ? 'crouch-hurt-low' : 'crouch-hurt') : reaction?.level === 'low' ? 'hurt-low' : 'hurt';
     const age = frame - (reaction?.startedFrame ?? state.stateStartedFrame);
     const index = sample('hurt', Math.max(0, age));
-    return pose(name, name === 'hurt-low' ? Math.min(5, index + 1) : name === 'hurt-high' ? Math.min(5, index + 2) : index, state);
+    const reactionPose = pose(name, name === 'hurt-low' ? Math.min(5, index + 1) : name === 'hurt-high' ? Math.min(5, index + 2) : index, state);
+    return state.grabbedHold ? {...reactionPose, scale: reactionPose.scale * 1.05} : reactionPose;
   }
   const transition = state.animationTransition;
   const elapsed = Math.max(0, frame - (transition?.startedFrame ?? state.stateStartedFrame));
@@ -249,11 +251,14 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
   if (!character || !state.attack) return character ? [character] : [];
   const move = cowboy.moves.find(candidate => candidate.id === state.attack!.moveId);
   if (move?.id === 'throw-24' && state.attack.hasHit) {
-    const captureAge = frame - (state.attack.throwCapturedFrame ?? frame);
     const shotAge = state.attack.throwConfirmedFrame === undefined ? -1 : frame - state.attack.throwConfirmedFrame;
-    if (captureAge >= 9 && shotAge < 10) {
-      const armFrame = shotAge < 0 ? captureAge < 12 ? 0 : 1 : shotAge < 5 ? 2 : shotAge < 8 ? 4 : 5;
+    if (shotAge >= 0 && shotAge < 24) {
+      const armFrame = shotAge < 4 ? 0 : shotAge < 8 ? 1 : shotAge < 20 ? 2 : shotAge < 22 ? 4 : 5;
       return [{...pose('magic-down', armFrame, state), scale:1.25, offsetY:-30}, character];
+    }
+    if (shotAge >= 24 && shotAge < 40) {
+      const armFrame = shotAge < 28 ? 0 : shotAge < 34 ? 1 : shotAge < 38 ? 2 : 5;
+      return [{...pose('magic-horizontal', armFrame, state), scale:1.25}, character];
     }
   }
   if (!move?.projectile) return [character];

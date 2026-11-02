@@ -176,7 +176,7 @@ export class FightScene extends Phaser.Scene {
     this.stageView = new StageView(this, this.selectedStage, stageLayout);
     this.simulation = new Simulation(config, [this.selectedFighter, this.opponentFighter], this.training
       ? { training: true, initialDistance: this.training.initialDistance } : {});
-    this.fightSounds = new FightSounds(this);
+    this.fightSounds = new FightSounds(this, Boolean(this.training));
     this.simulation.setTrainingAutoRestore(this.training?.autoRestore ?? false);
     this.keyboardInputs = [new KeyboardInput(getPlayerLayout(0)), new KeyboardInput(getPlayerLayout(1))];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
