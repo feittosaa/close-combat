@@ -27,6 +27,19 @@ it('plays lasso and landing sounds once at their corresponding transitions', () 
   expect(play.mock.calls.filter(call=>call[0]==='sfx-landing_1')).toHaveLength(1);
 });
 
+it.each([[.1, 'landing_1', .275], [.6, 'landing_2', .386], [.9, 'landing_3', .510]] as const)(
+  'aligns landing variant %s to its measured impact', (random, name, seek) => {
+    vi.spyOn(Math, 'random').mockReturnValue(random);
+    const play = vi.fn();
+    const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never);
+    const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
+    snapshot.characters[0].grounded = false; sounds.observe(snapshot);
+    snapshot.characters[0].grounded = true; sounds.observe(snapshot); sounds.observe(snapshot);
+    expect(play).toHaveBeenCalledOnce();
+    expect(play).toHaveBeenCalledWith(`sfx-${name}`, {volume:1, seek});
+  },
+);
+
 it('plays taunt, ultimate and round cues once, with the victory cue delayed', () => {
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
