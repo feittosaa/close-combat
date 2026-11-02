@@ -5,18 +5,25 @@ import { recoveryFrames } from '../../engine/combat/frameData';
 import { getPhaseAnimationFrame, getTimedAnimationFrame, type AnimationClip } from './AnimationPlayback';
 import { ULTIMATE_ACTIVATION_FRAMES } from '../../engine/combat/ultimateActivation';
 import { flightFramesRemaining } from '../../engine/combat/airPhysics';
+import { loadGraphicsQuality } from '../../ui/graphicsSettings';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/cowboy/*.png', { eager: true, query: '?url', import: 'default' });
 const atlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/cowboy/*.atlas.json', { eager: true, import: 'default' });
+const highImages = import.meta.glob<string>('../../assets/sprites/characters/cowboy/high/*.png', { eager: true, query: '?url', import: 'default' });
+const highAtlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/cowboy/high/*.atlas.json', { eager: true, import: 'default' });
+const quality = loadGraphicsQuality();
+export const cowboyFrameSize = quality === 'high' ? 1280 : 640;
 
 /** Sprite positions remain authored in the source grid and anchored to the feet. */
 export const cowboyFootAnchor = 465 / 640;
 export const cowboyDisplayHeight = 225 * 1.6 / 1.85 * 640 / 512;
 export function preloadCowboySprites(scene: Phaser.Scene): void {
-  for (const [path, image] of Object.entries(images)) {
+  const selectedImages = quality === 'high' ? highImages : images;
+  const selectedAtlases = quality === 'high' ? highAtlases : atlases;
+  for (const [path, image] of Object.entries(selectedImages)) {
     const name = path.split('/').pop()!.replace('.png', '');
     const key = `cowboy-${name}`;
-    const atlas = atlases[path.replace(/\.png$/, '.atlas.json')];
+    const atlas = selectedAtlases[path.replace(/\.png$/, '.atlas.json')];
     if (atlas && !scene.textures.exists(key)) scene.load.atlas(key, image, atlas);
   }
 }
@@ -25,6 +32,8 @@ const pose = (name: string, frame: number, state: CharacterState) => {
     backward: 1.02, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
     'ultimate-body': .99, taunt: 1.08, guard: .96 * .98 * 1.01,
     hurt: .94 * .96 * .96, 'hurt-low': .97 * 1.01 * 1.01, 'hurt-high': .97 * .98 * .98,
+    'dash-forward': .97, 'dash-backward': .97, 'air-dash-forward': .97, 'air-dash-backward': .97,
+    'combo-left-shot': .98, 'combo-right-shot': .98,
     'crouch-combo-shot': .9, 'crouch-light-kick': 1.04, 'heavy-kick': 1.04, 'push-away': .98,
   };
   const horizontal: Record<string, readonly number[]> = {
@@ -116,9 +125,11 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     const activeEnd = startup + move.activeFrames;
     const recovery = recoveryFrames(move, state.attack);
     if (move.id === 'throw-24') {
-      const lowFrame = elapsed < startup ? getPhaseAnimationFrame([0,1],[2,3],elapsed,startup) :
-        elapsed < activeEnd ? 2 : getPhaseAnimationFrame([3,4,5],[1,2,3],elapsed-activeEnd,recovery);
-      return pose('throw-low', lowFrame, state);
+      if (elapsed < startup) return pose('throw-close-anticipation', getPhaseAnimationFrame([0,1,2,3,4,5],[3,4,4,3,2,2],elapsed,startup), state);
+      const shotAge = state.attack.throwConfirmedFrame === undefined ? -1 : frame - state.attack.throwConfirmedFrame;
+      const grabFrame = !state.attack.hasHit ? getPhaseAnimationFrame([1,5],[1,2],elapsed-startup,move.activeFrames + recovery) :
+        shotAge < 0 ? 2 : shotAge < 4 ? 3 : shotAge < 10 ? 4 : 5;
+      return pose('throw-low', grabFrame, state);
     }
     if (move.category === 'throw' && !state.attack.chargeReleased && elapsed === startup - 1 && (state.attack.chargeFrames ?? 0) >= startup - 1) {
       return pose('charge-throw', Math.floor(((state.attack.chargeFrames ?? 0) - startup + 1) / 5) % 6, state);
@@ -129,7 +140,11 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
       return pose('charge-heavy-punch', frames[Math.floor(((state.attack.chargeFrames ?? 0) - startup) / 8) % frames.length], state);
     }
     if (move.screenVolley) {
-      return pose('ultimate-body', Math.min(5, Math.max(0, Math.floor((elapsed - startup) / move.screenVolley.interval))), state);
+      const age = Math.max(0, elapsed - startup);
+      const shot = Math.min(5, Math.floor(age / move.screenVolley.interval));
+      const drawing = (shot === 1 || shot === 3) && age % move.screenVolley.interval < 2
+        ? shot : [0,2,2,4,4,5][shot];
+      return pose('ultimate-body', drawing, state);
     }
     if (move.id === 'quick-shot' || move.id === 'heavy-shot') {
       const bodyFrame = elapsed < startup ? getPhaseAnimationFrame([0,1],[2,3],elapsed,startup) :
@@ -223,7 +238,8 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     return age < 44 ? pose('enter-taunt', Math.floor(age * 6 / 44), state) : pose('taunt', Math.floor((age - 44) * 6 / 44), state);
   }
   const idleAge = frame - (state.idleStartedFrame ?? state.stateStartedFrame);
-  if (idleAge >= 300 && idleAge < 358) return pose('idle-special', sample('idleSpecial', idleAge - 300), state);
+  const idleCycle = idleAge % 600;
+  if (idleAge >= 600 && idleCycle < 58) return pose('idle-special', sample('idleSpecial', idleCycle), state);
   return pose('idle', sample('idle', frame - state.stateStartedFrame), state);
 }
 
@@ -232,6 +248,14 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
   const character = getCowboySpritePose(state, frame);
   if (!character || !state.attack) return character ? [character] : [];
   const move = cowboy.moves.find(candidate => candidate.id === state.attack!.moveId);
+  if (move?.id === 'throw-24' && state.attack.hasHit) {
+    const captureAge = frame - (state.attack.throwCapturedFrame ?? frame);
+    const shotAge = state.attack.throwConfirmedFrame === undefined ? -1 : frame - state.attack.throwConfirmedFrame;
+    if (captureAge >= 9 && shotAge < 10) {
+      const armFrame = shotAge < 0 ? captureAge < 12 ? 0 : 1 : shotAge < 5 ? 2 : shotAge < 8 ? 4 : 5;
+      return [{...pose('magic-down', armFrame, state), scale:1.25, offsetY:-30}, character];
+    }
+  }
   if (!move?.projectile) return [character];
   if (move.screenVolley) return [character];
   const elapsed = state.attack.elapsedFrames;

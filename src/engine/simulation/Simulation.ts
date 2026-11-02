@@ -53,6 +53,7 @@ const permitsStrength = (sequence: CharacterState['hitSequence'], move: MoveDefi
 const locked = (state: CharacterState): boolean => state.mode === 'hitstun' || state.mode === 'blockstun' || state.mode === 'knockdown';
 const axis = (input: FrameInput): number => input.direction.endsWith('F') ? 1 : input.direction.endsWith('B') ? -1 : 0;
 const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
+const PERFECT_BLOCK_WINDOW = 3;
 
 /** Deterministic combat. Commands, resources and allowed routes belong to each fighter's data. */
 export class Simulation {
@@ -91,6 +92,8 @@ export class Simulation {
   private ultimateHeld = [false, false];
   private tauntHeld = [false, false];
   private previousAxis = [0, 0];
+  private guardHeld = [false, false];
+  private guardStarted = [-Infinity, -Infinity];
   private tapAxis = [0, 0];
   private tapFrame = [-Infinity, -Infinity];
   private dashFrames = [0, 0];
@@ -103,8 +106,8 @@ export class Simulation {
     this.characters = this.createCharacters();
     this.resolver = new AttackResolver((fighterId, moveId) => definitions.find(fighter => fighter.id === fighterId)?.moves.find(move => move.id === moveId));
   }
-  advance(delta: number, read: (characters: readonly CharacterState[], frame: number) => readonly FrameInput[]): void {
-    this.clock.advance(delta, () => this.step(read(this.characters, this.frame)));
+  advance(delta: number, read: (characters: readonly CharacterState[], frame: number) => readonly FrameInput[], afterStep?: (snapshot: SimulationSnapshot) => void): void {
+    this.clock.advance(delta, () => { this.step(read(this.characters, this.frame)); if (afterStep) afterStep(this.snapshot()); });
   }
   stepFrame(inputs: readonly FrameInput[]): void { this.clock.reset(); this.step(inputs); }
   snapshot(): SimulationSnapshot {
@@ -119,6 +122,7 @@ export class Simulation {
   clearInputHistory(): void {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
     this.jumpHeld.fill(false); this.ultimateHeld.fill(false); this.tauntHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
+    this.guardHeld.fill(false); this.guardStarted.fill(-Infinity);
     this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
   }
   isMatchOver(): boolean { return this.phase === 'match-over'; }
@@ -219,6 +223,7 @@ export class Simulation {
         this.pendingThrow = undefined;
       } else if (--pending.remaining <= 0) {
         confirmedThrow = pending.event;
+        if (attacker.attack) attacker.attack.throwConfirmedFrame = this.frame;
         target.health = Math.max(0, target.health - confirmedThrow.damage);
         target.mode = 'hitstun'; target.remainingStateFrames = confirmedThrow.defenderStunFrames;
         this.pendingThrow = undefined;
@@ -229,6 +234,13 @@ export class Simulation {
     const previousX = this.characters.map(character => character.x);
     const attackingAtInput = this.characters.map(character => Boolean(character.attack));
     const lockedAtInput = this.characters.map(character => locked(character) || this.heldByUltimate(character));
+    this.characters.forEach((character, index) => {
+      const direction = (inputs[index] ?? neutral()).direction;
+      const held = direction === 'B' || direction === 'DB';
+      if (held && !this.guardHeld[index] && !lockedAtInput[index] && !character.attack) this.guardStarted[index] = this.frame;
+      if (!held) this.guardStarted[index] = -Infinity;
+      this.guardHeld[index] = held;
+    });
     // Ler ambos os comandos antes de avaliar guarda evita viés por ordem dos jogadores.
     const commands = this.characters.map((character, index) => {
       if (character.wakeupInvulnerabilityFrames) {
@@ -409,11 +421,20 @@ export class Simulation {
       this.volleyPriorHits.set(attackerId, priorHits);
       return volleyShotDamage(move, priorHits, shot);
     });
+    for (const event of this.lastHitEvents) {
+      const index = this.characters.findIndex(character => character.characterId === event.targetId);
+      if (event.outcome === 'block' && !lockedAtInput[index] && this.frame - this.guardStarted[index] < PERFECT_BLOCK_WINDOW) {
+        event.perfectBlock = true;
+        this.guardStarted[index] = -Infinity;
+      }
+    }
     this.lastHitEvents = this.lastHitEvents.filter(event => {
       const attackerIndex = this.characters.findIndex(c => c.characterId === event.attackerId);
       const move = this.move(attackerIndex, event.moveId);
       if (this.characters[attackerIndex].fighterId !== 'cowboy' || move?.category !== 'throw' || event.outcome !== 'hit' || this.pendingThrow) return true;
       const targetIndex = 1 - attackerIndex, target = this.characters[targetIndex];
+      const attacker = this.characters[attackerIndex];
+      if (attacker.attack) attacker.attack.throwCapturedFrame = this.frame;
       target.health += event.damage;
       target.mode = 'hitstun'; target.remainingStateFrames = 16; target.grabbedStartedFrame = this.frame;
       this.pendingThrow = { event, remaining: 15, previousButtons: new Set((inputs[targetIndex] ?? neutral()).buttons), attempted: false };
@@ -574,8 +595,10 @@ export class Simulation {
       }
       const gain = this.definitions[attackerIndex].rage;
       const received = this.definitions[targetIndex].rage;
-      if (gain && (!attacker.ultimateUsed || this.options.training) && !this.move(attackerIndex, event.moveId)?.rageCost) attacker.rage = Math.min(attacker.maxRage, attacker.rage + (event.outcome === 'hit' ? gain.onHit : gain.onBlock));
-      if (received && (!target.ultimateUsed || this.options.training) && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.outcome === 'hit' ? received.onDamage : received.onBlock));
+      if (gain && event.stage !== 'confirm' && event.outcome === 'hit' && sourceMove.category !== 'ultimate') {
+        attacker.rage = Math.min(attacker.maxRage, attacker.rage + gain.onHit);
+      }
+      if (received && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.perfectBlock ? 50 : event.outcome === 'hit' ? received.onDamage : received.onBlock));
       const pushSign = (event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1;
       target.pushbackMotion = undefined;
       target.throwFlight = undefined;
@@ -583,7 +606,7 @@ export class Simulation {
       if (sourceMove.throwFlight && event.outcome === 'hit') {
         const destination = contactPositions[attackerIndex] + pushSign * (Math.abs(contactPositions[targetIndex] - contactPositions[attackerIndex]) + event.pushback);
         target.throwFlight = true;
-        if (attacker.attack?.throwDirection !== 'backward') {
+        if (attacker.attack?.throwDirection !== 'backward' && !(attacker.fighterId === 'cowboy' && sourceMove.id === 'throw-24')) {
           const pullTo = attacker.x + pushSign * ((attacker.collision.bodyWidth + target.collision.bodyWidth) / 2 + 5);
           target.throwPull = { distancePerFrame: (pullTo - target.x) / 8, remainingFrames: 8,
             launchDistance: destination - pullTo, launchFrames: sourceMove.throwFlight.frames, liftSpeed: sourceMove.throwFlight.liftSpeed };
@@ -604,9 +627,15 @@ export class Simulation {
     this.characters.forEach((character,index)=>{
       if (!character.attack || locked(character)) character.chain = undefined;
       const previous=previousAnimationStates[index];
+      // A held back direction at a wall or the shared screen limit cannot animate a walk in place.
+      if (character.grounded && character.mode === 'moving' && character.movementDirection === 'backward' &&
+          Math.abs(character.x - previousX[index]) < 1e-7) {
+        character.mode = 'neutral'; character.movementDirection = undefined;
+      }
       if (character.facing !== previous.facing) character.facingTransition = {startedFrame:this.frame+1, from:previous.facing};
       if(character.mode!==previous.mode)character.stateStartedFrame=this.frame;
       if (character.mode === 'neutral' && character.grounded && !character.crouching && !character.attack && character.tauntStartedFrame === undefined) {
+        if (Math.abs(character.x - previousX[index]) >= 1e-7) character.idleStartedFrame = undefined;
         character.idleStartedFrame ??= this.frame;
       } else character.idleStartedFrame = undefined;
       const directionalPose=['moving','dashing'].includes(character.mode);
@@ -734,7 +763,8 @@ export class Simulation {
   }
   private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
     if (this.heldByUltimate(character)) return false;
-    if ((move.rageCost ?? 0) > character.rage || (move.category === 'ultimate' && character.ultimateUsed && !this.options.training)) return false;
+    if ((move.rageCost ?? 0) > character.rage || (move.category === 'ultimate' &&
+      (character.rage < character.maxRage || (character.ultimateUsed && !this.options.training)))) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;
     if (this.definitions[index].id === 'cowboy' && move.id === 'crouch-light-kick' &&

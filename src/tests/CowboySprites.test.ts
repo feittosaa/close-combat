@@ -4,13 +4,13 @@ import { createGameConfig } from '../engine/data/gameConfig';
 import { cowboy } from '../engine/data/fighters/cowboy';
 import type { FrameInput } from '../input/types';
 import { getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
-import chargeThrowAtlas from '../assets/sprites/characters/cowboy/charge-throw.atlas.json';
+import chargeThrowAtlas from '../assets/sprites/characters/cowboy/high/charge-throw.atlas.json';
 
 it('uses the correct cells for every lasso charge frame', () => {
-  expect(chargeThrowAtlas.meta.size).toEqual({ w: 3840, h: 640 });
+  expect(chargeThrowAtlas.meta.size).toEqual({ w: 3840, h: 2560 });
   for (let index = 0; index < 6; index++) {
     const frame = chargeThrowAtlas.frames[String(index) as keyof typeof chargeThrowAtlas.frames];
-    expect(frame.frame).toEqual({ x: index * 640, y: 0, w: 640, h: 640 });
+    expect(frame.frame).toEqual({ x: (index % 3) * 1280, y: Math.floor(index / 3) * 1280, w: 1280, h: 1280 });
   }
 });
 
@@ -59,28 +59,31 @@ it('keeps the round-end animation clock stable through the result and clears it 
   expect(sim.snapshot().roundEndedFrame).toBeUndefined();
 });
 
-it.each([0,1])('plays the special idle after five uninterrupted seconds for player %i', player => {
+it.each([0,1])('plays the special idle after ten uninterrupted seconds for player %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
   const idle = {...state, idleStartedFrame:20};
-  expect(getCowboySpritePose(idle,319)?.texture).toBe('cowboy-idle');
-  expect(getCowboySpritePose(idle,320)).toMatchObject({texture:'cowboy-idle-special',frame:0,flipX:player===1});
-  expect(getCowboySpritePose(idle,329)?.frame).toBe(1);
-  expect(getCowboySpritePose(idle,378)?.texture).toBe('cowboy-idle');
-  expect(getCowboySpritePose({...idle,tauntStartedFrame:320},320)?.texture).toBe('cowboy-enter-taunt');
+  expect(getCowboySpritePose(idle,619)?.texture).toBe('cowboy-idle');
+  expect(getCowboySpritePose(idle,620)).toMatchObject({texture:'cowboy-idle-special',frame:0,flipX:player===1});
+  expect(getCowboySpritePose(idle,629)?.frame).toBe(1);
+  expect(getCowboySpritePose(idle,678)?.texture).toBe('cowboy-idle');
+  expect(getCowboySpritePose(idle,1219)?.texture).toBe('cowboy-idle');
+  expect(getCowboySpritePose(idle,1220)).toMatchObject({texture:'cowboy-idle-special',frame:0});
+  expect(getCowboySpritePose(idle,1820)?.texture).toBe('cowboy-idle-special');
+  expect(getCowboySpritePose({...idle,tauntStartedFrame:620},620)?.texture).toBe('cowboy-enter-taunt');
 });
 
-it('restarts the five-second idle timer after a taunt', () => {
+it('restarts the ten-second idle timer after a taunt', () => {
   const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true});
   const step = (taunt = false) => sim.advance(1000/60, () => [
     {direction:'N',buttons:new Set(),taunt}, {direction:'N',buttons:new Set()},
   ]);
-  for (let i=0; i<310; i++) step();
+  for (let i=0; i<610; i++) step();
   expect(getCowboySpritePose(sim.snapshot().characters[0],sim.snapshot().frame)?.texture).toBe('cowboy-idle-special');
   step(true);
   for (let i=0; i<132; i++) step();
   let snapshot = sim.snapshot();
   expect(getCowboySpritePose(snapshot.characters[0],snapshot.frame)?.texture).toBe('cowboy-idle');
-  for (let i=0; i<298; i++) step();
+  for (let i=0; i<598; i++) step();
   snapshot = sim.snapshot();
   expect(getCowboySpritePose(snapshot.characters[0],snapshot.frame)?.texture).toBe('cowboy-idle');
   for (let i=0; i<3; i++) step();
@@ -91,7 +94,7 @@ it('restarts the five-second idle timer after a taunt', () => {
 it.each(['F','D','U'] as const)('restarts special idle after movement %s', direction => {
   const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true,initialDistance:300});
   const neutral: FrameInput = {direction:'N',buttons:new Set()};
-  for (let tick = 0; tick < 310; tick++) sim.stepFrame([neutral,neutral]);
+  for (let tick = 0; tick < 610; tick++) sim.stepFrame([neutral,neutral]);
   let snapshot = sim.snapshot();
   expect(getCowboySpritePose(snapshot.characters[0],snapshot.frame)?.texture).toBe('cowboy-idle-special');
   sim.stepFrame([{direction,buttons:new Set()},neutral]);
@@ -102,7 +105,7 @@ it.each(['F','D','U'] as const)('restarts special idle after movement %s', direc
     snapshot = sim.snapshot();
   }
   expect(snapshot.characters[0].idleStartedFrame).toBeDefined();
-  while (snapshot.frame - snapshot.characters[0].idleStartedFrame! < 299) {
+  while (snapshot.frame - snapshot.characters[0].idleStartedFrame! < 599) {
     sim.stepFrame([neutral,neutral]);
     snapshot = sim.snapshot();
   }
@@ -126,7 +129,8 @@ it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate
   expect(getCowboyUltimateActivationPose(state,149)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
   for(let shot=0;shot<6;shot++) {
     const attacking={...state,attack:{moveId:'bulls-eye',buttons:[] as const,elapsedFrames:1+shot*18,hasHit:false}};
-    expect(getCowboySpritePose(attacking,shot*18)).toMatchObject({texture:'cowboy-ultimate-body',frame:shot,flipX:player===1});
+    expect(getCowboySpritePose(attacking,shot*18)).toMatchObject({texture:'cowboy-ultimate-body',frame:[0,1,2,3,4,5][shot],flipX:player===1});
+    if (shot === 1 || shot === 3) expect(getCowboySpritePose({...attacking,attack:{...attacking.attack,elapsedFrames:attacking.attack.elapsedFrames+2}},shot*18+2)?.frame).toBe(shot+1);
   }
 });
 

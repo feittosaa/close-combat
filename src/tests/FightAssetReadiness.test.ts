@@ -8,11 +8,11 @@ import type { MatchMode } from '../scenes/matchSetup';
 it('prepares every match resource before releasing the menu; every mode starts with an empty loader queue',()=>{
   const textures=new Map<string,object>();
   const queued=new Set<string>();
-  const load={image:vi.fn((key:string)=>queued.add(key)),atlas:vi.fn((key:string)=>queued.add(key))};
+  const load={image:vi.fn((key:string)=>queued.add(key)),atlas:vi.fn((key:string)=>queued.add(key)),audio:vi.fn((key:string)=>queued.add(key))};
   const text={setOrigin:vi.fn()};
   const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
   Object.values(camera).forEach(method=>method.mockReturnValue(camera));
-  const shared={textures:{exists:(key:string)=>textures.has(key)},load};
+  const shared={textures:{exists:(key:string)=>textures.has(key)},cache:{audio:{exists:(key:string)=>textures.has(key)}},load};
   const boot=new BootScene();
   Object.assign(boot,shared,{cameras:{main:camera},scale:{width:1920,height:1080},add:{text:()=>text},scene:{start:vi.fn()}});
   boot.preload();
@@ -23,6 +23,7 @@ it('prepares every match resource before releasing the menu; every mode starts w
   expect(queued.has('cowboy-victory')).toBe(true);
   expect(queued.has('cowboy-defeat')).toBe(true);
   expect(queued.has('cowboy-effect-shot')).toBe(true);
+  expect(queued.has('sfx-perfect_block_1')).toBe(true);
   expect([...queued].some(key => key.startsWith('shoto-'))).toBe(false);
   for (const fighter of ['shoto','cowboy','grappler','puppet']) expect(queued.has(`fighter-icon-${fighter}`)).toBe(true);
   expect(load.atlas).toHaveBeenCalled();

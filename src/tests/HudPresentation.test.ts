@@ -33,8 +33,8 @@ it('positions each fighter icon at the outer edge of the health bar',()=>{
   const {scene,images}=mockScene();
   const hud=new CombatHud(scene,1024,['Cowboy','Shoto'],'Sala',false,'TREINO LIVRE',['cowboy','shoto']);
   expect(images.map(({x,y,key,width,height})=>({x,y,key,width,height}))).toEqual([
-    {x:28,y:19,key:'fighter-icon-cowboy',width:38,height:38},
-    {x:996,y:19,key:'fighter-icon-shoto',width:38,height:38},
+    {x:30,y:29,key:'fighter-icon-cowboy',width:57,height:57},
+    {x:994,y:29,key:'fighter-icon-shoto',width:57,height:57},
   ]);
   hud.destroy();
 });
@@ -57,7 +57,7 @@ it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar
   expect(commands).toContainEqual(['fillStyle',HUD.players[0]]);
   expect(commands).toContainEqual(['fillRect',31,12,291,13]);
   expect(commands).toContainEqual(['fillRect',896,12,97,13]);
-  expect(commands.filter(c=>c[0]==='lineBetween'&&c[1]===c[3])).toEqual([]);
+  expect(commands.filter(c=>c[0]==='lineBetween'&&c[1]===c[3]&&Number(c[2])<30)).toEqual([]);
   expect(snapshot).toEqual(original);
   snapshot.characters[0].health=0;snapshot.phase='match-over';snapshot.matchWinnerId='player-2';
   hud.update(snapshot,1024);
@@ -97,7 +97,9 @@ it('anchors health and larger bottom rage rails to both sides of a wide HUD',()=
   expect(commands).toContainEqual(['fillRect',width-592.5,10,564.5,17]);
   expect(commands).toContainEqual(['fillRect',35,538,250,8]);
   expect(commands).toContainEqual(['fillRect',width-285,538,250,8]);
-  expect(commands).toContainEqual(['fillRect',35,538,125,8]);
-  expect(commands).toContainEqual(['fillRect',width-160,538,125,8]);
+  expect(commands).toContainEqual(['fillRect',35,538,100,8]);
+  expect(commands).toContainEqual(['fillRect',width-135,538,100,8]);
+  for (const x of [85,135,185,235]) expect(commands).toContainEqual(['lineBetween',x,538,x,546]);
+  for (const x of [width-235,width-185,width-135,width-85]) expect(commands).toContainEqual(['lineBetween',x,538,x,546]);
   hud.destroy();
 });

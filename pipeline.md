@@ -1,5 +1,21 @@
 # Close Combat — Pipeline
 
+## Entrega da branch de menus e Cowboy — 2026-11-02
+
+O usuário solicitou o envio do conjunto atual e a integração em `development`, preservando `codex/feature-menus-design` para continuação. A instalação reproduzível, 515 testes, build e diff passaram localmente. Conferência no jogo das alterações visuais e sonoras permanece pendente após bloqueio do navegador pela revisão automática; não há aprovação artística ou de mixagem inferida dos testes. O resultado da CI remota e da integração deve ser verificado no remoto.
+
+## Rage e perfect block — 2026-11-02
+
+A barra tem cinco segmentos de 50 pontos, máximo de 250, e a ultimate exige a barra cheia. A rage continua acumulando após a ultimate; o limite de uma ultimate por combate fora do treino permanece. Acertar concede 10, receber um acerto 15, bloquear 5 e executar perfect block 50, sem ultrapassar o máximo. Acertos da ultimate não geram rage para seu atacante; o defensor recebe a rage normal. Um comando novo de defesa nos três quadros até o contato válido produz perfect block; segurar a defesa antes da janela ou durante bloqueio contínuo não renova a oportunidade. Guardas altas/baixas e agarrões preservam suas regras. O perfect block recebe indicação visual branca, som próprio e identificação no treino; os efeitos de contato são acumulados entre quadros de renderização. Instalação reproduzível, 515 testes, build e diff passaram. A conferência visual e sonora no jogo permanece pendente: a abertura do navegador foi rejeitada anteriormente pela revisão automática do ambiente. Alterações locais na branch ativa, sem commit, push ou CI remota.
+
+## Limites de caminhada e animação de repouso — 2026-11-02
+
+Ao segurar para trás no limite da arena ou de afastamento da câmera, o lutador deixa de exibir caminhada quando não há deslocamento e volta a caminhar quando surge espaço. A animação alternativa de repouso da Cowboy passa a ocorrer a cada 600 quadros (10 segundos) de repouso contínuo, com a contagem reiniciada ao agir ou se deslocar. Os retratos nas bordas das barras de vida aumentaram de 38 para 57 pixels, com nomes e estados reposicionados. Os quadros das luminárias do Saloon são compartilhados entre as duas qualidades e não precisam de upscale. Instalação reproduzível, 509 testes, build e diff passaram; conferência no jogo permanece pendente por bloqueio anterior da abertura do navegador. Sem commit, push ou CI remota nesta revisão.
+
+## Saloon e mixagem — 2026-11-02
+
+O Saloon está disponível na seleção de cenário para PvP e Arcade; treino e tutoriais mantêm a sala própria. A arte fornecida é usada em 1× na qualidade Baixa e 2× na Alta, com a mesma escala no jogo. Seis quadros transparentes animam discretamente as chamas das luminárias sobre o cenário fixo; as imagens das chamas e a folha gerada foram copiadas para `scenarios/animacoes_saloon` no diretório fornecido para upscale. Tiros usam volume 0,7 e acertos e bloqueios 1,15. Instalação reproduzível, 505 testes, build e diff passaram. A conferência no jogo, a avaliação artística e a escuta da mixagem continuam pendentes: a abertura do navegador foi rejeitada pela revisão automática do ambiente. As alterações permanecem na branch ativa, ainda sem commit, push ou CI remota.
+
 ## Seleção proporcional e retirada visual do Shoto — 2026-11-01
 
 Os retratos de seleção usam altura visível proporcional a 160 cm para Cowboy, 170 cm para Shoto, 175 cm para Puppet e 205 cm para Grappler, com a mesma linha de apoio e compensação das margens transparentes. A escala de todos foi ampliada em 25%, sem limitar a largura dos retratos; a composição foi reposicionada para manter os pés dentro da janela, podendo ficar atrás das caixas de nome. As folhas de animação antigas do Shoto, seus carregadores e testes exclusivamente visuais foram removidos; ele continua jogável com geometria provisória e mantém golpes, combos e efeitos. Os 487 testes restantes, build e diff passaram antes da ampliação; sete testes direcionados de seleção e build passaram depois. A conferência visual no jogo permanece bloqueada pela política do navegador; alterações locais na branch ativa, sem commit, push ou CI remota.
@@ -15,6 +31,26 @@ Após um chute fraco em pé acertar, o chute fraco agachado não pode iniciar en
 ## Cowboy — dano da ultimate — em andamento — 2026-11-01
 
 A ultimate causa 360 de dano em seis tiros quando iniciada sem golpes anteriores no mesmo combo. Para cada acerto anterior ao primeiro tiro, reduz 20 do total da rajada, distribuindo o resultado inteiro entre os disparos e limitando o dano mínimo a zero. O histórico de combo conta os tiros mesmo quando chegam ao mínimo de dano. Foram verificados os dois lados, a ultimate isolada, continuações com três e quatro golpes e o cálculo para seis golpes anteriores. Instalação reproduzível, 521 testes, build e diff passaram. Alterações locais na branch ativa, junto do trabalho visual pendente; sem commit, push ou CI remota.
+
+## Efeitos sonoros de combate — 2026-11-02
+
+Os 16 arquivos WAV fornecidos foram adicionados e carregados na preparação: acertos leves e fortes, defesa, defesa perfeita, materialização das mãos e disparos mágicos. A reprodução observa cada quadro fixo para não perder eventos quando a renderização pula quadros; ataques fortes e especiais usam impacto forte, defesa usa seu próprio som, e mãos e tiros da Cowboy têm sons próprios. Variantes seguem pesos 50/25/15/10, normalizados para grupos menores; os sons de defesa perfeita estão disponíveis sem criar a mecânica. Os 498 testes, build e diff passaram localmente. Falta conferir volume, mixagem, sincronia e desbloqueio de áudio no navegador, cuja abertura foi bloqueada pelo ambiente. Alterações locais na branch ativa junto dos trabalhos anteriores, sem commit, push ou CI remota.
+
+## Cowboy — antecipação do agarrão e disparos da ultimate — 2026-11-02
+
+O agarrão 2+4 recebeu nova folha de antecipação com recuo corporal, preparação de 18 quadros em vez de 13 e alcance horizontal total de 66 unidades em vez de 55 (+20%). A captura continua próxima e permite ao oponente escapar com pulo ou quebrar após a captura; sem deslocar a posição física do atacante durante a antecipação. A ultimate ganhou nova folha corporal com quadros de smear exibidos por dois quadros de simulação antes das poses estáveis; intervalos, projéteis e hitboxes permanecem os mesmos. As folhas 1× foram copiadas para Downloads, incluindo a folha de captura anterior; as três versões 2× fornecidas depois foram inseridas na qualidade Alta e seus 18 quadros conferidos integralmente contra as imagens recebidas. Os 495 testes, build e diff passaram. Falta conferir em jogo proporções, alinhamento com hitboxes e timing visual, pois a abertura do navegador foi bloqueada pelo ambiente. Alterações locais na branch ativa, incluindo gráficos e agarrão ainda pendentes, sem commit ou push nem CI remota.
+
+## Cowboy — agarrão 2+4 de curta distância — 2026-11-02
+
+O antigo laço baixo foi substituído por uma captura próxima com as duas mãos, mãos espectrais diagonais e dois efeitos de disparo; após a janela de quebra de 15 quadros, o alvo é lançado para frente e cai. O agarrão continua rápido e sem carga; alcance e área agora correspondem a uma captura próxima. A janela de quebra e as regras de tentativa foram preservadas. A nova folha corporal foi gerada com a referência canônica, preparada em 1× e ampliada tecnicamente para a variante 2×; os efeitos obsoletos do laço baixo foram removidos. Testes verificam alcance, quebra, aparecimento das mãos, lançamento para ambos os lados e queda. Os 493 testes, build e diff passaram. A revisão em jogo de alinhamento, hitbox, disparos e transições permanece pendente porque a abertura do navegador foi bloqueada pelo ambiente; a arte ainda depende de avaliação visual. Alterações locais na branch ativa, incluindo configurações gráficas pendentes, sem commit ou push nem CI remota.
+
+## Qualidade gráfica das sprites — 2026-11-02
+
+As configurações oferecem Baixa (sprites originais 1×, padrão) e Alta (upscale 2× fornecido). As imagens 3× foram retiradas do checkout e a antiga opção Média volta ao padrão Baixa; uma escolha Alta já salva continua Alta, agora usando 2×. Ao salvar uma alteração de qualidade, o jogo reinicia e retorna ao menu para carregar somente o conjunto escolhido. As folhas ampliadas em uso foram reorganizadas em grades de três por duas células sem alterar pixels ou transparência; atlas e escala de exibição mantêm alinhamento e colisões. A comparação integral anterior confirmou os 444 quadros 2× idênticos às fontes. Instalação reproduzível, 491 testes, build e diff passaram localmente. O carregamento conjunto das texturas 2× pode consumir cerca de 2,7 GiB de memória gráfica; desempenho e interface em jogo permanecem pendentes de conferência devido ao bloqueio do navegador. Alterações locais na branch ativa, sem commit ou push nem CI remota.
+
+## Cowboy — escala dos dashes e combo — 2026-11-02
+
+Os dashes dianteiros e traseiros, no chão e no ar, foram reduzidos em 3%; as duas folhas usadas nos três golpes fortes da sequência 1,2,2,2 foram reduzidas em 2%, preservando o primeiro golpe, as colisões e os tempos. Os 488 testes, build e diff passaram; instalação reproduzível concluída na alteração anterior. Conferência em jogo segue pendente devido ao bloqueio do navegador. As mudanças estão locais junto da substituição das sprites ampliadas, sem commit ou push.
 
 ## Cowboy — reação baixa — 2026-11-02
 

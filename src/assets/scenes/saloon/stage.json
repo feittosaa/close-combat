@@ -1,0 +1,38 @@
+{
+  "id": "saloon",
+  "name": "Saloon",
+  "referenceSize": {
+    "width": 1774,
+    "height": 887
+  },
+  "groundY": 710,
+  "minimumScale": 0.01,
+  "layers": [
+    {
+      "id": "background",
+      "file": "layers/saloon.png",
+      "highFile": "layers/saloon-high.png",
+      "depth": -300,
+      "parallax": 1,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "lamps",
+      "file": "layers/lamps-1.png",
+      "frames": [
+        "layers/lamps-2.png",
+        "layers/lamps-3.png",
+        "layers/lamps-4.png",
+        "layers/lamps-5.png",
+        "layers/lamps-6.png"
+      ],
+      "frameDuration": 9,
+      "depth": -299,
+      "parallax": 1,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "topExtension": 150
+}

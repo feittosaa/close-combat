@@ -1,6 +1,7 @@
 export interface StageLayer {
   id: string;
   file: string;
+  highFile?: string;
   frames?: readonly string[];
   frameDuration?: number;
   /** Ordem de desenho: negativos ficam atrás dos lutadores, que usam depth 0. */
@@ -39,6 +40,7 @@ export function validateStage(stage: StageDefinition): void {
   const ids = new Set<string>();
   stage.layers.forEach((layer) => {
     if (!layer.id || ids.has(layer.id) || !/^layers\/[\w-]+\.png$/.test(layer.file) ||
+        (layer.highFile !== undefined && !/^layers\/[\w-]+\.png$/.test(layer.highFile)) ||
         (layer.frames !== undefined && (!layer.frames.length || layer.frames.some(file => !/^layers\/[\w-]+\.png$/.test(file)) || !Number.isInteger(layer.frameDuration) || layer.frameDuration! <= 0)) ||
         ![layer.depth, layer.parallax, layer.x, layer.y].every(Number.isFinite) ||
         layer.parallax < 0 || layer.parallax > 1 ||

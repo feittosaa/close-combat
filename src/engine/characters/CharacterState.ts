@@ -13,6 +13,8 @@ export interface CharacterAttack {
   chargeFrames?: number;
   chargeReleased?: boolean;
   throwDirection?: 'forward' | 'backward';
+  throwCapturedFrame?: number;
+  throwConfirmedFrame?: number;
   hitOutcome?: 'hit' | 'block';
   /** Recovery override for a confirmed combo or a blocked strike. */
   recoveryFrames?: number;

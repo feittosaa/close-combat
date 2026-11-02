@@ -1,5 +1,6 @@
 import { validateStage } from './StageDefinition';
 import type { StageDefinition, StageLayer } from './StageDefinition';
+import { loadGraphicsQuality } from '../../ui/graphicsSettings';
 
 const manifests = import.meta.glob<StageDefinition>('../../assets/scenes/*/stage.json', { eager: true, import: 'default' });
 const images = import.meta.glob<string>('../../assets/scenes/*/layers/*.png', { eager: true, import: 'default', query: '?url' });
@@ -7,7 +8,7 @@ const images = import.meta.glob<string>('../../assets/scenes/*/layers/*.png', { 
 export const DEFAULT_STAGE_ID = 'sala-treino';
 export const stages: readonly StageDefinition[] = Object.values(manifests);
 
-export function getStageLayerUrl(stage: StageDefinition, layer: StageLayer, file = layer.file): string {
+export function getStageLayerUrl(stage: StageDefinition, layer: StageLayer, file = loadGraphicsQuality() === 'high' ? layer.highFile ?? layer.file : layer.file): string {
   const url = images[`../../assets/scenes/${stage.id}/${file}`];
   if (!url) throw new Error(`Imagem ausente no cenário ${stage.id}: ${file}`);
   return url;
@@ -18,7 +19,7 @@ stages.forEach((stage) => {
   validateStage(stage);
   if (ids.has(stage.id)) throw new Error(`ID de cenário duplicado: ${stage.id}`);
   ids.add(stage.id);
-  stage.layers.forEach((layer) => [layer.file, ...(layer.frames ?? [])].forEach(file => getStageLayerUrl(stage, layer, file)));
+  stage.layers.forEach((layer) => [layer.file, ...(layer.highFile ? [layer.highFile] : []), ...(layer.frames ?? [])].forEach(file => getStageLayerUrl(stage, layer, file)));
 });
 
 export function getStageById(id: string): StageDefinition | undefined {

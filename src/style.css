@@ -80,6 +80,8 @@ canvas {
 .controls-panel h2 { margin: 8px 0 12px; color: #ead3ad; font: 900 16px Arial,sans-serif; text-transform: uppercase; letter-spacing: -.02em; }
 .controls-grid > div > div, .control-system-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; font-size: 14px; }
 .control-system-row { max-width: 420px; }
+.controls-panel select { min-width: 100px; padding: 8px 14px; border: 0; color: #fff1da; background: #422b2d; font: 700 14px Arial,sans-serif; cursor: pointer; }
+.controls-panel select:focus-visible { outline: 2px solid #ffc485; }
 .controls-panel button { min-width: 100px; padding: 8px 14px; border: 0; border-radius: 0; color: #fff1da; background: linear-gradient(135deg,#422b2d,#191319); box-shadow: inset 4px 0 #b94536; clip-path: polygon(3% 0,100% 0,97% 100%,0 100%); cursor: pointer; font: 700 14px Arial,sans-serif; }
 .controls-panel button:hover, .controls-panel button:focus-visible { background: linear-gradient(110deg,#9f342c,#ca5140); }
 .controls-panel button:focus-visible { outline: 2px solid #ffc485; outline-offset: -3px; }

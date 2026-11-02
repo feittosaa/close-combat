@@ -74,10 +74,10 @@ it('starts the cinematic when a buffered ultimate becomes available as a missed 
 
 it('freezes the round clock and entire world for 150 ticks of activation, for any ultimate',()=>{
   expect(ULTIMATE_ACTIVATION_FRAMES).toBe(150);
-  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:200}};
+  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:250}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
-  expect(sim.snapshot().characters[0].rage).toBe(200);
+  expect(sim.snapshot().characters[0].rage).toBe(250);
   const motion=shoto.moves.find(m=>m.id==='wine-ultimate')!.input.sequence!;
   motion.slice(0,-1).forEach(d=>step(sim,input(d)));
   const before=sim.snapshot();step(sim,input('F',['1','2']),0,input('UF',['4']));
@@ -118,6 +118,7 @@ it.each([0,1])('bottle confirms, lighter explodes once for 280 and physically kn
   // Eight combat frames of throw preparation, independently of the shared contact pause.
   wait(sim,CONTACT_HITSTOP_FRAMES+7);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
   const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(50);
+  expect(sim.snapshot().characters[player].rage).toBe(0);
   const target=sim.snapshot().characters[1-player];
   expect(target).toMatchObject({health:720,mode:'knockdown',grounded:false});
   expect(target.verticalVelocity).toBe(-5);expect(target.knockdown).toBeDefined();
@@ -153,7 +154,7 @@ it('reset clears activation, confirmations, lighter, knockdown and explosion sta
 });
 
 it('keeps the KO launch alive until the defender reaches the floor',()=>{
-  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:200}};
+  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:250}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,80);command(sim,'wine-ultimate');contact(sim,'explosion');wait(sim,6);
   expect(sim.snapshot().phase).toBe('fight');
@@ -318,10 +319,10 @@ it.each([0,1])('holds both players from bottle confirmation through lighter impa
 });
 
 it.each([0,1])('allows one ultimate per fighter across rounds and restores it on match reset: player %i', player => {
-  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:200}};
+  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:250}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch',player);wait(sim,80);
-  expect(sim.snapshot().characters[player].rage).toBe(200);
+  expect(sim.snapshot().characters[player].rage).toBe(250);
   command(sim,'wine-ultimate',player);
   expect(sim.snapshot().characters[player].ultimateUsed).toBe(true);
   expect(sim.snapshot().characters[1-player].ultimateUsed).toBe(false);
@@ -330,7 +331,7 @@ it.each([0,1])('allows one ultimate per fighter across rounds and restores it on
   expect(sim.snapshot()).toMatchObject({round:2,phase:'fight'});
   expect(sim.snapshot().characters[player].ultimateUsed).toBe(true);
   command(sim,'light-punch',player);wait(sim,80);
-  expect(sim.snapshot().characters[player].rage).toBe(0);
+  expect(sim.snapshot().characters[player].rage).toBe(250);
   command(sim,'wine-ultimate',player);wait(sim,20);
   expect(sim.snapshot().ultimateActivation).toBeUndefined();
   expect(sim.snapshot().characters[player].attack?.moveId).not.toBe('wine-ultimate');
@@ -343,7 +344,7 @@ it.each([0,1])('refills rage and permits repeated ultimates in training: player 
   const sim=create(56);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
   expect(sim.snapshot().characters[player]).toMatchObject({rage:0,ultimateUsed:false});
   wait(sim,350);sim.fillTrainingRage();
-  expect(sim.snapshot().characters[player].rage).toBe(200);
+  expect(sim.snapshot().characters[player].rage).toBe(250);
   command(sim,'wine-ultimate',player);
   expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
 });

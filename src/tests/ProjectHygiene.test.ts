@@ -32,11 +32,11 @@ describe('Project asset and documentation hygiene', () => {
     }
     const stages = import.meta.glob<string>('../assets/scenes/*/stage.json', { eager: true, query: '?raw', import: 'default' });
     for (const [key, source] of Object.entries(stages)) {
-      const stage = JSON.parse(source) as { source?: string; layers: { file: string; frames?: string[] }[] };
+      const stage = JSON.parse(source) as { source?: string; layers: { file: string; highFile?: string; frames?: string[] }[] };
       if (stage.source) used.add(relativeTo(projectPath(key), stage.source));
-      for (const layer of stage.layers) for (const file of [layer.file, ...(layer.frames ?? [])]) used.add(relativeTo(projectPath(key), file));
+      for (const layer of stage.layers) for (const file of [layer.file, ...(layer.highFile ? [layer.highFile] : []), ...(layer.frames ?? [])]) used.add(relativeTo(projectPath(key), file));
     }
-    const cowboyAtlases = import.meta.glob('../assets/sprites/characters/cowboy/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
+    const cowboyAtlases = import.meta.glob('../assets/sprites/characters/cowboy/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
     for (const key of Object.keys(cowboyAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
     const canonical = import.meta.glob('../../assets/art/characters/*/turnaround.png', { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(canonical)) used.add(projectPath(key));
