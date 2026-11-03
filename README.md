@@ -5,7 +5,6 @@ Jogo de luta 2D para navegador de computador, com simulação determinística e 
 - [Base](base.md): princípios e decisões gerais.
 - [Identidade visual](identidade-visual.md): linguagem artística e critérios de produção.
 - [Pipeline](pipeline.md): conteúdo específico, estado do trabalho, tarefas e validações.
-- [CI/CD](docs/ci-cd.md): processo de entrega.
 
 ## Executar
 
