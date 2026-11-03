@@ -2,7 +2,7 @@
 
 ## Proposta de parry da Cowboy — 2026-11-03
 
-A defesa em pé aumentou mais 1% de escala. Os braços mágicos em pé foram ampliados em 5% e são reutilizados na defesa aérea, com deslocamento vertical para acompanhar a pose; os braços agachados aumentaram 2% e foram deslocados 30 unidades para baixo, aproximando as pontas do chão. A arte aérea de braços que deixou de ser usada foi retirada. O relato anterior de efeitos em miniatura continua sem reprodução e correção confirmadas.
+A defesa em pé aumentou mais 1% de escala. Os braços mágicos em pé foram ampliados em 5% e são reutilizados na defesa aérea, com deslocamento vertical para acompanhar a pose; os braços agachados aumentaram 2% e foram deslocados 25 unidades para baixo, aproximando as pontas do chão. A arte aérea de braços que deixou de ser usada foi retirada. O relato anterior de efeitos em miniatura continua sem reprodução e correção confirmadas.
 
 A defesa em pé aumentou mais 1% de escala. Os braços mágicos para as defesas em pé, agachada e aérea e a animação corporal de defesa aérea foram aprovados e integrados nas versões normal e high. Os braços aparecem na frente da personagem, acompanham sua direção e usam quadros de entrada e saída; a defesa aérea tem sua própria animação corporal. As defesas em pé e agachada foram observadas no treino; a defesa aérea e a qualidade high ainda precisam de conferência visual em combate. Testes cobrem seleção, ordem das camadas, espelhamento e saída para os dois jogadores. Instalação reproduzível, 604 testes, build e diff passaram.
 

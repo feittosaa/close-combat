@@ -294,7 +294,7 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
       const crouching = source.grounded && source.crouching;
       const name = crouching ? 'magic-crouch-guard' : 'magic-guard';
       const drawing = exiting ? sample('magicExit', age) : age < 6 ? sample('magic', age) : 2;
-      return [character, {...pose(name, drawing, state), scale:crouching ? 1.02 : 1.05, offsetY:crouching ? 30 : source.grounded ? 0 : 18}];
+      return [character, {...pose(name, drawing, state), scale:crouching ? 1.02 : 1.05, offsetY:crouching ? 25 : source.grounded ? 0 : 18}];
     }
     return [character];
   }
