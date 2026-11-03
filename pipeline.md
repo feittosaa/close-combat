@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Fluxo de trabalho — 2026-11-03
+
+O workflow de CI e seu manifesto foram removidos do checkout. Branches, commits e pushes dependem de pedido explícito; commits e pushes diretamente em `main` ou `development` são proibidos. As referências anteriores a CI nesta pipeline registram o histórico e não representam exigências atuais. A remoção no remoto depende de envio autorizado; configurações de proteção do GitHub não foram verificadas nem alteradas.
+
 ## Proposta de parry da Cowboy — 2026-11-03
 
 A defesa em pé aumentou mais 1% de escala. Os braços mágicos em pé foram ampliados em 5% e são reutilizados na defesa aérea, com deslocamento vertical para acompanhar a pose; os braços agachados aumentaram 2% e foram deslocados 25 unidades para baixo, aproximando as pontas do chão. A arte aérea de braços que deixou de ser usada foi retirada. O relato anterior de efeitos em miniatura continua sem reprodução e correção confirmadas.
@@ -555,7 +559,7 @@ Branch `codex/feature-menu-hud`: seleção de personagem unificada para Arcade, 
 
 Validação local: instalação reproduzível, 297 testes em 37 arquivos, build e verificação de diff. No navegador: seleção nos cinco modos, confirmações de ambos os jogadores no PvP, entrada na partida e pausas de partida e treino. A aprovação artística do usuário permanece pendente. Envio e CI remota a conferir.
 
-Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visual.md). Entrega: [docs/ci-cd.md](docs/ci-cd.md).
+Regras gerais: [base.md](base.md). Arte: [identidade-visual.md](identidade-visual.md). Entrega: [AGENTS.md](AGENTS.md).
 
 Este é o único documento Markdown para estado de implementação, decisões de personagens/cenários, números específicos, pendências, validações e histórico de entregas. As seções históricas não prevalecem sobre o estado vigente.
 
