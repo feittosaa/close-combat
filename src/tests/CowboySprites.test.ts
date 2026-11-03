@@ -17,7 +17,7 @@ it.each([0, 1])('renders each defensive stance with spectral arms in front for p
     const layers = getCowboySpriteLayers(defending,108);
     expect(layers.map(layer=>layer.texture)).toEqual([body, arms]);
     expect(layers[1]).toMatchObject({frame:2, flipX:player===1});
-    expect(layers[1]).toMatchObject({scale:crouching ? 1.02 : 1.05,offsetY:crouching ? 30 : grounded ? 0 : 18});
+    expect(layers[1]).toMatchObject({scale:crouching ? 1.02 : 1.05,offsetY:crouching ? 25 : grounded ? 0 : 18});
     expect(getCowboySpriteLayers({...defending,mode:'blockstun'},108)[1].texture).toBe(arms);
     const from = {mode:'blocking' as const, stateStartedFrame:100, grounded, crouching, movementDirection:state.movementDirection, facing:state.facing, verticalVelocity:state.verticalVelocity};
     const leaving = {...state, grounded, crouching:false, mode:'neutral' as const, animationTransition:{from,startedFrame:110}};
