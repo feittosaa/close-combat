@@ -29,6 +29,8 @@ canvas {
   display: block;
 }
 
+.loading-screen { position: fixed; inset: 0; z-index: 200; display: flex; align-items: end; justify-content: end; padding: 6vw; background-color: #100e12; background-size: cover; background-position: center; color: #ffe1af; font: 900 clamp(15px, 2vw, 28px) Arial, sans-serif; letter-spacing: .1em; }
+
 .combat-pause[hidden] { display: none; }
 .combat-pause { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e12cc; backdrop-filter: blur(5px); color: #f6e6ce; }
 .pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #f0dfc477; background: linear-gradient(120deg,#25191d,#130f14 65%); padding: 26px; border-top: 4px solid #c04436; box-shadow: 0 0 0 5px #16121ae0, 0 24px 90px #000b; }

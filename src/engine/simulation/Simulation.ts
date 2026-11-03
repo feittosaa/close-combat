@@ -14,7 +14,7 @@ import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { flightFramesRemaining } from '../combat/airPhysics';
 import { attackDurationFrames } from '../combat/frameData';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
-import { COWBOY_GRAB_LAUNCH } from '../combat/cowboyGrab';
+import { COWBOY_GRAB_LAUNCH, COWBOY_GRAB_SHOTS } from '../combat/cowboyGrab';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
 export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number; usedLightPunch?: boolean; usedStandingLightKick?: boolean }
@@ -202,8 +202,7 @@ export class Simulation {
       this.characters.forEach((character, index) => this.readCommand(character, index, inputs[index] ?? neutral()));
       this.hitstopFramesRemaining -= 1;
       // Keep attacks/poses intact through the last impact tick, including KO/time-up.
-      if (!this.hitstopFramesRemaining && !this.options.training && !this.characters.some(c=>c.juggle || c.ultimateCapture || (c.knockdown && !c.grounded)) &&
-        (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
+      if (!this.hitstopFramesRemaining && !this.options.training && this.canEndRound()) this.finishRound();
       return;
     }
     let confirmedThrow: HitEvent | undefined;
@@ -213,6 +212,11 @@ export class Simulation {
       const targetIndex = 1 - attackerIndex;
       const target = this.characters[targetIndex], attacker = this.characters[attackerIndex];
       const move = this.move(attackerIndex, pending.event.moveId)!;
+      if (pending.confirmed && attacker.fighterId === 'cowboy' && move.id === 'throw-24' &&
+          attacker.attack?.throwConfirmedFrame !== undefined &&
+          COWBOY_GRAB_SHOTS.some(shot => this.frame - attacker.attack!.throwConfirmedFrame! === shot)) {
+        target.hitReaction = { level: 'mid', startedFrame: this.frame };
+      }
       const buttons = (inputs[targetIndex] ?? neutral()).buttons;
       const pressed = [...buttons].filter(button => !pending.previousButtons.has(button));
       const breaksThrow = !pending.attempted && pressed.length > 0 && pressed.every(button => move.input.buttons.includes(button));
@@ -405,7 +409,8 @@ export class Simulation {
         target.mode = 'neutral'; target.remainingStateFrames = 0; owner.hitSequence = undefined;
       }
     }
-    this.resolveBodies(previousX); this.resolveScreenEdges(previousX); this.updateFacing();
+    const intendedX = this.characters.map(character => character.x);
+    this.resolveBodies(previousX); this.resolveScreenEdges(previousX); this.resolveWallBounces(previousX, intendedX); this.updateFacing();
     this.explosions = this.explosions.map(e => ({ ...e, remainingFrames: e.remainingFrames - 1 })).filter(e => e.remainingFrames > 0);
     this.updateLighters();
     this.projectiles.forEach(projectile => {
@@ -437,6 +442,7 @@ export class Simulation {
       const index = this.characters.findIndex(character => character.characterId === event.targetId);
       if (event.outcome === 'block' && !lockedAtInput[index] && this.frame - this.guardStarted[index] < PERFECT_BLOCK_WINDOW) {
         event.perfectBlock = true;
+        this.characters[index].perfectBlockStartedFrame = this.frame;
         this.guardStarted[index] = -Infinity;
       }
     }
@@ -455,7 +461,7 @@ export class Simulation {
     });
     if (confirmedThrow) this.lastHitEvents.push(confirmedThrow);
     for (const hit of this.lastHitEvents) {
-      if (hit.outcome !== 'hit' || (hit.damage <= 0 && hit.volleyStep === undefined)) continue;
+      if (hit.outcome !== 'hit' || hit.stage === 'confirm') continue;
       let combo = this.comboHistory.find(entry => entry.active && entry.attackerId === hit.attackerId && entry.targetId === hit.targetId);
       if (!combo) {
         combo = { attackerId:hit.attackerId,targetId:hit.targetId,hits:0,damage:0,active:true,lastFrame:this.frame };
@@ -613,6 +619,7 @@ export class Simulation {
       }
       if (received && event.stage !== 'confirm') target.rage = Math.min(target.maxRage, target.rage + (event.perfectBlock ? 50 : event.outcome === 'hit' ? received.onDamage : received.onBlock));
       const pushSign = (event.pushbackDirection ?? attacker.facing) === 'right' ? 1 : -1;
+      target.wallBouncePending = event.outcome === 'hit' && sourceMove.wallBounce ? { direction: pushSign, attackerId: attacker.characterId, moveId: sourceMove.id } : undefined;
       target.pushbackMotion = undefined;
       target.throwFlight = undefined;
       target.throwPull = undefined;
@@ -636,7 +643,8 @@ export class Simulation {
       this.recentContacts.push({ frame: this.frame, event });
     });
     this.recentContacts = this.recentContacts.filter(entry => this.frame - entry.frame < 180).slice(-20);
-    this.resolveBodies(); this.resolveScreenEdges(previousX); this.updateFacing();
+    const contactX = this.characters.map(character => character.x);
+    this.resolveBodies(); this.resolveScreenEdges(previousX); this.resolveWallBounces(previousX, contactX); this.updateFacing();
     this.characters.forEach((character,index)=>{
       if (!character.attack || locked(character)) character.chain = undefined;
       const previous=previousAnimationStates[index];
@@ -662,8 +670,7 @@ export class Simulation {
       this.quietFrames = quiet ? this.quietFrames + 1 : 0;
       if (this.trainingAutoRestore && this.quietFrames >= 90) this.characters.forEach(character => { character.health = character.maxHealth; });
     } else {
-      if (!this.hitstopFramesRemaining && !this.characters.some(c=>c.juggle || c.ultimateCapture || (c.knockdown && !c.grounded)) &&
-        (this.characters.some(character => character.health === 0) || this.roundFramesRemaining === 0)) this.finishRound();
+      if (!this.hitstopFramesRemaining && this.canEndRound()) this.finishRound();
     }
     this.frame += 1;
   }
@@ -780,10 +787,11 @@ export class Simulation {
       (character.rage < character.maxRage || (character.ultimateUsed && !this.options.training)))) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;
+    if (this.definitions[index].id === 'cowboy' && move.id === 'light-kick' && previous?.moveId !== 'light-kick' &&
+        this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedStandingLightKick)) return false;
     if (this.definitions[index].id === 'cowboy' && move.id === 'crouch-light-kick' &&
         this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedStandingLightKick)) return false;
-    if (this.definitions[index].id === 'cowboy' && move.id === 'light-punch' && previous?.hitOutcome === 'hit' &&
-        character.chain?.length === 3 && character.chain.every(id => id === 'light-kick') && this.characters[1-index].mode === 'hitstun' &&
+    if (this.definitions[index].id === 'cowboy' && move.id === 'light-punch' && previous?.moveId !== 'light-punch' &&
         this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedLightPunch)) return false;
     if (!move.screenVolley && previous?.hitOutcome === 'hit' && character.chain && this.definitions[index].combos?.some(recipe =>
       !recipe.launch && recipe.moveIds.length === character.chain!.length &&
@@ -824,8 +832,8 @@ export class Simulation {
     if (character.attack?.hitOutcome !== 'hit' || !character.chain || this.characters[1 - index].mode !== 'hitstun') return false;
     const combos = this.definitions[index].combos ?? [];
     const starter = this.move(index, character.attack.moveId)?.startsComboOnHit && move.id !== character.attack.moveId;
-    const completed = character.hitSequence && combos.find(recipe => recipe.continueOnHit && recipe.moveIds.length === character.chain!.length &&
-      recipe.moveIds.every((id, step) => id === character.chain![step]));
+    const completed = character.hitSequence && combos.find(recipe => recipe.continueOnHit && character.chain!.length <= recipe.moveIds.length &&
+      character.chain!.every((id, step) => id === recipe.moveIds[step]));
     return Boolean(combos.some(recipe => recipe.moveIds[0] === move.id && (starter || (completed && recipe.id !== completed.id))));
   }
 
@@ -888,6 +896,56 @@ export class Simulation {
     left.x += excess * leftShare;
     right.x -= excess * (1 - leftShare);
   }
+  private resolveWallBounces(previousX: readonly number[], intendedX: readonly number[]): void {
+    this.characters.forEach((character, index) => {
+      const pending = character.wallBouncePending;
+      if (!pending) return;
+      const attempted = (intendedX[index] - previousX[index]) * pending.direction;
+      const wall = pending.direction > 0 ? this.config.arena.right - wallInset(character) : this.config.arena.left + wallInset(character);
+      const reachedWall = (intendedX[index] - wall) * pending.direction >= 0 && (character.x - wall) * pending.direction >= -0.001;
+      // The prone collision box is wider than the airborne body. Once it reaches the wall,
+      // place the upright bounce body next to the same wall without moving its opponent.
+      const visibleWidth = (this.config.arena.viewportWidth ?? this.config.arena.right - this.config.arena.left) / FIGHT_WORLD_SCALE;
+      const inset = character.collision.bodyWidth / 2 + visibleWidth * .01;
+      const bounceX = pending.direction > 0 ? this.config.arena.right - inset : this.config.arena.left + inset;
+      const opponent = this.characters[1 - index];
+      const extraMargin = opponent.mode === 'knockdown' ? Math.max(0, knockdownRadius(opponent) - FIGHT_SIDE_MARGIN) : 0;
+      const separationLimit = this.config.arena.maxSeparation === undefined ? Infinity : Math.max(0, this.config.arena.maxSeparation - extraMargin * 2);
+      const bothVisible = Math.abs(bounceX - opponent.x) <= separationLimit + .001;
+      if (attempted > 0 && reachedWall && bothVisible) {
+        character.wallBouncePending = undefined;
+        character.x = bounceX;
+        character.wallBounceEffect = { x: character.x, y: character.y - character.collision.hurtboxes.standing.height / 2, frame: this.frame, direction: pending.direction };
+        character.throwPull = undefined; character.throwFlight = undefined; character.knockdown = undefined;
+        const frontSpacing = (character.collision.bodyWidth + opponent.collision.bodyWidth) / 2 + 40;
+        const returnDistance = Math.max(0, (character.x - opponent.x) * pending.direction - frontSpacing);
+        character.pushbackMotion = returnDistance > 0
+          ? { distancePerFrame: -pending.direction * returnDistance / 25, remainingFrames: 25 } : undefined;
+        character.grounded = false; character.crouching = false; character.mode = 'hitstun';
+        character.verticalVelocity = -8; character.airborneStartedFrame = this.frame;
+        character.juggle = { gravityScale: (this.definitions[index].juggle?.initialGravityScale ?? 1) * .65, airHits: 0 };
+        const attacker = this.characters.find(candidate => candidate.characterId === pending.attackerId);
+        if (attacker) {
+          attacker.chain = undefined;
+          attacker.hitSequence = undefined;
+          const attackerIndex = this.characters.indexOf(attacker);
+          this.parsers[attackerIndex].clear();
+          this.pendingCommands[attackerIndex] = undefined;
+          for (const combo of this.comboHistory) {
+            if (combo.active && combo.attackerId === attacker.characterId && combo.targetId === character.characterId) combo.active = false;
+          }
+          const attack = attacker.attack;
+          const move = attack && this.move(this.characters.indexOf(attacker), attack.moveId);
+          if (attack && move && attack.moveId === pending.moveId && !locked(attacker)) {
+            const activeEnd = (attack.startupFrames ?? move.startup) + move.activeFrames;
+            attack.recoveryFrames = Math.min(attack.recoveryFrames ?? move.recovery, Math.max(0, attack.elapsedFrames - activeEnd + 4));
+          }
+        }
+        character.remainingStateFrames = flightFramesRemaining(character.y, character.verticalVelocity, this.config.arena.floorY,
+          this.config.movement.gravity * character.juggle.gravityScale) + (this.definitions[index].juggle?.getupFrames ?? 0);
+      } else if (!character.pushbackMotion && !character.throwPull && !character.throwFlight) character.wallBouncePending = undefined;
+    });
+  }
   private resolveBodies(previousX = this.characters.map(character => character.x)): void {
     const { left, right } = this.config.arena;
     this.characters.forEach(character => { character.x = clamp(character.x, left + wallInset(character), right - wallInset(character)); });
@@ -919,6 +977,18 @@ export class Simulation {
     if (first.x === second.x) return;
     first.facing = first.x < second.x ? 'right' : 'left'; second.facing = first.facing === 'right' ? 'left' : 'right';
   }
+  private canEndRound(): boolean {
+    if (this.characters.some(c => c.juggle || c.ultimateCapture || (c.knockdown && !c.grounded))) return false;
+    const defeated = this.characters.filter(c => c.health === 0);
+    if (defeated.length) {
+      const ultimateInProgress = this.ultimateActivation || this.characters.some((c, index) => c.attack && this.move(index, c.attack.moveId)?.category === 'ultimate') ||
+        this.projectiles.some(projectile => this.definitions.find(fighter => fighter.id === projectile.fighterId)?.moves.find(move => move.id === projectile.attack.moveId)?.category === 'ultimate');
+      return !ultimateInProgress && defeated.every(c => c.mode !== 'hitstun' && !c.wallBouncePending && !c.pushbackMotion && !c.throwPull && !c.throwFlight) &&
+        !this.pendingThrow && !this.pendingLighters.length;
+    }
+    return this.roundFramesRemaining === 0;
+  }
+
   private finishRound(): void {
     const [first, second] = this.characters;
     const winner = first.health === second.health ? undefined : first.health > second.health ? 0 : 1;
@@ -926,6 +996,8 @@ export class Simulation {
     this.roundEndReason = winner === undefined ? 'draw' : this.characters.some(character => character.health === 0) ? 'knockout' : 'time';
     if (winner !== undefined) this.roundWins[winner] += 1;
     this.characters.forEach(character => { character.attack = undefined; }); this.projectiles = []; this.pendingLighters = []; this.ultimateActivation = undefined;
-    this.phase = 'round-over'; this.roundEndedFrame = this.frame; this.transitionFrames = this.config.match.roundEndPauseFrames;
+    this.phase = 'round-over'; this.roundEndedFrame = this.frame;
+    this.transitionFrames = this.roundWins.some(wins => wins >= this.config.match.roundCount)
+      ? Math.max(this.config.match.roundEndPauseFrames, 300) : this.config.match.roundEndPauseFrames;
   }
 }

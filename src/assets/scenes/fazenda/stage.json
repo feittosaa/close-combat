@@ -1,0 +1,14 @@
+{
+  "id": "fazenda",
+  "name": "Fazenda",
+  "referenceSize": { "width": 1774, "height": 887 },
+  "groundY": 710,
+  "topExtension": 150,
+  "minimumScale": 0.01,
+  "layers": [
+    { "id": "ceu", "file": "layers/ceu.png", "size": { "width": 1774, "height": 887 }, "depth": -302, "parallax": 1, "x": 0, "y": 0, "repeatWithoutFlip": true, "motion": { "axis": "x", "amplitude": 80, "period": 3600, "mode": "oscillate" } },
+    { "id": "fazenda", "file": "layers/fazenda.png", "highFile": "layers/fazenda-high.png", "depth": -301, "parallax": 1, "x": 0, "y": 0 },
+    { "id": "fumaca", "file": "layers/fumaca.png", "size": { "width": 200, "height": 160 }, "depth": -300, "parallax": 1, "x": 1372, "y": 107, "motion": { "axis": "y", "amplitude": 3, "period": 420 } },
+    { "id": "sombra", "file": "layers/sombra.png", "depth": -299, "parallax": 1, "x": 0, "y": 170, "motion": { "axis": "x", "amplitude": 6, "period": 300 } }
+  ]
+}

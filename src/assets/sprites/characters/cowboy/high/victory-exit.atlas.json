@@ -62,48 +62,8 @@
     },
     "3": {
       "frame": {
-        "x": 0,
-        "y": 1280,
-        "w": 1280,
-        "h": 1280
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
+        "x": 3840,
         "y": 0,
-        "w": 1280,
-        "h": 1280
-      },
-      "sourceSize": {
-        "w": 1280,
-        "h": 1280
-      }
-    },
-    "4": {
-      "frame": {
-        "x": 1280,
-        "y": 1280,
-        "w": 1280,
-        "h": 1280
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 1280,
-        "h": 1280
-      },
-      "sourceSize": {
-        "w": 1280,
-        "h": 1280
-      }
-    },
-    "5": {
-      "frame": {
-        "x": 2560,
-        "y": 1280,
         "w": 1280,
         "h": 1280
       },
@@ -122,10 +82,10 @@
     }
   },
   "meta": {
-    "image": "effect-impact.png",
+    "image": "victory-exit.png",
     "size": {
-      "w": 3840,
-      "h": 2560
+      "w": 5120,
+      "h": 1280
     },
     "scale": "1"
   }

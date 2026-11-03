@@ -37,6 +37,8 @@ export interface MoveDefinition {
   pushback: { hit: number; block: number };
   /** Spread hit pushback over combat ticks; blocked pushback remains immediate. */
   hitPushbackFrames?: number;
+  /** On outward impact with a stage or visible-screen boundary, launch the target back into the arena. */
+  wallBounce?: boolean;
   /** Launch a thrown opponent over several simulation frames. */
   throwFlight?: { frames: number; liftSpeed: number };
   hitLevel: HitLevel;

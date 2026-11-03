@@ -32,9 +32,16 @@ describe('Project asset and documentation hygiene', () => {
     }
     const stages = import.meta.glob<string>('../assets/scenes/*/stage.json', { eager: true, query: '?raw', import: 'default' });
     for (const [key, source] of Object.entries(stages)) {
-      const stage = JSON.parse(source) as { source?: string; layers: { file: string; highFile?: string; frames?: string[] }[] };
+      const stage = JSON.parse(source) as { source?: string; layers: { file: string; sourceStage?: string; highFile?: string; frames?: string[] }[] };
       if (stage.source) used.add(relativeTo(projectPath(key), stage.source));
-      for (const layer of stage.layers) for (const file of [layer.file, ...(layer.highFile ? [layer.highFile] : []), ...(layer.frames ?? [])]) used.add(relativeTo(projectPath(key), file));
+      for (const layer of stage.layers) for (const file of [layer.file, ...(layer.highFile ? [layer.highFile] : []), ...(layer.frames ?? [])]) {
+        used.add(layer.sourceStage ? `src/assets/scenes/${layer.sourceStage}/${file}` : relativeTo(projectPath(key), file));
+      }
+    }
+    for (const stage of ['saloon', 'fazenda', 'sala-treino']) {
+      for (const name of ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'round-win', 'round-lose', ...(stage === 'saloon' ? ['tumbleweed'] : [])]) {
+        used.add(`src/assets/scenes/${stage}/presentation/${name}.png`);
+      }
     }
     const cowboyAtlases = import.meta.glob('../assets/sprites/characters/cowboy/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
     for (const key of Object.keys(cowboyAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));

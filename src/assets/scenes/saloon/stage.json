@@ -1,6 +1,6 @@
 {
   "id": "saloon",
-  "name": "Saloon",
+  "name": "Saloon · Retrô",
   "referenceSize": {
     "width": 1774,
     "height": 887
@@ -18,20 +18,164 @@
       "y": 0
     },
     {
-      "id": "lamps",
-      "file": "layers/lamps-1.png",
+      "id": "chama-teto-esquerda",
+      "file": "layers/flame-1.png",
       "frames": [
-        "layers/lamps-2.png",
-        "layers/lamps-3.png",
-        "layers/lamps-4.png",
-        "layers/lamps-5.png",
-        "layers/lamps-6.png"
+        "layers/flame-2.png",
+        "layers/flame-3.png",
+        "layers/flame-4.png",
+        "layers/flame-5.png",
+        "layers/flame-6.png"
       ],
       "frameDuration": 9,
       "depth": -299,
       "parallax": 1,
-      "x": 0,
-      "y": 0
+      "x": 733,
+      "y": 117,
+      "size": {
+        "width": 28,
+        "height": 50
+      }
+    },
+    {
+      "id": "chama-teto-centro",
+      "file": "layers/flame-1.png",
+      "frames": [
+        "layers/flame-2.png",
+        "layers/flame-3.png",
+        "layers/flame-4.png",
+        "layers/flame-5.png",
+        "layers/flame-6.png"
+      ],
+      "frameDuration": 9,
+      "depth": -299,
+      "parallax": 1,
+      "x": 875,
+      "y": 150,
+      "size": {
+        "width": 28,
+        "height": 50
+      }
+    },
+    {
+      "id": "chama-teto-direita",
+      "file": "layers/flame-1.png",
+      "frames": [
+        "layers/flame-2.png",
+        "layers/flame-3.png",
+        "layers/flame-4.png",
+        "layers/flame-5.png",
+        "layers/flame-6.png"
+      ],
+      "frameDuration": 9,
+      "depth": -299,
+      "parallax": 1,
+      "x": 1016,
+      "y": 117,
+      "size": {
+        "width": 28,
+        "height": 50
+      }
+    },
+    {
+      "id": "chama-parede-esquerda",
+      "file": "layers/flame-1.png",
+      "frames": [
+        "layers/flame-2.png",
+        "layers/flame-3.png",
+        "layers/flame-4.png",
+        "layers/flame-5.png",
+        "layers/flame-6.png"
+      ],
+      "frameDuration": 9,
+      "depth": -299,
+      "parallax": 1,
+      "x": 422,
+      "y": 336,
+      "size": {
+        "width": 28,
+        "height": 50
+      }
+    },
+    {
+      "id": "chama-parede-direita",
+      "file": "layers/flame-1.png",
+      "frames": [
+        "layers/flame-2.png",
+        "layers/flame-3.png",
+        "layers/flame-4.png",
+        "layers/flame-5.png",
+        "layers/flame-6.png"
+      ],
+      "frameDuration": 9,
+      "depth": -299,
+      "parallax": 1,
+      "x": 881,
+      "y": 366,
+      "size": {
+        "width": 28,
+        "height": 50
+      }
+    },
+    {
+      "id": "chama-mesa-esquerda",
+      "file": "layers/flame-1.png",
+      "frames": [
+        "layers/flame-2.png",
+        "layers/flame-3.png",
+        "layers/flame-4.png",
+        "layers/flame-5.png",
+        "layers/flame-6.png"
+      ],
+      "frameDuration": 9,
+      "depth": -299,
+      "parallax": 1,
+      "x": 967,
+      "y": 502,
+      "size": {
+        "width": 28,
+        "height": 50
+      }
+    },
+    {
+      "id": "chama-mesa-centro",
+      "file": "layers/flame-1.png",
+      "frames": [
+        "layers/flame-2.png",
+        "layers/flame-3.png",
+        "layers/flame-4.png",
+        "layers/flame-5.png",
+        "layers/flame-6.png"
+      ],
+      "frameDuration": 9,
+      "depth": -299,
+      "parallax": 1,
+      "x": 1138,
+      "y": 507,
+      "size": {
+        "width": 28,
+        "height": 50
+      }
+    },
+    {
+      "id": "chama-mesa-direita",
+      "file": "layers/flame-1.png",
+      "frames": [
+        "layers/flame-2.png",
+        "layers/flame-3.png",
+        "layers/flame-4.png",
+        "layers/flame-5.png",
+        "layers/flame-6.png"
+      ],
+      "frameDuration": 9,
+      "depth": -299,
+      "parallax": 1,
+      "x": 1707,
+      "y": 497,
+      "size": {
+        "width": 28,
+        "height": 50
+      }
     }
   ],
   "topExtension": 150

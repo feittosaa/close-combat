@@ -7,10 +7,10 @@ import type { HitEvent } from '../engine/combat/AttackResolver';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import type { ProjectileState } from '../engine/combat/ProjectileState';
 import { getTimedAnimationFrame, type AnimationClip } from './animations/AnimationPlayback';
+import { contactEffectKey } from './contactEffects';
 
 const effectClips: Readonly<Record<string, AnimationClip>> = {
   shot:{key:'shot',start:0,end:5,frameRate:20,frameDurations:[2,3,3,3,3,3],repeat:-1},
-  impact:{key:'impact',start:0,end:5,frameRate:30,frameDurations:[1,2,3,2,2,2],repeat:0},
 };
 
 /** Cowboy effects follow the existing projectile geometry and simulation clock. */
@@ -18,13 +18,30 @@ export class ProjectileView {
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly sprites = new Map<number, Phaser.GameObjects.Image>();
   private readonly dynamiteExplosions = new Map<number, Phaser.GameObjects.Image>();
-  private impact?: { sprite: Phaser.GameObjects.Image; started: number; eventFrame: number; texture: string };
-  private perfectImpact?: { x: number; y: number; started: number };
-  private lastPerfectFrame = -1;
-  constructor(private readonly scene: Phaser.Scene) { this.graphics = scene.add.graphics().setDepth(11); }
+  private impacts: { sprite: Phaser.GameObjects.Image; started: number }[] = [];
+  private wallEffects = new Map<string, { sprite: Phaser.GameObjects.Image; started: number }>();
+  private lastFrame = -1;
+  constructor(private readonly scene: Phaser.Scene) { this.graphics = scene.add.graphics().setDepth(12); }
   sync(projectiles: readonly ProjectileState[], explosions: readonly ExplosionState[] = [], frame = 0, hits: readonly HitEvent[] = [], characters: readonly CharacterState[] = []): void {
     const g = this.graphics.clear();
-    if (frame < this.lastPerfectFrame) this.lastPerfectFrame = -1;
+    if (frame < this.lastFrame) { this.impacts.forEach(impact => impact.sprite.destroy()); this.impacts = []; }
+    if (frame < this.lastFrame) { this.wallEffects.forEach(effect => effect.sprite.destroy()); this.wallEffects.clear(); }
+    this.lastFrame = frame;
+    for (const character of characters) {
+      const effect = character.wallBounceEffect;
+      const existing = this.wallEffects.get(character.characterId);
+      if (effect && effect.frame <= frame && frame - effect.frame < 12 && existing?.started !== effect.frame) {
+        existing?.sprite.destroy();
+        const sprite = this.scene.add.image(effect.x + effect.direction * character.collision.bodyWidth / 2, effect.y, 'wall-bounce')
+          .setDepth(12).setDisplaySize(90, 180).setFlipX(effect.direction < 0);
+        this.wallEffects.set(character.characterId, { sprite, started: effect.frame });
+      }
+    }
+    for (const [id, effect] of this.wallEffects) {
+      const age = frame - effect.started;
+      if (age >= 12 || age < 0) { effect.sprite.destroy(); this.wallEffects.delete(id); }
+      else effect.sprite.setAlpha(1 - age / 12);
+    }
     const active = new Set(projectiles.filter(p => p.fighterId === 'cowboy').map(p => p.id));
     for (const [id,sprite] of this.sprites) if (!active.has(id)) { sprite.destroy(); this.sprites.delete(id); }
     for (const p of projectiles) {
@@ -83,45 +100,31 @@ export class ProjectileView {
       }
       g.restore();
     }
-    const hit = hits.find(event => event.perfectBlock) ?? hits[0];
-    const shooter = hit && characters.find(character => character.characterId === hit.attackerId);
-    const target = hit && characters.find(character => character.characterId === hit.targetId);
-    if (hit?.perfectBlock && target && this.lastPerfectFrame !== frame) {
-      const box = createHurtbox(target);
-      const heightRatio = hit.contactHeight === 'low' ? .84 : hit.contactHeight === 'high' ? .18 : .5;
-      this.perfectImpact = { x: box.x + box.width / 2, y: box.y + box.height * heightRatio, started: frame };
-      this.lastPerfectFrame = frame;
+    for (const contact of hits) {
+      const attacker = characters.find(character => character.characterId === contact.attackerId);
+      const defender = characters.find(character => character.characterId === contact.targetId);
+      if (!attacker || !defender) continue;
+      const move = getCharacterById(attacker.fighterId)?.moves.find(candidate => candidate.id === contact.moveId);
+      const key = `contact-${contactEffectKey(contact, move)}`;
+      if (!this.scene.textures.exists(key)) continue;
+      const box = createHurtbox(defender);
+      const height = contact.contactHeight ?? move?.hitLevel;
+      const x = contact.contactPoint?.x ?? box.x + box.width / 2;
+      const y = contact.contactPoint?.y ?? box.y + box.height * (height === 'low' ? .84 : height === 'high' ? .18 : .5);
+      const isBlock = contact.outcome === 'block';
+      const bodyY = contact.contactBody?.centerY ?? box.y + box.height / 2;
+      const bodyHeight = contact.contactBody?.height ?? box.height;
+      const sprite = this.scene.add.image(x, isBlock ? bodyY : y, key, 0).setDepth(12)
+        .setDisplaySize(isBlock ? 84 : 66, isBlock ? bodyHeight * 1.2 : 66)
+        .setFlipX((contact.pushbackDirection ?? attacker.facing) === 'left');
+      this.impacts.push({ sprite, started: frame });
     }
-    if (this.perfectImpact) {
-      const age = frame - this.perfectImpact.started;
-      if (age >= 12 || age < 0) this.perfectImpact = undefined;
-      else {
-        const { x, y } = this.perfectImpact;
-        const radius = 12 + age * 2;
-        g.lineStyle(3, 0xffffff, 1 - age / 12).strokeCircle(x, y, radius);
-        for (let i = 0; i < 8; i++) {
-          const angle = i * Math.PI / 4;
-          g.lineBetween(x + Math.cos(angle) * (radius + 3), y + Math.sin(angle) * (radius + 3),
-            x + Math.cos(angle) * (radius + 13), y + Math.sin(angle) * (radius + 13));
-        }
-      }
-    }
-    const effect = hit?.perfectBlock ? undefined : hit?.outcome === 'block' ? 'block' : shooter?.fighterId === 'cowboy' ? 'impact' : undefined;
-    const texture = `cowboy-effect-${effect}`;
-    if (hit && effect && this.impact?.eventFrame !== frame && this.scene.textures.exists(texture)) {
-      if (target) {
-        this.impact?.sprite.destroy();
-        const box = createHurtbox(target);
-        const heightRatio = hit.contactHeight === 'low' ? .84 : hit.contactHeight === 'high' ? .18 : .5;
-        const sprite = this.scene.add.image(box.x + box.width / 2,box.y + box.height * heightRatio,texture,'0').setDepth(12).setDisplaySize(80,80);
-        this.impact = { sprite, started: frame, eventFrame: frame, texture };
-      }
-    }
-    if (this.impact) {
-      const age = frame - this.impact.started;
-      if (age >= 12) { this.impact.sprite.destroy(); this.impact = undefined; }
-      else this.impact.sprite.setTexture(this.impact.texture,String(getTimedAnimationFrame(effectClips.impact,age)));
-    }
+    this.impacts = this.impacts.filter(impact => {
+      const age = frame - impact.started;
+      if (age >= 12 || age < 0) { impact.sprite.destroy(); return false; }
+      impact.sprite.setFrame(Math.min(5, Math.floor(age / 2)));
+      return true;
+    });
     const activeExplosions = new Set(explosions.filter(e => e.kind === 'dynamite').map(e => e.id!));
     for (const [id,sprite] of this.dynamiteExplosions) if (!activeExplosions.has(id)) { sprite.destroy(); this.dynamiteExplosions.delete(id); }
     for (const explosion of explosions) {
@@ -139,5 +142,5 @@ export class ProjectileView {
       g.lineStyle(2,0xffdda0,explosion.remainingFrames/10).strokeCircle(explosion.x,explosion.y,radius+5);
     }
   }
-  destroy(): void { this.sprites.forEach(sprite => sprite.destroy()); this.dynamiteExplosions.forEach(sprite => sprite.destroy()); this.impact?.sprite.destroy(); this.graphics.destroy(); }
+  destroy(): void { this.sprites.forEach(sprite => sprite.destroy()); this.dynamiteExplosions.forEach(sprite => sprite.destroy()); this.impacts.forEach(impact => impact.sprite.destroy()); this.wallEffects.forEach(effect => effect.sprite.destroy()); this.graphics.destroy(); }
 }

@@ -1,27 +1,13 @@
 {
   "id": "sala-treino",
   "name": "Sala de Treino",
-  "referenceSize": {
-    "width": 1424,
-    "height": 688
-  },
-  "groundY": 600,
+  "referenceSize": { "width": 1804, "height": 872 },
+  "groundY": 682,
+  "topExtension": 150,
   "minimumScale": 0.01,
   "layers": [
-    {
-      "id": "sala",
-      "file": "layers/sala-1.png",
-      "frames": [
-        "layers/sala-2.png",
-        "layers/sala-3.png",
-        "layers/sala-4.png",
-        "layers/sala-5.png"
-      ],
-      "frameDuration": 12,
-      "depth": -300,
-      "parallax": 1,
-      "x": 0,
-      "y": 0
-    }
+    { "id": "sala", "file": "layers/sala.png", "highFile": "layers/sala-high.png", "depth": -300, "parallax": 1, "x": 0, "y": 0 },
+    { "id": "bandeira-esquerda", "file": "layers/bandeira-1.png", "frames": ["layers/bandeira-2.png", "layers/bandeira-3.png", "layers/bandeira-4.png"], "frameDuration": 12, "size": { "width": 260, "height": 347 }, "depth": -299, "parallax": 1, "x": 200, "y": 61 },
+    { "id": "bandeira-direita", "file": "layers/bandeira-1.png", "frames": ["layers/bandeira-2.png", "layers/bandeira-3.png", "layers/bandeira-4.png"], "frameDuration": 12, "size": { "width": 260, "height": 347 }, "depth": -299, "parallax": 1, "x": 1300, "y": 61 }
   ]
 }
