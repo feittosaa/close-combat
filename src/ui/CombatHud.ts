@@ -22,7 +22,7 @@ export class CombatHud {
   private lastImpactLabel = '';
   private lastImpactFrame = Number.NEGATIVE_INFINITY;
   private readonly barWidth: number;
-  private readonly sidePadding = 28;
+  private readonly sidePadding = 82;
 
   constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = ['JOGADOR 1','JOGADOR 2'], stageName = '', private readonly training = false, private readonly practiceLabel = 'TREINO LIVRE', fighterIds?: readonly [string,string]) {
     this.barWidth = Math.max(360, width / 2 - this.sidePadding - 90);
@@ -34,15 +34,15 @@ export class CombatHud {
     decoration.fillStyle(HUD.players[0]).fillPoints([
       {x:width/2-34,y:0},{x:width/2-29,y:0},{x:width/2-23,y:41},{x:width/2-28,y:41},
     ],true);
-    const labels=[scene.add.text(fighterIds ? 64 : 28,31,`P1  /  ${fighterNames[0].toUpperCase()}`,hudText(13,true)),
-      scene.add.text(width-(fighterIds ? 64 : 28),31,`P2  /  ${fighterNames[1].toUpperCase()}`,hudText(13,true)).setOrigin(1,0)];
-    const portraits = fighterIds ? fighterIds.map((id,index) => scene.add.image(index === 0 ? 30 : width-30,29,`fighter-icon-${id}`).setDisplaySize(57,57)) : [];
+    const labels=[scene.add.text(fighterIds ? 82 : 28,31,`P1  /  ${fighterNames[0].toUpperCase()}`,hudText(13,true)),
+      scene.add.text(width-(fighterIds ? 82 : 28),31,`P2  /  ${fighterNames[1].toUpperCase()}`,hudText(13,true)).setOrigin(1,0)];
+    const portraits = fighterIds ? fighterIds.map((id,index) => scene.add.image(index === 0 ? 40 : width-40,39,`fighter-icon-${id}`).setDisplaySize(76,76)) : [];
     this.healthGraphics=scene.add.graphics();
     this.healthLabels=[scene.add.text(this.sidePadding+this.barWidth,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
       scene.add.text(width-this.sidePadding-this.barWidth,33,'',hudText(10,false,HUD.goldText))];
     this.rageLabels=[scene.add.text(30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)),scene.add.text(width-30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)).setOrigin(1,0)];
-    this.modeLabels=[scene.add.text(fighterIds ? 64 : 30,49,'',hudText(10,false,HUD.muted)),
-      scene.add.text(width-(fighterIds ? 64 : 30),49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
+    this.modeLabels=[scene.add.text(fighterIds ? 82 : 30,49,'',hudText(10,false,HUD.muted)),
+      scene.add.text(width-(fighterIds ? 82 : 30),49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
     this.timer=scene.add.text(width/2,6,'99',hudText(30,true)).setOrigin(.5,0);
     this.roundLabel=scene.add.text(width/2,41,'ROUND 1',hudText(10,false,HUD.goldText)).setOrigin(.5,0);
     const stageLabel=scene.add.text(width/2,61,stageName.toUpperCase(),hudText(9,false,HUD.muted)).setOrigin(.5,0);

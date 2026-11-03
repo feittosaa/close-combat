@@ -159,9 +159,10 @@ describe('fundação da simulação', () => {
     const sim = new Simulation({ ...config, match: { ...config.match, roundEndPauseFrames: 2 } }, [fragile, fragile], { initialDistance: 64 });
     for (let round = 1; round <= 2; round++) {
       sim.stepFrame([input('N', ['1']), N]); advance(sim, 8 + CONTACT_HITSTOP_FRAMES);
+      while (sim.snapshot().phase === 'fight') advance(sim, 1);
       expect(sim.snapshot()).toMatchObject({ phase: 'round-over', round, roundEndReason: 'knockout', roundWinnerId: 'player-1' });
       expect(sim.snapshot().activeHitboxes).toEqual([]);
-      advance(sim, 2);
+      advance(sim, round === 2 ? 300 : 2);
     }
     expect(sim.snapshot()).toMatchObject({ phase: 'match-over', matchWinnerId: 'player-1', roundWins: [2, 0] });
     expect(sim.isMatchOver()).toBe(true); sim.resetMatch(); expect(sim.isMatchOver()).toBe(false);

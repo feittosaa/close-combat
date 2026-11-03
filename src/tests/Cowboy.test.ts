@@ -6,6 +6,26 @@ import { Simulation, volleyShotDamage } from '../engine/simulation/Simulation';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 import { contactHeight, createHitbox, createHurtbox, createHurtZones } from '../engine/collision/combatGeometry';
 import { getCowboySpriteLayers } from '../rendering/animations/cowboySprites';
+import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
+
+it.each([0,1])('reinicia a reação da vítima nos tiros do agarrão 2+4: jogador %i', player => {
+  const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true,initialDistance:65});
+  const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
+  step({direction:'N',buttons:new Set(['2','4'])});
+  const seen:number[] = [];
+  for (let tick=0; tick<120; tick++) {
+    step();
+    const snapshot = sim.snapshot(), attacker = snapshot.characters[player], target = snapshot.characters[1-player];
+    const confirmed = attacker.attack?.throwConfirmedFrame;
+    if (confirmed === undefined || target.hitReaction?.startedFrame !== snapshot.frame - 1) continue;
+    const age = target.hitReaction.startedFrame - confirmed;
+    if (COWBOY_GRAB_SHOTS.some(shot => shot === age)) {
+      seen.push(age);
+      expect(getCowboySpriteLayers(target,snapshot.frame)[0].texture).toBe('cowboy-hurt');
+    }
+  }
+  expect(seen).toEqual([...COWBOY_GRAB_SHOTS]);
+});
 
 it('divide a vulnerabilidade em cabeça, barriga e pernas sem mudar sua área total', () => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
@@ -45,6 +65,94 @@ it.each([0,1])('permite os três pisões defendidos sem reiniciar o combo: jogad
 });
 
 const input = (direction: Direction = 'N', button?: AttackButton): FrameInput => ({ direction, buttons: new Set(button ? [button] : []) });
+
+it.each([0,1])('o afastamento e o laço quicam o adversário na borda e o lançam de volta, jogador %i', player => {
+ for (const move of ['push-away', 'throw-13'] as const) {
+  const base = createGameConfig(1024,576);
+  const config = {...base, arena:{...base.arena, left:0, right:350, maxSeparation:undefined}};
+  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+  const sim = new Simulation(config,defs,{training:true,initialDistance:56});
+  const step = (a:FrameInput=input(), b:FrameInput=input()) => sim.stepFrame(player === 0 ? [a,b] : [b,a]);
+  for (let i=0; i<160; i++) step(input('F'),input('B'));
+  if (move === 'push-away') {
+    for (const d of ['D','DF','F'] as const) step(input(d));
+    step(input('F','4'));
+  } else step({direction:'N', buttons:new Set(['1','3'])});
+  for (let i=0; i<160 && !sim.snapshot().characters[1-player].wallBounceEffect; i++) step();
+  const target = sim.snapshot().characters[1-player];
+  expect(target.wallBounceEffect).toBeDefined();
+  const direction = target.wallBounceEffect!.direction;
+  const wall = direction > 0 ? config.arena.right : config.arena.left;
+  const contact = target.wallBounceEffect!.x + direction * target.collision.bodyWidth / 2;
+  const visibleWidth = config.arena.viewportWidth! / 1.6;
+  expect(Math.abs(wall - contact)).toBeLessThanOrEqual(visibleWidth * .02);
+  expect(target.mode).toBe('hitstun');
+  expect(target.grounded).toBe(false);
+  expect(target.verticalVelocity).toBe(-8);
+  expect(target.juggle?.gravityScale).toBeCloseTo((defs[1-player].juggle?.initialGravityScale ?? 1) * .65);
+  const attacker = sim.snapshot().characters[player];
+  expect(attacker.chain).toBeUndefined();
+  expect(attacker.hitSequence).toBeUndefined();
+  expect(sim.snapshot().comboHistory.some(combo => combo.active && combo.attackerId === attacker.characterId)).toBe(false);
+  const atBounce = target.x;
+  for (let i=0; i<10; i++) step();
+  expect((sim.snapshot().characters[1-player].x - atBounce) * target.wallBounceEffect!.direction).toBeLessThanOrEqual(0);
+  expect(sim.snapshot().characters[1-player].grounded).toBe(false);
+  expect(sim.snapshot().characters[player].attack).toBeUndefined();
+  for (let i=0; i<30; i++) step();
+  const returned = sim.snapshot().characters[1-player];
+  const spacing = (returned.x - sim.snapshot().characters[player].x) * direction;
+  expect(spacing).toBeGreaterThan(0);
+  expect(spacing).toBeLessThanOrEqual((returned.collision.bodyWidth + attacker.collision.bodyWidth) / 2 + 41);
+  expect(returned.grounded).toBe(false);
+  step(input('N','1'));
+  expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-punch');
+  for (let i=0; i<90 && !sim.snapshot().hitEvents.some(event=>event.attackerId===attacker.characterId && event.moveId==='light-punch'); i++) step();
+  const next = sim.snapshot();
+  expect(next.hitEvents.some(event=>event.attackerId===attacker.characterId && event.moveId==='light-punch' && event.outcome==='hit')).toBe(true);
+  expect(next.comboHistory.find(combo=>combo.active && combo.attackerId===attacker.characterId)?.hits).toBe(1);
+ }
+});
+
+it.each([0,1])('o limite da tela no meio da arena não causa quique nem arrasta o atacante, jogador %i', player => {
+ for (const move of ['push-away', 'throw-13'] as const) {
+  const base=createGameConfig(1024,576);
+  const config={...base,arena:{...base.arena,maxSeparation:200}};
+  const sim=new Simulation(config,player===0?[cowboy,shoto]:[shoto,cowboy],{training:true,initialDistance:56});
+  const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
+  if (move === 'push-away') {
+    for(const d of ['D','DF','F'] as const)step(input(d));
+    step(input('F','4'));
+  } else step({direction:'N',buttons:new Set(['1','3'])});
+  for(let i=0;i<100 && !sim.snapshot().hitEvents.length;i++)step();
+  expect(sim.snapshot().hitEvents[0]?.moveId).toBe(move);
+  const attackerX=sim.snapshot().characters[player].x;
+  for(let i=0;i<100;i++) {
+    step();
+    expect(sim.snapshot().characters[1-player].wallBounceEffect).toBeUndefined();
+  }
+  const snapshot=sim.snapshot();
+  expect(snapshot.characters[1-player].wallBounceEffect).toBeUndefined();
+  expect(snapshot.characters[player].x).toBeCloseTo(attackerX);
+  expect(Math.abs(snapshot.characters[0].x-snapshot.characters[1].x)).toBeLessThanOrEqual(config.arena.maxSeparation);
+ }
+});
+
+it.each([0,1])('um golpe letal ainda quica antes do fim do round, jogador %i', player => {
+  const base=createGameConfig(1024,576), config={...base,arena:{...base.arena,left:0,right:350,maxSeparation:undefined}};
+  const fragile={...shoto,maxHealth:1};
+  const sim=new Simulation(config,player===0?[cowboy,fragile]:[fragile,cowboy],{initialDistance:56});
+  const step=(a:FrameInput=input(),b:FrameInput=input())=>sim.stepFrame(player===0?[a,b]:[b,a]);
+  for(let i=0;i<160;i++)step(input('F'),input('B'));
+  for(const d of ['D','DF','F'] as const)step(input(d));
+  step(input('F','4'));
+  for(let i=0;i<100 && !sim.snapshot().characters[1-player].wallBounceEffect;i++)step();
+  expect(sim.snapshot().characters[1-player].wallBounceEffect).toBeDefined();
+  expect(sim.snapshot().characters[1-player].health).toBe(0);
+  expect(sim.snapshot().phase).toBe('fight');
+  for(let i=0;i<200 && sim.snapshot().phase==='fight';i++)step();
+  expect(sim.snapshot().phase).toBe('round-over');
+});
 
 it.each([0,1])('permite dash aéreo nos dois sentidos com duplo toque ou atalho: jogador %i', player => {
   for (const direction of ['F','B'] as const) for (const shortcut of [false,true]) {
@@ -388,6 +496,22 @@ it.each([0,1])('a ultimate levanta e acerta seis vezes após o primeiro disparo:
   }
 });
 
+it.each([0,1])('completa a ultimate mesmo após zerar a vida no primeiro tiro, jogador %i', player => {
+  const attacker = {...cowboy, moves:cowboy.moves.map(move => move.id === 'bulls-eye' ? {...move, rageCost:0} : move), rage:{...cowboy.rage!, maximum:0}};
+  const target = {...shoto, maxHealth:1};
+  const sim = new Simulation(createGameConfig(1024,576), player === 0 ? [attacker,target] : [target,attacker], {initialDistance:100});
+  const step = (value:FrameInput=input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
+  step({...input(),ultimate:true});
+  const shots:number[] = [];
+  for (let tick=0; tick<500 && shots.length<6; tick++) {
+    step();
+    for (const event of sim.snapshot().hitEvents) if (event.moveId === 'bulls-eye' && event.outcome === 'hit') shots.push(event.volleyStep!);
+    if (shots.length && shots.length < 6) expect(sim.snapshot().phase).toBe('fight');
+  }
+  expect(shots).toEqual([0,1,2,3,4,5]);
+  expect(sim.snapshot().characters[1-player].health).toBe(0);
+});
+
 it.each([0,1])('o primeiro disparo da ultimate só é bloqueado agachado: jogador %i', player => {
   for (const [guard,expected] of [['B','hit'],['DB','block']] as const) {
     const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
@@ -679,11 +803,12 @@ it.each([0, 1])('comando da ultimate exige movimento completo e rage: jogador %i
   }
 });
 
-it.each([0, 1])('encadeia 3,3,3 e inicia o combo de tiros se ainda não usou o soco: jogador %i', player => {
+it.each([0, 1])('encadeia chutes parciais ou completos com o combo de tiros: jogador %i', player => {
+ for (const kicks of [1, 2, 3]) {
   const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, {training: true, initialDistance: 65});
   const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
-  for (const button of ['3', '3', '3', '1', '2', '2', '2'] as const) {
+  for (const button of [...Array<'3'>(kicks).fill('3'), '1', '2', '2', '2'] as const) {
     step(input('N', button));
     const moveId = button === '1' ? 'light-punch' : button === '2' ? 'heavy-punch' : 'light-kick';
     expect(sim.snapshot().characters[player].attack?.moveId).toBe(moveId);
@@ -695,7 +820,8 @@ it.each([0, 1])('encadeia 3,3,3 e inicia o combo de tiros se ainda não usou o s
     expect(hit, `${button}: ${moveId}`).toBe(true);
     while (sim.snapshot().hitstopFramesRemaining) step(input());
   }
-  expect(sim.snapshot().characters[1 - player].health).toBe(794);
+  expect(sim.snapshot().characters[1 - player].health).toBe(866 - 24 * kicks);
+ }
 });
 
 it.each([0, 1])('não reinicia os três chutes durante o mesmo combo confirmado: jogador %i', player => {
@@ -713,8 +839,25 @@ it.each([0, 1])('não reinicia os três chutes durante o mesmo combo confirmado:
   expect(sim.snapshot().characters[player].attack?.elapsedFrames).toBeGreaterThan(previous!.elapsedFrames);
 });
 
+it.each([0, 1])('não retorna ao chute após trocar para o soco, jogador %i', player => {
+  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+  const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});
+  const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
+  for (const button of ['3','1'] as const) {
+    step(input('N',button));
+    for (let tick=0; tick<100 && !sim.snapshot().hitEvents.length; tick++) step();
+    expect(sim.snapshot().hitEvents[0]?.outcome).toBe('hit');
+    while (sim.snapshot().hitstopFramesRemaining) step();
+  }
+  step(input('N','3'));
+  expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-punch');
+  for (let tick=0; tick<100; tick++) step();
+  step(input('N','3'));
+  expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-kick');
+});
+
 it.each([0, 1])('não repete o soco fraco depois de usá-lo e concluir 3,3,3: jogador %i', player => {
-  for (const sequence of [['1','3','3','3'],['3','3','3','1','3','3','3']] as const) {
+  for (const sequence of [['1','3','3','3']] as const) {
     const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);

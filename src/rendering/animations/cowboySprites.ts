@@ -17,14 +17,20 @@ export const cowboyFrameSize = quality === 'high' ? 1280 : 640;
 /** Sprite positions remain authored in the source grid and anchored to the feet. */
 export const cowboyFootAnchor = 465 / 640;
 export const cowboyDisplayHeight = 225 * 1.6 / 1.85 * 640 / 512;
+export function getCowboyFrameSize(texture: string): number {
+  const name = texture.replace(/^cowboy-/, '');
+  const base = `../../assets/sprites/characters/cowboy/high/${name}`;
+  return quality === 'high' && highImages[`${base}.png`] && highAtlases[`${base}.atlas.json`] ? 1280 : 640;
+}
+
 export function preloadCowboySprites(scene: Phaser.Scene): void {
-  const selectedImages = quality === 'high' ? highImages : images;
-  const selectedAtlases = quality === 'high' ? highAtlases : atlases;
-  for (const [path, image] of Object.entries(selectedImages)) {
+  for (const [path, image] of Object.entries(images)) {
     const name = path.split('/').pop()!.replace('.png', '');
     const key = `cowboy-${name}`;
-    const atlas = selectedAtlases[path.replace(/\.png$/, '.atlas.json')];
-    if (atlas && !scene.textures.exists(key)) scene.load.atlas(key, image, atlas);
+    const highBase = `../../assets/sprites/characters/cowboy/high/${name}`;
+    const useHigh = getCowboyFrameSize(key) === 1280;
+    const atlas = useHigh ? highAtlases[`${highBase}.atlas.json`] : atlases[path.replace(/\.png$/, '.atlas.json')];
+    if (atlas && !scene.textures.exists(key)) scene.load.atlas(key, useHigh ? highImages[`${highBase}.png`] : image, atlas);
   }
 }
 const pose = (name: string, frame: number, state: CharacterState) => {
@@ -111,9 +117,25 @@ export function getCowboyRoundEndPresentation(state: CharacterState, elapsed: nu
 
 export function getCowboyRoundEndPose(state: CharacterState, winner: boolean, elapsed: number) {
   if (state.fighterId !== 'cowboy' || !state.grounded) return undefined;
-  if (!winner && state.mode === 'knockdown') return pose('defeat', 5, state);
+  if (!winner && state.mode === 'knockdown') return undefined;
+  if (winner && elapsed >= 80) {
+    const age = elapsed - 80;
+    const frame = age < 12 ? 0 : age < 24 ? 1 : 2 + Math.floor((age - 24) / 12) % 2;
+    const direction = state.facing === 'right' ? -1 : 1;
+    return { ...pose('victory-exit', frame, state), flipX: direction < 0, offsetX: direction * Math.max(0, age - 24) * 4 };
+  }
   const durations = winner ? [10, 9, 14, 12, 11, 24] : [8, 8, 10, 10, 12, 32];
   return pose(winner ? 'victory' : 'defeat', getPhaseAnimationFrame([0,1,2,3,4,5], durations, Math.max(0, elapsed), 80), state);
+}
+
+/** Wait until the victory exit has fully crossed the visible camera edge. */
+export function hasCowboyExited(state: CharacterState, elapsed: number, floorY: number, gravity: number, view: {left: number; right: number}): boolean {
+  if (state.fighterId !== 'cowboy') return true;
+  const presentation = getCowboyRoundEndPresentation(state, elapsed, floorY, gravity);
+  const result = getCowboyRoundEndPose(presentation.state, true, presentation.elapsed);
+  if (!result || result.texture !== 'cowboy-victory-exit') return false;
+  const x = state.x + result.offsetX;
+  return state.facing === 'right' ? x + cowboyDisplayHeight / 2 < view.left : x - cowboyDisplayHeight / 2 > view.right;
 }
 
 export function getCowboySpritePose(state: CharacterState, frame: number) {
@@ -190,6 +212,11 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     return pose('knockdown', remaining > 12 ? 2 : remaining > 8 ? 3 : remaining > 4 ? 4 : 5, state);
   }
   if (state.mode === 'hitstun') {
+    const bounce = state.wallBounceEffect;
+    const bounceAge = bounce ? frame - bounce.frame : -1;
+    if (!state.grounded && bounce && bounceAge >= 0 && bounceAge < 24 && (state.hitReaction?.startedFrame ?? -1) <= bounce.frame) {
+      return pose('wall-bounce', Math.min(3, Math.floor(bounceAge / 6)), state);
+    }
     if (state.grounded && state.grabbedStartedFrame !== undefined && frame - state.grabbedStartedFrame < 16) {
       return pose('grabbed', 0, state);
     }
@@ -208,6 +235,10 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     return {...pose(name, sample('turn', frame - turn.startedFrame), state), flipX:turn.from === 'left'};
   }
   if (state.mode === 'blocking' || state.mode === 'blockstun') {
+    const perfectAge = frame - (state.perfectBlockStartedFrame ?? -Infinity);
+    if (state.mode === 'blockstun' && state.grounded && !state.crouching && perfectAge >= 0 && perfectAge < 12) {
+      return pose('perfect-block', perfectAge < 3 ? 1 : perfectAge < 9 ? 2 : 3, state);
+    }
     const name = state.crouching && state.grounded ? 'crouch-guard' : 'guard';
     return pose(name, state.mode === 'blockstun' ? 2 : sample('guardEnter', elapsed), state);
   }

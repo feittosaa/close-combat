@@ -158,7 +158,8 @@ it('keeps the KO launch alive until the defender reaches the floor',()=>{
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,80);command(sim,'wine-ultimate');contact(sim,'explosion');wait(sim,6);
   expect(sim.snapshot().phase).toBe('fight');
-  wait(sim,30);expect(sim.snapshot().phase).toBe('round-over');expect(sim.snapshot().characters[1].grounded).toBe(true);
+  for (let tick=0; tick<200 && sim.snapshot().phase === 'fight'; tick++) step(sim);
+  expect(sim.snapshot().phase).toBe('round-over');expect(sim.snapshot().characters[1].grounded).toBe(true);
 });
 
 it('gives the glass a shallow arc and bottle a visibly higher arc, using the same collision coordinates',()=>{
@@ -181,7 +182,7 @@ it('valida proporções e camadas do cenário',()=>{
     expect(stage.referenceSize.width/stage.referenceSize.height).toBeGreaterThanOrEqual(16/9);
     expect(()=>validateStage({...stage,referenceSize:{width:100,height:100}})).toThrow();
   }
-  expect(defaultStage.layers.map(l=>l.id)).toEqual(['sala']);
+  expect(defaultStage.layers.map(l=>l.id)).toEqual(['sala', 'bandeira-esquerda', 'bandeira-direita']);
 });
 
 it('reaches both actual panorama walls when the opponent follows, without dragging a stationary fighter',()=>{

@@ -24,6 +24,10 @@ export interface HitEvent {
   stage?: 'confirm' | 'explosion';
   volleyStep?: number;
   contactHeight?: 'low' | 'mid' | 'high';
+  /** Geometric center of the contact, captured before either fighter moves. */
+  contactPoint?: { x: number; y: number };
+  /** Target's body at contact, before the resulting reaction changes its posture. */
+  contactBody?: { centerY: number; height: number };
 }
 export class AttackResolver {
   constructor(private readonly resolveMove: (fighterId: string, moveId: string) => MoveDefinition | undefined) {}
@@ -60,7 +64,9 @@ export class AttackResolver {
       const box = projectile ? createProjectileHitbox({ownerId:attacker.characterId,x:attacker.x,y:attacker.y,facing:attacker.facing,phase},move) : createHitbox(attacker,move);
       const hurtboxes = target.fighterId === 'cowboy'
         ? Object.values(createHurtZones(target)) : [createHurtbox(target)];
-      if (!hurtboxes.some(hurtbox => intersects(box, hurtbox))) return [];
+      const contacted = hurtboxes.find(hurtbox => intersects(box, hurtbox));
+      if (!contacted) return [];
+      const targetBody = createHurtbox(target);
       const guard = inputs[1 - index]?.direction;
       const blocked = move.category !== 'throw' && ['blocking', 'blockstun'].includes(target.mode) &&
         (hitLevel === 'low' ? target.grounded && guard === 'DB' : guard === 'B' || guard === 'DB');
@@ -88,6 +94,11 @@ export class AttackResolver {
         pushback: phase === 'confirm' ? 0 : blocked ? move.pushback.block : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
         defenderStunFrames: stun, frameAdvantage: frameAdvantage(recovery, stun),
         context: blocked ? undefined : classifyHitContext(target),
+        contactPoint: {
+          x: (Math.max(box.x, contacted.x) + Math.min(box.x + box.width, contacted.x + contacted.width)) / 2,
+          y: (Math.max(box.y, contacted.y) + Math.min(box.y + box.height, contacted.y + contacted.height)) / 2,
+        },
+        contactBody: { centerY: targetBody.y + targetBody.height / 2, height: targetBody.height },
         ...(target.fighterId === 'cowboy' && move.category !== 'throw' ? { contactHeight: contactHeight(target, box) } : {}) };
       return [{ attack, target, event }];
     });

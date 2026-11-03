@@ -17,14 +17,16 @@ function stageImage(stage: StageDefinition): SVGSVGElement {
   svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
   svg.setAttribute('aria-hidden', 'true');
   for (const layer of [...stage.layers].sort((a, b) => a.depth - b.depth)) {
+    if (layer.crop) continue;
     const image = document.createElementNS(ns, 'image');
     const scale = layer.contentScale ?? 1;
     const origin = layer.scaleOrigin ?? { x: 0, y: 0 };
     image.setAttribute('href', getStageLayerUrl(stage, layer));
     image.setAttribute('x', String(layer.x + origin.x * (1 - scale)));
     image.setAttribute('y', String(layer.y + origin.y * (1 - scale)));
-    image.setAttribute('width', String(stage.referenceSize.width * scale));
-    image.setAttribute('height', String(stage.referenceSize.height * scale));
+    image.setAttribute('width', String((layer.size?.width ?? stage.referenceSize.width) * scale));
+    image.setAttribute('height', String((layer.size?.height ?? stage.referenceSize.height) * scale));
+    if (layer.size) image.setAttribute('preserveAspectRatio', 'none');
     svg.append(image);
   }
   return svg;

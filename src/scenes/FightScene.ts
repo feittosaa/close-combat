@@ -15,8 +15,10 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
-import { getCowboyRoundEndPresentation, preloadCowboySprites } from '../rendering/animations/cowboySprites';
+import { getCowboyRoundEndPresentation, hasCowboyExited, preloadCowboySprites } from '../rendering/animations/cowboySprites';
 import { ProjectileView } from '../rendering/ProjectileView';
+import { preloadContactEffects } from '../rendering/contactEffects';
+import { RESULT_TITLE_END_FRAME, StagePresentation } from '../rendering/StagePresentation';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
@@ -30,6 +32,7 @@ import { TrainingHud } from '../ui/TrainingHud';
 import { ArcadeController } from '../engine/combat/ArcadeController';
 import { arcadeOpponents, opponentFor, stageForMatch, type FightSetup, type MatchMode } from './matchSetup';
 import { FightSounds } from '../audio/FightSounds';
+import { UltimateOverlay } from '../ui/UltimateOverlay';
 import type { HitEvent } from '../engine/combat/AttackResolver';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 
@@ -43,6 +46,8 @@ export class FightScene extends Phaser.Scene {
   private arcadeInfo?: Phaser.GameObjects.Text;
   private selectedStage = defaultStage;
   private stageView?: StageView;
+  private stagePresentation?: StagePresentation;
+  private ultimateOverlay?: UltimateOverlay;
   private simulation?: Simulation;
   private fightSounds?: FightSounds;
   private pendingVisualHits: HitEvent[] = [];
@@ -58,6 +63,7 @@ export class FightScene extends Phaser.Scene {
   private hudWidth = 0;
   private resultFloorY = 0;
   private resultGravity = 0;
+  private roundsToWin = 2;
   private tutorial?: TutorialSession;
   private tutorialHud?: TutorialHud;
   private training?: TrainingSession;
@@ -123,10 +129,17 @@ export class FightScene extends Phaser.Scene {
     this.pauseMenu?.setVisible(this.paused);
     // DOM search must receive text normally, including letters used by training hotkeys.
   }
+  private canContinueArcade(snapshot: SimulationSnapshot): boolean {
+    if (snapshot.phase !== 'match-over' || snapshot.matchWinnerId !== 'player-1') return false;
+    const winner = snapshot.characters.find(character => character.characterId === snapshot.matchWinnerId);
+    if (!winner || snapshot.roundEndedFrame === undefined) return false;
+    const elapsed = snapshot.frame - snapshot.roundEndedFrame - RESULT_TITLE_END_FRAME;
+    return hasCowboyExited(winner, elapsed, this.resultFloorY, this.resultGravity, this.cameras.main.worldView);
+  }
   private readonly handleContinue = (): void => {
     if (this.tutorial && !this.paused && this.tutorial.next()) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.resetFight(); return; }
     const snapshot = this.simulation?.snapshot();
-    if (this.mode !== 'arcade' || snapshot?.phase !== 'match-over' || snapshot.matchWinnerId !== 'player-1') return;
+    if (this.mode !== 'arcade' || !snapshot || !this.canContinueArcade(snapshot)) return;
     if (this.arcadeIndex + 1 >= arcadeOpponents(this.selectedFighter.id).length) return;
     this.scene.restart({ fighterId: this.selectedFighter.id, stageId: this.selectedStage.id,
       mode: 'arcade', arcadeIndex: this.arcadeIndex + 1 });
@@ -163,6 +176,7 @@ export class FightScene extends Phaser.Scene {
     preloadFighterIcons(this);
     preloadStage(this, this.selectedStage);
     preloadCowboySprites(this);
+    preloadContactEffects(this);
   }
 
   create(): void {
@@ -170,13 +184,16 @@ export class FightScene extends Phaser.Scene {
     const config = createGameConfig(width, height);
     this.resultFloorY = config.arena.floorY;
     this.resultGravity = config.movement.gravity;
+    this.roundsToWin = config.match.roundCount;
     const stageLayout = createStageLayout(this.selectedStage, width, height, config.arena.floorY);
     // The full panorama defines the walls; shared viewport separation still limits lone retreat.
     Object.assign(config.arena,getStageArenaBounds(stageLayout));
     this.stageView = new StageView(this, this.selectedStage, stageLayout);
+    this.stagePresentation = new StagePresentation(this, this.selectedStage.id, config.match.roundCount);
+    this.ultimateOverlay = new UltimateOverlay(this, this.selectedStage.id);
     this.simulation = new Simulation(config, [this.selectedFighter, this.opponentFighter], this.training
       ? { training: true, initialDistance: this.training.initialDistance } : {});
-    this.fightSounds = new FightSounds(this, Boolean(this.training));
+    this.fightSounds = new FightSounds(this, Boolean(this.training), this.mode === 'arcade', config.match.roundCount);
     this.simulation.setTrainingAutoRestore(this.training?.autoRestore ?? false);
     this.keyboardInputs = [new KeyboardInput(getPlayerLayout(0)), new KeyboardInput(getPlayerLayout(1))];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
@@ -224,7 +241,9 @@ export class FightScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     if (!this.simulation) return;
 
-    if (!this.paused && !this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame), snapshot => this.observeFrame(snapshot));
+    this.fightSounds?.prepareRound(this.simulation.snapshot());
+    const intro = this.stagePresentation?.update(this.simulation.snapshot(), this.paused ? 0 : delta, getHudLogicalWidth(this.scale));
+    if (!intro && !this.paused && !this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame), snapshot => this.observeFrame(snapshot));
     this.syncViewsAndHud();
   }
 
@@ -258,6 +277,7 @@ export class FightScene extends Phaser.Scene {
 
   private resetFight(): void {
     this.simulation?.resetMatch(this.training?.initialDistance);
+    this.stagePresentation?.reset();
     this.fightSounds?.reset();
     this.pendingVisualHits = [];
     this.bot?.reset();
@@ -295,17 +315,20 @@ export class FightScene extends Phaser.Scene {
     if (!snapshot) return;
 
     this.resizeHud(getHudLogicalWidth(this.scale));
-    const resultElapsed = snapshot.phase !== 'fight' && snapshot.roundWinnerId && snapshot.roundEndedFrame !== undefined
-      ? snapshot.frame - snapshot.roundEndedFrame : undefined;
+    const finalRound = snapshot.roundWins.some(wins => wins >= this.roundsToWin);
+    const resultAge = snapshot.roundEndedFrame === undefined ? -1 : snapshot.frame - snapshot.roundEndedFrame;
+    const visualFrame = snapshot.roundEndedFrame ?? snapshot.frame;
+    const resultElapsed = snapshot.phase !== 'fight' && finalRound && snapshot.roundWinnerId && resultAge >= RESULT_TITLE_END_FRAME ? resultAge - RESULT_TITLE_END_FRAME : undefined;
     const cameraCharacters = resultElapsed === undefined ? snapshot.characters : snapshot.characters.map(character =>
       getCowboyRoundEndPresentation(character, resultElapsed, this.resultFloorY, this.resultGravity).state);
-    this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), snapshot.frame);
+    this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), visualFrame);
+    this.ultimateOverlay?.update(Boolean(snapshot.ultimateActivation), this.game.loop.delta);
     snapshot.characters.forEach((character, index) => {
       const result = resultElapsed !== undefined
         ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed, floorY: this.resultFloorY, gravity: this.resultGravity} : undefined;
-      this.combatants[index]?.sync(character, snapshot.frame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result);
+      this.combatants[index]?.sync(character, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result);
     });
-    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,snapshot.frame,this.pendingVisualHits.splice(0),snapshot.characters);
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
     if (this.arcadeInfo) {
@@ -313,7 +336,7 @@ export class FightScene extends Phaser.Scene {
       let label = `ARCADE · LUTA ${this.arcadeIndex + 1}/${count} · COMPUTADOR`;
       if (snapshot.phase === 'match-over') {
         label = snapshot.matchWinnerId === 'player-1'
-          ? this.arcadeIndex + 1 < count ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'ARCADE CONCLUÍDO · ESC PAUSA'
+          ? this.arcadeIndex + 1 < count ? this.canContinueArcade(snapshot) ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'VITÓRIA' : 'ARCADE CONCLUÍDO · ESC PAUSA'
           : snapshot.matchWinnerId ? 'FIM DE JOGO · ESC PAUSA' : 'EMPATE · ESC PAUSA';
       }
       this.arcadeInfo.setText(label);
@@ -358,6 +381,8 @@ export class FightScene extends Phaser.Scene {
     this.trainingHud = undefined;
     this.tutorialHud?.destroy(); this.tutorialHud = undefined; this.tutorial = undefined;
     this.training = undefined;
+    this.stagePresentation?.destroy(); this.stagePresentation = undefined;
+    this.ultimateOverlay?.destroy(); this.ultimateOverlay = undefined;
     this.stageView?.destroy();
     this.stageView = undefined;
     this.simulation = undefined;

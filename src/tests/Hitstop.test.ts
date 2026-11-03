@@ -67,7 +67,12 @@ it.each([20,1000])('KO/time-up com %i HP conserva a micro pausa sem tempo extra 
     expect(sim.snapshot().characters[0].attack).toEqual(pose);
   }
   expect(sim.snapshot().roundFramesRemaining).toBe(0);
-  sim.stepFrame(neutral);expect(sim.snapshot()).toMatchObject({phase:'round-over',roundEndReason:health===20?'knockout':'time',roundFramesRemaining:0});
+  sim.stepFrame(neutral);
+  if (health === 20) {
+    expect(sim.snapshot().phase).toBe('fight');
+    while (sim.snapshot().phase === 'fight') sim.stepFrame(neutral);
+  }
+  expect(sim.snapshot()).toMatchObject({phase:'round-over',roundEndReason:health===20?'knockout':'time',roundFramesRemaining:0});
 });
 it('reproduz contatos, poses congeladas e relógio iguais em 30/60/120/144 FPS',()=>{
   const run=(fps:number)=>{

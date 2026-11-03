@@ -40,7 +40,7 @@ describe.each(stages)('camera and ground contract: $id', stage => {
   it('applies equal X/Y zoom and the same vertical scroll to scenery and fighters', () => {
     const camera = { removeBounds: vi.fn(), setOrigin: vi.fn(), setZoom: vi.fn(), setScroll: vi.fn() };
     const layers = stage.layers.flatMap(() => Array.from({length: 3}, () => {
-      const image = { setOrigin: vi.fn(), setScale: vi.fn(), setDepth: vi.fn(), setScrollFactor: vi.fn(), setFlipX: vi.fn(), setPosition: vi.fn(), width: stage.referenceSize.width, height: stage.referenceSize.height, destroy: vi.fn() };
+      const image = { x:0, y:0, setOrigin: vi.fn(), setScale: vi.fn(), setDisplaySize:vi.fn(), setCrop:vi.fn(), setDepth: vi.fn(), setScrollFactor: vi.fn(), setFlipX: vi.fn(), setPosition: vi.fn(), width: stage.referenceSize.width, height: stage.referenceSize.height, destroy: vi.fn() };
       Object.values(image).forEach(fn => { if (typeof fn === 'function') fn.mockReturnValue(image); });
       return image;
     }));
@@ -59,6 +59,14 @@ describe.each(stages)('camera and ground contract: $id', stage => {
       const [, scrollY] = camera.setScroll.mock.lastCall!;
       const projectedFeet = 288 + (488 - scrollY - 288) * zoomY;
       expect(projectedFeet).toBeCloseTo(488, 8);
+    }
+    if (stage.id === 'fazenda') {
+      expect(layers.slice(0, 3).every(image => !image.setFlipX.mock.calls.length)).toBe(true);
+      view.sync([], [], 900);
+      const first = layers[1].setPosition.mock.lastCall![0];
+      view.sync([], [], 2700);
+      const second = layers[1].setPosition.mock.lastCall![0];
+      expect(first - second).toBeCloseTo(2 * stage.layers[0].motion!.amplitude * layout.scale);
     }
     expect(camera.removeBounds).toHaveBeenCalled();
     stage.layers.forEach((layer, i) => expect(layers[i * 3 + 1].setScrollFactor).toHaveBeenCalledWith(layer.parallax, 1));

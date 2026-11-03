@@ -33,8 +33,8 @@ it('positions each fighter icon at the outer edge of the health bar',()=>{
   const {scene,images}=mockScene();
   const hud=new CombatHud(scene,1024,['Cowboy','Shoto'],'Sala',false,'TREINO LIVRE',['cowboy','shoto']);
   expect(images.map(({x,y,key,width,height})=>({x,y,key,width,height}))).toEqual([
-    {x:30,y:29,key:'fighter-icon-cowboy',width:57,height:57},
-    {x:994,y:29,key:'fighter-icon-shoto',width:57,height:57},
+    {x:40,y:39,key:'fighter-icon-cowboy',width:76,height:76},
+    {x:984,y:39,key:'fighter-icon-shoto',width:76,height:76},
   ]);
   hud.destroy();
 });
@@ -55,8 +55,8 @@ it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar
   expect(texts.some(t=>t.value==='250 / 1000')).toBe(true);
   expect(texts.some(t=>t.value==='99')).toBe(true);
   expect(commands).toContainEqual(['fillStyle',HUD.players[0]]);
-  expect(commands).toContainEqual(['fillRect',31,12,291,13]);
-  expect(commands).toContainEqual(['fillRect',896,12,97,13]);
+  expect(commands).toContainEqual(['fillRect',85,12,265.5,13]);
+  expect(commands).toContainEqual(['fillRect',850.5,12,88.5,13]);
   expect(commands.filter(c=>c[0]==='lineBetween'&&c[1]===c[3]&&Number(c[2])<30)).toEqual([]);
   expect(snapshot).toEqual(original);
   snapshot.characters[0].health=0;snapshot.phase='match-over';snapshot.matchWinnerId='player-2';
@@ -93,8 +93,8 @@ it('anchors health and larger bottom rage rails to both sides of a wide HUD',()=
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
   snapshot.characters[0].rage=100;snapshot.characters[1].rage=100;
   hud.update(snapshot,width);
-  expect(commands).toContainEqual(['fillRect',28,10,564.5,17]);
-  expect(commands).toContainEqual(['fillRect',width-592.5,10,564.5,17]);
+  expect(commands).toContainEqual(['fillRect',82,10,510.5,17]);
+  expect(commands).toContainEqual(['fillRect',width-592.5,10,510.5,17]);
   expect(commands).toContainEqual(['fillRect',35,538,250,8]);
   expect(commands).toContainEqual(['fillRect',width-285,538,250,8]);
   expect(commands).toContainEqual(['fillRect',35,538,100,8]);

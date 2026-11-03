@@ -3,7 +3,7 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { cowboy } from '../engine/data/fighters/cowboy';
 import type { FrameInput } from '../input/types';
-import { getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
+import { getCowboyRoundEndPose, getCowboyRoundEndPresentation, hasCowboyExited, getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
 import chargeThrowAtlas from '../assets/sprites/characters/cowboy/high/charge-throw.atlas.json';
 
 it('uses the correct cells for every lasso charge frame', () => {
@@ -12,6 +12,21 @@ it('uses the correct cells for every lasso charge frame', () => {
     const frame = chargeThrowAtlas.frames[String(index) as keyof typeof chargeThrowAtlas.frames];
     expect(frame.frame).toEqual({ x: (index % 3) * 1280, y: Math.floor(index / 3) * 1280, w: 1280, h: 1280 });
   }
+});
+
+it.each([0,1])('uses the approved standing perfect-block and wall-bounce poses for player %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  const block = {...state, mode:'blockstun' as const, perfectBlockStartedFrame:100};
+  expect(getCowboySpritePose(block,101)).toMatchObject({texture:'cowboy-perfect-block',frame:1});
+  expect(getCowboySpritePose(block,105)).toMatchObject({texture:'cowboy-perfect-block',frame:2});
+  expect(getCowboySpritePose({...block,crouching:true},105)?.texture).toBe('cowboy-crouch-guard');
+  expect(getCowboySpritePose(block,113)?.texture).toBe('cowboy-guard');
+  const bounce = {...state, mode:'hitstun' as const, grounded:false,
+    wallBounceEffect:{x:state.x,y:state.y,frame:200,direction:1 as const}, hitReaction:{level:'mid' as const,startedFrame:190}};
+  expect(getCowboySpritePose(bounce,200)).toMatchObject({texture:'cowboy-wall-bounce',frame:0});
+  expect(getCowboySpritePose(bounce,218)).toMatchObject({texture:'cowboy-wall-bounce',frame:3});
+  expect(getCowboySpritePose({...bounce,hitReaction:{level:'high',startedFrame:205}},206)?.texture).toBe('cowboy-hurt-high');
+  expect(getCowboySpritePose(bounce,224)?.texture).toBe('cowboy-air-hurt');
 });
 
 it.each([0,1])('shows the heavy kick smear briefly before its clear impact pose for player %i', player => {
@@ -26,10 +41,22 @@ it.each([0,1])('shows the heavy kick smear briefly before its clear impact pose 
 it.each([0,1])('renders the round result using the correct orientation for player %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
   expect(getCowboyRoundEndPose(state,true,0)).toMatchObject({texture:'cowboy-victory',frame:0,flipX:player===1});
-  expect(getCowboyRoundEndPose(state,true,200)).toMatchObject({texture:'cowboy-victory',frame:5});
+  expect(getCowboyRoundEndPose(state,true,79)).toMatchObject({texture:'cowboy-victory',frame:5});
+  expect(getCowboyRoundEndPose(state,true,80)).toMatchObject({texture:'cowboy-victory-exit',frame:0});
+  const exit = getCowboyRoundEndPose(state,true,140)!;
+  expect(exit.texture).toBe('cowboy-victory-exit');
+  expect(Math.sign(exit.offsetX)).toBe(player === 0 ? -1 : 1);
   expect(getCowboyRoundEndPose(state,false,0)).toMatchObject({texture:'cowboy-defeat',frame:0});
-  expect(getCowboyRoundEndPose({...state,mode:'knockdown'},false,0)).toMatchObject({texture:'cowboy-defeat',frame:5});
+  expect(getCowboyRoundEndPose({...state,mode:'knockdown'},false,0)).toBeUndefined();
   expect(getCowboyRoundEndPose({...state,grounded:false},true,0)).toBeUndefined();
+});
+
+it.each([0,1])('waits for player %i to leave the camera after victory', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  const view = {left: 0, right: 1024};
+  expect(hasCowboyExited(state, 140, state.y, .55, view)).toBe(false);
+  expect(hasCowboyExited(state, 1000, state.y, .55, view)).toBe(true);
+  expect(hasCowboyExited({...state, grounded:false, y:state.y - 60, verticalVelocity:-2}, 0, state.y, .55, view)).toBe(false);
 });
 
 it.each([0,1])('lands visually before the round result for airborne player %i', player => {

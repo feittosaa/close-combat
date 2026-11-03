@@ -49,6 +49,7 @@ export interface CharacterState {
   idleStartedFrame?: number;
   attack?: CharacterAttack;
   hitFlashFrames: number;
+  perfectBlockStartedFrame?: number;
   hitReaction?: { level: 'low' | 'mid' | 'high'; startedFrame: number };
   grabbedStartedFrame?: number;
   grabbedHold?: boolean;
@@ -60,6 +61,8 @@ export interface CharacterState {
   hitSequence?: { targetId: string; heavy: boolean; heavyButton?: '2' | '4' };
   knockdown?: { velocityX: number };
   pushbackMotion?: { distancePerFrame: number; remainingFrames: number };
+  wallBouncePending?: { direction: -1 | 1; attackerId: string; moveId: string };
+  wallBounceEffect?: { x: number; y: number; frame: number; direction: -1 | 1 };
   throwFlight?: boolean;
   throwPull?: { distancePerFrame: number; remainingFrames: number; launchDistance: number; launchFrames: number; liftSpeed: number };
   /** Confirmed launcher flight; independent of ordinary jumps and scripted captures. */

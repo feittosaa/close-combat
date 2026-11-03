@@ -9,7 +9,7 @@ export const DEFAULT_STAGE_ID = 'sala-treino';
 export const stages: readonly StageDefinition[] = Object.values(manifests);
 
 export function getStageLayerUrl(stage: StageDefinition, layer: StageLayer, file = loadGraphicsQuality() === 'high' ? layer.highFile ?? layer.file : layer.file): string {
-  const url = images[`../../assets/scenes/${stage.id}/${file}`];
+  const url = images[`../../assets/scenes/${layer.sourceStage ?? stage.id}/${file}`];
   if (!url) throw new Error(`Imagem ausente no cenário ${stage.id}: ${file}`);
   return url;
 }

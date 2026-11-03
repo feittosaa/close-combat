@@ -5,10 +5,38 @@ import { FightScene } from '../scenes/FightScene';
 import { stages, stageTextureKey } from '../rendering/stages/stageCatalog';
 import type { MatchMode } from '../scenes/matchSetup';
 
+it('keeps the available wallpaper on the loading screen and removes it afterwards', () => {
+  vi.useFakeTimers();
+  const screen = {className:'', textContent:'', style:{backgroundImage:''}, setAttribute:vi.fn(), remove:vi.fn()};
+  const document = {createElement:vi.fn(() => screen), body:{appendChild:vi.fn()}};
+  const sessionStorage = {setItem:vi.fn()};
+  vi.stubGlobal('document', document);
+  vi.stubGlobal('window', {setInterval, clearInterval});
+  vi.stubGlobal('sessionStorage', sessionStorage);
+  try {
+    const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
+    Object.values(camera).forEach(method=>method.mockReturnValue(camera));
+    const load={image:vi.fn(),atlas:vi.fn(),spritesheet:vi.fn(),audio:vi.fn()};
+    const boot=new BootScene();
+    Object.assign(boot,{cameras:{main:camera},scale:{width:1920,height:1080},load,
+      textures:{exists:()=>false},cache:{audio:{exists:()=>false}},scene:{start:vi.fn()}});
+    boot.preload();
+    const first = screen.style.backgroundImage;
+    vi.advanceTimersByTime(3500);
+    expect(screen.style.backgroundImage).toBe(first);
+    expect(sessionStorage.setItem).toHaveBeenCalledTimes(2);
+    boot.create();
+    expect(screen.remove).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  } finally {
+    vi.unstubAllGlobals(); vi.useRealTimers();
+  }
+});
+
 it('prepares every match resource before releasing the menu; every mode starts with an empty loader queue',()=>{
   const textures=new Map<string,object>();
   const queued=new Set<string>();
-  const load={image:vi.fn((key:string)=>queued.add(key)),atlas:vi.fn((key:string)=>queued.add(key)),audio:vi.fn((key:string)=>queued.add(key))};
+  const load={image:vi.fn((key:string)=>queued.add(key)),atlas:vi.fn((key:string)=>queued.add(key)),spritesheet:vi.fn((key:string)=>queued.add(key)),audio:vi.fn((key:string)=>queued.add(key))};
   const text={setOrigin:vi.fn()};
   const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
   Object.values(camera).forEach(method=>method.mockReturnValue(camera));

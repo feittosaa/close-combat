@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { cowboyDisplayHeight, cowboyFootAnchor, cowboyFrameSize, getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboyUltimateActivationPose } from './animations/cowboySprites';
+import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize, getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboyUltimateActivationPose } from './animations/cowboySprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
@@ -55,7 +55,7 @@ export class CombatantView {
         const sprite=this.sprites[index]??=this.scene.add.image(0,0,pose.texture,String(pose.frame)).setDepth(10);
         sprite.setTexture(pose.texture,String(pose.frame))
           .setOrigin(.5,cowboyFootAnchor)
-          .setScale(cowboyDisplayHeight / cowboyFrameSize * pose.scale)
+          .setScale(cowboyDisplayHeight / getCowboyFrameSize(pose.texture) * pose.scale)
           .setAngle(0)
           .setPosition(state.x+pose.offsetX,state.y+pose.offsetY).setFlipX(pose.flipX).setAlpha(pose.alpha).setVisible(true);
       });
@@ -73,7 +73,7 @@ export class CombatantView {
         const left = state.facing === 'right' ? hand - width * 64 / 640 : tip - width * 85 / 640;
         const lasso = this.lasso ??= this.scene.add.image(0,0,lassoTexture,'2').setDepth(11);
         lasso.setTexture(lassoTexture, '2').setOrigin(0,.5).setDisplaySize(width,120)
-          .setPosition(left,state.y - 99).setFlipX(state.facing === 'left').setVisible(true);
+          .setPosition(left,state.y - 109).setFlipX(state.facing === 'left').setVisible(true);
       } else this.lasso?.setVisible(false);
       const dustKind = move?.id === 'power-kick' ? 'power' :
         move && (move.id === 'light-kick' || move.id === 'crouch-light-kick') ? 'light' : undefined;

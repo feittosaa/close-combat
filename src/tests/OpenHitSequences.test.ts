@@ -25,6 +25,35 @@ function hit(sim: Simulation, player:number, buttons:AttackButton[], continuous=
   throw new Error('Missing connected hit');
 }
 
+it.each([0,1])('keeps confirmed attacks available after the target reaches zero health, player %i', player => {
+  const fragile = {...shoto, maxHealth:20};
+  const fighters = player === 0 ? [shoto, fragile] as const : [fragile, shoto] as const;
+  const sim = new Simulation(config, fighters, {initialDistance:56});
+  for (const button of ['1','1','1'] as const) hit(sim, player, [button]);
+  expect(sim.snapshot().characters[1-player].health).toBe(0);
+  expect(sim.snapshot().phase).toBe('fight');
+  expect(sim.snapshot().comboHistory.slice(-1)[0]?.hits).toBe(3);
+  for (let tick=0; tick<100 && sim.snapshot().phase==='fight'; tick++) step(sim);
+  expect(sim.snapshot().roundWinnerId).toBe(`player-${player+1}`);
+});
+
+it.each([0,1])('allows an ultimate after the hit that reduced health to zero, player %i', player => {
+  const attacker = {...shoto, rage:{...shoto.rage!, maximum:0}, moves:shoto.moves.map(move => move.category === 'ultimate' ? {...move, rageCost:0} : move)};
+  const fragile = {...shoto, maxHealth:20};
+  const fighters = player === 0 ? [attacker, fragile] as const : [fragile, attacker] as const;
+  const sim = new Simulation(config, fighters, {initialDistance:56});
+  hit(sim, player, ['1']);
+  step(sim, player, {...N, ultimate:true});
+  let activated = false;
+  for (let tick=0; tick<300; tick++) {
+    if (sim.snapshot().ultimateActivation) activated = true;
+    if (activated && !sim.snapshot().ultimateActivation) break;
+    expect(sim.snapshot().phase).toBe('fight');
+    step(sim);
+  }
+  expect(activated).toBe(true);
+});
+
 it.each([0,1])('connects 1,1,1 → 3 → 2,2,2 as an open sequence without adding a recipe: player %i', player=>{
   const sim=create(96);
   const buttons:AttackButton[]=['1','1','1','3','2','2','2'];
