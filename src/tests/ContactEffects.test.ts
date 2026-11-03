@@ -27,7 +27,7 @@ it('preloads every image as a six-frame sheet', () => {
   const spritesheet = vi.fn(), image = vi.fn();
   preloadContactEffects({textures:{exists:()=>false},load:{spritesheet,image}} as never);
   expect(image).toHaveBeenCalledWith('wall-bounce', expect.any(String));
-  expect(spritesheet).toHaveBeenCalledTimes(16);
+  expect(spritesheet).toHaveBeenCalledTimes(15);
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-light',expect.any(String),{frameWidth:362,frameHeight:724});
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-heavy',expect.any(String),{frameWidth:464,frameHeight:724});
 });
@@ -41,8 +41,10 @@ it('renders simultaneous contacts using sprites, advances frames and clears them
   const image=vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
   const view=new ProjectileView({add:{graphics:()=>graphics,image},textures:{exists:()=>true}} as never);
   const characters=new Simulation(createGameConfig(1024,576),[cowboy,shoto]).snapshot().characters;
-  view.sync([],[],10,[{...event,contactPoint:{x:300,y:250}}, {...event,attackerId:'player-2',targetId:'player-1'}],characters);
+  view.sync([],[],10,[{...event,contactPoint:{x:300,y:250}}, {...event,outcome:'block',perfectBlock:true,contactPoint:{x:400,y:200},attackerId:'player-2',targetId:'player-1'}],characters);
   expect(image).toHaveBeenCalledTimes(2);
+  expect(image).toHaveBeenNthCalledWith(2,400,200,'contact-block-perfect',0);
+  expect(second.setDisplaySize).toHaveBeenCalledWith(66,66);
   view.sync([],[],14,[],characters);
   expect(first.setFrame).toHaveBeenLastCalledWith(2);
   view.sync([],[],0,[],characters);

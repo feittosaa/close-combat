@@ -14,7 +14,7 @@ const variants = {
   steps: ['steps_1', 'steps_2', 'steps_3', 'steps_4', 'steps_5'],
   heavy_step: ['heavy_step_1', 'heavy_step_2', 'heavy_step_3', 'heavy_step_4'],
   magic_explosion: ['magic_explosion_1', 'magic_explosion_2'], start_fight: ['start_fight_1', 'start_fight_2', 'start_fight_3'],
-  push_hit: ['push_hit_1', 'push_hit_2', 'push_hit_3'], combo_breaker: ['combo_breaker_1', 'combo_breaker_2'],
+  push_hit: ['push_hit_1', 'push_hit_2'], combo_breaker: ['combo_breaker_1', 'combo_breaker_2'],
   grab: ['grab_1', 'grab_2'], throw: ['throw_1', 'throw_2'],
   kick_on_the_ground: ['kick_on_the_ground_1', 'kick_on_the_ground_2'],
   dash: ['dash_1', 'dash_2'], air_dash: ['air_dash_1', 'air_dash_2', 'air_dash_3', 'air_dash_4'],

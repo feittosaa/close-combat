@@ -196,8 +196,8 @@ export class Simulation {
         return;
       }
     }
-    // The round clock uses real fixed ticks, independently of combat/animation time.
-    if (!this.options.training) this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
+    // The clock pauses until the complete ultimate sequence has finished.
+    if (!this.options.training && !this.ultimateInProgress()) this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
     if (this.hitstopFramesRemaining > 0) {
       this.characters.forEach((character, index) => this.readCommand(character, index, inputs[index] ?? neutral()));
       this.hitstopFramesRemaining -= 1;
@@ -977,13 +977,19 @@ export class Simulation {
     if (first.x === second.x) return;
     first.facing = first.x < second.x ? 'right' : 'left'; second.facing = first.facing === 'right' ? 'left' : 'right';
   }
+  private ultimateInProgress(): boolean {
+    return Boolean(this.ultimateActivation || this.pendingLighters.length || this.characters.some((character, index) =>
+      character.ultimateCapture || (character.attack && this.move(index, character.attack.moveId)?.category === 'ultimate')) ||
+      this.projectiles.some(projectile => this.definitions.find(fighter => fighter.id === projectile.fighterId)?.moves
+        .find(move => move.id === projectile.attack.moveId)?.category === 'ultimate') ||
+      this.explosions.some(explosion => explosion.kind === undefined));
+  }
+
   private canEndRound(): boolean {
     if (this.characters.some(c => c.juggle || c.ultimateCapture || (c.knockdown && !c.grounded))) return false;
     const defeated = this.characters.filter(c => c.health === 0);
     if (defeated.length) {
-      const ultimateInProgress = this.ultimateActivation || this.characters.some((c, index) => c.attack && this.move(index, c.attack.moveId)?.category === 'ultimate') ||
-        this.projectiles.some(projectile => this.definitions.find(fighter => fighter.id === projectile.fighterId)?.moves.find(move => move.id === projectile.attack.moveId)?.category === 'ultimate');
-      return !ultimateInProgress && defeated.every(c => c.mode !== 'hitstun' && !c.wallBouncePending && !c.pushbackMotion && !c.throwPull && !c.throwFlight) &&
+      return !this.ultimateInProgress() && defeated.every(c => c.mode !== 'hitstun' && !c.wallBouncePending && !c.pushbackMotion && !c.throwPull && !c.throwFlight) &&
         !this.pendingThrow && !this.pendingLighters.length;
     }
     return this.roundFramesRemaining === 0;

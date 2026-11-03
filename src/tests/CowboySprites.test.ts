@@ -6,6 +6,27 @@ import type { FrameInput } from '../input/types';
 import { getCowboyRoundEndPose, getCowboyRoundEndPresentation, hasCowboyExited, getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
 import chargeThrowAtlas from '../assets/sprites/characters/cowboy/high/charge-throw.atlas.json';
 
+it.each([0, 1])('renders each defensive stance with spectral arms in front for player %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  for (const [grounded, crouching, body, arms] of [
+    [true, false, 'cowboy-guard', 'cowboy-magic-guard'],
+    [true, true, 'cowboy-crouch-guard', 'cowboy-magic-crouch-guard'],
+    [false, false, 'cowboy-air-guard', 'cowboy-magic-guard'],
+  ] as const) {
+    const defending = {...state, grounded, crouching, mode:'blocking' as const, stateStartedFrame:100};
+    const layers = getCowboySpriteLayers(defending,108);
+    expect(layers.map(layer=>layer.texture)).toEqual([body, arms]);
+    expect(layers[1]).toMatchObject({frame:2, flipX:player===1});
+    expect(layers[1]).toMatchObject({scale:crouching ? 1.02 : 1.05,offsetY:crouching ? 30 : grounded ? 0 : 18});
+    expect(getCowboySpriteLayers({...defending,mode:'blockstun'},108)[1].texture).toBe(arms);
+    const from = {mode:'blocking' as const, stateStartedFrame:100, grounded, crouching, movementDirection:state.movementDirection, facing:state.facing, verticalVelocity:state.verticalVelocity};
+    const leaving = {...state, grounded, crouching:false, mode:'neutral' as const, animationTransition:{from,startedFrame:110}};
+    expect(getCowboySpriteLayers(leaving,111)[1]).toMatchObject({texture:arms,frame:3});
+    expect(getCowboySpriteLayers(leaving,116)).toHaveLength(1);
+    if (!grounded) expect(getCowboySpritePose(leaving,111)?.texture).toBe('cowboy-air-guard');
+  }
+});
+
 it('uses the correct cells for every lasso charge frame', () => {
   expect(chargeThrowAtlas.meta.size).toEqual({ w: 3840, h: 2560 });
   for (let index = 0; index < 6; index++) {

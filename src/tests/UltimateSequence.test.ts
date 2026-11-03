@@ -94,7 +94,18 @@ it('freezes the round clock and entire world for 150 ticks of activation, for an
   }
   step(sim);expect(sim.snapshot().ultimateActivation).toBeUndefined();
   expect(sim.snapshot().frame).toBe(started.frame+1);
-  expect(sim.snapshot().roundFramesRemaining).toBe(before.roundFramesRemaining-1);
+  expect(sim.snapshot().roundFramesRemaining).toBe(before.roundFramesRemaining);
+  let resumed = false;
+  for (let tick = 0; tick < 500; tick++) {
+    const active = sim.snapshot();
+    const ultimateActive = active.characters.some(character => character.attack?.moveId === 'wine-ultimate' || character.ultimateCapture) ||
+      active.projectiles.some(projectile => projectile.attack.moveId === 'wine-ultimate') ||
+      active.explosions.some(explosion => explosion.kind === undefined);
+    step(sim);
+    if (ultimateActive) expect(sim.snapshot().roundFramesRemaining).toBe(before.roundFramesRemaining);
+    if (sim.snapshot().roundFramesRemaining < before.roundFramesRemaining) { resumed = true; break; }
+  }
+  expect(resumed).toBe(true);
 });
 
 it('freezes already flying projectiles, and simultaneous ultimates share one activation interval',()=>{
