@@ -35,11 +35,11 @@ export function preloadCowboySprites(scene: Phaser.Scene): void {
 }
 const pose = (name: string, frame: number, state: CharacterState) => {
   const scales: Record<string, number> = {
-    backward: 1.02, walk: .99, 'enter-walk': .99, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
+    backward: 1.02 * .99, 'enter-backward': .99, walk: .99, 'enter-walk': .99, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
     'throw-low': 1.01 * 1.05, 'throw-close-anticipation': 1.01,
-    'ultimate-body': .99, taunt: 1.08, guard: .96 * .98 * 1.01,
+    'ultimate-body': .99, taunt: 1.08, guard: .96 * .98 * 1.01 * 1.02 * 1.02 * 1.05 * 1.01 * 1.01, 'crouch-guard': 1.02 * 1.02 * .99, 'perfect-block': 1.02 * .98 * 1.02,
     hurt: .94 * .96 * .96 * 1.02, 'hurt-low': .97 * 1.01 * 1.01, 'hurt-high': .97 * .98 * .98,
-    'dash-forward': .97, 'dash-backward': .97, 'air-dash-forward': .97, 'air-dash-backward': .97,
+    'dash-forward': .97 * .97, 'dash-backward': .97 * .97, 'air-dash-forward': .97, 'air-dash-backward': .97 * .98,
     'combo-left-shot': .98, 'combo-right-shot': .98,
     'crouch-combo-shot': .9, 'crouch-light-kick': 1.04, 'heavy-kick': 1.04, 'push-away': .98,
   };
@@ -239,10 +239,13 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     if (state.mode === 'blockstun' && state.grounded && !state.crouching && perfectAge >= 0 && perfectAge < 12) {
       return pose('perfect-block', perfectAge < 3 ? 1 : perfectAge < 9 ? 2 : 3, state);
     }
-    const name = state.crouching && state.grounded ? 'crouch-guard' : 'guard';
+    const name = !state.grounded ? 'air-guard' : state.crouching ? 'crouch-guard' : 'guard';
     return pose(name, state.mode === 'blockstun' ? 2 : sample('guardEnter', elapsed), state);
   }
   if (!state.grounded) {
+    if ((transition?.from.mode === 'blocking' || transition?.from.mode === 'blockstun') && !transition.from.grounded && elapsed < 6) {
+      return pose('air-guard', sample('exit', elapsed), state);
+    }
     if (state.mode === 'dashing') {
       const backward = state.movementDirection === 'backward';
       return pose(backward ? 'air-dash-backward' : 'air-dash-forward', sample(backward ? 'dashBackward' : 'dashForward', elapsed), state);
@@ -276,10 +279,25 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
   return pose('idle', sample('idle', frame - state.stateStartedFrame), state);
 }
 
-/** Spectral arms materialize behind the opaque fighter; the firing drawings already contain them. */
+/** Defensive arms appear in front; attacking arms materialize behind the fighter. */
 export function getCowboySpriteLayers(state: CharacterState, frame: number) {
   const character = getCowboySpritePose(state, frame);
-  if (!character || !state.attack) return character ? [character] : [];
+  if (!character) return [];
+  if (!state.attack) {
+    const defending = state.mode === 'blocking' || state.mode === 'blockstun';
+    const transition = state.animationTransition;
+    const exiting = !defending && transition && (transition.from.mode === 'blocking' || transition.from.mode === 'blockstun') &&
+      frame - transition.startedFrame >= 0 && frame - transition.startedFrame < 6;
+    if (defending || exiting) {
+      const source = defending ? state : transition!.from;
+      const age = Math.max(0, frame - (defending ? state.stateStartedFrame : transition!.startedFrame));
+      const crouching = source.grounded && source.crouching;
+      const name = crouching ? 'magic-crouch-guard' : 'magic-guard';
+      const drawing = exiting ? sample('magicExit', age) : age < 6 ? sample('magic', age) : 2;
+      return [character, {...pose(name, drawing, state), scale:crouching ? 1.02 : 1.05, offsetY:crouching ? 30 : source.grounded ? 0 : 18}];
+    }
+    return [character];
+  }
   const move = cowboy.moves.find(candidate => candidate.id === state.attack!.moveId);
   if (move?.id === 'throw-24' && state.attack.hasHit) {
     const shotAge = state.attack.throwConfirmedFrame === undefined ? -1 : frame - state.attack.throwConfirmedFrame;

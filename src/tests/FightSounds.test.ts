@@ -177,7 +177,7 @@ it('uses available light-hit files and the counter and push cues', () => {
   expect(play).toHaveBeenCalledWith('sfx-hit_3', {volume:1.15,seek:.045});
   expect(play).toHaveBeenCalledWith('sfx-counter_hit_3', {volume:1,seek:.285});
   snapshot.hitEvents = [{...event,moveId:'push-away',context:undefined}]; sounds.observe(snapshot);
-  expect(play).toHaveBeenCalledWith('sfx-push_hit_3', {volume:1});
+  expect(play).toHaveBeenCalledWith('sfx-push_hit_2', {volume:1,seek:.285});
 });
 
 it.each([[.1, 'heavy_hit_1', .295], [.6, 'heavy_hit_2', .022], [.8, 'heavy_hit_3', .739], [.97, 'heavy_hit_4', .4]] as const)(

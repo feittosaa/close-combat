@@ -8,7 +8,6 @@ import blockLight from '../assets/sprites/effects/contact/block-light.png';
 import blockHeavy from '../assets/sprites/effects/contact/block-heavy.png';
 import blockSweep from '../assets/sprites/effects/contact/block-sweep.png';
 import blockPerfect from '../assets/sprites/effects/contact/block-perfect.png';
-import blockPerfectHeavy from '../assets/sprites/effects/contact/block-perfect-heavy.png';
 import hitBlue from '../assets/sprites/effects/contact/hit-blue.png';
 import blockBlue from '../assets/sprites/effects/contact/block-blue.png';
 import hitWine from '../assets/sprites/effects/contact/hit-wine.png';
@@ -22,7 +21,7 @@ import wallBounce from '../assets/sprites/effects/contact/wall-bounce.png';
 const sheets = {
   'hit-light': hitLight, 'hit-heavy': hitHeavy, 'hit-sweep': hitSweep,
   'block-light': blockLight, 'block-heavy': blockHeavy, 'block-sweep': blockSweep,
-  'block-perfect': blockPerfect, 'block-perfect-heavy': blockPerfectHeavy,
+  'block-perfect': blockPerfect,
   'hit-blue': hitBlue, 'block-blue': blockBlue, 'hit-wine': hitWine, 'block-wine': blockWine,
   'hit-orange': hitOrange, 'block-orange': blockOrange, 'hit-green': hitGreen, 'block-green': blockGreen,
 } as const;
@@ -41,7 +40,7 @@ export function contactEffectKey(event: HitEvent, move?: MoveDefinition): Sheet 
   const push = move?.id === 'push-away';
   const heavy = move?.category === 'power' || move?.category === 'ultimate' ||
     move?.input.buttons.some(button => button === '2' || button === '4');
-  if (event.perfectBlock) return heavy ? 'block-perfect-heavy' : 'block-perfect';
+  if (event.perfectBlock) return 'block-perfect';
   let color: 'blue' | 'wine' | 'orange' | 'green' | undefined;
   if (move?.category === 'special' || move?.category === 'ultimate') {
     if (event.stage === 'explosion' || move.projectile?.visual === 'molotov') color = 'orange';

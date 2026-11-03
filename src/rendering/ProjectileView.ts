@@ -111,7 +111,7 @@ export class ProjectileView {
       const height = contact.contactHeight ?? move?.hitLevel;
       const x = contact.contactPoint?.x ?? box.x + box.width / 2;
       const y = contact.contactPoint?.y ?? box.y + box.height * (height === 'low' ? .84 : height === 'high' ? .18 : .5);
-      const isBlock = contact.outcome === 'block';
+      const isBlock = contact.outcome === 'block' && !contact.perfectBlock;
       const bodyY = contact.contactBody?.centerY ?? box.y + box.height / 2;
       const bodyHeight = contact.contactBody?.height ?? box.height;
       const sprite = this.scene.add.image(x, isBlock ? bodyY : y, key, 0).setDepth(12)
