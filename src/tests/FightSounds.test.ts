@@ -180,7 +180,7 @@ it('uses available light-hit files and the counter and push cues', () => {
   expect(play).toHaveBeenCalledWith('sfx-push_hit_2', {volume:1,seek:.285});
 });
 
-it.each([[.1, 'heavy_hit_1', .295], [.6, 'heavy_hit_2', .022], [.8, 'heavy_hit_3', .739], [.97, 'heavy_hit_4', .4]] as const)(
+it.each([[.1, 'heavy_hit_1', .295], [.6, 'heavy_hit_2', .022], [.8, 'heavy_hit_3', .606], [.97, 'heavy_hit_4', .4]] as const)(
   'aligns heavy-hit variant %s to its measured impact', (random, name, seek) => {
     vi.spyOn(Math, 'random').mockReturnValue(random);
     const play = vi.fn();
@@ -192,6 +192,18 @@ it.each([[.1, 'heavy_hit_1', .295], [.6, 'heavy_hit_2', .022], [.8, 'heavy_hit_3
     expect(play).toHaveBeenCalledWith(`sfx-${name}`, {volume:1.15, ...(seek ? {seek} : {})});
   },
 );
+
+it('plays a hit cue even when the training target is already depleted', () => {
+  vi.spyOn(Math, 'random').mockReturnValue(0);
+  const play = vi.fn();
+  const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
+  const snapshot = new Simulation(createGameConfig(1024,576),[shoto,shoto]).snapshot();
+  snapshot.characters[1].health = 0;
+  snapshot.hitEvents = [{attackerId:'player-1',targetId:'player-2',moveId:'light-punch',damage:20,outcome:'hit',
+    pushback:0,attackerRecoveryFrames:0,defenderStunFrames:0,frameAdvantage:0}];
+  sounds.observe(snapshot);
+  expect(play).toHaveBeenCalledWith('sfx-hit_1', {volume:1.15});
+});
 
 it('cancels a delayed pistol draw if the taunt is interrupted', () => {
   const play = vi.fn();

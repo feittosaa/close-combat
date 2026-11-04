@@ -97,7 +97,9 @@ export class AttackResolver {
         : Math.round(move.damage * (1 + chargeSteps * (move.charge?.damagePerStep ?? 0)));
       const event: HitEvent = { attackerId: attacker.characterId, targetId: target.characterId, moveId: move.id,
         ...(volleyStep !== undefined ? { volleyStep } : {}),
-        damage: blocked ? 0 : Math.min(target.health, damage), outcome: blocked ? 'block' : 'hit',
+        // The event describes the move that connected. Training keeps reporting that
+        // value after a depleted target is hit; only the health bar is capped at zero.
+        damage: blocked ? 0 : damage, outcome: blocked ? 'block' : 'hit',
         pushback: blocked ? move.pushback.block : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
         defenderStunFrames: stun, frameAdvantage: frameAdvantage(recovery, stun),
         context: blocked ? undefined : classifyHitContext(target),
@@ -111,7 +113,6 @@ export class AttackResolver {
     });
     for (const { attack, target, event } of pending) {
       attack.hasHit = true; attack.hitOutcome = event.outcome;
-      event.damage = Math.min(target.health, event.damage);
       target.health = Math.max(0, target.health - event.damage);
       target.mode = event.outcome === 'block' ? 'blockstun' : 'hitstun';
       target.remainingStateFrames = event.defenderStunFrames;

@@ -4,6 +4,23 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { defaultCharacter } from '../engine/data/characters';
 
+it('excludes effects created after the presentation update from the dimmer camera', () => {
+  const object = () => {
+    const value = { setName: vi.fn(), setOrigin: vi.fn(), setScrollFactor: vi.fn(), setDepth: vi.fn(), setVisible: vi.fn(), destroy: vi.fn() };
+    Object.values(value).forEach(method => method.mockReturnValue(value));
+    return value;
+  };
+  const title = object(), dimmer = object(), effect = object();
+  const camera = { setViewport: vi.fn(), ignore: vi.fn() };
+  const scene = { add: { image: () => title, rectangle: () => dimmer }, cameras: { add: () => camera, remove: vi.fn() },
+    scale: { width: 1920, height: 1080 }, children: { list: [title, dimmer] } };
+  const presentation = new StagePresentation(scene as never, 'saloon');
+  scene.children.list.push(effect);
+  presentation.syncCamera();
+  expect(camera.ignore).toHaveBeenCalledWith([title, effect]);
+  presentation.destroy();
+});
+
 it.each(['saloon', 'fazenda', 'sala-treino'])('uses the %s presentations for intros and results', theme => {
   const makeObject = () => {
     const object = { width:1000, height:400, setName:vi.fn(), setOrigin:vi.fn(), setScrollFactor:vi.fn(), setDepth:vi.fn(), setVisible:vi.fn(),

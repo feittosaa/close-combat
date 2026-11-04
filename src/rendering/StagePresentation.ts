@@ -24,7 +24,6 @@ export class StagePresentation {
 
   update(snapshot: SimulationSnapshot, delta: number, width: number): boolean {
     this.dimmerCamera.setViewport(0, 0, this.scene.scale.width, this.scene.scale.height);
-    this.dimmerCamera.ignore(this.scene.children.list.filter(object => object !== this.dimmer));
     if (snapshot.round !== this.round) { this.intro = this.round === 0 ? 1400 : 2400; this.round = snapshot.round; }
     const wasIntro = this.intro > 0 && snapshot.phase === 'fight';
     if (wasIntro) this.intro = Math.max(0, this.intro - delta);
@@ -42,6 +41,10 @@ export class StagePresentation {
       this.dimmer.setPosition(0, 0).setSize(this.scene.scale.width, this.scene.scale.height).setAlpha(.2 * Math.max(0, alpha)).setVisible(true);
     } else { this.title.setVisible(false); this.dimmer.setVisible(false); }
     return wasIntro;
+  }
+
+  syncCamera(): void {
+    this.dimmerCamera.ignore(this.scene.children.list.filter(object => object !== this.dimmer));
   }
 
   reset(): void { this.round = 0; this.intro = 0; }

@@ -356,6 +356,7 @@ export class FightScene extends Phaser.Scene {
     this.inputDisplays.forEach((display, index) => {
       display.update(this.currentInputs[index] ?? neutralInput(), this.inputHistories[index].snapshot(), snapshot.characters[index].facing);
     });
+    this.stagePresentation?.syncCamera();
   }
 
   private cleanup(): void {
