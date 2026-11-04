@@ -12,7 +12,7 @@ import { defaultStage, selectableStages } from '../rendering/stages/stageCatalog
 import { opponentFor, isTrainingMode, type MatchMode } from './matchSetup';
 
 const MODES = [
-  { id: 'arcade', title: 'ARCADE', hint: 'Enfrente o Shoto controlado pelo computador.', tag: '1 JOGADOR' },
+  { id: 'arcade', title: 'ARCADE', hint: 'Enfrente o Bob controlado pelo computador.', tag: '1 JOGADOR' },
   { id: 'versus', title: 'LUTA PVP', hint: 'Dois jogadores no mesmo teclado.', tag: '2 JOGADORES' },
   { id: 'training', title: 'MODO TREINO', hint: 'Pratique comandos, alcances e punições.', tag: 'PRÁTICA LIVRE' },
   { id: 'tutorial', title: 'TUTORIAL BÁSICO', hint: 'Aprenda movimento, quatro básicos e defesa.', tag: 'PASSO A PASSO' },

@@ -1,0 +1,124 @@
+{
+  "frames": {
+    "0": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 1448
+      }
+    },
+    "1": {
+      "frame": {
+        "x": 960,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 1448
+      }
+    },
+    "2": {
+      "frame": {
+        "x": 1920,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 1448
+      }
+    },
+    "3": {
+      "frame": {
+        "x": 2880,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 1448
+      }
+    },
+    "4": {
+      "frame": {
+        "x": 3840,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 1448
+      }
+    },
+    "5": {
+      "frame": {
+        "x": 4800,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 960,
+        "h": 1448
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 1448
+      }
+    }
+  }
+}

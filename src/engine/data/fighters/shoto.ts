@@ -2,7 +2,7 @@ import type { CharacterDefinition } from '../characters';
 
 /** Bancada provisória criada do zero. Valores técnicos, ainda sem homologação de balanceamento. */
 export const shoto: CharacterDefinition = {
-  id: 'shoto', name: 'Shoto', maxHealth: 1000, defaultUltimateId: 'rake-ultimate',
+  id: 'shoto', name: 'Bob', maxHealth: 1000, defaultUltimateId: 'rake-ultimate',
   movement: { walkSpeed: 2.4, backwardWalkSpeed: 1.8, jumpVelocity: -11.46, dashSpeed: 4.6 * 24 / 18, backdashSpeed: 3.6 * 24 / 18, dashDurationFrames: 18 },
   collision: {
     bodyWidth: 60.72,
