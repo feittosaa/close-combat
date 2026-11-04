@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize, getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboyUltimateActivationPose } from './animations/cowboySprites';
-import { getShotoSpritePose, getShotoUltimatePose, getShotoVictoryExit, shotoIdleScale, shotoSpriteScale } from './animations/shotoSprites';
+import { getShotoSpritePose, getShotoUltimatePose, getShotoVictoryExit, getShotoResolution, shotoIdleScale, shotoSpriteScale } from './animations/shotoSprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
@@ -77,7 +77,7 @@ export class CombatantView {
     if (shotoDrawing && this.scene.textures?.exists(shotoDrawing.texture)) {
       const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, shotoDrawing.texture, String(shotoDrawing.frame)).setDepth(10);
       sprite.setDepth(depth).setTexture(shotoDrawing.texture, String(shotoDrawing.frame)).setOrigin(.5, shotoDrawing.footAnchor)
-        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * (shotoPose?.scale ?? 1)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y)
+        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * (shotoPose?.scale ?? 1) / getShotoResolution(shotoDrawing.texture)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y)
         .setFlipX(shotoDrawing.flipX).setAlpha(1).setVisible(true);
       this.sprites.slice(1).forEach(other => other.setVisible(false));
       this.graphics.clear();

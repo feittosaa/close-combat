@@ -2,6 +2,12 @@
 
 ## Revisão das animações do Shoto — 2026-11-04
 
+O personagem antes exibido como Shoto passou a se chamar Bob, e a Cowboy passou a se chamar Texas; os identificadores internos foram preservados. As 57 folhas high fornecidas para Bob foram conectadas à opção de qualidade alta, com atlas de resolução dupla e escala de exibição preservada, incluindo projéteis e efeito da ultimate. Os testes comparam todos os quadros nas duas qualidades; as dimensões e limites visíveis dos arquivos high foram comparados aos originais. Bob em alta qualidade e os dois nomes foram observados no jogo; a revisão artística e os ciclos completos de todas as animações seguem pendentes. Instalação reproduzível, 662 testes, sete verificações visuais, build e diff passaram localmente. As reduções de recuperação do antiaéreo e do chute fraco agachado da Texas solicitadas anteriormente também fazem parte desta entrega.
+
+A recuperação base do chute fraco agachado da Cowboy (`d+3`) foi reduzida de 20 para 10 quadros; a regra existente de recuperação em ataques bloqueados continua válida. Instalação reproduzível e build passaram; 659 testes passaram e um teste de higiene falhou devido às imagens não rastreadas do Shoto em `src/assets/sprites/characters/shoto/high/`, preservadas. Sem commit ou push nesta alteração.
+
+A recuperação do antiaéreo agachado da Cowboy (`d+2`) foi reduzida de 29 para 23 quadros. Instalação reproduzível e build passaram; 659 testes passaram e um teste de higiene falhou porque encontrou imagens não rastreadas em `src/assets/sprites/characters/shoto/high/`, preservadas como trabalho existente. Sem commit ou push nesta alteração.
+
 O chute potente `3+4` da Cowboy também é um overhead médio: acerta a guarda agachada e é bloqueado em pé. Testes cobrem os dois lados e adversários Shoto e Cowboy. Instalação reproduzível, 660 testes, sete verificações visuais, build e diff passaram localmente. As artes em revisão continuam aguardando avaliação artística e conferência integral em movimento.
 
 O soco forte agachado do Shoto é um overhead de nível médio: acerta a guarda agachada e pode ser bloqueado em pé. O motor usa uma propriedade explícita para essa regra, sem alterar os demais golpes médios. Testes cobrem ambas as guardas e os dois jogadores; instalação reproduzível, 658 testes, build e diff passaram localmente. Sem commit, push ou CI remota.

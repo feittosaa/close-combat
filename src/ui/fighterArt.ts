@@ -9,8 +9,8 @@ import puppetPortrait from '../assets/art/characters/puppet/selection-portrait.p
 import type Phaser from 'phaser';
 
 export const fighterArt: Readonly<Record<string, {icon: string; portrait: string; name: string; heightCm: number; imageHeight: number; top: number; bottom: number}>> = {
-  shoto: {icon:shotoIcon,portrait:shotoPortrait,name:'Shoto',heightCm:170,imageHeight:1446,top:22,bottom:1422},
-  cowboy: {icon:cowboyIcon,portrait:cowboyPortrait,name:'Cowboy',heightCm:160,imageHeight:1448,top:11,bottom:1436},
+  shoto: {icon:shotoIcon,portrait:shotoPortrait,name:'Bob',heightCm:170,imageHeight:1446,top:22,bottom:1422},
+  cowboy: {icon:cowboyIcon,portrait:cowboyPortrait,name:'Texas',heightCm:160,imageHeight:1448,top:11,bottom:1436},
   grappler: {icon:grapplerIcon,portrait:grapplerPortrait,name:'Grappler',heightCm:205,imageHeight:1448,top:30,bottom:1417},
   puppet: {icon:puppetIcon,portrait:puppetPortrait,name:'Puppet',heightCm:175,imageHeight:1435,top:9,bottom:1412},
 };
