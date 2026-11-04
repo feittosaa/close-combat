@@ -52,7 +52,7 @@ it('prepares every match resource before releasing the menu; every mode starts w
   expect(queued.has('cowboy-defeat')).toBe(true);
   expect(queued.has('cowboy-effect-shot')).toBe(true);
   expect(queued.has('sfx-perfect_block_1')).toBe(true);
-  expect([...queued].some(key => key.startsWith('shoto-'))).toBe(false);
+  expect(queued.has('shoto-idle')).toBe(true);
   for (const fighter of ['shoto','cowboy','grappler','puppet']) expect(queued.has(`fighter-icon-${fighter}`)).toBe(true);
   expect(load.atlas).toHaveBeenCalled();
   for(const key of queued)textures.set(key,{});queued.clear();

@@ -49,7 +49,7 @@ it('does not skip startup/activity, auto-repeat a held button, or invent a whiff
   }
 });
 
-it.each([0,1])('uses only one unit of hit pushback for ordinary grounded strikes: player %i',player=>{
+it.each([0,1])('uses each grounded strike’s authored hit pushback: player %i',player=>{
   for(const move of shoto.moves.filter(move=>!move.airborne&&['basic','crouching','power'].includes(move.category??''))){
     const sim=new Simulation(config,undefined,{training:true,initialDistance:64});
     const start=sim.snapshot().characters[1-player].x;
@@ -57,7 +57,9 @@ it.each([0,1])('uses only one unit of hit pushback for ordinary grounded strikes
     step(sim,player,attack);
     for(let tick=0;tick<move.startup;tick++)step(sim);
     const event=sim.snapshot().hitEvents[0];
-    expect(event).toMatchObject({moveId:move.id,outcome:'hit',pushback:1});
-    expect(sim.snapshot().characters[1-player].x-start).toBeCloseTo(player===0?1:-1);
+    const distance = move.id === 'power-punch' ? 140 : 1;
+    expect(event).toMatchObject({moveId:move.id,outcome:'hit',pushback:distance});
+    if (move.id === 'power-punch') for (let tick = 0; tick < 20; tick++) step(sim);
+    expect(sim.snapshot().characters[1-player].x-start).toBeCloseTo((player===0?1:-1) * distance);
   }
 });

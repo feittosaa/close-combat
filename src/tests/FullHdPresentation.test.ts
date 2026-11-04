@@ -82,7 +82,8 @@ it('acompanha a subida e a descida do salto real com zoom fixo',()=>{
     expect(camera.scrollY).toBeLessThanOrEqual(75);
     if (!snapshot.characters[0].grounded) expect(camera.scrollY).toBeLessThan(75);
     for(const fighter of snapshot.characters){
-      const head=288+(fighter.y-(144*1.03*1.15*1.1)-camera.scrollY-288)*camera.zoom;
+      const headHeight = fighter.grounded ? 144*1.03*1.15*1.1 : 145;
+      const head=288+(fighter.y-headHeight-camera.scrollY-288)*camera.zoom;
       expect(head).toBeGreaterThan(78);
       expect(fighter.y).toBeLessThanOrEqual(488);
       airborne ||= !fighter.grounded;

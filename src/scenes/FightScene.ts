@@ -16,6 +16,8 @@ import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
 import { getCowboyRoundEndPresentation, hasCowboyExited, preloadCowboySprites } from '../rendering/animations/cowboySprites';
+import { hasShotoExited } from '../rendering/animations/shotoSprites';
+import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { ProjectileView } from '../rendering/ProjectileView';
 import { preloadContactEffects } from '../rendering/contactEffects';
 import { RESULT_TITLE_END_FRAME, StagePresentation } from '../rendering/StagePresentation';
@@ -134,7 +136,9 @@ export class FightScene extends Phaser.Scene {
     const winner = snapshot.characters.find(character => character.characterId === snapshot.matchWinnerId);
     if (!winner || snapshot.roundEndedFrame === undefined) return false;
     const elapsed = snapshot.frame - snapshot.roundEndedFrame - RESULT_TITLE_END_FRAME;
-    return hasCowboyExited(winner, elapsed, this.resultFloorY, this.resultGravity, this.cameras.main.worldView);
+    const presentation = getCowboyRoundEndPresentation(winner, elapsed, this.resultFloorY, this.resultGravity);
+    return hasCowboyExited(winner, elapsed, this.resultFloorY, this.resultGravity, this.cameras.main.worldView) &&
+      hasShotoExited(presentation.state, presentation.elapsed, this.cameras.main.worldView);
   }
   private readonly handleContinue = (): void => {
     if (this.tutorial && !this.paused && this.tutorial.next()) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.resetFight(); return; }
@@ -176,6 +180,7 @@ export class FightScene extends Phaser.Scene {
     preloadFighterIcons(this);
     preloadStage(this, this.selectedStage);
     preloadCowboySprites(this);
+    preloadShotoSprites(this);
     preloadContactEffects(this);
   }
 

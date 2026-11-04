@@ -19,6 +19,22 @@ function contact(sim: Simulation, player: number, guard = input()) {
   throw new Error('Missing contact');
 }
 
+it('aumenta em aproximadamente 15% a altura do salto normal', () => {
+  const peak = (jumpVelocity: number) => {
+    const fighter = { ...shoto, movement: { ...shoto.movement, jumpVelocity } };
+    const sim = new Simulation(config, [fighter, fighter], { training: true, initialDistance: 400 });
+    const floor = config.arena.floorY;
+    step(sim, 0, input('U'));
+    let highest = floor;
+    for (let tick = 0; tick < 70; tick++) {
+      highest = Math.min(highest, sim.snapshot().characters[0].y);
+      step(sim);
+    }
+    return floor - highest;
+  };
+  expect(peak(shoto.movement.jumpVelocity) / peak(-10.7)).toBeCloseTo(1.15, 1);
+});
+
 it.each([0,1])('executes each air basic, preserves gravity and mirrors the existing strike poses: player %i', player => {
   for (const move of shoto.moves.filter(move => move.airborne && move.category === 'basic')) {
     const sim = new Simulation(config,undefined,{training:true,initialDistance:56});
@@ -99,7 +115,7 @@ it.each([0,1])('keeps a missed air kick vulnerable after landing during recovery
   for (const button of ['3','4'] as const) {
     const sim = new Simulation(config,undefined,{training:true,initialDistance:400});
     step(sim,player,input('U'));
-    for (let tick=0;tick<10;tick++) step(sim);
+    for (let tick=0;tick<18;tick++) step(sim);
     step(sim,player,input('N',button));
     for (let tick=0;tick<50 && !sim.snapshot().characters[player].grounded;tick++) step(sim,player,input('B'));
     const landed = sim.snapshot().characters[player];

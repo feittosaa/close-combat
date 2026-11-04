@@ -8,7 +8,7 @@ import type { Direction, FrameInput } from '../input/types';
 const input=(direction:Direction='N'):FrameInput=>({direction,buttons:new Set()});
 const N=input();
 const practice=()=>new Simulation(createGameConfig(2200,700),undefined,{training:true,initialDistance:900});
-it.each(['F','B'] as const)('segundo toque %s inicia imediatamente e completa 24F depois de soltar',direction=>{
+it.each(['F','B'] as const)('segundo toque %s inicia imediatamente e completa 18F depois de soltar',direction=>{
   for(const index of [0,1]){
     const sim=practice();const pair=[N,N];pair[index]=input(direction);
     sim.stepFrame(pair);sim.stepFrame([N,N]);const before=sim.snapshot().characters[index].x;
@@ -17,9 +17,10 @@ it.each(['F','B'] as const)('segundo toque %s inicia imediatamente e completa 24
     const sign=(index===0?1:-1)*(direction==='F'?1:-1);
     expect(sim.snapshot().characters[index].mode).toBe('dashing');
     expect(sim.snapshot().characters[index].x-before).toBeCloseTo(sign*speed);
-    for(let frame=1;frame<24;frame++)sim.stepFrame([N,N]);
+    for(let frame=1;frame<18;frame++)sim.stepFrame([N,N]);
     expect(sim.snapshot().characters[index].mode).toBe('dashing');
-    expect(sim.snapshot().characters[index].x-before).toBeCloseTo(sign*speed*24);
+    expect(sim.snapshot().characters[index].x-before).toBeCloseTo(sign*speed*18);
+    expect(sim.snapshot().characters[index].x-before).toBeCloseTo(sign*(direction==='F'?4.6:3.6)*24);
     const end=sim.snapshot().characters[index].x;sim.stepFrame([N,N]);
     expect(sim.snapshot().characters[index]).toMatchObject({mode:'neutral',x:end});
   }

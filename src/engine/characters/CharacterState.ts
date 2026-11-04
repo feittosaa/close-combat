@@ -52,6 +52,8 @@ export interface CharacterState {
   perfectBlockStartedFrame?: number;
   hitReaction?: { level: 'low' | 'mid' | 'high'; startedFrame: number };
   grabbedStartedFrame?: number;
+  /** Start of the Shoto ippon victim reaction. */
+  ipponReceivedFrame?: number;
   grabbedHold?: boolean;
   chain?: string[];
   /** Consecutive confirmed hits in an authored projectile sequence. */
@@ -59,8 +61,12 @@ export interface CharacterState {
   projectileComboId?: number;
   /** Confirmed pressure keeps its strength floor until the defender regains control. */
   hitSequence?: { targetId: string; heavy: boolean; heavyButton?: '2' | '4' };
+  /** Contacted normal attacks in the current uninterrupted string, including guards. */
+  contactSequence?: { heavy: boolean; heavyButton?: '2' | '4'; weakFamily?: '1' | '3' };
   knockdown?: { velocityX: number };
   pushbackMotion?: { distancePerFrame: number; remainingFrames: number };
+  /** A bounce blocks the next received combo until its reaction ends. */
+  wallBounceProtection?: 'waiting' | 'receiving';
   wallBouncePending?: { direction: -1 | 1; attackerId: string; moveId: string };
   wallBounceEffect?: { x: number; y: number; frame: number; direction: -1 | 1 };
   throwFlight?: boolean;
@@ -69,10 +75,7 @@ export interface CharacterState {
   juggle?: { gravityScale: number; airHits: number; suspensionFrames?: number };
   /** Counts combat ticks, including grounded getup, then a short protected return. */
   wakeupInvulnerabilityFrames?: number;
-  /** Bottle confirmation holds the defender until the lighter arrives, including landing. */
-  ultimateCapture?: { ownerId: string };
-  ultimateThrowStartedFrame?: number;
 }
 
 /** Snapshot of the preceding pose state; contains no renderer objects or recursive history. */
-export type CharacterAnimationState = Pick<CharacterState,'mode'|'stateStartedFrame'|'grounded'|'crouching'|'movementDirection'|'facing'|'verticalVelocity'>;
+export type CharacterAnimationState = Pick<CharacterState,'mode'|'stateStartedFrame'|'idleStartedFrame'|'grounded'|'crouching'|'movementDirection'|'facing'|'verticalVelocity'>;

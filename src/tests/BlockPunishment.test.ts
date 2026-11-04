@@ -33,8 +33,8 @@ describe('blocked attack recovery', () => {
     expect(sim.snapshot().hitEvents[0]?.outcome).toBe('block');
     for (let i = 0; i < 60 && (sim.snapshot().characters[0].attack || sim.snapshot().hitstopFramesRemaining); i++) sim.stepFrame([input('B'), neutral]);
     expect(sim.snapshot().characters[0].attack).toBeUndefined();
-    sim.stepFrame([input('B'), input('D', '1')]);
-    for (let i = 0; i < 20 && !sim.snapshot().hitEvents.length; i++) sim.stepFrame([input('B'), neutral]);
+    sim.stepFrame([input('DB'), input('D', '1')]);
+    for (let i = 0; i < 20 && !sim.snapshot().hitEvents.length; i++) sim.stepFrame([input('DB'), neutral]);
     expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', moveId: 'crouch-punch' });
   });
 
@@ -74,8 +74,8 @@ describe('blocked attack recovery', () => {
     }
   });
 
-  it.each([0, 1])('punishes a blocked heavy punch at the previously unreachable distance, player %i', attacker => {
-    const sim = new Simulation(config, undefined, { training: true, initialDistance: 108 });
+  it.each([0, 1])('punishes a blocked heavy punch near its reduced reach, player %i', attacker => {
+    const sim = new Simulation(config, undefined, { training: true, initialDistance: 100 });
     const defender = 1 - attacker;
     const advance = (attack: FrameInput, defense: FrameInput) => {
       const inputs = [neutral, neutral]; inputs[attacker] = attack; inputs[defender] = defense;
@@ -86,7 +86,7 @@ describe('blocked attack recovery', () => {
     expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'block', moveId: 'heavy-punch' });
     for (let i = 0; i < 60 && (sim.snapshot().hitstopFramesRemaining || sim.snapshot().characters[defender].mode === 'blockstun'); i++) advance(input('B'), input('B'));
     const before = sim.snapshot();
-    expect(Math.abs(before.characters[0].x - before.characters[1].x)).toBeCloseTo(114);
+    expect(Math.abs(before.characters[0].x - before.characters[1].x)).toBeCloseTo(106);
     advance(input('B'), input('N', '1'));
     for (let i = 0; i < 15 && !sim.snapshot().hitEvents.length; i++) advance(input('B'), neutral);
     expect(sim.snapshot().hitEvents[0]).toMatchObject({ outcome: 'hit', moveId: 'light-punch', context: 'block-punish' });
@@ -117,7 +117,7 @@ describe('blocked attack recovery', () => {
     sim.stepFrame([input('D'), input('B')]);
     sim.stepFrame([input('DF'), input('B')]);
     sim.stepFrame([input('F', '1'), input('B')]);
-    expect(sim.snapshot().characters[0].attack?.moveId).toBe('wine-glass');
+    expect(sim.snapshot().characters[0].attack?.moveId).toBe('tomato-light');
     let recoveredBeforeBlock = false;
     for (let i = 0; i < 100 && !sim.snapshot().hitEvents.length; i++) {
       sim.stepFrame([input('F'), input('B')]);
@@ -125,7 +125,7 @@ describe('blocked attack recovery', () => {
     }
     const state = sim.snapshot();
     expect(recoveredBeforeBlock).toBe(true);
-    expect(state.hitEvents[0]).toMatchObject({ outcome: 'block', moveId: 'wine-glass' });
+    expect(state.hitEvents[0]).toMatchObject({ outcome: 'block', moveId: 'tomato-light' });
     expect(state.characters[0].attack).toBeUndefined();
     expect(state.characters[0].mode).not.toBe('recovery');
   });

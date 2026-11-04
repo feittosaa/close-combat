@@ -104,7 +104,7 @@ export function getCowboyUltimateActivationPose(state: CharacterState, elapsed: 
 
 /** Round-end drawings are presentation only and never change combat geometry. */
 export function getCowboyRoundEndPresentation(state: CharacterState, elapsed: number, floorY: number, gravity: number) {
-  if (state.fighterId !== 'cowboy' || state.grounded) return { state, elapsed };
+  if (!['cowboy', 'shoto'].includes(state.fighterId) || state.grounded) return { state, elapsed };
   const landing = flightFramesRemaining(state.y, state.verticalVelocity, floorY, gravity);
   const ticks = Math.min(Math.max(0, elapsed), landing);
   const y = Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2);

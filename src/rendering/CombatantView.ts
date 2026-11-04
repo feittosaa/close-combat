@@ -1,9 +1,15 @@
 import type Phaser from 'phaser';
 import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize, getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboyUltimateActivationPose } from './animations/cowboySprites';
+import { getShotoSpritePose, getShotoUltimatePose, getShotoVictoryExit, shotoIdleScale, shotoSpriteScale } from './animations/shotoSprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
 import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
+
+export function combatantDepth(state: CharacterState, frame: number): number {
+  const ipponAge = frame - (state.ipponReceivedFrame ?? -Infinity);
+  return ipponAge >= 0 && ipponAge < 24 ? 9 : 10;
+}
 
 /** Fighters without body artwork retain diagnostic geometry. */
 export class CombatantView {
@@ -12,11 +18,14 @@ export class CombatantView {
   private readonly volleyArms: Phaser.GameObjects.Image[] = [];
   private readonly grabShots: Phaser.GameObjects.Image[] = [];
   private dust?: Phaser.GameObjects.Image;
+  private ultimateWind?: Phaser.GameObjects.Image;
   private lasso?: Phaser.GameObjects.Image;
   constructor(private readonly scene: Phaser.Scene, private readonly color: number) {
     this.graphics = scene.add.graphics().setDepth(11);
   }
   sync(state: CharacterState, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number; floorY: number; gravity: number}): void {
+    const depth = combatantDepth(state, frame);
+    this.graphics.setDepth(depth);
     const presentation = result ? getCowboyRoundEndPresentation(state, result.elapsed, result.floorY, result.gravity) : undefined;
     if (presentation) state = presentation.state;
     const grabAge = state.attack?.moveId === 'throw-24' && state.attack.throwConfirmedFrame !== undefined
@@ -48,12 +57,40 @@ export class CombatantView {
           .setFlipX(state.facing === 'left').setAlpha(fadeIn * fadeOut).setVisible(elapsed < 112);
       }
     } else this.volleyArms.forEach(arms => arms.setVisible(false));
+    const windActive = state.fighterId === 'shoto' && state.attack?.moveId === 'rake-ultimate' &&
+      activationFrame === undefined && (state.mode === 'startup' || state.mode === 'active');
+    if (windActive && this.scene.textures.exists('shoto-effect-ultimate-wind')) {
+      const wind = this.ultimateWind ??= this.scene.add.image(0, 0, 'shoto-effect-ultimate-wind', '0').setDepth(9);
+      wind.setTexture('shoto-effect-ultimate-wind', String(Math.floor(state.attack!.elapsedFrames / 2) % 6))
+        .setOrigin(.5, 1).setDisplaySize(285, 280).setPosition(state.x, state.y + 5)
+        .setFlipX(state.facing === 'left').setVisible(true);
+    } else this.ultimateWind?.setVisible(false);
+    const shotoPose = state.fighterId === 'shoto' && (!result || !result.winner || !state.grounded)
+      ? activationFrame === undefined ? getShotoSpritePose(state, frame) : getShotoUltimatePose(state, activationFrame, true) : undefined;
+    const shotoVictory = state.fighterId === 'shoto' && result?.winner && state.grounded
+      ? getShotoVictoryExit(state, presentation!.elapsed) ?? { texture: 'shoto-victory', frame: Math.min(5, Math.floor(presentation!.elapsed / 12)), footAnchor: 900 / 1024,
+        offsetX: 0, flipX: state.facing === 'left' } : undefined;
+    const shotoDefeat = state.fighterId === 'shoto' && result && !result.winner && state.grounded && state.mode !== 'knockdown'
+      ? { texture: 'shoto-defeat', frame: Math.min(5, Math.floor(result.elapsed / 8)), footAnchor: 900 / 1024,
+        offsetX: 0, flipX: state.facing === 'left' } : undefined;
+    const shotoDrawing = shotoVictory || shotoDefeat || shotoPose;
+    if (shotoDrawing && this.scene.textures?.exists(shotoDrawing.texture)) {
+      const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, shotoDrawing.texture, String(shotoDrawing.frame)).setDepth(10);
+      sprite.setDepth(depth).setTexture(shotoDrawing.texture, String(shotoDrawing.frame)).setOrigin(.5, shotoDrawing.footAnchor)
+        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * (shotoPose?.scale ?? 1)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y)
+        .setFlipX(shotoDrawing.flipX).setAlpha(1).setVisible(true);
+      this.sprites.slice(1).forEach(other => other.setVisible(false));
+      this.graphics.clear();
+      this.lasso?.setVisible(false);
+      this.dust?.setVisible(false);
+      return;
+    }
     const roundEndPose = result && getCowboyRoundEndPose(state, result.winner, presentation!.elapsed);
     const layers=state.fighterId === 'cowboy' ? roundEndPose ? [roundEndPose] : activationFrame !== undefined ? [getCowboyUltimateActivationPose(state,activationFrame)] : getCowboySpriteLayers(state, frame) : [];
     if(layers.length && layers.every(pose=>this.scene.textures?.exists(pose.texture))){
       layers.forEach((pose,index)=>{
         const sprite=this.sprites[index]??=this.scene.add.image(0,0,pose.texture,String(pose.frame)).setDepth(10);
-        sprite.setTexture(pose.texture,String(pose.frame))
+        sprite.setDepth(depth).setTexture(pose.texture,String(pose.frame))
           .setOrigin(.5,cowboyFootAnchor)
           .setScale(cowboyDisplayHeight / getCowboyFrameSize(pose.texture) * pose.scale)
           .setAngle(0)
@@ -111,5 +148,5 @@ export class CombatantView {
       g.lineStyle(4, 0xa6e6ff).lineBetween(state.x + sign * 28, box.y + 12, state.x + sign * 28, box.y + box.height - 12);
     }
   }
-  destroy(): void { this.sprites.forEach(sprite=>sprite.destroy()); this.volleyArms.forEach(sprite=>sprite.destroy()); this.grabShots.forEach(sprite=>sprite.destroy()); this.dust?.destroy(); this.lasso?.destroy(); this.graphics.destroy(); }
+  destroy(): void { this.sprites.forEach(sprite=>sprite.destroy()); this.volleyArms.forEach(sprite=>sprite.destroy()); this.grabShots.forEach(sprite=>sprite.destroy()); this.dust?.destroy(); this.ultimateWind?.destroy(); this.lasso?.destroy(); this.graphics.destroy(); }
 }

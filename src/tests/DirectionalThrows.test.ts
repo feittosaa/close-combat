@@ -22,7 +22,9 @@ it.each([0,1])('chooses front/back for both throws when the command starts, even
     expect(sim.snapshot().characters[player].attack).toMatchObject({moveId:move.id,throwDirection:direction==='B'?'backward':'forward'});
     // Choosing another direction during preparation does not replace the captured choice.
     step(sim,player,input(direction==='B'?'F':'B'));
-    const event=contact(sim,player);const [self,target]=[sim.snapshot().characters[player],sim.snapshot().characters[1-player]];
+    const event=contact(sim,player);
+    if (move.throwFlight) for (let tick=0; tick<80 && sim.snapshot().characters[1-player].throwFlight; tick++) step(sim);
+    const [self,target]=[sim.snapshot().characters[player],sim.snapshot().characters[1-player]];
     const expectedSign=direction==='B'?-sign:sign;
     expect(event).toMatchObject({moveId:move.id,outcome:'hit',damage:move.damage,pushbackDirection:expectedSign>0?'right':'left'});
     expect(target.x-self.x).toBeCloseTo(expectedSign*(distance+move.pushback.hit));
@@ -37,6 +39,7 @@ it.each([0,1])('keeps back throws inside both walls with body separation: player
     const sim=new Simulation(config,undefined,{training:true,initialDistance:48});
     for(let tick=0;tick<600;tick++)sim.stepFrame([input(wall==='left'?'B':'F'),input(wall==='left'?'F':'B')]);
     step(sim,player,input('B',move.input.buttons));contact(sim,player);
+    if (move.throwFlight) for (let tick=0; tick<80 && sim.snapshot().characters[1-player].throwFlight; tick++) step(sim);
     const states=sim.snapshot().characters;
     for(const state of states){expect(state.x-state.collision.bodyWidth/2).toBeGreaterThanOrEqual(config.arena.left);expect(state.x+state.collision.bodyWidth/2).toBeLessThanOrEqual(config.arena.right);}
     expect(Math.abs(states[0].x-states[1].x)).toBeGreaterThanOrEqual(shoto.collision.bodyWidth-0.00001);
@@ -61,7 +64,9 @@ it('resolves simultaneous back throws symmetrically from the contact positions',
   const before=sim.snapshot().characters;const center=(before[0].x+before[1].x)/2;
   const grab=input('B',['1','3']);sim.stepFrame([grab,grab]);
   for(let tick=0;tick<20 && !sim.snapshot().hitEvents.length;tick++)step(sim);
-  const snapshot=sim.snapshot();expect(snapshot.hitEvents).toHaveLength(2);
+  expect(sim.snapshot().hitEvents).toHaveLength(2);
+  for (let tick=0; tick<80 && sim.snapshot().characters.some(c=>c.throwFlight); tick++) step(sim);
+  const snapshot=sim.snapshot();
   expect(snapshot.characters.map(c=>c.health)).toEqual([925,925]);
   expect((snapshot.characters[0].x+snapshot.characters[1].x)/2).toBeCloseTo(center);
   expect(snapshot.characters[0].x).toBeGreaterThan(snapshot.characters[1].x);
@@ -89,4 +94,17 @@ it.each([0,1])('delays both throws until frame fifteen and captures at expanded 
     for(let elapsed=1;elapsed<total;elapsed++){step(whiff);expect(whiff.snapshot().characters[player].attack).toBeDefined();}
     step(whiff);expect(whiff.snapshot().characters[player].attack).toBeUndefined();
   }
+});
+
+it.each([0, 1])('ippon projeta a vítima e termina em queda: jogador %i', player => {
+  const sim = new Simulation(config, [shoto, shoto], { training: true, initialDistance: 56 });
+  step(sim, player, input('N', ['1', '3']));
+  expect(contact(sim, player).moveId).toBe('throw-13');
+  expect(sim.snapshot().characters[1-player]).toMatchObject({ throwFlight: true, mode: 'knockdown' });
+  for (let tick = 0; tick < 30 && sim.snapshot().characters[1-player].grounded; tick++) step(sim);
+  const victim = sim.snapshot().characters[1-player];
+  expect(victim).toMatchObject({ grounded: false, throwFlight: true, mode: 'knockdown' });
+  expect(victim.verticalVelocity).toBeLessThan(0);
+  for (let tick = 0; tick < 80 && !sim.snapshot().characters[1-player].grounded; tick++) step(sim);
+  expect(sim.snapshot().characters[1-player]).toMatchObject({ grounded: true, mode: 'knockdown' });
 });

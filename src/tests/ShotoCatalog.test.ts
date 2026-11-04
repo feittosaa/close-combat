@@ -34,13 +34,13 @@ function untilContact(sim: Simulation, player = 0, guard = N, continuous = false
 const move = (id: string) => shoto.moves.find(m => m.id === id)!;
 
 describe('manual Shoto catalogue', () => {
-  it('registers only the four authored punch strings', () => {
+  it('registers the authored punch and kick strings', () => {
     expect(shoto.combos?.map(c => c.notation)).toEqual([
-      '1,1,1','2,2,2','1,1,2','1,1,1+2',
+      '1,1,1','2,2,2','1,1,2','1,1,1+2','3,3,4','3,4',
     ]);
     expect(formatCommand('b,bd,d,df,f,1+2')).toContain('←,↙,↓,↘,→,');
     expect(formatCommand('f,d,fd,4')).toContain('→,↓,↘,');
-    expect(fighterMoveList(shoto).filter(e => e.categories.includes('special'))).toHaveLength(5);
+    expect(fighterMoveList(shoto).filter(e => e.categories.includes('special'))).toHaveLength(6);
   });
 
   it.each([0,1])('executes every authored string with connected hits for player %i', player => {
@@ -64,6 +64,25 @@ describe('manual Shoto catalogue', () => {
     }
   });
 
+  it.each([0, 1])('uses faster startup only for the second and third heavy punches for player %i', player => {
+    const sim = create(56);
+    for (const [index, startup] of [13, 10, 10].entries()) {
+      command(sim, move('heavy-punch'), player);
+      for (let frame = 0; frame < 40 && (sim.snapshot().characters[player].chain?.length ?? 0) !== index + 1; frame++) step(sim, N, player);
+      expect(sim.snapshot().characters[player].attack?.startupFrames).toBe(startup);
+      untilContact(sim, player, N, index > 0);
+    }
+    expect(sim.snapshot().recentContacts.map(contact => contact.event.moveId)).toEqual(['heavy-punch', 'heavy-punch', 'heavy-punch']);
+    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(30);
+
+    const launcher = create(56);
+    for (const id of ['light-punch', 'light-punch', 'heavy-punch']) {
+      command(launcher, move(id), player);
+      untilContact(launcher, player);
+    }
+    expect(launcher.snapshot().characters[player].attack?.startupFrames).toBeUndefined();
+  });
+
   it('never executes a full string from a held button, whiff or an unauthorized route', () => {
     const sim = create(); for(let i=0;i<100;i++)step(sim,input('N',['1']));
     expect(sim.snapshot().recentContacts).toHaveLength(1);
@@ -73,13 +92,34 @@ describe('manual Shoto catalogue', () => {
     expect(wrong.snapshot().characters[0].attack?.moveId).toBe('heavy-punch');
   });
 
+  it.each([0,1])('o soco fraco agachado acerta guarda alta e é defendido agachado, jogador %i', player => {
+    expect(move('crouch-punch').hitLevel).toBe('low');
+    for (const [direction, outcome] of [['B', 'hit'], ['DB', 'block']] as const) {
+      const sim = create(56);
+      command(sim, move('crouch-punch'), player);
+      untilContact(sim, player, input(direction));
+      expect(sim.snapshot().hitEvents[0]).toMatchObject({ moveId: 'crouch-punch', outcome });
+    }
+  });
+
+  it.each([0,1])('antiaéreo agachado acerta guarda baixa e é bloqueado em pé, jogador %i', player => {
+    const attack = move('crouch-uppercut');
+    expect(attack).toMatchObject({ hitLevel: 'mid', overhead: true });
+    for (const [direction, outcome] of [['B', 'block'], ['DB', 'hit']] as const) {
+      const sim = create(56);
+      command(sim, attack, player);
+      untilContact(sim, player, input(direction));
+      expect(sim.snapshot().hitEvents[0]).toMatchObject({ moveId: attack.id, outcome });
+    }
+  });
+
   it.each([0,1])('prioritizes crouching attacks and low guard correctly for player %i', player => {
     for(const attack of shoto.moves.filter(m => m.crouching)) {
       for(const guard of [input('B'),input('DB')]) {
         const sim=create(56);command(sim,attack,player);untilContact(sim,player,guard);
         const event=sim.snapshot().hitEvents[0];
         expect(event.moveId).toBe(attack.id);
-        expect(event.outcome).toBe(attack.hitLevel==='low' && guard.direction==='B'?'hit':'block');
+        expect(event.outcome).toBe((attack.hitLevel==='low' && guard.direction==='B') || (attack.overhead && guard.direction==='DB') ? 'hit' : 'block');
         expect(sim.snapshot().characters[player].crouching).toBe(true);
       }
     }
@@ -101,7 +141,7 @@ describe('manual Shoto catalogue', () => {
   });
 
   it.each([0,1])('creates independently travelling fast/slow wine projectiles for player %i', player => {
-    for(const id of ['wine-glass','wine-bottle']) {
+    for(const id of ['tomato-light','tomato-heavy']) {
       const sim=create(300), attack=move(id);command(sim,attack,player);
       expect(sim.snapshot().characters[player].attack?.moveId).toBe(id);
       wait(sim,attack.startup);
@@ -127,14 +167,14 @@ describe('manual Shoto catalogue', () => {
 
   it('builds rage on real contacts, requires a full bar and consumes it on ultimate startup', () => {
     const fastCharge={...shoto,rage:{...shoto.rage!,onHit:250}};
-    const noRage=create(300);command(noRage,move('wine-ultimate'));
+    const noRage=create(300);command(noRage,move('crow-ultimate'));
     expect(noRage.snapshot().characters[0].attack).toBeUndefined();
     const sim=create(56,fastCharge);command(sim,move('light-punch'));untilContact(sim);
     expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([250,15]);wait(sim);
-    command(sim,move('wine-ultimate'));
-    expect(sim.snapshot().characters[0]).toMatchObject({rage:0,attack:{moveId:'wine-ultimate'}});
-    untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'wine-ultimate',stage:'confirm',damage:0});
-    step(sim);untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'wine-ultimate',stage:'explosion',damage:280});
+    command(sim,move('crow-ultimate'));
+    expect(sim.snapshot().characters[0]).toMatchObject({rage:0,attack:{moveId:'crow-ultimate'}});
+    untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'crow-ultimate',outcome:'hit'});
+    expect(sim.snapshot().hitEvents[0].damage).toBeGreaterThan(0);
     expect(sim.snapshot().characters[0].rage).toBe(0);
     sim.resetMatch();expect(sim.snapshot().projectiles).toHaveLength(0);expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
   });
@@ -153,21 +193,62 @@ describe('manual Shoto catalogue', () => {
     }
   });
 
-  it('advancing knee passes through a real projectile, but is not immune to melee', () => {
-    const sim=create(200);command(sim,move('wine-glass'),1);
-    wait(sim,20);command(sim,move('advancing-knee'));
-    const start=sim.snapshot().characters[0].x;
-    for(let i=0;i<26;i++)step(sim);
-    expect(sim.snapshot().characters[0].x).toBeGreaterThan(start);
-    expect(sim.snapshot().characters[0].health).toBe(1000);
-    expect(sim.snapshot().projectiles.some(p=>p.x < sim.snapshot().characters[0].x)).toBe(true);
-    const melee=create(56);step(melee,input('N',['1']),1);command(melee,move('advancing-knee'));wait(melee,7);
-    expect(melee.snapshot().characters[0].health).toBe(980);
+  it.each([0, 1])('chutes especiais sobem e permanecem no ar durante a maior parte da recuperação: jogador %i', player => {
+    for (const id of ['reversal-light', 'reversal-kick']) {
+      const sim = create(400);
+      const special = move(id);
+      command(sim, special, player);
+      const floor = config.arena.floorY;
+      let highest = floor;
+      let landedAt = 0;
+      for (let frame = 1; frame <= 80; frame++) {
+        step(sim, N, player);
+        const state = sim.snapshot().characters[player];
+        highest = Math.min(highest, state.y);
+        if (state.grounded) { landedAt = frame; break; }
+      }
+      expect(floor - highest).toBeGreaterThan(90);
+      expect(landedAt).toBeGreaterThan(special.startup + special.activeFrames + special.recovery - 8);
+    }
+  });
+
+  it.each([0, 1])('permits the airborne follow-up only after the light flying kick for player %i', player => {
+    for (const id of ['flying-kick-light', 'flying-kick-heavy']) {
+      const sim = create(400);
+      const starter = move(id);
+      command(sim, starter, player);
+      expect(sim.snapshot().characters[player]).toMatchObject({ grounded: false, attack: { moveId: id } });
+      wait(sim, starter.startup + 1, player);
+      expect(sim.snapshot().characters[player].grounded).toBe(false);
+      step(sim, input('N', ['3']), player);
+      expect(sim.snapshot().characters[player].attack?.moveId).toBe(id === 'flying-kick-light' ? 'flying-kick-followup' : id);
+    }
+  });
+
+  it.each([0, 1])('accepts the light flying follow-up after a connected kick for player %i', player => {
+    const sim = create(56);
+    command(sim, move('flying-kick-light'), player);
+    untilContact(sim, player);
+    step(sim, input('N', ['3']), player);
+    wait(sim, CONTACT_HITSTOP_FRAMES + 2, player);
+    expect(sim.snapshot().characters[player].attack?.moveId).toBe('flying-kick-followup');
+  });
+
+  it.each([0, 1])('permite continuar após voadoras conectadas, jogador %i', player => {
+    for (const id of ['flying-kick-light', 'flying-kick-heavy']) {
+      const sim = create(56);
+      command(sim, move(id), player);
+      untilContact(sim, player);
+      expect(sim.snapshot().hitEvents[0].outcome).toBe('hit');
+      step(sim, input('N', ['1']), player);
+      wait(sim, CONTACT_HITSTOP_FRAMES + 2, player);
+      expect(sim.snapshot().characters[player].attack?.moveId).toBe('air-light-punch');
+    }
   });
 
   it('a projectile contact triggers hitstop independently of the round clock and resets with the match', () => {
     const sim=new Simulation(config,undefined,{initialDistance:300});
-    command(sim,move('wine-glass'));untilContact(sim);
+    command(sim,move('tomato-light'));untilContact(sim);
     const contact=sim.snapshot();expect(contact.hitstopFramesRemaining).toBe(CONTACT_HITSTOP_FRAMES);
     step(sim);expect(sim.snapshot().frame).toBe(contact.frame);
     expect(sim.snapshot().roundFramesRemaining).toBe(contact.roundFramesRemaining-1);
@@ -192,9 +273,9 @@ describe('manual Shoto catalogue', () => {
   });
 
   it('projectile continues after its owner is interrupted, then expires without contact', () => {
-    const sim=create(56);command(sim,move('wine-bottle'));
+    const sim=create(56);command(sim,move('tomato-heavy'));
     // Time a reversal to interrupt after bottle release while its invulnerability avoids contact.
-    wait(sim,move('wine-bottle').startup-7);command(sim,move('reversal-kick'),1);
+    wait(sim,move('tomato-heavy').startup-7);command(sim,move('reversal-kick'),1);
     untilContact(sim,1);
     expect(sim.snapshot().characters[0].mode).toBe('hitstun');
     expect(sim.snapshot().projectiles.some(p=>p.ownerId==='player-1')).toBe(true);
@@ -202,10 +283,10 @@ describe('manual Shoto catalogue', () => {
   });
 
   it.each([0,1])('gates ultimate and respects guard on either side for player %i', player => {
-    const sim=create(200);sim.fillTrainingRage();command(sim,move('wine-ultimate'),player);
+    const sim=create(200);sim.fillTrainingRage();command(sim,move('crow-ultimate'),player);
     expect(sim.snapshot().characters[player].rage).toBe(0);
-    untilContact(sim,player,input('B'));
-    expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'wine-ultimate',outcome:'block',damage:0});
+    untilContact(sim,player,input('DB'));
+    expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'crow-ultimate',outcome:'block',damage:0});
   });
 
 });

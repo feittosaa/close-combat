@@ -6,10 +6,10 @@ import type { Direction, FrameInput } from '../input/types';
 import { getCharacterAnimationKey } from '../rendering/animations/CharacterAnimationMap';
 const input=(direction:Direction):FrameInput=>({direction,buttons:new Set()});const N=input('N');
 describe('locomoção sem corrida',()=>{
-  it.each([shoto])('$name volta a caminhar ao manter avanço após os 24F de dash',fighter=>{
+  it.each([shoto])('$name volta a caminhar ao manter avanço após os 18F de dash',fighter=>{
     const sim=new Simulation(createGameConfig(2200,700),[fighter,fighter],{training:true,initialDistance:900});
     sim.stepFrame([input('F'),N]);sim.stepFrame([N,N]);
-    for(let f=0;f<24;f++){sim.stepFrame([input('F'),N]);expect(sim.snapshot().characters[0].mode).toBe('dashing');}
+    for(let f=0;f<18;f++){sim.stepFrame([input('F'),N]);expect(sim.snapshot().characters[0].mode).toBe('dashing');}
     const x=sim.snapshot().characters[0].x;sim.stepFrame([input('F'),N]);const state=sim.snapshot().characters[0];
     expect(state.mode).toBe('moving');expect(state.x-x).toBeCloseTo(fighter.movement.walkSpeed);expect(getCharacterAnimationKey(state)).toBe(`${fighter.id}-walk`);
     for(let frame=0;frame<60;frame++){
