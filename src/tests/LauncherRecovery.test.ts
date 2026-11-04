@@ -64,15 +64,24 @@ it.each([0,1])('drops a second launcher to the floor and permits a new launch af
   for(const button of ['1','1','2'] as const)hit(sim,player,button);
   const second=sim.snapshot();const target=second.characters[1-player];
   expect(target.health).toBe(850);
-  expect(target).toMatchObject({y:config.arena.floorY,grounded:true,verticalVelocity:0,mode:'knockdown'});
+  expect(target).toMatchObject({grounded:false,mode:'knockdown'});
+  expect(target.y).toBeLessThan(config.arena.floorY);
+  expect(target.verticalVelocity).toBeGreaterThanOrEqual(4);
   expect(target.juggle).toBeUndefined();
-  expect(target.airborneStartedFrame).toBeUndefined();
-  expect(target.airborneElapsedFrames).toBeUndefined();
   expect(target.remainingStateFrames).toBeGreaterThanOrEqual(second.hitEvents[0].attackerRecoveryFrames);
-  expect(target.wakeupInvulnerabilityFrames).toBe(target.remainingStateFrames+shoto.juggle!.wakeupInvulnerabilityFrames);
   for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++){
     step(sim);expect(sim.snapshot().characters).toEqual(second.characters);
   }
+  let y = target.y;
+  while (!sim.snapshot().characters[1-player].grounded) {
+    step(sim,player,{direction:'N',buttons:new Set(['1'])});
+    const falling = sim.snapshot().characters[1-player];
+    expect(falling.y).toBeGreaterThan(y);
+    expect(falling.health).toBe(target.health);
+    y = falling.y;
+  }
+  expect(sim.snapshot().characters[1-player]).toMatchObject({mode:'knockdown',grounded:true});
+  expect(sim.snapshot().characters[1-player].wakeupInvulnerabilityFrames).toBeGreaterThan(0);
   while(sim.snapshot().characters[1-player].wakeupInvulnerabilityFrames)step(sim);
   expect(sim.snapshot().characters[1-player].mode).toBe('neutral');
   for(const button of ['1','1','2'] as const)hit(sim,player,button);

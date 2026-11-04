@@ -18,18 +18,19 @@ it.each(['hit','block'] as const)('selects separate images for %s variants', out
   expect(contactEffectKey(contact,move(cowboy,'crouch-heavy-kick'))).toBe(`${outcome}-sweep`);
   expect(contactEffectKey(contact,move(cowboy,'push-away'))).toBe(`${outcome}-sweep`);
   expect(contactEffectKey(contact,move(cowboy,'quick-shot'))).toBe(`${outcome}-blue`);
-  expect(contactEffectKey(contact,move(shoto,'wine-glass'))).toBe(`${outcome}-wine`);
-  expect(contactEffectKey(contact,move(shoto,'wine-bottle'))).toBe(`${outcome}-green`);
-  expect(contactEffectKey({...contact,stage:'explosion'},move(shoto,'wine-ultimate'))).toBe(`${outcome}-orange`);
+  expect(contactEffectKey(contact,move(shoto,'tomato-light'))).toBe(`${outcome}-wine`);
+  expect(contactEffectKey(contact,move(shoto,'tomato-heavy'))).toBe(`${outcome}-wine`);
+  expect(contactEffectKey(contact,move(shoto,'crow-ultimate'))).toBe(`${outcome}-heavy`);
 });
 
 it('preloads every image as a six-frame sheet', () => {
   const spritesheet = vi.fn(), image = vi.fn();
   preloadContactEffects({textures:{exists:()=>false},load:{spritesheet,image}} as never);
   expect(image).toHaveBeenCalledWith('wall-bounce', expect.any(String));
-  expect(spritesheet).toHaveBeenCalledTimes(15);
+  expect(spritesheet).toHaveBeenCalledTimes(11);
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-light',expect.any(String),{frameWidth:362,frameHeight:724});
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-heavy',expect.any(String),{frameWidth:464,frameHeight:724});
+  expect(spritesheet).toHaveBeenCalledWith('contact-hit-wine',expect.any(String),{frameWidth:512,frameHeight:724});
 });
 
 it('renders simultaneous contacts using sprites, advances frames and clears them on reset', () => {

@@ -141,17 +141,14 @@ export class FightSounds {
     for (const id of activeExplosions) if (!this.explosions.has(id)) this.play('magic_explosion');
     this.explosions = activeExplosions;
     for (const event of snapshot.hitEvents) {
-      if (event.stage === 'explosion') this.play('magic_explosion');
       if (event.outcome === 'block') { this.play(event.perfectBlock ? 'perfect_block' : 'block'); continue; }
       const attacker = snapshot.characters.find(character => character.characterId === event.attackerId);
       const move = attacker && getCharacterById(attacker.fighterId)?.moves.find(candidate => candidate.id === event.moveId);
       const heavy = move && (move.category === 'special' || move.category === 'ultimate' || move.input.buttons.includes('2') || move.input.buttons.includes('4'));
-      if (event.stage !== 'confirm') {
-        if (move?.category === 'throw') { if (attacker?.fighterId !== 'cowboy') this.play('grab'); this.play('throw'); }
-        if (event.moveId === 'crouch-heavy-kick' && attacker?.fighterId === 'cowboy') this.play('kick_on_the_ground');
-        this.play(event.moveId === 'push-away' && attacker?.fighterId === 'cowboy' ? 'push_hit' : heavy ? 'heavy_hit' : 'hit');
-        if (event.context === 'counter-hit') this.play('counter_hit');
-      }
+      if (move?.category === 'throw') { if (attacker?.fighterId !== 'cowboy') this.play('grab'); this.play('throw'); }
+      if (event.moveId === 'crouch-heavy-kick' && attacker?.fighterId === 'cowboy') this.play('kick_on_the_ground');
+      this.play(event.moveId === 'push-away' && attacker?.fighterId === 'cowboy' ? 'push_hit' : heavy ? 'heavy_hit' : 'hit');
+      if (event.context === 'counter-hit') this.play('counter_hit');
     }
     for (const character of snapshot.characters) {
       const ready = character.maxRage > 0 && character.rage >= character.maxRage && !character.ultimateUsed;

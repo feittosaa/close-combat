@@ -14,9 +14,7 @@ export interface ProjectileState {
   velocity: number;
   verticalVelocity?: number;
   gravity?: number;
-  phase?: 'confirm' | 'lighter';
-  targetId?: string;
   remainingFrames: number;
-  visual: 'glass' | 'bottle' | 'molotov' | 'bullet' | 'lighter' | 'volley' | 'dynamite';
+  visual: 'tomato' | 'crow' | 'bullet' | 'volley' | 'dynamite';
   attack: CharacterAttack;
 }

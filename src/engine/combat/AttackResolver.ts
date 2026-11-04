@@ -21,7 +21,6 @@ export interface HitEvent {
   defenderStunFrames: number;
   frameAdvantage: number;
   context?: HitContext;
-  stage?: 'confirm' | 'explosion';
   volleyStep?: number;
   contactHeight?: 'low' | 'mid' | 'high';
   /** Geometric center of the contact, captured before either fighter moves. */
@@ -44,32 +43,41 @@ export class AttackResolver {
   resolve(characters: CharacterState[], inputs: readonly FrameInput[], projectiles: readonly ProjectileState[] = [], damageOverride?: (attackerId: string, targetId: string, move: MoveDefinition, volleyStep: number) => number): HitEvent[] {
     // Capturar todos os contatos antes de aplicar dano mantém trades simétricos.
     const sources = [
-      ...characters.map((attacker, index) => ({ attacker, index, attack: attacker.attack, projectile: false, phase: undefined as ProjectileState['phase'], targetId: undefined as string | undefined, volleyStep: undefined as number | undefined })),
+      ...characters.map((attacker, index) => {
+        const move = attacker.attack && this.resolveMove(attacker.fighterId, attacker.attack.moveId);
+        const elapsed = attacker.attack ? attacker.attack.elapsedFrames - (attacker.attack.startupFrames ?? move?.startup ?? 0) : -1;
+        const volleyStep = move?.multiHit && elapsed >= 0 && elapsed % move.multiHit.interval === 0 ? elapsed / move.multiHit.interval : undefined;
+        return { attacker, index, attack: attacker.attack, projectile: false, volleyStep };
+      }),
       ...projectiles.map(p => {
         const index = characters.findIndex(c => c.characterId === p.ownerId);
-        return { attacker: { ...characters[index], x: p.x, y: p.y, facing: p.facing }, index, attack: p.attack, projectile: true, phase: p.phase, targetId: p.targetId, volleyStep: p.volleyStep };
+        return { attacker: { ...characters[index], x: p.x, y: p.y, facing: p.facing }, index, attack: p.attack, projectile: true, volleyStep: p.volleyStep };
       }),
     ];
-    const pending = sources.flatMap(({ attacker, index, attack, projectile, phase, targetId, volleyStep }) => {
+    const pending = sources.flatMap(({ attacker, index, attack, projectile, volleyStep }) => {
       const move = attack ? this.resolveMove(attacker.fighterId, attack.moveId) : undefined;
       const target = characters[1 - index];
-      if (!attack || attack.hasHit || !move || (!projectile && (attacker.mode !== 'active' || move.projectile))) return [];
-      if (targetId && target.characterId !== targetId) return [];
+      if (!attack || !move || (attack.hasHit && !move.multiHit) || (!projectile && (attacker.mode !== 'active' || move.projectile))) return [];
+      if (move.multiHit && (volleyStep === undefined || volleyStep >= move.multiHit.hits)) return [];
       if (target.mode === 'knockdown' || (target.wakeupInvulnerabilityFrames ?? 0) > 0) return [];
-      const defense = target.attack ? this.resolveMove(target.fighterId, target.attack.moveId)?.invulnerability : undefined;
+      const defenseMove = target.attack ? this.resolveMove(target.fighterId, target.attack.moveId) : undefined;
+      if (projectile && defenseMove?.projectileInvulnerable) return [];
+      const defense = defenseMove?.invulnerability;
       if (defense && target.attack!.elapsedFrames < defense.until && (defense.kind === 'all' || projectile)) return [];
       if (move.category === 'throw' && (!target.grounded || !attacker.grounded || target.mode === 'hitstun' || target.mode === 'blockstun')) return [];
       const hitLevel = volleyStep === 0 ? move.screenVolley?.firstHitLevel ?? move.hitLevel : move.hitLevel;
       if (hitLevel === 'high' && target.crouching) return [];
-      const box = projectile ? createProjectileHitbox({ownerId:attacker.characterId,x:attacker.x,y:attacker.y,facing:attacker.facing,phase},move) : createHitbox(attacker,move);
-      const hurtboxes = target.fighterId === 'cowboy'
+      const box = projectile ? createProjectileHitbox({ownerId:attacker.characterId,x:attacker.x,y:attacker.y,facing:attacker.facing},move) : createHitbox(attacker,move);
+      const zonedTarget = target.fighterId === 'cowboy' || target.fighterId === 'shoto';
+      const hurtboxes = zonedTarget && move.category !== 'throw'
         ? Object.values(createHurtZones(target)) : [createHurtbox(target)];
       const contacted = hurtboxes.find(hurtbox => intersects(box, hurtbox));
       if (!contacted) return [];
       const targetBody = createHurtbox(target);
       const guard = inputs[1 - index]?.direction;
       const blocked = move.category !== 'throw' && ['blocking', 'blockstun'].includes(target.mode) &&
-        (hitLevel === 'low' ? target.grounded && guard === 'DB' : guard === 'B' || guard === 'DB');
+        (hitLevel === 'low' ? target.grounded && guard === 'DB' :
+          move.overhead ? guard === 'B' : guard === 'B' || guard === 'DB');
       const owner = characters[index];
       const ownerMove = owner.attack ? this.resolveMove(owner.fighterId, owner.attack.moveId) : undefined;
       // Allow a manual response after guard stun: 0.4s for light inputs and 0.6s for heavy inputs.
@@ -80,7 +88,7 @@ export class AttackResolver {
         attack.recoveryFrames = Math.max(attack.recoveryFrames ?? move.recovery, minimumRecovery);
       }
       const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, attackDurationFrames(ownerMove, owner.attack) - owner.attack.elapsedFrames - 1) : 0) : attackDurationFrames(move, attack) - attack.elapsedFrames - 1;
-      const stun = blocked ? move.blockstun : phase === 'confirm' ? move.ultimateSequence!.confirmStun : move.hitstun;
+      const stun = blocked ? move.blockstun : move.hitstun;
       const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward' && !(attacker.fighterId === 'cowboy' && move.id === 'throw-24')
         ? (attacker.facing === 'right' ? 'left' : 'right') : attacker.facing;
       const chargeSteps = move.charge ? Math.min(move.charge.maxSteps, Math.floor((attack.chargeFrames ?? 0) / move.charge.framesPerStep)) : 0;
@@ -88,10 +96,9 @@ export class AttackResolver {
         ? damageOverride(attacker.characterId, target.characterId, move, volleyStep)
         : Math.round(move.damage * (1 + chargeSteps * (move.charge?.damagePerStep ?? 0)));
       const event: HitEvent = { attackerId: attacker.characterId, targetId: target.characterId, moveId: move.id,
-        stage: phase === 'confirm' ? 'confirm' : phase === 'lighter' ? 'explosion' : undefined,
         ...(volleyStep !== undefined ? { volleyStep } : {}),
-        damage: blocked || phase === 'confirm' ? 0 : Math.min(target.health, damage), outcome: blocked ? 'block' : 'hit',
-        pushback: phase === 'confirm' ? 0 : blocked ? move.pushback.block : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
+        damage: blocked ? 0 : Math.min(target.health, damage), outcome: blocked ? 'block' : 'hit',
+        pushback: blocked ? move.pushback.block : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
         defenderStunFrames: stun, frameAdvantage: frameAdvantage(recovery, stun),
         context: blocked ? undefined : classifyHitContext(target),
         contactPoint: {
@@ -99,7 +106,7 @@ export class AttackResolver {
           y: (Math.max(box.y, contacted.y) + Math.min(box.y + box.height, contacted.y + contacted.height)) / 2,
         },
         contactBody: { centerY: targetBody.y + targetBody.height / 2, height: targetBody.height },
-        ...(target.fighterId === 'cowboy' && move.category !== 'throw' ? { contactHeight: contactHeight(target, box) } : {}) };
+        ...(zonedTarget && move.category !== 'throw' ? { contactHeight: contactHeight(target, box) } : {}) };
       return [{ attack, target, event }];
     });
     for (const { attack, target, event } of pending) {

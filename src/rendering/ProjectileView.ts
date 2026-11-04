@@ -42,12 +42,31 @@ export class ProjectileView {
       if (age >= 12 || age < 0) { effect.sprite.destroy(); this.wallEffects.delete(id); }
       else effect.sprite.setAlpha(1 - age / 12);
     }
-    const active = new Set(projectiles.filter(p => p.fighterId === 'cowboy').map(p => p.id));
+    const active = new Set(projectiles.filter(p => p.fighterId === 'cowboy' || p.visual === 'tomato' || p.visual === 'crow').map(p => p.id));
     for (const [id,sprite] of this.sprites) if (!active.has(id)) { sprite.destroy(); this.sprites.delete(id); }
     for (const p of projectiles) {
       const move = getCharacterById(p.fighterId)?.moves.find(m=>m.id===p.attack.moveId);
       if(!move)continue;
       const box=createProjectileHitbox(p,move);
+      if (p.visual === 'crow' && this.scene.textures.exists('shoto-crow')) {
+        const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
+        const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, 'shoto-crow', '0').setDepth(11);
+        this.sprites.set(p.id, sprite);
+        sprite.setTexture('shoto-crow', String(Math.floor(age / 3) % 6)).setPosition(box.x + box.width / 2, box.y + box.height / 2)
+          .setDisplaySize(box.width * .6, box.height * 1.2).setFlipX(p.facing === 'left').setVisible(true);
+        continue;
+      }
+      if (p.visual === 'tomato' && this.scene.textures.exists('shoto-tomato')) {
+        const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, 'shoto-tomato', '0').setDepth(11);
+        this.sprites.set(p.id, sprite);
+        const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
+        const size = 66.8;
+        const sign = p.facing === 'right' ? 1 : -1;
+        sprite.setTexture('shoto-tomato', String(Math.floor(age / 3) % 6))
+          .setPosition(box.x + box.width / 2 - sign * size / 4, box.y + box.height / 2)
+          .setDisplaySize(size, size).setFlipX(p.facing === 'left').setVisible(true);
+        continue;
+      }
       if (p.visual === 'volley') {
         const key = 'cowboy-effect-volley';
         if (this.scene.textures.exists(key)) {
@@ -80,23 +99,15 @@ export class ProjectileView {
           continue;
         }
       }
-      const size = box.width / (p.visual === 'lighter' ? 8 : p.visual === 'glass' ? 22 : 30);
-      const x = 0, y = 0;
+      const size = box.width / 30;
       g.save().translateCanvas(box.x + box.width / 2, box.y + box.height / 2).scaleCanvas(size, size);
       g.lineStyle(1.5, 0xf4dfb0, 1);
       if (p.visual === 'bullet') {
         g.fillStyle(0x42c8ff).fillRoundedRect(-12, -5, 24, 10, 5);
-      } else if (p.visual === 'lighter') {
-        g.fillStyle(0xc7b79d).fillRect(x-3,y-5,6,10);
-        g.fillStyle(0xffc65c).fillTriangle(x-3,y-6,x+3,y-6,x,y-15);
-      } else if (p.visual === 'glass') {
-        g.fillStyle(0x862c41).fillRect(x - 6, y - 10, 12, 8);
-        g.strokeRect(x - 7, y - 13, 14, 13).lineBetween(x, y, x, y + 9).lineBetween(x - 6, y + 9, x + 6, y + 9);
+      } else if (p.visual === 'tomato') {
+        g.fillStyle(0xc62918).fillCircle(0, 0, 12);
       } else {
-        g.fillStyle(0x354d39).fillRoundedRect(x - 7, y - 14, 14, 27, 3);
-        g.fillRect(x - 3, y - 21, 6, 9);
-        g.fillStyle(0xd7c49b).fillRect(x - 6, y - 5, 12, 11);
-        if (p.visual === 'molotov') g.fillStyle(0xf8a84b).fillTriangle(x - 4, y - 22, x + 7, y - 22, x + 3, y - 39);
+        g.fillStyle(0x777777).fillRect(-15, -7, 30, 14);
       }
       g.restore();
     }

@@ -14,6 +14,9 @@ export function createHitbox(character: CharacterState, move: MoveDefinition): H
 }
 export function createHurtbox(character: CharacterState): Hurtbox {
   let box = character.collision.hurtboxes[character.mode === 'knockdown' && character.grounded && !character.throwPull ? 'knockdown' : !character.grounded ? 'airborne' : character.crouching ? 'crouching' : 'standing'];
+  if (!character.grounded && character.mode === 'active' && character.attack) {
+    box = character.collision.airborneActiveHurtboxes?.[character.attack.moveId] ?? box;
+  }
   const jump = character.collision.jumpHurtboxes;
   if (jump && !character.grounded && character.mode === 'airborne') {
     const elapsed = character.airborneElapsedFrames ?? 0;

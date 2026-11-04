@@ -37,7 +37,7 @@ it('tutorial básico só oferece movimento, quatro básicos e guarda; exige cont
 });
 it('treino de combos oferece somente receitas manuais e não aprova digitação isolada', () => {
   const tutorial = new TutorialSession(shoto, 'combo-tutorial');
-  expect(tutorial.lessons).toHaveLength(4); expect(tutorial.lesson?.notation).toBe('1,1,1');
+  expect(tutorial.lessons).toHaveLength(6); expect(tutorial.lesson?.notation).toBe('1,1,1');
   tutorial.observe(create().snapshot(), N); expect(tutorial.complete).toBe(false); expect(tutorial.next()).toBe(false);
 });
 it('tutorial reconhece finalizador agachado e lista não o oferece como golpe independente', () => {

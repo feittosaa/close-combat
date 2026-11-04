@@ -20,11 +20,14 @@ export interface MoveDefinition {
   airborne?: boolean;
   /** Existing artwork only; this is a temporary pose alias, never new animation. */
   pose?: 'light-punch' | 'heavy-punch' | 'light-kick' | 'heavy-kick';
-  movement?: { speed: number; until: number; launch?: number };
+  movement?: { speed: number; until: number; launch?: number; gravityScale?: number };
   invulnerability?: { kind: 'all' | 'projectile'; until: number };
-  projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'glass' | 'bottle' | 'molotov' | 'bullet' | 'dynamite' };
-  ultimateSequence?: { lighterHitbox: MoveDefinition['hitbox']; lighterDelay: number; lighterSpeed: number; confirmStun: number; knockbackSpeed: number; launchSpeed: number; knockdownFrames: number };
-  screenVolley?: { shots: number; interval: number; bandHeight: number; firstHitLevel?: HitLevel; damageReductionPerPriorHit?: number };
+  /** Immunity to projectiles throughout this move, independently of other invulnerability. */
+  projectileInvulnerable?: boolean;
+  projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'tomato' | 'crow' | 'bullet' | 'dynamite' };
+  screenVolley?: { shots: number; interval: number; bandHeight: number; pattern?: readonly { frame: number; height: number }[]; firstHitLevel?: HitLevel; damageReductionPerPriorHit?: number };
+  /** Repeated contact windows distributed over the active portion of one move. */
+  multiHit?: { hits: number; interval: number; damageReductionPerPriorHit: number };
   rageCost?: number;
   /** Derruba no chão apenas quando o golpe acerta. */
   knockdown?: boolean;
@@ -41,6 +44,8 @@ export interface MoveDefinition {
   wallBounce?: boolean;
   /** Launch a thrown opponent over several simulation frames. */
   throwFlight?: { frames: number; liftSpeed: number };
+  /** A mid attack that cannot be blocked while crouching. */
+  overhead?: boolean;
   hitLevel: HitLevel;
   hitbox: { forward: number; yOffset: number; width: number; height: number };
 }

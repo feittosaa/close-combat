@@ -4,6 +4,7 @@ import { AttackResolver } from '../engine/combat/AttackResolver';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
+import { cowboy } from '../engine/data/fighters/cowboy';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
@@ -70,7 +71,7 @@ const juggleFixture: CharacterDefinition={...shoto,id:'juggle-fixture',combos:sh
   moves:shoto.moves.map(m=>m.id==='heavy-punch'?{...m,activeFrames:3,recovery:18,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:
     ['light-punch','heavy-kick'].includes(m.id)?{...m,startup:4,activeFrames:1,recovery:1,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:m)};
 
-it('increases gravity once per real air hit, caps it, and never resets upward momentum on ordinary hits',()=>{
+it('increases gravity once per real air hit, caps it, and lifts on ordinary hits',()=>{
   const sim=launch(0,juggleFixture);
   // Start new independent jabs after the grounded string has completed its recovery.
   for(let i=0;i<26;i++)step(sim);
@@ -81,10 +82,24 @@ it('increases gravity once per real air hit, caps it, and never resets upward mo
       hits++;
       expect(after.characters[1].juggle?.airHits).toBe(hits);
       expect(after.characters[1].juggle?.gravityScale).toBeCloseTo(Math.min(juggleFixture.juggle!.maximumGravityScale,0.7+hits*0.15));
-      expect(after.characters[1].verticalVelocity).toBeCloseTo(before.characters[1].verticalVelocity+(before.characters[1].juggle!.suspensionFrames?0:config.movement.gravity*before.characters[1].juggle!.gravityScale));
+      expect(after.characters[1].verticalVelocity).toBeCloseTo(Math.min(-2.5, before.characters[1].verticalVelocity+(before.characters[1].juggle!.suspensionFrames?0:config.movement.gravity*before.characters[1].juggle!.gravityScale)));
     }
   }
   expect(hits).toBeGreaterThanOrEqual(2);
+});
+
+it.each([shoto, cowboy])('levanta o alvo $name quando é atingido enquanto cai', defender => {
+  const sim = new Simulation(config, [juggleFixture, defender], { training: true, initialDistance: 56 });
+  step(sim, 1, input('U'));
+  for (let tick = 0; tick < 26; tick++) step(sim);
+  expect(sim.snapshot().characters[1]).toMatchObject({ grounded: false });
+  expect(sim.snapshot().characters[1].verticalVelocity).toBeGreaterThan(0);
+  step(sim, 0, input('N', ['4']));
+  contact(sim);
+  const hit = sim.snapshot().characters[1];
+  expect(hit.verticalVelocity).toBeLessThanOrEqual(-2.5);
+  for (let tick = 0; tick < CONTACT_HITSTOP_FRAMES + 1; tick++) step(sim);
+  expect(sim.snapshot().characters[1].y).toBeLessThan(hit.y);
 });
 
 it('protects getup and the exact wakeup interval from strikes, throws and projectiles, then accepts contacts',()=>{
@@ -93,13 +108,13 @@ it('protects getup and the exact wakeup interval from strikes, throws and projec
   const resolver=new AttackResolver((_,id)=>shoto.moves.find(m=>m.id===id));
   for(let tick=0;tick<33;tick++) {
     const snapshot=sim.snapshot();
-    for(const id of ['light-punch','throw-13','wine-glass']) {
+    for(const id of ['light-punch','throw-13','tomato-light']) {
       const [attacker,target]=structuredClone(snapshot.characters);
       const move=shoto.moves.find(m=>m.id===id)!;
       attacker.x=target.x-(id==='throw-13'?30:56);attacker.y=target.y;attacker.facing='right';attacker.mode='active';
       attacker.attack={moveId:id,buttons:move.input.buttons,elapsedFrames:move.startup,hasHit:false};
-      const projectiles=id==='wine-glass'?[{id:0,ownerId:attacker.characterId,fighterId:attacker.fighterId,
-        x:target.x,y:target.y,facing:'right' as const,velocity:0,remainingFrames:10,visual:'glass' as const,attack:attacker.attack}]:[];
+      const projectiles=id==='tomato-light'?[{id:0,ownerId:attacker.characterId,fighterId:attacker.fighterId,
+        x:target.x,y:target.y,facing:'right' as const,velocity:0,remainingFrames:10,visual:'tomato' as const,attack:attacker.attack}]:[];
       const events=resolver.resolve([attacker,target],[input(),input()],projectiles);
       expect(events.length,`${id} at wakeup tick ${tick}`).toBe(tick<32?0:1);
     }

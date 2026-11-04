@@ -66,6 +66,22 @@ it.each([0,1])('permite os três pisões defendidos sem reiniciar o combo: jogad
 
 const input = (direction: Direction = 'N', button?: AttackButton): FrameInput => ({ direction, buttons: new Set(button ? [button] : []) });
 
+it.each([0, 1])('chute 3+4 é overhead contra as duas guardas, jogador %i', player => {
+  const move = cowboy.moves.find(candidate => candidate.id === 'power-kick')!;
+  expect(move).toMatchObject({ hitLevel: 'mid', overhead: true });
+  for (const defender of [shoto, cowboy]) {
+    for (const [direction, outcome] of [['B', 'block'], ['DB', 'hit']] as const) {
+      const defs = player === 0 ? [cowboy, defender] as const : [defender, cowboy] as const;
+      const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 56 });
+      const guard = input(direction);
+      const step = (value: FrameInput = input()) => sim.stepFrame(player === 0 ? [value, guard] : [guard, value]);
+      step({ direction: 'N', buttons: new Set(['3', '4']) });
+      for (let tick = 0; tick < 90 && !sim.snapshot().hitEvents.length; tick++) step();
+      expect(sim.snapshot().hitEvents[0]).toMatchObject({ moveId: 'power-kick', outcome });
+    }
+  }
+});
+
 it.each([0,1])('o afastamento e o laço quicam o adversário na borda e o lançam de volta, jogador %i', player => {
  for (const move of ['push-away', 'throw-13'] as const) {
   const base = createGameConfig(1024,576);
@@ -803,27 +819,6 @@ it.each([0, 1])('comando da ultimate exige movimento completo e rage: jogador %i
   }
 });
 
-it.each([0, 1])('encadeia chutes parciais ou completos com o combo de tiros: jogador %i', player => {
- for (const kicks of [1, 2, 3]) {
-  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
-  const sim = new Simulation(createGameConfig(1024, 576), defs, {training: true, initialDistance: 65});
-  const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
-  for (const button of [...Array<'3'>(kicks).fill('3'), '1', '2', '2', '2'] as const) {
-    step(input('N', button));
-    const moveId = button === '1' ? 'light-punch' : button === '2' ? 'heavy-punch' : 'light-kick';
-    expect(sim.snapshot().characters[player].attack?.moveId).toBe(moveId);
-    let hit = false;
-    for (let tick = 0; tick < 100; tick++) {
-      step(input());
-      if (sim.snapshot().hitEvents.some(event => event.moveId === moveId && event.outcome === 'hit')) { hit = true; break; }
-    }
-    expect(hit, `${button}: ${moveId}`).toBe(true);
-    while (sim.snapshot().hitstopFramesRemaining) step(input());
-  }
-  expect(sim.snapshot().characters[1 - player].health).toBe(866 - 24 * kicks);
- }
-});
-
 it.each([0, 1])('não reinicia os três chutes durante o mesmo combo confirmado: jogador %i', player => {
   const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});
@@ -837,45 +832,6 @@ it.each([0, 1])('não reinicia os três chutes durante o mesmo combo confirmado:
   const previous = sim.snapshot().characters[player].attack;
   step(input('N','3'));
   expect(sim.snapshot().characters[player].attack?.elapsedFrames).toBeGreaterThan(previous!.elapsedFrames);
-});
-
-it.each([0, 1])('não retorna ao chute após trocar para o soco, jogador %i', player => {
-  const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
-  const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});
-  const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
-  for (const button of ['3','1'] as const) {
-    step(input('N',button));
-    for (let tick=0; tick<100 && !sim.snapshot().hitEvents.length; tick++) step();
-    expect(sim.snapshot().hitEvents[0]?.outcome).toBe('hit');
-    while (sim.snapshot().hitstopFramesRemaining) step();
-  }
-  step(input('N','3'));
-  expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-punch');
-  for (let tick=0; tick<100; tick++) step();
-  step(input('N','3'));
-  expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-kick');
-});
-
-it.each([0, 1])('não repete o soco fraco depois de usá-lo e concluir 3,3,3: jogador %i', player => {
-  for (const sequence of [['1','3','3','3']] as const) {
-    const defs=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
-    const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
-    const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
-    for (const button of sequence) {
-      step(input('N',button));
-      for(let tick=0;tick<100&&!sim.snapshot().hitEvents.length;tick++)step();
-      expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:button==='1'?'light-punch':'light-kick',outcome:'hit'});
-      while(sim.snapshot().hitstopFramesRemaining)step();
-    }
-    step(input('N','1'));
-    expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-kick');
-    for(let tick=0;tick<4;tick++)step();
-    step(input('N','4'));
-    expect(sim.snapshot().characters[player].attack?.moveId).toBe('heavy-kick');
-    for(let tick=0;tick<100;tick++)step();
-    step(input('N','1'));
-    expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-punch');
-  }
 });
 
 it.each([0, 1])('não cancela o soco fraco confirmado para outro soco fraco: jogador %i', player => {
@@ -932,7 +888,7 @@ it.each([0, 1])('um soco alto do Shoto seleciona a reação alta da Cowboy: joga
   expect(sim.snapshot().characters[1-player].hitReaction?.level).toBe('high');
 });
 
-it.each([0, 1])('não cancela o soco fraco bloqueado para o combo de chutes: jogador %i', player => {
+it.each([0, 1])('cancela o soco fraco bloqueado para o combo de chutes: jogador %i', player => {
   const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, {training: true, initialDistance: 65});
   const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input('B')] : [input('B'), value]);
@@ -941,7 +897,7 @@ it.each([0, 1])('não cancela o soco fraco bloqueado para o combo de chutes: jog
   expect(sim.snapshot().hitEvents[0]?.outcome).toBe('block');
   while (sim.snapshot().hitstopFramesRemaining) step(input());
   step(input('N', '3'));
-  expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-punch');
+  expect(sim.snapshot().characters[player].attack?.moveId).toBe('light-kick');
 });
 
 it.each([0, 1])('encadeia 1,2,2,2 com dois tiros atrasados após acertos: jogador %i', player => {

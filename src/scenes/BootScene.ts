@@ -3,6 +3,7 @@ import menuBackground from '../../assets/art/wallpapers/cowboy-menu.png';
 import menuReference from '../../assets/art/menu/patio-solar.png';
 import { configureUiCamera } from '../rendering/presentation';
 import { preloadCowboySprites } from '../rendering/animations/cowboySprites';
+import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { stages } from '../rendering/stages/stageCatalog';
 import { preloadStage } from '../rendering/stages/StageView';
 import { preloadFighterIcons } from '../ui/fighterArt';
@@ -39,6 +40,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('menu-reference', menuReference);
     stages.forEach(stage => preloadStage(this, stage));
     preloadCowboySprites(this);
+    preloadShotoSprites(this);
     preloadContactEffects(this);
     preloadPresentations(this);
     preloadFightSounds(this);

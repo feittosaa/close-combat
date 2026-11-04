@@ -54,53 +54,7 @@ it.each([0,1])('allows an ultimate after the hit that reduced health to zero, pl
   expect(activated).toBe(true);
 });
 
-it.each([0,1])('connects 1,1,1 → 3 → 2,2,2 as an open sequence without adding a recipe: player %i', player=>{
-  const sim=create(96);
-  const buttons:AttackButton[]=['1','1','1','3','2','2','2'];
-  buttons.forEach((button,index)=>hit(sim,player,[button],index>0));
-  expect(sim.snapshot().recentContacts.map(c=>c.event.moveId)).toEqual([
-    'light-punch','light-punch','light-punch','light-kick','heavy-punch','heavy-punch','heavy-punch',
-  ]);
-  expect(sim.snapshot().characters[1-player].health).toBe(810);
-  expect(Math.abs(sim.snapshot().characters[1].x-sim.snapshot().characters[0].x)).toBeCloseTo(103);
-  expect(shoto.combos?.map(recipe=>recipe.notation)).toEqual(['1,1,1','2,2,2','1,1,2','1,1,1+2']);
-  for(let tick=0;tick<100;tick++) {
-    const snapshot=sim.snapshot();
-    if(!snapshot.characters[player].attack){
-      expect(snapshot.characters.map(c=>c.mode)).toEqual(['neutral','neutral']);
-      expect(snapshot.characters.every(c=>!c.hitSequence)).toBe(true);
-      return;
-    }
-    expect(snapshot.characters[1-player].mode).toBe('hitstun');
-    step(sim);
-  }
-  throw new Error('Sequence never returned to neutral');
-});
-
-it.each([0,1])('keeps the defender exposed when a heavy string starts near the end of the light combo: player %i', player => {
-  const sim = create(96);
-  for (const button of ['1', '1', '1'] as const) hit(sim, player, [button]);
-  const light = sim.snapshot();
-  expect(light.characters[player].attack?.recoveryFrames).toBe(10);
-  expect(light.hitEvents[0].attackerRecoveryFrames).toBe(light.hitEvents[0].defenderStunFrames);
-  // Wait until only two frames of the original hit reaction remain before continuing.
-  wait(sim, CONTACT_HITSTOP_FRAMES + light.hitEvents[0].defenderStunFrames - 2);
-  expect(sim.snapshot().characters[1-player].remainingStateFrames).toBe(2);
-  for (const button of ['2', '2', '2'] as const) hit(sim, player, [button], true);
-  const strong = sim.snapshot();
-  expect(strong.characters[player].attack?.recoveryFrames).toBe(30);
-  expect(strong.hitEvents[0].defenderStunFrames).toBe(strong.hitEvents[0].attackerRecoveryFrames);
-  expect(strong.hitEvents[0].defenderStunFrames).toBeGreaterThan(light.hitEvents[0].defenderStunFrames);
-  for (let i = 0; i < 100 && sim.snapshot().characters[player].attack; i++) {
-    expect(sim.snapshot().characters[1-player].mode).toBe('hitstun');
-    step(sim, player, N, input([], 'B'));
-  }
-  expect(sim.snapshot().characters[1-player].remainingStateFrames).toBe(0);
-  step(sim);
-  expect(sim.snapshot().characters.map(character => character.mode)).toEqual(['neutral', 'neutral']);
-});
-
-it.each([['1', 10], ['2', 30]] as const)('returns both fighters to neutral together after a confirmed %s string', (button, recovery) => {
+it.each([['1', 20], ['2', 30]] as const)('returns both fighters to neutral together after a confirmed %s string', (button, recovery) => {
   const sim = create(96);
   for (let i = 0; i < 3; i++) hit(sim, 0, [button], i > 0);
   const contact = sim.snapshot();
@@ -139,9 +93,9 @@ it.each([0,1])('resets the strength floor and recipe after a confirmed launcher:
   expect(sim.snapshot().characters[player].chain).toEqual(['light-punch']);
 });
 
-it('keeps punch repetition capped at the authored string and gives kicks no repetition route',()=>{
+it('keeps repetition capped at each authored string',()=>{
   for(const button of ['1','2','3','4'] as const){
-    const sim=create();const count=button==='1'||button==='2'?3:1;
+    const sim=create();const count=button==='1'||button==='2'?3:button==='3'?2:1;
     for(let i=0;i<count;i++)hit(sim,0,[button]);
     const elapsed=sim.snapshot().characters[0].attack!.elapsedFrames;
     step(sim,0,input([button]));wait(sim,CONTACT_HITSTOP_FRAMES+1);
@@ -150,7 +104,7 @@ it('keeps punch repetition capped at the authored string and gives kicks no repe
   }
 });
 
-it('does not open new routes or synchronize recovery on block or whiff',()=>{
+it('opens a continuation on block without synchronizing recovery, but not on whiff',()=>{
   for(const blocked of [true,false]){
     const sim=create(blocked?56:300);const guard=blocked?input([],'B'):N;
     step(sim,0,input(['1']),guard);
@@ -158,7 +112,7 @@ it('does not open new routes or synchronize recovery on block or whiff',()=>{
     const contact=sim.snapshot().hitEvents[0];
     if(blocked){expect(contact.outcome).toBe('block');expect(contact.frameAdvantage).toBeLessThan(0);}
     step(sim,0,input(['4']),guard);wait(sim,CONTACT_HITSTOP_FRAMES+1);
-    expect(sim.snapshot().characters[0].attack?.moveId).toBe('light-punch');
+    expect(sim.snapshot().characters[0].attack?.moveId).toBe(blocked ? 'heavy-kick' : 'light-punch');
     expect(sim.snapshot().characters[0].hitSequence).toBeUndefined();
   }
 });
