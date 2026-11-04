@@ -149,6 +149,24 @@ describe('fundação da simulação', () => {
     advance(sim, 90); expect(sim.snapshot().characters[1].health).toBe(20);
     expect(sim.snapshot().roundFramesRemaining).toBe(1);
   });
+  it('registra o dano integral de novos acertos contra alvo sem vida no treino', () => {
+    const fragile = { ...shoto, maxHealth: 20 };
+    const sim = new Simulation(config, [shoto, fragile], { training: true, initialDistance: 64 });
+    const hit = (): NonNullable<ReturnType<Simulation['snapshot']>['hitEvents'][number]> => {
+      sim.stepFrame([input('N', ['1']), N]);
+      for (let frame = 0; frame < 80; frame++) {
+        const event = sim.snapshot().hitEvents[0];
+        if (event) return event;
+        sim.stepFrame([N, N]);
+      }
+      throw new Error('Acerto de treino não ocorreu');
+    };
+    expect(hit()).toMatchObject({ outcome: 'hit', damage: 20 });
+    expect(sim.snapshot().characters[1].health).toBe(0);
+    advance(sim, 80);
+    expect(hit()).toMatchObject({ outcome: 'hit', damage: 20 });
+    expect(sim.snapshot().characters[1].health).toBe(0);
+  });
   it('geometria é espelhada por personagem e não depende de arte', () => {
     const states = practice().snapshot().characters;
     expect(createHurtbox(states[0]).width).toBe(60.72);

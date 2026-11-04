@@ -30,7 +30,7 @@ const volumes: Partial<Record<Effect, number>> = {
 };
 // Keep 25 ms before each measured waveform peak to retain the impact's attack.
 const impactSeek: Readonly<Record<string, number>> = {
-  heavy_hit_1: .295, heavy_hit_2: .022, heavy_hit_3: .739, heavy_hit_4: .400,
+  heavy_hit_1: .295, heavy_hit_2: .022, heavy_hit_3: .606, heavy_hit_4: .400,
   landing_1: .275, landing_2: .386, landing_3: .510, landing_4: .405, landing_5: .989,
   heavy_step_1: .205, heavy_step_2: .215, heavy_step_3: .215,
   lace_error: .415,

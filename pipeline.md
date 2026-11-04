@@ -1,5 +1,13 @@
 # Close Combat — Pipeline
 
+## Correções de efeitos, Saloon e contatos de treino — 2026-11-04
+
+A câmera de escurecimento da apresentação agora ignora também os efeitos criados no quadro atual, após a atualização das imagens de combate. Antes, ela podia desenhar uma cópia pequena dos projéteis e efeitos de contato em outra posição. Os braços espectrais de ataque da Texas permanecem atrás do corpo, conforme sua apresentação original.
+
+A linha de chão do Saloon Retrô foi corrigida de 710 para 750, igual às variantes Dia e Noite; os pés dos dois lutadores foram conferidos apoiados no piso no cenário. Em treino, o evento de contato passa a registrar o dano integral do golpe mesmo com a vida do alvo em zero, enquanto a vida permanece limitada a zero. Assim, o painel de dano e o som de acerto continuam presentes em novos contatos. A variante `heavy_hit_3` começa após 631 ms de silêncio; seu seek passou de 739 ms para 606 ms, preservando o ataque audível da onda.
+
+Instalação reproduzível, 665 testes, build e diff passaram localmente. Um acerto da Texas foi conferido no treino após a correção da câmera; a reprodução visual do projétil e a escuta humana da mixagem do acerto forte seguem pendentes. O piso do Saloon Retrô foi conferido no jogo. A branch permanece aberta para os próximos efeitos.
+
 ## Revisão das animações do Shoto — 2026-11-04
 
 O personagem antes exibido como Shoto passou a se chamar Bob, e a Cowboy passou a se chamar Texas; os identificadores internos foram preservados. As 57 folhas high fornecidas para Bob foram conectadas à opção de qualidade alta, com atlas de resolução dupla e escala de exibição preservada, incluindo projéteis e efeito da ultimate. Os testes comparam todos os quadros nas duas qualidades; as dimensões e limites visíveis dos arquivos high foram comparados aos originais. Bob em alta qualidade e os dois nomes foram observados no jogo; a revisão artística e os ciclos completos de todas as animações seguem pendentes. Instalação reproduzível, 662 testes, sete verificações visuais, build e diff passaram localmente. As reduções de recuperação do antiaéreo e do chute fraco agachado da Texas solicitadas anteriormente também fazem parte desta entrega.

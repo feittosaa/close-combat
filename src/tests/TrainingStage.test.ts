@@ -20,9 +20,9 @@ it('usa o Saloon nos modos de combate e preserva a sala no treino',()=>{
   expect(stageForMatch('arcade','saloon')).toBe(saloon);
   expect(stageForMatch('training','saloon')).toBe(trainingStage);
 });
-it.each(['saloon-dia','saloon-noite'])('reutiliza as chamas e ajusta a linha do chão em %s', id => {
+it.each(['saloon-dia','saloon-noite'])('reutiliza as chamas e compartilha a linha do chão em %s', id => {
   const stage = getStageById(id)!;
-  expect(stage.groundY).toBe(getStageById('saloon')!.groundY + 40);
+  expect(stage.groundY).toBe(getStageById('saloon')!.groundY);
   expect(stage.layers.filter(layer => layer.sourceStage === 'saloon')).toHaveLength(7);
   for (const layer of stage.layers.filter(layer => layer.sourceStage === 'saloon')) {
     expect(layer.frames).toHaveLength(5);
