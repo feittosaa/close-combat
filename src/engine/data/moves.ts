@@ -24,7 +24,7 @@ export interface MoveDefinition {
   invulnerability?: { kind: 'all' | 'projectile'; until: number };
   /** Immunity to projectiles throughout this move, independently of other invulnerability. */
   projectileInvulnerable?: boolean;
-  projectile?: { speed: number; life: number; verticalSpeed?: number; gravity?: number; visual: 'tomato' | 'crow' | 'bullet' | 'dynamite' };
+  projectile?: { speed: number; life: number; spawnYOffsets?: readonly number[]; verticalSpeed?: number; gravity?: number; visual: 'tomato' | 'crow' | 'bullet' | 'dynamite' };
   screenVolley?: { shots: number; interval: number; bandHeight: number; pattern?: readonly { frame: number; height: number }[]; firstHitLevel?: HitLevel; damageReductionPerPriorHit?: number };
   /** Repeated contact windows distributed over the active portion of one move. */
   multiHit?: { hits: number; interval: number; damageReductionPerPriorHit: number };

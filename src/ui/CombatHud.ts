@@ -1,3 +1,4 @@
+import { RAGE_LEVEL, RAGE_SEGMENT } from '../engine/combat/rage';
 import { LOGICAL_VIEW } from '../rendering/presentation';
 import type Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
@@ -15,6 +16,7 @@ export class CombatHud {
   private readonly resultLabel: Phaser.GameObjects.Text;
   private readonly modeLabels: Phaser.GameObjects.Text[];
   private readonly rageLabels: Phaser.GameObjects.Text[];
+  private readonly rageLevels: Phaser.GameObjects.Text[];
   private readonly healthLabels: Phaser.GameObjects.Text[];
   private readonly comboLabels: Phaser.GameObjects.Text[];
   private readonly comboGraphics: Phaser.GameObjects.Graphics;
@@ -40,7 +42,8 @@ export class CombatHud {
     this.healthGraphics=scene.add.graphics();
     this.healthLabels=[scene.add.text(this.sidePadding+this.barWidth,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
       scene.add.text(width-this.sidePadding-this.barWidth,33,'',hudText(10,false,HUD.goldText))];
-    this.rageLabels=[scene.add.text(30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)),scene.add.text(width-30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)).setOrigin(1,0)];
+    this.rageLabels=[scene.add.text(45,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)),scene.add.text(width-45,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)).setOrigin(1,0)];
+    this.rageLevels=[scene.add.text(17,heightForRage(training)-8,'0',hudText(23,true,HUD.goldText)),scene.add.text(width-17,heightForRage(training)-8,'0',hudText(23,true,HUD.goldText)).setOrigin(1,0)];
     this.modeLabels=[scene.add.text(fighterIds ? 82 : 30,49,'',hudText(10,false,HUD.muted)),
       scene.add.text(width-(fighterIds ? 82 : 30),49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
     this.timer=scene.add.text(width/2,6,'99',hudText(30,true)).setOrigin(.5,0);
@@ -52,7 +55,7 @@ export class CombatHud {
       scene.add.text(training?width-217:width-42,82,'',{...hudText(12,true,HUD.goldText),align:'right'}).setOrigin(1,0)];
     this.resultLabel=scene.add.text(width/2,98,'',{...hudText(17,true),stroke:'#17131a',strokeThickness:4,align:'center'}).setOrigin(.5,0);
     this.pauseHint=scene.add.text(width/2,LOGICAL_VIEW.height-18,'',hudText(10,false,HUD.muted)).setOrigin(.5).setVisible(!training);
-    this.root=scene.add.container(0,0,[decoration,this.healthGraphics,...portraits,...labels,...this.healthLabels,...this.modeLabels,...this.rageLabels,
+    this.root=scene.add.container(0,0,[decoration,this.healthGraphics,...portraits,...labels,...this.healthLabels,...this.modeLabels,...this.rageLabels,...this.rageLevels,
       this.timer,this.roundLabel,stageLabel,this.hitLabel,this.comboGraphics,...this.comboLabels,this.resultLabel,this.pauseHint]).setScrollFactor(0).setDepth(100);
   }
 
@@ -89,25 +92,25 @@ export class CombatHud {
       g.lineStyle(1,HUD.gold,.9).strokeRect(x,10,this.barWidth,17);
       for(let round=0;round<2;round++)drawDiamond(g,index===0?width/2-70+round*16:width/2+70-round*16,19,3,HUD.lightGold,snapshot.roundWins[index]>round);
       if(character.maxRage>0){
-        const rageWidth=260, rageX=index===0?30:width-30-rageWidth, rageY=heightForRage(this.training);
+        const rageWidth=260, rageX=index===0?45:width-45-rageWidth, rageY=heightForRage(this.training);
         const outline = [{x:rageX+5,y:rageY-2},{x:rageX+rageWidth,y:rageY-2},
           {x:rageX+rageWidth-5,y:rageY+12},{x:rageX,y:rageY+12}];
         g.fillStyle(HUD.ink,.95).fillPoints(outline,true);
         g.lineStyle(1,HUD.gold,.85).strokePoints(outline,true);
         g.fillStyle(HUD.rail).fillRect(rageX+5,rageY+1,rageWidth-10,8);
-        const inner=healthBarFill(character.rage,character.maxRage,rageX+5,rageWidth-10,index===1);
-        if (inner.width > 0) {
-          g.fillStyle(character.rage>=character.maxRage?HUD.lightGold:HUD.players[index]).fillRect(inner.x,rageY+1,inner.width,8);
-          g.fillStyle(HUD.lightGold,.5).fillRect(inner.x,rageY+1,inner.width,1);
+        for (const [level, color] of [0x398ee8, 0xd83c32].entries()) {
+          const inner=healthBarFill(Math.max(0, Math.min(RAGE_LEVEL, character.rage - level * RAGE_LEVEL)),RAGE_LEVEL,rageX+5,rageWidth-10,index===1);
+          if (inner.width > 0) g.fillStyle(color).fillRect(inner.x,rageY+1,inner.width,8);
         }
         g.lineStyle(1, HUD.ink, .9);
-        for (let section = 1; section < 5; section++) {
-          const markerX = rageX + 5 + (rageWidth - 10) * section / 5;
+        for (let section = 1; section < RAGE_LEVEL / RAGE_SEGMENT; section++) {
+          const markerX = rageX + 5 + (rageWidth - 10) * section / (RAGE_LEVEL / RAGE_SEGMENT);
           g.lineBetween(markerX, rageY + 1, markerX, rageY + 9);
         }
-        drawDiamond(g,index===0?rageX+rageWidth+7:rageX-7,rageY+5,4,HUD.gold,!character.ultimateUsed && character.rage>=character.maxRage);
+
       }
-      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}${character.ultimateUsed?' · USADA':character.rage>=character.maxRage?' · PRONTA':''}`:'');
+      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}`:'');
+      this.rageLevels[index]?.setText(character.maxRage > 0 ? String(Math.min(2, Math.floor(character.rage / RAGE_LEVEL))) : '');
       this.healthLabels[index]?.setText(`${Math.max(0,character.health)} / ${character.maxHealth}`);
       this.modeLabels[index]?.setText(this.training?MODE_LABELS[character.mode]:index===0?'JOGADOR 1':'JOGADOR 2')
         .setColor(character.mode==='hitstun'?'#f09a84':character.mode==='blockstun'||character.mode==='blocking'?'#95d7d0':HUD.muted);

@@ -1,3 +1,4 @@
+import { RAGE_SEGMENT } from '../combat/rage';
 import type { CharacterState, CharacterAnimationState, CharacterAttack } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import { defaultCharacter, type CharacterDefinition } from '../data/characters';
@@ -74,7 +75,6 @@ export class Simulation {
   private frame = 0;
   private elapsedFrames = 0;
   private hitstopFramesRemaining = 0;
-  private ultimateUsed: [boolean, boolean] = [false, false];
   private round = 1;
   private phase: SimulationSnapshot['phase'] = 'fight';
   private roundWins: [number, number] = [0, 0];
@@ -95,6 +95,8 @@ export class Simulation {
   private jumpHeld = [false, false];
   private ultimateHeld = [false, false];
   private tauntHeld = [false, false];
+  private rageActionHeld = [false, false];
+  private breaker: ({ guess: 'light' | 'heavy'; combo: ComboRecord; failed: boolean } | undefined)[] = [undefined, undefined];
   private previousAxis = [0, 0];
   private guardHeld = [false, false];
   private guardStarted = [-Infinity, -Infinity];
@@ -125,7 +127,7 @@ export class Simulation {
   }
   clearInputHistory(): void {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
-    this.jumpHeld.fill(false); this.ultimateHeld.fill(false); this.tauntHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
+    this.jumpHeld.fill(false); this.rageActionHeld.fill(false); this.ultimateHeld.fill(false); this.tauntHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
     this.guardHeld.fill(false); this.guardStarted.fill(-Infinity);
     this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
   }
@@ -133,11 +135,10 @@ export class Simulation {
   resetMatch(distance?: number): void {
     if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
     this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
-    this.ultimateUsed = [false, false];
     this.resetRound(false);
   }
   fillTrainingRage(): void {
-    if (this.options.training) this.characters.forEach(character => { if (!character.ultimateUsed || this.options.training) character.rage = character.maxRage; });
+    if (this.options.training) this.characters.forEach(character => { character.rage = character.maxRage; });
   }
   setTrainingAutoRestore(enabled: boolean): void { if (this.options.training) { this.trainingAutoRestore = enabled; this.quietFrames = 0; } }
 
@@ -149,7 +150,7 @@ export class Simulation {
     return this.definitions.map((fighter, index) => ({
       characterId: `player-${index + 1}`, fighterId: fighter.id, collision: structuredClone(fighter.collision),
       x: clamp(center + (index === 0 ? -1 : 1) * distance / 2, left + fighter.collision.bodyWidth / 2, right - fighter.collision.bodyWidth / 2),
-      y: floorY, facing: index === 0 ? 'right' : 'left', health: fighter.maxHealth, maxHealth: fighter.maxHealth, rage: 0, maxRage: fighter.rage?.maximum ?? 0, ultimateUsed: this.ultimateUsed[index],
+      y: floorY, facing: index === 0 ? 'right' : 'left', health: fighter.maxHealth, maxHealth: fighter.maxHealth, rage: 0, maxRage: fighter.rage?.maximum ?? 0,
       mode: 'neutral', stateStartedFrame: this.frame, remainingStateFrames: 0, verticalVelocity: 0,
       grounded: true, crouching: false, hitFlashFrames: 0,
     })) as [CharacterState, CharacterState];
@@ -159,7 +160,7 @@ export class Simulation {
     this.clearInputHistory(); this.characters = this.createCharacters();
     this.characters.forEach((character, index) => { character.rage = rage[index]; }); this.roundFramesRemaining = this.config.match.roundDurationFrames;
     this.roundWinnerId = undefined; this.roundEndedFrame = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
-    this.lastHitEvents = []; this.recentContacts = []; this.comboHistory = []; this.volleyPriorHits.clear(); this.pendingThrow = undefined; this.quietFrames = 0;
+    this.lastHitEvents = []; this.recentContacts = []; this.comboHistory = []; this.breaker = [undefined, undefined]; this.volleyPriorHits.clear(); this.pendingThrow = undefined; this.quietFrames = 0;
     this.hitstopFramesRemaining = 0; this.ultimateActivation = undefined; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
   }
   private step(inputs: readonly FrameInput[]): void {
@@ -181,6 +182,7 @@ export class Simulation {
       }
       this.ultimateActivation = undefined;
     }
+    this.readRageActions(inputs);
     this.clearFinishedHitSequences();
     // Read before any world/timer mutation so activation freezes both players symmetrically.
     if (!this.hitstopFramesRemaining) {
@@ -189,6 +191,7 @@ export class Simulation {
       this.characters.forEach((character,index) => {
         const move = this.pendingCommands[index]?.move;
         if (move?.category === 'ultimate' && !locked(character) && this.canStart(character,index,move)) {
+          if (this.tryBreakerOnMove(index, move)) return;
           this.startMove(character,index,move);
           character.mode = 'startup'; character.stateStartedFrame = this.frame;
           owners.push(character.characterId);
@@ -301,6 +304,7 @@ export class Simulation {
       character.movementDirection = undefined;
       const requested = commands[index];
       if (!wasLocked && requested && requested.category !== 'ultimate' && this.canStart(character, index, requested)) {
+        if (this.tryBreakerOnMove(index, requested)) return;
         this.startMove(character,index,requested);
       }
       if (character.attack) {
@@ -320,14 +324,16 @@ export class Simulation {
           const recoil = !character.grounded && (character.chain?.length ?? 0) > 1 ? this.projectileRecipe(index, character.chain ?? [])?.projectileSequence?.airRecoil : undefined;
           if (recoil) character.verticalVelocity = recoil.liftSpeed;
           const volleyOrigin = this.volleyOrigin(character);
-          character.attack.projectileId = this.nextProjectileId;
-          this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
-            x: volley ? volleyOrigin : character.x + (character.facing === 'right' ? 1 : -1) * character.collision.bodyWidth * 7 / 12, y: volley ? this.config.arena.floorY - (volley.pattern?.[volleyShot]?.height ?? (volleyShot + 1) * volley.bandHeight) : character.y, facing: character.facing,
-            ...(volley ? { volleyStep: volleyShot } : {}),
-            ...(this.projectileRecipe(index, character.chain ?? []) ? { comboId: character.projectileComboId, comboStep: (character.chain?.length ?? 1) - 1 } : {}),
-            velocity: projectile.speed * (character.facing === 'right' ? 1 : -1), remainingFrames: projectile.life,
-            verticalVelocity: projectile.verticalSpeed ?? 0, gravity: projectile.gravity ?? 0,
-            visual: volley && projectile.visual !== 'crow' ? 'volley' : projectile.visual, attack: { ...character.attack, hasHit: false } });
+          for (const yOffset of projectile.spawnYOffsets ?? [0]) {
+            character.attack.projectileId = this.nextProjectileId;
+            this.projectiles.push({ id: this.nextProjectileId++, ownerId: character.characterId, fighterId: character.fighterId,
+              x: volley ? volleyOrigin : character.x + (character.facing === 'right' ? 1 : -1) * character.collision.bodyWidth * 7 / 12, y: volley ? this.config.arena.floorY - (volley.pattern?.[volleyShot]?.height ?? (volleyShot + 1) * volley.bandHeight) : character.y + yOffset, facing: character.facing,
+              ...(volley ? { volleyStep: volleyShot } : {}),
+              ...(this.projectileRecipe(index, character.chain ?? []) ? { comboId: character.projectileComboId, comboStep: (character.chain?.length ?? 1) - 1 } : {}),
+              velocity: projectile.speed * (character.facing === 'right' ? 1 : -1), remainingFrames: projectile.life,
+              verticalVelocity: projectile.verticalSpeed ?? 0, gravity: projectile.gravity ?? 0,
+              visual: volley && projectile.visual !== 'crow' ? 'volley' : projectile.visual, attack: { ...character.attack, hasHit: false } });
+          }
         }
         const startup = character.attack.startupFrames ?? move.startup;
         character.mode = elapsed < startup ? 'startup' : elapsed < startup + move.activeFrames ? 'active' : 'recovery';
@@ -442,6 +448,11 @@ export class Simulation {
         (this.comboHistory.find(combo => combo.active && combo.attackerId === attackerId && combo.targetId === targetId)?.hits ?? 0);
       this.volleyPriorHits.set(attackerId, priorHits);
       return volleyShotDamage(move, priorHits, shot);
+    }, event => {
+      if (event.outcome !== 'hit') return;
+      const targetIndex = this.characters.findIndex(character => character.characterId === event.targetId);
+      const attempt = this.breaker[targetIndex];
+      if (attempt?.failed && attempt.combo.active) event.damage = Math.round(event.damage * 1.2);
     });
     for (const event of this.lastHitEvents) {
       const index = this.characters.findIndex(character => character.characterId === event.targetId);
@@ -454,7 +465,7 @@ export class Simulation {
     this.lastHitEvents = this.lastHitEvents.filter(event => {
       const attackerIndex = this.characters.findIndex(c => c.characterId === event.attackerId);
       const move = this.move(attackerIndex, event.moveId);
-      if (this.characters[attackerIndex].fighterId !== 'cowboy' || move?.category !== 'throw' || event.outcome !== 'hit' || this.pendingThrow) return true;
+      if (event.armored || this.characters[attackerIndex].fighterId !== 'cowboy' || move?.category !== 'throw' || event.outcome !== 'hit' || this.pendingThrow) return true;
       const targetIndex = 1 - attackerIndex, target = this.characters[targetIndex];
       const attacker = this.characters[attackerIndex];
       if (attacker.attack) attacker.attack.throwCapturedFrame = this.frame;
@@ -498,7 +509,7 @@ export class Simulation {
       const move = this.definitions.find(f=>f.id===p.fighterId)!.moves.find(m=>m.id===p.attack.moveId)!;
       const box = createProjectileHitbox(p,move);
       const alive = (!p.attack.hasHit || p.volleyStep !== undefined) && p.remainingFrames > 0 && p.x >= this.config.arena.left - 100 && p.x <= this.config.arena.right + 100 && box.y+box.height <= this.config.arena.floorY;
-      if (!alive && p.visual === 'dynamite') this.explosions.push({ x:box.x + box.width / 2, y:box.y + box.height / 2, remainingFrames:12, kind:'dynamite', id:p.id });
+      if (!alive && p.visual === 'dynamite') this.explosions.push({ x:box.x + box.width / 2, y:box.y + box.height / 2, remainingFrames:12, kind:'dynamite', id:p.id, ownerId:p.ownerId });
       return alive;
     });
     if (this.lastHitEvents.length) this.hitstopFramesRemaining = CONTACT_HITSTOP_FRAMES;
@@ -517,6 +528,14 @@ export class Simulation {
           heavyButton: previous?.heavyButton ?? heavyButton(sourceMove),
           weakFamily: previous?.weakFamily ?? (button === '1' || button === '3' ? button : undefined),
         };
+      }
+      if (event.armored) {
+        const gain = this.definitions[attackerIndex].rage;
+        const received = this.definitions[targetIndex].rage;
+        if (gain && sourceMove.category !== 'ultimate') attacker.rage = Math.min(attacker.maxRage, attacker.rage + gain.onHit);
+        if (received) target.rage = Math.min(target.maxRage, target.rage + received.onDamage);
+        this.recentContacts.push({ frame: this.frame, event });
+        return;
       }
       if (sourceMove.screenVolley && event.outcome === 'hit') {
         target.grounded = false; target.crouching = false;
@@ -735,7 +754,6 @@ export class Simulation {
           character.hitSequence.heavyButton ??= heavyButton(move);
         }
         character.rage = Math.max(0, character.rage - (move.rageCost ?? 0));
-        if (move.category === 'ultimate' && !this.options.training) { this.ultimateUsed[index] = true; character.ultimateUsed = true; }
         character.attack = { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false,
           ...(move.charge ? { chargeFrames: 1 } : {}),
           ...(startupFrames !== undefined ? { startupFrames } : {}),
@@ -751,6 +769,7 @@ export class Simulation {
         }
   }
   private readCommand(character: CharacterState, index: number, input: FrameInput): void {
+    if (input.rageAction) { this.parsers[index].clear(); this.pendingCommands[index] = undefined; return; }
     if (this.pendingCommands[index] && this.pendingCommands[index]!.expires < this.frame) this.pendingCommands[index] = undefined;
     const moves = this.definitions[index].moves.filter(move => !move.comboOnly);
     const shortcut = Boolean(input.ultimate) && !this.ultimateHeld[index];
@@ -765,12 +784,68 @@ export class Simulation {
     if (character.attack?.moveId === 'flying-kick-light' && !character.grounded && command?.id === 'air-light-kick') {
       command = this.move(index, 'flying-kick-followup');
     }
-    if (command && !permitsStrength(character.hitSequence, command)) {
+    const authoredContinuation = command && character.chain && this.recipePrefix(index, [...character.chain, command.id]);
+    if (command && !authoredContinuation && !permitsStrength(character.hitSequence, command)) {
       this.pendingCommands[index] = undefined; return;
     }
     if (command && command.input.buttons.length === input.buttons.size && (!character.grounded || !input.direction.startsWith('U'))) this.pendingCommands[index] = { move: command, expires: this.frame + 6,
       ...(command.category === 'throw' ? { throwDirection: input.direction.endsWith('B') ? 'backward' : 'forward' } : {}) };
   }
+  private readRageActions(inputs: readonly FrameInput[]): void {
+    this.characters.forEach((character, index) => {
+      const input = inputs[index] ?? neutral();
+      if (!input.rageAction) { this.rageActionHeld[index] = false; return; }
+      if (this.rageActionHeld[index] || character.rage < RAGE_SEGMENT) return;
+      const combo = this.comboHistory.find(entry => entry.active && entry.targetId === character.characterId);
+      const button = [...input.buttons][0];
+      if (combo && (character.mode === 'hitstun' || character.mode === 'knockdown') && button && input.buttons.size === 1 && !this.breaker[index]) {
+        character.rage -= RAGE_SEGMENT;
+        this.breaker[index] = { guess: button === '1' || button === '3' ? 'light' : 'heavy', combo, failed: false };
+        this.rageActionHeld[index] = true;
+        this.parsers[index].clear(); this.pendingCommands[index] = undefined;
+      } else if (!button && !character.grounded && (character.mode === 'hitstun' || character.mode === 'knockdown')) {
+        character.rage -= RAGE_SEGMENT; this.rageActionHeld[index] = true;
+        character.mode = 'airborne'; character.remainingStateFrames = 0;
+        character.juggle = undefined; character.knockdown = undefined; character.throwFlight = false;
+        character.wallBouncePending = undefined; character.throwPull = undefined; character.pushbackMotion = undefined;
+        character.verticalVelocity = 0;
+        for (const entry of this.comboHistory) if (entry.targetId === character.characterId) entry.active = false;
+        this.breaker[index] = undefined;
+      }
+    });
+    this.breaker.forEach((attempt, index) => { if (attempt && !attempt.combo.active) this.breaker[index] = undefined; });
+  }
+
+  private tryBreakerOnMove(attackerIndex: number, move: MoveDefinition): boolean {
+    const targetIndex = 1 - attackerIndex;
+    const attempt = this.breaker[targetIndex];
+    if (!attempt || attempt.failed || !attempt.combo.active || attempt.combo.attackerId !== this.characters[attackerIndex].characterId) return false;
+    const strength = move.input.buttons.some(button => button === '2' || button === '4') ? 'heavy' : 'light';
+    if (attempt.guess !== strength) { attempt.failed = true; return false; }
+    this.breakCombo(targetIndex, this.characters[attackerIndex].characterId);
+    return true;
+  }
+
+  private breakCombo(targetIndex: number, attackerId: string): void {
+    const target = this.characters[targetIndex];
+    const attacker = this.characters.find(character => character.characterId === attackerId);
+    if (!attacker) return;
+    this.breaker[targetIndex] = undefined;
+    for (const entry of this.comboHistory) if (entry.targetId === target.characterId) entry.active = false;
+    for (const character of [target, attacker]) {
+      character.attack = undefined; character.chain = undefined; character.hitSequence = undefined; character.contactSequence = undefined;
+      character.mode = 'neutral'; character.remainingStateFrames = 0; character.grounded = true;
+      character.y = this.config.arena.floorY; character.crouching = false; character.airDashUsed = false;
+      character.airborneStartedFrame = undefined; character.airborneElapsedFrames = undefined;
+      character.grabbedStartedFrame = undefined; character.grabbedHold = undefined; character.wakeupInvulnerabilityFrames = undefined;
+      character.juggle = undefined; character.knockdown = undefined; character.throwFlight = false;
+      character.wallBouncePending = undefined; character.throwPull = undefined; character.pushbackMotion = undefined; character.verticalVelocity = 0;
+    }
+    this.projectiles = this.projectiles.filter(projectile => projectile.ownerId !== attackerId);
+    this.pendingCommands.fill(undefined); this.parsers.forEach(parser => parser.clear());
+    this.pendingThrow = undefined;
+  }
+
   private clearFinishedHitSequences(): void {
     for (const owner of this.characters) {
       const target = this.characters.find(character => character.characterId === owner.hitSequence?.targetId);
@@ -778,8 +853,7 @@ export class Simulation {
     }
   }
   private canStart(character: CharacterState, index: number, move: MoveDefinition): boolean {
-    if ((move.rageCost ?? 0) > character.rage || (move.category === 'ultimate' &&
-      (character.rage < character.maxRage || (character.ultimateUsed && !this.options.training)))) return false;
+    if ((move.rageCost ?? 0) > character.rage) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;
     if (move.id === 'flying-kick-followup') {
@@ -803,9 +877,11 @@ export class Simulation {
     if (move.category !== 'ultimate' && !move.screenVolley && (previous?.hitOutcome === 'hit' || previous?.hitOutcome === 'block') && character.chain && this.definitions[index].combos?.some(recipe =>
       !recipe.launch && recipe.moveIds.length === character.chain!.length &&
       recipe.moveIds.every((id, i) => id === character.chain![i]) && (recipe.endsBasicChain || heavyStrike(this.move(index, previous.moveId)!)))) return false;
-    if (!permitsStrength(character.hitSequence, move)) return false;
-    if (character.contactSequence && !permitsStrength({ ...character.contactSequence, targetId: this.characters[1 - index].characterId }, move)) return false;
+    const authoredContinuation = character.chain && this.recipePrefix(index, [...character.chain, move.id]);
+    if (!authoredContinuation && !permitsStrength(character.hitSequence, move)) return false;
+    if (!authoredContinuation && character.contactSequence && !permitsStrength({ ...character.contactSequence, targetId: this.characters[1 - index].characterId }, move)) return false;
     if (!previous) return true;
+    if (authoredContinuation && previous.hitOutcome === 'hit') return true;
     if (this.canContinueRecipe(character, index, move)) return true;
     // A chord completed within the input grace window replaces its uncommitted single.
     if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&

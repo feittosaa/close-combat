@@ -24,7 +24,12 @@ it.each([['low', 640], ['high', 1280]] as const)('loads only the %s texture set 
   const atlas = vi.fn();
   preloadCowboySprites({ textures: { exists: () => false }, load: { atlas } } as never);
   expect(cowboyFrameSize).toBe(size);
-  expect(atlas).toHaveBeenCalledTimes(78);
+  expect(atlas).toHaveBeenCalledTimes(81);
+  for (const name of ['double-shot', 'fall-landing', 'launch-hit']) {
+    const art = atlas.mock.calls.find(([key]) => key === `cowboy-${name}`);
+    expect(art?.[2].frames['0'].frame.w).toBe(size);
+    expect(Object.keys(art?.[2].frames ?? {})).toHaveLength(6);
+  }
   const idle = atlas.mock.calls.find(([key]) => key === 'cowboy-idle');
   expect(idle?.[2].frames['0'].frame.w).toBe(size);
   const exit = atlas.mock.calls.find(([key]) => key === 'cowboy-victory-exit');

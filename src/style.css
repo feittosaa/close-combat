@@ -29,7 +29,13 @@ canvas {
   display: block;
 }
 
-.loading-screen { position: fixed; inset: 0; z-index: 200; display: flex; align-items: end; justify-content: end; padding: 6vw; background-color: #100e12; background-size: cover; background-position: center; color: #ffe1af; font: 900 clamp(15px, 2vw, 28px) Arial, sans-serif; letter-spacing: .1em; }
+.loading-screen { position: fixed; inset: 0; z-index: 200; display: flex; align-items: end; justify-content: end; padding: 6vw; background-color: #100e12; color: #ffe1af; font: 900 clamp(15px, 2vw, 28px) Arial, sans-serif; letter-spacing: .1em; isolation: isolate; overflow: hidden; }
+.loading-screen::before { content: ''; position: absolute; inset: -1.5%; z-index: -1; background-image: linear-gradient(0deg, #100e12dd, transparent 70%), var(--loading-wallpaper); background-size: cover; background-position: left center; animation: loading-wallpaper-left 20s linear, loading-wallpaper-fade 20s linear; }
+.loading-screen.wallpaper-right::before { animation-name: loading-wallpaper-right, loading-wallpaper-fade; }
+@keyframes loading-wallpaper-left { from { background-position: left center; } to { background-position: right center; } }
+@keyframes loading-wallpaper-right { from { background-position: right center; } to { background-position: left center; } }
+@keyframes loading-wallpaper-fade { 0%, 100% { opacity: 0; } 5%, 95% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .loading-screen::before { animation: none; opacity: 1; } }
 
 .combat-pause[hidden] { display: none; }
 .combat-pause { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e12cc; backdrop-filter: blur(5px); color: #f6e6ce; }

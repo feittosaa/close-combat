@@ -7,7 +7,7 @@ import type { MatchMode } from '../scenes/matchSetup';
 
 it('keeps the available wallpaper on the loading screen and removes it afterwards', () => {
   vi.useFakeTimers();
-  const screen = {className:'', textContent:'', style:{backgroundImage:''}, setAttribute:vi.fn(), remove:vi.fn()};
+  const screen = {className:'', textContent:'', style:{setProperty:vi.fn()}, setAttribute:vi.fn(), remove:vi.fn()};
   const document = {createElement:vi.fn(() => screen), body:{appendChild:vi.fn()}};
   const sessionStorage = {setItem:vi.fn()};
   vi.stubGlobal('document', document);
@@ -21,9 +21,11 @@ it('keeps the available wallpaper on the loading screen and removes it afterward
     Object.assign(boot,{cameras:{main:camera},scale:{width:1920,height:1080},load,
       textures:{exists:()=>false},cache:{audio:{exists:()=>false}},scene:{start:vi.fn()}});
     boot.preload();
-    const first = screen.style.backgroundImage;
-    vi.advanceTimersByTime(3500);
-    expect(screen.style.backgroundImage).toBe(first);
+    const first = screen.style.setProperty.mock.calls[0][1];
+    expect(screen.className).toBe('loading-screen wallpaper-left');
+    vi.advanceTimersByTime(20000);
+    expect(screen.style.setProperty.mock.calls[1][1]).not.toBe(first);
+    expect(screen.className).toBe('loading-screen wallpaper-right');
     expect(sessionStorage.setItem).toHaveBeenCalledTimes(2);
     boot.create();
     expect(screen.remove).toHaveBeenCalledOnce();

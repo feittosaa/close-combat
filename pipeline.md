@@ -1,5 +1,45 @@
 # Close Combat — Pipeline
 
+## Validação da branch — 2026-11-04
+
+Instalação reproduzível, 711 testes, build e checagem de diff passaram localmente antes do envio. A instalação informou quatro vulnerabilidades nas dependências. As últimas alterações visuais e suas transições ainda precisam de conferência no jogo; a validação automatizada não constitui aprovação artística.
+
+## Wallpaper do Bob — 2026-11-04
+
+A arte fornecida do Bob foi adicionada à rotação do menu principal, alternando com a da Texas a cada vinte segundos, com movimento horizontal linear alternando entre alinhamento à esquerda e à direita, e fades de saída e entrada de um segundo (troca direta e sem movimento quando reduzido), e à tela de carregamento, que usa o mesmo intervalo, movimento alternado e duração dos fades. O teste direcionado de carregamento passou; a apresentação no menu ainda precisa de conferência visual no jogo.
+
+## Sequências e preparação da Texas — 2026-11-04
+
+Foram adicionadas as sequências `d+2,2` e `4,4,2`, usando os golpes existentes; ambas conectam nos testes dos dois lados. Em `4,4,2`, as preparações são 17, 12 e 10 quadros, acelerando o segundo chute e o tiro; a reação da Texas ao levantamento foi ampliada em 10%, depois 12% e duas vezes mais 2%; a reação a dano aéreo foi reduzida em 6% e a de levantamento depois aumentada em 3%; após o segundo levantamento, a queda usa os quadros aéreos ampliados em 15% e muda para a pose no chão ao aterrissar; o soco forte foi reduzido em 2%; e a pose caída no chão foi ampliada em 140% e depois reduzida em 20% (1,92 vez a escala original). Essas alterações ainda precisam de conferência visual em jogo. O início do primeiro tiro da ultimate foi atrasado em 12 quadros após a preparação, e o áudio da pistola na ultimate e na provocação foi atrasado em seis quadros. O painel de golpes no treino exibiu as duas sequências; a execução em jogo e a escuta do áudio permanecem pendentes. Instalação reproduzível, 707 testes, build e diff passaram localmente.
+
+As três folhas aprovadas foram integradas em resoluções normal e alta: tiro duplo `1+2`, queda e reação aérea ao levantamento. O tiro usa os braços mágicos e efeitos separados e cria dois projéteis simultâneos; seus tempos e dano são provisórios, baseados no tiro leve existente. A queda reaproveita a recuperação anterior. O tiro duplo foi observado no treino, com dois acertos e 40 de dano; posteriormente a escala do corpo nessa animação aumentou 2% e essa alteração ainda precisa de conferência no jogo; os ciclos completos de queda e levantamento ainda precisam de conferência visual em movimento. Instalação reproduzível, 711 testes, build e diff passaram localmente; a instalação informou quatro vulnerabilidades em dependências. As alterações permanecem na branch existente; a validação remota depende da CI após o envio.
+
+## Ações de Rage e dois níveis — 2026-11-04
+
+Rage acumula até 600 pontos em duas barras sobrepostas de 300, azul e vermelha, cada uma dividida em seis partes de 50; o contador de níveis completos de 0 a 2 fica na extremidade externa. Ultimates custam 300 e podem ser repetidas sempre que houver recurso, inclusive fora do treino. O atalho de Rage é configurável: E para P1 e Num7 para P2 por padrão, respeitando mapeamentos já existentes. O histórico de treino registra o novo comando.
+
+Ação de Rage custa 50: sem golpe, recupera um lutador vulnerável no ar; junto de 1 ou 3 prevê golpe leve, e junto de 2 ou 4 prevê golpe pesado. Durante um combo, a tentativa é resolvida quando o adversário inicia o próximo golpe: acerto recupera ambos e encerra o combo, erro aumenta em 20% os danos seguintes desse combo, incluindo o golpe previsto. Uma tentativa pendente ou falha termina com o combo. Testes cobrem os dois lados, comandos, acertos, erros, custo, encerramento da penalidade, limite, repetição de ultimates fora do treino e recuperação em lançamentos e quiques reais.
+
+Instalação reproduzível, 703 testes, build e diff passaram localmente. No treino foram observados os níveis azul e vermelho, os contadores nas extremidades externas e o consumo de 300 pontos de uma ultimate; anteriormente também foram observados duas ultimates consecutivas e o registro de E junto de um golpe; as situações de recuperação e combo breaker foram verificadas por testes de simulação, mas não reproduzidas visualmente no jogo. A avaliação de jogabilidade e artística permanece pendente. Alterações na branch existente, sem novo commit, push ou CI remota; a instalação informou quatro vulnerabilidades nas dependências.
+
+## Seleção de personagens e cores — 2026-11-04
+
+Uma divisória angular escura e estreita, em formato de ampulheta e contornada pelas cores dos jogadores, separa as artes no centro para evitar a junção espelhada; ela foi conferida no jogo com Texas dos dois lados. O menu de seleção usa as quatro artes de fundo fornecidas, alinhadas à esquerda para P1 e espelhadas à direita para o adversário, com a grade de personagens na parte inferior. Os retratos anteriores de corpo inteiro foram preservados a pedido do usuário. Grappler e Puppet continuam disponíveis apenas para visualização. Ao confirmar um lutador, abre-se uma escolha entre as duas cores acima do nome; cada jogador pode definir sua própria cor no PvP. No treino, após escolher seu lutador, o jogador escolhe o adversário e sua cor; em confrontos espelhados, a cor oposta é sugerida por padrão. Nos demais modos individuais o adversário espelhado usa a cor oposta por padrão. A escolha acompanha o personagem e os efeitos durante a luta; o aleatório resolve o lutador antes da escolha de cor.
+
+Instalação reproduzível, 680 testes, build e diff passaram localmente. O menu e a seleção alternativa de Texas para P1 foram observados no treino, com o adversário usando a cor original. A escolha de Bob contra Texas alternativa também foi conferida no treino. A avaliação artística do menu e a conferência visual das demais combinações e efeitos continuam pendentes. Alterações locais na branch existente, sem novo commit, push ou CI remota. A instalação informou quatro vulnerabilidades nas dependências (duas moderadas e duas críticas).
+
+## Laço contra alvo agachado — 2026-11-04
+
+O agarrão de laço `1+3` da Texas passou a ser alto: erra adversários agachados e continua acertando em pé. Sua caixa ativa foi elevada e reduzida na vertical para ficar acima das caixas agachadas de Bob e Texas, mantendo alcance horizontal e carga. Testes cobrem os dois lutadores, ambos os lados, guarda agachada e laço carregado ou sem carga; a caixa ativa foi observada no treino acima de Texas agachada. Instalação reproduzível, 680 testes, build e diff passaram localmente.
+
+## Cores, iluminação e blindagem de ultimate — 2026-11-04
+
+Personagens idênticos usam paletas provisórias no segundo jogador: a camisa oliva de Bob passa a vermelho vibrante; na Texas os tons vermelhos, rosas, magentas e marrons ficam próximos do preto. Tons azuis da Texas alternativa e de seus efeitos passam a roxo, incluindo braços mágicos, tiros, dinamite, explosão e contatos, também na ultimate e no perfect block. A explosão guarda o autor para distinguir Texas espelhadas. A troca atua na imagem inteira por faixa de cor, com transições suaves, e pode alcançar outras partes com tons semelhantes; deve ser revista durante as animações. A iluminação de cada cenário aplica matiz e brilho aos sprites de corpo; no Saloon as chamas adicionam luz de acordo com a posição e o parallax da camada. O sistema usa shader e matriz de cor em WebGL e processamento de quadros em Canvas. As fontes de imagem não foram alteradas.
+
+Enquanto uma ultimate está em execução, acertos, projéteis e agarrões causam metade do dano, arredondada ao inteiro mais próximo, sem interromper a ação ou aplicar lançamento e deslocamento. A preparação cinematográfica continua congelando o combate. Regressões cobrem ambos os lados, lutadores, golpes, agarrões e projéteis.
+
+Instalação reproduzível, 676 testes, build e diff passaram localmente. Texas espelhada foi observada na postura inicial e em um acerto de dinamite no treino em WebGL. A escolha da cor da dinamite, explosão, tiros e bloqueios por autor tem regressão automatizada; o bloqueio roxo e a explosão completa ainda precisam de conferência visual. A revisão artística das paletas e da iluminação em movimento e nos demais cenários continua pendente. Branch aberta, alterações ainda sem commit ou push.
+
 ## Correções de efeitos, Saloon e contatos de treino — 2026-11-04
 
 A câmera de escurecimento da apresentação agora ignora também os efeitos criados no quadro atual, após a atualização das imagens de combate. Antes, ela podia desenhar uma cópia pequena dos projéteis e efeitos de contato em outra posição. Os braços espectrais de ataque da Texas permanecem atrás do corpo, conforme sua apresentação original.

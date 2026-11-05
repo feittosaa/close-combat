@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import menuBackground from '../../assets/art/wallpapers/cowboy-menu.png';
+import bobMenuBackground from '../../assets/art/wallpapers/bob-menu.png';
 import menuReference from '../../assets/art/menu/patio-solar.png';
 import { configureUiCamera } from '../rendering/presentation';
 import { preloadCowboySprites } from '../rendering/animations/cowboySprites';
@@ -31,12 +32,15 @@ export class BootScene extends Phaser.Scene {
     }
     const advance = () => {
       if (!this.loadingScreen || !wallpapers.length) return;
-      this.loadingScreen.style.backgroundImage = `linear-gradient(0deg, #100e12dd, transparent 70%), url(${JSON.stringify(wallpapers[nextWallpaper++ % wallpapers.length])})`;
+      const index = nextWallpaper++;
+      this.loadingScreen.className = `loading-screen ${index % 2 === 0 ? 'wallpaper-left' : 'wallpaper-right'}`;
+      this.loadingScreen.style.setProperty('--loading-wallpaper', `url(${JSON.stringify(wallpapers[index % wallpapers.length])})`);
       try { sessionStorage.setItem('close-combat-wallpaper', String(nextWallpaper)); } catch { /* Keep loading without storage. */ }
     };
     advance();
-    if (this.loadingScreen) this.wallpaperTimer = window.setInterval(advance, 3500);
+    if (this.loadingScreen) this.wallpaperTimer = window.setInterval(advance, 20000);
     this.load.image('menu-solar', menuBackground);
+    this.load.image('menu-bob', bobMenuBackground);
     this.load.image('menu-reference', menuReference);
     stages.forEach(stage => preloadStage(this, stage));
     preloadCowboySprites(this);

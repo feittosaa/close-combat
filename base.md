@@ -43,7 +43,7 @@ Controles são remapeáveis, direções são relativas ao oponente e transiçõe
 
 O atalho de reinício de partida funciona somente no treino livre. PvP e Arcade preservam a partida ao receber essa tecla.
 
-Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É proibido ajustar suas cores por CSS ou código, incluindo filtros, tint, shaders, LUTs, recoloração de pixels ou pós-processamento. Correções artísticas pertencem à imagem fonte e exigem aprovação; recorte, transparência, escala, alinhamento e espelhamento técnicos não autorizam recoloração.
+Spritesheets e imagens oficiais preservam suas fontes originais. Variações de cor de personagem e iluminação de cenário podem ser aplicadas durante a renderização; sua aparência exige revisão visual. Correções artísticas permanentes pertencem à imagem fonte e exigem aprovação.
 
 ## Apresentação compartilhada
 
@@ -51,7 +51,7 @@ A composição lógica de combate é 1024 × 576, com projeção uniforme; a sa�
 
 O piso, os lutadores e os cenários compartilham o mesmo espaço. O limite lateral da visão deve preservar ambos os lados sem arrastar um personagem parado. Mudanças autorizadas no tamanho dos lutadores exigem revisão proporcional de corpo, hurtboxes, hitboxes e seus deslocamentos nos dados de cada personagem. As caixas físicas não são inferidas automaticamente de silhuetas ou do desenho do cenário.
 
-Fora do treino, cada personagem pode ativar uma ultimate uma vez por combate; o limite persiste entre rounds e reinicia em uma nova partida. A rage acumulada permanece entre rounds e pode voltar a encher após a ultimate. No treino, a ultimate pode ser repetida. A ultimate exige a barra completa e também pode ser acionada por uma tecla configurável, obedecendo às mesmas condições e animação do comando original. Uma defesa iniciada pouco antes do impacto pode gerar um perfect block, com indicação e som próprios e maior ganho de rage.
+A rage acumulada permanece entre rounds e pode alimentar ultimates repetidas e ações defensivas. A ultimate exige o recurso correspondente e também pode ser acionada por uma tecla configurável, obedecendo às mesmas condições e animação do comando original. Uma ação de rage configurável permite recuperação aérea e tentativa de interrupção de combos, respeitando o recurso disponível. Uma defesa iniciada pouco antes do impacto pode gerar um perfect block, com indicação e som próprios e maior ganho de rage.
 
 O HUD deve ser minimalista: barras de vida contínuas próximas ao topo, sem divisões verticais ou molduras grandes. Mostrar dados reais; detalhes de diagnóstico pertencem às ferramentas de treino. Animações decorativas respeitam movimento reduzido e não prejudicam leitura ou foco.
 

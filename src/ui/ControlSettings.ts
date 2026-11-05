@@ -9,7 +9,7 @@ export class ControlSettings {
   private systemDraft: SystemControlLayout = getSystemControls();
   private trainingDraft: TrainingControls = getTrainingControls();
   private graphicsDraft: GraphicsQuality = loadGraphicsQuality();
-  private capture?: { player?: number; group?: 'directions'|'buttons'|'ultimate'|'taunt'; action: string; system?: true; training?: true; button: HTMLButtonElement };
+  private capture?: { player?: number; group?: 'directions'|'buttons'|'ultimate'|'taunt'|'rageAction'; action: string; system?: true; training?: true; button: HTMLButtonElement };
   private readonly status = document.createElement('p');
   private readonly previousFocus = document.activeElement as HTMLElement | null;
   constructor(private readonly close: () => void) {
@@ -40,7 +40,7 @@ export class ControlSettings {
         button.onclick=()=> { if (this.capture) this.capture.button.textContent=''; this.capture={player,group:kind,action,button}; button.textContent='Pressione…'; this.status.textContent='Esc cancela a captura. Atalhos do treino aparecem na tela de treino.'; };
         row.append(caption,button); group.append(row);
       });
-      for (const [action,label] of [['ultimate','Ultimate'],['taunt','Provocação']] as const) {
+      for (const [action,label] of [['ultimate','Ultimate'],['taunt','Provocação'],['rageAction','Ação de rage']] as const) {
         const row = document.createElement('div'); const caption = document.createElement('span'); caption.textContent = label;
         const button = document.createElement('button'); button.textContent = keyLabel(layout[action]);
         button.setAttribute('aria-label', `P${player+1} ${label}: ${button.textContent}`);
@@ -76,7 +76,7 @@ export class ControlSettings {
       this.systemDraft=system;this.trainingDraft=training;this.capture=undefined;this.status.textContent='Comando alterado. Salve para aplicar.';this.render();return;
     }
     if(player===undefined||group===undefined)return;
-    const candidate=structuredClone(this.draft);if (group === 'ultimate' || group === 'taunt') candidate[player][group] = event.code; else (candidate[player][group] as Record<string,string>)[action]=event.code;
+    const candidate=structuredClone(this.draft);if (group === 'ultimate' || group === 'taunt' || group === 'rageAction') candidate[player][group] = event.code; else (candidate[player][group] as Record<string,string>)[action]=event.code;
     // Validation is pure; saving happens only on explicit Save.
     if(!validateControlSet(candidate,this.systemDraft,this.trainingDraft)){this.status.textContent='Tecla repetida, reservada ou não suportada. Escolha outra.';return;}
     this.draft=candidate;this.capture=undefined;this.status.textContent='Tecla alterada. Salve para aplicar.';this.render();

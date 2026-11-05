@@ -1,3 +1,4 @@
+import { RAGE_LEVEL } from '../engine/combat/rage';
 import type Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { getCharacterById } from '../engine/data/characters';
@@ -42,7 +43,7 @@ const impactSeek: Readonly<Record<string, number>> = {
   steps_1: .045, air_dash_2: .085, magical_shot_1: .035, magical_shot_2: .095,
   lace_draw: .065, lace_catch: .065, kick_on_the_ground_2: .015, magic_explosion_1: .015,
 };
-const PISTOL_DRAW_DELAY = 36;
+const PISTOL_DRAW_DELAY = 42;
 
 export function selectSoundVariant(count: number, random = Math.random()): number {
   const weights = count === 5 ? [50, 25, 15, 5, 5] : [50, 25, 15, 10];
@@ -151,7 +152,7 @@ export class FightSounds {
       if (event.context === 'counter-hit') this.play('counter_hit');
     }
     for (const character of snapshot.characters) {
-      const ready = character.maxRage > 0 && character.rage >= character.maxRage && !character.ultimateUsed;
+      const ready = character.maxRage > 0 && character.rage >= RAGE_LEVEL;
       if (ready && !this.ultimateReady.has(character.characterId)) this.play('ultimate_ready');
       if (ready) this.ultimateReady.add(character.characterId); else this.ultimateReady.delete(character.characterId);
       if (character.mode === 'dashing') {

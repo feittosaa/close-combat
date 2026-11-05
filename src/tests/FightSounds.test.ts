@@ -137,15 +137,15 @@ it('plays taunt, ultimate and round cues once, with the victory cue delayed', ()
   snapshot.characters[0].tauntStartedFrame = 1;
   sounds.observe(snapshot); sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(0);
-  snapshot.elapsedFrames=35; sounds.observe(snapshot);
+  snapshot.elapsedFrames=41; sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(0);
-  snapshot.elapsedFrames=36; sounds.observe(snapshot);
+  snapshot.elapsedFrames=42; sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(1);
   snapshot.ultimateActivation = {ownerIds:['player-1'],elapsedFrames:0,remainingFrames:149};
   sounds.observe(snapshot); sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-ultimate_activation')).toHaveLength(1);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(1);
-  snapshot.elapsedFrames=72; sounds.observe(snapshot);
+  snapshot.elapsedFrames=84; sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(2);
   snapshot.phase='round-over'; snapshot.roundEndReason='knockout'; snapshot.roundWinnerId='player-1'; snapshot.elapsedFrames=100;
   sounds.observe(snapshot); sounds.observe(snapshot);

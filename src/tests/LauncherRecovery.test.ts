@@ -91,3 +91,13 @@ it.each([0,1])('drops a second launcher to the floor and permits a new launch af
   for(const button of ['1','1','2'] as const)hit(sim,player,button);
   expect(sim.snapshot().characters[1-player]).toMatchObject({grounded:false,verticalVelocity:-10});
 });
+
+it.each([0,1])('recovers immediately from a real launcher for 50 rage: victim %i', victim => {
+  const sim = launch(1 - victim);
+  sim.fillTrainingRage();
+  expect(sim.snapshot().characters[victim]).toMatchObject({ grounded: false, mode: 'hitstun' });
+  step(sim, victim, { ...N, rageAction: true });
+  const recovered = sim.snapshot().characters[victim];
+  expect(recovered).toMatchObject({ rage: 550, mode: 'airborne', remainingStateFrames: 0 });
+  expect(recovered.juggle).toBeUndefined();
+});

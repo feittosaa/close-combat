@@ -75,3 +75,13 @@ it('maps each player’s dedicated ultimate key independently', () => {
   one.clear();expect(one.read().ultimate).toBeUndefined();
   one.destroy();two.destroy();
 });
+
+
+it('maps rage action independently for both players', () => {
+  const target = new EventTarget() as Window;
+  const one = new KeyboardInput(PLAYER_ONE_KEYS, target), two = new KeyboardInput(PLAYER_TWO_KEYS, target);
+  dispatchKey(target, 'keydown', 'KeyE');
+  expect(one.read().rageAction).toBe(true); expect(two.read().rageAction).toBeUndefined();
+  dispatchKey(target, 'keydown', 'Numpad7'); expect(two.read().rageAction).toBe(true);
+  one.destroy(); two.destroy();
+});

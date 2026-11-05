@@ -9,7 +9,7 @@ import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
 import { playableCharacters } from '../engine/data/characters';
 import { defaultStage, selectableStages } from '../rendering/stages/stageCatalog';
-import { opponentFor, isTrainingMode, type MatchMode } from './matchSetup';
+import { opponentFor, isTrainingMode, selectsOpponent, type MatchMode } from './matchSetup';
 
 const MODES = [
   { id: 'arcade', title: 'ARCADE', hint: 'Enfrente o Bob controlado pelo computador.', tag: '1 JOGADOR' },
@@ -33,6 +33,9 @@ export class MenuScene extends Phaser.Scene {
   private root?: Phaser.GameObjects.Container;
   private chrome?: Phaser.GameObjects.Container;
   private background?: Phaser.GameObjects.Image;
+  private wallpaperIndex = 0;
+  private readonly wallpapers = ['menu-solar', 'menu-bob'];
+  private readonly wallpaperMotion = { progress: 0 };
   private menuElement?: HTMLElement;
   private resizeObserver?: ResizeObserver;
   private motionPreference?: MediaQueryList;
@@ -41,7 +44,11 @@ export class MenuScene extends Phaser.Scene {
     Object.assign(this.menuElement!.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
     if (rect.width && rect.height && this.background) {
       const frame = getRightAlignedCover(rect, this.background.frame);
-      this.background.setPosition(frame.x, frame.y).setScale(frame.scale);
+      const moving = this.page === 'home' && !this.motionPreference?.matches;
+      const scale = frame.scale * (moving ? 1.03 : 1);
+      const travel = Math.max(0, this.background.frame.width * scale - frame.x);
+      const progress = this.wallpaperIndex % 2 === 0 ? 1 - this.wallpaperMotion.progress : this.wallpaperMotion.progress;
+      this.background.setPosition(frame.x + (moving ? travel * progress : 0), frame.y).setScale(scale);
       configureUiCamera(this.cameras.main, rect);
     }
   };
@@ -68,7 +75,7 @@ export class MenuScene extends Phaser.Scene {
       if (versus && p1Direction) {
         this.selection.move(0, p1Direction as -1 | 1); this.render();
       } else if (arrowDirection) {
-        const player = versus ? 1 : 0;
+        const player = versus ? 1 : this.selection.activePlayer;
         this.selection.move(player, arrowDirection as -1 | 1); this.render();
       } else if (versus && key.toLowerCase() === 'j') this.confirmFighter(0);
       else if (versus && event.code === 'Numpad1') this.confirmFighter(1);
@@ -86,6 +93,7 @@ export class MenuScene extends Phaser.Scene {
   constructor() { super('MenuScene'); }
   init(data: { fighterId?: string } = {}): void {
     this.page = 'home'; this.mode = 'arcade'; this.transitioning = false; this.selection.reopen();
+    this.wallpaperIndex = 0;
     this.stageIndex = selectableStages.findIndex(stage => stage.id === defaultStage.id);
     const index = this.fighters.findIndex(f => f.id === data.fighterId);
     if (index >= 0) this.fighterIndex = index;
@@ -96,7 +104,30 @@ export class MenuScene extends Phaser.Scene {
     this.textures.get('menu-solar').setFilter(Phaser.Textures.FilterMode.LINEAR);
     const background = this.add.image(width, height / 2, 'menu-solar').setOrigin(1, .5);
     this.background = background;
+    const startWallpaperMotion = () => {
+      this.tweens.killTweensOf(this.wallpaperMotion);
+      this.wallpaperMotion.progress = 0;
+      if (!this.motionPreference?.matches) this.tweens.add({ targets: this.wallpaperMotion, progress: 1, duration: 20000, ease: 'Linear', onUpdate: () => {
+        if (this.page === 'home' && this.menuElement) this.alignMenu();
+      }});
+    };
+    this.time.addEvent({ delay: 20000, loop: true, callback: () => {
+      if (this.page !== 'home') return;
+      const switchWallpaper = () => {
+        if (this.page !== 'home' || !this.background) return;
+        this.wallpaperIndex = (this.wallpaperIndex + 1) % this.wallpapers.length;
+        this.background.setTexture(this.wallpapers[this.wallpaperIndex]);
+        startWallpaperMotion();
+        this.alignMenu();
+      };
+      if (this.motionPreference?.matches) { switchWallpaper(); return; }
+      this.tweens.add({ targets: background, alpha: 0, duration: 1000, onComplete: () => {
+        switchWallpaper();
+        this.tweens.add({ targets: background, alpha: 1, duration: 1000 });
+      }});
+    }});
     this.motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    startWallpaperMotion();
     const reducedMotion = this.motionPreference.matches;
     if (!reducedMotion) {
       for (let i = 0; i < 9; i++) {
@@ -147,7 +178,8 @@ export class MenuScene extends Phaser.Scene {
   }
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
-    this.background?.setTexture(this.page === 'home' ? 'menu-solar' : 'menu-reference');
+    if (this.background) { this.tweens.killTweensOf(this.background); this.background.setAlpha(1); }
+    this.background?.setTexture(this.page === 'home' ? this.wallpapers[this.wallpaperIndex] : 'menu-reference');
     this.alignMenu();
     const { width, height } = LOGICAL_VIEW;
     this.menuElement!.hidden = this.page === 'settings';
@@ -207,6 +239,7 @@ export class MenuScene extends Phaser.Scene {
         selection: this.selection,
         opponent: opponentFor(this.fighters[this.fighterIndex].id, this.mode),
         versus: this.mode === 'versus',
+        selectOpponent: selectsOpponent(this.mode),
         modeTitle: MODES.find(mode => mode.id === this.mode)!.title,
         refresh: () => this.render(),
         confirm: () => this.confirmFighter(),
@@ -254,17 +287,22 @@ export class MenuScene extends Phaser.Scene {
     if (id === 'settings') { this.page = 'settings'; new ControlSettings(() => { this.page = 'home'; this.render(); }); } else { this.mode = id; this.page = 'fighter'; if (id === 'tutorial' || id === 'combo-tutorial') this.fighterIndex = 0; } this.render();
   }
   private back(): void {
+    if (this.page === 'fighter' && this.selection.choosingColor[this.selection.activePlayer]) {
+      this.selection.choosingColor[this.selection.activePlayer] = false;
+      this.selection.ready[this.selection.activePlayer] = false;
+      this.render(); return;
+    }
     this.selection.reopen();
     this.page = this.page === 'stage' ? 'fighter' : 'home'; this.render();
   }
   private confirmFighter(player = this.selection.activePlayer): void {
-    if (!this.selection.confirm(player, this.mode === 'versus')) { this.render(); return; }
+    if (!this.selection.confirm(player, selectsOpponent(this.mode))) { this.render(); return; }
     if (isTrainingMode(this.mode)) this.startFight();
     else { this.page = 'stage'; this.render(); }
   }
   private startFight(): void {
     if (this.transitioning) return; this.transitioning = true;
     const fighter = this.fighters[this.fighterIndex];
-    this.scene.start('FightScene', { fighterId: fighter.id, opponentId: this.mode === 'versus' ? this.fighters[this.selection.indices[1]].id : opponentFor(fighter.id, this.mode).id, stageId: this.selectedStage.id, mode: this.mode, arcadeIndex: 0 });
+    this.scene.start('FightScene', { fighterId: fighter.id, opponentId: selectsOpponent(this.mode) ? this.fighters[this.selection.indices[1]].id : opponentFor(fighter.id, this.mode).id, stageId: this.selectedStage.id, mode: this.mode, arcadeIndex: 0, fighterPalette: this.selection.palettes[0], opponentPalette: selectsOpponent(this.mode) ? this.selection.palettes[1] : undefined });
   }
 }

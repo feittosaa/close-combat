@@ -176,7 +176,7 @@ it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
   expect(getCowboyUltimateActivationPose(state,149)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
   for(let shot=0;shot<6;shot++) {
-    const attacking={...state,attack:{moveId:'bulls-eye',buttons:[] as const,elapsedFrames:1+shot*18,hasHit:false}};
+    const attacking={...state,attack:{moveId:'bulls-eye',buttons:[] as const,elapsedFrames:cowboy.moves.find(move=>move.id==='bulls-eye')!.startup+shot*18,hasHit:false}};
     expect(getCowboySpritePose(attacking,shot*18)).toMatchObject({texture:'cowboy-ultimate-body',frame:[0,1,2,3,4,5][shot],flipX:player===1});
     if (shot === 1 || shot === 3) expect(getCowboySpritePose({...attacking,attack:{...attacking.attack,elapsedFrames:attacking.attack.elapsedFrames+2}},shot*18+2)?.frame).toBe(shot+1);
   }
@@ -440,4 +440,17 @@ it.each([0,1])('mostra a queda progressiva enquanto o empurrão desloca a Cowboy
   const pushed={...state,mode:'knockdown' as const,grounded:true,stateStartedFrame:100,pushbackMotion:{distancePerFrame:5,remainingFrames:12}};
   for(let age=0;age<12;age++) expect(getCowboySpritePose(pushed,100+age)).toMatchObject({texture:'cowboy-push-fall',frame:Math.floor(age/2),flipX:player===1});
   expect(getCowboySpritePose({...pushed,pushbackMotion:undefined},112)?.texture).toBe('cowboy-knockdown');
+});
+
+
+it.each([0,1])('usa folhas de tiro duplo, queda e levantamento para jogador %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  const shooting = {...state, attack: {moveId:'double-shot',buttons:['1','2'] as const,elapsedFrames:14,hasHit:false}};
+  expect(getCowboySpritePose(shooting,14)).toMatchObject({texture:'cowboy-double-shot',frame:3,scale:1.02,flipX:player===1});
+  expect(getCowboySpriteLayers(shooting,14).map(layer=>layer.texture)).toContain('cowboy-magic-horizontal');
+  expect(getCowboySpritePose({...state,mode:'knockdown',remainingStateFrames:20},10)).toMatchObject({texture:'cowboy-fall-landing',scale:2.4*.8});
+  expect(getCowboySpritePose({...state,mode:'knockdown',grounded:false,remainingStateFrames:20,stateStartedFrame:10},10)).toMatchObject({texture:'cowboy-fall-landing',frame:0,scale:1.15});
+  expect(getCowboySpritePose({...state,mode:'knockdown',grounded:false,remainingStateFrames:20,stateStartedFrame:10},18)).toMatchObject({texture:'cowboy-fall-landing',frame:2,scale:1.15});
+  expect(getCowboySpritePose({...state,mode:'hitstun',grounded:false,juggle:{gravityScale:1,airHits:0}},10)).toMatchObject({texture:'cowboy-launch-hit',scale:1.1*1.12*1.02*1.02*.94*1.03});
+  expect(getCowboySpritePose({...state,mode:'hitstun',grounded:false},10)).toMatchObject({texture:'cowboy-air-hurt',scale:.94});
 });
