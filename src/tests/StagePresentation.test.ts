@@ -3,6 +3,7 @@ import { StagePresentation } from '../rendering/StagePresentation';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { defaultCharacter } from '../engine/data/characters';
+import { presentationBounds } from '../rendering/stages/presentationBounds';
 
 it('excludes effects created after the presentation update from the dimmer camera', () => {
   const object = () => {
@@ -35,6 +36,9 @@ it.each(['saloon', 'fazenda', 'sala-treino'])('uses the %s presentations for int
   const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
   expect(presentation.update(snapshot, 100, 1024)).toBe(true);
   expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:ready`);
+  expect(title.setPosition).toHaveBeenLastCalledWith(512, 288);
+  const readyBounds = presentationBounds[`${theme}:ready`];
+  expect(title.setDisplaySize.mock.lastCall![1] * (readyBounds[3] - readyBounds[1])).toBeCloseTo(144);
   presentation.update(snapshot, 1000, 1024);
   expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:fight`);
   presentation.update(snapshot, 400, 1024); presentation.update(snapshot, 16, 1024);
@@ -55,6 +59,33 @@ it.each(['saloon', 'fazenda', 'sala-treino'])('uses the %s presentations for int
   snapshot.roundWins = [2, 0]; snapshot.roundWinnerId = snapshot.characters[0].characterId;
   presentation.update(snapshot, 16, 1024);
   expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:victory`);
+  presentation.destroy();
+});
+
+it.each(['saloon', 'fazenda', 'sala-treino'])('shows K.O. immediately in %s before the result', theme => {
+  const object = () => {
+    const value = {width:1000,height:400,setName:vi.fn(),setOrigin:vi.fn(),setScrollFactor:vi.fn(),setDepth:vi.fn(),setVisible:vi.fn(),
+      setTexture:vi.fn(),setPosition:vi.fn(),setDisplaySize:vi.fn(),setAlpha:vi.fn(),setSize:vi.fn(),destroy:vi.fn()};
+    Object.values(value).forEach(method => { if (typeof method === 'function') method.mockReturnValue(value); });
+    return value;
+  };
+  const title = object(), dimmer = object();
+  const scene = {add:{image:()=>title,rectangle:()=>dimmer},cameras:{add:()=>({setViewport:vi.fn(),ignore:vi.fn()}),remove:vi.fn()},
+    scale:{width:1920,height:1080},children:{list:[title,dimmer]}};
+  const presentation = new StagePresentation(scene as never, theme);
+  const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
+  presentation.update(snapshot, 1600, 1024);
+  snapshot.knockoutStartedAt = 100;
+  presentation.update(snapshot, 16, 1024);
+  expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:ko`);
+  expect(title.setPosition).toHaveBeenLastCalledWith(512, 288);
+  const koBounds = presentationBounds[`${theme}:ko`];
+  expect(title.setDisplaySize.mock.lastCall![1] * (koBounds[3] - koBounds[1])).toBeCloseTo(144);
+  presentation.update(snapshot, 1984, 1024);
+  snapshot.phase = 'round-over'; snapshot.roundEndedFrame = 100; snapshot.frame = 120;
+  snapshot.roundWinnerId = snapshot.characters[0].characterId;
+  presentation.update(snapshot, 16, 1024);
+  expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:round-win`);
   presentation.destroy();
 });
 
@@ -85,7 +116,7 @@ it('shows the final result at full opacity over a 20% dimmer before the victory 
   presentation.destroy();
 });
 
-it('waits one second after the next round resets before displaying ready', () => {
+it('shows ready for one second, then enables fight on the next round', () => {
   const object = () => {
     const value = {width:1000,height:400,setName:vi.fn(),setOrigin:vi.fn(),setScrollFactor:vi.fn(),setDepth:vi.fn(),setVisible:vi.fn(),
       setTexture:vi.fn(),setPosition:vi.fn(),setDisplaySize:vi.fn(),setAlpha:vi.fn(),setSize:vi.fn(),destroy:vi.fn()};
@@ -100,11 +131,10 @@ it('waits one second after the next round resets before displaying ready', () =>
   presentation.update(snapshot, 1400, 1024);
   snapshot.round = 2;
   expect(presentation.update(snapshot, 500, 1024)).toBe(true);
-  expect(title.setVisible).toHaveBeenLastCalledWith(false);
-  expect(presentation.update(snapshot, 499, 1024)).toBe(true);
-  expect(title.setVisible).toHaveBeenLastCalledWith(false);
-  presentation.update(snapshot, 1, 1024);
   expect(title.setTexture).toHaveBeenLastCalledWith('presentation:saloon:ready');
+  expect(presentation.update(snapshot, 499, 1024)).toBe(true);
+  expect(presentation.update(snapshot, 1, 1024)).toBe(false);
+  expect(title.setTexture).toHaveBeenLastCalledWith('presentation:saloon:fight');
   presentation.destroy();
 });
 

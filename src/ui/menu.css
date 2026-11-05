@@ -70,6 +70,7 @@
 .arena-palette::before, .arena-palette::after { content: ''; position: absolute; right: 0; bottom: 0; width: 52%; height: 52%; clip-path: polygon(100% 0, 100% 100%, 0 100%); background: var(--palette-accent); }
 .arena-palette::after { width: 34%; height: 34%; background: var(--palette-detail); }
 .arena-palette[aria-pressed="true"] { outline: .2cqw solid #fff0b6; outline-offset: .2cqw; }
+.arena-palette:disabled { opacity: .3; filter: grayscale(.8); cursor: not-allowed; }
 .stage-selection { isolation: isolate; background: #100e13; }
 .stage-selection .arena-header { z-index: 4; inset: 3% 0 auto; justify-content: center; border: 0; text-shadow: .18cqw .18cqw #70271f, 0 .3cqw .5cqw #000; }
 .stage-selection .arena-step { margin: 0; color: #fff0d2; font: italic 900 2.4cqw/1 Arial,sans-serif; letter-spacing: -.03em; }

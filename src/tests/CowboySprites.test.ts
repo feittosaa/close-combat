@@ -448,9 +448,9 @@ it.each([0,1])('usa folhas de tiro duplo, queda e levantamento para jogador %i',
   const shooting = {...state, attack: {moveId:'double-shot',buttons:['1','2'] as const,elapsedFrames:14,hasHit:false}};
   expect(getCowboySpritePose(shooting,14)).toMatchObject({texture:'cowboy-double-shot',frame:3,scale:1.02,flipX:player===1});
   expect(getCowboySpriteLayers(shooting,14).map(layer=>layer.texture)).toContain('cowboy-magic-horizontal');
-  expect(getCowboySpritePose({...state,mode:'knockdown',remainingStateFrames:20},10)).toMatchObject({texture:'cowboy-fall-landing',scale:2.4*.8});
-  expect(getCowboySpritePose({...state,mode:'knockdown',grounded:false,remainingStateFrames:20,stateStartedFrame:10},10)).toMatchObject({texture:'cowboy-fall-landing',frame:0,scale:1.15});
-  expect(getCowboySpritePose({...state,mode:'knockdown',grounded:false,remainingStateFrames:20,stateStartedFrame:10},18)).toMatchObject({texture:'cowboy-fall-landing',frame:2,scale:1.15});
+  expect(getCowboySpritePose({...state,mode:'knockdown',remainingStateFrames:20},10)).toMatchObject({texture:'cowboy-fall-landing',scale:2.4*.8*.92});
+  expect(getCowboySpritePose({...state,mode:'knockdown',grounded:false,remainingStateFrames:20,stateStartedFrame:10},10)).toMatchObject({texture:'cowboy-fall-landing',frame:0,scale:1.51*.95});
+  expect(getCowboySpritePose({...state,mode:'knockdown',grounded:false,remainingStateFrames:20,stateStartedFrame:10},18)).toMatchObject({texture:'cowboy-fall-landing',frame:2,scale:1.7*.95});
   expect(getCowboySpritePose({...state,mode:'hitstun',grounded:false,juggle:{gravityScale:1,airHits:0}},10)).toMatchObject({texture:'cowboy-launch-hit',scale:1.1*1.12*1.02*1.02*.94*1.03});
   expect(getCowboySpritePose({...state,mode:'hitstun',grounded:false},10)).toMatchObject({texture:'cowboy-air-hurt',scale:.94});
 });

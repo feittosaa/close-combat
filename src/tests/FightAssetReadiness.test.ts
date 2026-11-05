@@ -4,6 +4,9 @@ import { BootScene } from '../scenes/BootScene';
 import { FightScene } from '../scenes/FightScene';
 import { stages, stageTextureKey } from '../rendering/stages/stageCatalog';
 import type { MatchMode } from '../scenes/matchSetup';
+import { Simulation, type SimulationSnapshot } from '../engine/simulation/Simulation';
+import { createGameConfig } from '../engine/data/gameConfig';
+import { shoto } from '../engine/data/fighters/shoto';
 
 it('keeps the available wallpaper on the loading screen and removes it afterwards', () => {
   vi.useFakeTimers();
@@ -35,6 +38,89 @@ it('keeps the available wallpaper on the loading screen and removes it afterward
   }
 });
 
+it.each([['KeyS','KeyJ'],['ArrowDown','Numpad1']])('lets either player return both to character selection: %s', (down, confirm) => {
+  const nav = {className:'',style:{},setAttribute:vi.fn(),replaceChildren:vi.fn(),remove:vi.fn()};
+  const buttons: {textContent:string;className:string;onclick?:()=>void}[] = [];
+  const document = {createElement:vi.fn((tag:string) => {
+    if (tag === 'nav') return nav;
+    const button = {textContent:'',className:'',onclick:undefined}; buttons.push(button); return button;
+  }),body:{appendChild:vi.fn()}};
+  const listeners = new Map<string, EventListener>();
+  vi.stubGlobal('document',document);
+  vi.stubGlobal('window',{addEventListener:(name:string, listener:EventListener)=>listeners.set(name,listener),removeEventListener:vi.fn()});
+  try {
+    const fight = new FightScene();
+    const start=vi.fn();
+    Object.assign(fight,{scene:{start,restart:vi.fn()},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
+    fight.init({mode:'versus',fighterId:'shoto',opponentId:'cowboy'});
+    const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
+    snapshot.phase='match-over';
+    (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
+    expect(buttons.slice(0,3).map(button=>button.textContent)).toEqual(['REVANCHE','TROCAR PERSONAGEM','MENU PRINCIPAL']);
+    const send=(code:string)=>listeners.get('keydown')!({code,repeat:false,preventDefault:vi.fn(),stopImmediatePropagation:vi.fn()} as unknown as Event);
+    send(down); send(confirm);
+    expect(start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto',selectVersus:true});
+  } finally { vi.unstubAllGlobals(); }
+});
+
+it.each(['versus','arcade'] as const)('offers the requested post-match actions in %s', mode => {
+  const nav = {className:'',style:{},setAttribute:vi.fn(),replaceChildren:vi.fn(),remove:vi.fn()};
+  const buttons: {textContent:string;className:string;onclick?:()=>void}[] = [];
+  vi.stubGlobal('document',{createElement:(tag:string) => {
+    if (tag === 'nav') return nav;
+    const button = {textContent:'',className:'',onclick:undefined}; buttons.push(button); return button;
+  },body:{appendChild:vi.fn()}});
+  vi.stubGlobal('window',{addEventListener:vi.fn(),removeEventListener:vi.fn()});
+  try {
+    const fight = new FightScene();
+    const start=vi.fn(), restart=vi.fn();
+    Object.assign(fight,{scene:{start,restart},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
+    fight.init({mode,fighterId:'shoto',opponentId:'cowboy'});
+    const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
+    snapshot.phase='match-over'; snapshot.matchWinnerId='player-2';
+    (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
+    expect(buttons.map(button=>button.textContent)).toEqual(mode === 'versus' ? ['REVANCHE','TROCAR PERSONAGEM','MENU PRINCIPAL'] : ['CONTINUAR','MENU PRINCIPAL']);
+    buttons[0].onclick!();
+    expect(restart).toHaveBeenCalledOnce();
+    buttons[buttons.length - 1].onclick!();
+    expect(start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto'});
+  } finally { vi.unstubAllGlobals(); }
+});
+
+it('runs two real seconds of slow motion after a fatal hit before continuing the round', () => {
+  const fighter = {...shoto,maxHealth:20};
+  const simulation = new Simulation(createGameConfig(1024,576),[fighter,fighter],{initialDistance:64});
+  const fight = new FightScene();
+  const neutral = {direction:'N' as const,buttons:new Set<'1'>()};
+  let first = true;
+  Object.assign(fight,{simulation,scale:{width:1024,height:576},stagePresentation:{update:()=>false},syncViewsAndHud:()=>{},
+    readInputs:()=>{ const input = first ? {direction:'N' as const,buttons:new Set(['1' as const])} : neutral; first=false; return [input,neutral]; }});
+  for(let i=0;i<120 && simulation.snapshot().knockoutStartedAt === undefined;i++) fight.update(0,1000/60);
+  const fatal = simulation.snapshot();
+  expect(fatal.knockoutStartedAt).toBeDefined();
+  for(let i=0;i<100;i++) fight.update(0,1000/60);
+  const slowed = simulation.snapshot();
+  expect(slowed.elapsedFrames-fatal.elapsedFrames).toBeGreaterThanOrEqual(24);
+  expect(slowed.elapsedFrames-fatal.elapsedFrames).toBeLessThanOrEqual(26);
+  expect(slowed.phase).toBe('fight');
+  for(let i=0;i<150 && simulation.snapshot().phase === 'fight';i++) fight.update(0,1000/60);
+  expect(simulation.snapshot().phase).toBe('round-over');
+});
+
+it('discards held keys and buffered commands when the intro ends, so only presses after Fight count', () => {
+  const simulation = new Simulation(createGameConfig(1024,576),[shoto,shoto],{initialDistance:64});
+  const fight = new FightScene();
+  const keyboard = {clear:vi.fn(),read:()=>({direction:'N' as const,buttons:new Set<'1'>()})}, buffer = {clear:vi.fn(),push:vi.fn()};
+  let intro = true;
+  Object.assign(fight,{simulation,scale:{width:1024,height:576},stagePresentation:{update:()=>intro},syncViewsAndHud:()=>{},fightSounds:undefined,
+    keyboardInputs:[keyboard,keyboard],commandBuffers:[buffer,buffer]});
+  fight.update(0,16); fight.update(0,16);
+  expect(keyboard.clear).not.toHaveBeenCalled();
+  intro = false; fight.update(0,16); fight.update(0,16);
+  expect(keyboard.clear).toHaveBeenCalledTimes(2);
+  expect(buffer.clear).toHaveBeenCalledTimes(2);
+});
+
 it('prepares every match resource before releasing the menu; every mode starts with an empty loader queue',()=>{
   const textures=new Map<string,object>();
   const queued=new Set<string>();
@@ -48,6 +134,7 @@ it('prepares every match resource before releasing the menu; every mode starts w
   boot.preload();
   for(const stage of stages)for(const layer of stage.layers)expect(queued.has(stageTextureKey(stage,layer))).toBe(true);
   expect(queued.has('menu-solar')).toBe(true);
+  for (const theme of ['saloon','fazenda','sala-treino']) expect(queued.has(`presentation:${theme}:ko`)).toBe(true);
   expect(queued.has('cowboy-idle')).toBe(true);
   expect(queued.has('cowboy-idle-special')).toBe(true);
   expect(queued.has('cowboy-victory')).toBe(true);

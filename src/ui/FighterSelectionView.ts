@@ -45,6 +45,7 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
         const swatch = button('', 'arena-palette', () => { selection.selectPalette(player, index as 0 | 1); options.refresh(); });
         swatch.setAttribute('aria-label', index === 0 ? 'Cor original' : 'Cor alternativa');
         swatch.setAttribute('aria-pressed', String(selection.palettes[player] === index));
+        if (selection.isPaletteLocked(player, index as 0 | 1)) { swatch.disabled = true; swatch.setAttribute('aria-label', `${index === 0 ? 'Cor original' : 'Cor alternativa'} indisponível`); }
         swatch.style.setProperty('--palette-main', color[0]);
         swatch.style.setProperty('--palette-accent', color[1]);
         swatch.style.setProperty('--palette-detail', color[2]);

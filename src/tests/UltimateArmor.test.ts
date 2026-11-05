@@ -65,3 +65,23 @@ it.each([0, 1])('continues an ultimate after an opponent hits it: player %i', pl
   expect(target.attack?.moveId).toBe('rake-ultimate');
   expect(target.mode).not.toBe('hitstun');
 });
+
+it.each([0, 1])('does not launch or displace an armored ultimate on a launcher hit: player %i', player => {
+  const attacker = {...shoto, combos:[{id:'test-launcher',name:'Launcher',notation:'2',moveIds:['heavy-punch'],launch:{velocity:-10,recoveryFrames:6}}]};
+  const defender = {...shoto, moves:shoto.moves.map(move => move.id === 'rake-ultimate' ? {...move,startup:80,movement:undefined} : move)};
+  const sim = new Simulation(createGameConfig(1024,576), player === 0 ? [defender,attacker] : [attacker,defender], {training:true,initialDistance:56});
+  sim.fillTrainingRage();
+  const step = (defense:FrameInput=neutral, offense:FrameInput=neutral) => sim.stepFrame(player === 0 ? [defense,offense] : [offense,defense]);
+  step({...neutral,ultimate:true});
+  for (let i=0;i<ULTIMATE_ACTIVATION_FRAMES;i++) step();
+  step(neutral,{direction:'N',buttons:new Set(['2'])});
+  let hit;
+  for (let i=0;i<60 && !hit;i++) { step(); hit=sim.snapshot().hitEvents.find(event=>event.targetId===`player-${player+1}`); }
+  expect(hit).toMatchObject({armored:true,pushback:0,defenderStunFrames:0});
+  const target=sim.snapshot().characters[player];
+  expect(target).toMatchObject({grounded:true,verticalVelocity:0});
+  expect(target.juggle).toBeUndefined();
+  expect(target.throwPull).toBeUndefined();
+  expect(target.knockdown).toBeUndefined();
+  expect(target.attack?.moveId).toBe('rake-ultimate');
+});

@@ -78,7 +78,7 @@ export class FightSounds {
   private ultimateReady = new Set<string>();
   private taunts = new Map<string, number>();
   private pendingDraws = new Map<string, { due: number; kind: 'taunt' | 'ultimate'; started?: number }>();
-  private ultimateActive = false;
+  private ultimateOwners = new Set<string>();
   private warned = false;
   private resultPlayed = false;
   private victoryAt?: number;
@@ -90,7 +90,7 @@ export class FightSounds {
   reset(): void {
     this.arms.clear(); this.projectiles.clear(); this.explosions.clear(); this.grabShots.clear(); this.grounded.clear(); this.lastSteps.clear();
     this.lassoActive.clear(); this.lassoCaptures.clear(); this.grabCaptures.clear(); this.lassoHits.clear(); this.lassoMisses.clear(); this.kickFrames.clear(); this.dashing.clear(); this.ultimateReady.clear(); this.taunts.clear(); this.pendingDraws.clear();
-    this.ultimateActive = false; this.warned = false; this.resultPlayed = false; this.victoryAt = undefined; this.matchResultAt = undefined; this.round = 0; this.announcedRound = 0; this.arcadeLossPlayed = false;
+    this.ultimateOwners.clear(); this.warned = false; this.resultPlayed = false; this.victoryAt = undefined; this.matchResultAt = undefined; this.round = 0; this.announcedRound = 0; this.arcadeLossPlayed = false;
   }
   private play(effect: Effect): void {
     const choices: readonly string[] = variants[effect];
@@ -129,15 +129,14 @@ export class FightSounds {
     if (this.matchResultAt !== undefined && snapshot.elapsedFrames >= this.matchResultAt) {
       this.matchResultAt = undefined; this.play(snapshot.roundWinnerId === snapshot.characters[0].characterId ? 'victory' : 'defeat');
     }
-    if (snapshot.ultimateActivation && !this.ultimateActive) {
+    const owners = new Set(snapshot.ultimateActivation?.ownerIds ?? []);
+    for (const ownerId of owners) if (!this.ultimateOwners.has(ownerId)) {
       this.play('ultimate_activation');
-      for (const character of snapshot.characters) {
-        if (character.fighterId === 'cowboy' && snapshot.ultimateActivation.ownerIds.includes(character.characterId)) {
-          this.pendingDraws.set(character.characterId, { due: snapshot.elapsedFrames + PISTOL_DRAW_DELAY, kind: 'ultimate' });
-        }
+      if (snapshot.characters.find(character => character.characterId === ownerId)?.fighterId === 'cowboy') {
+        this.pendingDraws.set(ownerId, { due: snapshot.elapsedFrames + PISTOL_DRAW_DELAY, kind: 'ultimate' });
       }
     }
-    this.ultimateActive = Boolean(snapshot.ultimateActivation);
+    this.ultimateOwners = owners;
     const activeExplosions = new Set(snapshot.explosions.filter(explosion => explosion.kind === 'dynamite' && explosion.id !== undefined).map(explosion => explosion.id!));
     for (const id of activeExplosions) if (!this.explosions.has(id)) this.play('magic_explosion');
     this.explosions = activeExplosions;
