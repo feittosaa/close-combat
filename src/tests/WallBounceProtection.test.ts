@@ -10,7 +10,7 @@ const neutral: FrameInput = { direction: 'N', buttons: new Set() };
 const attack: FrameInput = { direction: 'N', buttons: new Set(['1', '2']) };
 const fighter = (base: CharacterDefinition): CharacterDefinition => ({
   ...base, id: `${base.id}-bounce-test`, combos: [{ id: 'test', name: 'test', notation: '1+2,1+2', moveIds: ['power-punch', 'power-punch'] }], moves: [{ ...shoto.moves.find(move => move.id === 'power-punch')!,
-    startup: 2, activeFrames: 2, recovery: 3, damage: 1, hitstun: 18,
+    startup: 2, activeFrames: 2, recovery: 3, damage: 1, hitstun: 18, knockdown: false,
     hitbox: { forward: 0, yOffset: -600, width: 300, height: 600 },
     pushback: { hit: 250, block: 0 }, hitPushbackFrames: 12 }],
 });
@@ -81,4 +81,18 @@ it.each([0, 1])('allows the victim to recover from a real wall bounce: victim %i
   expect(recovered).toMatchObject({ rage: 550, remainingStateFrames: 0 });
   expect(['airborne', 'neutral']).toContain(recovered.mode);
   expect(recovered.juggle).toBeUndefined();
+});
+
+it.each([0, 1])('permite dano após o quique de um golpe que derruba: vítima %i', victim => {
+  const base = createGameConfig(1024, 576);
+  const config = { ...base, arena: { ...base.arena, left: 0, right: 350, maxSeparation: undefined } };
+  const attacker = 1 - victim;
+  const definitions: [CharacterDefinition, CharacterDefinition] = attacker === 0 ? [shoto, cowboy] : [cowboy, shoto];
+  const sim = new Simulation(config, definitions, { training: true, initialDistance: 56 });
+  const step = (attackerInput = neutral) => sim.stepFrame(attacker === 0 ? [attackerInput, neutral] : [neutral, attackerInput]);
+  for (let i = 0; i < 150; i++) step({ direction: 'F', buttons: new Set() });
+  step(attack);
+  for (let i = 0; i < 500 && !sim.snapshot().characters[victim].wallBounceEffect; i++) step();
+  expect(sim.snapshot().characters[victim].wallBounceEffect).toBeDefined();
+  expect(sim.snapshot().characters[victim].wakeupInvulnerabilityFrames).toBeUndefined();
 });

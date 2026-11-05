@@ -18,7 +18,7 @@ import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 import { COWBOY_GRAB_LAUNCH, COWBOY_GRAB_SHOTS } from '../combat/cowboyGrab';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
-export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number; starterWeakFamily?: '1' | '3'; usedLightPunch?: boolean; usedStandingLightKick?: boolean }
+export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number; starterWeakFamily?: '1' | '3'; usedLightPunch?: boolean; usedStandingLightKick?: boolean; usedWeakKick?: boolean }
 export interface SimulationSnapshot {
   /** frame is combat/animation time; elapsedFrames counts every fixed tick, including hitstop. */
   frame: number; elapsedFrames: number; round: number; roundFramesRemaining: number;
@@ -48,6 +48,9 @@ export function volleyShotDamage(move: MoveDefinition, priorHits: number, shot: 
 const knockdownRadius = (state: CharacterState): number => state.collision.hurtboxes.knockdown.width / 2 + 8;
 const wallInset = (state: CharacterState): number => state.mode === 'knockdown' ? knockdownRadius(state) : state.collision.bodyWidth / 2;
 const neutral = (): FrameInput => ({ direction: 'N', buttons: new Set() });
+/** Single-button weak strike (basic or crouching) on the given button. */
+const isWeakButton = (move: MoveDefinition, button: '1' | '3'): boolean =>
+  ['basic', 'crouching'].includes(move.category ?? '') && move.input.buttons.length === 1 && move.input.buttons[0] === button;
 const chainStrike = (move: MoveDefinition): boolean => ['basic', 'crouching', 'power'].includes(move.category ?? '') && !move.projectile;
 const heavyStrike = (move: MoveDefinition): boolean => move.input.buttons.some(button => button === '2' || button === '4');
 const heavyButton = (move: MoveDefinition): '2' | '4' | undefined =>
@@ -503,6 +506,8 @@ export class Simulation {
       combo.hits += 1; combo.damage += hit.damage; combo.lastFrame = this.frame;
       if (hit.moveId === 'light-punch' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'cowboy') combo.usedLightPunch = true;
       if (hit.moveId === 'light-kick' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'cowboy') combo.usedStandingLightKick = true;
+      const hitMove = this.move(this.characters.findIndex(character => character.characterId === hit.attackerId), hit.moveId);
+      if (this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'shoto' && hitMove && isWeakButton(hitMove, '3')) combo.usedWeakKick = true;
     }
     this.comboHistory = this.comboHistory.slice(-12);
     for (const projectile of this.projectiles) {
@@ -880,6 +885,8 @@ export class Simulation {
     if (this.definitions[index].id === 'shoto' && ['basic', 'crouching'].includes(move.category ?? '') && move.input.buttons.length === 1 && (move.input.buttons[0] === '1' || move.input.buttons[0] === '2')) {
       const combo = this.comboHistory.find(entry => entry.active && entry.attackerId === character.characterId && entry.targetId === this.characters[1 - index].characterId);
       if (combo?.starterWeakFamily === '3' || character.contactSequence?.weakFamily === '3') return false;
+      // A weak kick may follow a weak punch, never the reverse, so 1,1,3,3,1,1,3,3… cannot loop.
+      if (combo?.usedWeakKick && isWeakButton(move, '1')) return false;
     }
     if (this.definitions[index].id === 'cowboy' && move.id === 'light-kick' && previous?.moveId !== 'light-kick' &&
         this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedStandingLightKick)) return false;
@@ -1020,6 +1027,8 @@ export class Simulation {
         character.x = bounceX;
         character.wallBounceEffect = { x: character.x, y: character.y - character.collision.hurtboxes.standing.height / 2, frame: this.frame, direction: pending.direction };
         character.throwPull = undefined; character.throwFlight = undefined; character.knockdown = undefined;
+        // The knockdown that carried the fighter into the wall must not keep it invulnerable after the bounce.
+        character.wakeupInvulnerabilityFrames = undefined;
         const frontSpacing = (character.collision.bodyWidth + opponent.collision.bodyWidth) / 2 + 40;
         const returnDistance = Math.max(0, (character.x - opponent.x) * pending.direction - frontSpacing);
         character.pushbackMotion = returnDistance > 0

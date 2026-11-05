@@ -1,5 +1,13 @@
 # Close Combat — Pipeline
 
+## Bob — regra contra combo infinito — 2026-11-05
+
+Dentro de um mesmo combo, o Bob não pode iniciar soco fraco (botão `1`: em pé, abaixado) depois de acertar um chute fraco (botão `3`: em pé, abaixado, aéreo); o inverso continua permitido. Isso impede `1,1,3,3,1,1,3,3…`. A regra vale enquanto o combo contra o alvo estiver ativo. Teste cobre os dois lados; 735 testes passam; falta conferência em jogo. Correção adicional: o quique na parede zera a invulnerabilidade de levantamento, de modo que o alvo pode sofrer dano depois do quique.
+
+## Revisão do Bob — 2026-11-05
+
+Soco de uma polegada (`1+2`): preparação de 6 para 12 quadros (valor escolhido por mim, ajustável) e agora derruba o alvo após o empurrão; na sequência `1,1,1+2` o golpe mantém preparação de 6 quadros para continuar sendo combo. O fim de combo com derrubada passa a valer no tutorial de combos. Pose de vitória (e de derrota) agora também aparece ao final de rounds que não encerram a partida, para ambos os lutadores, após o título do resultado. Pendentes: animação de Bob sendo empurrado para trás (não existe folha própria; hoje usa `fall` com deslocamento) e remoção do contorno (lineart) dos efeitos da ultimate (`effect-ultimate-wind` e demais), que exigem nova arte fornecida e aprovada. Testes passam; falta conferência em jogo.
+
 ## Escala do chute pós-laço da Texas — 2026-11-05
 
 O chute depois do laço `1+3` usa `push-away`; a ampliação de 50% o deixou com 606 px visíveis contra 412 do idle, e foi revertida (agora ≈ 412). Na vítima, a queda no ar (`fall-landing`, quadros 0–2) tinha corpo deitado de 119–245 px e aparecia minúscula; passou a usar escala por quadro (1,51 / 1,65 / 1,70, depois reduzida em 5%) para que o comprimento do corpo iguale o da pose deitada no chão. Isso substitui o aumento uniforme de 20% da queda. Medido por alfa nos atlas e por simulação; ainda precisa de conferência visual em jogo.

@@ -29,7 +29,7 @@ it.each([0, 1])('o punho fecha no primeiro quadro de contato para o jogador %i',
   const step = (value = neutral) => sim.stepFrame(player === 0 ? [value, neutral] : [neutral, value]);
   step(punch);
   const move = shoto.moves.find(candidate => candidate.id === 'power-punch')!;
-  expect(move).toMatchObject({ startup: 6, activeFrames: 3, recovery: 40, hitbox: { forward: 32, yOffset: -148, width: 26, height: 25 } });
+  expect(move).toMatchObject({ startup: 12, activeFrames: 3, recovery: 40, hitbox: { forward: 32, yOffset: -148, width: 26, height: 25 } });
   while (sim.snapshot().characters[player].attack!.elapsedFrames < move.startup - 1) step();
   let snapshot = sim.snapshot();
   expect(getShotoSpritePose(snapshot.characters[player], snapshot.frame)).toMatchObject({ texture: 'shoto-power-punch', frame: 3 });

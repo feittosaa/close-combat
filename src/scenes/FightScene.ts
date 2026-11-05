@@ -92,7 +92,6 @@ export class FightScene extends Phaser.Scene {
   private hudWidth = 0;
   private resultFloorY = 0;
   private resultGravity = 0;
-  private roundsToWin = 2;
   private tutorial?: TutorialSession;
   private tutorialHud?: TutorialHud;
   private training?: TrainingSession;
@@ -258,7 +257,6 @@ export class FightScene extends Phaser.Scene {
     const config = createGameConfig(width, height);
     this.resultFloorY = config.arena.floorY;
     this.resultGravity = config.movement.gravity;
-    this.roundsToWin = config.match.roundCount;
     const stageLayout = createStageLayout(this.selectedStage, width, height, config.arena.floorY);
     // The full panorama defines the walls; shared viewport separation still limits lone retreat.
     Object.assign(config.arena,getStageArenaBounds(stageLayout));
@@ -411,10 +409,9 @@ export class FightScene extends Phaser.Scene {
     if (snapshot.phase === 'match-over') this.showResultMenu(snapshot);
 
     this.resizeHud(getHudLogicalWidth(this.scale));
-    const finalRound = snapshot.roundWins.some(wins => wins >= this.roundsToWin);
     const resultAge = snapshot.roundEndedFrame === undefined ? -1 : snapshot.frame - snapshot.roundEndedFrame;
     const visualFrame = snapshot.roundEndedFrame ?? snapshot.frame;
-    const resultElapsed = snapshot.phase !== 'fight' && finalRound && snapshot.roundWinnerId && resultAge >= RESULT_TITLE_END_FRAME ? resultAge - RESULT_TITLE_END_FRAME : undefined;
+    const resultElapsed = snapshot.phase !== 'fight' && snapshot.roundWinnerId && resultAge >= RESULT_TITLE_END_FRAME ? resultAge - RESULT_TITLE_END_FRAME : undefined;
     const cameraCharacters = resultElapsed === undefined ? snapshot.characters : snapshot.characters.map(character =>
       getCowboyRoundEndPresentation(character, resultElapsed, this.resultFloorY, this.resultGravity).state);
     this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), visualFrame);

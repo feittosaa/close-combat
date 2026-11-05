@@ -64,6 +64,16 @@ describe('manual Shoto catalogue', () => {
     }
   });
 
+  it.each([0, 1])('allows a weak kick after a weak punch but not a weak punch after a weak kick for player %i', player => {
+    const sim = create(56);
+    command(sim, move('light-punch'), player); untilContact(sim, player, N, false);
+    command(sim, move('light-kick'), player); untilContact(sim, player, N, true);
+    command(sim, move('light-punch'), player);
+    for (let frame = 0; frame < 60; frame++) step(sim, N, player);
+    expect(sim.snapshot().recentContacts.map(contact => contact.event.moveId)).toEqual(['light-punch', 'light-kick']);
+    expect(sim.snapshot().characters[player].attack?.moveId).not.toBe('light-punch');
+  });
+
   it.each([0, 1])('uses faster startup only for the second and third heavy punches for player %i', player => {
     const sim = create(56);
     for (const [index, startup] of [13, 10, 10].entries()) {
