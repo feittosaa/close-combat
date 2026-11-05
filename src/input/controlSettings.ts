@@ -26,7 +26,7 @@ export function saveTrainingControls(value: TrainingControls): boolean {
 }
 export function validateControlSet(players: ControlLayouts, system: SystemControlLayout, training: TrainingControls): boolean {
   if (!validateLayouts(players) || !validateSystemControls(system) || !validateTrainingControls(training)) return false;
-  const keys = [...players.flatMap(layout => [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt]), ...Object.values(system), ...Object.values(training)];
+  const keys = [...players.flatMap(layout => [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt, layout.rageAction]), ...Object.values(system), ...Object.values(training)];
   return new Set(keys).size === keys.length;
 }
 const systemDefaultKeys = new Set(['KeyP','KeyR']);
@@ -44,8 +44,8 @@ export function validateLayouts(value: unknown): value is ControlLayouts {
   if (!Array.isArray(value) || value.length !== 2) return false;
   const seen = new Set<string>();
   return value.every(layout => layout && ['left','right','up','down'].every(key => typeof layout.directions?.[key] === 'string') &&
-    ['1','2','3','4'].every(key => typeof layout.buttons?.[key] === 'string') && typeof layout.ultimate === 'string' && typeof layout.taunt === 'string' &&
-    [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt].every(code => {
+    ['1','2','3','4'].every(key => typeof layout.buttons?.[key] === 'string') && typeof layout.ultimate === 'string' && typeof layout.taunt === 'string' && typeof layout.rageAction === 'string' &&
+    [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt, layout.rageAction].every(code => {
       if (typeof code !== 'string' || !validKey(code) || seen.has(code)) return false;
       seen.add(code); return true;
     }));
@@ -54,10 +54,11 @@ export function loadControls(storage?: Pick<Storage,'getItem'>): ControlLayouts 
   try {
     const data = JSON.parse((storage ?? globalThis.localStorage)?.getItem(storageKey) ?? 'null');
     if (Array.isArray(data) && data.length === 2 && data.every(layout => layout && typeof layout === 'object')) {
-      const used = new Set(data.flatMap(layout => [...Object.values(layout.directions ?? {}), ...Object.values(layout.buttons ?? {}), layout.ultimate, layout.taunt].filter(Boolean)));
-      for (const [index, layout] of data.entries()) for (const action of ['ultimate', 'taunt'] as const) {
+      const storedSystem = JSON.parse((storage ?? globalThis.localStorage)?.getItem(systemStorageKey) ?? 'null');
+      const used = new Set([...data.flatMap(layout => [...Object.values(layout.directions ?? {}), ...Object.values(layout.buttons ?? {}), layout.ultimate, layout.taunt, layout.rageAction].filter(Boolean)), ...(validateSystemControls(storedSystem) ? Object.values(storedSystem) : []), ...Object.values(trainingControls)]);
+      for (const [index, layout] of data.entries()) for (const action of ['ultimate', 'taunt', 'rageAction'] as const) {
         if (typeof layout[action] === 'string') continue;
-        const key = [defaults()[index][action], ...'TUYOQZXCVB'.split('').map(letter => `Key${letter}`), 'Numpad5','Numpad6','Numpad7'].find(code => !used.has(code) && !reserved.has(code) && !systemDefaultKeys.has(code));
+        const key = [defaults()[index][action], ...'ETUYOQZXCVB'.split('').map(letter => `Key${letter}`), 'Numpad5','Numpad6','Numpad7','Numpad8'].find(code => !used.has(code) && !reserved.has(code) && !systemDefaultKeys.has(code));
         if (!key) return defaults();
         layout[action] = key; used.add(key);
       }
@@ -78,7 +79,7 @@ systemControls = (() => { try { const v = JSON.parse(globalThis.localStorage?.ge
 export function getSystemControls(): SystemControlLayout { return { ...systemControls }; }
 export function saveSystemControls(value: SystemControlLayout, storage?: Pick<Storage,'setItem'>): boolean {
   if (!validateSystemControls(value)) return false;
-  if (layouts.flatMap(layout => [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt]).some(code => code === value.pause || code === value.reset)) return false;
+  if (layouts.flatMap(layout => [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt, layout.rageAction]).some(code => code === value.pause || code === value.reset)) return false;
   systemControls = { ...value }; try { (storage ?? globalThis.localStorage)?.setItem(systemStorageKey, JSON.stringify(value)); } catch { /* Runtime mapping remains usable for this session. */ } return true;
 }
 export function keyLabel(code: string): string {

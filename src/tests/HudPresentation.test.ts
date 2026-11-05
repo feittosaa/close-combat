@@ -75,14 +75,14 @@ it('apresenta o histórico de combo no painel com a cor do jogador',()=>{
   hud.destroy();
 });
 it('treino usa teclas remapeadas e mantém dados de contato e pausa legíveis',()=>{
-  saveSystemControls({pause:'KeyQ',reset:'KeyE'});
+  saveSystemControls({pause:'KeyQ',reset:'KeyZ'});
   const {scene,texts}=mockScene();
   const hud=new TrainingHud(scene,1024,576),session=new TrainingSession();
   session.paused=true;session.speed=.25;
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
   hud.update(snapshot,session);
   expect(texts.some(t=>t.value.includes('PAUSADO')&&t.value.includes('25%'))).toBe(true);
-  expect(texts.some(t=>t.value.includes('Q PAUSA')&&t.value.includes('E / F2 RESET'))).toBe(true);
+  expect(texts.some(t=>t.value.includes('Q PAUSA')&&t.value.includes('Z / F2 RESET'))).toBe(true);
   expect(texts.some(t=>t.value.includes('FRAME 0')&&t.value.includes('DISTÂNCIA'))).toBe(true);
   hud.destroy();
 });
@@ -95,11 +95,26 @@ it('anchors health and larger bottom rage rails to both sides of a wide HUD',()=
   hud.update(snapshot,width);
   expect(commands).toContainEqual(['fillRect',82,10,510.5,17]);
   expect(commands).toContainEqual(['fillRect',width-592.5,10,510.5,17]);
-  expect(commands).toContainEqual(['fillRect',35,538,250,8]);
-  expect(commands).toContainEqual(['fillRect',width-285,538,250,8]);
-  expect(commands).toContainEqual(['fillRect',35,538,100,8]);
-  expect(commands).toContainEqual(['fillRect',width-135,538,100,8]);
-  for (const x of [85,135,185,235]) expect(commands).toContainEqual(['lineBetween',x,538,x,546]);
-  for (const x of [width-235,width-185,width-135,width-85]) expect(commands).toContainEqual(['lineBetween',x,538,x,546]);
+  expect(commands).toContainEqual(['fillRect',50,538,250,8]);
+  expect(commands).toContainEqual(['fillRect',width-300,538,250,8]);
+  expect(commands).toContainEqual(['fillRect',50,538,250/3,8]);
+  expect(commands).toContainEqual(['fillRect',width-50-250/3,538,250/3,8]);
+  for (const x of [1,2,3,4,5].map(i=>50+250*i/6)) expect(commands).toContainEqual(['lineBetween',x,538,x,546]);
+  for (const x of [1,2,3,4,5].map(i=>width-300+250*i/6)) expect(commands).toContainEqual(['lineBetween',x,538,x,546]);
+  hud.destroy();
+});
+
+
+it('layers blue and red rage fills and shows completed levels', () => {
+  const { scene, texts, commands } = mockScene();
+  const hud = new CombatHud(scene, 1024);
+  const snapshot = new Simulation(createGameConfig(1024, 576)).snapshot();
+  snapshot.characters[0].rage = 450; snapshot.characters[1].rage = 600;
+  hud.update(snapshot, 1024);
+  expect(commands).toContainEqual(['fillStyle', 0x398ee8]);
+  expect(commands).toContainEqual(['fillStyle', 0xd83c32]);
+  expect(commands).toContainEqual(['fillRect', 50, 538, 125, 8]);
+  expect(texts.some(text => text.value === '1')).toBe(true);
+  expect(texts.some(text => text.value === '2')).toBe(true);
   hud.destroy();
 });

@@ -42,6 +42,34 @@
 .arena-confirm { background: #b73d32; } .arena-confirm:hover { background: #d14b3c; }
 .arena-back { background: transparent; color: #dac6a7 !important; }
 .fighter-selection .arena-footer, .stage-selection .arena-footer { z-index: 4; font-size: .75cqw; padding: .55cqw 5%; background: transparent; border: 0; text-shadow: 0 2px 4px #000; }
+/* Character art fills both halves; the opponent faces inward. */
+.fighter-selection::before, .fighter-selection::after {
+  display: block; position: absolute; top: 0; bottom: 0; left: 43%; right: auto;
+  width: 14%; z-index: 1; pointer-events: none;
+  clip-path: polygon(0 0, 100% 0, 64% 45%, 100% 100%, 0 100%, 36% 45%);
+}
+.fighter-selection::before { background: linear-gradient(90deg, #c66048, #f0d29d 48%, #bda6e4); }
+.fighter-selection::after {
+  left: 43.3%; width: 13.4%;
+  background: linear-gradient(145deg, #17121b, #09080d 55%, #221827);
+}
+.fighter-selection .arena-hero { top: 0; left: 0; width: 50%; height: 100%; overflow: hidden; }
+.fighter-selection .arena-hero.right { left: auto; right: 0; }
+.fighter-selection .arena-hero img { left: 0; width: 100%; height: 100%; object-fit: cover; object-position: left center; transform: none; }
+.fighter-selection .arena-hero.right img { transform: scaleX(-1); }
+.fighter-selection .arena-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, #100c12cc, transparent 50%); pointer-events: none; }
+.fighter-selection .arena-fighter-name { z-index: 2; top: auto; bottom: 28%; width: 27%; border-color: #f1c074; }
+.fighter-selection .arena-fighter-name.right { border-color: #b39bed; }
+.fighter-selection .arena-selection { top: auto; bottom: 5%; left: 23%; width: 54%; padding: .7cqw; transform: none; background: #100d13ee; }
+.fighter-selection .arena-roster { grid-template-columns: repeat(10, 4.2cqw); gap: .3cqw; }
+.fighter-selection .arena-portrait, .fighter-selection .arena-empty, .fighter-selection .arena-random { width: 4.2cqw; }
+.fighter-selection .arena-random { margin: 0; }
+.arena-palettes { display: flex; gap: .5cqw; margin: 0 0 .6cqw; }
+.arena-fighter-name.right .arena-palettes { justify-content: flex-end; }
+.arena-palette { position: relative; width: 2.5cqw; height: 2.5cqw; padding: 0; border: .16cqw solid #eee; background: var(--palette-main); box-shadow: 0 0 0 .12cqw #171218; }
+.arena-palette::before, .arena-palette::after { content: ''; position: absolute; right: 0; bottom: 0; width: 52%; height: 52%; clip-path: polygon(100% 0, 100% 100%, 0 100%); background: var(--palette-accent); }
+.arena-palette::after { width: 34%; height: 34%; background: var(--palette-detail); }
+.arena-palette[aria-pressed="true"] { outline: .2cqw solid #fff0b6; outline-offset: .2cqw; }
 .stage-selection { isolation: isolate; background: #100e13; }
 .stage-selection .arena-header { z-index: 4; inset: 3% 0 auto; justify-content: center; border: 0; text-shadow: .18cqw .18cqw #70271f, 0 .3cqw .5cqw #000; }
 .stage-selection .arena-step { margin: 0; color: #fff0d2; font: italic 900 2.4cqw/1 Arial,sans-serif; letter-spacing: -.03em; }

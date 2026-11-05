@@ -62,3 +62,23 @@ it.each([0, 1])('impede outro quique no próximo combo e libera o posterior, jog
     }
   }
 });
+
+it.each([0, 1])('allows the victim to recover from a real wall bounce: victim %i', victim => {
+  const base = createGameConfig(1024, 576);
+  const config = { ...base, arena: { ...base.arena, left: 0, right: 350, maxSeparation: undefined } };
+  const attacker = 1 - victim;
+  const definitions: [CharacterDefinition, CharacterDefinition] = attacker === 0 ? [fighter(shoto), cowboy] : [cowboy, fighter(shoto)];
+  const sim = new Simulation(config, definitions, { training: true, initialDistance: 56 });
+  const step = (attackerInput = neutral, victimInput = neutral) => sim.stepFrame(attacker === 0 ? [attackerInput, victimInput] : [victimInput, attackerInput]);
+  for (let i = 0; i < 150; i++) step({ direction: 'F', buttons: new Set() });
+  step(attack);
+  for (let i = 0; i < 500 && !sim.snapshot().characters[victim].wallBounceEffect; i++) step();
+  expect(sim.snapshot().characters[victim].wallBounceEffect).toBeDefined();
+  expect(sim.snapshot().characters[victim].grounded).toBe(false);
+  sim.fillTrainingRage();
+  step(neutral, { ...neutral, rageAction: true });
+  const recovered = sim.snapshot().characters[victim];
+  expect(recovered).toMatchObject({ rage: 550, remainingStateFrames: 0 });
+  expect(['airborne', 'neutral']).toContain(recovered.mode);
+  expect(recovered.juggle).toBeUndefined();
+});

@@ -5,6 +5,7 @@ import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
 import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
+import { CharacterColorEffect, type CharacterColor } from './characterColor';
 
 export function combatantDepth(state: CharacterState, frame: number): number {
   const ipponAge = frame - (state.ipponReceivedFrame ?? -Infinity);
@@ -14,6 +15,7 @@ export function combatantDepth(state: CharacterState, frame: number): number {
 /** Fighters without body artwork retain diagnostic geometry. */
 export class CombatantView {
   private readonly graphics: Phaser.GameObjects.Graphics;
+  private readonly colorEffect = new CharacterColorEffect();
   private readonly sprites: Phaser.GameObjects.Image[] = [];
   private readonly volleyArms: Phaser.GameObjects.Image[] = [];
   private readonly grabShots: Phaser.GameObjects.Image[] = [];
@@ -23,7 +25,7 @@ export class CombatantView {
   constructor(private readonly scene: Phaser.Scene, private readonly color: number) {
     this.graphics = scene.add.graphics().setDepth(11);
   }
-  sync(state: CharacterState, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number; floorY: number; gravity: number}): void {
+  sync(state: CharacterState, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number; floorY: number; gravity: number}, color: CharacterColor = { hue: 0, brightness: 1 }): void {
     const depth = combatantDepth(state, frame);
     this.graphics.setDepth(depth);
     const presentation = result ? getCowboyRoundEndPresentation(state, result.elapsed, result.floorY, result.gravity) : undefined;
@@ -34,6 +36,7 @@ export class CombatantView {
     if (shotIndex >= 0 && this.scene.textures.exists('cowboy-effect-shot')) {
       const sign = state.facing === 'right' ? 1 : -1;
       const shot = this.grabShots[0] ??= this.scene.add.image(0, 0, 'cowboy-effect-shot', '0').setDepth(11);
+      this.colorEffect.apply(shot, { hue: 0, brightness: 1, alternate: color.alternate }, 'magic');
       const travel = grabAge - COWBOY_GRAB_SHOTS[shotIndex];
       const horizontal = shotIndex === 2;
       shot.setTexture('cowboy-effect-shot', String(Math.min(5, travel)))
@@ -46,6 +49,7 @@ export class CombatantView {
       const camera = this.scene.cameras.main;
       for (let i = 0; i < 6; i++) {
         const arms = this.volleyArms[i] ??= this.scene.add.image(0, 0, 'cowboy-magic-volley', '0').setDepth(9);
+        this.colorEffect.apply(arms, color, 'magic');
         const elapsed = state.attack!.elapsedFrames;
         const fadeIn = Math.min(1, (elapsed + 10) / 15);
         const fadeOut = Math.max(0, Math.min(1, (112 - elapsed) / 18));
@@ -76,6 +80,7 @@ export class CombatantView {
     const shotoDrawing = shotoVictory || shotoDefeat || shotoPose;
     if (shotoDrawing && this.scene.textures?.exists(shotoDrawing.texture)) {
       const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, shotoDrawing.texture, String(shotoDrawing.frame)).setDepth(10);
+      this.colorEffect.apply(sprite, color, 'bob');
       sprite.setDepth(depth).setTexture(shotoDrawing.texture, String(shotoDrawing.frame)).setOrigin(.5, shotoDrawing.footAnchor)
         .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * (shotoPose?.scale ?? 1) / getShotoResolution(shotoDrawing.texture)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y)
         .setFlipX(shotoDrawing.flipX).setAlpha(1).setVisible(true);
@@ -90,6 +95,8 @@ export class CombatantView {
     if(layers.length && layers.every(pose=>this.scene.textures?.exists(pose.texture))){
       layers.forEach((pose,index)=>{
         const sprite=this.sprites[index]??=this.scene.add.image(0,0,pose.texture,String(pose.frame)).setDepth(10);
+        const magic = pose.texture.startsWith('cowboy-magic-');
+        this.colorEffect.apply(sprite, magic ? { hue: 0, brightness: 1, alternate: color.alternate } : color, magic ? 'magic' : 'texas');
         sprite.setDepth(depth).setTexture(pose.texture,String(pose.frame))
           .setOrigin(.5,cowboyFootAnchor)
           .setScale(cowboyDisplayHeight / getCowboyFrameSize(pose.texture) * pose.scale)
@@ -109,6 +116,7 @@ export class CombatantView {
         const width = Math.max(1, Math.abs(tip - hand)) * 640 / 491 * 1.15;
         const left = state.facing === 'right' ? hand - width * 64 / 640 : tip - width * 85 / 640;
         const lasso = this.lasso ??= this.scene.add.image(0,0,lassoTexture,'2').setDepth(11);
+        this.colorEffect.apply(lasso, { hue: 0, brightness: 1, alternate: color.alternate }, 'magic');
         lasso.setTexture(lassoTexture, '2').setOrigin(0,.5).setDisplaySize(width,120)
           .setPosition(left,state.y - 109).setFlipX(state.facing === 'left').setVisible(true);
       } else this.lasso?.setVisible(false);
@@ -118,6 +126,7 @@ export class CombatantView {
       if (dustKind && move && dustAge >= 0 && dustAge < 12 && this.scene.textures.exists(`cowboy-effect-dust-${dustKind}`)) {
         const box = createHitbox(state, move);
         const effect = this.dust ??= this.scene.add.image(0, 0, `cowboy-effect-dust-${dustKind}`, '0').setDepth(11);
+        this.colorEffect.apply(effect, { hue: 0, brightness: 1, alternate: color.alternate }, 'magic');
         const height = box.height * (dustKind === 'power' ? 1.375 : 1.625);
         effect.setTexture(`cowboy-effect-dust-${dustKind}`, String(Math.min(5, dustKind === 'light' ? 1 + Math.floor(dustAge / 3) : Math.floor(dustAge / 2))))
           .setOrigin(.5, 1).setDisplaySize(box.width * 1.25, height)

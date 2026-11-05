@@ -166,11 +166,11 @@ describe('manual Shoto catalogue', () => {
   });
 
   it('builds rage on real contacts, requires a full bar and consumes it on ultimate startup', () => {
-    const fastCharge={...shoto,rage:{...shoto.rage!,onHit:250}};
+    const fastCharge={...shoto,rage:{...shoto.rage!,onHit:300}};
     const noRage=create(300);command(noRage,move('crow-ultimate'));
     expect(noRage.snapshot().characters[0].attack).toBeUndefined();
     const sim=create(56,fastCharge);command(sim,move('light-punch'));untilContact(sim);
-    expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([250,15]);wait(sim);
+    expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([300,15]);wait(sim);
     command(sim,move('crow-ultimate'));
     expect(sim.snapshot().characters[0]).toMatchObject({rage:0,attack:{moveId:'crow-ultimate'}});
     untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'crow-ultimate',outcome:'hit'});
@@ -259,7 +259,7 @@ describe('manual Shoto catalogue', () => {
     const fight=new Simulation(config);fight.fillTrainingRage();
     expect(fight.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
     const practice=create();practice.fillTrainingRage();
-    expect(practice.snapshot().characters.map(c=>c.rage)).toEqual([250,250]);
+    expect(practice.snapshot().characters.map(c=>c.rage)).toEqual([600,600]);
     const miss=create(350);command(miss,move('heavy-punch'));wait(miss);
     expect(miss.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
     const blocked=create();command(blocked,move('light-punch'));untilContact(blocked,0,input('B'));
@@ -284,7 +284,7 @@ describe('manual Shoto catalogue', () => {
 
   it.each([0,1])('gates ultimate and respects guard on either side for player %i', player => {
     const sim=create(200);sim.fillTrainingRage();command(sim,move('crow-ultimate'),player);
-    expect(sim.snapshot().characters[player].rage).toBe(0);
+    expect(sim.snapshot().characters[player].rage).toBe(300);
     untilContact(sim,player,input('DB'));
     expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'crow-ultimate',outcome:'block',damage:0});
   });

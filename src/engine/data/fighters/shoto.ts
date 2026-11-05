@@ -1,3 +1,4 @@
+import { RAGE_LEVEL, RAGE_MAX } from '../../combat/rage';
 import type { CharacterDefinition } from '../characters';
 
 /** Bancada provisória criada do zero. Valores técnicos, ainda sem homologação de balanceamento. */
@@ -26,7 +27,7 @@ export const shoto: CharacterDefinition = {
   },
   juggle: { initialGravityScale: 0.7, gravityScalePerHit: 0.15, maximumGravityScale: 1.6,
     getupFrames: 24, wakeupInvulnerabilityFrames: 8, airHitSuspensionFrames: 6 },
-  rage: { maximum: 250, onHit: 10, onDamage: 15, onBlock: 5 },
+  rage: { maximum: RAGE_MAX, onHit: 10, onDamage: 15, onBlock: 5 },
   combos: [
     { id: 'simple-1', name: 'Combo simples · 1,1,1', notation: '1,1,1', moveIds: ['light-punch','light-punch','light-punch'], recoveryFrames: 20 },
     { id: 'simple-2', name: 'Combo simples · 2,2,2', notation: '2,2,2', moveIds: ['heavy-punch','heavy-punch','heavy-punch'], startupFrames: [13, 10, 10], recoveryFrames: 30, endsBasicChain: true },
@@ -110,11 +111,11 @@ export const shoto: CharacterDefinition = {
       startup: 7, activeFrames: 7, recovery: 22, damage: 25, hitstun: 18, blockstun: 10, pushback: { hit: 7, block: 5 }, hitLevel: 'mid',
       movement: { speed: 2.5, until: 14, launch: -4 }, projectileInvulnerable: true, hitbox: { forward: 20, yOffset: -120, width: 90, height: 70 } },
     { id: 'rake-ultimate', name: 'Ultimate — Redemoinho', category: 'ultimate', notation: 'd,df,f,d,df,f,1', input: { buttons: ['1'], sequence: ['D','DF','F','D','DF','F'] },
-      rageCost: 250, startup: 1, activeFrames: 60, recovery: 30, damage: 400, hitstun: 12, blockstun: 9, pushback: { hit: 0, block: 0 }, hitLevel: 'mid',
+      rageCost: RAGE_LEVEL, startup: 1, activeFrames: 60, recovery: 30, damage: 400, hitstun: 12, blockstun: 9, pushback: { hit: 0, block: 0 }, hitLevel: 'mid',
       multiHit: { hits: 10, interval: 6, damageReductionPerPriorHit: 20 },
       movement: { speed: 4, until: 61 }, hitbox: { forward: -110, yOffset: -185, width: 220, height: 160 } },
     { id: 'crow-ultimate', name: 'Ultimate — Revoada', category: 'ultimate', notation: 'b,f,b,f,1+2', input: { buttons: ['1','2'], sequence: ['B','F','B','F'] },
-      rageCost: 250, startup: 1, activeFrames: 91, recovery: 36, damage: 30, hitstun: 20, blockstun: 12, pushback: { hit: 0, block: 0 }, hitLevel: 'mid',
+      rageCost: RAGE_LEVEL, startup: 1, activeFrames: 91, recovery: 36, damage: 30, hitstun: 20, blockstun: 12, pushback: { hit: 0, block: 0 }, hitLevel: 'mid',
       screenVolley: { shots: 12, interval: 18, bandHeight: 44, firstHitLevel: 'low', damageReductionPerPriorHit: 20,
         pattern: [{frame:0,height:44},{frame:8,height:120},{frame:8,height:156},{frame:18,height:75},{frame:27,height:200},{frame:27,height:178},{frame:39,height:98},{frame:49,height:230},{frame:49,height:210},{frame:60,height:135},{frame:72,height:85},{frame:85,height:165}] },
       projectile: { speed: 24, life: 160, visual: 'crow' }, hitbox: { forward: 0, yOffset: 0, width: 160, height: 44 } },

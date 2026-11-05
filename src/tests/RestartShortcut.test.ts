@@ -8,7 +8,7 @@ afterEach(() => resetControls());
 
 it.each(['training', 'tutorial', 'combo-tutorial', 'versus', 'arcade'] as MatchMode[])(
   'only resets the training mode with the configured shortcut: %s', mode => {
-    saveSystemControls({ pause: 'KeyP', reset: 'KeyE' });
+    saveSystemControls({ pause: 'KeyP', reset: 'KeyZ' });
     const scene = new FightScene(); scene.init({ mode });
     const resetFight = vi.fn();
     Object.assign(scene, { simulation: {}, resetFight });
@@ -16,7 +16,7 @@ it.each(['training', 'tutorial', 'combo-tutorial', 'versus', 'arcade'] as MatchM
     const press = (code: string) => ({ code, repeat: false, preventDefault: vi.fn() } as unknown as KeyboardEvent);
     handle(press('KeyR'));
     expect(resetFight).not.toHaveBeenCalled();
-    const configured = press('KeyE'); handle(configured);
+    const configured = press('KeyZ'); handle(configured);
     expect(resetFight).toHaveBeenCalledTimes(mode === 'training' ? 1 : 0);
     expect(configured.preventDefault).toHaveBeenCalledTimes(mode === 'training' ? 1 : 0);
   },

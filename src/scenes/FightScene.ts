@@ -19,6 +19,8 @@ import { getCowboyRoundEndPresentation, hasCowboyExited, preloadCowboySprites } 
 import { hasShotoExited } from '../rendering/animations/shotoSprites';
 import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { ProjectileView } from '../rendering/ProjectileView';
+import { characterColor } from '../rendering/characterColor';
+import { registerCharacterPalette } from '../rendering/palettePipeline';
 import { preloadContactEffects } from '../rendering/contactEffects';
 import { RESULT_TITLE_END_FRAME, StagePresentation } from '../rendering/StagePresentation';
 import { CombatantView } from '../rendering/CombatantView';
@@ -32,7 +34,7 @@ import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
 import { ArcadeController } from '../engine/combat/ArcadeController';
-import { arcadeOpponents, opponentFor, stageForMatch, type FightSetup, type MatchMode } from './matchSetup';
+import { arcadeOpponents, opponentFor, stageForMatch, matchPalettes, type FightSetup, type MatchMode } from './matchSetup';
 import { FightSounds } from '../audio/FightSounds';
 import { UltimateOverlay } from '../ui/UltimateOverlay';
 import type { HitEvent } from '../engine/combat/AttackResolver';
@@ -40,6 +42,7 @@ import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 
 export class FightScene extends Phaser.Scene {
   private selectedFighter = defaultCharacter;
+  private alternatePalettes: [boolean, boolean] = [false, false];
   private opponentFighter = defaultCharacter;
   private mode: MatchMode = 'versus';
   private arcadeIndex = 0;
@@ -146,7 +149,7 @@ export class FightScene extends Phaser.Scene {
     if (this.mode !== 'arcade' || !snapshot || !this.canContinueArcade(snapshot)) return;
     if (this.arcadeIndex + 1 >= arcadeOpponents(this.selectedFighter.id).length) return;
     this.scene.restart({ fighterId: this.selectedFighter.id, stageId: this.selectedStage.id,
-      mode: 'arcade', arcadeIndex: this.arcadeIndex + 1 });
+      mode: 'arcade', fighterPalette: this.alternatePalettes[0] ? 1 : 0, arcadeIndex: this.arcadeIndex + 1 });
   };
   private readonly handleRestart = (event: KeyboardEvent): void => {
     if (this.mode !== 'training' || event.code !== getSystemControls().reset || !this.simulation) return;
@@ -168,6 +171,7 @@ export class FightScene extends Phaser.Scene {
     this.opponentFighter = this.mode === 'arcade'
       ? opponentFor(this.selectedFighter.id, 'arcade', this.arcadeIndex)
       : getCharacterById(data.opponentId ?? '') ?? opponentFor(this.selectedFighter.id, this.mode);
+    this.alternatePalettes = matchPalettes(data, this.selectedFighter.id === this.opponentFighter.id);
     this.selectedStage = stageForMatch(this.mode,data.stageId);
     this.tutorial = this.mode === 'tutorial' || this.mode === 'combo-tutorial' ? new TutorialSession(this.selectedFighter, this.mode) : undefined;
     this.training = data.mode === 'training' || this.tutorial ? new TrainingSession() : undefined;
@@ -185,6 +189,7 @@ export class FightScene extends Phaser.Scene {
   }
 
   create(): void {
+    registerCharacterPalette(this);
     const { width, height } = LOGICAL_VIEW;
     const config = createGameConfig(width, height);
     this.resultFloorY = config.arena.floorY;
@@ -328,12 +333,16 @@ export class FightScene extends Phaser.Scene {
       getCowboyRoundEndPresentation(character, resultElapsed, this.resultFloorY, this.resultGravity).state);
     this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), visualFrame);
     this.ultimateOverlay?.update(Boolean(snapshot.ultimateActivation), this.game.loop.delta);
+    const layout = createStageLayout(this.selectedStage, LOGICAL_VIEW.width, LOGICAL_VIEW.height, this.resultFloorY);
     snapshot.characters.forEach((character, index) => {
       const result = resultElapsed !== undefined
         ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed, floorY: this.resultFloorY, gravity: this.resultGravity} : undefined;
-      this.combatants[index]?.sync(character, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result);
+      const color = characterColor(this.selectedStage, layout, character.x, this.cameras.main.scrollX,
+        this.alternatePalettes[index]);
+      this.combatants[index]?.sync(character, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color);
     });
-    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters);
+    const alternateOwnerIds = new Set(snapshot.characters.filter((_, index) => this.alternatePalettes[index]).map(character => character.characterId));
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
     if (this.arcadeInfo) {

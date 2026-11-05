@@ -14,6 +14,7 @@ export interface HitEvent {
   moveId: string;
   damage: number;
   outcome: 'hit' | 'block';
+  armored?: boolean;
   perfectBlock?: boolean;
   pushback: number;
   pushbackDirection?: 'left' | 'right';
@@ -40,7 +41,7 @@ export class AttackResolver {
       return owner && move ? [createProjectileHitbox(projectile, move)] : [];
     }));
   }
-  resolve(characters: CharacterState[], inputs: readonly FrameInput[], projectiles: readonly ProjectileState[] = [], damageOverride?: (attackerId: string, targetId: string, move: MoveDefinition, volleyStep: number) => number): HitEvent[] {
+  resolve(characters: CharacterState[], inputs: readonly FrameInput[], projectiles: readonly ProjectileState[] = [], damageOverride?: (attackerId: string, targetId: string, move: MoveDefinition, volleyStep: number) => number, contact?: (event: HitEvent) => void): HitEvent[] {
     // Capturar todos os contatos antes de aplicar dano mantém trades simétricos.
     const sources = [
       ...characters.map((attacker, index) => {
@@ -61,8 +62,9 @@ export class AttackResolver {
       if (move.multiHit && (volleyStep === undefined || volleyStep >= move.multiHit.hits)) return [];
       if (target.mode === 'knockdown' || (target.wakeupInvulnerabilityFrames ?? 0) > 0) return [];
       const defenseMove = target.attack ? this.resolveMove(target.fighterId, target.attack.moveId) : undefined;
-      if (projectile && defenseMove?.projectileInvulnerable) return [];
-      const defense = defenseMove?.invulnerability;
+      const armored = defenseMove?.category === 'ultimate';
+      if (projectile && !armored && defenseMove?.projectileInvulnerable) return [];
+      const defense = armored ? undefined : defenseMove?.invulnerability;
       if (defense && target.attack!.elapsedFrames < defense.until && (defense.kind === 'all' || projectile)) return [];
       if (move.category === 'throw' && (!target.grounded || !attacker.grounded || target.mode === 'hitstun' || target.mode === 'blockstun')) return [];
       const hitLevel = volleyStep === 0 ? move.screenVolley?.firstHitLevel ?? move.hitLevel : move.hitLevel;
@@ -99,9 +101,10 @@ export class AttackResolver {
         ...(volleyStep !== undefined ? { volleyStep } : {}),
         // The event describes the move that connected. Training keeps reporting that
         // value after a depleted target is hit; only the health bar is capped at zero.
-        damage: blocked ? 0 : damage, outcome: blocked ? 'block' : 'hit',
-        pushback: blocked ? move.pushback.block : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
-        defenderStunFrames: stun, frameAdvantage: frameAdvantage(recovery, stun),
+        damage: blocked ? 0 : armored ? Math.round(damage / 2) : damage, outcome: blocked ? 'block' : 'hit',
+        ...(armored && !blocked ? { armored: true } : {}),
+        pushback: armored ? 0 : blocked ? move.pushback.block : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
+        defenderStunFrames: armored ? 0 : stun, frameAdvantage: frameAdvantage(recovery, armored ? 0 : stun),
         context: blocked ? undefined : classifyHitContext(target),
         contactPoint: {
           x: (Math.max(box.x, contacted.x) + Math.min(box.x + box.width, contacted.x + contacted.width)) / 2,
@@ -111,14 +114,18 @@ export class AttackResolver {
         ...(zonedTarget && move.category !== 'throw' ? { contactHeight: contactHeight(target, box) } : {}) };
       return [{ attack, target, event }];
     });
+    const resolved: HitEvent[] = [];
     for (const { attack, target, event } of pending) {
+      contact?.(event);
+      resolved.push(event);
       attack.hasHit = true; attack.hitOutcome = event.outcome;
       target.health = Math.max(0, target.health - event.damage);
+      if (event.armored) { target.hitFlashFrames = 5; continue; }
       target.mode = event.outcome === 'block' ? 'blockstun' : 'hitstun';
       target.remainingStateFrames = event.defenderStunFrames;
       target.attack = undefined;
       target.hitFlashFrames = event.outcome === 'hit' ? 5 : 0;
     }
-    return pending.map(({ event }) => event);
+    return resolved;
   }
 }
