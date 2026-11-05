@@ -39,7 +39,7 @@ describe('Project asset and documentation hygiene', () => {
       }
     }
     for (const stage of ['saloon', 'fazenda', 'sala-treino']) {
-      for (const name of ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'round-win', 'round-lose', ...(stage === 'saloon' ? ['tumbleweed'] : [])]) {
+      for (const name of ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'round-win', 'round-lose', 'ko', ...(stage === 'saloon' ? ['tumbleweed'] : [])]) {
         used.add(`src/assets/scenes/${stage}/presentation/${name}.png`);
       }
     }

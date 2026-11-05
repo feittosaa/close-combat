@@ -5,6 +5,7 @@ import { defaultCharacter as shoto } from '../engine/data/characters';
 import { createHurtbox } from '../engine/collision/combatGeometry';
 import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
+import type { CharacterState } from '../engine/characters/CharacterState';
 const input = (direction: Direction = 'N', buttons: AttackButton[] = []): FrameInput => ({ direction, buttons: new Set(buttons) });
 const N = input();
 const config = createGameConfig(1024, 576);
@@ -185,6 +186,20 @@ describe('fundação da simulação', () => {
     expect(sim.snapshot()).toMatchObject({ phase: 'match-over', matchWinnerId: 'player-1', roundWins: [2, 0] });
     expect(sim.isMatchOver()).toBe(true); sim.resetMatch(); expect(sim.isMatchOver()).toBe(false);
   });
+  it('registra o KO no golpe fatal e aguarda o golpe terminar antes do resultado', () => {
+    const fragile = { ...shoto, maxHealth: 20 };
+    const sim = new Simulation(config, [fragile, fragile], { initialDistance: 64 });
+    sim.stepFrame([input('N', ['1']), N]);
+    while (sim.snapshot().characters[1].health > 0) advance(sim, 1);
+    const fatal = sim.snapshot();
+    expect(fatal.knockoutStartedAt).toBe(fatal.elapsedFrames);
+    expect(fatal.phase).toBe('fight');
+    expect(fatal.characters[0].attack).toBeDefined();
+    for (let i = 0; i < 29; i++) { advance(sim, 1); expect(sim.snapshot().phase).toBe('fight'); }
+    while (sim.snapshot().phase === 'fight') advance(sim, 1);
+    expect(sim.snapshot()).toMatchObject({phase:'round-over',roundEndReason:'knockout'});
+    expect(sim.snapshot().characters[0].attack).toBeUndefined();
+  });
   it('resolve timeout e empate sem contatos antigos repetidos', () => {
     const timeout = { ...config, match: { ...config.match, roundCount: 1, roundDurationFrames: 1, roundEndPauseFrames: 1 } };
     const tie = new Simulation(timeout); tie.stepFrame([N, N]);
@@ -192,6 +207,24 @@ describe('fundação da simulação', () => {
     tie.stepFrame([N, N]); expect(tie.snapshot().phase).toBe('match-over');
     const sim = new Simulation(timeout, [shoto, { ...shoto, maxHealth: 900 }]); sim.stepFrame([N, N]);
     expect(sim.snapshot()).toMatchObject({ roundEndReason: 'time', roundWinnerId: 'player-1' });
+  });
+  it('interrompe passos acumulados no início do próximo round antes de ler outra entrada', () => {
+    const rules = {...config, match:{...config.match,roundDurationFrames:1,roundEndPauseFrames:1}};
+    const sim = new Simulation(rules, [shoto,{...shoto,maxHealth:900}]);
+    let reads = 0;
+    sim.advance(1000, () => { reads++; return [N,N]; }, snapshot => snapshot.round === 1);
+    expect(sim.snapshot()).toMatchObject({round:2,phase:'fight',roundFramesRemaining:1});
+    expect(reads).toBe(2);
+  });
+  it('mantém o resultado por 160 quadros e aguarda mais um segundo antes do próximo round', () => {
+    const rules = {...config, match:{...config.match,roundDurationFrames:1}};
+    const sim = new Simulation(rules, [shoto,{...shoto,maxHealth:900}]);
+    sim.stepFrame([N,N]);
+    expect(sim.snapshot()).toMatchObject({phase:'round-over',round:1});
+    advance(sim, 219);
+    expect(sim.snapshot()).toMatchObject({phase:'round-over',round:1});
+    advance(sim, 1);
+    expect(sim.snapshot()).toMatchObject({phase:'fight',round:2});
   });
 });
 
@@ -208,4 +241,14 @@ it('não interpreta novo botão com outro mantido como acorde ou golpe independe
   sim.stepFrame([input('N', ['1', '2']), N]); advance(sim, 40, [input('N', ['1', '2']), N]);
   expect(sim.snapshot().characters[1].health).toBe(980);
   expect(sim.snapshot().characters[0].attack).toBeUndefined();
+});
+
+it.each([0, 1])('mantém o derrotado caído em vez de iniciar o levantamento: jogador %i', player => {
+  const sim = new Simulation(config, [shoto, shoto], { initialDistance: 64 });
+  const target = sim.snapshot().characters[player];
+  expect(target.health).toBeGreaterThan(0);
+  const internal = sim as unknown as { characters: CharacterState[] };
+  Object.assign(internal.characters[player], { health: 0, mode: 'knockdown', grounded: true, remainingStateFrames: 10 });
+  advance(sim, 60);
+  expect(sim.snapshot().characters[player]).toMatchObject({ mode: 'knockdown', remainingStateFrames: 13 });
 });

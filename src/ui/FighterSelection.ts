@@ -35,11 +35,28 @@ export class FighterSelection {
     else this.select(player, next);
   }
 
+  /** A color already confirmed by the other player on the same fighter cannot be chosen again. */
+  isPaletteLocked(player: SelectionPlayer, palette: 0 | 1): boolean {
+    const other = player === 0 ? 1 : 0;
+    return this.ready[other] && !this.random[other] && this.indices[player] === this.indices[other] && this.palettes[other] === palette;
+  }
+
   selectPalette(player: SelectionPlayer, palette: 0 | 1): void {
-    if (!this.choosingColor[player]) return;
+    if (!this.choosingColor[player] || this.isPaletteLocked(player, palette)) return;
     this.activePlayer = player;
     this.palettes[player] = palette;
     this.ready[player] = false;
+    this.separatePalettes(player);
+  }
+
+  /** Same fighter on both sides never repeats a color: the other player keeps the leftover one. */
+  private separatePalettes(player: SelectionPlayer): void {
+    const other = player === 0 ? 1 : 0;
+    if (this.random[other] || !this.choosingColor[other] || this.ready[other] || this.indices[player] !== this.indices[other]) return;
+    const free = this.palettes[player] === 0 ? 1 : 0;
+    if (this.palettes[other] === free) return;
+    this.palettes[other] = free;
+    this.ready[other] = false;
   }
 
   confirm(player: SelectionPlayer, versus: boolean): boolean {
@@ -50,7 +67,7 @@ export class FighterSelection {
     }
     if (!this.choosingColor[player]) {
       const other = player === 0 ? 1 : 0;
-      if (versus && this.ready[other] && this.indices[player] === this.indices[other])
+      if (versus && (this.choosingColor[other] || this.ready[other]) && this.indices[player] === this.indices[other])
         this.palettes[player] = this.palettes[other] === 0 ? 1 : 0;
       this.choosingColor[player] = true;
       this.ready[player] = false;

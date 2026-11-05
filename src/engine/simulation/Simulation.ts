@@ -28,6 +28,7 @@ export interface SimulationSnapshot {
   phase: 'fight' | 'round-over' | 'match-over';
   roundWins: readonly [number, number]; roundWinnerId?: string;
   roundEndedFrame?: number;
+  knockoutStartedAt?: number;
   roundEndReason?: 'knockout' | 'time' | 'draw'; matchWinnerId?: string;
   characters: readonly CharacterState[]; activeHitboxes: readonly Hitbox[];
   projectiles: readonly ProjectileState[];
@@ -62,6 +63,9 @@ const clamp = (value: number, low: number, high: number): number => Math.max(low
 const PERFECT_BLOCK_WINDOW = 3;
 
 /** Deterministic combat. Commands, resources and allowed routes belong to each fighter's data. */
+/** Remaining-frame value just above the getup poses, so the lying pose is held. */
+const DEFEATED_LYING_FRAMES = 13;
+
 export class Simulation {
   private readonly clock = new FixedStepClock();
   private readonly parsers = [new CommandParser(true, 36), new CommandParser(true, 36)];
@@ -81,6 +85,7 @@ export class Simulation {
   private roundFramesRemaining: number;
   private roundWinnerId?: string;
   private roundEndedFrame?: number;
+  private knockoutStartedAt?: number;
   private roundEndReason?: SimulationSnapshot['roundEndReason'];
   private matchWinnerId?: string;
   private transitionFrames = 0;
@@ -112,14 +117,15 @@ export class Simulation {
     this.characters = this.createCharacters();
     this.resolver = new AttackResolver((fighterId, moveId) => definitions.find(fighter => fighter.id === fighterId)?.moves.find(move => move.id === moveId));
   }
-  advance(delta: number, read: (characters: readonly CharacterState[], frame: number) => readonly FrameInput[], afterStep?: (snapshot: SimulationSnapshot) => void): void {
-    this.clock.advance(delta, () => { this.step(read(this.characters, this.frame)); if (afterStep) afterStep(this.snapshot()); });
+  advance(delta: number, read: (characters: readonly CharacterState[], frame: number) => readonly FrameInput[], afterStep?: (snapshot: SimulationSnapshot) => void | boolean): void {
+    this.clock.advance(delta, () => { this.step(read(this.characters, this.frame)); return afterStep?.(this.snapshot()); });
   }
+  hasKnockout(): boolean { return this.knockoutStartedAt !== undefined; }
   stepFrame(inputs: readonly FrameInput[]): void { this.clock.reset(); this.step(inputs); }
   snapshot(): SimulationSnapshot {
     return { frame: this.frame, elapsedFrames: this.elapsedFrames, round: this.round, roundFramesRemaining: this.roundFramesRemaining,
       hitstopFramesRemaining: this.hitstopFramesRemaining, ultimateActivation: structuredClone(this.ultimateActivation), explosions: structuredClone(this.explosions),
-      phase: this.phase, roundWins: [...this.roundWins], roundWinnerId: this.roundWinnerId, roundEndedFrame: this.roundEndedFrame,
+      phase: this.phase, roundWins: [...this.roundWins], roundWinnerId: this.roundWinnerId, roundEndedFrame: this.roundEndedFrame, knockoutStartedAt: this.knockoutStartedAt,
       roundEndReason: this.roundEndReason, matchWinnerId: this.matchWinnerId,
       characters: structuredClone(this.characters), activeHitboxes: this.phase === 'fight' ? this.resolver.activeHitboxes(this.characters, this.projectiles) : [],
       projectiles: structuredClone(this.projectiles),
@@ -159,7 +165,7 @@ export class Simulation {
     const rage = preserveRage ? this.characters.map(character => character.rage) : [0, 0];
     this.clearInputHistory(); this.characters = this.createCharacters();
     this.characters.forEach((character, index) => { character.rage = rage[index]; }); this.roundFramesRemaining = this.config.match.roundDurationFrames;
-    this.roundWinnerId = undefined; this.roundEndedFrame = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
+    this.roundWinnerId = undefined; this.roundEndedFrame = undefined; this.knockoutStartedAt = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
     this.lastHitEvents = []; this.recentContacts = []; this.comboHistory = []; this.breaker = [undefined, undefined]; this.volleyPriorHits.clear(); this.pendingThrow = undefined; this.quietFrames = 0;
     this.hitstopFramesRemaining = 0; this.ultimateActivation = undefined; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
   }
@@ -270,7 +276,11 @@ export class Simulation {
         if (!character.wakeupInvulnerabilityFrames) character.wakeupInvulnerabilityFrames = undefined;
       }
       character.hitFlashFrames = Math.max(0, character.hitFlashFrames - 1);
-      const holdLastStunFrame = character.remainingStateFrames === 1 &&
+      // A defeated fighter stays down: hold the lying frame instead of starting the getup.
+      const defeatedDown = !this.options.training && character.health === 0 && character.mode === 'knockdown' && character.grounded &&
+        character.remainingStateFrames > 0 && character.remainingStateFrames <= DEFEATED_LYING_FRAMES;
+      if (defeatedDown) character.remainingStateFrames = DEFEATED_LYING_FRAMES;
+      const holdLastStunFrame = defeatedDown || character.remainingStateFrames === 1 &&
         (character.juggle || (character.mode === 'knockdown' && !character.grounded));
       if (locked(character) && character.remainingStateFrames > 0 && !holdLastStunFrame) {
         character.remainingStateFrames -= 1;
@@ -454,6 +464,9 @@ export class Simulation {
       const attempt = this.breaker[targetIndex];
       if (attempt?.failed && attempt.combo.active) event.damage = Math.round(event.damage * 1.2);
     });
+    if (!this.options.training && this.knockoutStartedAt === undefined && this.characters.some(character => character.health === 0)) {
+      this.knockoutStartedAt = this.elapsedFrames;
+    }
     for (const event of this.lastHitEvents) {
       const index = this.characters.findIndex(character => character.characterId === event.targetId);
       if (event.outcome === 'block' && !lockedAtInput[index] && this.frame - this.guardStarted[index] < PERFECT_BLOCK_WINDOW) {
@@ -1078,7 +1091,8 @@ export class Simulation {
     if (this.characters.some(c => c.juggle || (c.knockdown && !c.grounded))) return false;
     const defeated = this.characters.filter(c => c.health === 0);
     if (defeated.length) {
-      return !this.ultimateInProgress() && defeated.every(c => c.mode !== 'hitstun' && !c.wallBouncePending && !c.pushbackMotion && !c.throwPull && !c.throwFlight) &&
+      return (this.knockoutStartedAt === undefined || this.elapsedFrames - this.knockoutStartedAt >= 30) &&
+        !this.ultimateInProgress() && this.characters.every(c => !c.attack) && defeated.every(c => c.mode !== 'hitstun' && !c.wallBouncePending && !c.pushbackMotion && !c.throwPull && !c.throwFlight) &&
         !this.pendingThrow;
     }
     return this.roundFramesRemaining === 0;
@@ -1092,7 +1106,6 @@ export class Simulation {
     if (winner !== undefined) this.roundWins[winner] += 1;
     this.characters.forEach(character => { character.attack = undefined; }); this.projectiles = []; this.ultimateActivation = undefined;
     this.phase = 'round-over'; this.roundEndedFrame = this.frame;
-    this.transitionFrames = this.roundWins.some(wins => wins >= this.config.match.roundCount)
-      ? Math.max(this.config.match.roundEndPauseFrames, 300) : this.config.match.roundEndPauseFrames;
+    this.transitionFrames = this.config.match.roundEndPauseFrames;
   }
 }

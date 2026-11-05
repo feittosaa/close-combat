@@ -91,8 +91,8 @@ export class MenuScene extends Phaser.Scene {
   }
 
   constructor() { super('MenuScene'); }
-  init(data: { fighterId?: string } = {}): void {
-    this.page = 'home'; this.mode = 'arcade'; this.transitioning = false; this.selection.reopen();
+  init(data: { fighterId?: string; selectVersus?: boolean } = {}): void {
+    this.page = data.selectVersus ? 'fighter' : 'home'; this.mode = data.selectVersus ? 'versus' : 'arcade'; this.transitioning = false; this.selection.reopen();
     this.wallpaperIndex = 0;
     this.stageIndex = selectableStages.findIndex(stage => stage.id === defaultStage.id);
     const index = this.fighters.findIndex(f => f.id === data.fighterId);

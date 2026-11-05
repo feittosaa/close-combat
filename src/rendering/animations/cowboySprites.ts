@@ -42,7 +42,7 @@ const pose = (name: string, frame: number, state: CharacterState) => {
     'dash-forward': .97 * .97, 'dash-backward': .97 * .97, 'air-dash-forward': .97, 'air-dash-backward': .97 * .98,
     'heavy-punch': .98, 'charge-heavy-punch': .98, 'combo-left-shot': .98 * .98, 'combo-right-shot': .98 * .98,
     'double-shot': 1.02, 'launch-hit': 1.1 * 1.12 * 1.02 * 1.02 * .94 * 1.03, 'air-hurt': .94,
-    'crouch-combo-shot': .9, 'crouch-light-kick': 1.04, 'heavy-kick': 1.04, 'push-away': .98,
+    'crouch-combo-shot': .9, 'crouch-light-kick': 1.04, 'heavy-kick': 1.04, 'push-away': 1,
   };
   const horizontal: Record<string, readonly number[]> = {
     'enter-taunt': [-4, -5, -5, -11, -16, -30],
@@ -139,6 +139,9 @@ export function hasCowboyExited(state: CharacterState, elapsed: number, floorY: 
   return state.facing === 'right' ? x + cowboyDisplayHeight / 2 < view.left : x - cowboyDisplayHeight / 2 > view.right;
 }
 
+/** Body length in the airborne fall frames matches the grounded lying pose (about 370 px in the 640 grid). */
+const airborneFallScale = [1.51 * .95, 1.65 * .95, 1.7 * .95] as const;
+
 export function getCowboySpritePose(state: CharacterState, frame: number) {
   if (state.fighterId !== 'cowboy') return undefined;
   if (state.attack) {
@@ -208,9 +211,12 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
       return pose('push-fall', Math.min(5, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 2)), state);
     }
     if (state.grounded && state.throwPull) return pose('grabbed', 0, state);
-    if (!state.grounded) return {...pose('fall-landing', Math.min(2, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 4)), state), scale: 1.15};
+    if (!state.grounded) {
+      const drawing = Math.min(2, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 4));
+      return {...pose('fall-landing', drawing, state), scale: airborneFallScale[drawing]};
+    }
     const remaining = state.remainingStateFrames;
-    return remaining > 12 ? {...pose('fall-landing', 5, state), scale: 2.4 * .8} : pose('knockdown', remaining > 8 ? 3 : remaining > 4 ? 4 : 5, state);
+    return remaining > 12 ? {...pose('fall-landing', 5, state), scale: 2.4 * .8 * .92} : pose('knockdown', remaining > 8 ? 3 : remaining > 4 ? 4 : 5, state);
   }
   if (state.mode === 'hitstun') {
     const bounce = state.wallBounceEffect;

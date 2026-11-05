@@ -52,6 +52,30 @@ export class FightScene extends Phaser.Scene {
   private selectedStage = defaultStage;
   private stageView?: StageView;
   private stagePresentation?: StagePresentation;
+  private introBlocked = false;
+  private knockoutAt?: number;
+  private knockoutSlowRemaining = 0;
+  private resultMenu?: HTMLElement;
+  private resultMenuIndex = 0;
+  private resultActions: { label: string; run: () => void }[] = [];
+  private readonly alignResultMenu = (): void => {
+    if (!this.resultMenu) return;
+    const rect = this.game.canvas.getBoundingClientRect();
+    const height = Math.min(rect.height, rect.width * LOGICAL_VIEW.height / LOGICAL_VIEW.width);
+    Object.assign(this.resultMenu.style, {left:`${rect.left + rect.width / 2}px`, top:`${rect.top + (rect.height - height) / 2 + height * .84}px`, maxWidth:`${rect.width * .94}px`});
+  };
+  private readonly resultMenuKey = (event: KeyboardEvent): void => {
+    if (!this.resultMenu || event.repeat) return;
+    const layouts = [getPlayerLayout(0), getPlayerLayout(1)];
+    const up = event.code === 'ArrowUp' || layouts.some(layout => event.code === layout.directions.up);
+    const down = event.code === 'ArrowDown' || layouts.some(layout => event.code === layout.directions.down);
+    const confirm = event.code === 'Enter' || layouts.some(layout => event.code === layout.buttons['1']);
+    if (up || down) {
+      event.preventDefault();
+      this.resultMenuIndex = (this.resultMenuIndex + (up ? -1 : 1) + this.resultActions.length) % this.resultActions.length;
+      this.renderResultMenu();
+    } else if (confirm) { event.preventDefault(); event.stopImmediatePropagation(); this.resultActions[this.resultMenuIndex]?.run(); }
+  };
   private ultimateOverlay?: UltimateOverlay;
   private simulation?: Simulation;
   private fightSounds?: FightSounds;
@@ -105,7 +129,7 @@ export class FightScene extends Phaser.Scene {
     }],
   ];
   private advanceOneFrame(): void {
-    if (!this.training?.paused || !this.simulation) return;
+    if (!this.training?.paused || !this.simulation || this.introBlocked) return;
     const snapshot = this.simulation.snapshot();
     this.simulation.stepFrame(this.readInputs(snapshot.characters, snapshot.frame));
     this.observeFrame(this.simulation.snapshot());
@@ -145,6 +169,7 @@ export class FightScene extends Phaser.Scene {
   }
   private readonly handleContinue = (): void => {
     if (this.tutorial && !this.paused && this.tutorial.next()) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.resetFight(); return; }
+    if (this.resultMenu) return;
     const snapshot = this.simulation?.snapshot();
     if (this.mode !== 'arcade' || !snapshot || !this.canContinueArcade(snapshot)) return;
     if (this.arcadeIndex + 1 >= arcadeOpponents(this.selectedFighter.id).length) return;
@@ -178,6 +203,45 @@ export class FightScene extends Phaser.Scene {
     if (this.tutorial) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.training!.showGeometry = false; this.training!.autoRestore = false; }
     this.bot = this.mode === 'arcade' ? new ArcadeController(this.opponentFighter, this.selectedFighter) : undefined;
     this.botRound = 0;
+    this.resultMenuIndex = 0;
+  }
+
+  private renderResultMenu(): void {
+    if (!this.resultMenu) return;
+    this.resultMenu.replaceChildren(...this.resultActions.map((action, index) => {
+      const button = document.createElement('button');
+      button.textContent = action.label;
+      button.className = index === this.resultMenuIndex ? 'selected' : '';
+      button.onclick = action.run;
+      return button;
+    }));
+  }
+
+  private showResultMenu(snapshot: SimulationSnapshot): void {
+    if (this.resultMenu || (this.mode !== 'versus' && this.mode !== 'arcade')) return;
+    const setup = { fighterId: this.selectedFighter.id, opponentId: this.opponentFighter.id, stageId: this.selectedStage.id,
+      mode: this.mode, fighterPalette: this.alternatePalettes[0] ? 1 as const : 0 as const, opponentPalette: this.alternatePalettes[1] ? 1 as const : 0 as const };
+    this.resultActions = [];
+    if (this.mode === 'arcade') {
+      this.resultActions.push({label:'CONTINUAR', run:() => {
+        if (snapshot.matchWinnerId !== 'player-1') this.scene.restart({...setup, arcadeIndex:this.arcadeIndex});
+        else if (this.arcadeIndex + 1 < arcadeOpponents(this.selectedFighter.id).length) this.scene.restart({...setup, arcadeIndex:this.arcadeIndex + 1});
+        else this.scene.start('MenuScene', {fighterId:this.selectedFighter.id});
+      }});
+    }
+    if (this.mode === 'versus') {
+      this.resultActions.push({label:'REVANCHE', run:() => this.scene.restart(setup)});
+      this.resultActions.push({label:'TROCAR PERSONAGEM', run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id, selectVersus:true})});
+    }
+    this.resultActions.push({label:'MENU PRINCIPAL', run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id})});
+    this.resultMenu = document.createElement('nav');
+    this.resultMenu.className = 'match-result-menu';
+    this.resultMenu.setAttribute('aria-label', 'Opções após a partida');
+    document.body.appendChild(this.resultMenu);
+    this.alignResultMenu();
+    this.renderResultMenu();
+    window.addEventListener('resize', this.alignResultMenu);
+    window.addEventListener('keydown', this.resultMenuKey, true);
   }
 
   preload(): void {
@@ -251,20 +315,39 @@ export class FightScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     if (!this.simulation) return;
 
-    this.fightSounds?.prepareRound(this.simulation.snapshot());
-    const intro = this.stagePresentation?.update(this.simulation.snapshot(), this.paused ? 0 : delta, getHudLogicalWidth(this.scale));
-    if (!intro && !this.paused && !this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame), snapshot => this.observeFrame(snapshot));
+    const current = this.simulation.snapshot();
+    this.fightSounds?.prepareRound(current);
+    const intro = this.stagePresentation?.update(current, this.paused ? 0 : delta, getHudLogicalWidth(this.scale));
+    if (this.introBlocked && !intro) {
+      this.keyboardInputs.forEach(input => input.clear());
+      this.commandBuffers.forEach(buffer => buffer.clear());
+    }
+    this.introBlocked = Boolean(intro);
+    if (!intro && !this.paused && !this.training?.paused) {
+      const slow = this.knockoutSlowRemaining > 0;
+      if (slow) this.knockoutSlowRemaining = Math.max(0, this.knockoutSlowRemaining - delta);
+      const round = current.round;
+      this.simulation.advance(delta * (this.training?.speed ?? 1) * (slow ? .25 : 1), (characters, frame) => this.readInputs(characters, frame), snapshot => {
+        const newlyKnockedOut = snapshot.knockoutStartedAt !== undefined && snapshot.knockoutStartedAt !== this.knockoutAt;
+        this.observeFrame(snapshot);
+        return snapshot.round === round && !newlyKnockedOut;
+      });
+    }
     this.syncViewsAndHud();
   }
 
   private observeFrame(snapshot: SimulationSnapshot): void {
+    if (snapshot.knockoutStartedAt !== undefined && snapshot.knockoutStartedAt !== this.knockoutAt) {
+      this.knockoutAt = snapshot.knockoutStartedAt; this.knockoutSlowRemaining = 2000;
+    }
+    if (snapshot.knockoutStartedAt === undefined) this.knockoutAt = undefined;
     this.fightSounds?.observe(snapshot);
     this.pendingVisualHits.push(...snapshot.hitEvents);
   }
 
   private readInputs(characters: readonly CharacterState[], frame: number): readonly FrameInput[] {
     const inputs = this.keyboardInputs.map((input, index) => input.read(characters[index]?.facing ?? (index === 0 ? 'right' : 'left')));
-    const snapshot = this.simulation?.snapshot();
+    const snapshot = this.tutorial || this.bot ? this.simulation?.snapshot() : undefined;
     const opponentInput = this.training?.opponentInput(frame, characters);
     if (opponentInput) inputs[1] = opponentInput;
     if (this.tutorial && snapshot) {
@@ -277,6 +360,7 @@ export class FightScene extends Phaser.Scene {
       inputs[1] = snapshot.phase === 'fight'
         ? this.bot.readInput(frame, characters[1], characters[0]) : neutralInput();
     }
+    if (this.simulation?.hasKnockout()) inputs.fill(neutralInput());
     this.currentInputs = inputs as [FrameInput, FrameInput];
     this.currentInputs.forEach((input, index) => {
       this.commandBuffers[index]?.push(input);
@@ -288,6 +372,7 @@ export class FightScene extends Phaser.Scene {
   private resetFight(): void {
     this.simulation?.resetMatch(this.training?.initialDistance);
     this.stagePresentation?.reset();
+    this.knockoutAt = undefined; this.knockoutSlowRemaining = 0; this.introBlocked = false;
     this.fightSounds?.reset();
     this.pendingVisualHits = [];
     this.bot?.reset();
@@ -323,6 +408,7 @@ export class FightScene extends Phaser.Scene {
   private syncViewsAndHud(): void {
     const snapshot = this.simulation?.snapshot();
     if (!snapshot) return;
+    if (snapshot.phase === 'match-over') this.showResultMenu(snapshot);
 
     this.resizeHud(getHudLogicalWidth(this.scale));
     const finalRound = snapshot.roundWins.some(wins => wins >= this.roundsToWin);
@@ -369,6 +455,9 @@ export class FightScene extends Phaser.Scene {
   }
 
   private cleanup(): void {
+    window.removeEventListener('keydown', this.resultMenuKey, true);
+    window.removeEventListener('resize', this.alignResultMenu);
+    this.resultMenu?.remove(); this.resultMenu = undefined; this.resultActions = [];
     window.removeEventListener('keydown', this.handlePause);
     this.input.keyboard?.off('keydown-ESC', this.handleEscape);
     this.pauseMenu?.destroy(); this.pauseMenu = undefined;

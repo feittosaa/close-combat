@@ -143,3 +143,7 @@ canvas {
 .combat-pause.inspection .pause-panel { clip-path: none; }
 @media (max-width: 760px) { .pause-panel { padding: 16px; } .combat-pause.match-pause .pause-panel { background: linear-gradient(135deg,#382529,#171016); } }
 @media (prefers-reduced-motion: reduce) { .combat-pause button { transition: none; } }
+
+.match-result-menu { position: fixed; z-index: 210; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: stretch; gap: .7rem; padding: .8rem; background: #100d13e8; border: 2px solid #e4c59e; }
+.match-result-menu button { border: 1px solid #e4c59e; background: #35252a; color: #fff0d2; padding: .7rem 1rem; font: bold 1rem Arial, sans-serif; cursor: pointer; }
+.match-result-menu button.selected, .match-result-menu button:hover, .match-result-menu button:focus-visible { background: #b73d32; }

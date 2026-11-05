@@ -155,6 +155,36 @@ it('plays taunt, ultimate and round cues once, with the victory cue delayed', ()
   expect(play.mock.calls.filter(call=>call[0]==='sfx-round_win')).toHaveLength(1);
 });
 
+it('plays both ultimate cues and delayed draws when both fighters activate together', () => {
+  const play = vi.fn();
+  const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
+  const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true});
+  sim.fillTrainingRage();
+  const ultimate = {direction:'N' as const,buttons:new Set<'1'>(),ultimate:true};
+  const neutral = {direction:'N' as const,buttons:new Set<'1'>()};
+  sim.stepFrame([ultimate,ultimate]);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toEqual(['player-1','player-2']);
+  sounds.observe(sim.snapshot()); sounds.observe(sim.snapshot());
+  expect(play.mock.calls.filter(call=>call[0]==='sfx-ultimate_activation')).toHaveLength(2);
+  for (let i=0;i<42;i++) { sim.stepFrame([neutral,neutral]); sounds.observe(sim.snapshot()); }
+  expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(2);
+});
+
+it('plays the same arms, draw and shot cues for each fighter when both ultimates run together', () => {
+  const play = vi.fn();
+  const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
+  const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true,initialDistance:200});
+  sim.fillTrainingRage();
+  const ultimate = {direction:'N' as const,buttons:new Set<'1'>(),ultimate:true};
+  const neutral = {direction:'N' as const,buttons:new Set<'1'>()};
+  sim.stepFrame([ultimate,ultimate]);
+  for (let i=0;i<500;i++) { sim.stepFrame([neutral,neutral]); sounds.observe(sim.snapshot()); }
+  const count = (prefix:string) => play.mock.calls.filter(call=>String(call[0]).startsWith(prefix)).length;
+  expect(count('sfx-pistol_draw')).toBe(2);
+  expect(count('sfx-magical_arms')).toBe(2);
+  expect(count('sfx-magical_shot') % 2).toBe(0);
+});
+
 it('warns at ten seconds once in normal play, but never in training', () => {
   const play = vi.fn();
   const scene = {cache:{audio:{exists:()=>true}},sound:{play}} as never;

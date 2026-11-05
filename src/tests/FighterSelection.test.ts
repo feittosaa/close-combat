@@ -26,15 +26,36 @@ describe('fighter selection', () => {
     expect(selection.palettes).toEqual([1, 0]);
   });
 
-  it('defaults a matching fighter to the other color but allows either choice', () => {
+  it('never repeats a color for a matching fighter', () => {
     const selection = new FighterSelection(1);
     selection.confirm(1, true);
     selection.confirm(1, true);
     selection.confirm(0, true);
     expect(selection.palettes).toEqual([1, 0]);
     selection.selectPalette(0, 0);
-    expect(selection.confirm(0, true)).toBe(true);
-    expect(selection.palettes).toEqual([0, 0]);
+    expect(selection.palettes).toEqual([1, 0]);
+  });
+
+  it('gives the other player the leftover color when the same fighter is picked', () => {
+    const selection = new FighterSelection(1);
+    selection.confirm(0, true);
+    selection.confirm(1, true);
+    expect(selection.palettes).toEqual([0, 1]);
+    selection.selectPalette(1, 0);
+    expect(selection.palettes).toEqual([1, 0]);
+  });
+
+  it('locks a color confirmed by one player so the other cannot pick it', () => {
+    const selection = new FighterSelection(1);
+    selection.confirm(0, true); selection.selectPalette(0, 1); selection.confirm(0, true);
+    expect(selection.isPaletteLocked(1, 1)).toBe(true);
+    expect(selection.isPaletteLocked(1, 0)).toBe(false);
+    selection.confirm(1, true);
+    expect(selection.palettes).toEqual([1, 0]);
+    selection.selectPalette(1, 1);
+    expect(selection.palettes).toEqual([1, 0]);
+    selection.move(1, 1);
+    expect(selection.palettes).toEqual([1, 0]);
   });
 
   it('moves between colors without changing the fighter and reopens selection', () => {
