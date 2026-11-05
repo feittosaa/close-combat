@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
+import type { CharacterDefinition } from '../engine/data/characters';
 import type { FrameInput, AttackButton } from '../input/types';
 
 const input = (buttons: AttackButton[] = [], rageAction = false): FrameInput => ({ direction: 'N', buttons: new Set(buttons), rageAction });
 const light = shoto.moves.find(move => move.id === 'light-punch')!;
 const heavy = shoto.moves.find(move => move.id === 'heavy-punch')!;
 const lightKick = shoto.moves.find(move => move.id === 'light-kick')!;
-const fighter = { ...shoto, moves: [light, heavy, lightKick].map(move => ({ ...move, startup: 1, activeFrames: 2, recovery: 2, hitstun: 80, hitbox: { forward: 0, yOffset: -140, width: 120, height: 140 } })) };
+const fighter: CharacterDefinition = { ...shoto, combos: shoto.combos!.map(({ startupFrames, ...recipe }) => recipe), moves: [light, heavy, lightKick].map(move => ({ ...move, startup: 1, activeFrames: 2, recovery: 2, hitstun: 80, hitbox: { forward: 0, yOffset: -140, width: 120, height: 140 } })) };
 const setup = (definition = fighter) => { const sim = new Simulation(createGameConfig(1024, 576), [definition, definition], { training: true, initialDistance: 56 }); sim.fillTrainingRage(); return sim; };
 const step = (sim: Simulation, p1 = input(), p2 = input()) => sim.stepFrame([p1, p2]);
 const hit = (sim: Simulation, button: AttackButton) => {

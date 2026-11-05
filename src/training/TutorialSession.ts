@@ -38,7 +38,7 @@ export class TutorialSession {
     if (lesson.guard) { this.passed = snapshot.hitEvents.some(event => event.targetId === self.characterId && event.outcome === 'block'); return; }
     if (!lesson.moves) return;
     // Um defensor livre encerra a tentativa: não somar ataques independentes como combo.
-    if (target.mode !== 'hitstun') this.connected = [];
+    if (target.mode !== 'hitstun' && target.mode !== 'knockdown') this.connected = [];
     for (const event of snapshot.hitEvents) {
       if (event.attackerId !== self.characterId || event.outcome !== 'hit') { this.connected = []; continue; }
       if (event.moveId !== lesson.moves[this.connected.length]) this.connected = [];
