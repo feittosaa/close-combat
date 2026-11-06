@@ -4,17 +4,16 @@ import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FrameInput } from '../input/types';
-import { RUSH_FREEZE_FRAMES } from '../engine/combat/rage';
+import { RAGE_BUFF_COST, RUSH_FREEZE_FRAMES } from '../engine/combat/rage';
 
 const input = (extra: Partial<FrameInput> = {}): FrameInput => ({ direction: 'N', buttons: new Set(), ...extra });
 const punch = shoto.moves.find(move => move.id === 'light-punch')!;
-const fixture = (category: 'basic' | 'special' | 'ultimate'): CharacterDefinition => ({
+const fixture = (category: 'basic' | 'special' | 'throw' | 'ultimate'): CharacterDefinition => ({
   ...shoto, combos: [],
   moves: [{ ...punch, category, startup: 10, activeFrames: 2, recovery: 4, damage: 100, hitbox: { forward: 0, yOffset: -140, width: 120, height: 140 } }],
 });
-const create = (definition: CharacterDefinition, rage = 600) => {
-  const sim = new Simulation(createGameConfig(1024, 576), [definition, definition], { training: true, initialDistance: 56 });
-  sim.fillTrainingRage();
+const create = (definition: CharacterDefinition, rage = 600, training = true) => {
+  const sim = new Simulation(createGameConfig(1024, 576), [definition, definition], { training, initialDistance: 56 });
   (sim as unknown as { characters: { rage: number }[] }).characters[0].rage = rage;
   return sim;
 };
@@ -36,6 +35,7 @@ describe('buffs de rage', () => {
     const sim = create(fixture('basic'));
     step(sim, input({ rageAction: true, taunt: true }));
     expect(sim.snapshot().characters[0]).toMatchObject({ rush: true, rage: 300 });
+    for (let i = 0; i < RUSH_FREEZE_FRAMES; i++) step(sim);
     expect(strike(sim)).toBe(110);
   });
   it.each([['sem provocação', { rageAction: true }, 600], ['sem barra cheia', { rageAction: true, taunt: true }, 299]] as const)('não ativa o Rush %s', (_name, action, rage) => {
@@ -53,19 +53,31 @@ describe('buffs de rage', () => {
   it('reforça o especial com E durante o golpe', () => {
     const sim = create(fixture('special'));
     expect(strike(sim, { rageAction: true })).toBe(110);
-    expect(sim.snapshot().characters[0].rage).toBe(310);
+    expect(sim.snapshot().characters[0].rage).toBe(510);
   });
   it('soma Rush e reforço de especial', () => {
     const sim = create(fixture('special'));
     step(sim, input({ rageAction: true, taunt: true }));
     for (let i = 0; i < RUSH_FREEZE_FRAMES; i++) step(sim);
     expect(strike(sim, { rageAction: true })).toBe(121);
+    expect(sim.snapshot().characters[0].rage).toBe(210);
+  });
+  it('reforça o agarrão com E gastando só 100 de rage', () => {
+    const sim = create(fixture('throw'));
+    expect(strike(sim, { rageAction: true })).toBe(110);
+    expect(sim.snapshot().characters[0].rage).toBe(510);
+  });
+  it('o reforço de especial gasta só um segmento de 100 e o rage acumula até 900', () => {
+    expect(RAGE_BUFF_COST).toBe(100);
+    expect(shoto.rage?.maximum).toBe(900);
+    const sim = create(fixture('special'), 100);
+    expect(strike(sim, { rageAction: true })).toBe(110);
     expect(sim.snapshot().characters[0].rage).toBe(10);
   });
   it('não reforça golpe básico', () => {
     const sim = create(fixture('basic'));
     expect(strike(sim, { rageAction: true })).toBe(100);
-    expect(sim.snapshot().characters[0].rage).toBe(600);
+    expect(sim.snapshot().characters[0].rage).toBe(610);
   });
   it('mantém o reforço no projétil já lançado', () => {
     const tomato = shoto.moves.find(move => move.id === 'tomato-light')!;
@@ -83,10 +95,12 @@ describe('buffs de rage', () => {
       step(sim, input({ buttons: new Set(['1']) }));
       expect(sim.snapshot().characters[0].attack?.moveId).toBe('light-punch');
     });
-    it('pausa os quadros dos dois lutadores por um instante', () => {
-      const sim = rush(), frame = sim.snapshot().frame;
+    it('congela os dois lutadores e o cronômetro durante a ativação, como a ultimate', () => {
+      const sim = create(fixture('basic'), 600, false), frame = sim.snapshot().frame, clock = sim.snapshot().roundFramesRemaining;
+      step(sim, input({ rageAction: true, taunt: true }));
+      expect(RUSH_FREEZE_FRAMES).toBeGreaterThan(18);
       for (let i = 0; i < RUSH_FREEZE_FRAMES - 1; i++) step(sim);
-      expect(sim.snapshot().frame).toBe(frame);
+      expect(sim.snapshot()).toMatchObject({ frame, roundFramesRemaining: clock });
       step(sim); expect(sim.snapshot().frame).toBe(frame + 1);
     });
     it('cancela a provocação já iniciada e aceita E depois de T', () => {

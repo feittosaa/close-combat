@@ -19,7 +19,7 @@ it.each(['shoto', 'cowboy'])('protects %s ultimate against strikes and throws wi
     const attacker = characters[0], target = characters[1];
     const move = shoto.moves.find(item => item.id === attackId)!;
     attacker.mode = 'active'; attacker.attack = { moveId: attackId, buttons: move.input.buttons, elapsedFrames: move.startup, hasHit: false };
-    target.mode = 'active'; target.attack = { moveId: fighter === 'shoto' ? 'rake-ultimate' : 'bulls-eye', buttons: ['1'], elapsedFrames: 8, hasHit: false };
+    target.mode = 'active'; target.attack = { moveId: fighter === 'shoto' ? 'rake-ultimate' : 'bulls-eye', buttons: ['1'], elapsedFrames: 4, hasHit: false };
     const before = structuredClone(target.attack);
     const [event] = resolver.resolve(characters, [neutral, neutral]);
     expect(event).toMatchObject({ armored: true, damage: Math.round(move.damage / 2), pushback: 0, defenderStunFrames: 0 });

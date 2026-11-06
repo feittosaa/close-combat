@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
-const DURATION_MS = 520;
+/** Matches the Rush freeze (RUSH_FREEZE_FRAMES at 60 fps). */
+const DURATION_MS = 800;
 const RING_COLORS = [0xff4b3a, 0xffc24a] as const;
 
 /** Onda de choque e chamas da ativação do Rage Rush; usa o relógio da cena, que segue durante a pausa de quadros. */

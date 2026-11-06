@@ -54,6 +54,31 @@ void main() {
   gl_FragColor = vec4(rgb(v) * source.a, source.a);
 }`;
 
+const lightFragment = `
+precision mediump float;
+uniform sampler2D uMainSampler;
+uniform float uExposure;
+uniform vec3 uShadow;
+uniform float uOcclusion;
+uniform float uWarmth;
+varying vec2 outTexCoord;
+void main() {
+  vec4 source = texture2D(uMainSampler, outTexCoord);
+  if (source.a < 0.001) { gl_FragColor = source; return; }
+  vec3 c = source.rgb / source.a;
+  float lum = dot(c, vec3(0.299, 0.587, 0.114));
+  // Deep tones receive the ambient occlusion: they take the stage's shadow colour and are deepened, so no hue is rotated.
+  float shade = 1.0 - smoothstep(0.05, 0.7, lum);
+  c *= mix(vec3(1.0), uShadow, shade);
+  c *= 1.0 - uOcclusion * shade;
+  c *= uExposure;
+  // Flame light only warms the lit surfaces.
+  c += vec3(1.0, 0.62, 0.3) * uWarmth * lum * lum * 0.35;
+  gl_FragColor = vec4(min(c, vec3(1.0)) * source.a, source.a);
+}`;
+
+export interface StageLightPipeline { exposure: number; shadow: readonly [number, number, number]; occlusion: number; warmth: number }
+
 export function registerCharacterPalette(scene: Phaser.Scene): void {
   if (scene.game?.renderer?.type === Phaser.WEBGL) {
     class CharacterPalettePipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
@@ -64,6 +89,19 @@ export function registerCharacterPalette(scene: Phaser.Scene): void {
         this.bindAndDraw(target);
       }
     }
-    (scene.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer).pipelines.addPostPipeline('character-palette', CharacterPalettePipeline);
+    class StageLightPostPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline implements StageLightPipeline {
+      exposure = 1; shadow: readonly [number, number, number] = [1, 1, 1]; occlusion = 0; warmth = 0;
+      constructor(game: Phaser.Game) { super({ game, fragShader: lightFragment }); }
+      onDraw(target: Phaser.Renderer.WebGL.RenderTarget): void {
+        this.set1f('uExposure', this.exposure);
+        this.set3f('uShadow', this.shadow[0], this.shadow[1], this.shadow[2]);
+        this.set1f('uOcclusion', this.occlusion);
+        this.set1f('uWarmth', this.warmth);
+        this.bindAndDraw(target);
+      }
+    }
+    const pipelines = (scene.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer).pipelines;
+    pipelines.addPostPipeline('character-palette', CharacterPalettePipeline);
+    pipelines.addPostPipeline('stage-light', StageLightPostPipeline);
   }
 }

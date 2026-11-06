@@ -1,4 +1,6 @@
 import { LOGICAL_VIEW, getHudLogicalWidth } from '../rendering/presentation';
+import { HUD_FONT } from '../ui/hudTheme';
+import { t } from '../i18n/i18n';
 import { TutorialSession } from '../training/TutorialSession';
 import { TutorialHud } from '../ui/TutorialHud';
 import { ControlSettings } from '../ui/ControlSettings';
@@ -16,7 +18,7 @@ import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
 import { getCowboyRoundEndPresentation, preloadCowboySprites } from '../rendering/animations/cowboySprites';
-import { RESULT_TITLE_END_FRAME, resultElapsed as resultElapsedFrames } from '../rendering/roundEnd';
+import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
 import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { ProjectileView } from '../rendering/ProjectileView';
 import { RushEffect } from '../rendering/RushEffect';
@@ -51,7 +53,6 @@ export class FightScene extends Phaser.Scene {
   private difficulty?: ArcadeDifficulty;
   private bot?: ArcadeController;
   private botRound = 0;
-  private arcadeInfo?: Phaser.GameObjects.Text;
   private selectedStage = defaultStage;
   private stageView?: StageView;
   private stagePresentation?: StagePresentation;
@@ -222,20 +223,19 @@ export class FightScene extends Phaser.Scene {
       mode: this.mode, arcadeRun: this.arcadeRun, difficulty: this.difficulty, fighterPalette: this.alternatePalettes[0] ? 1 as const : 0 as const, opponentPalette: this.alternatePalettes[1] ? 1 as const : 0 as const };
     this.resultActions = [];
     if (this.mode === 'arcade') {
-      this.resultActions.push({label:'CONTINUAR', run:() => {
-        if (snapshot.matchWinnerId !== 'player-1') this.scene.restart({...setup, arcadeIndex:this.arcadeIndex});
-        else if (this.arcadeIndex + 1 < this.arcadeRun!.opponents.length) this.scene.restart({...setup, arcadeIndex:this.arcadeIndex + 1});
-        else this.scene.start('MenuScene', {fighterId:this.selectedFighter.id});
-      }});
+      // Opponents and sceneries are always drawn, and the fighter cannot change: win to continue, lose to retry, or give up.
+      const won = snapshot.matchWinnerId === 'player-1', lastFight = this.arcadeIndex + 1 >= this.arcadeRun!.opponents.length;
+      if (!won) this.resultActions.push({label:t('result.rematch'), run:() => this.scene.restart({...setup, arcadeIndex:this.arcadeIndex})});
+      else if (!lastFight) this.resultActions.push({label:t('result.continue'), run:() => this.scene.restart({...setup, arcadeIndex:this.arcadeIndex + 1})});
     }
     if (this.mode === 'versus') {
-      this.resultActions.push({label:'REVANCHE', run:() => this.scene.restart(setup)});
-      this.resultActions.push({label:'TROCAR PERSONAGEM', run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id, selectVersus:true})});
+      this.resultActions.push({label:t('result.rematch'), run:() => this.scene.restart(setup)});
+      this.resultActions.push({label:t('result.changeFighter'), run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id, selectVersus:true, ...(snapshot.matchWinnerId ? { stageChooser: snapshot.matchWinnerId === 'player-1' ? 0 : 1 } : {})})});
     }
-    this.resultActions.push({label:'MENU PRINCIPAL', run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id})});
+    this.resultActions.push({label:t(this.mode === 'arcade' && this.resultActions.length ? 'result.giveUp' : 'result.mainMenu'), run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id})});
     this.resultMenu = document.createElement('nav');
     this.resultMenu.className = 'match-result-menu';
-    this.resultMenu.setAttribute('aria-label', 'Opções após a partida');
+    this.resultMenu.setAttribute('aria-label', t('result.label'));
     document.body.appendChild(this.resultMenu);
     this.alignResultMenu();
     this.renderResultMenu();
@@ -279,9 +279,6 @@ export class FightScene extends Phaser.Scene {
     this.hitboxView = new HitboxView(this);
     this.hitboxView.setVisible(this.training?.showGeometry ?? false);
     this.hudWidth = 0;
-    if (this.mode === 'arcade') this.arcadeInfo = this.add.text(width / 2, 91, '', {
-      color: '#f2d299', fontSize: '13px', align: 'center', fontStyle: 'bold',
-    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(110);
     if (this.training && !this.tutorial) {
       this.trainingKeys.forEach(([key, handler]) => {
         const listener = (event: KeyboardEvent): void => {
@@ -297,11 +294,11 @@ export class FightScene extends Phaser.Scene {
       });
     }
 
-    this.pinnedMove = this.add.text(width / 2, 155, '', { color: '#ffe0ab', backgroundColor: '#15151fdd', fontSize: '12px', wordWrap: { width: width - 80 }, align: 'center' }).setOrigin(.5, 0).setDepth(120).setScrollFactor(0);
+    this.pinnedMove = this.add.text(width / 2, 155, '', { color: '#ffe0ab', backgroundColor: '#15151fdd', fontSize: '12px', fontFamily: HUD_FONT, wordWrap: { width: width - 80 }, align: 'center' }).setOrigin(.5, 0).setDepth(120).setScrollFactor(0);
     this.pauseMenu = new PauseMenu([this.selectedFighter, this.opponentFighter], Boolean(this.training),
       () => this.togglePause(false),
       () => this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }),
-      (entry, playerIndex) => { this.pinnedMove?.setText(`TREINAR · ${formatMoveTitle(entry.title,getPlayerLayout(playerIndex))}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()), () => { this.simulation?.fillTrainingRage(); this.syncViewsAndHud(); });
+      (entry, playerIndex) => { this.pinnedMove?.setText(`${t('training.pinned', { title: formatMoveTitle(entry.title,getPlayerLayout(playerIndex)) })}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()), () => { this.simulation?.fillTrainingRage(); this.syncViewsAndHud(); });
     window.addEventListener('keydown', this.handlePause);
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
     window.addEventListener('keydown', this.handleRestart);
@@ -322,6 +319,7 @@ export class FightScene extends Phaser.Scene {
       this.commandBuffers.forEach(buffer => buffer.clear());
     }
     this.introBlocked = Boolean(intro);
+    this.simulation?.setPreFight(!this.paused && Boolean(this.stagePresentation?.moveOnly));
     if (!intro && !this.paused && !this.training?.paused) {
       const slow = this.knockoutSlowRemaining > 0;
       if (slow) this.knockoutSlowRemaining = Math.max(0, this.knockoutSlowRemaining - delta);
@@ -384,7 +382,8 @@ export class FightScene extends Phaser.Scene {
     this.training?.resetInspection();
     this.keyboardInputs.forEach((input) => input.clear());
     this.commandBuffers.forEach((buffer) => buffer.clear());
-    this.inputHistories.forEach(history => history.clear());
+    // Free training keeps the input history; only the fighters go back to the centre.
+    if (!this.training || this.tutorial) this.inputHistories.forEach(history => history.clear());
     this.currentInputs = [neutralInput(), neutralInput()];
     this.syncViewsAndHud();
   }
@@ -393,17 +392,16 @@ export class FightScene extends Phaser.Scene {
     if (Math.abs(width - this.hudWidth) < .01) return;
     this.hudWidth = width;
     this.hud?.destroy();
-    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name], this.selectedStage.name,
-      Boolean(this.training), this.mode === 'tutorial' ? 'TUTORIAL' : 'TREINO LIVRE', [this.selectedFighter.id,this.opponentFighter.id]);
+    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name],
+      Boolean(this.training), t(this.mode === 'tutorial' ? 'hud.tutorial' : 'hud.freeTraining'), [this.selectedFighter.id,this.opponentFighter.id]);
     this.trainingHud?.destroy(); this.trainingHud = undefined;
     this.inputDisplays.forEach(display => display.destroy()); this.inputDisplays = [];
     if (this.training && !this.tutorial) {
       this.trainingHud = new TrainingHud(this, width, LOGICAL_VIEW.height);
-      this.inputDisplays = [new PlayerInputDisplay(this, 18, 104, 'P1 · ENTRADAS', '#eca58a', 0),
-        new PlayerInputDisplay(this, width - 198, 104, 'P2 · ENTRADAS', '#8dd5ca', 1)];
+      this.inputDisplays = [new PlayerInputDisplay(this, 18, 104, t('training.inputs', { player: 1 }), '#eca58a', 0),
+        new PlayerInputDisplay(this, width - 198, 104, t('training.inputs', { player: 2 }), '#8dd5ca', 1)];
       this.inputDisplays.forEach(display => display.setVisible(this.training!.showInputs));
     }
-    this.arcadeInfo?.setX(width / 2);
     this.pinnedMove?.setX(width / 2);
     this.tutorialHud?.setCenter(width / 2);
   }
@@ -414,10 +412,8 @@ export class FightScene extends Phaser.Scene {
     if (snapshot.phase === 'match-over') this.showResultMenu(snapshot);
 
     this.resizeHud(getHudLogicalWidth(this.scale));
-    const resultAge = snapshot.roundEndedFrame === undefined ? -1 : snapshot.frame - snapshot.roundEndedFrame;
     const visualFrame = snapshot.roundEndedFrame ?? snapshot.frame;
-    const resultElapsed = snapshot.phase !== 'fight' && snapshot.roundWinnerId && resultAge >= 0
-      ? resultElapsedFrames(resultAge, snapshot.roundEndReason) : undefined;
+    const resultElapsed = snapshot.phase !== 'fight' && snapshot.roundWinnerId ? this.stagePresentation?.resultElapsed(snapshot.frame) : undefined;
     const cameraCharacters = resultElapsed === undefined ? snapshot.characters : snapshot.characters.map(character =>
       getCowboyRoundEndPresentation(character, resultElapsed, this.resultFloorY, this.resultGravity).state);
     this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), visualFrame);
@@ -434,16 +430,6 @@ export class FightScene extends Phaser.Scene {
     this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
-    if (this.arcadeInfo) {
-      const count = this.arcadeRun!.opponents.length;
-      let label = `ARCADE · LUTA ${this.arcadeIndex + 1}/${count} · COMPUTADOR`;
-      if (snapshot.phase === 'match-over') {
-        label = snapshot.matchWinnerId === 'player-1'
-          ? this.arcadeIndex + 1 < count ? this.canContinueArcade(snapshot) ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'VITÓRIA' : 'ARCADE CONCLUÍDO · ESC PAUSA'
-          : snapshot.matchWinnerId ? 'FIM DE JOGO · ESC PAUSA' : 'EMPATE · ESC PAUSA';
-      }
-      this.arcadeInfo.setText(label);
-    }
     if (this.training) {
       this.training.observe(snapshot);
       this.trainingHud?.update(snapshot, this.training);
@@ -452,7 +438,8 @@ export class FightScene extends Phaser.Scene {
     this.tutorialHud?.update();
     this.stageView?.syncHudCamera();
     this.inputDisplays.forEach((display, index) => {
-      display.update(this.currentInputs[index] ?? neutralInput(), this.inputHistories[index].snapshot(), snapshot.characters[index].facing);
+      display.update(this.currentInputs[index] ?? neutralInput(), this.inputHistories[index].snapshot(), snapshot.characters[index].facing,
+        snapshot.comboHistory.filter(combo => combo.attackerId === snapshot.characters[index].characterId));
     });
     this.stagePresentation?.syncCamera();
   }
@@ -475,8 +462,6 @@ export class FightScene extends Phaser.Scene {
     this.combatants.forEach((combatant) => combatant.destroy());
     this.combatants = []; this.projectileView?.destroy(); this.projectileView = undefined;
     this.rushEffect?.destroy(); this.rushEffect = undefined; this.rushActive = [false, false];
-    this.arcadeInfo?.destroy();
-    this.arcadeInfo = undefined;
     this.bot = undefined;
     this.inputDisplays.forEach((display) => display.destroy());
     this.inputDisplays = [];

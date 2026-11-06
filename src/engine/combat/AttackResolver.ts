@@ -98,7 +98,7 @@ export class AttackResolver {
       const baseDamage = !blocked && volleyStep !== undefined && damageOverride
         ? damageOverride(attacker.characterId, target.characterId, move, volleyStep)
         : move.damage * (1 + chargeSteps * (move.charge?.damagePerStep ?? 0));
-      const buff = (attacker.rush ? RAGE_BUFF_DAMAGE : 1) * (attack.empowered && move.category === 'special' ? RAGE_BUFF_DAMAGE : 1);
+      const buff = (attacker.rush ? RAGE_BUFF_DAMAGE : 1) * (attack.empowered && (move.category === 'special' || move.category === 'throw') ? RAGE_BUFF_DAMAGE : 1);
       const damage = Math.round(baseDamage * buff);
       const event: HitEvent = { attackerId: attacker.characterId, targetId: target.characterId, moveId: move.id,
         ...(volleyStep !== undefined ? { volleyStep } : {}),

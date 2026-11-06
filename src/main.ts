@@ -4,6 +4,9 @@ import './style.css';
 import { BootScene } from './scenes/BootScene';
 import { FightScene } from './scenes/FightScene';
 import { MenuScene } from './scenes/MenuScene';
+import { applyDocumentLanguage } from './i18n/i18n';
+
+applyDocumentLanguage();
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -18,7 +21,7 @@ const game = new Phaser.Game({
     postBoot: (instance: Phaser.Game): void => {
       // O canvas precisa receber foco para teclado, navegação e automação acessível.
       instance.canvas.tabIndex = 0;
-      instance.canvas.setAttribute('aria-label', 'Close Combat — jogo e menus');
+      instance.canvas.setAttribute('aria-label', 'Close Combat');
       instance.canvas.addEventListener('pointerdown', () => instance.canvas.focus());
       instance.canvas.focus();
     },

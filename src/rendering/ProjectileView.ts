@@ -74,7 +74,7 @@ export class ProjectileView {
         if (this.scene.textures.exists(key)) {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, key, '0').setDepth(11);
           this.sprites.set(p.id, sprite);
-          this.colorEffect.apply(sprite, { hue: 0, brightness: 1, alternate: alternateOwnerIds.has(p.ownerId) }, 'magic');
+          this.colorEffect.apply(sprite, { alternate: alternateOwnerIds.has(p.ownerId) }, 'magic');
           const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
           const effectFrame = age < 3 ? 0 : 1 + Math.floor((age - 3) / 4) % 5;
           sprite.setTexture(key, String(effectFrame)).setPosition(box.x + box.width / 2, box.y + box.height / 2)
@@ -92,7 +92,7 @@ export class ProjectileView {
         if (this.scene.textures.exists(key)) {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0,0,key,'0').setDepth(11);
           this.sprites.set(p.id, sprite);
-          this.colorEffect.apply(sprite, { hue: 0, brightness: 1, alternate: alternateOwnerIds.has(p.ownerId) }, 'magic');
+          this.colorEffect.apply(sprite, { alternate: alternateOwnerIds.has(p.ownerId) }, 'magic');
           const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
           const effectFrame = effect === 'dynamite' ? Math.min(5, Math.floor(age / 2)) : getTimedAnimationFrame(effectClips.shot, age);
           sprite.setTexture(key, String(effectFrame))
@@ -135,7 +135,7 @@ export class ProjectileView {
       const sprite = this.scene.add.image(x, isBlock ? bodyY : y, key, 0).setDepth(12)
         .setDisplaySize(isBlock ? 84 : 66, isBlock ? bodyHeight * 1.2 : 66)
         .setFlipX((contact.pushbackDirection ?? attacker.facing) === 'left');
-      if (purpleContact) this.colorEffect.apply(sprite, { hue: 0, brightness: 1, alternate: true }, purpleBlock && contact.perfectBlock ? 'magic-highlight' : 'magic');
+      if (purpleContact) this.colorEffect.apply(sprite, { alternate: true }, purpleBlock && contact.perfectBlock ? 'magic-highlight' : 'magic');
       this.impacts.push({ sprite, started: frame });
     }
     this.impacts = this.impacts.filter(impact => {
@@ -151,7 +151,7 @@ export class ProjectileView {
         if (this.scene.textures.exists('cowboy-effect-dynamite-blast')) {
           const sprite = this.dynamiteExplosions.get(explosion.id!) ?? this.scene.add.image(explosion.x, explosion.y, 'cowboy-effect-dynamite-blast', '0').setDepth(11);
           this.dynamiteExplosions.set(explosion.id!, sprite);
-          this.colorEffect.apply(sprite, { hue: 0, brightness: 1, alternate: Boolean(explosion.ownerId && alternateOwnerIds.has(explosion.ownerId)) }, 'magic');
+          this.colorEffect.apply(sprite, { alternate: Boolean(explosion.ownerId && alternateOwnerIds.has(explosion.ownerId)) }, 'magic');
           sprite.setTexture('cowboy-effect-dynamite-blast', String(Math.min(5, Math.floor((12 - explosion.remainingFrames) / 2))))
             .setPosition(explosion.x, explosion.y).setDisplaySize(130, 130);
         }

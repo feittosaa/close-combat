@@ -67,5 +67,5 @@ it('requires 300 rage for an ultimate', () => {
   sim.stepFrame([neutral, neutral]);
   sim.stepFrame([{ ...neutral, ultimate: true }, neutral]);
   expect(sim.snapshot().ultimateActivation?.ownerIds).toEqual(['player-1']);
-  expect(sim.snapshot().characters[0].rage).toBe(300);
+  expect(sim.snapshot().characters[0].rage).toBe(600);
 });

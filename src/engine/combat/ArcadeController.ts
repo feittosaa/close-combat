@@ -8,10 +8,8 @@ import { RAGE_SEGMENT } from './rage';
 
 export type ArcadeDifficulty = 'easy' | 'normal' | 'hard';
 export const ARCADE_DIFFICULTIES = [
-  { id: 'easy', title: 'FÁCIL', tag: 'RELAXADO', hint: 'Reage devagar, quase não defende e só usa golpes básicos.' },
-  { id: 'normal', title: 'NORMAL', tag: 'EQUILIBRADO', hint: 'Defende, pune golpes errados, encadeia e usa especiais.' },
-  { id: 'hard', title: 'DIFÍCIL', tag: 'IMPLACÁVEL', hint: 'Reage rápido, pune cada erro, cruza o ar e usa toda a rage.' },
-] as const satisfies readonly { id: ArcadeDifficulty; title: string; tag: string; hint: string }[];
+  { id: 'easy' }, { id: 'normal' }, { id: 'hard' },
+] as const satisfies readonly { id: ArcadeDifficulty }[];
 
 interface Profile {
   /** Quadros de golpe do adversário que passam até a IA reagir. */

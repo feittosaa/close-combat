@@ -6,8 +6,9 @@ import { createStageLayout } from '../rendering/stages/stageLayout';
 it('keeps ordinary training colors while differentiating the second mirrored fighter', () => {
   const stage = getStageById('sala-treino')!;
   const layout = createStageLayout(stage, 1024, 576, 488);
-  expect(characterColor(stage, layout, 500, 0, false)).toEqual({ hue: 0, brightness: 1, alternate: false });
-  expect(characterColor(stage, layout, 500, 0, true)).toEqual({ hue: 0, brightness: 1, alternate: true });
+  const neutral = { exposure: 1, shadow: [1, 1, 1], occlusion: 0, warmth: 0 };
+  expect(characterColor(stage, layout, 500, 0, false)).toEqual({ ...neutral, alternate: false });
+  expect(characterColor(stage, layout, 500, 0, true)).toEqual({ ...neutral, alternate: true });
 });
 
 it('changes clothing and magic colors while preserving skin and unrelated colors', () => {
@@ -35,12 +36,12 @@ it('changes clothing and magic colors while preserving skin and unrelated colors
 
 it('scopes canvas coloring to the fighter and updates it without wrapping repeatedly', () => {
   const context = { filter: 'none', save: vi.fn(), restore: vi.fn() };
-  const render = vi.fn((_renderer: unknown) => expect(context.filter).toBe('hue-rotate(95deg) brightness(0.9)'));
+  const render = vi.fn((_renderer: unknown) => expect(context.filter).toBe('brightness(0.9)'));
   const sprite = { scene: { sys: { game: { renderer: { type: 1 } } } }, renderCanvas: render };
   const effect = new CharacterColorEffect();
-  effect.apply(sprite as never, { hue: 0, brightness: 1 });
+  effect.apply(sprite as never, {});
   const wrapped = sprite.renderCanvas;
-  effect.apply(sprite as never, { hue: 95, brightness: .9 });
+  effect.apply(sprite as never, { exposure: .9 });
   expect(sprite.renderCanvas).toBe(wrapped);
   sprite.renderCanvas({ currentContext: context } as never);
   expect(render).toHaveBeenCalledOnce();
@@ -56,32 +57,48 @@ it('lights a fighter near a flame and follows the layer parallax', () => {
   const center = (flame.x + flame.size!.width / 2) * layout.scale;
   const near = characterColor(stage, layout, center + 50, 100, false);
   const far = characterColor(stage, layout, center + 500, 100, false);
-  expect(near.brightness).toBeGreaterThan(far.brightness);
-  expect(near.hue).toBeLessThan(far.hue);
+  expect(near.warmth).toBeGreaterThan(far.warmth!);
+  expect(far.warmth).toBeLessThan(.2);
 });
 
-it.each([['palette first', false], ['plain first, palette added later', true]] as const)('applies stage lighting after the clothing recolor (%s)', (_name, plainFirst) => {
-  const calls: string[] = [];
-  const matrix = { hue: vi.fn(), brightness: vi.fn() };
-  const effects = (name: string) => ({ addColorMatrix: vi.fn(() => { calls.push(name); return matrix; }), remove: vi.fn(() => calls.push(`remove-${name}`)) });
+const lit = { exposure: .9, shadow: [.9, .84, .8], occlusion: .2, warmth: .3 } as const;
+const webglSprite = () => {
+  const added: string[] = [], removed: string[] = [];
+  const instances: Record<string, Record<string, unknown>> = { 'character-palette': { palette: 0 }, 'stage-light': {} };
   const sprite = {
     scene: { sys: { game: { renderer: { type: 2 } } } },
-    setPostPipeline: vi.fn(() => calls.push('palette')), getPostPipeline: vi.fn(() => ({ palette: 0 })),
-    preFX: effects('pre-lighting'), postFX: effects('post-lighting'),
+    setPostPipeline: vi.fn((name: string) => { added.push(name); }), removePostPipeline: vi.fn((name: string) => { removed.push(name); }),
+    getPostPipeline: vi.fn((name: string) => instances[name]),
   };
+  return { sprite, added, removed, instances };
+};
+
+it.each([['palette first', false], ['light first, palette added later', true]] as const)('applies stage lighting after the clothing recolor (%s)', (_name, plainFirst) => {
+  const { sprite, added, removed, instances } = webglSprite();
   const effect = new CharacterColorEffect();
-  if (plainFirst) effect.apply(sprite as never, { hue: 10, brightness: .9, alternate: false }, 'bob');
-  effect.apply(sprite as never, { hue: 10, brightness: .9, alternate: true }, 'bob');
-  effect.apply(sprite as never, { hue: 20, brightness: .8, alternate: true }, 'bob');
-  expect(calls.join()).toBe(plainFirst ? 'pre-lighting,palette,remove-pre-lighting,post-lighting' : 'palette,post-lighting');
-  expect(matrix.hue).toHaveBeenLastCalledWith(20);
+  if (plainFirst) effect.apply(sprite as never, { ...lit, alternate: false }, 'bob');
+  effect.apply(sprite as never, { ...lit, alternate: true }, 'bob');
+  effect.apply(sprite as never, { ...lit, exposure: .8, alternate: true }, 'bob');
+  expect(added.join()).toBe(plainFirst ? 'stage-light,character-palette,stage-light' : 'character-palette,stage-light');
+  expect(removed.join()).toBe(plainFirst ? 'stage-light' : '');
+  expect(instances['stage-light']).toMatchObject({ exposure: .8, occlusion: .2, warmth: .3, shadow: [.9, .84, .8] });
 });
 
-it('keeps the original pre-effect lighting on sprites without a recolor', () => {
-  const pre = { addColorMatrix: vi.fn(() => ({ hue: vi.fn(), brightness: vi.fn() })), remove: vi.fn() };
-  const sprite = { scene: { sys: { game: { renderer: { type: 2 } } } }, setPostPipeline: vi.fn(), preFX: pre, postFX: { addColorMatrix: vi.fn() } };
-  new CharacterColorEffect().apply(sprite as never, { hue: 10, brightness: .9, alternate: false }, 'texas');
-  expect(pre.addColorMatrix).toHaveBeenCalledOnce();
-  expect(sprite.postFX.addColorMatrix).not.toHaveBeenCalled();
-  expect(sprite.setPostPipeline).not.toHaveBeenCalled();
+it('adds no lighting pass to sprites on a neutral stage, and never rotates hue', () => {
+  const { sprite, added } = webglSprite();
+  new CharacterColorEffect().apply(sprite as never, { alternate: false }, 'texas');
+  expect(added).toEqual([]);
+});
+
+it('keeps the Texas poncho red on every stage: lighting only multiplies and deepens, it never changes the hue', () => {
+  const poncho = [176, 32, 32] as const;
+  const hueOf = ([r, g, b]: readonly number[]) => { const max = Math.max(r, g, b), d = max - Math.min(r, g, b); return ((max === r ? (g - b) / d : max === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60 + 360) % 360; };
+  for (const id of ['fazenda', 'saloon-dia', 'saloon-noite', 'saloon']) {
+    const stage = getStageById(id)!, layout = createStageLayout(stage, 1024, 576, 488);
+    const { exposure = 1, shadow = [1, 1, 1], occlusion = 0 } = characterColor(stage, layout, 500, 0, false);
+    const lum = (.299 * poncho[0] + .587 * poncho[1] + .114 * poncho[2]) / 255, shade = 1 - Math.min(1, Math.max(0, (lum - .05) / .65)) ** 2 * (3 - 2 * Math.min(1, Math.max(0, (lum - .05) / .65)));
+    const lighted = poncho.map((value, channel) => value * (1 + (shadow[channel] - 1) * shade) * (1 - occlusion * shade) * exposure);
+    const gap = Math.abs(hueOf(lighted) - hueOf(poncho));
+    expect(Math.min(gap, 360 - gap), id).toBeLessThan(12);
+  }
 });

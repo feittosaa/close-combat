@@ -1,4 +1,4 @@
-import { RAGE_BAR, RAGE_SEGMENT, RUSH_FREEZE_FRAMES } from '../combat/rage';
+import { AIR_RECOVERY_FREEZE_FRAMES, BREAKER_FREEZE_FRAMES, BREAKER_MISS_FREEZE_FRAMES, BREAKER_PUSH_DISTANCE, BREAKER_PUSH_FRAMES, BREAKER_INVULNERABLE_FRAMES, RAGE_BAR, RAGE_BUFF_COST, RAGE_SEGMENT, RUSH_FREEZE_FRAMES } from '../combat/rage';
 import type { CharacterState, CharacterAnimationState, CharacterAttack } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import { defaultCharacter, type CharacterDefinition } from '../data/characters';
@@ -34,6 +34,8 @@ export interface SimulationSnapshot {
   projectiles: readonly ProjectileState[];
   hitEvents: readonly HitEvent[]; recentContacts: readonly CombatLogEntry[];
   comboHistory: readonly ComboRecord[];
+  /** Latest combo breaker attempt per defender, for the HUD notice. */
+  breakerNotices: readonly BreakerNotice[];
 }
 export interface SimulationOptions { training?: boolean; initialDistance?: number }
 export function volleyShotDamage(move: MoveDefinition, priorHits: number, shot: number): number {
@@ -65,6 +67,7 @@ const axis = (input: FrameInput): number => input.direction.endsWith('F') ? 1 : 
 const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
 const PERFECT_BLOCK_WINDOW = 3;
 
+export interface BreakerNotice { characterId: string; outcome: 'broken' | 'missed'; frame: number }
 /** Deterministic combat. Commands, resources and allowed routes belong to each fighter's data. */
 /** Remaining-frame value just above the getup poses, so the lying pose is held. */
 const DEFEATED_LYING_FRAMES = 13;
@@ -105,6 +108,10 @@ export class Simulation {
   private tauntHeld = [false, false];
   private rageActionHeld = [false, false];
   private rushChordHeld = [false, false];
+  /** True while the current freeze comes from a rage action (Rush, breaker, air recovery), which also stops the round clock. */
+  private clockFrozen = false;
+  private preFight = false;
+  private breakerNotices: BreakerNotice[] = [];
   private breaker: ({ guess: 'light' | 'heavy'; combo: ComboRecord; failed: boolean } | undefined)[] = [undefined, undefined];
   private previousAxis = [0, 0];
   private guardHeld = [false, false];
@@ -133,7 +140,7 @@ export class Simulation {
       roundEndReason: this.roundEndReason, matchWinnerId: this.matchWinnerId,
       characters: structuredClone(this.characters), activeHitboxes: this.phase === 'fight' ? this.resolver.activeHitboxes(this.characters, this.projectiles) : [],
       projectiles: structuredClone(this.projectiles),
-      hitEvents: this.lastHitEvents.map(event => ({ ...event })), recentContacts: this.recentContacts.map(entry => ({ frame: entry.frame, event: { ...entry.event } })), comboHistory: structuredClone(this.comboHistory) };
+      hitEvents: this.lastHitEvents.map(event => ({ ...event })), recentContacts: this.recentContacts.map(entry => ({ frame: entry.frame, event: { ...entry.event } })), comboHistory: structuredClone(this.comboHistory), breakerNotices: structuredClone(this.breakerNotices) };
   }
   clearInputHistory(): void {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
@@ -144,8 +151,11 @@ export class Simulation {
   isMatchOver(): boolean { return this.phase === 'match-over'; }
   resetMatch(distance?: number): void {
     if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
+    // Training only repositions the fighters: finished combos stay listed (closed, and old enough not to show on the HUD).
+    const keptCombos = this.options.training ? this.comboHistory.map(combo => ({ ...combo, active: false, lastFrame: Number.NEGATIVE_INFINITY })) : [];
     this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
     this.resetRound(false);
+    this.comboHistory = keptCombos;
   }
   fillTrainingRage(): void {
     if (this.options.training) this.characters.forEach(character => { character.rage = character.maxRage; });
@@ -171,9 +181,12 @@ export class Simulation {
     this.characters.forEach((character, index) => { character.rage = rage[index]; }); this.roundFramesRemaining = this.config.match.roundDurationFrames;
     this.roundWinnerId = undefined; this.roundEndedFrame = undefined; this.knockoutStartedAt = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
     this.lastHitEvents = []; this.recentContacts = []; this.comboHistory = []; this.breaker = [undefined, undefined]; this.volleyPriorHits.clear(); this.pendingThrow = undefined; this.quietFrames = 0;
-    this.hitstopFramesRemaining = 0; this.ultimateActivation = undefined; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
+    this.hitstopFramesRemaining = 0; this.clockFrozen = false; this.breakerNotices = []; this.ultimateActivation = undefined; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
   }
-  private step(inputs: readonly FrameInput[]): void {
+  /** While true fighters can move but no attack or rage input is read, and the round clock waits (the FIGHT title and the grace after it). */
+  setPreFight(locked: boolean): void { this.preFight = locked; }
+  private step(rawInputs: readonly FrameInput[]): void {
+    const inputs = this.preFight ? rawInputs.map(input => ({ ...input, buttons: new Set<AttackButton>(), ultimate: false, taunt: false, rageAction: false })) : rawInputs;
     this.elapsedFrames += 1;
     this.lastHitEvents = [];
     if (this.phase !== 'fight') {
@@ -213,10 +226,11 @@ export class Simulation {
       }
     }
     // The clock pauses until the complete ultimate sequence has finished.
-    if (!this.options.training && !this.ultimateInProgress()) this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
+    if (!this.options.training && !this.ultimateInProgress() && !this.clockFrozen && !this.preFight) this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
     if (this.hitstopFramesRemaining > 0) {
       this.characters.forEach((character, index) => this.readCommand(character, index, inputs[index] ?? neutral()));
       this.hitstopFramesRemaining -= 1;
+      if (!this.hitstopFramesRemaining) this.clockFrozen = false;
       // Keep attacks/poses intact through the last impact tick, including KO/time-up.
       if (!this.hitstopFramesRemaining && !this.options.training && this.canEndRound()) this.finishRound();
       return;
@@ -563,7 +577,7 @@ export class Simulation {
         if (event.volleyStep === sourceMove.screenVolley.shots - 1) {
           target.mode = 'knockdown';
           target.knockdown = { velocityX: 0 };
-          target.remainingStateFrames = (this.definitions[targetIndex].juggle?.getupFrames ?? 24) +
+          target.remainingStateFrames = (this.definitions[targetIndex].juggle?.getupFrames ?? 36) +
             flightFramesRemaining(target.y, target.verticalVelocity, this.config.arena.floorY, this.config.movement.gravity);
         }
       }
@@ -628,7 +642,7 @@ export class Simulation {
       if (sourceMove.knockdown && event.outcome === 'hit' && target.grounded && (!sourceMove.multiHit || event.volleyStep === sourceMove.multiHit.hits - 1)) {
         target.mode = 'knockdown'; target.attack = undefined; target.crouching = false;
         target.knockdown = { velocityX: 0 };
-        target.remainingStateFrames = Math.max(juggleRules?.getupFrames ?? 24, event.attackerRecoveryFrames);
+        target.remainingStateFrames = Math.max(juggleRules?.getupFrames ?? 36, event.attackerRecoveryFrames);
         target.wakeupInvulnerabilityFrames = target.remainingStateFrames + (juggleRules?.wakeupInvulnerabilityFrames ?? 0);
         event.defenderStunFrames = target.remainingStateFrames;
         event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
@@ -720,7 +734,11 @@ export class Simulation {
     const halfView = (this.config.arena.viewportWidth ?? this.config.arena.right - this.config.arena.left) / (2 * FIGHT_WORLD_SCALE);
     const center = clamp((this.characters[0].x + this.characters[1].x) / 2, this.config.arena.left + halfView, this.config.arena.right - halfView);
     const inset = character.fighterId === 'shoto' ? 0 : 156;
-    return character.facing === 'right' ? center - halfView + inset : center + halfView - inset;
+    const edge = character.facing === 'right' ? center - halfView + inset : center + halfView - inset;
+    // The volley starts behind both fighters, so an opponent glued to the shooter (or cornered behind the edge point) is still crossed.
+    const rearmost = Math.min(character.x, this.characters.find(other => other !== character)?.x ?? character.x);
+    const frontmost = Math.max(character.x, this.characters.find(other => other !== character)?.x ?? character.x);
+    return character.facing === 'right' ? Math.min(edge, rearmost - 60) : Math.max(edge, frontmost + 60);
   }
   private startMove(character: CharacterState, index: number, move: MoveDefinition): void {
         if (move.screenVolley) this.volleyPriorHits.delete(character.characterId);
@@ -819,7 +837,7 @@ export class Simulation {
       this.rushChordHeld[index] = chord;
       if (chord) { if (chordStarted) this.startRush(character); this.rageActionHeld[index] = true; return; }
       if (this.rageActionHeld[index]) return;
-      if (character.rage >= RAGE_BAR && this.empowerSpecial(character, index)) return;
+      if (character.rage >= RAGE_BUFF_COST && this.empowerSpecial(character, index)) return;
       if (character.rage < RAGE_SEGMENT) return;
       const combo = this.comboHistory.find(entry => entry.active && entry.targetId === character.characterId);
       const button = [...input.buttons][0];
@@ -836,6 +854,7 @@ export class Simulation {
         character.verticalVelocity = 0;
         for (const entry of this.comboHistory) if (entry.targetId === character.characterId) entry.active = false;
         this.breaker[index] = undefined;
+        this.freeze(AIR_RECOVERY_FREEZE_FRAMES);
       }
     });
     this.breaker.forEach((attempt, index) => { if (attempt && !attempt.combo.active) this.breaker[index] = undefined; });
@@ -845,16 +864,17 @@ export class Simulation {
   private startRush(character: CharacterState): void {
     if (character.rush || character.rage < RAGE_BAR || character.mode === 'hitstun' || character.mode === 'knockdown') return;
     character.rage -= RAGE_BAR; character.rush = true; character.tauntStartedFrame = undefined;
-    this.hitstopFramesRemaining = Math.max(this.hitstopFramesRemaining, RUSH_FREEZE_FRAMES);
+    this.freeze(RUSH_FREEZE_FRAMES);
   }
 
-  /** Reforço de especial (E durante o golpe): gasta uma barra cheia. */
+  /** Reforço de especial ou agarrão (E durante o golpe): gasta um segmento de 100. */
   private empowerSpecial(character: CharacterState, index: number): boolean {
     const attack = character.attack;
-    if (!attack || attack.empowered || this.move(index, attack.moveId)?.category !== 'special') return false;
+    const category = attack && this.move(index, attack.moveId)?.category;
+    if (!attack || attack.empowered || (category !== 'special' && category !== 'throw')) return false;
     attack.empowered = true;
     this.projectiles.forEach(projectile => { if (projectile.ownerId === character.characterId && projectile.attack.moveId === attack.moveId) projectile.attack.empowered = true; });
-    character.rage -= RAGE_BAR; this.rageActionHeld[index] = true;
+    character.rage -= RAGE_BUFF_COST; this.rageActionHeld[index] = true;
     return true;
   }
 
@@ -863,9 +883,22 @@ export class Simulation {
     const attempt = this.breaker[targetIndex];
     if (!attempt || attempt.failed || !attempt.combo.active || attempt.combo.attackerId !== this.characters[attackerIndex].characterId) return false;
     const strength = move.input.buttons.some(button => button === '2' || button === '4') ? 'heavy' : 'light';
-    if (attempt.guess !== strength) { attempt.failed = true; return false; }
+    if (attempt.guess !== strength) {
+      attempt.failed = true;
+      this.noteBreaker(targetIndex, 'missed'); this.freeze(BREAKER_MISS_FREEZE_FRAMES);
+      return false;
+    }
     this.breakCombo(targetIndex, this.characters[attackerIndex].characterId);
     return true;
+  }
+
+  /** Freezes both fighters, projectiles and the round clock, as rage actions do. */
+  private freeze(frames: number): void {
+    this.hitstopFramesRemaining = Math.max(this.hitstopFramesRemaining, frames); this.clockFrozen = true;
+  }
+  private noteBreaker(targetIndex: number, outcome: BreakerNotice['outcome']): void {
+    const characterId = this.characters[targetIndex].characterId;
+    this.breakerNotices = [...this.breakerNotices.filter(notice => notice.characterId !== characterId), { characterId, outcome, frame: this.frame }];
   }
 
   private breakCombo(targetIndex: number, attackerId: string): void {
@@ -887,6 +920,12 @@ export class Simulation {
     this.projectiles = this.projectiles.filter(projectile => projectile.ownerId !== attackerId);
     this.pendingCommands.fill(undefined); this.parsers.forEach(parser => parser.clear());
     this.pendingThrow = undefined;
+    // The broken attacker is shoved away, still standing and with nothing queued.
+    const away = attacker.x >= target.x ? 1 : -1;
+    attacker.pushbackMotion = { distancePerFrame: away * BREAKER_PUSH_DISTANCE / BREAKER_PUSH_FRAMES, remainingFrames: BREAKER_PUSH_FRAMES };
+    // The defender who broke the combo cannot be hit again until both fighters have repositioned.
+    target.wakeupInvulnerabilityFrames = BREAKER_INVULNERABLE_FRAMES;
+    this.noteBreaker(targetIndex, 'broken'); this.freeze(BREAKER_FREEZE_FRAMES);
   }
 
   private clearFinishedHitSequences(): void {
@@ -948,7 +987,8 @@ export class Simulation {
     if (move.screenVolley && previous.hitOutcome === 'hit' && this.characters[1-index].mode === 'hitstun') return true;
     if (previous.hitOutcome !== 'hit' || !character.hitSequence) return false;
     if (move.category === 'ultimate') return true;
-    if (!chainStrike(move)) return false;
+    // Power moves (1+2 / 3+4) may finish a chain even when they fire a projectile, like Texas's double shot.
+    if (!chainStrike(move) && move.category !== 'power') return false;
     const previousMove = this.move(index, previous.moveId)!;
     if (!chainStrike(previousMove) && !(character.fighterId === 'shoto' && previousMove.id.startsWith('flying-kick-'))) return false;
     return previous.moveId !== move.id || this.recipePrefix(index, chain);
