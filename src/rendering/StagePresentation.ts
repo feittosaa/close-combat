@@ -45,9 +45,8 @@ export class StagePresentation {
     const name = showingKnockout ? 'ko' : wasIntro ? (this.intro > FIGHT_MS + ATTACK_GRACE_MS ? 'ready' : this.intro > ATTACK_GRACE_MS ? 'fight' : undefined) : endAge >= 0 && endAge < RESULT_TITLE_END_FRAME ?
       (timedOut && (endAge < TIMEOUT_TITLE_FRAMES || !snapshot.roundWinnerId) ? 'timeout' : snapshot.roundWinnerId ?
         (snapshot.roundWinnerId === snapshot.characters[0].characterId ? (finalRound ? 'victory' : 'round-win') : (finalRound ? 'lose' : 'round-lose')) : undefined) : undefined;
-    // The fighters' result poses start on the frame the victory/defeat title first shows, after K.O. or TIME has left the screen.
-    const resultShown = name === 'victory' || name === 'round-win' || name === 'lose' || name === 'round-lose';
-    if (this.resultFrame === undefined && snapshot.roundWinnerId && (resultShown || endAge >= RESULT_TITLE_END_FRAME)) this.resultFrame = snapshot.frame;
+    // The fighters' victory/defeat poses start only once the round-win/victory title has left the screen.
+    if (this.resultFrame === undefined && snapshot.roundWinnerId && endAge >= RESULT_TITLE_END_FRAME) this.resultFrame = snapshot.frame;
     if (name) {
       this.title.setTexture(presentationKey(this.theme, name));
       const [left, top, right, bottom] = presentationBounds[`${this.theme}:${name}`];
@@ -68,7 +67,7 @@ export class StagePresentation {
     this.dimmerCamera.ignore(this.scene.children.list.filter(object => object !== this.dimmer));
   }
 
-  /** Frames since the victory/defeat title appeared this round, which is when the result poses begin. */
+  /** Frames since the victory/defeat title disappeared this round, which is when the result poses begin. */
   resultElapsed(frame: number): number | undefined { return this.resultFrame === undefined ? undefined : frame - this.resultFrame; }
   reset(): void { this.round = 0; this.intro = 0; this.moveOnlyNow = false; this.knockoutAt = undefined; this.knockoutRemaining = 0; this.resultFrame = undefined; }
   destroy(): void { this.scene.cameras?.remove(this.dimmerCamera); this.title.destroy(); this.dimmer.destroy(); }

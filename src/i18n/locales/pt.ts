@@ -253,6 +253,7 @@ const messages = {
   'tutorial.guard': 'Defender',
   'tutorial.guardHint': 'Segure trás para bloquear o soco do adversário.',
   'tutorial.comboHint': 'Conecte todos os golpes na ordem, sem deixar o adversário se recuperar.',
+  'victory.label': 'Tela de vitória de {name}',
   'result.label': 'Opções após a partida',
   'result.continue': 'CONTINUAR',
   'result.rematch': 'REVANCHE',

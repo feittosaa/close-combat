@@ -1,5 +1,7 @@
 import { expect, it, vi } from 'vitest';
 vi.mock('phaser',()=>({default:{Scene:class {},Game:vi.fn(),Scale:{FIT:0,CENTER_BOTH:0},Textures:{FilterMode:{LINEAR:0}}}}));
+const victoryScreens: unknown[][] = [];
+vi.mock('../ui/VictoryScreen', () => ({ VictoryScreen: class { constructor(...args: unknown[]) { victoryScreens.push(args.slice(1)); } destroy(): void {} } }));
 import { BootScene } from '../scenes/BootScene';
 import { FightScene } from '../scenes/FightScene';
 import { stages, stageTextureKey } from '../rendering/stages/stageCatalog';
@@ -190,4 +192,28 @@ it('starts the preparation scene before exposing any menu or fighter selection',
   const {MenuScene}=await import('../scenes/MenuScene');
   await import('../main');
   expect(Phaser.Game).toHaveBeenCalledWith(expect.objectContaining({scene:[BootScene,MenuScene,FightScene]}));
+});
+
+it.each([
+  ['PvP com vencedor', 'versus', 'player-2', 0, [['cowboy', 'Texas']]],
+  ['PvP empatado', 'versus', undefined, 0, []],
+  ['Arcade: vitória sobre o último adversário', 'arcade', 'player-1', -1, [['shoto', 'Bob']]],
+  ['Arcade: vitória no meio da jornada', 'arcade', 'player-1', 0, []],
+  ['Arcade: derrota', 'arcade', 'player-2', -1, []],
+] as const)('tela de vitória: %s', (_name, mode, winner, arcadeIndex, expected) => {
+  victoryScreens.length = 0;
+  const nav = {className:'',style:{},setAttribute:vi.fn(),replaceChildren:vi.fn(),remove:vi.fn()};
+  vi.stubGlobal('document',{createElement:(tag:string) => tag === 'nav' ? nav : ({textContent:'',className:'',onclick:undefined}),body:{appendChild:vi.fn()}});
+  vi.stubGlobal('window',{addEventListener:vi.fn(),removeEventListener:vi.fn()});
+  try {
+    const fight = new FightScene();
+    Object.assign(fight,{scene:{start:vi.fn(),restart:vi.fn()},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
+    fight.init({mode,fighterId:'shoto',opponentId:'cowboy',arcadeIndex:Math.max(0,arcadeIndex)});
+    if (arcadeIndex < 0) arcadeIndex = (fight as unknown as {arcadeRun:{opponents:string[]}}).arcadeRun.opponents.length - 1;
+    if (mode === 'arcade') fight.init({mode,fighterId:'shoto',arcadeIndex:Math.max(0,arcadeIndex),arcadeRun:(fight as unknown as {arcadeRun:object}).arcadeRun as never});
+    const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
+    snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
+    (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
+    expect(victoryScreens.map(([, id, name]) => [id, name])).toEqual(mode === 'arcade' && expected.length ? [['shoto','Bob']] : expected);
+  } finally { vi.unstubAllGlobals(); }
 });

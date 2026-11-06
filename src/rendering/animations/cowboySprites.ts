@@ -112,7 +112,8 @@ export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number
   const landing = flightFramesRemaining(state.y, state.verticalVelocity, floorY, gravity);
   const ticks = Math.min(Math.max(0, ageSinceRoundEnd), landing);
   if (ticks < landing) {
-    return { ...state, y: Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2), verticalVelocity: state.verticalVelocity + gravity * ticks };
+    // The loser falls in the knocked-down drawing, not the jump one.
+    return { ...state, ...(lost ? { mode: 'knockdown' as const } : {}), y: Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2), verticalVelocity: state.verticalVelocity + gravity * ticks };
   }
   // A loser lands already lying: plenty of knockdown time left, so neither fighter's pose reads as getting up.
   const lying = lost ? { mode: 'knockdown' as const, remainingStateFrames: LYING_HOLD_FRAMES, stateStartedFrame: Number.NEGATIVE_INFINITY } : { mode: 'neutral' as const };

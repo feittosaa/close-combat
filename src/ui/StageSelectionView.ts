@@ -33,7 +33,7 @@ const groupLabel = (group: StageGroup) => group.variants.length > 1 ? t(`stage.g
 const variantLabel = (stageId: string) => t(`stage.variant.${stageId}` as 'stage.variant.saloon');
 
 /** A composed stage preview uses the same sources and layer order as the fight. */
-function stageImage(stage: StageDefinition): SVGSVGElement {
+export function stageImage(stage: StageDefinition): SVGSVGElement {
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('viewBox', `0 0 ${stage.referenceSize.width} ${stage.referenceSize.height}`);

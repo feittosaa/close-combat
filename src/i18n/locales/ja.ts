@@ -253,6 +253,7 @@ export const ja: Locale = {
     'tutorial.guard': 'ガードする',
     'tutorial.guardHint': '後ろを押し続けて相手のパンチをガードしましょう。',
     'tutorial.comboHint': '相手に立て直す隙を与えず、すべての技を順番につなげましょう。',
+    'victory.label': '{name}の勝利画面',
     'result.label': '対戦後のメニュー',
     'result.continue': 'コンティニュー',
     'result.rematch': '再戦',

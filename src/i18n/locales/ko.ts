@@ -253,6 +253,7 @@ export const ko: Locale = {
     'tutorial.guard': '방어하기',
     'tutorial.guardHint': '뒤를 누르고 있어 상대의 펀치를 막으세요.',
     'tutorial.comboHint': '상대가 회복하지 못하게 모든 기술을 순서대로 이으세요.',
+    'victory.label': '{name} 승리 화면',
     'result.label': '대전 후 메뉴',
     'result.continue': '계속하기',
     'result.rematch': '재대결',

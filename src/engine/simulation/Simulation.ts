@@ -582,6 +582,8 @@ export class Simulation {
         }
       }
       if (event.outcome === 'hit') target.hitReaction = { level: event.contactHeight ?? sourceMove.hitLevel, startedFrame: this.frame };
+      // Taking a hit stands a crouching fighter up, so the combo can go on with a high attack; a block keeps the crouch.
+      if (event.outcome === 'hit') target.crouching = false;
       if (event.outcome === 'hit' && sourceMove.category === 'throw') target.grabbedStartedFrame = this.frame;
       if (event.outcome === 'hit' && sourceMove.category === 'throw' && attacker.fighterId === 'shoto') target.ipponReceivedFrame = this.frame;
       const current = attacker.attack;

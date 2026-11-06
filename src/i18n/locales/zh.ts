@@ -253,6 +253,7 @@ export const zh: Locale = {
     'tutorial.guard': '防御',
     'tutorial.guardHint': '按住后方向键防御对手的拳。',
     'tutorial.comboHint': '按顺序衔接所有招式，不让对手恢复。',
+    'victory.label': '{name}的胜利画面',
     'result.label': '赛后选项',
     'result.continue': '继续',
     'result.rematch': '再战',

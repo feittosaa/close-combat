@@ -253,6 +253,7 @@ export const es: Locale = {
     'tutorial.guard': 'Defenderse',
     'tutorial.guardHint': 'Mantén atrás para bloquear el puñetazo del rival.',
     'tutorial.comboHint': 'Conecta todos los golpes en orden sin dejar que el rival se recupere.',
+    'victory.label': 'Pantalla de victoria de {name}',
     'result.label': 'Opciones tras el combate',
     'result.continue': 'CONTINUAR',
     'result.rematch': 'REVANCHA',

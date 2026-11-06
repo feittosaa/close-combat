@@ -253,6 +253,7 @@ export const en: Locale = {
     'tutorial.guard': 'Block',
     'tutorial.guardHint': 'Hold back to block the opponent\'s punch.',
     'tutorial.comboHint': 'Connect every attack in order without letting the opponent recover.',
+    'victory.label': '{name} victory screen',
     'result.label': 'After-match options',
     'result.continue': 'CONTINUE',
     'result.rematch': 'REMATCH',

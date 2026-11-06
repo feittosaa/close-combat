@@ -36,7 +36,7 @@ export function createGameConfig(width: number, height: number): GameConfig {
       maxHealth: 1000,
       roundDurationFrames: 99 * 60,
       roundCount: 2,
-      roundEndPauseFrames: 220,
+      roundEndPauseFrames: 250,
     },
   };
 }
