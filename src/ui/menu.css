@@ -73,6 +73,8 @@
 .arena-portrait img, .arena-portrait svg { width: 100%; height: 100%; object-fit: cover; filter: sepia(.08); }
 .arena-portrait span { position: absolute; inset: auto 0 0; background: var(--paper-light); border-top: .1cqw solid var(--print); font: 600 .75cqw var(--font); color: var(--print); }
 .arena-portrait[aria-pressed="true"], .arena-random[aria-pressed="true"] { outline: .22cqw solid var(--red); outline-offset: .08cqw; }
+.arena-portrait.unavailable img { filter: grayscale(.85) brightness(.7); }
+.arena-unavailable { position: absolute; inset: 0 0 auto; padding: .1cqw 0; background: #0b0a0ad9; border-bottom: .08cqw solid var(--red); font: 700 .55cqw var(--font); font-style: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--cream); text-align: center; }
 .arena-empty { background: repeating-linear-gradient(135deg, transparent 0 .3cqw, #27263a22 .3cqw .42cqw), var(--paper-shade); border-color: #27263a66; }
 .arena-random { display: grid; place-items: center; margin: 0; color: var(--print); font: 800 2.2cqw/1 var(--font) !important; }
 .arena-cursors { position: absolute; inset: 0 0 auto; display: flex; justify-content: space-between; }

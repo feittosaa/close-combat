@@ -249,4 +249,14 @@ describe('animação de espera do Shoto', () => {
       expect(poses.every(pose => pose?.flipX === (facing === 'left'))).toBe(true);
     }
   });
+
+  it('Bob que perde no ar pousa deitado, sem a pose de levantar nem a de pé', async () => {
+    const { settleAfterRound } = await import('../rendering/animations/cowboySprites');
+    const base = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
+    const airborne = { ...base, y: base.y - 200, grounded: false, verticalVelocity: -3, mode: 'airborne' as const, remainingStateFrames: 0, stateStartedFrame: 540 };
+    const landed = settleAfterRound(airborne, 200, base.y, .55, true);
+    expect(landed).toMatchObject({ grounded: true, mode: 'knockdown', y: base.y });
+    expect(getShotoSpritePose(landed, 549)).toMatchObject({ texture: 'shoto-fall', frame: 5 });
+    expect(settleAfterRound(airborne, 200, base.y, .55, false).mode).toBe('neutral');
+  });
 });

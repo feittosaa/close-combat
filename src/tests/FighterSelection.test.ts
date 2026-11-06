@@ -1,12 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { FighterSelection } from '../ui/FighterSelection';
 import { fighterArt, selectionPortraitSize } from '../ui/fighterArt';
 
 it('scales visible selection portraits to the authored heights and shared baseline', () => {
   for (const [id,height] of Object.entries({cowboy:160,shoto:170,puppet:175,grappler:205})) {
-    const art = fighterArt[id], size = selectionPortraitSize(id);
-    expect(size.height * (art.bottom-art.top) / art.imageHeight).toBeCloseTo(height/205*125);
-    expect(size.bottom + size.height * (art.imageHeight-art.bottom) / art.imageHeight).toBeCloseTo(0);
+    const { top, bottom, imageHeight } = fighterArt[id] as { top: number; bottom: number; imageHeight: number }, size = selectionPortraitSize(id);
+    expect(size.height * (bottom-top) / imageHeight).toBeCloseTo(height/205*125);
+    expect(size.bottom + size.height * (imageHeight-bottom) / imageHeight).toBeCloseTo(0);
   }
 });
 
@@ -72,18 +72,45 @@ describe('fighter selection', () => {
     expect(selection.indices[0]).toBe(1);
   });
 
-  it('resolves random before opening the color menu', () => {
-    const random = vi.spyOn(Math, 'random').mockReturnValue(0.8);
-    try {
-      const selection = new FighterSelection(3);
-      selection.move(0, -1);
-      expect(selection.random[0]).toBe(true);
-      expect(selection.confirm(0, false)).toBe(false);
-      expect(selection.indices[0]).toBe(2);
-      expect(selection.random[0]).toBe(false);
-      expect(selection.choosingColor[0]).toBe(true);
-      expect(selection.confirm(0, false)).toBe(true);
-    } finally { random.mockRestore(); }
+  it('confirms the random pick at once, with no colour step and without revealing the fighter', () => {
+    const selection = new FighterSelection(3);
+    selection.move(0, -1);
+    expect(selection.random[0]).toBe(true);
+    expect(selection.confirm(0, false)).toBe(true);
+    expect(selection.ready[0]).toBe(true);
+    expect(selection.choosingColor[0]).toBe(false);
+    expect(selection.random[0]).toBe(true);           // still hidden: nothing is drawn yet
+  });
+
+  it('draws fighter and colour only when the fight starts', () => {
+    const selection = new FighterSelection(3);
+    selection.move(0, -1); selection.confirm(0, false);
+    selection.resolveRandoms(() => .8);
+    expect(selection.random[0]).toBe(false);
+    expect(selection.indices[0]).toBe(2);
+    expect(selection.palettes[0]).toBe(1);
+  });
+
+  it('versus: random and hand-picked players become ready independently, and a drawn colour never repeats a picked one', () => {
+    const selection = new FighterSelection(3);
+    selection.select(0, 1); selection.confirm(0, true); selection.confirm(0, true);   // P1: fighter 1, colour 0
+    expect(selection.ready).toEqual([true, false]);
+    selection.move(1, -1);                                                              // P2 on the random tile
+    expect(selection.confirm(1, true)).toBe(true);
+    expect(selection.ready).toEqual([true, true]);
+    selection.resolveRandoms(() => .4);                                                 // draws fighter 1, colour 0: the same as P1
+    expect(selection.indices).toEqual([1, 1]);
+    expect(selection.palettes[0]).toBe(0);
+    expect(selection.palettes[1]).toBe(1);
+  });
+
+  it('two random players draw independently and still end with different colours on the same fighter', () => {
+    const selection = new FighterSelection(1);
+    selection.move(0, -1); selection.confirm(0, true);
+    selection.move(1, -1); selection.confirm(1, true);
+    selection.resolveRandoms(() => .2);
+    expect(selection.indices).toEqual([0, 0]);
+    expect(selection.palettes[0]).not.toBe(selection.palettes[1]);
   });
 });
 

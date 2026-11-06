@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize, getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboyUltimateActivationPose } from './animations/cowboySprites';
+import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize, getCowboyRoundEndPose, getCowboySpriteLayers, getCowboyUltimateActivationPose } from './animations/cowboySprites';
 import { getShotoSpritePose, getShotoUltimatePose, getShotoResolution, shotoIdleScale, shotoSpriteScale, getShotoRoundEndPose } from './animations/shotoSprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
@@ -25,11 +25,9 @@ export class CombatantView {
   constructor(private readonly scene: Phaser.Scene, private readonly color: number) {
     this.graphics = scene.add.graphics().setDepth(11);
   }
-  sync(state: CharacterState, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number; floorY: number; gravity: number}, color: CharacterColor = {}): void {
+  sync(state: CharacterState, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number}, color: CharacterColor = {}): void {
     const depth = combatantDepth(state, frame);
     this.graphics.setDepth(depth);
-    const presentation = result ? getCowboyRoundEndPresentation(state, result.elapsed, result.floorY, result.gravity) : undefined;
-    if (presentation) state = presentation.state;
     const grabAge = state.attack?.moveId === 'throw-24' && state.attack.throwConfirmedFrame !== undefined
       ? frame - state.attack.throwConfirmedFrame : -1;
     const shotIndex = COWBOY_GRAB_SHOTS.findIndex(start => grabAge >= start && grabAge < start + 7);
@@ -72,7 +70,7 @@ export class CombatantView {
     const shotoPose = state.fighterId === 'shoto' && (!result || !result.winner || !state.grounded)
       ? activationFrame === undefined ? getShotoSpritePose(state, frame) : getShotoUltimatePose(state, activationFrame, true) : undefined;
     const shotoResult = state.fighterId === 'shoto' && result && state.grounded && (result.winner || state.mode !== 'knockdown')
-      ? getShotoRoundEndPose(state, result.winner, presentation!.elapsed) : undefined;
+      ? getShotoRoundEndPose(state, result.winner, result.elapsed) : undefined;
     const shotoDrawing = shotoResult || shotoPose;
     if (shotoDrawing && this.scene.textures?.exists(shotoDrawing.texture)) {
       const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, shotoDrawing.texture, String(shotoDrawing.frame)).setDepth(10);
@@ -86,7 +84,7 @@ export class CombatantView {
       this.dust?.setVisible(false);
       return;
     }
-    const roundEndPose = result && getCowboyRoundEndPose(state, result.winner, presentation!.elapsed);
+    const roundEndPose = result && getCowboyRoundEndPose(state, result.winner, result.elapsed);
     const layers=state.fighterId === 'cowboy' ? roundEndPose ? [roundEndPose] : activationFrame !== undefined ? [getCowboyUltimateActivationPose(state,activationFrame)] : getCowboySpriteLayers(state, frame) : [];
     if(layers.length && layers.every(pose=>this.scene.textures?.exists(pose.texture))){
       layers.forEach((pose,index)=>{
