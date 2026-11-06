@@ -14,7 +14,7 @@ export const cowboy: CharacterDefinition = {
       knockdown: { offsetX: 0, offsetY: -39, width: 157.54, height: 39 },
     },
   },
-  juggle: { initialGravityScale: 0.7, gravityScalePerHit: 0.15, maximumGravityScale: 1.6, getupFrames: 24, wakeupInvulnerabilityFrames: 8, airHitSuspensionFrames: 6 },
+  juggle: { initialGravityScale: 0.7, gravityScalePerHit: 0.15, maximumGravityScale: 1.6, getupFrames: 36, wakeupInvulnerabilityFrames: 8, airHitSuspensionFrames: 6 },
   rage: { maximum: RAGE_MAX, onHit: 10, onDamage: 15, onBlock: 5 },
   combos: [
     { id: 'crouch-anti-air-double', name: 'Antiaéreo duplo', notation: 'd+2,2', moveIds: ['anti-air','anti-air'], projectileSequence: { startupFrames: [9, 9], continueOnBlock: false } },

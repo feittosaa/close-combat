@@ -1,11 +1,11 @@
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import type { FrameInput } from '../input/types';
 import type { CharacterDefinition } from '../engine/data/characters';
+import { nameOf, t } from '../i18n/i18n';
 export interface TutorialLesson {
   part: string; title: string; instruction: string; notation: string; distance: number;
   moves?: readonly string[]; movement?: boolean; guard?: boolean;
 }
-const COMBO_PART = 'COMBOS · OPCIONAL';
 /** Tutorial único: movimento, básicos, defesa e, por fim, combos do mais leve ao mais pesado. */
 export class TutorialSession {
   index = 0; passed = false;
@@ -16,20 +16,20 @@ export class TutorialSession {
   constructor(fighter: CharacterDefinition) {
     const damage = (moveIds: readonly string[]) => moveIds.reduce((total, id) => total + (fighter.moves.find(move => move.id === id)?.damage ?? 0), 0);
     const recipes = (fighter.combos ?? []).map(combo => ({
-      id: combo.id, title: combo.name, notation: combo.notation,
+      id: combo.id, title: nameOf(`combo.${fighter.id}.${combo.id}`, combo.name), notation: combo.notation,
       moves: combo.finisherMoveId ? [...combo.moveIds.slice(0, -1), combo.finisherMoveId] : combo.moveIds,
     }));
-    const chains = (fighter.comboChains ?? []).map(chain => {
+    const chains = (fighter.comboChains ?? []).map((chain, index) => {
       const parts = chain.recipeIds.map(id => recipes.find(recipe => recipe.id === id)!);
-      return { title: chain.name, notation: parts.map(part => part.notation).join(','), moves: parts.flatMap(part => part.moves) };
+      return { title: nameOf(`chain.${fighter.id}.${index}`, chain.name), notation: parts.map(part => part.notation).join(','), moves: parts.flatMap(part => part.moves) };
     });
     const combos = [...recipes.map(({ id, ...recipe }) => recipe), ...chains].sort((a, b) => damage(a.moves) - damage(b.moves)).map(combo => ({
-      part: COMBO_PART, ...combo, instruction: 'Conecte todos os golpes na ordem, sem deixar o adversário se recuperar.', distance: 64,
+      part: t('tutorial.partCombos'), ...combo, instruction: t('tutorial.comboHint'), distance: 64,
     }));
     this.lessons = [
-      { part: 'MOVIMENTO', title: 'Mover', instruction: 'Ande para frente ou para trás para ajustar a distância.', notation: 'F / B', distance: 110, movement: true },
-      ...fighter.moves.filter(move => !move.airborne && (!move.category || move.category === 'basic')).map(move => ({ part: 'GOLPES BÁSICOS', title: move.name, instruction: 'Aproxime-se e acerte. Solte o botão antes de atacar novamente.', notation: move.input.buttons.join('+'), moves: [move.id], distance: 64 })),
-      { part: 'DEFESA', title: 'Defender', instruction: 'Segure trás para bloquear o soco do adversário.', notation: 'B', guard: true, distance: 64 },
+      { part: t('tutorial.partMovement'), title: t('tutorial.move'), instruction: t('tutorial.moveHint'), notation: 'F / B', distance: 110, movement: true },
+      ...fighter.moves.filter(move => !move.airborne && (!move.category || move.category === 'basic')).map(move => ({ part: t('tutorial.partBasics'), title: nameOf(`move.${fighter.id}.${move.id}`, move.name), instruction: t('tutorial.basicHint'), notation: move.input.buttons.join('+'), moves: [move.id], distance: 64 })),
+      { part: t('tutorial.partDefense'), title: t('tutorial.guard'), instruction: t('tutorial.guardHint'), notation: 'B', guard: true, distance: 64 },
       ...combos,
     ];
   }

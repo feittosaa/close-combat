@@ -272,7 +272,7 @@ describe('manual Shoto catalogue', () => {
     const fight=new Simulation(config);fight.fillTrainingRage();
     expect(fight.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
     const practice=create();practice.fillTrainingRage();
-    expect(practice.snapshot().characters.map(c=>c.rage)).toEqual([600,600]);
+    expect(practice.snapshot().characters.map(c=>c.rage)).toEqual([900,900]);
     const miss=create(350);command(miss,move('heavy-punch'));wait(miss);
     expect(miss.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
     const blocked=create();command(blocked,move('light-punch'));untilContact(blocked,0,input('B'));
@@ -302,8 +302,14 @@ describe('manual Shoto catalogue', () => {
     expect(last?.frameAdvantage).toBeGreaterThanOrEqual(10);
   });
 
-  it('rake ultimate has a slower startup and cannot reach a distant target', () => {
-    expect(move('rake-ultimate').startup).toBeGreaterThanOrEqual(20);
+  it('rake ultimate damages shortly after its activation ends, but cannot reach a distant target', () => {
+    const close=create(56);close.fillTrainingRage();command(close,move('rake-ultimate'));
+    let activationEnd=-1, firstHit=-1;
+    for(let i=0;i<400&&firstHit<0;i++){step(close);const snapshot=close.snapshot();
+      if(activationEnd<0&&!snapshot.ultimateActivation)activationEnd=i;
+      if(snapshot.hitEvents.some(event=>event.moveId==='rake-ultimate'))firstHit=i;}
+    expect(firstHit-activationEnd).toBeGreaterThanOrEqual(6);
+    expect(firstHit-activationEnd).toBeLessThanOrEqual(9);
     const far=create(300);far.fillTrainingRage();command(far,move('rake-ultimate'));
     let contacts=0;
     for(let i=0;i<400;i++){step(far);contacts+=far.snapshot().hitEvents.length;}
@@ -334,7 +340,7 @@ describe('manual Shoto catalogue', () => {
 
   it.each([0,1])('gates ultimate and respects guard on either side for player %i', player => {
     const sim=create(200);sim.fillTrainingRage();command(sim,move('crow-ultimate'),player);
-    expect(sim.snapshot().characters[player].rage).toBe(300);
+    expect(sim.snapshot().characters[player].rage).toBe(600);
     untilContact(sim,player,input('DB'));
     expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'crow-ultimate',outcome:'block',damage:0});
   });
@@ -370,5 +376,18 @@ describe('manual Shoto catalogue', () => {
     const far = throwBlocked(220);
     expect(far.snapshot().characters[0].attack).toBeDefined();
     expect(move(id).startup + move(id).activeFrames + move(id).recovery).toBeGreaterThanOrEqual(66);
+  });
+  it('rake ultimate ends with the victim lying on the ground and Bob recovered before it can act', () => {
+    const sim=create(56);sim.fillTrainingRage();command(sim,move('rake-ultimate'));
+    let last;
+    for(let i=0;i<400&&!last;i++){step(sim);last=sim.snapshot().hitEvents.find(event=>event.volleyStep===move('rake-ultimate').multiHit!.hits-1);}
+    expect(move('rake-ultimate').recovery).toBeGreaterThan(8);
+    for(let i=0;i<10;i++)step(sim);
+    expect(sim.snapshot().characters[1]).toMatchObject({mode:'knockdown'});
+    expect(last?.defenderStunFrames).toBeGreaterThanOrEqual(36);
+  });
+
+  it('crouching light kick recovers faster than before', () => {
+    expect(move('crouch-light-kick').recovery).toBeLessThan(18);
   });
 });

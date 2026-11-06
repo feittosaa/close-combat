@@ -38,7 +38,7 @@ it('keeps the available wallpaper on the loading screen and removes it afterward
   }
 });
 
-it.each([['KeyS','KeyJ'],['ArrowDown','Numpad1']])('lets either player return both to character selection: %s', (down, confirm) => {
+it.each([['KeyS','KeyJ',undefined],['ArrowDown','Numpad1','player-2']] as const)('lets either player return both to character selection, the winner then choosing the stage: %s', (down, confirm, winner) => {
   const nav = {className:'',style:{},setAttribute:vi.fn(),replaceChildren:vi.fn(),remove:vi.fn()};
   const buttons: {textContent:string;className:string;onclick?:()=>void}[] = [];
   const document = {createElement:vi.fn((tag:string) => {
@@ -54,16 +54,16 @@ it.each([['KeyS','KeyJ'],['ArrowDown','Numpad1']])('lets either player return bo
     Object.assign(fight,{scene:{start,restart:vi.fn()},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
     fight.init({mode:'versus',fighterId:'shoto',opponentId:'cowboy'});
     const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
-    snapshot.phase='match-over';
+    snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
     (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
     expect(buttons.slice(0,3).map(button=>button.textContent)).toEqual(['REVANCHE','TROCAR PERSONAGEM','MENU PRINCIPAL']);
     const send=(code:string)=>listeners.get('keydown')!({code,repeat:false,preventDefault:vi.fn(),stopImmediatePropagation:vi.fn()} as unknown as Event);
     send(down); send(confirm);
-    expect(start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto',selectVersus:true});
+    expect(start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto',selectVersus:true,...(winner ? {stageChooser:1} : {})});
   } finally { vi.unstubAllGlobals(); }
 });
 
-it.each(['versus','arcade'] as const)('offers the requested post-match actions in %s', mode => {
+const postMatch = (mode: 'versus' | 'arcade', winner: string | undefined, arcadeIndex = 0) => {
   const nav = {className:'',style:{},setAttribute:vi.fn(),replaceChildren:vi.fn(),remove:vi.fn()};
   const buttons: {textContent:string;className:string;onclick?:()=>void}[] = [];
   vi.stubGlobal('document',{createElement:(tag:string) => {
@@ -71,19 +71,45 @@ it.each(['versus','arcade'] as const)('offers the requested post-match actions i
     const button = {textContent:'',className:'',onclick:undefined}; buttons.push(button); return button;
   },body:{appendChild:vi.fn()}});
   vi.stubGlobal('window',{addEventListener:vi.fn(),removeEventListener:vi.fn()});
+  const fight = new FightScene();
+  const start=vi.fn(), restart=vi.fn();
+  Object.assign(fight,{scene:{start,restart},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
+  fight.init({mode,fighterId:'shoto',opponentId:'cowboy',arcadeIndex});
+  const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
+  snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
+  (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
+  return { buttons: buttons.map(button => button.textContent), click: (index: number) => buttons[index].onclick!(), start, restart, last: fight as unknown as { arcadeRun: { opponents: string[] } } };
+};
+
+it('versus offers rematch, character swap and main menu', () => {
   try {
-    const fight = new FightScene();
-    const start=vi.fn(), restart=vi.fn();
-    Object.assign(fight,{scene:{start,restart},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
-    fight.init({mode,fighterId:'shoto',opponentId:'cowboy'});
-    const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
-    snapshot.phase='match-over'; snapshot.matchWinnerId='player-2';
-    (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
-    expect(buttons.map(button=>button.textContent)).toEqual(mode === 'versus' ? ['REVANCHE','TROCAR PERSONAGEM','MENU PRINCIPAL'] : ['CONTINUAR','MENU PRINCIPAL']);
-    buttons[0].onclick!();
-    expect(restart).toHaveBeenCalledOnce();
-    buttons[buttons.length - 1].onclick!();
-    expect(start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto'});
+    const menu = postMatch('versus', 'player-2');
+    expect(menu.buttons).toEqual(['REVANCHE','TROCAR PERSONAGEM','MENU PRINCIPAL']);
+    menu.click(0); expect(menu.restart).toHaveBeenCalledOnce();
+    menu.click(2); expect(menu.start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto'});
+  } finally { vi.unstubAllGlobals(); }
+});
+
+it('arcade after a loss offers only a rematch or giving up, never a character swap', () => {
+  try {
+    const menu = postMatch('arcade', 'player-2');
+    expect(menu.buttons).toEqual(['REVANCHE','DESISTIR E VOLTAR AO MENU']);
+    menu.click(0); expect(menu.restart.mock.calls[0][0]).toMatchObject({ arcadeIndex: 0 });
+    menu.click(1); expect(menu.start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto'});
+  } finally { vi.unstubAllGlobals(); }
+});
+
+it('arcade after a win offers to continue or give up, and after the last opponent only the main menu', () => {
+  try {
+    const next = postMatch('arcade', 'player-1');
+    expect(next.buttons).toEqual(['CONTINUAR','DESISTIR E VOLTAR AO MENU']);
+    next.click(0); expect(next.restart.mock.calls[0][0]).toMatchObject({ arcadeIndex: 1 });
+  } finally { vi.unstubAllGlobals(); }
+  try {
+    const count = postMatch('arcade', 'player-2').last.arcadeRun.opponents.length;
+    vi.unstubAllGlobals();
+    const final = postMatch('arcade', 'player-1', count - 1);
+    expect(final.buttons).toEqual(['MENU PRINCIPAL']);
   } finally { vi.unstubAllGlobals(); }
 });
 

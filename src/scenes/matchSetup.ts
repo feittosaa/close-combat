@@ -1,4 +1,5 @@
-import { defaultStage, trainingStage, getStageById, selectableStages } from '../rendering/stages/stageCatalog';
+import { defaultStage, trainingStage, getStageById } from '../rendering/stages/stageCatalog';
+import { groupsFor, resolveChoice } from '../rendering/stages/stageGroups';
 import { characters, defaultCharacter, getCharacterById } from '../engine/data/characters';
 import type { ArcadeDifficulty } from '../engine/combat/ArcadeController';
 export type MatchMode = 'versus' | 'training' | 'arcade' | 'tutorial';
@@ -10,15 +11,20 @@ function shuffled<T>(items: readonly T[], random: () => number): T[] {
   for (let i = result.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [result[i], result[j]] = [result[j], result[i]]; }
   return result;
 }
-/** Enfrenta todos os personagens em ordem aleatória, cada luta em um cenário aleatório sem repetir o anterior. */
+/**
+ * Enfrenta todos os personagens em ordem aleatória, cada luta em um cenário aleatório sem repetir o anterior.
+ * A sala de treino fica bloqueada no Arcade e o Saloon conta como um cenário só: dia, noite e retrô nunca se repetem em sequência.
+ */
 export function createArcadeRun(random: () => number = Math.random): ArcadeRun {
   const opponents = shuffled(characters.map(fighter => fighter.id), random);
-  const stageIds = selectableStages.map(stage => stage.id);
+  const groups = groupsFor('arcade');
   const stagesForRun: string[] = [];
+  let previousGroup: string | undefined;
   opponents.forEach(() => {
-    const previous = stagesForRun[stagesForRun.length - 1];
-    const options = stageIds.length > 1 ? stageIds.filter(id => id !== previous) : stageIds;
-    stagesForRun.push(options[Math.floor(random() * options.length)]);
+    const options = groups.length > 1 ? groups.filter(group => group.id !== previousGroup) : groups;
+    const group = options[Math.min(options.length - 1, Math.floor(random() * options.length))];
+    previousGroup = group.id;
+    stagesForRun.push(resolveChoice({ groupId: group.id, variantId: group.variants[Math.floor(random() * group.variants.length)] }, groups, random));
   });
   return { opponents, stages: stagesForRun };
 }

@@ -153,10 +153,10 @@ it('reaches both actual panorama walls when the opponent follows, without draggi
 it.each([0,1])('allows repeated ultimates with sufficient rage: player %i', player => {
   const sim=create(56); sim.fillTrainingRage();
   command(sim,'crow-ultimate',player);
-  expect(sim.snapshot().characters[player].rage).toBe(300);
+  expect(sim.snapshot().characters[player].rage).toBe(600);
   wait(sim,350);
   command(sim,'crow-ultimate',player);
-  expect(sim.snapshot().characters[player].rage).toBe(0);
+  expect(sim.snapshot().characters[player].rage).toBe(300);
   expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
 });
 
@@ -177,9 +177,9 @@ it.each([0,1])('permits ultimates again in a real match after earning rage in a 
 
 it.each([0,1])('refills rage and permits repeated ultimates in training: player %i', player => {
   const sim=create(56);sim.fillTrainingRage();command(sim,'crow-ultimate',player);
-  expect(sim.snapshot().characters[player]).toMatchObject({rage:300});
+  expect(sim.snapshot().characters[player]).toMatchObject({rage:600});
   wait(sim,350);sim.fillTrainingRage();
-  expect(sim.snapshot().characters[player].rage).toBe(600);
+  expect(sim.snapshot().characters[player].rage).toBe(900);
   command(sim,'crow-ultimate',player);
   expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
 });
@@ -206,7 +206,7 @@ it.each([0,1])('uses the shortcut with full cinematic and the same resource rule
   step(sim,N,player);sim.fillTrainingRage();
   step(sim,{...N,ultimate:true},player);
   expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
-  expect(sim.snapshot().characters[player].rage).toBe(300);
+  expect(sim.snapshot().characters[player].rage).toBe(600);
   expect(sim.snapshot().projectiles).toHaveLength(0);
 });
 

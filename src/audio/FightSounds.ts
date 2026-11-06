@@ -4,6 +4,7 @@ import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { getCharacterById } from '../engine/data/characters';
 import { getCowboySpriteLayers } from '../rendering/animations/cowboySprites';
 import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
+import { effectGain } from './audioSettings';
 
 const files = import.meta.glob<string>('../assets/audio/effects/*.wav', { eager: true, query: '?url', import: 'default' });
 const variants = {
@@ -97,7 +98,7 @@ export class FightSounds {
     const name = choices[selectSoundVariant(choices.length) - 1];
     const key = `sfx-${name}`;
     const seek = impactSeek[name];
-    if (this.scene.cache.audio.exists(key)) this.scene.sound.play(key, { volume: volumes[effect] ?? 1, ...(seek ? { seek } : {}) });
+    if (this.scene.cache.audio.exists(key)) this.scene.sound.play(key, { volume: effectGain(volumes[effect] ?? 1), ...(seek ? { seek } : {}) });
   }
   prepareRound(snapshot: SimulationSnapshot): void {
     if (this.training || snapshot.round === this.announcedRound) return;

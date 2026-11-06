@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { t } from '../i18n/i18n';
+import { loadInterfaceFonts } from '../ui/hudTheme';
 import menuBackground from '../../assets/art/wallpapers/cowboy-menu.png';
 import bobMenuBackground from '../../assets/art/wallpapers/bob-menu.png';
 import menuReference from '../../assets/art/menu/patio-solar.png';
@@ -27,7 +29,7 @@ export class BootScene extends Phaser.Scene {
       this.loadingScreen = document.createElement('div');
       this.loadingScreen.className = 'loading-screen';
       this.loadingScreen.setAttribute('role', 'status');
-      this.loadingScreen.textContent = 'PREPARANDO A ARENA…';
+      this.loadingScreen.textContent = t('boot.loading');
       document.body.appendChild(this.loadingScreen);
     }
     const advance = () => {
@@ -52,8 +54,13 @@ export class BootScene extends Phaser.Scene {
   }
   create(): void {
     if (this.wallpaperTimer !== undefined) window.clearInterval(this.wallpaperTimer);
-    this.loadingScreen?.remove();
-    this.loadingScreen = undefined;
-    this.scene.start('MenuScene');
+    // Canvas text (HUD, tutorial) uses the menu faces: start once they are ready.
+    const start = () => {
+      this.loadingScreen?.remove();
+      this.loadingScreen = undefined;
+      this.scene.start('MenuScene');
+    };
+    const fonts = loadInterfaceFonts();
+    if (fonts) void fonts.then(start); else start();
   }
 }

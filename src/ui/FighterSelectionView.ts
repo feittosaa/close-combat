@@ -1,4 +1,5 @@
 import { fighterArt } from './fighterArt';
+import { t } from '../i18n/i18n';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FighterSelection, SelectionPlayer } from './FighterSelection';
 
@@ -40,12 +41,13 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
         : [['#50683b', '#e4b34e', '#714a2d'], ['#d22529', '#e4b34e', '#714a2d']];
       const palette = node('div', 'arena-palettes');
       palette.setAttribute('role', 'group');
-      palette.setAttribute('aria-label', `Cores de ${entry.name}, jogador ${player + 1}`);
+      palette.setAttribute('aria-label', t('fighter.colorsOf', { name: entry.name, player: player + 1 }));
       colors.forEach((color, index) => {
         const swatch = button('', 'arena-palette', () => { selection.selectPalette(player, index as 0 | 1); options.refresh(); });
-        swatch.setAttribute('aria-label', index === 0 ? 'Cor original' : 'Cor alternativa');
+        const colorName = t(index === 0 ? 'fighter.originalColor' : 'fighter.alternateColor');
+        swatch.setAttribute('aria-label', colorName);
         swatch.setAttribute('aria-pressed', String(selection.palettes[player] === index));
-        if (selection.isPaletteLocked(player, index as 0 | 1)) { swatch.disabled = true; swatch.setAttribute('aria-label', `${index === 0 ? 'Cor original' : 'Cor alternativa'} indisponível`); }
+        if (selection.isPaletteLocked(player, index as 0 | 1)) { swatch.disabled = true; swatch.setAttribute('aria-label', t('fighter.colorUnavailable', { color: colorName })); }
         swatch.style.setProperty('--palette-main', color[0]);
         swatch.style.setProperty('--palette-accent', color[1]);
         swatch.style.setProperty('--palette-detail', color[2]);
@@ -53,13 +55,14 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
       });
       name.append(palette);
     }
-    name.append(node('span', 'arena-eyebrow', player === 1 && !versus ? 'ADVERSÁRIO' : `PLAYER 0${player + 1}`), node('h1', '', entry.name));
-    if (selectOpponent) name.append(button(selection.ready[player] ? `${player === 1 && !versus ? 'ADVERSÁRIO' : `P${player + 1}`} · PRONTO` : `ESCOLHER ${player === 1 && !versus ? 'ADVERSÁRIO' : `P${player + 1}`}`, 'arena-player-switch', () => { selection.activePlayer = player; options.refresh(); }));
+    const who = player === 1 && !versus ? t('fighter.opponent') : `P${player + 1}`;
+    name.append(node('span', 'arena-eyebrow', player === 1 && !versus ? t('fighter.opponent') : t('fighter.player', { player: player + 1 })), node('h1', '', entry.name));
+    if (selectOpponent) name.append(button(t(selection.ready[player] ? 'fighter.ready' : 'fighter.choose', { who }), 'arena-player-switch', () => { selection.activePlayer = player; options.refresh(); }));
     root.append(hero, name);
   }
   const panel = node('div', 'arena-selection');
-  panel.append(node('span', 'arena-eyebrow', options.modeTitle), node('h2', '', versus ? `ESCOLHA DE P${selection.activePlayer + 1}` : selectOpponent && selection.activePlayer === 1 ? 'ESCOLHA O ADVERSÁRIO' : 'ESCOLHA SEU LUTADOR'));
-  const grid = node('div', 'arena-roster'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'Personagens disponíveis');
+  panel.append(node('span', 'arena-eyebrow', options.modeTitle), node('h2', '', versus ? t('fighter.choiceOf', { player: selection.activePlayer + 1 }) : t(selectOpponent && selection.activePlayer === 1 ? 'fighter.chooseOpponent' : 'fighter.chooseFighter')));
+  const grid = node('div', 'arena-roster'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', t('fighter.roster'));
   fighters.forEach((entry, index) => {
     const tile = button('', 'arena-portrait', () => { selection.select(selection.activePlayer, index); options.refresh(); });
     tile.setAttribute('aria-label', entry.name); tile.setAttribute('aria-pressed', String(!selection.random[selection.activePlayer] && index === selection.indices[selection.activePlayer]));
@@ -80,11 +83,11 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
       const heading = root.querySelector(`.arena-fighter-name.${side} h1`);
       const status = root.querySelector('.arena-opponent');
       if (hero) hero.src = art.background;
-      if (heading) heading.textContent = `${art.name} · EM DESENVOLVIMENTO`;
-      if (status) status.textContent = `VISUALIZANDO ${art.name.toUpperCase()} · INDISPONÍVEL PARA LUTA`;
+      if (heading) heading.textContent = t('fighter.inDevelopment', { name: art.name });
+      if (status) status.textContent = t('fighter.previewing', { name: art.name.toUpperCase() });
     });
-    tile.setAttribute('aria-label', `${art.name} · em desenvolvimento`);
-    tile.title = 'Ver arte · indisponível para luta';
+    tile.setAttribute('aria-label', t('fighter.inDevelopmentLabel', { name: art.name }));
+    tile.title = t('fighter.viewArt');
     tile.append(fighterPortrait(id, true), node('span', '', art.name));
     grid.append(tile);
   }
@@ -94,7 +97,7 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
     grid.append(empty);
   }
   const random = button('?', 'arena-random', () => { selection.selectRandom(selection.activePlayer); options.refresh(); });
-  random.setAttribute('aria-label', 'Personagem aleatório');
+  random.setAttribute('aria-label', t('fighter.random'));
   random.setAttribute('aria-pressed', String(selection.random[selection.activePlayer]));
   if (versus) {
     const cursors = node('div', 'arena-cursors');
@@ -102,10 +105,10 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
     random.append(cursors);
   }
   const status = node('p', 'arena-opponent', selectOpponent
-    ? `P1 ${selection.ready[0] ? 'PRONTO' : 'ESCOLHENDO'} · ${versus ? 'P2' : 'ADVERSÁRIO'} ${selection.ready[1] ? 'PRONTO' : 'ESCOLHENDO'}`
+    ? `P1 ${t(selection.ready[0] ? 'fighter.statusReady' : 'fighter.statusChoosing')} · ${versus ? 'P2' : t('fighter.opponent')} ${t(selection.ready[1] ? 'fighter.statusReady' : 'fighter.statusChoosing')}`
     : `P2 · ${options.opponent.name} · ${options.modeTitle}`);
   status.setAttribute('role', 'status');
   grid.append(random);
-  panel.append(grid, status, button(selection.choosingColor[selection.activePlayer] ? 'CONFIRMAR COR  →' : selectOpponent && selection.activePlayer === 1 && !versus ? 'CONFIRMAR ADVERSÁRIO  →' : versus ? `CONFIRMAR P${selection.activePlayer + 1}  →` : 'CONFIRMAR PERSONAGEM  →', 'arena-confirm', options.confirm), button('← VOLTAR', 'arena-back', options.back));
+  panel.append(grid, status, button(selection.choosingColor[selection.activePlayer] ? t('fighter.confirmColor') : selectOpponent && selection.activePlayer === 1 && !versus ? t('fighter.confirmOpponent') : versus ? t('fighter.confirmPlayer', { player: selection.activePlayer + 1 }) : t('fighter.confirmFighter'), 'arena-confirm', options.confirm), button(t('common.backArrow'), 'arena-back', options.back));
   root.append(panel);
 }

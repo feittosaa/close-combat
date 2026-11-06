@@ -1,25 +1,30 @@
 import type Phaser from 'phaser';
 import type { StageDefinition } from './stages/StageDefinition';
 import type { StageLayout } from './stages/stageLayout';
+import type { StageLightPipeline } from './palettePipeline';
 
 export type Palette = 'none' | 'bob' | 'texas' | 'magic' | 'magic-highlight';
-export interface CharacterColor { hue: number; brightness: number; alternate?: boolean }
+/**
+ * Stage lighting for a fighter: `exposure` scales the whole figure, `shadow` is the ambient colour taken by its dark tones,
+ * `occlusion` deepens them and `warmth` is the flame light on the lit surfaces. Nothing rotates hue, so clothing keeps its colour.
+ */
+export interface CharacterColor { exposure?: number; shadow?: readonly [number, number, number]; occlusion?: number; warmth?: number; alternate?: boolean }
 type CanvasImage = Phaser.GameObjects.Image & { renderCanvas: (...args: [Phaser.Renderer.Canvas.CanvasRenderer, ...unknown[]]) => void };
 const smoothstep = (a: number, b: number, value: number): number => {
   const t = Math.max(0, Math.min(1, (value - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
 
-/** Provisional scene grading; lights follow their scenery layer's parallax. */
+/** Provisional scene lighting; lights follow their scenery layer's parallax. */
 export function characterColor(stage: StageDefinition, layout: StageLayout, x: number, cameraScrollX: number, alternate: boolean): CharacterColor {
-  const ambient: Record<string, CharacterColor> = {
-    'sala-treino': { hue: 0, brightness: 1 },
-    'fazenda': { hue: -4, brightness: 1.03 },
-    'saloon-dia': { hue: -5, brightness: 1.03 },
-    'saloon-noite': { hue: 8, brightness: .91 },
-    'saloon': { hue: -8, brightness: .94 },
+  const ambient: Record<string, Required<Omit<CharacterColor, 'alternate' | 'warmth'>>> = {
+    'sala-treino': { exposure: 1, shadow: [1, 1, 1], occlusion: 0 },
+    'fazenda': { exposure: 1.03, shadow: [.9, .94, 1], occlusion: .12 },
+    'saloon-dia': { exposure: 1.03, shadow: [.96, .91, .86], occlusion: .14 },
+    'saloon-noite': { exposure: .91, shadow: [.8, .82, 1], occlusion: .26 },
+    'saloon': { exposure: .95, shadow: [.92, .84, .8], occlusion: .2 },
   };
-  const base = ambient[stage.id] ?? { hue: 0, brightness: 1 };
+  const base = ambient[stage.id] ?? ambient['sala-treino'];
   let light = 0;
   for (const layer of stage.layers) {
     if (!layer.id.startsWith('chama-')) continue;
@@ -30,7 +35,7 @@ export function characterColor(stage: StageDefinition, layout: StageLayout, x: n
       light = Math.max(light, Math.max(0, 1 - Math.abs(x - position) / (200 * layout.scale)));
     }
   }
-  return { hue: base.hue - 5 * light, brightness: base.brightness + .09 * light, alternate };
+  return { ...base, warmth: light, alternate };
 }
 
 /** Change selected chromatic ranges only, retaining shading and transparency. */
@@ -66,12 +71,12 @@ function hsvToRgb(hue: number, value: number, saturation: number): [number, numb
   return rgb.map(channel => channel + m) as [number, number, number];
 }
 
-/** Stage grading is independent from the selective alternate palette and always runs after it, like a filter over the recolored sprite. */
+/** Stage lighting is independent from the selective alternate palette and always runs after it, like a filter over the recolored sprite. */
 export class CharacterColorEffect {
-  private readonly matrices = new WeakMap<Phaser.GameObjects.Image, { matrix: Phaser.FX.ColorMatrix; post: boolean }>();
   private readonly canvasColors = new WeakMap<Phaser.GameObjects.Image, CharacterColor>();
   private readonly canvasPalettes = new WeakMap<Phaser.GameObjects.Image, Palette>();
   private readonly pipelines = new WeakMap<Phaser.GameObjects.Image, { palette: number }>();
+  private readonly lights = new WeakMap<Phaser.GameObjects.Image, StageLightPipeline>();
   apply(sprite: Phaser.GameObjects.Image, color: CharacterColor, palette: Palette = 'none'): void {
     palette = color.alternate ? palette : 'none';
     if (sprite.scene?.sys.game.renderer.type === 1) {
@@ -85,7 +90,7 @@ export class CharacterColorEffect {
           const selected = this.canvasPalettes.get(sprite)!;
           const context = renderer.currentContext;
           context.save();
-          context.filter = `hue-rotate(${current.hue}deg) brightness(${current.brightness})`;
+          context.filter = `brightness(${current.exposure ?? 1})`;
           if (selected === 'none') {
             try { render.call(image, renderer, ...args); } finally { context.restore(); }
             return;
@@ -119,23 +124,24 @@ export class CharacterColorEffect {
       return;
     }
     if (palette !== 'none' && !this.pipelines.has(sprite)) {
+      // The palette must come first in the chain: a light added earlier is re-added behind it.
+      const relight = this.lights.has(sprite);
+      if (relight) { sprite.removePostPipeline('stage-light'); this.lights.delete(sprite); }
       sprite.setPostPipeline('character-palette');
       const pipeline = sprite.getPostPipeline('character-palette') as unknown as { palette: number } | undefined;
       if (pipeline) this.pipelines.set(sprite, pipeline);
     }
     const pipeline = this.pipelines.get(sprite);
     if (pipeline) pipeline.palette = palette === 'bob' ? 1 : palette === 'texas' ? 2 : palette === 'magic' ? 3 : palette === 'magic-highlight' ? 4 : 0;
-    // Recolored sprites light after the palette (post effect, like a filter); plain sprites keep their original pre effect.
-    const post = this.pipelines.has(sprite);
-    let entry = this.matrices.get(sprite);
-    if (entry && entry.post !== post) {
-      (entry.post ? sprite.postFX : sprite.preFX)?.remove(entry.matrix as unknown as Phaser.FX.Controller);
-      entry = undefined;
+    if (!this.lights.has(sprite) && isLit(color)) {
+      sprite.setPostPipeline('stage-light');
+      const light = sprite.getPostPipeline('stage-light') as unknown as StageLightPipeline | undefined;
+      if (light) this.lights.set(sprite, light);
     }
-    const effects = post ? sprite.postFX : sprite.preFX;
-    if (!effects) return;
-    if (!entry) { entry = { matrix: effects.addColorMatrix(), post }; this.matrices.set(sprite, entry); }
-    entry.matrix.hue(color.hue);
-    entry.matrix.brightness(color.brightness, true);
+    const light = this.lights.get(sprite);
+    if (light) Object.assign(light, { exposure: color.exposure ?? 1, shadow: color.shadow ?? [1, 1, 1], occlusion: color.occlusion ?? 0, warmth: color.warmth ?? 0 });
   }
 }
+
+const isLit = (color: CharacterColor): boolean =>
+  (color.exposure ?? 1) !== 1 || (color.occlusion ?? 0) > 0 || (color.warmth ?? 0) > 0 || (color.shadow ?? [1, 1, 1]).some(channel => channel !== 1);
