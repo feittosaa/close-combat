@@ -149,7 +149,7 @@ it('prepares every match resource before releasing the menu; every mode starts w
   const start=(boot as unknown as {scene:{start:ReturnType<typeof vi.fn>}}).scene.start;
   expect(start).toHaveBeenCalledWith('MenuScene');
   load.image.mockClear();load.atlas.mockClear();
-  for(const mode of ['training','tutorial','combo-tutorial','versus','arcade'] as MatchMode[]) {
+  for(const mode of ['training','tutorial','versus','arcade'] as MatchMode[]) {
     for(const stage of stages) {
       const fight=new FightScene();Object.assign(fight,shared);
       fight.init({mode,stageId:stage.id,fighterId:'shoto'});fight.preload();

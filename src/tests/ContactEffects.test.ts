@@ -62,7 +62,7 @@ it('colors only the alternate Texas projectile purple', () => {
     const pipeline = { palette: 0 };
     const value = { setDepth: vi.fn(), setTexture: vi.fn(), setPosition: vi.fn(), setDisplaySize: vi.fn(),
       setFlipX: vi.fn(), setAngle: vi.fn(), setVisible: vi.fn(), destroy: vi.fn(),
-      setPostPipeline: vi.fn(), getPostPipeline: vi.fn(() => pipeline), preFX: { addColorMatrix: () => matrix } };
+      setPostPipeline: vi.fn(), getPostPipeline: vi.fn(() => pipeline), preFX: { addColorMatrix: () => matrix, remove: vi.fn() }, postFX: { addColorMatrix: () => matrix, remove: vi.fn() } };
     [value.setDepth, value.setTexture, value.setPosition, value.setDisplaySize, value.setFlipX, value.setAngle,
       value.setVisible, value.destroy, value.setPostPipeline].forEach(fn => fn.mockReturnValue(value));
     return { value, pipeline };
@@ -93,7 +93,7 @@ it('colors blocked projectiles by attacker while retaining perfect-block feedbac
   const makeSprite = () => {
     const pipeline = { palette: 0 };
     const value = { setDepth: vi.fn(), setDisplaySize: vi.fn(), setFlipX: vi.fn(), setFrame: vi.fn(), destroy: vi.fn(),
-      setPostPipeline: vi.fn(), getPostPipeline: vi.fn(() => pipeline), preFX: { addColorMatrix: () => ({ hue: vi.fn(), brightness: vi.fn() }) } };
+      setPostPipeline: vi.fn(), getPostPipeline: vi.fn(() => pipeline), preFX: { addColorMatrix: () => ({ hue: vi.fn(), brightness: vi.fn() }), remove: vi.fn() }, postFX: { addColorMatrix: () => ({ hue: vi.fn(), brightness: vi.fn() }), remove: vi.fn() } };
     [value.setDepth, value.setDisplaySize, value.setFlipX, value.setFrame, value.destroy, value.setPostPipeline].forEach(fn => fn.mockReturnValue(value));
     return { value, pipeline };
   };

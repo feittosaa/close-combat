@@ -113,7 +113,7 @@ describe('blocked attack recovery', () => {
     expect(sim.snapshot().characters[0]).toMatchObject({ mode: 'neutral', remainingStateFrames: 0 });
   });
   it('does not restart the owner’s recovery when a distant projectile is blocked', () => {
-    const sim = new Simulation(config, undefined, { training: true, initialDistance: 400 });
+    const sim = new Simulation(config, undefined, { training: true, initialDistance: 600 });
     sim.stepFrame([input('D'), input('B')]);
     sim.stepFrame([input('DF'), input('B')]);
     sim.stepFrame([input('F', '1'), input('B')]);

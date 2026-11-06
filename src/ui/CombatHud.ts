@@ -109,7 +109,7 @@ export class CombatHud {
         }
 
       }
-      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}`:'');
+      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}${character.rush?' · RUSH':''}`:'');
       this.rageLevels[index]?.setText(character.maxRage > 0 ? String(Math.min(2, Math.floor(character.rage / RAGE_LEVEL))) : '');
       this.healthLabels[index]?.setText(`${Math.max(0,character.health)} / ${character.maxHealth}`);
       this.modeLabels[index]?.setText(this.training?MODE_LABELS[character.mode]:index===0?'JOGADOR 1':'JOGADOR 2')

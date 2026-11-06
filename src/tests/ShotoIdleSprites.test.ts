@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { combatantDepth } from '../rendering/CombatantView';
-import { getShotoIdleFrame, getShotoSpritePose, getShotoUltimatePose, getShotoVictoryExit, hasShotoExited, preloadShotoSprites, shotoIdleTexture } from '../rendering/animations/shotoSprites';
+import { getShotoIdleFrame, getShotoSpritePose, getShotoUltimatePose, preloadShotoSprites, shotoIdleTexture } from '../rendering/animations/shotoSprites';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
@@ -21,18 +21,6 @@ describe('animação de espera do Shoto', () => {
     expect(getShotoIdleFrame(115, 100)).toBe(1);
   });
 
-  it.each(['left', 'right'] as const)('corre para fora da tela após a vitória com orientação %s', facing => {
-    const state = { ...new Simulation(createGameConfig(1024, 576), [shoto, shoto]).snapshot().characters[0], facing };
-    expect(getShotoVictoryExit(state, 79)).toBeUndefined();
-    const start = getShotoVictoryExit(state, 80)!;
-    const running = getShotoVictoryExit(state, 100)!;
-    expect(start.texture).toBe('shoto-victory-exit');
-    expect(running.frame).toBeGreaterThanOrEqual(2);
-    expect(Math.sign(running.offsetX)).toBe(facing === 'right' ? -1 : 1);
-    expect(hasShotoExited(state, 100, {left: 0, right: 1024})).toBe(false);
-    expect(hasShotoExited(state, 600, {left: 0, right: 1024})).toBe(true);
-  });
-
   it('carrega o atlas uma vez', () => {
     const loaded: string[] = [];
     const scene = { textures: { exists: () => false }, load: { atlas: (key: string) => loaded.push(key), image: (key: string) => loaded.push(key) } };
@@ -43,11 +31,9 @@ describe('animação de espera do Shoto', () => {
     expect(loaded).toHaveLength(initialCount);
   });
 
-  it('aumenta apenas o primeiro soco forte e acelera os quadros da ultimate', () => {
+  it('acelera os quadros da ultimate', () => {
     const state = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
     const attack = { moveId: 'heavy-punch', buttons: ['2' as const], elapsedFrames: 13, hasHit: false };
-    expect(getShotoSpritePose({ ...state, mode: 'active', chain: ['heavy-punch'], attack }, 13)?.scale).toBe(1.01);
-    expect(getShotoSpritePose({ ...state, mode: 'active', chain: ['light-punch', 'light-punch', 'heavy-punch'], attack }, 13)?.scale).toBeUndefined();
     const ultimate = { ...state, attack: { ...attack, moveId: 'rake-ultimate' } };
     expect([0, 1, 2, 3, 4].map(frame => getShotoUltimatePose(ultimate, frame, false).frame)).toEqual([0, 0, 1, 1, 2]);
     expect(getShotoUltimatePose(ultimate, 75, true).frame).toBe(5);
@@ -92,20 +78,25 @@ describe('animação de espera do Shoto', () => {
     }
   });
 
-  it('distribui os seis quadros do tomate uniformemente sem trocar de atlas', () => {
+  it('segura o tomate na mão até o projétil sair e mostra o arremesso no quadro em que ele nasce', () => {
     const state = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
     for (const id of ['tomato-light', 'tomato-heavy']) {
       const move = shoto.moves.find(candidate => candidate.id === id)!;
-      const duration = Math.ceil((move.startup + move.activeFrames + move.recovery) * 0.8);
-      const counts = Array(6).fill(0);
-      for (let elapsedFrames = 0; elapsedFrames < duration; elapsedFrames++) {
+      const frames = Array.from({ length: move.startup + move.activeFrames + move.recovery }, (_, elapsedFrames) => {
         const attack = { moveId: id, buttons: ['1' as const], elapsedFrames, hasHit: false };
         const pose = getShotoSpritePose({ ...state, mode: 'startup', attack }, elapsedFrames)!;
         expect(pose.texture).toBe('shoto-tomato-throw');
-        counts[pose.frame]++;
-      }
-      expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
-      expect(counts.every(count => count > 0)).toBe(true);
+        return pose.frame;
+      });
+      expect(new Set(frames.slice(0, move.startup))).toEqual(new Set([0, 1, 2]));
+      expect(frames[move.startup]).toBe(3);
+      expect(new Set(frames.slice(move.startup))).toEqual(new Set([3, 4, 5]));
+      expect(frames).toEqual([...frames].sort((a, b) => a - b));
+      const sim = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true, initialDistance: 400 });
+      const press = (direction: FrameInput['direction'], buttons: FrameInput['buttons'] = new Set()) => sim.stepFrame([{ direction, buttons }, { direction: 'N', buttons: new Set() }]);
+      press('D'); press('DF'); press('F', new Set(move.input.buttons));
+      for (let i = 0; i < 60 && !sim.snapshot().projectiles.length; i++) press('N');
+      expect(getShotoSpritePose(sim.snapshot().characters[0], 0)).toMatchObject({ texture: 'shoto-tomato-throw', frame: 3 });
     }
   });
 

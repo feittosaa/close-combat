@@ -6,6 +6,9 @@ import { getPhaseAnimationFrame, getTimedAnimationFrame, type AnimationClip } fr
 import { ULTIMATE_ACTIVATION_FRAMES } from '../../engine/combat/ultimateActivation';
 import { flightFramesRemaining } from '../../engine/combat/airPhysics';
 import { loadGraphicsQuality } from '../../ui/graphicsSettings';
+import { autoSpriteScale, bodyCenterShift, lyingFloorAnchor } from './spriteScale';
+import cowboyCalibration from '../../assets/sprites/characters/cowboy/calibration.json';
+import cowboyMeasurements from '../../assets/sprites/characters/cowboy/measurements.json';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/cowboy/*.png', { eager: true, query: '?url', import: 'default' });
 const atlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/cowboy/*.atlas.json', { eager: true, import: 'default' });
@@ -33,25 +36,20 @@ export function preloadCowboySprites(scene: Phaser.Scene): void {
     if (atlas && !scene.textures.exists(key)) scene.load.atlas(key, useHigh ? highImages[`${highBase}.png`] : image, atlas);
   }
 }
+export const cowboySheetScale = (name: string, frame = 0): number => autoSpriteScale(cowboy, cowboyMeasurements, name, frame, cowboyCalibration);
 const pose = (name: string, frame: number, state: CharacterState) => {
-  const scales: Record<string, number> = {
-    backward: 1.02 * .99, 'enter-backward': .99, walk: .99, 'enter-walk': .99, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
-    'throw-low': 1.01 * 1.05, 'throw-close-anticipation': 1.01,
-    'ultimate-body': .99, taunt: 1.08, guard: .96 * .98 * 1.01 * 1.02 * 1.02 * 1.05 * 1.01 * 1.01, 'crouch-guard': 1.02 * 1.02 * .99, 'perfect-block': 1.02 * .98 * 1.02,
-    hurt: .94 * .96 * .96 * 1.02, 'hurt-low': .97 * 1.01 * 1.01, 'hurt-high': .97 * .98 * .98,
-    'dash-forward': .97 * .97, 'dash-backward': .97 * .97, 'air-dash-forward': .97, 'air-dash-backward': .97 * .98,
-    'heavy-punch': .98, 'charge-heavy-punch': .98, 'combo-left-shot': .98 * .98, 'combo-right-shot': .98 * .98,
-    'double-shot': 1.02, 'launch-hit': 1.1 * 1.12 * 1.02 * 1.02 * .94 * 1.03, 'air-hurt': .94,
-    'crouch-combo-shot': .9, 'crouch-light-kick': 1.04, 'heavy-kick': 1.04, 'push-away': 1,
-  };
   const horizontal: Record<string, readonly number[]> = {
     'enter-taunt': [-4, -5, -5, -11, -16, -30],
     taunt: [-1, -8, -11, 9, 29, 42],
   };
-  const direction = state.facing === 'left' ? -1 : 1;
+  const direction = state.facing === 'left' ? -1 : 1, scale = cowboySheetScale(name, frame);
+  // A lying drawing on the floor rests on its lowest row instead of the feet line.
+  const floor = state.grounded ? lyingFloorAnchor(cowboy, cowboyMeasurements, name, frame) : undefined;
   return {
-    texture: `cowboy-${name}`, frame, scale: scales[name] ?? 1, alpha: 1,
-    flipX: direction === -1, offsetX: (horizontal[name]?.[frame] ?? 0) * cowboyDisplayHeight / 640 * direction, offsetY: 0,
+    texture: `cowboy-${name}`, frame, scale, alpha: 1,
+    flipX: direction === -1,
+    offsetX: ((horizontal[name]?.[frame] ?? 0) / 640 + bodyCenterShift(cowboy, cowboyMeasurements, name, frame) * scale) * cowboyDisplayHeight * direction,
+    offsetY: floor === undefined ? 0 : (cowboyFootAnchor - floor) * cowboyDisplayHeight * scale,
   };
 };
 const isShotCombo = (state: CharacterState) => state.attack?.moveId === 'heavy-punch' &&
@@ -119,28 +117,10 @@ export function getCowboyRoundEndPresentation(state: CharacterState, elapsed: nu
 export function getCowboyRoundEndPose(state: CharacterState, winner: boolean, elapsed: number) {
   if (state.fighterId !== 'cowboy' || !state.grounded) return undefined;
   if (!winner && state.mode === 'knockdown') return undefined;
-  if (winner && elapsed >= 80) {
-    const age = elapsed - 80;
-    const frame = age < 12 ? 0 : age < 24 ? 1 : 2 + Math.floor((age - 24) / 12) % 2;
-    const direction = state.facing === 'right' ? -1 : 1;
-    return { ...pose('victory-exit', frame, state), flipX: direction < 0, offsetX: direction * Math.max(0, age - 24) * 4 };
-  }
   const durations = winner ? [10, 9, 14, 12, 11, 24] : [8, 8, 10, 10, 12, 32];
   return pose(winner ? 'victory' : 'defeat', getPhaseAnimationFrame([0,1,2,3,4,5], durations, Math.max(0, elapsed), 80), state);
 }
 
-/** Wait until the victory exit has fully crossed the visible camera edge. */
-export function hasCowboyExited(state: CharacterState, elapsed: number, floorY: number, gravity: number, view: {left: number; right: number}): boolean {
-  if (state.fighterId !== 'cowboy') return true;
-  const presentation = getCowboyRoundEndPresentation(state, elapsed, floorY, gravity);
-  const result = getCowboyRoundEndPose(presentation.state, true, presentation.elapsed);
-  if (!result || result.texture !== 'cowboy-victory-exit') return false;
-  const x = state.x + result.offsetX;
-  return state.facing === 'right' ? x + cowboyDisplayHeight / 2 < view.left : x - cowboyDisplayHeight / 2 > view.right;
-}
-
-/** Body length in the airborne fall frames matches the grounded lying pose (about 370 px in the 640 grid). */
-const airborneFallScale = [1.51 * .95, 1.65 * .95, 1.7 * .95] as const;
 
 export function getCowboySpritePose(state: CharacterState, frame: number) {
   if (state.fighterId !== 'cowboy') return undefined;
@@ -189,8 +169,7 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
       return pose('heavy-kick', frame, state);
     }
     if (move.category === 'throw' && state.attack.hitOutcome === 'hit' && state.attack.throwDirection !== 'backward' && elapsed >= startup + 8) {
-      const kick = pose('push-away', Math.min(5, 2 + Math.floor((elapsed - startup - 8) / 6)), state);
-      return { ...kick, scale: kick.scale * .98 };
+      return pose('push-away', Math.min(5, 2 + Math.floor((elapsed - startup - 8) / 6)), state);
     }
     if (move.category === 'throw' && !state.attack.hasHit && elapsed >= activeEnd) {
       return pose('throw-miss', getPhaseAnimationFrame([0,1,2,3,4,5],[1,1,1,1,1,1],elapsed-activeEnd,recovery), state);
@@ -213,10 +192,10 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
     if (state.grounded && state.throwPull) return pose('grabbed', 0, state);
     if (!state.grounded) {
       const drawing = Math.min(2, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 4));
-      return {...pose('fall-landing', drawing, state), scale: airborneFallScale[drawing]};
+      return pose('fall-landing', drawing, state);
     }
     const remaining = state.remainingStateFrames;
-    return remaining > 12 ? {...pose('fall-landing', 5, state), scale: 2.4 * .8 * .92} : pose('knockdown', remaining > 8 ? 3 : remaining > 4 ? 4 : 5, state);
+    return remaining > 12 ? pose('fall-landing', 5, state) : pose('knockdown', remaining > 8 ? 3 : remaining > 4 ? 4 : 5, state);
   }
   if (state.mode === 'hitstun') {
     const bounce = state.wallBounceEffect;

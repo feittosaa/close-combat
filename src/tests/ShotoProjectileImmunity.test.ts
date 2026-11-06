@@ -26,8 +26,18 @@ it.each([0, 1])('protege os especiais contra projéteis do início ao fim, lado 
   }
 });
 
-it('a proteção contra projéteis não torna os outros especiais imunes a golpes físicos', () => {
-  for (const id of moves.filter(id => id !== 'reversal-kick')) {
+it('as voadoras e o chute invencível ignoram golpes físicos durante o movimento', () => {
+  for (const id of ['flying-kick-light', 'flying-kick-heavy', 'flying-kick-followup', 'reversal-kick']) {
+    const characters = [...new Simulation(createGameConfig(1024, 576), [shoto, shoto], { initialDistance: 56 }).snapshot().characters];
+    const [attacker, target] = characters;
+    attacker.mode = 'active'; attacker.attack = { moveId: 'light-punch', buttons: ['1'], elapsedFrames: 8, hasHit: false };
+    target.mode = 'startup'; target.attack = { moveId: id, buttons: ['3'], elapsedFrames: 1, hasHit: false };
+    expect(resolver.resolve(characters, neutral), id).toHaveLength(0);
+  }
+});
+
+it('a proteção contra projéteis não torna imunes a golpes físicos os especiais sem invulnerabilidade', () => {
+  for (const id of moves.filter(id => !shoto.moves.find(move => move.id === id)!.invulnerability)) {
     const characters = [...new Simulation(createGameConfig(1024, 576), [shoto, shoto], { initialDistance: 56 }).snapshot().characters];
     const [attacker, target] = characters;
     attacker.mode = 'active'; attacker.attack = { moveId: 'light-punch', buttons: ['1'], elapsedFrames: 8, hasHit: false };

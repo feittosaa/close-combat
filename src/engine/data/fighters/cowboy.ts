@@ -25,6 +25,7 @@ export const cowboy: CharacterDefinition = {
     { id: 'air-light-light-heavy', name: 'Tiros aéreos leves e forte', notation: 'no ar + 1,1,2', moveIds: ['air-light-punch','air-light-punch','air-heavy-punch'], projectileSequence: { startupFrames: [8, 8, 14], continueOnBlock: false, airRecoil: { liftSpeed: -0.8, gravityScale: 0.35 } } },
     { id: 'air-heavy-heavy', name: 'Tiros aéreos fortes', notation: 'no ar + 2,2', moveIds: ['air-heavy-punch','air-heavy-punch'], projectileSequence: { startupFrames: [14, 14], continueOnBlock: false, airRecoil: { liftSpeed: -0.8, gravityScale: 0.35 } } },
   ],
+  comboChains: [{ name: 'Chutes rápidos e tiros', recipeIds: ['rapid-kicks', 'delayed-shots'] }],
   moves: [
     { id: 'light-punch', name: 'Soco fraco', category: 'basic', startsComboOnHit: true, input: { buttons: ['1'] }, startup: 8, activeFrames: 3, recovery: 17, damage: 20, hitstun: 16, blockstun: 8, pushback: { hit: 3, block: 4 }, hitLevel: 'mid', projectile: { speed: 9, life: 100, visual: 'bullet' }, hitbox: { forward: 0, yOffset: -120, width: 28, height: 18 } },
     { id: 'heavy-punch', name: 'Soco forte', category: 'basic', charge: { framesPerStep: 60, maxSteps: 2, damagePerStep: 0.2 }, input: { buttons: ['2'] }, startup: 14, activeFrames: 4, recovery: 26, damage: 38, hitstun: 20, blockstun: 10, pushback: { hit: 5, block: 6 }, hitLevel: 'mid', projectile: { speed: 6, life: 150, visual: 'bullet' }, hitbox: { forward: 0, yOffset: -120, width: 36, height: 22 } },

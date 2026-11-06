@@ -32,6 +32,20 @@ describe('rage actions', () => {
     expect(snapshot.characters.every(character => character.mode === 'neutral')).toBe(true);
     expect(snapshot.comboHistory[snapshot.comboHistory.length - 1]?.active).toBe(false);
   });
+  it('does not teleport a fighter to the floor when a break happens in the air', () => {
+    const sim = setup(); hit(sim, '1');
+    const target = (sim as unknown as { characters: ReturnType<Simulation['snapshot']>['characters'] }).characters[1];
+    target.grounded = false; target.y -= 300; target.verticalVelocity = 0;
+    const airY = target.y;
+    step(sim, input(), input(['1'], true));
+    step(sim); step(sim); step(sim, input(['1']));
+    for (let i = 0; i < 15; i++) step(sim);
+    const after = sim.snapshot().characters[1];
+    expect(sim.snapshot().comboHistory.slice(-1)[0]?.active).toBe(false);
+    expect(after.grounded).toBe(false);
+    expect(after.y).toBeGreaterThanOrEqual(airY);
+    expect(after.y).toBeLessThan(createGameConfig(1024, 576).arena.floorY - 100);
+  });
   it.each(['2', '4'] as const)('breaks a heavy attack when guessed with %s', guess => {
     const sim = setup(); hit(sim, '1'); step(sim, input(), input([guess], true));
     step(sim); step(sim); step(sim, input(['2']));

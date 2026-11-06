@@ -6,7 +6,7 @@ import type { MatchMode } from '../scenes/matchSetup';
 vi.mock('phaser', () => ({ default: { Scene: class {} } }));
 afterEach(() => resetControls());
 
-it.each(['training', 'tutorial', 'combo-tutorial', 'versus', 'arcade'] as MatchMode[])(
+it.each(['training', 'tutorial', 'versus', 'arcade'] as MatchMode[])(
   'only resets the training mode with the configured shortcut: %s', mode => {
     saveSystemControls({ pause: 'KeyP', reset: 'KeyZ' });
     const scene = new FightScene(); scene.init({ mode });

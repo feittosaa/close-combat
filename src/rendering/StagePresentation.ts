@@ -1,11 +1,11 @@
 import type Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { LOGICAL_VIEW } from './presentation';
+import { RESULT_TITLE_END_FRAME, TIMEOUT_TITLE_FRAMES } from './roundEnd';
 import { presentationKey, presentationTheme, type PresentationTheme } from './stages/stagePresentationAssets';
 import { presentationBounds } from './stages/presentationBounds';
 
 /** Give the result text the entire foreground before starting the match-end poses. */
-export const RESULT_TITLE_END_FRAME = 160;
 
 /** Presentation is stage-specific and never changes the combat simulation. */
 export class StagePresentation {
@@ -39,7 +39,7 @@ export class StagePresentation {
     const timedOut = snapshot.roundEndReason === 'time' || (snapshot.roundEndReason === 'draw' && snapshot.roundFramesRemaining === 0);
     const finalRound = snapshot.roundWins.some(wins => wins >= this.winsToFinish);
     const name = showingKnockout ? 'ko' : wasIntro ? (this.intro > 600 ? 'ready' : 'fight') : endAge >= 0 && endAge < RESULT_TITLE_END_FRAME ?
-      (timedOut && (endAge < 75 || !snapshot.roundWinnerId) ? 'timeout' : snapshot.roundWinnerId ?
+      (timedOut && (endAge < TIMEOUT_TITLE_FRAMES || !snapshot.roundWinnerId) ? 'timeout' : snapshot.roundWinnerId ?
         (snapshot.roundWinnerId === snapshot.characters[0].characterId ? (finalRound ? 'victory' : 'round-win') : (finalRound ? 'lose' : 'round-lose')) : undefined) : undefined;
     if (name) {
       this.title.setTexture(presentationKey(this.theme, name));

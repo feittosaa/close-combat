@@ -6,7 +6,7 @@ import { Simulation, volleyShotDamage } from '../engine/simulation/Simulation';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 import { contactHeight, createHitbox, createHurtbox, createHurtZones } from '../engine/collision/combatGeometry';
 import { intersects } from '../engine/collision/intersects';
-import { getCowboySpriteLayers } from '../rendering/animations/cowboySprites';
+import { cowboySheetScale, getCowboySpriteLayers } from '../rendering/animations/cowboySprites';
 import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
 
 it.each([0,1])('reinicia a reação da vítima nos tiros do agarrão 2+4: jogador %i', player => {
@@ -1164,8 +1164,8 @@ it.each([0,1])('amplia somente a pose intermediária da vítima cowboy no agarr�
     if (target.grabbedHold && target.grabbedStartedFrame !== undefined) {
       const age=snapshot.frame-target.grabbedStartedFrame;
       const pose=getCowboySpriteLayers(target,snapshot.frame)[0];
-      if (age<16) { initial=true; expect(pose.scale).toBe(1); }
-      if (age>=16) { middle=true; expect(pose.scale).toBeCloseTo(.94*.96*.96*1.02*1.05); }
+      if (age<16) { initial=true; expect(pose.texture).toBe('cowboy-grabbed'); expect(pose.scale).toBe(cowboySheetScale('grabbed')); }
+      if (age>=16) { middle=true; expect(pose.scale).toBeCloseTo(cowboySheetScale(pose.texture.replace('cowboy-', ''), pose.frame) * 1.05, 9); }
     }
     if (middle && !target.grabbedHold) { released=true; break; }
   }

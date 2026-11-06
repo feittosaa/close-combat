@@ -52,6 +52,8 @@ export interface CharacterDefinition {
   rage?: { maximum: number; onHit: number; onDamage: number; onBlock: number };
   /** Receitas de autoria manual, independentes das sequências abertas de acertos. */
   combos?: readonly ComboRecipe[];
+  /** Receitas encadeadas em sequência, também de autoria manual. */
+  comboChains?: readonly { name: string; recipeIds: readonly string[] }[];
   collision: CharacterCollisionProfile;
 }
 export const DEFAULT_CHARACTER_ID = 'shoto';
