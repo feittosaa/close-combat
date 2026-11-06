@@ -59,3 +59,29 @@ it('lights a fighter near a flame and follows the layer parallax', () => {
   expect(near.brightness).toBeGreaterThan(far.brightness);
   expect(near.hue).toBeLessThan(far.hue);
 });
+
+it.each([['palette first', false], ['plain first, palette added later', true]] as const)('applies stage lighting after the clothing recolor (%s)', (_name, plainFirst) => {
+  const calls: string[] = [];
+  const matrix = { hue: vi.fn(), brightness: vi.fn() };
+  const effects = (name: string) => ({ addColorMatrix: vi.fn(() => { calls.push(name); return matrix; }), remove: vi.fn(() => calls.push(`remove-${name}`)) });
+  const sprite = {
+    scene: { sys: { game: { renderer: { type: 2 } } } },
+    setPostPipeline: vi.fn(() => calls.push('palette')), getPostPipeline: vi.fn(() => ({ palette: 0 })),
+    preFX: effects('pre-lighting'), postFX: effects('post-lighting'),
+  };
+  const effect = new CharacterColorEffect();
+  if (plainFirst) effect.apply(sprite as never, { hue: 10, brightness: .9, alternate: false }, 'bob');
+  effect.apply(sprite as never, { hue: 10, brightness: .9, alternate: true }, 'bob');
+  effect.apply(sprite as never, { hue: 20, brightness: .8, alternate: true }, 'bob');
+  expect(calls.join()).toBe(plainFirst ? 'pre-lighting,palette,remove-pre-lighting,post-lighting' : 'palette,post-lighting');
+  expect(matrix.hue).toHaveBeenLastCalledWith(20);
+});
+
+it('keeps the original pre-effect lighting on sprites without a recolor', () => {
+  const pre = { addColorMatrix: vi.fn(() => ({ hue: vi.fn(), brightness: vi.fn() })), remove: vi.fn() };
+  const sprite = { scene: { sys: { game: { renderer: { type: 2 } } } }, setPostPipeline: vi.fn(), preFX: pre, postFX: { addColorMatrix: vi.fn() } };
+  new CharacterColorEffect().apply(sprite as never, { hue: 10, brightness: .9, alternate: false }, 'texas');
+  expect(pre.addColorMatrix).toHaveBeenCalledOnce();
+  expect(sprite.postFX.addColorMatrix).not.toHaveBeenCalled();
+  expect(sprite.setPostPipeline).not.toHaveBeenCalled();
+});

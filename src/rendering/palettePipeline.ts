@@ -28,10 +28,12 @@ void main() {
   vec3 color = source.rgb / source.a;
   if (uPalette > 3.5) { gl_FragColor = vec4(color * vec3(0.72, 0.5, 1.0) * source.a, source.a); return; }
   vec3 v = hsv(color);
-  if (uPalette < 1.5 && v.x >= 27.0 && v.x <= 56.0 && v.y >= 0.38 && v.z < 0.745 && v.z > 0.176) {
-    v.x = mod(355.0 + (v.x - 40.0) * 0.35, 360.0);
-    v.y = max(v.y, 0.9);
-    v.z = min(v.z * 1.15, 1.0);
+  if (uPalette < 1.5 && v.x >= 27.0 && v.x <= 56.0 && v.y >= 0.38 && v.z < 0.745 && v.z > 0.078) {
+    // Saturated orange at the low hue edge is blond hair or straw, not shirt: fade it out instead of cutting.
+    float shirt = max(smoothstep(30.0, 35.0, v.x), 1.0 - smoothstep(0.6, 0.72, v.y));
+    vec3 red = rgb(vec3(mod(355.0 + (v.x - 40.0) * 0.35, 360.0), max(v.y, 0.9), min(v.z * 1.15, 1.0)));
+    gl_FragColor = vec4(mix(color, red, shirt) * source.a, source.a);
+    return;
   }
   else if (uPalette < 2.5 && uPalette > 1.5) {
     if (v.x >= 160.0 && v.x <= 255.0 && v.y >= 0.1) {

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { characters, playableCharacters, defaultCharacter, getCharacterById } from '../engine/data/characters';
+import { getStageById } from '../rendering/stages/stageCatalog';
 import { fighterMoveList, filterMoveList } from '../training/MoveList';
-import { arcadeOpponents, opponentFor } from '../scenes/matchSetup';
+import { createArcadeRun, opponentFor } from '../scenes/matchSetup';
 
 describe('elenco reiniciado', () => {
   it('registra Cowboy e Shoto, preservando os quatro básicos e o catálogo manual', () => {
@@ -17,10 +18,16 @@ describe('elenco reiniciado', () => {
     expect(defaultCharacter).not.toHaveProperty('combatRules');
   });
   it.each(['ayla', 'gris', 'tester', 'dummy'])('não resolve o personagem removido %s', id => expect(getCharacterById(id)).toBeUndefined());
-  it.each(['versus', 'training', 'tutorial', 'combo-tutorial', 'arcade'] as const)('usa Shoto espelhado em %s', mode => {
-    expect(opponentFor('shoto', mode).id).toBe('shoto');
-    expect(opponentFor('id-inválido', mode).id).toBe('shoto');
-    expect(arcadeOpponents('shoto')).toEqual([defaultCharacter]);
+  it('espelha o personagem fora do Arcade e recorre ao Shoto para id inválido', () => {
+    expect(opponentFor('cowboy').id).toBe('cowboy');
+    expect(opponentFor('id-inválido').id).toBe('shoto');
+  });
+  it('sorteia no Arcade todos os personagens, um cenário por luta e sem repetir o anterior', () => {
+    const run = createArcadeRun(() => 0.99);
+    expect([...run.opponents].sort()).toEqual(characters.map(fighter => fighter.id).sort());
+    expect(run.stages).toHaveLength(characters.length);
+    run.stages.forEach((id, index) => { expect(getStageById(id)).toBeDefined(); if (index) expect(id).not.toBe(run.stages[index - 1]); });
+    expect(createArcadeRun(() => 0).opponents).not.toEqual(createArcadeRun(() => 0.99).opponents);
   });
   it('separa básicos, especiais e receitas manuais com busca', () => {
     const entries = fighterMoveList(defaultCharacter);

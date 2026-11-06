@@ -7,23 +7,27 @@ import '../ui/menu.css';
 
 import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
-import { playableCharacters } from '../engine/data/characters';
+import { getCharacterById, playableCharacters } from '../engine/data/characters';
 import { defaultStage, selectableStages } from '../rendering/stages/stageCatalog';
-import { opponentFor, isTrainingMode, selectsOpponent, type MatchMode } from './matchSetup';
+import { ARCADE_DIFFICULTIES, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
+import { createArcadeRun, opponentFor, isTrainingMode, selectsOpponent, type MatchMode } from './matchSetup';
 
 const MODES = [
-  { id: 'arcade', title: 'ARCADE', hint: 'Enfrente o Bob controlado pelo computador.', tag: '1 JOGADOR' },
+  { id: 'arcade', title: 'ARCADE', hint: 'Enfrente todos os personagens, em ordem e cenários aleatórios.', tag: '1 JOGADOR' },
   { id: 'versus', title: 'LUTA PVP', hint: 'Dois jogadores no mesmo teclado.', tag: '2 JOGADORES' },
   { id: 'training', title: 'MODO TREINO', hint: 'Pratique comandos, alcances e punições.', tag: 'PRÁTICA LIVRE' },
-  { id: 'tutorial', title: 'TUTORIAL BÁSICO', hint: 'Aprenda movimento, quatro básicos e defesa.', tag: 'PASSO A PASSO' },
-  { id: 'combo-tutorial', title: 'TUTORIAL DE COMBOS', hint: 'Pratique as sequências manuais do personagem.', tag: 'COMBOS' },
+  { id: 'tutorial', title: 'TUTORIAL', hint: 'Movimento, golpes básicos, defesa e treino opcional de combos.', tag: 'PASSO A PASSO' },
   { id: 'settings', title: 'CONFIGURAÇÕES', hint: 'Teclas e controles dos dois jogadores.', tag: 'OPÇÕES' },
 ] as const;
 
 /** Fluxo público: modo → escolhas dos jogadores → cenário → luta. */
 export class MenuScene extends Phaser.Scene {
-  private page: 'home' | 'fighter' | 'stage' | 'settings' = 'home';
+  private page: 'home' | 'difficulty' | 'fighter' | 'stage' | 'settings' = 'home';
+  private difficultyIndex = 1;
+  private get entries(): readonly { title: string; tag: string; hint: string }[] { return this.page === 'difficulty' ? ARCADE_DIFFICULTIES : MODES; }
+  private get cursor(): number { return this.page === 'difficulty' ? this.difficultyIndex : this.modeIndex; }
   private mode: MatchMode = 'arcade';
+  private arcadeRun = createArcadeRun();
   private modeIndex = 0;
   private stageIndex = 0;
   private get selectedStage() { return selectableStages[this.stageIndex]; }
@@ -57,16 +61,16 @@ export class MenuScene extends Phaser.Scene {
     if (ControlSettings.active || event.repeat || this.transitioning) return;
     const key = event.key;
     if (key === 'Enter' && event.target instanceof HTMLButtonElement &&
-      !(this.page === 'home' && event.target.classList.contains('arena-mode'))) return;
+      !((this.page === 'home' || this.page === 'difficulty') && event.target.classList.contains('arena-mode'))) return;
     if (['Enter', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) event.preventDefault();
-    if (this.page === 'home') {
+    if (this.page === 'home' || this.page === 'difficulty') {
       if (key === 'ArrowDown' || key === 'ArrowUp') {
-        this.selectHomeMode((this.modeIndex + (key === 'ArrowDown' ? 1 : -1) + MODES.length) % MODES.length);
+        this.selectHomeMode((this.cursor + (key === 'ArrowDown' ? 1 : -1) + this.entries.length) % this.entries.length);
         if (event.target instanceof HTMLButtonElement && event.target.classList.contains('arena-mode'))
-          this.menuElement?.querySelectorAll<HTMLButtonElement>('.arena-mode')[this.modeIndex]?.focus();
+          this.menuElement?.querySelectorAll<HTMLButtonElement>('.arena-mode')[this.cursor]?.focus();
       }
-      else if (key === 'Enter') this.chooseMode(this.modeIndex);
-      else { const i = ['a', 'v', 't', 'b', 'o', 'c'].indexOf(key.toLowerCase()); if (i >= 0) this.chooseMode(i); }
+      else if (key === 'Enter') this.page === 'difficulty' ? this.chooseDifficulty(this.difficultyIndex) : this.chooseMode(this.modeIndex);
+      else if (this.page === 'home') { const i = ['a', 'v', 't', 'b', 'o', 'c'].indexOf(key.toLowerCase()); if (i >= 0) this.chooseMode(i); }
     } else if (key === 'Escape') this.back();
     else if (this.page === 'fighter') {
       const versus = this.mode === 'versus';
@@ -179,14 +183,14 @@ export class MenuScene extends Phaser.Scene {
   private render(): void {
     const root = this.root; if (!root) return; root.removeAll(true);
     if (this.background) { this.tweens.killTweensOf(this.background); this.background.setAlpha(1); }
-    this.background?.setTexture(this.page === 'home' ? this.wallpapers[this.wallpaperIndex] : 'menu-reference');
+    this.background?.setTexture(this.page === 'home' || this.page === 'difficulty' ? this.wallpapers[this.wallpaperIndex] : 'menu-reference');
     this.alignMenu();
     const { width, height } = LOGICAL_VIEW;
     this.menuElement!.hidden = this.page === 'settings';
     this.chrome?.setVisible(this.menuElement!.hidden);
     this.menuElement!.replaceChildren();
     if (!this.menuElement!.hidden) { this.renderMenu(); return; }
-    const titles = { home: '01 / MODOS', fighter: '02 / PERSONAGEM', stage: '03 / CENÁRIO', settings: 'CONFIGURAÇÕES' };
+    const titles = { home: '01 / MODOS', difficulty: '02 / DIFICULDADE', fighter: '02 / PERSONAGEM', stage: '03 / CENÁRIO', settings: 'CONFIGURAÇÕES' };
     this.text(width - 42, 40, titles[this.page], 13, '#fff0d2').setStroke('#171219', 3).setOrigin(1, 0);
     this.text(56, 144, 'CONFIGURAÇÕES', 26);
     this.text(56, 204, 'Configure as teclas no painel de controles.', 18, '#c4b8c0');
@@ -198,7 +202,7 @@ export class MenuScene extends Phaser.Scene {
     const root = this.menuElement!;
     root.classList.toggle('fighter-selection', this.page === 'fighter');
     root.classList.toggle('stage-selection', this.page === 'stage');
-    root.classList.toggle('arena-home', this.page === 'home');
+    root.classList.toggle('arena-home', this.page === 'home' || this.page === 'difficulty');
     const node = (tag: string, className: string, text = ''): HTMLElement => {
       const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
     };
@@ -207,29 +211,29 @@ export class MenuScene extends Phaser.Scene {
       element.onclick = action; return element;
     };
     const header = node('header', 'arena-header');
-    if (this.page === 'home') header.append(node('span', 'arena-brand', 'CLOSE COMBAT'));
+    if (this.page === 'home' || this.page === 'difficulty') header.append(node('span', 'arena-brand', 'CLOSE COMBAT'));
     else header.append(node('h1', 'arena-step', this.page === 'stage' ? 'SELEÇÃO DE CENÁRIO' : 'SELEÇÃO DE PERSONAGEM'));
     root.append(header);
-    if (this.page === 'home') {
-      const modes = node('nav', 'arena-modes'); modes.setAttribute('aria-label', 'Modos de jogo');
+    if (this.page === 'home' || this.page === 'difficulty') {
+      const modes = node('nav', 'arena-modes'); modes.setAttribute('aria-label', this.page === 'home' ? 'Modos de jogo' : 'Dificuldade do Arcade');
       const feature = node('div', 'arena-feature');
       feature.setAttribute('aria-hidden', 'true');
       const featureNumber = node('span', 'arena-feature-number');
       const featureTitle = node('strong', 'arena-feature-title');
       const featureHint = node('span', 'arena-feature-hint');
       feature.append(featureNumber, featureTitle, featureHint);
-      MODES.forEach((mode, index) => {
-        const item = button('', 'arena-mode', () => this.chooseMode(index));
+      this.entries.forEach((mode, index) => {
+        const item = button('', 'arena-mode', () => this.page === 'home' ? this.chooseMode(index) : this.chooseDifficulty(index));
         item.append(node('span', 'arena-number', String(index + 1).padStart(2, '0')),
           node('strong', '', mode.title), node('small', '', mode.tag), node('span', 'arena-mode-hint', mode.hint));
         item.addEventListener('pointerenter', () => this.selectHomeMode(index));
         item.addEventListener('focus', () => this.selectHomeMode(index));
         modes.append(item);
       });
-      const note = node('div', 'arena-home-note', 'ESCOLHA SUA LUTA');
-      const controls = node('footer', 'arena-home-controls', '↑ ↓ ESCOLHER   ·   ENTER CONFIRMAR');
+      const note = node('div', 'arena-home-note', this.page === 'home' ? 'ESCOLHA SUA LUTA' : 'ESCOLHA A DIFICULDADE');
+      const controls = node('footer', 'arena-home-controls', this.page === 'home' ? '↑ ↓ ESCOLHER   ·   ENTER CONFIRMAR' : '↑ ↓ ESCOLHER   ·   ENTER CONFIRMAR   ·   ESC VOLTAR');
       root.append(modes, feature, note, controls);
-      this.selectHomeMode(this.modeIndex);
+      this.selectHomeMode(this.cursor);
     } else if (this.page === 'stage') {
       renderStageSelection(root, { stages: selectableStages, selected: this.stageIndex,
         select: index => this.selectStage(index), confirm: () => this.startFight(), back: () => this.back() });
@@ -237,7 +241,7 @@ export class MenuScene extends Phaser.Scene {
       renderFighterSelection(root, {
         fighters: this.fighters,
         selection: this.selection,
-        opponent: opponentFor(this.fighters[this.fighterIndex].id, this.mode),
+        opponent: this.mode === 'arcade' ? getCharacterById(this.arcadeRun.opponents[0]) ?? opponentFor(this.fighters[this.fighterIndex].id) : opponentFor(this.fighters[this.fighterIndex].id),
         versus: this.mode === 'versus',
         selectOpponent: selectsOpponent(this.mode),
         modeTitle: MODES.find(mode => mode.id === this.mode)!.title,
@@ -256,9 +260,9 @@ export class MenuScene extends Phaser.Scene {
     const featureTitle = root?.querySelector<HTMLElement>('.arena-feature-title');
     const featureHint = root?.querySelector<HTMLElement>('.arena-feature-hint');
     if (!root || !featureNumber || !featureTitle || !featureHint) return;
-    const changed = index !== this.modeIndex;
-    this.modeIndex = index;
-    const mode = MODES[index];
+    const changed = index !== this.cursor;
+    if (this.page === 'difficulty') this.difficultyIndex = index; else this.modeIndex = index;
+    const mode = this.entries[index];
     featureNumber.textContent = `0${index + 1} / ${mode.tag}`;
     featureTitle.textContent = mode.title;
     featureHint.textContent = mode.hint;
@@ -284,7 +288,10 @@ export class MenuScene extends Phaser.Scene {
   private chooseMode(index: number): void {
     this.selection.reopen();
     this.modeIndex = index; const id = MODES[index].id;
-    if (id === 'settings') { this.page = 'settings'; new ControlSettings(() => { this.page = 'home'; this.render(); }); } else { this.mode = id; this.page = 'fighter'; if (id === 'tutorial' || id === 'combo-tutorial') this.fighterIndex = 0; } this.render();
+    if (id === 'settings') { this.page = 'settings'; new ControlSettings(() => { this.page = 'home'; this.render(); }); } else { this.mode = id; if (id === 'arcade') this.arcadeRun = createArcadeRun(); this.page = id === 'arcade' ? 'difficulty' : 'fighter'; if (id === 'tutorial') this.fighterIndex = 0; } this.render();
+  }
+  private chooseDifficulty(index: number): void {
+    this.difficultyIndex = index; this.page = 'fighter'; this.render();
   }
   private back(): void {
     if (this.page === 'fighter' && this.selection.choosingColor[this.selection.activePlayer]) {
@@ -293,16 +300,16 @@ export class MenuScene extends Phaser.Scene {
       this.render(); return;
     }
     this.selection.reopen();
-    this.page = this.page === 'stage' ? 'fighter' : 'home'; this.render();
+    this.page = this.page === 'stage' ? 'fighter' : this.page === 'fighter' && this.mode === 'arcade' ? 'difficulty' : 'home'; this.render();
   }
   private confirmFighter(player = this.selection.activePlayer): void {
     if (!this.selection.confirm(player, selectsOpponent(this.mode))) { this.render(); return; }
-    if (isTrainingMode(this.mode)) this.startFight();
+    if (isTrainingMode(this.mode) || this.mode === 'arcade') this.startFight();
     else { this.page = 'stage'; this.render(); }
   }
   private startFight(): void {
     if (this.transitioning) return; this.transitioning = true;
     const fighter = this.fighters[this.fighterIndex];
-    this.scene.start('FightScene', { fighterId: fighter.id, opponentId: selectsOpponent(this.mode) ? this.fighters[this.selection.indices[1]].id : opponentFor(fighter.id, this.mode).id, stageId: this.selectedStage.id, mode: this.mode, arcadeIndex: 0, fighterPalette: this.selection.palettes[0], opponentPalette: selectsOpponent(this.mode) ? this.selection.palettes[1] : undefined });
+    this.scene.start('FightScene', { fighterId: fighter.id, opponentId: selectsOpponent(this.mode) ? this.fighters[this.selection.indices[1]].id : opponentFor(fighter.id).id, stageId: this.selectedStage.id, mode: this.mode, arcadeIndex: 0, arcadeRun: this.arcadeRun, difficulty: ARCADE_DIFFICULTIES[this.difficultyIndex].id satisfies ArcadeDifficulty, fighterPalette: this.selection.palettes[0], opponentPalette: selectsOpponent(this.mode) ? this.selection.palettes[1] : undefined });
   }
 }

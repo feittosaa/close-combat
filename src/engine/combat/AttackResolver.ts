@@ -6,6 +6,7 @@ import type { Hitbox } from '../collision/types';
 import { contactHeight, createHitbox, createHurtbox, createHurtZones } from '../collision/combatGeometry';
 import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { intersects } from '../collision/intersects';
+import { RAGE_BUFF_DAMAGE } from './rage';
 import { attackDurationFrames, classifyHitContext, frameAdvantage, type HitContext } from './frameData';
 
 export interface HitEvent {
@@ -94,16 +95,18 @@ export class AttackResolver {
       const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward' && !(attacker.fighterId === 'cowboy' && move.id === 'throw-24')
         ? (attacker.facing === 'right' ? 'left' : 'right') : attacker.facing;
       const chargeSteps = move.charge ? Math.min(move.charge.maxSteps, Math.floor((attack.chargeFrames ?? 0) / move.charge.framesPerStep)) : 0;
-      const damage = !blocked && volleyStep !== undefined && damageOverride
+      const baseDamage = !blocked && volleyStep !== undefined && damageOverride
         ? damageOverride(attacker.characterId, target.characterId, move, volleyStep)
-        : Math.round(move.damage * (1 + chargeSteps * (move.charge?.damagePerStep ?? 0)));
+        : move.damage * (1 + chargeSteps * (move.charge?.damagePerStep ?? 0));
+      const buff = (attacker.rush ? RAGE_BUFF_DAMAGE : 1) * (attack.empowered && move.category === 'special' ? RAGE_BUFF_DAMAGE : 1);
+      const damage = Math.round(baseDamage * buff);
       const event: HitEvent = { attackerId: attacker.characterId, targetId: target.characterId, moveId: move.id,
         ...(volleyStep !== undefined ? { volleyStep } : {}),
         // The event describes the move that connected. Training keeps reporting that
         // value after a depleted target is hit; only the health bar is capped at zero.
         damage: blocked ? 0 : armored ? Math.round(damage / 2) : damage, outcome: blocked ? 'block' : 'hit',
         ...(armored && !blocked ? { armored: true } : {}),
-        pushback: armored ? 0 : blocked ? move.pushback.block : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
+        pushback: armored ? 0 : blocked ? move.pushback.block : move.multiHit && volleyStep !== move.multiHit.hits - 1 ? 0 : move.pushback.hit, pushbackDirection, attackerRecoveryFrames: recovery,
         defenderStunFrames: armored ? 0 : stun, frameAdvantage: frameAdvantage(recovery, armored ? 0 : stun),
         context: blocked ? undefined : classifyHitContext(target),
         contactPoint: {

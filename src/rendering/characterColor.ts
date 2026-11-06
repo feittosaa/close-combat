@@ -40,7 +40,12 @@ export function palettePixel(r: number, g: number, b: number, palette: Palette):
   if (!delta || !max) return [r, g, b];
   const saturation = delta / max;
   let h = (max === r ? (g - b) / delta + (g < b ? 6 : 0) : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4) * 60;
-  if (palette === 'bob' && h >= 27 && h <= 56 && saturation >= .38 && max < 190 && max > 45) h = 355 + (h - 40) * .35;
+  if (palette === 'bob' && h >= 27 && h <= 56 && saturation >= .38 && max < 190 && max > 20) {
+    // Saturated orange at the low hue edge is blond hair or straw, not shirt: fade it out instead of cutting.
+    const shirt = Math.max(smoothstep(30, 35, h), 1 - smoothstep(.6, .72, saturation));
+    const red = hsvToRgb(355 + (h - 40) * .35, Math.min(255, max * 1.15), Math.max(saturation, .9));
+    return red.map((value, index) => Math.round([r, g, b][index] + (value - [r, g, b][index]) * shirt)) as [number, number, number];
+  }
   else if (palette === 'texas' && !(h >= 160 && h <= 255 && saturation >= .1)) {
     const warm = Math.max(1 - smoothstep(34, 44, h), smoothstep(292, 307, h));
     const red = Math.max(1 - smoothstep(8, 24, h), smoothstep(292, 307, h));
@@ -50,19 +55,20 @@ export function palettePixel(r: number, g: number, b: number, palette: Palette):
     const shade = max * .3;
     return [r, g, b].map(value => Math.round(value + (shade - value) * weight)) as [number, number, number];
   }
-  else if ((palette === 'magic' || palette === 'texas') && h >= 160 && h <= 255 && saturation >= .1) h += 55;
-  else return [r, g, b];
-  h = ((h % 360) + 360) % 360 / 60;
-  const value = palette === 'bob' ? Math.min(255, max * 1.15) : max;
-  const c = palette === 'bob' ? value * Math.max(saturation, .9) : delta;
-  const x = c * (1 - Math.abs(h % 2 - 1)), m = value - c;
-  const rgb = h < 1 ? [c, x, 0] : h < 2 ? [x, c, 0] : h < 3 ? [0, c, x] : h < 4 ? [0, x, c] : h < 5 ? [x, 0, c] : [c, 0, x];
-  return rgb.map(value => Math.round(value + m)) as [number, number, number];
+  else if ((palette === 'magic' || palette === 'texas') && h >= 160 && h <= 255 && saturation >= .1) return hsvToRgb(h + 55, max, saturation).map(Math.round) as [number, number, number];
+  return [r, g, b];
 }
 
-/** Stage grading is independent from the selective alternate palette. */
+function hsvToRgb(hue: number, value: number, saturation: number): [number, number, number] {
+  const h = ((hue % 360) + 360) % 360 / 60, c = value * saturation;
+  const x = c * (1 - Math.abs(h % 2 - 1)), m = value - c;
+  const rgb = h < 1 ? [c, x, 0] : h < 2 ? [x, c, 0] : h < 3 ? [0, c, x] : h < 4 ? [0, x, c] : h < 5 ? [x, 0, c] : [c, 0, x];
+  return rgb.map(channel => channel + m) as [number, number, number];
+}
+
+/** Stage grading is independent from the selective alternate palette and always runs after it, like a filter over the recolored sprite. */
 export class CharacterColorEffect {
-  private readonly matrices = new WeakMap<Phaser.GameObjects.Image, Phaser.FX.ColorMatrix>();
+  private readonly matrices = new WeakMap<Phaser.GameObjects.Image, { matrix: Phaser.FX.ColorMatrix; post: boolean }>();
   private readonly canvasColors = new WeakMap<Phaser.GameObjects.Image, CharacterColor>();
   private readonly canvasPalettes = new WeakMap<Phaser.GameObjects.Image, Palette>();
   private readonly pipelines = new WeakMap<Phaser.GameObjects.Image, { palette: number }>();
@@ -119,10 +125,17 @@ export class CharacterColorEffect {
     }
     const pipeline = this.pipelines.get(sprite);
     if (pipeline) pipeline.palette = palette === 'bob' ? 1 : palette === 'texas' ? 2 : palette === 'magic' ? 3 : palette === 'magic-highlight' ? 4 : 0;
-    if (!sprite.preFX) return;
-    let matrix = this.matrices.get(sprite);
-    if (!matrix) { matrix = sprite.preFX.addColorMatrix(); this.matrices.set(sprite, matrix); }
-    matrix.hue(color.hue);
-    matrix.brightness(color.brightness, true);
+    // Recolored sprites light after the palette (post effect, like a filter); plain sprites keep their original pre effect.
+    const post = this.pipelines.has(sprite);
+    let entry = this.matrices.get(sprite);
+    if (entry && entry.post !== post) {
+      (entry.post ? sprite.postFX : sprite.preFX)?.remove(entry.matrix as unknown as Phaser.FX.Controller);
+      entry = undefined;
+    }
+    const effects = post ? sprite.postFX : sprite.preFX;
+    if (!effects) return;
+    if (!entry) { entry = { matrix: effects.addColorMatrix(), post }; this.matrices.set(sprite, entry); }
+    entry.matrix.hue(color.hue);
+    entry.matrix.brightness(color.brightness, true);
   }
 }

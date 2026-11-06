@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize, getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboyUltimateActivationPose } from './animations/cowboySprites';
-import { getShotoSpritePose, getShotoUltimatePose, getShotoVictoryExit, getShotoResolution, shotoIdleScale, shotoSpriteScale } from './animations/shotoSprites';
+import { getShotoSpritePose, getShotoUltimatePose, getShotoResolution, shotoIdleScale, shotoSpriteScale, getShotoRoundEndPose } from './animations/shotoSprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
@@ -71,18 +71,14 @@ export class CombatantView {
     } else this.ultimateWind?.setVisible(false);
     const shotoPose = state.fighterId === 'shoto' && (!result || !result.winner || !state.grounded)
       ? activationFrame === undefined ? getShotoSpritePose(state, frame) : getShotoUltimatePose(state, activationFrame, true) : undefined;
-    const shotoVictory = state.fighterId === 'shoto' && result?.winner && state.grounded
-      ? getShotoVictoryExit(state, presentation!.elapsed) ?? { texture: 'shoto-victory', frame: Math.min(5, Math.floor(presentation!.elapsed / 12)), footAnchor: 900 / 1024,
-        offsetX: 0, flipX: state.facing === 'left' } : undefined;
-    const shotoDefeat = state.fighterId === 'shoto' && result && !result.winner && state.grounded && state.mode !== 'knockdown'
-      ? { texture: 'shoto-defeat', frame: Math.min(5, Math.floor(result.elapsed / 8)), footAnchor: 900 / 1024,
-        offsetX: 0, flipX: state.facing === 'left' } : undefined;
-    const shotoDrawing = shotoVictory || shotoDefeat || shotoPose;
+    const shotoResult = state.fighterId === 'shoto' && result && state.grounded && (result.winner || state.mode !== 'knockdown')
+      ? getShotoRoundEndPose(state, result.winner, presentation!.elapsed) : undefined;
+    const shotoDrawing = shotoResult || shotoPose;
     if (shotoDrawing && this.scene.textures?.exists(shotoDrawing.texture)) {
       const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, shotoDrawing.texture, String(shotoDrawing.frame)).setDepth(10);
       this.colorEffect.apply(sprite, color, 'bob');
       sprite.setDepth(depth).setTexture(shotoDrawing.texture, String(shotoDrawing.frame)).setOrigin(.5, shotoDrawing.footAnchor)
-        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * (shotoPose?.scale ?? 1) / getShotoResolution(shotoDrawing.texture)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y)
+        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * ('scale' in shotoDrawing ? shotoDrawing.scale ?? 1 : 1) / getShotoResolution(shotoDrawing.texture)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y)
         .setFlipX(shotoDrawing.flipX).setAlpha(1).setVisible(true);
       this.sprites.slice(1).forEach(other => other.setVisible(false));
       this.graphics.clear();

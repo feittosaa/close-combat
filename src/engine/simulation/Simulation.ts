@@ -1,4 +1,4 @@
-import { RAGE_SEGMENT } from '../combat/rage';
+import { RAGE_BAR, RAGE_SEGMENT, RUSH_FREEZE_FRAMES } from '../combat/rage';
 import type { CharacterState, CharacterAnimationState, CharacterAttack } from '../characters/CharacterState';
 import { AttackResolver, type HitEvent } from '../combat/AttackResolver';
 import { defaultCharacter, type CharacterDefinition } from '../data/characters';
@@ -104,6 +104,7 @@ export class Simulation {
   private ultimateHeld = [false, false];
   private tauntHeld = [false, false];
   private rageActionHeld = [false, false];
+  private rushChordHeld = [false, false];
   private breaker: ({ guess: 'light' | 'heavy'; combo: ComboRecord; failed: boolean } | undefined)[] = [undefined, undefined];
   private previousAxis = [0, 0];
   private guardHeld = [false, false];
@@ -136,7 +137,7 @@ export class Simulation {
   }
   clearInputHistory(): void {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
-    this.jumpHeld.fill(false); this.rageActionHeld.fill(false); this.ultimateHeld.fill(false); this.tauntHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
+    this.jumpHeld.fill(false); this.rageActionHeld.fill(false); this.rushChordHeld.fill(false); this.ultimateHeld.fill(false); this.tauntHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
     this.guardHeld.fill(false); this.guardStarted.fill(-Infinity);
     this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
   }
@@ -368,7 +369,7 @@ export class Simulation {
       } else this.dashFrames[index] = 0;
       const tauntPressed = Boolean(input.taunt) && !this.tauntHeld[index];
       this.tauntHeld[index] = Boolean(input.taunt);
-      if ((character.fighterId === 'cowboy' || character.fighterId === 'shoto') && tauntPressed && character.mode === 'neutral' && !character.attack) character.tauntStartedFrame = this.frame;
+      if ((character.fighterId === 'cowboy' || character.fighterId === 'shoto') && tauntPressed && !input.rageAction && character.mode === 'neutral' && !character.attack) character.tauntStartedFrame = this.frame;
       if (character.tauntStartedFrame !== undefined && (character.mode !== 'neutral' || character.attack || this.frame - character.tauntStartedFrame >= 132)) character.tauntStartedFrame = undefined;
       if (character.knockdown) { character.x += character.knockdown.velocityX; character.knockdown.velocityX *= .94; }
       if (character.throwPull) {
@@ -623,7 +624,8 @@ export class Simulation {
         }
       }
 
-      if (sourceMove.knockdown && event.outcome === 'hit' && target.grounded) {
+      // Multi-hit moves keep the target standing until their last hit, which alone knocks down and pushes.
+      if (sourceMove.knockdown && event.outcome === 'hit' && target.grounded && (!sourceMove.multiHit || event.volleyStep === sourceMove.multiHit.hits - 1)) {
         target.mode = 'knockdown'; target.attack = undefined; target.crouching = false;
         target.knockdown = { velocityX: 0 };
         target.remainingStateFrames = Math.max(juggleRules?.getupFrames ?? 24, event.attackerRecoveryFrames);
@@ -812,8 +814,13 @@ export class Simulation {
   private readRageActions(inputs: readonly FrameInput[]): void {
     this.characters.forEach((character, index) => {
       const input = inputs[index] ?? neutral();
-      if (!input.rageAction) { this.rageActionHeld[index] = false; return; }
-      if (this.rageActionHeld[index] || character.rage < RAGE_SEGMENT) return;
+      if (!input.rageAction) { this.rageActionHeld[index] = false; this.rushChordHeld[index] = false; return; }
+      const chord = Boolean(input.taunt), chordStarted = chord && !this.rushChordHeld[index];
+      this.rushChordHeld[index] = chord;
+      if (chord) { if (chordStarted) this.startRush(character); this.rageActionHeld[index] = true; return; }
+      if (this.rageActionHeld[index]) return;
+      if (character.rage >= RAGE_BAR && this.empowerSpecial(character, index)) return;
+      if (character.rage < RAGE_SEGMENT) return;
       const combo = this.comboHistory.find(entry => entry.active && entry.targetId === character.characterId);
       const button = [...input.buttons][0];
       if (combo && (character.mode === 'hitstun' || character.mode === 'knockdown') && button && input.buttons.size === 1 && !this.breaker[index]) {
@@ -834,6 +841,23 @@ export class Simulation {
     this.breaker.forEach((attempt, index) => { if (attempt && !attempt.combo.active) this.breaker[index] = undefined; });
   }
 
+  /** Rush (E + provocação): gasta uma barra cheia, congela os quadros por um instante e não trava o lutador. */
+  private startRush(character: CharacterState): void {
+    if (character.rush || character.rage < RAGE_BAR || character.mode === 'hitstun' || character.mode === 'knockdown') return;
+    character.rage -= RAGE_BAR; character.rush = true; character.tauntStartedFrame = undefined;
+    this.hitstopFramesRemaining = Math.max(this.hitstopFramesRemaining, RUSH_FREEZE_FRAMES);
+  }
+
+  /** Reforço de especial (E durante o golpe): gasta uma barra cheia. */
+  private empowerSpecial(character: CharacterState, index: number): boolean {
+    const attack = character.attack;
+    if (!attack || attack.empowered || this.move(index, attack.moveId)?.category !== 'special') return false;
+    attack.empowered = true;
+    this.projectiles.forEach(projectile => { if (projectile.ownerId === character.characterId && projectile.attack.moveId === attack.moveId) projectile.attack.empowered = true; });
+    character.rage -= RAGE_BAR; this.rageActionHeld[index] = true;
+    return true;
+  }
+
   private tryBreakerOnMove(attackerIndex: number, move: MoveDefinition): boolean {
     const targetIndex = 1 - attackerIndex;
     const attempt = this.breaker[targetIndex];
@@ -852,9 +876,10 @@ export class Simulation {
     for (const entry of this.comboHistory) if (entry.targetId === target.characterId) entry.active = false;
     for (const character of [target, attacker]) {
       character.attack = undefined; character.chain = undefined; character.hitSequence = undefined; character.contactSequence = undefined;
-      character.mode = 'neutral'; character.remainingStateFrames = 0; character.grounded = true;
-      character.y = this.config.arena.floorY; character.crouching = false; character.airDashUsed = false;
-      character.airborneStartedFrame = undefined; character.airborneElapsedFrames = undefined;
+      // A fighter still in the air keeps its height and falls on its own; only grounded ones return to neutral.
+      const inAir = !character.grounded;
+      character.mode = inAir ? 'airborne' : 'neutral'; character.remainingStateFrames = 0; character.crouching = false; character.airDashUsed = false;
+      if (!inAir) { character.y = this.config.arena.floorY; character.airborneStartedFrame = undefined; character.airborneElapsedFrames = undefined; }
       character.grabbedStartedFrame = undefined; character.grabbedHold = undefined; character.wakeupInvulnerabilityFrames = undefined;
       character.juggle = undefined; character.knockdown = undefined; character.throwFlight = false;
       character.wallBouncePending = undefined; character.throwPull = undefined; character.pushbackMotion = undefined; character.verticalVelocity = 0;
