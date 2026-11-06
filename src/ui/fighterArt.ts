@@ -3,13 +3,15 @@ import grapplerBackground from '../assets/art/characters/grappler/selection-back
 import shotoBackground from '../assets/art/characters/shoto/selection-background.png';
 import cowboyBackground from '../assets/art/characters/cowboy/selection-background.png';
 import cowboyIcon from '../assets/art/characters/cowboy/selection-icon.png';
-import cowboyPortrait from '../assets/art/characters/cowboy/selection-portrait.png';
 import shotoIcon from '../assets/art/characters/shoto/selection-icon.png';
-import shotoPortrait from '../assets/art/characters/shoto/selection-portrait.png';
 import grapplerIcon from '../assets/art/characters/grappler/selection-icon.png';
-import grapplerPortrait from '../assets/art/characters/grappler/selection-portrait.png';
 import puppetIcon from '../assets/art/characters/puppet/selection-icon.png';
-import puppetPortrait from '../assets/art/characters/puppet/selection-portrait.png';
+import shotoFullbody from '../assets/art/characters/shoto/fullbody.png';
+import cowboyFullbody from '../assets/art/characters/cowboy/fullbody.png';
+import grapplerFullbody from '../assets/art/characters/grappler/fullbody.png';
+import puppetFullbody from '../assets/art/characters/puppet/fullbody.png';
+import pirateFullbody from '../assets/art/characters/pirate/fullbody.png';
+import stanceFullbody from '../assets/art/characters/stance/fullbody.png';
 import pirateBackground from '../assets/art/characters/pirate/selection-background.png';
 import pirateIcon from '../assets/art/characters/pirate/selection-icon.png';
 import stanceBackground from '../assets/art/characters/stance/selection-background.png';
@@ -19,16 +21,16 @@ import type Phaser from 'phaser';
 
 /** Square window around the visible art of each icon, so every icon fills the same area of the HUD (the drawings sit differently inside their canvases). */
 export interface IconWindow { x: number; y: number; size: number }
-/** Height scale of the selection portraits, known only for the characters already drawn full height. */
-export interface PortraitMetrics { portrait: string; heightCm: number; imageHeight: number; top: number; bottom: number }
-export type FighterArt = { background: string; icon: string; iconWindow: IconWindow; name: string } & Partial<PortraitMetrics>;
+/** Victory-screen framing: the full-body art is drawn `height` times the screen height, its top edge `top` screen heights from the top. Each `top` leaves the head whole just inside the screen; only the legs fall off the bottom. */
+export interface VictoryFrame { height: number; top: number }
+export interface FighterArt { background: string; icon: string; iconWindow: IconWindow; fullbody: string; victory: VictoryFrame; name: string }
 export const fighterArt: Readonly<Record<string, FighterArt>> = {
-  shoto: {background:shotoBackground,icon:shotoIcon,iconWindow:{x:7,y:26,size:1228},portrait:shotoPortrait,name:'Bob',heightCm:170,imageHeight:1446,top:22,bottom:1422},
-  cowboy: {background:cowboyBackground,icon:cowboyIcon,iconWindow:{x:0,y:13,size:1241},portrait:cowboyPortrait,name:'Texas',heightCm:160,imageHeight:1448,top:11,bottom:1436},
-  grappler: {background:grapplerBackground,icon:grapplerIcon,iconWindow:{x:1,y:0,size:1022},portrait:grapplerPortrait,name:'Grappler',heightCm:205,imageHeight:1448,top:30,bottom:1417},
-  puppet: {background:puppetBackground,icon:puppetIcon,iconWindow:{x:0,y:0,size:928},portrait:puppetPortrait,name:'Puppet',heightCm:175,imageHeight:1435,top:9,bottom:1412},
-  pirate: {background:pirateBackground,icon:pirateIcon,iconWindow:{x:0,y:0,size:1152},name:'Pirate'},
-  stance: {background:stanceBackground,icon:stanceIcon,iconWindow:{x:0,y:7,size:2287},name:'Stance'},
+  shoto: {background:shotoBackground,icon:shotoIcon,iconWindow:{x:7,y:26,size:1228},fullbody:shotoFullbody,victory:{height:1.3,top:0},name:'Bob'},
+  cowboy: {background:cowboyBackground,icon:cowboyIcon,iconWindow:{x:0,y:13,size:1241},fullbody:cowboyFullbody,victory:{height:1.28,top:.01},name:'Texas'},
+  grappler: {background:grapplerBackground,icon:grapplerIcon,iconWindow:{x:1,y:0,size:1022},fullbody:grapplerFullbody,victory:{height:1.2,top:-.005},name:'Grappler'},
+  puppet: {background:puppetBackground,icon:puppetIcon,iconWindow:{x:0,y:0,size:928},fullbody:puppetFullbody,victory:{height:1.34,top:.012},name:'Puppet'},
+  pirate: {background:pirateBackground,icon:pirateIcon,iconWindow:{x:0,y:0,size:1152},fullbody:pirateFullbody,victory:{height:1.1,top:.004},name:'Pirate'},
+  stance: {background:stanceBackground,icon:stanceIcon,iconWindow:{x:0,y:7,size:2287},fullbody:stanceFullbody,victory:{height:1.38,top:.009},name:'Stance'},
 };
 
 /** Selection art shown for a player who picked the random tile; it is not a fighter, so it never appears in the roster. */
@@ -39,15 +41,6 @@ export function placeFighterIcon(image: Phaser.GameObjects.Image, id: string, x:
   const window = fighterArt[id].iconWindow, scale = size / window.size;
   image.setCrop(window.x, window.y, window.size, window.size).setScale(scale)
     .setPosition(x - (window.x + window.size / 2 - image.width / 2) * scale, y - (window.y + window.size / 2 - image.height / 2) * scale);
-}
-
-/** Position the visible artwork on a shared baseline, allowing for transparent margins. */
-export function selectionPortraitSize(id: string): {height: number; bottom: number} {
-  const { heightCm, imageHeight, top, bottom } = fighterArt[id];
-  if (heightCm === undefined || imageHeight === undefined || top === undefined || bottom === undefined) throw new Error(`Sem medidas de retrato para ${id}`);
-  const visibleHeight = bottom - top;
-  const scale = heightCm / 205 * 1.25;
-  return {height: 100 * scale * imageHeight / visibleHeight, bottom: -100 * scale * (imageHeight - bottom) / visibleHeight};
 }
 
 export function preloadFighterIcons(scene: Phaser.Scene): void {

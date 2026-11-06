@@ -216,12 +216,12 @@ describe('fundação da simulação', () => {
     expect(sim.snapshot()).toMatchObject({round:2,phase:'fight',roundFramesRemaining:1});
     expect(reads).toBe(2);
   });
-  it('mantém o resultado por 160 quadros e aguarda mais um segundo antes do próximo round', () => {
+  it('mantém o resultado por 160 quadros e aguarda mais 90 quadros (a pose de vitória) antes do próximo round', () => {
     const rules = {...config, match:{...config.match,roundDurationFrames:1}};
     const sim = new Simulation(rules, [shoto,{...shoto,maxHealth:900}]);
     sim.stepFrame([N,N]);
     expect(sim.snapshot()).toMatchObject({phase:'round-over',round:1});
-    advance(sim, 219);
+    advance(sim, 249);
     expect(sim.snapshot()).toMatchObject({phase:'round-over',round:1});
     advance(sim, 1);
     expect(sim.snapshot()).toMatchObject({phase:'fight',round:2});

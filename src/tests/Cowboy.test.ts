@@ -1229,3 +1229,9 @@ it.each([0,1])('dispara dois projéteis simultâneos com 1+2: jogador %i', playe
   for(let tick=0;tick<80 && sim.snapshot().recentContacts.length<2;tick++)step();
   expect(sim.snapshot().recentContacts.filter(entry=>entry.event.moveId==='double-shot')).toHaveLength(2);
 });
+
+it('a gravidade ao apanhar no ar e ao ser levantado é a mesma do Bob (o pulo da Texas segue mais alto)', async () => {
+  const { shoto } = await import('../engine/data/fighters/shoto');
+  expect(cowboy.movement.jumpVelocity).toBeLessThan(shoto.movement.jumpVelocity);
+  expect(cowboy.juggle).toEqual(shoto.juggle);
+});

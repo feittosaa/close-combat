@@ -1,4 +1,5 @@
 import { LOGICAL_VIEW, getHudLogicalWidth } from '../rendering/presentation';
+import { VictoryScreen } from '../ui/VictoryScreen';
 import { HUD_FONT } from '../ui/hudTheme';
 import { t } from '../i18n/i18n';
 import { TutorialSession } from '../training/TutorialSession';
@@ -60,6 +61,7 @@ export class FightScene extends Phaser.Scene {
   private knockoutAt?: number;
   private knockoutSlowRemaining = 0;
   private resultMenu?: HTMLElement;
+  private victoryScreen?: VictoryScreen;
   private resultMenuIndex = 0;
   private resultActions: { label: string; run: () => void }[] = [];
   private readonly alignResultMenu = (): void => {
@@ -233,6 +235,10 @@ export class FightScene extends Phaser.Scene {
       this.resultActions.push({label:t('result.changeFighter'), run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id, selectVersus:true, ...(snapshot.matchWinnerId ? { stageChooser: snapshot.matchWinnerId === 'player-1' ? 0 : 1 } : {})})});
     }
     this.resultActions.push({label:t(this.mode === 'arcade' && this.resultActions.length ? 'result.giveUp' : 'result.mainMenu'), run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id})});
+    // The champion screen closes a PvP match and the whole Arcade run (a win over the last opponent).
+    const champion = snapshot.matchWinnerId === 'player-1' ? this.selectedFighter : snapshot.matchWinnerId === 'player-2' ? this.opponentFighter : undefined;
+    const arcadeCleared = this.mode === 'arcade' && snapshot.matchWinnerId === 'player-1' && this.arcadeIndex + 1 >= this.arcadeRun!.opponents.length;
+    if (champion && (this.mode === 'versus' || arcadeCleared)) this.victoryScreen = new VictoryScreen(this.game.canvas, this.selectedStage, champion.id, champion.name);
     this.resultMenu = document.createElement('nav');
     this.resultMenu.className = 'match-result-menu';
     this.resultMenu.setAttribute('aria-label', t('result.label'));
@@ -451,6 +457,7 @@ export class FightScene extends Phaser.Scene {
     window.removeEventListener('keydown', this.resultMenuKey, true);
     window.removeEventListener('resize', this.alignResultMenu);
     this.resultMenu?.remove(); this.resultMenu = undefined; this.resultActions = [];
+    this.victoryScreen?.destroy(); this.victoryScreen = undefined;
     window.removeEventListener('keydown', this.handlePause);
     this.input.keyboard?.off('keydown-ESC', this.handleEscape);
     this.pauseMenu?.destroy(); this.pauseMenu = undefined;

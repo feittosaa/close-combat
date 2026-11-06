@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { FighterSelection } from '../ui/FighterSelection';
-import { fighterArt, selectionPortraitSize } from '../ui/fighterArt';
-
-it('scales visible selection portraits to the authored heights and shared baseline', () => {
-  for (const [id,height] of Object.entries({cowboy:160,shoto:170,puppet:175,grappler:205})) {
-    const { top, bottom, imageHeight } = fighterArt[id] as { top: number; bottom: number; imageHeight: number }, size = selectionPortraitSize(id);
-    expect(size.height * (bottom-top) / imageHeight).toBeCloseTo(height/205*125);
-    expect(size.bottom + size.height * (imageHeight-bottom) / imageHeight).toBeCloseTo(0);
-  }
-});
 
 describe('fighter selection', () => {
   it('requires a character and color confirmation for each player', () => {

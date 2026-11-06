@@ -253,6 +253,7 @@ export const it: Locale = {
     'tutorial.guard': 'Parare',
     'tutorial.guardHint': 'Tieni indietro per parare il pugno dell\'avversario.',
     'tutorial.comboHint': 'Collega tutti i colpi in ordine senza lasciare che l\'avversario si riprenda.',
+    'victory.label': 'Schermata di vittoria di {name}',
     'result.label': 'Opzioni dopo l\'incontro',
     'result.continue': 'CONTINUA',
     'result.rematch': 'RIVINCITA',

@@ -253,6 +253,7 @@ export const de: Locale = {
     'tutorial.guard': 'Abwehren',
     'tutorial.guardHint': 'Halte zurück, um den Schlag des Gegners zu blocken.',
     'tutorial.comboHint': 'Verbinde alle Angriffe der Reihe nach, ohne dass sich der Gegner erholt.',
+    'victory.label': 'Siegerbildschirm von {name}',
     'result.label': 'Optionen nach dem Kampf',
     'result.continue': 'WEITER',
     'result.rematch': 'REVANCHE',
