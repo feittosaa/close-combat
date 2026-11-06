@@ -7,16 +7,6 @@ import type { MoveDefinition } from '../engine/data/moves';
 export const OPPONENT_MODES = ['idle', 'guard-high', 'guard-low', 'repeat-cross', 'repeat-jab', 'repeat-kick', 'manual'] as const;
 export type OpponentMode = typeof OPPONENT_MODES[number];
 
-export const OPPONENT_LABELS: Record<OpponentMode, string> = {
-  idle: 'PARADO',
-  manual: 'SEGUNDO JOGADOR',
-  'guard-high': 'GUARDA ALTA',
-  'guard-low': 'GUARDA BAIXA',
-  'repeat-cross': 'REPETE SOCO 2',
-  'repeat-jab': 'REPETE SOCO 1',
-  'repeat-kick': 'REPETE CHUTE 4',
-};
-
 /** Practice controls produce ordinary inputs; the combat engine never receives forced hits or blocks. */
 export class TrainingSession {
   paused = false;

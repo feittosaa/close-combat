@@ -5,4 +5,4 @@ export interface UltimateActivation {
   elapsedFrames: number;
   remainingFrames: number;
 }
-export interface ExplosionState { x: number; y: number; remainingFrames: number; kind?: 'dynamite'; id?: number }
+export interface ExplosionState { x: number; y: number; remainingFrames: number; kind?: 'dynamite'; id?: number; ownerId?: string }

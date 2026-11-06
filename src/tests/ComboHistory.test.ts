@@ -26,5 +26,6 @@ it.each([0,1])('soma golpes até o adversário recuperar a defesa: jogador %i', 
   expect(sim.snapshot().hitEvents[0]?.outcome).toBe('block');
   expect(sim.snapshot().comboHistory).toHaveLength(1);
   sim.resetMatch();
-  expect(sim.snapshot().comboHistory).toEqual([]);
+  // Training reset only repositions: the finished combo stays listed, closed.
+  expect(sim.snapshot().comboHistory).toMatchObject([{hits:3,damage:72,active:false}]);
 });

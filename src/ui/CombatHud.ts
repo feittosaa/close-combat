@@ -1,9 +1,15 @@
+import { RAGE_LEVEL, RAGE_SEGMENT } from '../engine/combat/rage';
 import { LOGICAL_VIEW } from '../rendering/presentation';
 import type Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
-import { contactLabel, MODE_LABELS } from './combatLabels';
+import { contactLabel, stateLabel } from './combatLabels';
+import { t } from '../i18n/i18n';
 import { getSystemControls, keyLabel } from '../input/controlSettings';
-import { HUD, hudText, drawDiamond, drawHudPanel, healthBarFill } from './hudTheme';
+import { placeFighterIcon } from './fighterArt';
+import { HUD, hudText, drawRoundMarker, healthBarFill } from './hudTheme';
+
+/** How long a combo breaker notice stays up after the freeze, in frames. */
+const BREAKER_NOTICE_FRAMES = 90;
 
 /** Minimal HUD; all values and round markers reflect the same simulation snapshot. */
 export class CombatHud {
@@ -12,104 +18,110 @@ export class CombatHud {
   private readonly timer: Phaser.GameObjects.Text;
   private readonly roundLabel: Phaser.GameObjects.Text;
   private readonly hitLabel: Phaser.GameObjects.Text;
-  private readonly resultLabel: Phaser.GameObjects.Text;
   private readonly modeLabels: Phaser.GameObjects.Text[];
   private readonly rageLabels: Phaser.GameObjects.Text[];
-  private readonly healthLabels: Phaser.GameObjects.Text[];
-  private readonly comboLabels: Phaser.GameObjects.Text[];
-  private readonly comboGraphics: Phaser.GameObjects.Graphics;
+  private readonly rageLevels: Phaser.GameObjects.Text[];
+  private readonly comboCounts: Phaser.GameObjects.Text[];
+  private readonly comboWords: Phaser.GameObjects.Text[];
+  private readonly comboDetails: Phaser.GameObjects.Text[];
+  private readonly breakerLabels: Phaser.GameObjects.Text[];
   private readonly pauseHint: Phaser.GameObjects.Text;
   private lastImpactLabel = '';
   private lastImpactFrame = Number.NEGATIVE_INFINITY;
   private readonly barWidth: number;
   private readonly sidePadding = 82;
 
-  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = ['JOGADOR 1','JOGADOR 2'], stageName = '', private readonly training = false, private readonly practiceLabel = 'TREINO LIVRE', fighterIds?: readonly [string,string]) {
+  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = [t('hud.player', { player: 1 }),t('hud.player', { player: 2 })], private readonly training = false, private readonly practiceLabel = t('hud.freeTraining'), fighterIds?: readonly [string,string]) {
     this.barWidth = Math.max(360, width / 2 - this.sidePadding - 90);
     const decoration=scene.add.graphics();
-    // The timer sits in a small angled ink badge; health rails remain continuous.
-    decoration.fillStyle(HUD.ink,.92).fillPoints([
-      {x:width/2-34,y:0},{x:width/2+34,y:0},{x:width/2+28,y:41},{x:width/2-28,y:41},
-    ],true);
-    decoration.fillStyle(HUD.players[0]).fillPoints([
-      {x:width/2-34,y:0},{x:width/2-29,y:0},{x:width/2-23,y:41},{x:width/2-28,y:41},
-    ],true);
-    const labels=[scene.add.text(fighterIds ? 82 : 28,31,`P1  /  ${fighterNames[0].toUpperCase()}`,hudText(13,true)),
-      scene.add.text(width-(fighterIds ? 82 : 28),31,`P2  /  ${fighterNames[1].toUpperCase()}`,hudText(13,true)).setOrigin(1,0)];
-    const portraits = fighterIds ? fighterIds.map((id,index) => scene.add.image(index === 0 ? 40 : width-40,39,`fighter-icon-${id}`).setDisplaySize(76,76)) : [];
+    // The timer hangs from the top edge on an ink plaque with rounded lower corners and a doubled cream rule.
+    const plaque = { tl: 0, tr: 0, bl: 14, br: 14 };
+    decoration.fillStyle(HUD.ink,.94).fillRoundedRect(width/2-40,-2,80,66,plaque);
+    decoration.lineStyle(2,HUD.gold,.95).strokeRoundedRect(width/2-40,-2,80,66,plaque);
+    decoration.lineStyle(1,HUD.gold,.4).strokeRoundedRect(width/2-35,-2,70,61,{ tl: 0, tr: 0, bl: 10, br: 10 });
+    // Only the fighter's name under each bar; side and portrait already tell the players apart.
+    const labels=[scene.add.text(fighterIds ? 82 : 28,30,fighterNames[0].toUpperCase(),hudText(18,true)),
+      scene.add.text(width-(fighterIds ? 82 : 28),30,fighterNames[1].toUpperCase(),hudText(18,true)).setOrigin(1,0)];
+    const portraits = fighterIds ? fighterIds.map((id,index) => { const icon = scene.add.image(0,0,`fighter-icon-${id}`); placeFighterIcon(icon,id,index === 0 ? 40 : width-40,39,76); return icon; }) : [];
     this.healthGraphics=scene.add.graphics();
-    this.healthLabels=[scene.add.text(this.sidePadding+this.barWidth,33,'',hudText(10,false,HUD.goldText)).setOrigin(1,0),
-      scene.add.text(width-this.sidePadding-this.barWidth,33,'',hudText(10,false,HUD.goldText))];
-    this.rageLabels=[scene.add.text(30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)),scene.add.text(width-30,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)).setOrigin(1,0)];
-    this.modeLabels=[scene.add.text(fighterIds ? 82 : 30,49,'',hudText(10,false,HUD.muted)),
-      scene.add.text(width-(fighterIds ? 82 : 30),49,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
-    this.timer=scene.add.text(width/2,6,'99',hudText(30,true)).setOrigin(.5,0);
-    this.roundLabel=scene.add.text(width/2,41,'ROUND 1',hudText(10,false,HUD.goldText)).setOrigin(.5,0);
-    const stageLabel=scene.add.text(width/2,61,stageName.toUpperCase(),hudText(9,false,HUD.muted)).setOrigin(.5,0);
+    this.rageLabels=[scene.add.text(45,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)),scene.add.text(width-45,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)).setOrigin(1,0)];
+    this.rageLevels=[scene.add.text(24,heightForRage(training)+5,'0',hudText(16,true,HUD.goldText)).setOrigin(.5),scene.add.text(width-24,heightForRage(training)+5,'0',hudText(16,true,HUD.goldText)).setOrigin(.5)];
+    this.modeLabels=[scene.add.text(fighterIds ? 82 : 30,53,'',hudText(10,false,HUD.muted)),
+      scene.add.text(width-(fighterIds ? 82 : 30),53,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
+    this.timer=scene.add.text(width/2,4,'99',hudText(28,true)).setOrigin(.5,0);
+    this.roundLabel=scene.add.text(width/2,38,'ROUND 1',hudText(10,true,HUD.goldText)).setOrigin(.5,0);
     this.hitLabel=scene.add.text(width/2,78,'',{...hudText(11,false,HUD.goldText),align:'center',wordWrap:{width:540}}).setOrigin(.5,0).setVisible(training);
-    this.comboGraphics=scene.add.graphics();
-    this.comboLabels=[scene.add.text(training?217:42,82,'',hudText(12,true,HUD.goldText)),
-      scene.add.text(training?width-217:width-42,82,'',{...hudText(12,true,HUD.goldText),align:'right'}).setOrigin(1,0)];
-    this.resultLabel=scene.add.text(width/2,98,'',{...hudText(17,true),stroke:'#17131a',strokeThickness:4,align:'center'}).setOrigin(.5,0);
+    // Combos: a large hit count under each health bar, on the player's own side, with the damage beneath it.
+    const comboX = training ? 210 : 30;
+    this.comboCounts=[scene.add.text(comboX,88,'',{...hudText(58,true),strokeThickness:6}),
+      scene.add.text(width-comboX,88,'',{...hudText(58,true),strokeThickness:6}).setOrigin(1,0)];
+    this.comboWords=[scene.add.text(comboX,118,'',hudText(18,true)),scene.add.text(width-comboX,118,'',hudText(18,true)).setOrigin(1,0)];
+    this.comboDetails=[scene.add.text(comboX+2,154,'',hudText(13,true,HUD.goldText)),
+      scene.add.text(width-comboX-2,154,'',{...hudText(13,true,HUD.goldText),align:'right'}).setOrigin(1,0)];
+    // Combo breaker outcome, shown in the combo slot of the fighter who tried it.
+    this.breakerLabels=[scene.add.text(comboX,100,'',{...hudText(30,true),strokeThickness:5}),
+      scene.add.text(width-comboX,100,'',{...hudText(30,true),strokeThickness:5}).setOrigin(1,0)];
     this.pauseHint=scene.add.text(width/2,LOGICAL_VIEW.height-18,'',hudText(10,false,HUD.muted)).setOrigin(.5).setVisible(!training);
-    this.root=scene.add.container(0,0,[decoration,this.healthGraphics,...portraits,...labels,...this.healthLabels,...this.modeLabels,...this.rageLabels,
-      this.timer,this.roundLabel,stageLabel,this.hitLabel,this.comboGraphics,...this.comboLabels,this.resultLabel,this.pauseHint]).setScrollFactor(0).setDepth(100);
+    this.root=scene.add.container(0,0,[decoration,this.healthGraphics,...portraits,...labels,...this.modeLabels,...this.rageLabels,...this.rageLevels,
+      this.timer,this.roundLabel,this.hitLabel,...this.comboCounts,...this.comboWords,...this.comboDetails,...this.breakerLabels,this.pauseHint]).setScrollFactor(0).setDepth(100);
   }
 
   update(snapshot: SimulationSnapshot, width: number): void {
     this.timer.setText(this.training?'∞':String(Math.ceil(snapshot.roundFramesRemaining/60)).padStart(2,'0'));
-    this.roundLabel.setText(this.training?this.practiceLabel:`ROUND ${snapshot.round}`).setFontSize(this.training?9:10);
-    const winner=snapshot.characters.findIndex(c=>c.characterId===(snapshot.phase==='match-over'?snapshot.matchWinnerId:snapshot.roundWinnerId));
-    const outcome=snapshot.roundEndReason==='knockout'?'K.O.':snapshot.roundEndReason==='time'?'TEMPO':'EMPATE';
-    this.resultLabel.setText(snapshot.phase==='match-over' ? `${winner<0?'EMPATE':`P${winner+1} VENCE A LUTA`}`
-      : snapshot.phase==='round-over'?`${outcome}${winner<0?'':` · P${winner+1} VENCE`}`:'');
-    this.pauseHint.setText(`${keyLabel(getSystemControls().pause)} / ESC · PAUSA`);
+    this.roundLabel.setText(this.training?this.practiceLabel:t('hud.round', { round: snapshot.round })).setFontSize(this.training?9:10);
+    this.pauseHint.setText(t('hud.pauseHint', { key: keyLabel(getSystemControls().pause) }));
     const latest=snapshot.recentContacts[snapshot.recentContacts.length-1];
     if(snapshot.frame<this.lastImpactFrame){this.lastImpactLabel='';this.lastImpactFrame=Number.NEGATIVE_INFINITY;}
     if(latest&&latest.frame>this.lastImpactFrame){this.lastImpactLabel=contactLabel(latest.event);this.lastImpactFrame=latest.frame;}
     this.hitLabel.setText(snapshot.frame-this.lastImpactFrame<=90?this.lastImpactLabel:'');
-    this.comboGraphics.clear();
-    this.comboLabels.forEach((label,index) => {
-      const records = snapshot.comboHistory.filter(combo => combo.attackerId === snapshot.characters[index].characterId);
-      const visible = this.training ? records.slice(-3).reverse() : records.slice(-1).filter(combo => combo.hits > 1 && (combo.active || snapshot.frame - combo.lastFrame <= 180));
-      if (visible.length) drawHudPanel(this.comboGraphics, index === 0 ? (this.training ? 205 : 30) : width-(this.training ? 365 : 190),76,160,14+visible.length*15,HUD.players[index]);
-      label.setText(visible.map(combo => `${combo.hits} HIT${combo.hits === 1 ? '' : 'S'} · ${combo.damage} DANO`).join('\n'));
+    snapshot.characters.forEach((character,index) => {
+      const notice = snapshot.breakerNotices.find(entry => entry.characterId === character.characterId && snapshot.frame - entry.frame <= BREAKER_NOTICE_FRAMES);
+      this.breakerLabels[index]?.setText(notice ? t(notice.outcome === 'broken' ? 'hud.breakerSuccess' : 'hud.breakerFail') : '')
+        .setColor(notice?.outcome === 'broken' ? HUD.ivory : '#ff4b36');
+      const combo = snapshot.comboHistory.filter(record => record.attackerId === character.characterId).pop();
+      const shown = !notice && combo && combo.hits > 1 && (combo.active || snapshot.frame - combo.lastFrame <= 120) ? combo : undefined;
+      const count = this.comboCounts[index]!, word = this.comboWords[index]!;
+      count.setText(shown ? String(shown.hits) : '').setColor(HUD.ivory);
+      // The word sits beside the number, on the inner side, so the count always reads first.
+      word.setText(shown ? t('hud.comboHits') : '').setX(index === 0 ? count.x + count.width + 6 : count.x - count.width - 6);
+      this.comboDetails[index]?.setText(shown ? t('hud.comboDamage', { damage: shown.damage }) : '');
     });
     this.healthGraphics.clear();
     snapshot.characters.forEach((character,index)=>{
       const x=index===0?this.sidePadding:width-this.sidePadding-this.barWidth;
       const g=this.healthGraphics;
+      // Health: a square ink case with a cream rim and a flat fill in the player's colour.
+      g.fillStyle(HUD.ink,.92).fillRect(x-4,6,this.barWidth+8,25);
       g.fillStyle(HUD.rail).fillRect(x,10,this.barWidth,17);
       const fill=healthBarFill(character.health,character.maxHealth,x+3,this.barWidth-6,index===1);
-      if(fill.width>0){
-        g.fillStyle(HUD.players[index]).fillRect(fill.x,12,fill.width,13);
-        g.fillStyle(HUD.lightGold,.45).fillRect(fill.x,12,fill.width,1);
-        g.fillStyle(0x000000,.22).fillRect(fill.x,24,fill.width,1);
-      }
-      g.lineStyle(1,HUD.gold,.9).strokeRect(x,10,this.barWidth,17);
-      for(let round=0;round<2;round++)drawDiamond(g,index===0?width/2-70+round*16:width/2+70-round*16,19,3,HUD.lightGold,snapshot.roundWins[index]>round);
+      if(fill.width>0) g.fillStyle(HUD.players[index]).fillRect(fill.x,12,fill.width,13);
+      g.lineStyle(2,HUD.gold,.95).strokeRect(x-4,6,this.barWidth+8,25);
+      for(let round=0;round<2;round++)drawRoundMarker(g,index===0?width/2-52-round*14:width/2+52+round*14,40,4,HUD.players[index],snapshot.roundWins[index]>round);
       if(character.maxRage>0){
-        const rageWidth=260, rageX=index===0?30:width-30-rageWidth, rageY=heightForRage(this.training);
-        const outline = [{x:rageX+5,y:rageY-2},{x:rageX+rageWidth,y:rageY-2},
-          {x:rageX+rageWidth-5,y:rageY+12},{x:rageX,y:rageY+12}];
-        g.fillStyle(HUD.ink,.95).fillPoints(outline,true);
-        g.lineStyle(1,HUD.gold,.85).strokePoints(outline,true);
-        g.fillStyle(HUD.rail).fillRect(rageX+5,rageY+1,rageWidth-10,8);
-        const inner=healthBarFill(character.rage,character.maxRage,rageX+5,rageWidth-10,index===1);
-        if (inner.width > 0) {
-          g.fillStyle(character.rage>=character.maxRage?HUD.lightGold:HUD.players[index]).fillRect(inner.x,rageY+1,inner.width,8);
-          g.fillStyle(HUD.lightGold,.5).fillRect(inner.x,rageY+1,inner.width,1);
+        const rageWidth=260, rageX=index===0?45:width-45-rageWidth, rageY=heightForRage(this.training);
+        // Rage: one separate cell per meter section; each bar fills white, then yellow, then red, from the outer edge inwards.
+        const sections = RAGE_LEVEL / RAGE_SEGMENT, gap = 4, cell = (rageWidth - 10 - gap * (sections - 1)) / sections;
+        for (let section = 0; section < sections; section++) {
+          const order = index === 0 ? section : sections - 1 - section, cellX = rageX + 5 + section * (cell + gap);
+          g.fillStyle(HUD.ink,.95).fillRoundedRect(cellX - 2, rageY - 2, cell + 4, 14, 4);
+          g.fillStyle(HUD.rail).fillRoundedRect(cellX, rageY, cell, 10, 3);
+          for (const [level, color] of HUD.rage.entries()) {
+            const amount = Math.max(0, Math.min(1, (character.rage - level * RAGE_LEVEL - order * RAGE_SEGMENT) / RAGE_SEGMENT));
+            const part = healthBarFill(amount, 1, cellX, cell, index === 1);
+            if (part.width > 0) g.fillStyle(color).fillRoundedRect(part.x, rageY, part.width, 10, Math.min(3, part.width / 2));
+          }
+          g.lineStyle(1, HUD.gold, .8).strokeRoundedRect(cellX - 2, rageY - 2, cell + 4, 14, 4);
         }
-        g.lineStyle(1, HUD.ink, .9);
-        for (let section = 1; section < 5; section++) {
-          const markerX = rageX + 5 + (rageWidth - 10) * section / 5;
-          g.lineBetween(markerX, rageY + 1, markerX, rageY + 9);
-        }
-        drawDiamond(g,index===0?rageX+rageWidth+7:rageX-7,rageY+5,4,HUD.gold,!character.ultimateUsed && character.rage>=character.maxRage);
+        // The completed rage levels sit in a small seal at the outer end of the rail.
+        const sealX = index === 0 ? 24 : width - 24;
+        g.fillStyle(HUD.ink, .95).fillCircle(sealX, rageY + 5, 13);
+        g.lineStyle(1.5, HUD.gold, .95).strokeCircle(sealX, rageY + 5, 13);
+
       }
-      this.rageLabels[index]?.setText(character.maxRage>0?`RAGE ${character.rage}/${character.maxRage}${character.ultimateUsed?' · USADA':character.rage>=character.maxRage?' · PRONTA':''}`:'');
-      this.healthLabels[index]?.setText(`${Math.max(0,character.health)} / ${character.maxHealth}`);
-      this.modeLabels[index]?.setText(this.training?MODE_LABELS[character.mode]:index===0?'JOGADOR 1':'JOGADOR 2')
+      this.rageLabels[index]?.setText(character.rush?'RUSH':'');
+      this.rageLevels[index]?.setText(character.maxRage > 0 ? String(Math.min(3, Math.floor(character.rage / RAGE_LEVEL))) : '');
+      // Fighting states are training instrumentation; a match shows only names, bars and the round.
+      this.modeLabels[index]?.setText(this.training?stateLabel(character.mode):'')
         .setColor(character.mode==='hitstun'?'#f09a84':character.mode==='blockstun'||character.mode==='blocking'?'#95d7d0':HUD.muted);
     });
   }

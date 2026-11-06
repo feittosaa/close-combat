@@ -1,8 +1,10 @@
+import { RAGE_LEVEL } from '../engine/combat/rage';
 import type Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { getCharacterById } from '../engine/data/characters';
 import { getCowboySpriteLayers } from '../rendering/animations/cowboySprites';
 import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
+import { effectGain } from './audioSettings';
 
 const files = import.meta.glob<string>('../assets/audio/effects/*.wav', { eager: true, query: '?url', import: 'default' });
 const variants = {
@@ -30,7 +32,7 @@ const volumes: Partial<Record<Effect, number>> = {
 };
 // Keep 25 ms before each measured waveform peak to retain the impact's attack.
 const impactSeek: Readonly<Record<string, number>> = {
-  heavy_hit_1: .295, heavy_hit_2: .022, heavy_hit_3: .739, heavy_hit_4: .400,
+  heavy_hit_1: .295, heavy_hit_2: .022, heavy_hit_3: .606, heavy_hit_4: .400,
   landing_1: .275, landing_2: .386, landing_3: .510, landing_4: .405, landing_5: .989,
   heavy_step_1: .205, heavy_step_2: .215, heavy_step_3: .215,
   lace_error: .415,
@@ -42,7 +44,7 @@ const impactSeek: Readonly<Record<string, number>> = {
   steps_1: .045, air_dash_2: .085, magical_shot_1: .035, magical_shot_2: .095,
   lace_draw: .065, lace_catch: .065, kick_on_the_ground_2: .015, magic_explosion_1: .015,
 };
-const PISTOL_DRAW_DELAY = 36;
+const PISTOL_DRAW_DELAY = 42;
 
 export function selectSoundVariant(count: number, random = Math.random()): number {
   const weights = count === 5 ? [50, 25, 15, 5, 5] : [50, 25, 15, 10];
@@ -77,7 +79,7 @@ export class FightSounds {
   private ultimateReady = new Set<string>();
   private taunts = new Map<string, number>();
   private pendingDraws = new Map<string, { due: number; kind: 'taunt' | 'ultimate'; started?: number }>();
-  private ultimateActive = false;
+  private ultimateOwners = new Set<string>();
   private warned = false;
   private resultPlayed = false;
   private victoryAt?: number;
@@ -89,14 +91,14 @@ export class FightSounds {
   reset(): void {
     this.arms.clear(); this.projectiles.clear(); this.explosions.clear(); this.grabShots.clear(); this.grounded.clear(); this.lastSteps.clear();
     this.lassoActive.clear(); this.lassoCaptures.clear(); this.grabCaptures.clear(); this.lassoHits.clear(); this.lassoMisses.clear(); this.kickFrames.clear(); this.dashing.clear(); this.ultimateReady.clear(); this.taunts.clear(); this.pendingDraws.clear();
-    this.ultimateActive = false; this.warned = false; this.resultPlayed = false; this.victoryAt = undefined; this.matchResultAt = undefined; this.round = 0; this.announcedRound = 0; this.arcadeLossPlayed = false;
+    this.ultimateOwners.clear(); this.warned = false; this.resultPlayed = false; this.victoryAt = undefined; this.matchResultAt = undefined; this.round = 0; this.announcedRound = 0; this.arcadeLossPlayed = false;
   }
   private play(effect: Effect): void {
     const choices: readonly string[] = variants[effect];
     const name = choices[selectSoundVariant(choices.length) - 1];
     const key = `sfx-${name}`;
     const seek = impactSeek[name];
-    if (this.scene.cache.audio.exists(key)) this.scene.sound.play(key, { volume: volumes[effect] ?? 1, ...(seek ? { seek } : {}) });
+    if (this.scene.cache.audio.exists(key)) this.scene.sound.play(key, { volume: effectGain(volumes[effect] ?? 1), ...(seek ? { seek } : {}) });
   }
   prepareRound(snapshot: SimulationSnapshot): void {
     if (this.training || snapshot.round === this.announcedRound) return;
@@ -128,15 +130,14 @@ export class FightSounds {
     if (this.matchResultAt !== undefined && snapshot.elapsedFrames >= this.matchResultAt) {
       this.matchResultAt = undefined; this.play(snapshot.roundWinnerId === snapshot.characters[0].characterId ? 'victory' : 'defeat');
     }
-    if (snapshot.ultimateActivation && !this.ultimateActive) {
+    const owners = new Set(snapshot.ultimateActivation?.ownerIds ?? []);
+    for (const ownerId of owners) if (!this.ultimateOwners.has(ownerId)) {
       this.play('ultimate_activation');
-      for (const character of snapshot.characters) {
-        if (character.fighterId === 'cowboy' && snapshot.ultimateActivation.ownerIds.includes(character.characterId)) {
-          this.pendingDraws.set(character.characterId, { due: snapshot.elapsedFrames + PISTOL_DRAW_DELAY, kind: 'ultimate' });
-        }
+      if (snapshot.characters.find(character => character.characterId === ownerId)?.fighterId === 'cowboy') {
+        this.pendingDraws.set(ownerId, { due: snapshot.elapsedFrames + PISTOL_DRAW_DELAY, kind: 'ultimate' });
       }
     }
-    this.ultimateActive = Boolean(snapshot.ultimateActivation);
+    this.ultimateOwners = owners;
     const activeExplosions = new Set(snapshot.explosions.filter(explosion => explosion.kind === 'dynamite' && explosion.id !== undefined).map(explosion => explosion.id!));
     for (const id of activeExplosions) if (!this.explosions.has(id)) this.play('magic_explosion');
     this.explosions = activeExplosions;
@@ -151,7 +152,7 @@ export class FightSounds {
       if (event.context === 'counter-hit') this.play('counter_hit');
     }
     for (const character of snapshot.characters) {
-      const ready = character.maxRage > 0 && character.rage >= character.maxRage && !character.ultimateUsed;
+      const ready = character.maxRage > 0 && character.rage >= RAGE_LEVEL;
       if (ready && !this.ultimateReady.has(character.characterId)) this.play('ultimate_ready');
       if (ready) this.ultimateReady.add(character.characterId); else this.ultimateReady.delete(character.characterId);
       if (character.mode === 'dashing') {

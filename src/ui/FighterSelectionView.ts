@@ -1,4 +1,5 @@
-import { fighterArt, selectionPortraitSize } from './fighterArt';
+import { fighterArt, randomArt } from './fighterArt';
+import { t } from '../i18n/i18n';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FighterSelection, SelectionPlayer } from './FighterSelection';
 
@@ -7,6 +8,7 @@ interface SelectionViewOptions {
   selection: FighterSelection;
   opponent: CharacterDefinition;
   versus: boolean;
+  selectOpponent: boolean;
   modeTitle: string;
   refresh: () => void;
   confirm: () => void;
@@ -15,7 +17,7 @@ interface SelectionViewOptions {
 
 /** One selection layout for every mode, with mode-specific confirmation only. */
 export function renderFighterSelection(root: HTMLElement, options: SelectionViewOptions): void {
-  const { fighters, selection, versus } = options;
+  const { fighters, selection, versus, selectOpponent } = options;
   const node = (tag: string, className: string, text = ''): HTMLElement => {
     const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
   };
@@ -24,29 +26,47 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
   };
   const fighterPortrait = (id: string, small: boolean): HTMLImageElement => {
     const image = document.createElement('img');
-    image.src = small ? fighterArt[id].icon : fighterArt[id].portrait;
+    image.src = small ? fighterArt[id].icon : fighterArt[id].background;
     image.alt = '';
-    image.className = 'cowboy-selection-art';
-    if (!small) sizePortrait(image,id);
     return image;
   };
-  const sizePortrait = (image: HTMLImageElement, id: string): void => {
-    const size = selectionPortraitSize(id);
-    image.style.height = `${size.height}%`;
-    image.style.bottom = `${size.bottom}%`;
-  };
   for (const player of [0, 1] as const satisfies readonly SelectionPlayer[]) {
-    const entry = player === 1 && !versus ? options.opponent : fighters[selection.indices[player]];
+    const entry = player === 1 && !selectOpponent ? options.opponent : fighters[selection.indices[player]];
     const side = player === 0 ? 'left' : 'right';
-    const hero = node('div', `arena-hero ${side}`); hero.append(fighterPortrait(entry.id, false));
+    // A player who picked the random tile sees the mystery silhouette instead of the fighter last highlighted.
+    const randomPick = selection.random[player] && (player === 0 || selectOpponent);
+    const hero = node('div', `arena-hero ${side}`);
+    if (randomPick) { const image = document.createElement('img'); image.src = randomArt.background; image.alt = ''; hero.append(image); }
+    else hero.append(fighterPortrait(entry.id, false));
     const name = node('div', `arena-fighter-name ${side}`);
-    name.append(node('span', 'arena-eyebrow', player === 1 && !versus ? 'ADVERSÁRIO' : `PLAYER 0${player + 1}`), node('h1', '', entry.name));
-    if (versus) name.append(button(selection.ready[player] ? `P${player + 1} · PRONTO` : `ESCOLHER P${player + 1}`, 'arena-player-switch', () => { selection.activePlayer = player; options.refresh(); }));
+    if ((player === 0 || selectOpponent) && selection.choosingColor[player]) {
+      const colors = entry.id === 'cowboy'
+        ? [['#b72b36', '#f5bd35', '#328bde'], ['#201d22', '#f5bd35', '#a55de3']]
+        : [['#50683b', '#e4b34e', '#714a2d'], ['#d22529', '#e4b34e', '#714a2d']];
+      const palette = node('div', 'arena-palettes');
+      palette.setAttribute('role', 'group');
+      palette.setAttribute('aria-label', t('fighter.colorsOf', { name: entry.name, player: player + 1 }));
+      colors.forEach((color, index) => {
+        const swatch = button('', 'arena-palette', () => { selection.selectPalette(player, index as 0 | 1); options.refresh(); });
+        const colorName = t(index === 0 ? 'fighter.originalColor' : 'fighter.alternateColor');
+        swatch.setAttribute('aria-label', colorName);
+        swatch.setAttribute('aria-pressed', String(selection.palettes[player] === index));
+        if (selection.isPaletteLocked(player, index as 0 | 1)) { swatch.disabled = true; swatch.setAttribute('aria-label', t('fighter.colorUnavailable', { color: colorName })); }
+        swatch.style.setProperty('--palette-main', color[0]);
+        swatch.style.setProperty('--palette-accent', color[1]);
+        swatch.style.setProperty('--palette-detail', color[2]);
+        palette.append(swatch);
+      });
+      name.append(palette);
+    }
+    const who = player === 1 && !versus ? t('fighter.opponent') : `P${player + 1}`;
+    name.append(node('span', 'arena-eyebrow', player === 1 && !versus ? t('fighter.opponent') : t('fighter.player', { player: player + 1 })), node('h1', '', randomPick ? t('fighter.randomName') : entry.name));
+    if (selectOpponent) name.append(button(t(selection.ready[player] ? 'fighter.ready' : 'fighter.choose', { who }), 'arena-player-switch', () => { selection.activePlayer = player; options.refresh(); }));
     root.append(hero, name);
   }
   const panel = node('div', 'arena-selection');
-  panel.append(node('span', 'arena-eyebrow', options.modeTitle), node('h2', '', versus ? `ESCOLHA DE P${selection.activePlayer + 1}` : 'ESCOLHA SEU LUTADOR'));
-  const grid = node('div', 'arena-roster'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'Personagens disponíveis');
+  panel.append(node('span', 'arena-eyebrow', options.modeTitle), node('h2', '', versus ? t('fighter.choiceOf', { player: selection.activePlayer + 1 }) : t(selectOpponent && selection.activePlayer === 1 ? 'fighter.chooseOpponent' : 'fighter.chooseFighter')));
+  const grid = node('div', 'arena-roster'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', t('fighter.roster'));
   fighters.forEach((entry, index) => {
     const tile = button('', 'arena-portrait', () => { selection.select(selection.activePlayer, index); options.refresh(); });
     tile.setAttribute('aria-label', entry.name); tile.setAttribute('aria-pressed', String(!selection.random[selection.activePlayer] && index === selection.indices[selection.activePlayer]));
@@ -66,13 +86,16 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
       const hero = root.querySelector(`.arena-hero.${side} img`) as HTMLImageElement | null;
       const heading = root.querySelector(`.arena-fighter-name.${side} h1`);
       const status = root.querySelector('.arena-opponent');
-      if (hero) { hero.src = art.portrait; sizePortrait(hero,id); }
-      if (heading) heading.textContent = `${art.name} · EM DESENVOLVIMENTO`;
-      if (status) status.textContent = `VISUALIZANDO ${art.name.toUpperCase()} · INDISPONÍVEL PARA LUTA`;
+      if (hero) hero.src = art.background;
+      const eyebrow = root.querySelector(`.arena-fighter-name.${side} .arena-eyebrow`);
+      if (heading) heading.textContent = art.name;
+      if (eyebrow) eyebrow.textContent = t('fighter.unavailable');
+      if (status) status.textContent = t('fighter.previewing', { name: art.name.toUpperCase() });
     });
-    tile.setAttribute('aria-label', `${art.name} · em desenvolvimento`);
-    tile.title = 'Ver arte · indisponível para luta';
-    tile.append(fighterPortrait(id, true), node('span', '', art.name));
+    tile.classList.add('unavailable');
+    tile.setAttribute('aria-label', t('fighter.inDevelopmentLabel', { name: art.name }));
+    tile.title = t('fighter.viewArt');
+    tile.append(fighterPortrait(id, true), node('span', '', art.name), node('em', 'arena-unavailable', t('fighter.unavailable')));
     grid.append(tile);
   }
   for (let index = fighters.length + upcoming.length; index < 9; index++) {
@@ -81,17 +104,18 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
     grid.append(empty);
   }
   const random = button('?', 'arena-random', () => { selection.selectRandom(selection.activePlayer); options.refresh(); });
-  random.setAttribute('aria-label', 'Personagem aleatório');
+  random.setAttribute('aria-label', t('fighter.random'));
   random.setAttribute('aria-pressed', String(selection.random[selection.activePlayer]));
   if (versus) {
     const cursors = node('div', 'arena-cursors');
     for (const player of [0, 1] as const) if (selection.random[player]) cursors.append(node('b', `cursor-p${player + 1}`, `P${player + 1}`));
     random.append(cursors);
   }
-  const status = node('p', 'arena-opponent', versus
-    ? `P1 ${selection.ready[0] ? 'PRONTO' : 'ESCOLHENDO'} · P2 ${selection.ready[1] ? 'PRONTO' : 'ESCOLHENDO'}`
+  const status = node('p', 'arena-opponent', selectOpponent
+    ? `P1 ${t(selection.ready[0] ? 'fighter.statusReady' : 'fighter.statusChoosing')} · ${versus ? 'P2' : t('fighter.opponent')} ${t(selection.ready[1] ? 'fighter.statusReady' : 'fighter.statusChoosing')}`
     : `P2 · ${options.opponent.name} · ${options.modeTitle}`);
   status.setAttribute('role', 'status');
-  panel.append(grid, random, status, button(versus ? `CONFIRMAR P${selection.activePlayer + 1}  →` : 'CONFIRMAR PERSONAGEM  →', 'arena-confirm', options.confirm), button('← VOLTAR', 'arena-back', options.back));
+  grid.append(random);
+  panel.append(grid, status, button(selection.choosingColor[selection.activePlayer] ? t('fighter.confirmColor') : selectOpponent && selection.activePlayer === 1 && !versus ? t('fighter.confirmOpponent') : versus ? t('fighter.confirmPlayer', { player: selection.activePlayer + 1 }) : t('fighter.confirmFighter'), 'arena-confirm', options.confirm), button(t('common.backArrow'), 'arena-back', options.back));
   root.append(panel);
 }

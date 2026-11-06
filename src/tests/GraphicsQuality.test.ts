@@ -24,12 +24,15 @@ it.each([['low', 640], ['high', 1280]] as const)('loads only the %s texture set 
   const atlas = vi.fn();
   preloadCowboySprites({ textures: { exists: () => false }, load: { atlas } } as never);
   expect(cowboyFrameSize).toBe(size);
-  expect(atlas).toHaveBeenCalledTimes(78);
+  expect(atlas).toHaveBeenCalledTimes(80);
+  for (const name of ['double-shot', 'fall-landing', 'launch-hit']) {
+    const art = atlas.mock.calls.find(([key]) => key === `cowboy-${name}`);
+    expect(art?.[2].frames['0'].frame.w).toBe(size);
+    expect(Object.keys(art?.[2].frames ?? {})).toHaveLength(6);
+  }
   const idle = atlas.mock.calls.find(([key]) => key === 'cowboy-idle');
   expect(idle?.[2].frames['0'].frame.w).toBe(size);
-  const exit = atlas.mock.calls.find(([key]) => key === 'cowboy-victory-exit');
-  expect(exit?.[2].frames['0'].frame.w).toBe(size);
-  expect(getCowboyFrameSize('cowboy-victory-exit')).toBe(size);
+  expect(getCowboyFrameSize('cowboy-idle')).toBe(size);
 });
 
 it.each(['low', 'high'] as const)('loads every Bob atlas at %s quality without changing display scale', async quality => {
@@ -38,7 +41,7 @@ it.each(['low', 'high'] as const)('loads every Bob atlas at %s quality without c
   const { preloadShotoSprites, getShotoResolution, shotoSpriteScale, shotoIdleScale } = await import('../rendering/animations/shotoSprites');
   const atlas = vi.fn();
   preloadShotoSprites({ textures: { exists: () => false }, load: { atlas } } as never);
-  expect(atlas).toHaveBeenCalledTimes(57);
+  expect(atlas).toHaveBeenCalledTimes(56);
   const ratio = quality === 'high' ? 2 : 1;
   const originals = import.meta.glob<{ frames: Record<string, { frame: Record<string, number> }> }>(
     '../assets/sprites/characters/shoto/*.atlas.json', { eager: true, import: 'default' });

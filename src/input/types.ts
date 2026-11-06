@@ -9,5 +9,6 @@ export interface FrameInput {
   dash?: 'F' | 'B';
   ultimate?: boolean;
   taunt?: boolean;
+  rageAction?: boolean;
   buttons: ReadonlySet<AttackButton>;
 }

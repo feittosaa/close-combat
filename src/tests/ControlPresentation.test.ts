@@ -103,3 +103,26 @@ it('migrates existing player mappings without overwriting keys and validates ult
   migrated[0].ultimate=migrated[1].ultimate;
   expect(validateLayouts(migrated)).toBe(false);
 });
+
+
+it('migrates saved layouts without stealing a configured rage action or system key', () => {
+  const old = [getPlayerLayout(0), getPlayerLayout(1)].map(({ rageAction: _rageAction, ...layout }) => layout);
+  old[0].buttons['1'] = 'KeyE';
+  const storage = { getItem: (key: string) => key.includes('system-controls') ? JSON.stringify({ pause: 'KeyP', reset: 'KeyQ' }) : JSON.stringify(old) };
+  const migrated = loadControls(storage);
+  expect(migrated[0].buttons['1']).toBe('KeyE');
+  expect(migrated[0].rageAction).not.toBe('KeyE');
+  expect(migrated[0].rageAction).not.toBe('KeyQ');
+  expect(migrated[1].rageAction).toBe('Numpad7');
+  expect(validateLayouts(migrated)).toBe(true);
+});
+
+
+it('records the rage action in the training input history', () => {
+  const history = new InputHistory();
+  history.push({ direction: 'N', buttons: new Set() }, 0, 'right');
+  history.push({ direction: 'N', buttons: new Set(['1']), rageAction: true }, 1, 'right');
+  history.push({ direction: 'N', buttons: new Set(['1']) }, 2, 'right');
+  expect(history.snapshot()).toHaveLength(3);
+  expect(history.snapshot()[1].input.rageAction).toBe(true);
+});

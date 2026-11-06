@@ -54,12 +54,12 @@ it('awards 10 rage for hitting and 15 for receiving a hit', () => {
   expect(sim.snapshot().characters.map(c => c.rage)).toEqual([10, 15]);
 });
 
-it('requires all 250 rage for an ultimate', () => {
-  const fast = { ...shoto, rage: { ...shoto.rage!, onHit: 249 } };
+it('requires 300 rage for an ultimate', () => {
+  const fast = { ...shoto, rage: { ...shoto.rage!, onHit: 299 } };
   const sim = new Simulation(createGameConfig(1024, 576), [fast, fast], { training: true, initialDistance: 56 });
   sim.stepFrame([{ ...neutral, buttons: new Set(['1']) }, neutral]);
   for (let i = 0; i < 30 && !sim.snapshot().hitEvents.length; i++) sim.stepFrame([neutral, neutral]);
-  expect(sim.snapshot().characters[0].rage).toBe(249);
+  expect(sim.snapshot().characters[0].rage).toBe(299);
   for (let i = 0; i < 80; i++) sim.stepFrame([neutral, neutral]);
   sim.stepFrame([{ ...neutral, ultimate: true }, neutral]);
   expect(sim.snapshot().ultimateActivation).toBeUndefined();
@@ -67,5 +67,5 @@ it('requires all 250 rage for an ultimate', () => {
   sim.stepFrame([neutral, neutral]);
   sim.stepFrame([{ ...neutral, ultimate: true }, neutral]);
   expect(sim.snapshot().ultimateActivation?.ownerIds).toEqual(['player-1']);
-  expect(sim.snapshot().characters[0].rage).toBe(0);
+  expect(sim.snapshot().characters[0].rage).toBe(600);
 });

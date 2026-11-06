@@ -18,6 +18,8 @@ export interface CharacterAttack {
   hitOutcome?: 'hit' | 'block';
   /** Recovery override for a confirmed combo or a blocked strike. */
   recoveryFrames?: number;
+  /** Especial reforçado com uma barra de rage; vale para seus projéteis. */
+  empowered?: boolean;
 }
 export interface CharacterState {
   characterId: string;
@@ -31,7 +33,8 @@ export interface CharacterState {
   maxHealth: number;
   rage: number;
   maxRage: number;
-  ultimateUsed: boolean;
+  /** Rage Rush ativo até o fim do round. */
+  rush?: boolean;
   mode: CharacterMode;
   stateStartedFrame: number;
   animationTransition?: { startedFrame: number; from: CharacterAnimationState; previous?: {startedFrame:number;from:CharacterAnimationState} };

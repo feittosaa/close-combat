@@ -1,4 +1,7 @@
 import { LOGICAL_VIEW, getHudLogicalWidth } from '../rendering/presentation';
+import { VictoryScreen } from '../ui/VictoryScreen';
+import { HUD_FONT } from '../ui/hudTheme';
+import { t } from '../i18n/i18n';
 import { TutorialSession } from '../training/TutorialSession';
 import { TutorialHud } from '../ui/TutorialHud';
 import { ControlSettings } from '../ui/ControlSettings';
@@ -15,12 +18,15 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
-import { getCowboyRoundEndPresentation, hasCowboyExited, preloadCowboySprites } from '../rendering/animations/cowboySprites';
-import { hasShotoExited } from '../rendering/animations/shotoSprites';
+import { preloadCowboySprites, settleAfterRound } from '../rendering/animations/cowboySprites';
+import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
 import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { ProjectileView } from '../rendering/ProjectileView';
+import { RushEffect } from '../rendering/RushEffect';
+import { characterColor } from '../rendering/characterColor';
+import { registerCharacterPalette } from '../rendering/palettePipeline';
 import { preloadContactEffects } from '../rendering/contactEffects';
-import { RESULT_TITLE_END_FRAME, StagePresentation } from '../rendering/StagePresentation';
+import { StagePresentation } from '../rendering/StagePresentation';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
@@ -31,8 +37,8 @@ import { preloadFighterIcons } from '../ui/fighterArt';
 import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
-import { ArcadeController } from '../engine/combat/ArcadeController';
-import { arcadeOpponents, opponentFor, stageForMatch, type FightSetup, type MatchMode } from './matchSetup';
+import { ArcadeController, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
+import { createArcadeRun, opponentFor, stageForMatch, matchPalettes, type ArcadeRun, type FightSetup, type MatchMode } from './matchSetup';
 import { FightSounds } from '../audio/FightSounds';
 import { UltimateOverlay } from '../ui/UltimateOverlay';
 import type { HitEvent } from '../engine/combat/AttackResolver';
@@ -40,15 +46,42 @@ import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 
 export class FightScene extends Phaser.Scene {
   private selectedFighter = defaultCharacter;
+  private alternatePalettes: [boolean, boolean] = [false, false];
   private opponentFighter = defaultCharacter;
   private mode: MatchMode = 'versus';
   private arcadeIndex = 0;
+  private arcadeRun?: ArcadeRun;
+  private difficulty?: ArcadeDifficulty;
   private bot?: ArcadeController;
   private botRound = 0;
-  private arcadeInfo?: Phaser.GameObjects.Text;
   private selectedStage = defaultStage;
   private stageView?: StageView;
   private stagePresentation?: StagePresentation;
+  private introBlocked = false;
+  private knockoutAt?: number;
+  private knockoutSlowRemaining = 0;
+  private resultMenu?: HTMLElement;
+  private victoryScreen?: VictoryScreen;
+  private resultMenuIndex = 0;
+  private resultActions: { label: string; run: () => void }[] = [];
+  private readonly alignResultMenu = (): void => {
+    if (!this.resultMenu) return;
+    const rect = this.game.canvas.getBoundingClientRect();
+    const height = Math.min(rect.height, rect.width * LOGICAL_VIEW.height / LOGICAL_VIEW.width);
+    Object.assign(this.resultMenu.style, {left:`${rect.left + rect.width / 2}px`, top:`${rect.top + (rect.height - height) / 2 + height * .84}px`, maxWidth:`${rect.width * .94}px`});
+  };
+  private readonly resultMenuKey = (event: KeyboardEvent): void => {
+    if (!this.resultMenu || event.repeat) return;
+    const layouts = [getPlayerLayout(0), getPlayerLayout(1)];
+    const up = event.code === 'ArrowUp' || layouts.some(layout => event.code === layout.directions.up);
+    const down = event.code === 'ArrowDown' || layouts.some(layout => event.code === layout.directions.down);
+    const confirm = event.code === 'Enter' || layouts.some(layout => event.code === layout.buttons['1']);
+    if (up || down) {
+      event.preventDefault();
+      this.resultMenuIndex = (this.resultMenuIndex + (up ? -1 : 1) + this.resultActions.length) % this.resultActions.length;
+      this.renderResultMenu();
+    } else if (confirm) { event.preventDefault(); event.stopImmediatePropagation(); this.resultActions[this.resultMenuIndex]?.run(); }
+  };
   private ultimateOverlay?: UltimateOverlay;
   private simulation?: Simulation;
   private fightSounds?: FightSounds;
@@ -58,6 +91,8 @@ export class FightScene extends Phaser.Scene {
   private commandBuffers: [CommandBuffer, CommandBuffer] = [new CommandBuffer(), new CommandBuffer()];
   private currentInputs: [FrameInput, FrameInput] = [neutralInput(), neutralInput()];
   private projectileView?: ProjectileView;
+  private rushEffect?: RushEffect;
+  private rushActive = [false, false];
   private combatants: CombatantView[] = [];
   private inputDisplays: PlayerInputDisplay[] = [];
   private hitboxView?: HitboxView;
@@ -65,7 +100,6 @@ export class FightScene extends Phaser.Scene {
   private hudWidth = 0;
   private resultFloorY = 0;
   private resultGravity = 0;
-  private roundsToWin = 2;
   private tutorial?: TutorialSession;
   private tutorialHud?: TutorialHud;
   private training?: TrainingSession;
@@ -102,7 +136,7 @@ export class FightScene extends Phaser.Scene {
     }],
   ];
   private advanceOneFrame(): void {
-    if (!this.training?.paused || !this.simulation) return;
+    if (!this.training?.paused || !this.simulation || this.introBlocked) return;
     const snapshot = this.simulation.snapshot();
     this.simulation.stepFrame(this.readInputs(snapshot.characters, snapshot.frame));
     this.observeFrame(this.simulation.snapshot());
@@ -132,21 +166,17 @@ export class FightScene extends Phaser.Scene {
     // DOM search must receive text normally, including letters used by training hotkeys.
   }
   private canContinueArcade(snapshot: SimulationSnapshot): boolean {
-    if (snapshot.phase !== 'match-over' || snapshot.matchWinnerId !== 'player-1') return false;
-    const winner = snapshot.characters.find(character => character.characterId === snapshot.matchWinnerId);
-    if (!winner || snapshot.roundEndedFrame === undefined) return false;
-    const elapsed = snapshot.frame - snapshot.roundEndedFrame - RESULT_TITLE_END_FRAME;
-    const presentation = getCowboyRoundEndPresentation(winner, elapsed, this.resultFloorY, this.resultGravity);
-    return hasCowboyExited(winner, elapsed, this.resultFloorY, this.resultGravity, this.cameras.main.worldView) &&
-      hasShotoExited(presentation.state, presentation.elapsed, this.cameras.main.worldView);
+    return snapshot.phase === 'match-over' && snapshot.matchWinnerId === 'player-1' && snapshot.roundEndedFrame !== undefined &&
+      snapshot.frame - snapshot.roundEndedFrame >= RESULT_TITLE_END_FRAME;
   }
   private readonly handleContinue = (): void => {
     if (this.tutorial && !this.paused && this.tutorial.next()) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.resetFight(); return; }
+    if (this.resultMenu) return;
     const snapshot = this.simulation?.snapshot();
     if (this.mode !== 'arcade' || !snapshot || !this.canContinueArcade(snapshot)) return;
-    if (this.arcadeIndex + 1 >= arcadeOpponents(this.selectedFighter.id).length) return;
-    this.scene.restart({ fighterId: this.selectedFighter.id, stageId: this.selectedStage.id,
-      mode: 'arcade', arcadeIndex: this.arcadeIndex + 1 });
+    if (this.arcadeIndex + 1 >= this.arcadeRun!.opponents.length) return;
+    this.scene.restart({ fighterId: this.selectedFighter.id, mode: 'arcade', fighterPalette: this.alternatePalettes[0] ? 1 : 0,
+      arcadeIndex: this.arcadeIndex + 1, arcadeRun: this.arcadeRun, difficulty: this.difficulty });
   };
   private readonly handleRestart = (event: KeyboardEvent): void => {
     if (this.mode !== 'training' || event.code !== getSystemControls().reset || !this.simulation) return;
@@ -165,15 +195,58 @@ export class FightScene extends Phaser.Scene {
     this.mode = data.mode ?? 'versus';
     this.paused = false;
     this.arcadeIndex = Math.max(0, Math.trunc(data.arcadeIndex ?? 0));
-    this.opponentFighter = this.mode === 'arcade'
-      ? opponentFor(this.selectedFighter.id, 'arcade', this.arcadeIndex)
-      : getCharacterById(data.opponentId ?? '') ?? opponentFor(this.selectedFighter.id, this.mode);
-    this.selectedStage = stageForMatch(this.mode,data.stageId);
-    this.tutorial = this.mode === 'tutorial' || this.mode === 'combo-tutorial' ? new TutorialSession(this.selectedFighter, this.mode) : undefined;
+    this.arcadeRun = this.mode === 'arcade' ? data.arcadeRun ?? createArcadeRun() : undefined;
+    this.opponentFighter = getCharacterById(this.arcadeRun?.opponents[this.arcadeIndex] ?? data.opponentId ?? '') ?? opponentFor(this.selectedFighter.id);
+    this.alternatePalettes = matchPalettes(data, this.selectedFighter.id === this.opponentFighter.id);
+    this.selectedStage = stageForMatch(this.mode,this.arcadeRun?.stages[this.arcadeIndex] ?? data.stageId);
+    this.tutorial = this.mode === 'tutorial' ? new TutorialSession(this.selectedFighter) : undefined;
     this.training = data.mode === 'training' || this.tutorial ? new TrainingSession() : undefined;
     if (this.tutorial) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.training!.showGeometry = false; this.training!.autoRestore = false; }
-    this.bot = this.mode === 'arcade' ? new ArcadeController(this.opponentFighter, this.selectedFighter) : undefined;
+    this.difficulty = data.difficulty;
+    this.bot = this.mode === 'arcade' ? new ArcadeController(this.opponentFighter, this.selectedFighter, this.difficulty) : undefined;
     this.botRound = 0;
+    this.resultMenuIndex = 0;
+  }
+
+  private renderResultMenu(): void {
+    if (!this.resultMenu) return;
+    this.resultMenu.replaceChildren(...this.resultActions.map((action, index) => {
+      const button = document.createElement('button');
+      button.textContent = action.label;
+      button.className = index === this.resultMenuIndex ? 'selected' : '';
+      button.onclick = action.run;
+      return button;
+    }));
+  }
+
+  private showResultMenu(snapshot: SimulationSnapshot): void {
+    if (this.resultMenu || (this.mode !== 'versus' && this.mode !== 'arcade')) return;
+    const setup = { fighterId: this.selectedFighter.id, opponentId: this.opponentFighter.id, stageId: this.selectedStage.id,
+      mode: this.mode, arcadeRun: this.arcadeRun, difficulty: this.difficulty, fighterPalette: this.alternatePalettes[0] ? 1 as const : 0 as const, opponentPalette: this.alternatePalettes[1] ? 1 as const : 0 as const };
+    this.resultActions = [];
+    if (this.mode === 'arcade') {
+      // Opponents and sceneries are always drawn, and the fighter cannot change: win to continue, lose to retry, or give up.
+      const won = snapshot.matchWinnerId === 'player-1', lastFight = this.arcadeIndex + 1 >= this.arcadeRun!.opponents.length;
+      if (!won) this.resultActions.push({label:t('result.rematch'), run:() => this.scene.restart({...setup, arcadeIndex:this.arcadeIndex})});
+      else if (!lastFight) this.resultActions.push({label:t('result.continue'), run:() => this.scene.restart({...setup, arcadeIndex:this.arcadeIndex + 1})});
+    }
+    if (this.mode === 'versus') {
+      this.resultActions.push({label:t('result.rematch'), run:() => this.scene.restart(setup)});
+      this.resultActions.push({label:t('result.changeFighter'), run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id, selectVersus:true, ...(snapshot.matchWinnerId ? { stageChooser: snapshot.matchWinnerId === 'player-1' ? 0 : 1 } : {})})});
+    }
+    this.resultActions.push({label:t(this.mode === 'arcade' && this.resultActions.length ? 'result.giveUp' : 'result.mainMenu'), run:() => this.scene.start('MenuScene', {fighterId:this.selectedFighter.id})});
+    // The champion screen closes a PvP match and the whole Arcade run (a win over the last opponent).
+    const champion = snapshot.matchWinnerId === 'player-1' ? this.selectedFighter : snapshot.matchWinnerId === 'player-2' ? this.opponentFighter : undefined;
+    const arcadeCleared = this.mode === 'arcade' && snapshot.matchWinnerId === 'player-1' && this.arcadeIndex + 1 >= this.arcadeRun!.opponents.length;
+    if (champion && (this.mode === 'versus' || arcadeCleared)) this.victoryScreen = new VictoryScreen(this.game.canvas, this.selectedStage, champion.id, champion.name);
+    this.resultMenu = document.createElement('nav');
+    this.resultMenu.className = 'match-result-menu';
+    this.resultMenu.setAttribute('aria-label', t('result.label'));
+    document.body.appendChild(this.resultMenu);
+    this.alignResultMenu();
+    this.renderResultMenu();
+    window.addEventListener('resize', this.alignResultMenu);
+    window.addEventListener('keydown', this.resultMenuKey, true);
   }
 
   preload(): void {
@@ -185,11 +258,11 @@ export class FightScene extends Phaser.Scene {
   }
 
   create(): void {
+    registerCharacterPalette(this);
     const { width, height } = LOGICAL_VIEW;
     const config = createGameConfig(width, height);
     this.resultFloorY = config.arena.floorY;
     this.resultGravity = config.movement.gravity;
-    this.roundsToWin = config.match.roundCount;
     const stageLayout = createStageLayout(this.selectedStage, width, height, config.arena.floorY);
     // The full panorama defines the walls; shared viewport separation still limits lone retreat.
     Object.assign(config.arena,getStageArenaBounds(stageLayout));
@@ -204,6 +277,7 @@ export class FightScene extends Phaser.Scene {
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
 
     this.projectileView = new ProjectileView(this);
+    this.rushEffect = new RushEffect(this);
     this.combatants = [
       new CombatantView(this, 0xe45b5b),
       new CombatantView(this, 0x5b8de4),
@@ -211,9 +285,6 @@ export class FightScene extends Phaser.Scene {
     this.hitboxView = new HitboxView(this);
     this.hitboxView.setVisible(this.training?.showGeometry ?? false);
     this.hudWidth = 0;
-    if (this.mode === 'arcade') this.arcadeInfo = this.add.text(width / 2, 91, '', {
-      color: '#f2d299', fontSize: '13px', align: 'center', fontStyle: 'bold',
-    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(110);
     if (this.training && !this.tutorial) {
       this.trainingKeys.forEach(([key, handler]) => {
         const listener = (event: KeyboardEvent): void => {
@@ -229,11 +300,11 @@ export class FightScene extends Phaser.Scene {
       });
     }
 
-    this.pinnedMove = this.add.text(width / 2, 155, '', { color: '#ffe0ab', backgroundColor: '#15151fdd', fontSize: '12px', wordWrap: { width: width - 80 }, align: 'center' }).setOrigin(.5, 0).setDepth(120).setScrollFactor(0);
+    this.pinnedMove = this.add.text(width / 2, 155, '', { color: '#ffe0ab', backgroundColor: '#15151fdd', fontSize: '12px', fontFamily: HUD_FONT, wordWrap: { width: width - 80 }, align: 'center' }).setOrigin(.5, 0).setDepth(120).setScrollFactor(0);
     this.pauseMenu = new PauseMenu([this.selectedFighter, this.opponentFighter], Boolean(this.training),
       () => this.togglePause(false),
       () => this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }),
-      (entry, playerIndex) => { this.pinnedMove?.setText(`TREINAR · ${formatMoveTitle(entry.title,getPlayerLayout(playerIndex))}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()), () => { this.simulation?.fillTrainingRage(); this.syncViewsAndHud(); });
+      (entry, playerIndex) => { this.pinnedMove?.setText(`${t('training.pinned', { title: formatMoveTitle(entry.title,getPlayerLayout(playerIndex)) })}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()), () => { this.simulation?.fillTrainingRage(); this.syncViewsAndHud(); });
     window.addEventListener('keydown', this.handlePause);
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
     window.addEventListener('keydown', this.handleRestart);
@@ -246,20 +317,44 @@ export class FightScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     if (!this.simulation) return;
 
-    this.fightSounds?.prepareRound(this.simulation.snapshot());
-    const intro = this.stagePresentation?.update(this.simulation.snapshot(), this.paused ? 0 : delta, getHudLogicalWidth(this.scale));
-    if (!intro && !this.paused && !this.training?.paused) this.simulation.advance(delta * (this.training?.speed ?? 1), (characters, frame) => this.readInputs(characters, frame), snapshot => this.observeFrame(snapshot));
+    const current = this.simulation.snapshot();
+    this.fightSounds?.prepareRound(current);
+    const intro = this.stagePresentation?.update(current, this.paused ? 0 : delta, getHudLogicalWidth(this.scale));
+    if (this.introBlocked && !intro) {
+      this.keyboardInputs.forEach(input => input.clear());
+      this.commandBuffers.forEach(buffer => buffer.clear());
+    }
+    this.introBlocked = Boolean(intro);
+    this.simulation?.setPreFight(!this.paused && Boolean(this.stagePresentation?.moveOnly));
+    if (!intro && !this.paused && !this.training?.paused) {
+      const slow = this.knockoutSlowRemaining > 0;
+      if (slow) this.knockoutSlowRemaining = Math.max(0, this.knockoutSlowRemaining - delta);
+      const round = current.round;
+      this.simulation.advance(delta * (this.training?.speed ?? 1) * (slow ? .25 : 1), (characters, frame) => this.readInputs(characters, frame), snapshot => {
+        const newlyKnockedOut = snapshot.knockoutStartedAt !== undefined && snapshot.knockoutStartedAt !== this.knockoutAt;
+        this.observeFrame(snapshot);
+        return snapshot.round === round && !newlyKnockedOut;
+      });
+    }
     this.syncViewsAndHud();
   }
 
   private observeFrame(snapshot: SimulationSnapshot): void {
+    if (snapshot.knockoutStartedAt !== undefined && snapshot.knockoutStartedAt !== this.knockoutAt) {
+      this.knockoutAt = snapshot.knockoutStartedAt; this.knockoutSlowRemaining = 2000;
+    }
+    if (snapshot.knockoutStartedAt === undefined) this.knockoutAt = undefined;
     this.fightSounds?.observe(snapshot);
+    snapshot.characters.forEach((character, index) => {
+      if (character.rush && !this.rushActive[index]) this.rushEffect?.play(character.x, character.y);
+      this.rushActive[index] = Boolean(character.rush);
+    });
     this.pendingVisualHits.push(...snapshot.hitEvents);
   }
 
   private readInputs(characters: readonly CharacterState[], frame: number): readonly FrameInput[] {
     const inputs = this.keyboardInputs.map((input, index) => input.read(characters[index]?.facing ?? (index === 0 ? 'right' : 'left')));
-    const snapshot = this.simulation?.snapshot();
+    const snapshot = this.tutorial || this.bot ? this.simulation?.snapshot() : undefined;
     const opponentInput = this.training?.opponentInput(frame, characters);
     if (opponentInput) inputs[1] = opponentInput;
     if (this.tutorial && snapshot) {
@@ -270,8 +365,9 @@ export class FightScene extends Phaser.Scene {
     if (this.bot && snapshot) {
       if (this.botRound !== snapshot.round) { this.bot.reset(); this.botRound = snapshot.round; }
       inputs[1] = snapshot.phase === 'fight'
-        ? this.bot.readInput(frame, characters[1], characters[0]) : neutralInput();
+        ? this.bot.readInput(frame, characters[1], characters[0], snapshot.projectiles) : neutralInput();
     }
+    if (this.simulation?.hasKnockout()) inputs.fill(neutralInput());
     this.currentInputs = inputs as [FrameInput, FrameInput];
     this.currentInputs.forEach((input, index) => {
       this.commandBuffers[index]?.push(input);
@@ -283,6 +379,7 @@ export class FightScene extends Phaser.Scene {
   private resetFight(): void {
     this.simulation?.resetMatch(this.training?.initialDistance);
     this.stagePresentation?.reset();
+    this.knockoutAt = undefined; this.knockoutSlowRemaining = 0; this.introBlocked = false;
     this.fightSounds?.reset();
     this.pendingVisualHits = [];
     this.bot?.reset();
@@ -291,7 +388,8 @@ export class FightScene extends Phaser.Scene {
     this.training?.resetInspection();
     this.keyboardInputs.forEach((input) => input.clear());
     this.commandBuffers.forEach((buffer) => buffer.clear());
-    this.inputHistories.forEach(history => history.clear());
+    // Free training keeps the input history; only the fighters go back to the centre.
+    if (!this.training || this.tutorial) this.inputHistories.forEach(history => history.clear());
     this.currentInputs = [neutralInput(), neutralInput()];
     this.syncViewsAndHud();
   }
@@ -300,17 +398,16 @@ export class FightScene extends Phaser.Scene {
     if (Math.abs(width - this.hudWidth) < .01) return;
     this.hudWidth = width;
     this.hud?.destroy();
-    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name], this.selectedStage.name,
-      Boolean(this.training), this.mode === 'tutorial' ? 'TUTORIAL BÁSICO' : this.mode === 'combo-tutorial' ? 'TUTORIAL DE COMBOS' : 'TREINO LIVRE', [this.selectedFighter.id,this.opponentFighter.id]);
+    this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name],
+      Boolean(this.training), t(this.mode === 'tutorial' ? 'hud.tutorial' : 'hud.freeTraining'), [this.selectedFighter.id,this.opponentFighter.id]);
     this.trainingHud?.destroy(); this.trainingHud = undefined;
     this.inputDisplays.forEach(display => display.destroy()); this.inputDisplays = [];
     if (this.training && !this.tutorial) {
       this.trainingHud = new TrainingHud(this, width, LOGICAL_VIEW.height);
-      this.inputDisplays = [new PlayerInputDisplay(this, 18, 104, 'P1 · ENTRADAS', '#eca58a', 0),
-        new PlayerInputDisplay(this, width - 198, 104, 'P2 · ENTRADAS', '#8dd5ca', 1)];
+      this.inputDisplays = [new PlayerInputDisplay(this, 18, 104, t('training.inputs', { player: 1 }), '#eca58a', 0),
+        new PlayerInputDisplay(this, width - 198, 104, t('training.inputs', { player: 2 }), '#8dd5ca', 1)];
       this.inputDisplays.forEach(display => display.setVisible(this.training!.showInputs));
     }
-    this.arcadeInfo?.setX(width / 2);
     this.pinnedMove?.setX(width / 2);
     this.tutorialHud?.setCenter(width / 2);
   }
@@ -318,34 +415,30 @@ export class FightScene extends Phaser.Scene {
   private syncViewsAndHud(): void {
     const snapshot = this.simulation?.snapshot();
     if (!snapshot) return;
+    if (snapshot.phase === 'match-over') this.showResultMenu(snapshot);
 
     this.resizeHud(getHudLogicalWidth(this.scale));
-    const finalRound = snapshot.roundWins.some(wins => wins >= this.roundsToWin);
-    const resultAge = snapshot.roundEndedFrame === undefined ? -1 : snapshot.frame - snapshot.roundEndedFrame;
     const visualFrame = snapshot.roundEndedFrame ?? snapshot.frame;
-    const resultElapsed = snapshot.phase !== 'fight' && finalRound && snapshot.roundWinnerId && resultAge >= RESULT_TITLE_END_FRAME ? resultAge - RESULT_TITLE_END_FRAME : undefined;
-    const cameraCharacters = resultElapsed === undefined ? snapshot.characters : snapshot.characters.map(character =>
-      getCowboyRoundEndPresentation(character, resultElapsed, this.resultFloorY, this.resultGravity).state);
+    const resultElapsed = snapshot.phase !== 'fight' && snapshot.roundWinnerId ? this.stagePresentation?.resultElapsed(snapshot.frame) : undefined;
+    // After the round ends, a fighter still in the air falls at once; the victory/defeat pose clock starts later, with the title.
+    const sinceRoundEnd = snapshot.phase !== 'fight' && snapshot.roundEndedFrame !== undefined ? snapshot.frame - snapshot.roundEndedFrame : undefined;
+    const shown = sinceRoundEnd === undefined ? snapshot.characters : snapshot.characters.map(character =>
+      settleAfterRound(character, sinceRoundEnd, this.resultFloorY, this.resultGravity, Boolean(snapshot.roundWinnerId) && snapshot.roundWinnerId !== character.characterId));
+    const cameraCharacters = shown;
     this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), visualFrame);
     this.ultimateOverlay?.update(Boolean(snapshot.ultimateActivation), this.game.loop.delta);
-    snapshot.characters.forEach((character, index) => {
+    const layout = createStageLayout(this.selectedStage, LOGICAL_VIEW.width, LOGICAL_VIEW.height, this.resultFloorY);
+    shown.forEach((character, index) => {
       const result = resultElapsed !== undefined
-        ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed, floorY: this.resultFloorY, gravity: this.resultGravity} : undefined;
-      this.combatants[index]?.sync(character, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result);
+        ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed} : undefined;
+      const color = characterColor(this.selectedStage, layout, character.x, this.cameras.main.scrollX,
+        this.alternatePalettes[index]);
+      this.combatants[index]?.sync(character, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color);
     });
-    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters);
+    const alternateOwnerIds = new Set(snapshot.characters.filter((_, index) => this.alternatePalettes[index]).map(character => character.characterId));
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
-    if (this.arcadeInfo) {
-      const count = arcadeOpponents(this.selectedFighter.id).length;
-      let label = `ARCADE · LUTA ${this.arcadeIndex + 1}/${count} · COMPUTADOR`;
-      if (snapshot.phase === 'match-over') {
-        label = snapshot.matchWinnerId === 'player-1'
-          ? this.arcadeIndex + 1 < count ? this.canContinueArcade(snapshot) ? 'VITÓRIA · ENTER PARA O PRÓXIMO ADVERSÁRIO' : 'VITÓRIA' : 'ARCADE CONCLUÍDO · ESC PAUSA'
-          : snapshot.matchWinnerId ? 'FIM DE JOGO · ESC PAUSA' : 'EMPATE · ESC PAUSA';
-      }
-      this.arcadeInfo.setText(label);
-    }
     if (this.training) {
       this.training.observe(snapshot);
       this.trainingHud?.update(snapshot, this.training);
@@ -354,11 +447,17 @@ export class FightScene extends Phaser.Scene {
     this.tutorialHud?.update();
     this.stageView?.syncHudCamera();
     this.inputDisplays.forEach((display, index) => {
-      display.update(this.currentInputs[index] ?? neutralInput(), this.inputHistories[index].snapshot(), snapshot.characters[index].facing);
+      display.update(this.currentInputs[index] ?? neutralInput(), this.inputHistories[index].snapshot(), snapshot.characters[index].facing,
+        snapshot.comboHistory.filter(combo => combo.attackerId === snapshot.characters[index].characterId));
     });
+    this.stagePresentation?.syncCamera();
   }
 
   private cleanup(): void {
+    window.removeEventListener('keydown', this.resultMenuKey, true);
+    window.removeEventListener('resize', this.alignResultMenu);
+    this.resultMenu?.remove(); this.resultMenu = undefined; this.resultActions = [];
+    this.victoryScreen?.destroy(); this.victoryScreen = undefined;
     window.removeEventListener('keydown', this.handlePause);
     this.input.keyboard?.off('keydown-ESC', this.handleEscape);
     this.pauseMenu?.destroy(); this.pauseMenu = undefined;
@@ -371,10 +470,8 @@ export class FightScene extends Phaser.Scene {
     this.keyboardInputs.forEach((input) => input.destroy());
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());
-    this.projectileView = new ProjectileView(this);
     this.combatants = []; this.projectileView?.destroy(); this.projectileView = undefined;
-    this.arcadeInfo?.destroy();
-    this.arcadeInfo = undefined;
+    this.rushEffect?.destroy(); this.rushEffect = undefined; this.rushActive = [false, false];
     this.bot = undefined;
     this.inputDisplays.forEach((display) => display.destroy());
     this.inputDisplays = [];
