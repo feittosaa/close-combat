@@ -14,7 +14,7 @@ SPRITES = Path(__file__).resolve().parents[1] / 'src/assets/sprites/characters/s
 ACTIONS = ('idle-normal', 'rake-enter', 'enter-walk', 'light-punch', 'alternate-punch',
            'launcher-punch', 'crouch', 'crouch-uppercut', 'crouch-heavy-kick', 'jump',
            'air-heavy-kick', 'flying-kick', 'tomato-throw', 'ippon', 'ippon-victim', 'windmill-4',
-           'heavy-punch-2', 'heavy-punch-3', 'power-punch', 'victory-exit', 'taunt', 'rake-ultimate-start', 'rake-ultimate-spin')
+           'heavy-punch-2', 'heavy-punch-3', 'power-punch', 'taunt', 'rake-ultimate-start', 'rake-ultimate-spin')
 
 
 def bounds(name):

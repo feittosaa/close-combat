@@ -1,25 +1,36 @@
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import type { FrameInput } from '../input/types';
 import type { CharacterDefinition } from '../engine/data/characters';
+import { nameOf, t } from '../i18n/i18n';
 export interface TutorialLesson {
-  title: string; instruction: string; notation: string; distance: number;
+  part: string; title: string; instruction: string; notation: string; distance: number;
   moves?: readonly string[]; movement?: boolean; guard?: boolean;
 }
-/** Ferramenta preservada, sem receitas antigas ou progressão por digitação isolada. */
+/** Tutorial único: movimento, básicos, defesa e, por fim, combos do mais leve ao mais pesado. */
 export class TutorialSession {
   index = 0; passed = false;
   private observedFrame = -1;
   private movementFrames = 0;
   private connected: string[] = [];
   readonly lessons: readonly TutorialLesson[];
-  constructor(fighter: CharacterDefinition, kind: 'tutorial' | 'combo-tutorial') {
-    this.lessons = kind === 'combo-tutorial' ? (fighter.combos ?? []).map(combo => ({
-      title: combo.name, instruction: 'Conecte os golpes na ordem da receita aprovada.', notation: combo.notation,
-      moves: combo.finisherMoveId ? [...combo.moveIds.slice(0,-1),combo.finisherMoveId] : combo.moveIds, distance: 64,
-    })) : [
-      { title: 'Mover', instruction: 'Ande para frente ou para trás para ajustar a distância.', notation: 'F / B', distance: 110, movement: true },
-      ...fighter.moves.filter(move => !move.airborne && (!move.category || move.category === 'basic')).map(move => ({ title: move.name, instruction: 'Aproxime-se e acerte. Solte o botão antes de atacar novamente.', notation: move.input.buttons.join('+'), moves: [move.id], distance: 64 })),
-      { title: 'Defender', instruction: 'Segure trás para bloquear o soco do adversário.', notation: 'B', guard: true, distance: 64 },
+  constructor(fighter: CharacterDefinition) {
+    const damage = (moveIds: readonly string[]) => moveIds.reduce((total, id) => total + (fighter.moves.find(move => move.id === id)?.damage ?? 0), 0);
+    const recipes = (fighter.combos ?? []).map(combo => ({
+      id: combo.id, title: nameOf(`combo.${fighter.id}.${combo.id}`, combo.name), notation: combo.notation,
+      moves: combo.finisherMoveId ? [...combo.moveIds.slice(0, -1), combo.finisherMoveId] : combo.moveIds,
+    }));
+    const chains = (fighter.comboChains ?? []).map((chain, index) => {
+      const parts = chain.recipeIds.map(id => recipes.find(recipe => recipe.id === id)!);
+      return { title: nameOf(`chain.${fighter.id}.${index}`, chain.name), notation: parts.map(part => part.notation).join(','), moves: parts.flatMap(part => part.moves) };
+    });
+    const combos = [...recipes.map(({ id, ...recipe }) => recipe), ...chains].sort((a, b) => damage(a.moves) - damage(b.moves)).map(combo => ({
+      part: t('tutorial.partCombos'), ...combo, instruction: t('tutorial.comboHint'), distance: 64,
+    }));
+    this.lessons = [
+      { part: t('tutorial.partMovement'), title: t('tutorial.move'), instruction: t('tutorial.moveHint'), notation: 'F / B', distance: 110, movement: true },
+      ...fighter.moves.filter(move => !move.airborne && (!move.category || move.category === 'basic')).map(move => ({ part: t('tutorial.partBasics'), title: nameOf(`move.${fighter.id}.${move.id}`, move.name), instruction: t('tutorial.basicHint'), notation: move.input.buttons.join('+'), moves: [move.id], distance: 64 })),
+      { part: t('tutorial.partDefense'), title: t('tutorial.guard'), instruction: t('tutorial.guardHint'), notation: 'B', guard: true, distance: 64 },
+      ...combos,
     ];
   }
   get lesson(): TutorialLesson | undefined { return this.lessons[this.index]; }
@@ -38,7 +49,7 @@ export class TutorialSession {
     if (lesson.guard) { this.passed = snapshot.hitEvents.some(event => event.targetId === self.characterId && event.outcome === 'block'); return; }
     if (!lesson.moves) return;
     // Um defensor livre encerra a tentativa: não somar ataques independentes como combo.
-    if (target.mode !== 'hitstun') this.connected = [];
+    if (target.mode !== 'hitstun' && target.mode !== 'knockdown') this.connected = [];
     for (const event of snapshot.hitEvents) {
       if (event.attackerId !== self.characterId || event.outcome !== 'hit') { this.connected = []; continue; }
       if (event.moveId !== lesson.moves[this.connected.length]) this.connected = [];

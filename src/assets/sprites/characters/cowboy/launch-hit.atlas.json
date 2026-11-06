@@ -79,12 +79,53 @@
         "w": 640,
         "h": 640
       }
+    },
+    "4": {
+      "frame": {
+        "x": 2560,
+        "y": 0,
+        "w": 640,
+        "h": 640
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 640,
+        "h": 640
+      },
+      "sourceSize": {
+        "w": 640,
+        "h": 640
+      }
+    },
+    "5": {
+      "frame": {
+        "x": 3200,
+        "y": 0,
+        "w": 640,
+        "h": 640
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 640,
+        "h": 640
+      },
+      "sourceSize": {
+        "w": 640,
+        "h": 640
+      }
     }
   },
   "meta": {
-    "image": "victory-exit.png",
+    "image": "launch-hit.png",
+    "format": "RGBA8888",
     "size": {
-      "w": 2560,
+      "w": 3840,
       "h": 640
     },
     "scale": "1"

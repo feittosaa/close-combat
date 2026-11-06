@@ -8,6 +8,7 @@ import type { CharacterState } from '../engine/characters/CharacterState';
 import type { ProjectileState } from '../engine/combat/ProjectileState';
 import { getTimedAnimationFrame, type AnimationClip } from './animations/AnimationPlayback';
 import { contactEffectKey } from './contactEffects';
+import { CharacterColorEffect } from './characterColor';
 
 const effectClips: Readonly<Record<string, AnimationClip>> = {
   shot:{key:'shot',start:0,end:5,frameRate:20,frameDurations:[2,3,3,3,3,3],repeat:-1},
@@ -16,13 +17,14 @@ const effectClips: Readonly<Record<string, AnimationClip>> = {
 /** Cowboy effects follow the existing projectile geometry and simulation clock. */
 export class ProjectileView {
   private readonly graphics: Phaser.GameObjects.Graphics;
+  private readonly colorEffect = new CharacterColorEffect();
   private readonly sprites = new Map<number, Phaser.GameObjects.Image>();
   private readonly dynamiteExplosions = new Map<number, Phaser.GameObjects.Image>();
   private impacts: { sprite: Phaser.GameObjects.Image; started: number }[] = [];
   private wallEffects = new Map<string, { sprite: Phaser.GameObjects.Image; started: number }>();
   private lastFrame = -1;
   constructor(private readonly scene: Phaser.Scene) { this.graphics = scene.add.graphics().setDepth(12); }
-  sync(projectiles: readonly ProjectileState[], explosions: readonly ExplosionState[] = [], frame = 0, hits: readonly HitEvent[] = [], characters: readonly CharacterState[] = []): void {
+  sync(projectiles: readonly ProjectileState[], explosions: readonly ExplosionState[] = [], frame = 0, hits: readonly HitEvent[] = [], characters: readonly CharacterState[] = [], alternateOwnerIds: ReadonlySet<string> = new Set()): void {
     const g = this.graphics.clear();
     if (frame < this.lastFrame) { this.impacts.forEach(impact => impact.sprite.destroy()); this.impacts = []; }
     if (frame < this.lastFrame) { this.wallEffects.forEach(effect => effect.sprite.destroy()); this.wallEffects.clear(); }
@@ -72,6 +74,7 @@ export class ProjectileView {
         if (this.scene.textures.exists(key)) {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, key, '0').setDepth(11);
           this.sprites.set(p.id, sprite);
+          this.colorEffect.apply(sprite, { alternate: alternateOwnerIds.has(p.ownerId) }, 'magic');
           const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
           const effectFrame = age < 3 ? 0 : 1 + Math.floor((age - 3) / 4) % 5;
           sprite.setTexture(key, String(effectFrame)).setPosition(box.x + box.width / 2, box.y + box.height / 2)
@@ -79,8 +82,8 @@ export class ProjectileView {
           continue;
         }
         const y = box.y + box.height / 2;
-        g.fillStyle(0x39bfff, .35).fillRoundedRect(box.x,box.y,box.width,box.height,box.height / 2);
-        g.fillStyle(0xbdefff, .9).fillRoundedRect(box.x, y - box.height * .16, box.width, box.height * .32, box.height * .16);
+        g.fillStyle(alternateOwnerIds.has(p.ownerId) ? 0xa45bff : 0x39bfff, .35).fillRoundedRect(box.x,box.y,box.width,box.height,box.height / 2);
+        g.fillStyle(alternateOwnerIds.has(p.ownerId) ? 0xe1c4ff : 0xbdefff, .9).fillRoundedRect(box.x, y - box.height * .16, box.width, box.height * .32, box.height * .16);
         continue;
       }
       if (p.fighterId === 'cowboy' && (p.visual === 'bullet' || p.visual === 'dynamite')) {
@@ -89,6 +92,7 @@ export class ProjectileView {
         if (this.scene.textures.exists(key)) {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0,0,key,'0').setDepth(11);
           this.sprites.set(p.id, sprite);
+          this.colorEffect.apply(sprite, { alternate: alternateOwnerIds.has(p.ownerId) }, 'magic');
           const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
           const effectFrame = effect === 'dynamite' ? Math.min(5, Math.floor(age / 2)) : getTimedAnimationFrame(effectClips.shot, age);
           sprite.setTexture(key, String(effectFrame))
@@ -103,7 +107,7 @@ export class ProjectileView {
       g.save().translateCanvas(box.x + box.width / 2, box.y + box.height / 2).scaleCanvas(size, size);
       g.lineStyle(1.5, 0xf4dfb0, 1);
       if (p.visual === 'bullet') {
-        g.fillStyle(0x42c8ff).fillRoundedRect(-12, -5, 24, 10, 5);
+        g.fillStyle(alternateOwnerIds.has(p.ownerId) ? 0xa45bff : 0x42c8ff).fillRoundedRect(-12, -5, 24, 10, 5);
       } else if (p.visual === 'tomato') {
         g.fillStyle(0xc62918).fillCircle(0, 0, 12);
       } else {
@@ -116,7 +120,10 @@ export class ProjectileView {
       const defender = characters.find(character => character.characterId === contact.targetId);
       if (!attacker || !defender) continue;
       const move = getCharacterById(attacker.fighterId)?.moves.find(candidate => candidate.id === contact.moveId);
-      const key = `contact-${contactEffectKey(contact, move)}`;
+      const purpleContact = alternateOwnerIds.has(attacker.characterId) && attacker.fighterId === 'cowboy';
+      const purpleBlock = contact.outcome === 'block' && purpleContact &&
+        (move?.projectile?.visual === 'bullet' || move?.projectile?.visual === 'dynamite');
+      const key = `contact-${purpleBlock && !contact.perfectBlock ? 'block-blue' : contactEffectKey(contact, move)}`;
       if (!this.scene.textures.exists(key)) continue;
       const box = createHurtbox(defender);
       const height = contact.contactHeight ?? move?.hitLevel;
@@ -128,6 +135,7 @@ export class ProjectileView {
       const sprite = this.scene.add.image(x, isBlock ? bodyY : y, key, 0).setDepth(12)
         .setDisplaySize(isBlock ? 84 : 66, isBlock ? bodyHeight * 1.2 : 66)
         .setFlipX((contact.pushbackDirection ?? attacker.facing) === 'left');
+      if (purpleContact) this.colorEffect.apply(sprite, { alternate: true }, purpleBlock && contact.perfectBlock ? 'magic-highlight' : 'magic');
       this.impacts.push({ sprite, started: frame });
     }
     this.impacts = this.impacts.filter(impact => {
@@ -143,6 +151,7 @@ export class ProjectileView {
         if (this.scene.textures.exists('cowboy-effect-dynamite-blast')) {
           const sprite = this.dynamiteExplosions.get(explosion.id!) ?? this.scene.add.image(explosion.x, explosion.y, 'cowboy-effect-dynamite-blast', '0').setDepth(11);
           this.dynamiteExplosions.set(explosion.id!, sprite);
+          this.colorEffect.apply(sprite, { alternate: Boolean(explosion.ownerId && alternateOwnerIds.has(explosion.ownerId)) }, 'magic');
           sprite.setTexture('cowboy-effect-dynamite-blast', String(Math.min(5, Math.floor((12 - explosion.remainingFrames) / 2))))
             .setPosition(explosion.x, explosion.y).setDisplaySize(130, 130);
         }

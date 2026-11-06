@@ -4,6 +4,9 @@ import { shoto } from '../../engine/data/fighters/shoto';
 import { recoveryFrames } from '../../engine/combat/frameData';
 import { getPhaseAnimationFrame } from './AnimationPlayback';
 import { loadGraphicsQuality } from '../../ui/graphicsSettings';
+import { autoSpriteScale, bodyCenterShift, lyingFloorAnchor } from './spriteScale';
+import shotoCalibration from '../../assets/sprites/characters/shoto/calibration.json';
+import shotoMeasurements from '../../assets/sprites/characters/shoto/measurements.json';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/shoto/*.png', { eager: true, query: '?url', import: 'default' });
 const atlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/shoto/*.atlas.json', { eager: true, import: 'default' });
@@ -12,6 +15,8 @@ const highAtlases = import.meta.glob<Record<string, unknown>>('../../assets/spri
 const quality = loadGraphicsQuality();
 export const shotoIdleTexture = 'shoto-idle';
 export const shotoSpriteScale = 182 / 512;
+/** Frame height, in source pixels, of every Bob sheet except the legacy idle. */
+export const SHOTO_FRAME = 1024;
 export const shotoIdleScale = 182 / 640 * 1.01 * 1.01;
 
 /** Return the relative atlas resolution used for the selected texture. */
@@ -39,35 +44,31 @@ export function getShotoIdleFrame(frame: number, startedFrame: number): number {
 
 type ShotoPose = { texture: string; frame: number; footAnchor: number; offsetX: number; flipX: boolean; scale?: number };
 
-export function getShotoVictoryExit(state: CharacterState, elapsed: number): ShotoPose | undefined {
-  if (state.fighterId !== 'shoto' || !state.grounded || elapsed < 80) return undefined;
-  const age = elapsed - 80;
-  const direction = state.facing === 'right' ? -1 : 1;
-  return { texture: 'shoto-victory-exit', frame: age < 6 ? 0 : age < 12 ? 1 : 2 + Math.floor((age - 12) / 4) % 4, footAnchor: 900 / 1024,
-    offsetX: direction * Math.max(0, age - 12) * 6, flipX: direction < 0 };
+/** One Bob drawing, sized by the automatic sprite analysis; a lying drawing on the floor rests on its lowest row. */
+function shotoPose(state: CharacterState, name: string, drawing: number, facesLeft = false): ShotoPose {
+  const floor = state.grounded ? lyingFloorAnchor(shoto, shotoMeasurements, name, drawing) : undefined;
+  const flipX = (state.facing === 'left') !== facesLeft, scale = autoSpriteScale(shoto, shotoMeasurements, name, drawing, shotoCalibration);
+  const shift = bodyCenterShift(shoto, shotoMeasurements, name, drawing) * SHOTO_FRAME * shotoSpriteScale * scale;
+  return {
+    texture: `shoto-${name}`, frame: drawing, footAnchor: floor ?? (name === 'idle' ? 670 / 724 : 900 / SHOTO_FRAME),
+    offsetX: flipX ? -shift : shift, flipX, scale,
+  };
 }
 
-export function hasShotoExited(state: CharacterState, elapsed: number, view: {left: number; right: number}): boolean {
-  if (state.fighterId !== 'shoto') return true;
-  const pose = getShotoVictoryExit(state, elapsed);
-  if (!pose) return false;
-  const x = state.x + pose.offsetX;
-  return state.facing === 'right' ? x + 182 < view.left : x - 182 > view.right;
-}
+/** Victory or defeat drawing shown with the result title. */
+export const getShotoRoundEndPose = (state: CharacterState, winner: boolean, elapsed: number): ShotoPose =>
+  winner ? shotoPose(state, 'victory', Math.min(5, Math.floor(elapsed / 12))) : shotoPose(state, 'defeat', Math.min(5, Math.floor(elapsed / 8)));
+
 export function getShotoUltimatePose(state: CharacterState, elapsed: number, activation: boolean): ShotoPose {
   if (state.attack?.moveId === 'rake-ultimate') {
     const drawing = activation ? Math.min(5, Math.floor(Math.max(0, elapsed) / 15)) : Math.floor(Math.max(0, elapsed) / 2) % 6;
-    return { texture: activation ? 'shoto-rake-ultimate-start' : 'shoto-rake-ultimate-spin', frame: drawing, footAnchor: 900 / 1024, offsetX: 0, flipX: state.facing === 'left' };
+    return shotoPose(state, activation ? 'rake-ultimate-start' : 'rake-ultimate-spin', drawing);
   }
   const drawing = activation ? Math.min(3, Math.floor(Math.max(0, elapsed) / 12)) : elapsed < 92 ? 3 : Math.min(5, 4 + Math.floor((elapsed - 92) / 12));
-  return { texture: 'shoto-ultimate', frame: drawing, footAnchor: 900 / 1024, offsetX: 0, flipX: state.facing === 'left' };
+  return shotoPose(state, 'ultimate', drawing);
 }
 export function getShotoSpritePose(state: CharacterState, frame: number): ShotoPose | undefined {
-  const pose = (name: string, drawing: number, facesLeft = false): ShotoPose => ({
-    texture: `shoto-${name}`, frame: drawing, footAnchor: name === 'idle' ? 670 / 724 : 900 / 1024,
-    offsetX: 0,
-    flipX: (state.facing === 'left') !== facesLeft,
-  });
+  const pose = (name: string, drawing: number, facesLeft = false) => shotoPose(state, name, drawing, facesLeft);
   const transition = state.animationTransition;
   const transitionAge = frame - (transition?.startedFrame ?? -Infinity);
   if (state.grounded && transition && transitionAge >= 0 && transitionAge < 3) {
@@ -92,8 +93,9 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
     const elapsed = state.attack.elapsedFrames;
     const end = startup + move.activeFrames;
     if (state.attack.moveId.startsWith('tomato-')) {
-      const duration = Math.ceil((end + recoveryFrames(move, state.attack)) * 0.8);
-      return pose('tomato-throw', getPhaseAnimationFrame([0, 1, 2, 3, 4, 5], [1, 1, 1, 1, 1, 1], elapsed, duration));
+      // Wind-up with the tomato in hand during startup; the release drawing appears with the projectile.
+      return pose('tomato-throw', elapsed < startup ? getPhaseAnimationFrame([0, 1, 2], [1, 1, 1], elapsed, startup) :
+        getPhaseAnimationFrame([3, 4, 5], [1, 2, 3], elapsed - startup, move.activeFrames + recoveryFrames(move, state.attack)));
     }
     if (move.crouching && elapsed >= end) {
       if (move.id === 'crouch-uppercut' && !state.crouching) return pose('idle-normal', 0);
@@ -122,7 +124,7 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
     if (ipponAge >= 0 && ipponAge < 24) return pose('ippon-victim', Math.min(5, Math.floor(ipponAge / 4)));
     if (state.grounded && state.remainingStateFrames <= 12) return pose('getup', Math.min(5, Math.floor((12 - state.remainingStateFrames) / 2)));
     const fall = pose('fall', state.grounded ? Math.min(5, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 3)) : 3);
-    return state.grounded ? { ...fall, scale: fall.frame <= 2 ? 1.3 : 1.08 } : fall;
+    return state.grounded ? fall : { ...fall, scale: 1 };
   }
   if (state.mode === 'hitstun') {
     if (state.grounded && state.grabbedStartedFrame !== undefined && frame - state.grabbedStartedFrame < 16) {

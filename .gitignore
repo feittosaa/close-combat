@@ -4,6 +4,7 @@ node_modules/
 # Builds e relatórios gerados
 dist/
 coverage/
+review/
 *.tsbuildinfo
 
 # Logs

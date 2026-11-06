@@ -137,15 +137,15 @@ it('plays taunt, ultimate and round cues once, with the victory cue delayed', ()
   snapshot.characters[0].tauntStartedFrame = 1;
   sounds.observe(snapshot); sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(0);
-  snapshot.elapsedFrames=35; sounds.observe(snapshot);
+  snapshot.elapsedFrames=41; sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(0);
-  snapshot.elapsedFrames=36; sounds.observe(snapshot);
+  snapshot.elapsedFrames=42; sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(1);
   snapshot.ultimateActivation = {ownerIds:['player-1'],elapsedFrames:0,remainingFrames:149};
   sounds.observe(snapshot); sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-ultimate_activation')).toHaveLength(1);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(1);
-  snapshot.elapsedFrames=72; sounds.observe(snapshot);
+  snapshot.elapsedFrames=84; sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(2);
   snapshot.phase='round-over'; snapshot.roundEndReason='knockout'; snapshot.roundWinnerId='player-1'; snapshot.elapsedFrames=100;
   sounds.observe(snapshot); sounds.observe(snapshot);
@@ -153,6 +153,36 @@ it('plays taunt, ultimate and round cues once, with the victory cue delayed', ()
   expect(play.mock.calls.filter(call=>call[0]==='sfx-round_win')).toHaveLength(0);
   snapshot.elapsedFrames=145; sounds.observe(snapshot); sounds.observe(snapshot);
   expect(play.mock.calls.filter(call=>call[0]==='sfx-round_win')).toHaveLength(1);
+});
+
+it('plays both ultimate cues and delayed draws when both fighters activate together', () => {
+  const play = vi.fn();
+  const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
+  const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true});
+  sim.fillTrainingRage();
+  const ultimate = {direction:'N' as const,buttons:new Set<'1'>(),ultimate:true};
+  const neutral = {direction:'N' as const,buttons:new Set<'1'>()};
+  sim.stepFrame([ultimate,ultimate]);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toEqual(['player-1','player-2']);
+  sounds.observe(sim.snapshot()); sounds.observe(sim.snapshot());
+  expect(play.mock.calls.filter(call=>call[0]==='sfx-ultimate_activation')).toHaveLength(2);
+  for (let i=0;i<42;i++) { sim.stepFrame([neutral,neutral]); sounds.observe(sim.snapshot()); }
+  expect(play.mock.calls.filter(call=>call[0]==='sfx-pistol_draw')).toHaveLength(2);
+});
+
+it('plays the same arms, draw and shot cues for each fighter when both ultimates run together', () => {
+  const play = vi.fn();
+  const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
+  const sim = new Simulation(createGameConfig(1024,576),[cowboy,cowboy],{training:true,initialDistance:200});
+  sim.fillTrainingRage();
+  const ultimate = {direction:'N' as const,buttons:new Set<'1'>(),ultimate:true};
+  const neutral = {direction:'N' as const,buttons:new Set<'1'>()};
+  sim.stepFrame([ultimate,ultimate]);
+  for (let i=0;i<500;i++) { sim.stepFrame([neutral,neutral]); sounds.observe(sim.snapshot()); }
+  const count = (prefix:string) => play.mock.calls.filter(call=>String(call[0]).startsWith(prefix)).length;
+  expect(count('sfx-pistol_draw')).toBe(2);
+  expect(count('sfx-magical_arms')).toBe(2);
+  expect(count('sfx-magical_shot') % 2).toBe(0);
 });
 
 it('warns at ten seconds once in normal play, but never in training', () => {
@@ -180,7 +210,7 @@ it('uses available light-hit files and the counter and push cues', () => {
   expect(play).toHaveBeenCalledWith('sfx-push_hit_2', {volume:1,seek:.285});
 });
 
-it.each([[.1, 'heavy_hit_1', .295], [.6, 'heavy_hit_2', .022], [.8, 'heavy_hit_3', .739], [.97, 'heavy_hit_4', .4]] as const)(
+it.each([[.1, 'heavy_hit_1', .295], [.6, 'heavy_hit_2', .022], [.8, 'heavy_hit_3', .606], [.97, 'heavy_hit_4', .4]] as const)(
   'aligns heavy-hit variant %s to its measured impact', (random, name, seek) => {
     vi.spyOn(Math, 'random').mockReturnValue(random);
     const play = vi.fn();
@@ -192,6 +222,18 @@ it.each([[.1, 'heavy_hit_1', .295], [.6, 'heavy_hit_2', .022], [.8, 'heavy_hit_3
     expect(play).toHaveBeenCalledWith(`sfx-${name}`, {volume:1.15, ...(seek ? {seek} : {})});
   },
 );
+
+it('plays a hit cue even when the training target is already depleted', () => {
+  vi.spyOn(Math, 'random').mockReturnValue(0);
+  const play = vi.fn();
+  const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
+  const snapshot = new Simulation(createGameConfig(1024,576),[shoto,shoto]).snapshot();
+  snapshot.characters[1].health = 0;
+  snapshot.hitEvents = [{attackerId:'player-1',targetId:'player-2',moveId:'light-punch',damage:20,outcome:'hit',
+    pushback:0,attackerRecoveryFrames:0,defenderStunFrames:0,frameAdvantage:0}];
+  sounds.observe(snapshot);
+  expect(play).toHaveBeenCalledWith('sfx-hit_1', {volume:1.15});
+});
 
 it('cancels a delayed pistol draw if the taunt is interrupted', () => {
   const play = vi.fn();

@@ -1,11 +1,11 @@
 import type Phaser from 'phaser';
 
 export type PresentationTheme = 'saloon' | 'fazenda' | 'sala-treino';
-export type PresentationImage = 'ready' | 'fight' | 'victory' | 'lose' | 'timeout' | 'ultimate' | 'round-win' | 'round-lose';
+export type PresentationImage = 'ready' | 'fight' | 'victory' | 'lose' | 'timeout' | 'ultimate' | 'round-win' | 'round-lose' | 'ko';
 
 const images = import.meta.glob<string>('../../assets/scenes/*/presentation/*.png', { eager: true, import: 'default', query: '?url' });
 const themes: PresentationTheme[] = ['saloon', 'fazenda', 'sala-treino'];
-const names: PresentationImage[] = ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'round-win', 'round-lose'];
+const names: PresentationImage[] = ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'round-win', 'round-lose', 'ko'];
 
 export function presentationTheme(stageId: string): PresentationTheme {
   if (stageId.startsWith('saloon')) return 'saloon';

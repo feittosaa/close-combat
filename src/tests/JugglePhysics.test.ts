@@ -57,9 +57,9 @@ it.each([0,1])('uses lighter launcher gravity, keeps the target stunned and rese
   expect(flightTicks).toBeGreaterThan(Math.ceil(20/config.movement.gravity));
   expect(announcedStun).toBe(flightTicks+shoto.juggle!.getupFrames);
   const landed=sim.snapshot().characters[1-player];
-  expect(landed).toMatchObject({mode:'knockdown',grounded:true,remainingStateFrames:24,wakeupInvulnerabilityFrames:32});
+  expect(landed).toMatchObject({mode:'knockdown',grounded:true,remainingStateFrames:36,wakeupInvulnerabilityFrames:44});
   expect(landed.juggle).toBeUndefined();
-  for(let i=0;i<24;i++)step(sim);
+  for(let i=0;i<36;i++)step(sim);
   expect(sim.snapshot().characters[1-player]).toMatchObject({mode:'neutral',wakeupInvulnerabilityFrames:8});
   for(let i=0;i<8;i++)step(sim);
   expect(sim.snapshot().characters[1-player].wakeupInvulnerabilityFrames).toBeUndefined();
@@ -116,7 +116,7 @@ it('protects getup and the exact wakeup interval from strikes, throws and projec
       const projectiles=id==='tomato-light'?[{id:0,ownerId:attacker.characterId,fighterId:attacker.fighterId,
         x:target.x,y:target.y,facing:'right' as const,velocity:0,remainingFrames:10,visual:'tomato' as const,attack:attacker.attack}]:[];
       const events=resolver.resolve([attacker,target],[input(),input()],projectiles);
-      expect(events.length,`${id} at wakeup tick ${tick}`).toBe(tick<32?0:1);
+      expect(events.length,`${id} at wakeup tick ${tick}`).toBe(tick<44?0:1);
     }
     step(sim);
   }

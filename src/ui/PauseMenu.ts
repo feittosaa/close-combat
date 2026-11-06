@@ -1,9 +1,10 @@
 import { getPlayerLayout } from '../input/controlSettings';
 import { commandNode, formatCommand, formatMoveTitle } from './commandNotation';
 import type { CharacterDefinition } from '../engine/data/characters';
+import { t } from '../i18n/i18n';
 import { fighterMoveList, filterMoveList, type MoveListCategory, type MoveListEntry } from '../training/MoveList';
 
-const labels: Record<MoveListCategory, string> = { all: 'Todos', basics: 'Básicos', combos: 'Combos', crouching: 'Abaixados', power: 'Potentes', throw: 'Agarrões', special: 'Especiais', ultimate: 'Ultimate' };
+const CATEGORIES: readonly MoveListCategory[] = ['all', 'basics', 'combos', 'crouching', 'power', 'throw', 'special', 'ultimate'];
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string): HTMLElementTagNameMap[K] => {
   const node = document.createElement(tag); if (text) node.textContent = text; if (className) node.className = className; return node;
 };
@@ -32,22 +33,22 @@ export class PauseMenu {
     resume: () => void, menu: () => void, private readonly pin: (entry: MoveListEntry, playerIndex: number) => void, step?: () => void, controls?: () => void, fillRage?: () => void) {
     this.root.classList.toggle('match-pause', !training);
     this.root.setAttribute('role', 'dialog'); this.root.setAttribute('aria-modal', 'true');
-    this.root.setAttribute('aria-label', training ? 'Treino pausado — lista de golpes' : 'Partida pausada');
+    this.root.setAttribute('aria-label', t(training ? 'pause.trainingLabel' : 'pause.matchLabel'));
     const panel = el('div', undefined, 'pause-panel');
-    const header = el('header'); header.append(el('p', 'CLOSE COMBAT', 'pause-eyebrow'), el('h1', training ? 'Treino pausado' : 'Partida pausada'));
+    const header = el('header'); header.append(el('p', 'CLOSE COMBAT', 'pause-eyebrow'), el('h1', t(training ? 'pause.trainingTitle' : 'pause.matchTitle')));
     const actions = el('div', undefined, 'pause-actions');
-    const resumeButton = el('button', 'Continuar · P / Esc'); resumeButton.onclick = resume;
-    const menuButton = el('button', 'Voltar ao menu'); menuButton.onclick = menu;
-    const controlsButton = el('button', 'Controles'); controlsButton.onclick = () => controls?.();
+    const resumeButton = el('button', t('pause.resume')); resumeButton.onclick = resume;
+    const menuButton = el('button', t('pause.menu')); menuButton.onclick = menu;
+    const controlsButton = el('button', t('pause.controls')); controlsButton.onclick = () => controls?.();
     actions.append(resumeButton, controlsButton, menuButton);
     if (training) {
-      const inspect = el('button', 'Inspecionar luta');
+      const inspect = el('button', t('pause.inspect'));
       inspect.onclick = () => {
         const inspecting = this.root.classList.toggle('inspection');
-        inspect.textContent = inspecting ? 'Ver lista de golpes' : 'Inspecionar luta';
+        inspect.textContent = t(inspecting ? 'pause.moveList' : 'pause.inspect');
       };
-      const next = el('button', 'Avançar 1 frame · .'); next.onclick = () => step?.();
-      const rage = el('button', 'Encher rage · treino'); rage.onclick = () => fillRage?.();
+      const next = el('button', t('pause.step')); next.onclick = () => step?.();
+      const rage = el('button', t('pause.fillRage')); rage.onclick = () => fillRage?.();
       actions.prepend(inspect, next, rage);
     }
     header.append(actions); panel.append(header);
@@ -58,20 +59,21 @@ export class PauseMenu {
         button.onclick = () => { this.fighterIndex = index; this.category = 'all'; this.search.value = ''; this.loadFighter(); };
         tools.append(button);
       });
-      this.search.type = 'search'; this.search.placeholder = 'Buscar golpe ou comando'; this.search.setAttribute('aria-label', 'Buscar golpe ou comando');
+      this.search.type = 'search'; this.search.placeholder = t('pause.search'); this.search.setAttribute('aria-label', t('pause.search'));
       this.search.oninput = () => this.renderRows(); tools.append(this.search, this.count); panel.append(tools);
-      this.categories.setAttribute('aria-label', 'Categorias de golpes'); this.rows.setAttribute('aria-label', 'Lista de golpes');
+      this.categories.setAttribute('aria-label', t('pause.categories')); this.rows.setAttribute('aria-label', t('pause.moves'));
       this.body.append(this.categories, this.rows, this.details); panel.append(this.body);
-      panel.append(el('p', 'Vírgula: sequência · +: simultâneo · Frente/trás relativos ao personagem · Teclas conforme seus controles.', 'pause-legend'));
+      panel.append(el('p', t('pause.legend'), 'pause-legend'));
       this.loadFighter();
-    } else panel.append(el('p', 'A luta e o cronômetro estão pausados.', 'pause-legend'));
+    } else panel.append(el('p', t('pause.matchLegend'), 'pause-legend'));
+    panel.dataset.banner = t('pause.banner');
     this.root.append(panel); this.root.hidden = true; document.body.append(this.root);
     this.root.addEventListener('keydown', this.onKey);
   }
 
   setVisible(visible: boolean): void {
     this.visible = visible; this.root.hidden = !visible;
-    if (visible) { this.root.classList.remove('inspection'); this.root.querySelectorAll('button').forEach(button => { if (button.textContent === 'Ver lista de golpes') button.textContent = 'Inspecionar luta'; }); }
+    if (visible) { this.root.classList.remove('inspection'); this.root.querySelectorAll('button').forEach(button => { if (button.textContent === t('pause.moveList')) button.textContent = t('pause.inspect'); }); }
     if (visible) this.root.querySelector<HTMLButtonElement>('button')?.focus();
     else document.querySelector<HTMLCanvasElement>('#game canvas')?.focus();
   }
@@ -83,10 +85,10 @@ export class PauseMenu {
   private loadFighter(): void {
     this.entries = fighterMoveList(this.fighters[this.fighterIndex]);
     this.categories.replaceChildren();
-    for (const category of Object.keys(labels) as MoveListCategory[]) {
+    for (const category of CATEGORIES) {
       const count = category === 'all' ? this.entries.length : this.entries.filter(entry => entry.categories.includes(category)).length;
       if (!count && category !== 'all') continue;
-      const button = el('button', `${labels[category]} · ${count}`);
+      const button = el('button', `${t(`category.${category}`)} · ${count}`);
       button.setAttribute('aria-pressed', String(category === this.category));
       button.onclick = () => {
         this.category = category;
@@ -103,7 +105,7 @@ export class PauseMenu {
     const term = this.search.value.trim().toLocaleLowerCase();
     const entries = filterMoveList(this.entries, this.category, '').filter(entry => !term ||
       `${entry.title} ${entry.notation} ${formatMoveTitle(entry.title,layout)} ${formatCommand(entry.notation,layout)}`.toLocaleLowerCase().includes(term));
-    this.count.textContent = `${this.fighters[this.fighterIndex].name} · ${entries.length} de ${this.entries.length}`;
+    this.count.textContent = t('pause.count', { name: this.fighters[this.fighterIndex].name, shown: entries.length, total: this.entries.length });
     this.rows.replaceChildren();
     for (const entry of entries) {
       const button = el('button', undefined, 'pause-move');
@@ -111,7 +113,7 @@ export class PauseMenu {
       button.append(command, el('span', formatMoveTitle(entry.title,layout)));
       button.onclick = () => this.showDetails(entry); this.rows.append(button);
     }
-    if (!entries.length) { this.rows.append(el('p', 'Nenhum golpe encontrado.')); this.details.replaceChildren(); }
+    if (!entries.length) { this.rows.append(el('p', t('pause.noMoves'))); this.details.replaceChildren(); }
     else this.showDetails(entries[0]);
   }
 
@@ -123,23 +125,23 @@ export class PauseMenu {
       const move = entry.move;
       if (move.category === 'throw') {
         const cowboy = this.fighters[this.fighterIndex].id === 'cowboy';
-        if (cowboy && move.id === 'throw-24') this.details.append(el('p', 'Laço baixo de curto alcance que derruba o adversário.'));
-        else this.details.append(el('p', 'Ao iniciar o comando, segure frente para lançar à frente ou trás para lançar atrás. Sem direção, lança à frente.'));
-        if (cowboy) this.details.append(el('p', `Para escapar, o adversário tem uma tentativa: ${move.input.buttons.join(' ou ')}.`));
+        if (cowboy && move.id === 'throw-24') this.details.append(el('p', t('pause.lowLasso')));
+        else this.details.append(el('p', t('pause.throwDirection')));
+        if (cowboy) this.details.append(el('p', t('pause.throwEscape', { buttons: move.input.buttons.join(t('pause.or')) })));
       }
-      if (move.rageCost) this.details.append(el('p', `Exige ${move.rageCost} de rage; consome ao iniciar.`));
-      if (move.invulnerability) this.details.append(el('p', `Invulnerável ${move.invulnerability.kind === 'all' ? 'a ataques' : 'a projéteis'} por ${move.invulnerability.until}F.`));
-      if (move.projectile) this.details.append(el('p', `Projétil · velocidade ${move.projectile.speed} · duração ${move.projectile.life}F.`));
-      const levels = { high: 'Alto', mid: 'Médio', low: 'Baixo', air: 'Aéreo', throw: 'Agarrão', special: 'Especial' };
-      const hitLevel = move.screenVolley?.firstHitLevel ? `${levels[move.screenVolley.firstHitLevel]} no primeiro tiro · ${levels[move.hitLevel]} nos demais` : levels[move.hitLevel];
-      this.details.append(el('p', `${hitLevel} · dano ${move.damage}`));
+      if (move.rageCost) this.details.append(el('p', t('pause.rageCost', { cost: move.rageCost })));
+      if (move.invulnerability) this.details.append(el('p', t(move.invulnerability.kind === 'all' ? 'pause.invulnerableAttacks' : 'pause.invulnerableProjectiles', { frames: move.invulnerability.until })));
+      if (move.projectile) this.details.append(el('p', t('pause.projectile', { speed: move.projectile.speed, life: move.projectile.life })));
+      const level = (id: typeof move.hitLevel) => t(`level.${id}`);
+      const hitLevel = move.screenVolley?.firstHitLevel ? t('pause.firstShot', { first: level(move.screenVolley.firstHitLevel), rest: level(move.hitLevel) }) : level(move.hitLevel);
+      this.details.append(el('p', t('pause.damage', { level: hitLevel, damage: move.damage })));
       const timeline = el('div', undefined, 'pause-timeline');
-      for (const [label, frames, cls] of [['Preparo', move.startup, 'startup'], ['Atividade', move.activeFrames, 'active'], ['Recuperação', move.recovery, 'recovery']] as const) {
+      for (const [label, frames, cls] of [[t('pause.startup'), move.startup, 'startup'], [t('pause.active'), move.activeFrames, 'active'], [t('pause.recovery'), move.recovery, 'recovery']] as const) {
         const block = el('span', `${label} ${frames}F`, cls); block.style.flexGrow = String(frames); timeline.append(block);
       }
-      this.details.append(timeline, el('p', 'Valores provisórios para balanceamento. Receitas fechadas funcionam também no vazio, após a atividade do golpe. Fora delas, só o acerto permite trocar de golpe e continuar. Forte impede voltar ao fraco até o fim da sequência; um levantamento acertado reinicia essa sequência.', 'pause-note'));
+      this.details.append(timeline, el('p', t('pause.note'), 'pause-note'));
     }
-    if (entry.combo) this.details.append(el('p', 'Receita manual aprovada pelo usuário.'));
-    const pin = el('button', 'Fixar comando no treino'); pin.onclick = () => this.pin(entry,this.fighterIndex); this.details.append(pin);
+    if (entry.combo) this.details.append(el('p', t('pause.recipe')));
+    const pin = el('button', t('pause.pin')); pin.onclick = () => this.pin(entry,this.fighterIndex); this.details.append(pin);
   }
 }

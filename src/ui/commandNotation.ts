@@ -1,15 +1,16 @@
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 import type { KeyboardLayout } from '../input/KeyboardInput';
 import { BUTTON_COLORS, getPlayerLayout, keyLabel } from '../input/controlSettings';
+import { t } from '../i18n/i18n';
 export const DIRECTION_ARROWS: Record<Direction,string> = {N:'•',F:'→',B:'←',U:'↑',D:'↓',DF:'↘',DB:'↙',UF:'↗',UB:'↖'};
 export interface CommandToken { text: string; button?: AttackButton }
-/** Only command notation is translated. Frame data, move IDs and engine commands stay unchanged. */
+/** Only command notation is translated (keys, arrows and the words authored in Portuguese). Frame data, move IDs and engine commands stay unchanged. */
 export function commandTokens(notation: string, layout = getPlayerLayout()): CommandToken[] {
   const parts = notation.split(/(\b(?:df|fd|db|bd|uf|ub|f|b|u|d|n)\b|(?<!\d)[1-4](?!\d))/gi);
   return parts.filter(Boolean).map(part => {
     if (/^[1-4]$/.test(part)) return { text: keyLabel(layout.buttons[part as AttackButton]), button: part as AttackButton };
     const direction = part.toUpperCase().replace(/^FD$/, 'DF').replace(/^BD$/, 'DB') as Direction;
-    return { text: DIRECTION_ARROWS[direction] ?? part.replace(/\s>\s/g,'  ›  ') };
+    return { text: DIRECTION_ARROWS[direction] ?? part.replace(/\s>\s/g,'  ›  ').replace(/voadora fraca/g, t('notation.lightFlyingKick')).replace(/no ar/g, t('notation.air')) };
   });
 }
 export function formatCommand(notation: string, layout?: KeyboardLayout): string { return commandTokens(notation,layout).map(token=>token.text).join(''); }

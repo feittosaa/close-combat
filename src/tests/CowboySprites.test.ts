@@ -3,7 +3,7 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { cowboy } from '../engine/data/fighters/cowboy';
 import type { FrameInput } from '../input/types';
-import { getCowboyRoundEndPose, getCowboyRoundEndPresentation, hasCowboyExited, getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
+import { cowboySheetScale, getCowboyRoundEndPose, settleAfterRound, getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
 import chargeThrowAtlas from '../assets/sprites/characters/cowboy/high/charge-throw.atlas.json';
 
 it.each([0, 1])('renders each defensive stance with spectral arms in front for player %i', player => {
@@ -63,34 +63,26 @@ it.each([0,1])('renders the round result using the correct orientation for playe
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
   expect(getCowboyRoundEndPose(state,true,0)).toMatchObject({texture:'cowboy-victory',frame:0,flipX:player===1});
   expect(getCowboyRoundEndPose(state,true,79)).toMatchObject({texture:'cowboy-victory',frame:5});
-  expect(getCowboyRoundEndPose(state,true,80)).toMatchObject({texture:'cowboy-victory-exit',frame:0});
-  const exit = getCowboyRoundEndPose(state,true,140)!;
-  expect(exit.texture).toBe('cowboy-victory-exit');
-  expect(Math.sign(exit.offsetX)).toBe(player === 0 ? -1 : 1);
   expect(getCowboyRoundEndPose(state,false,0)).toMatchObject({texture:'cowboy-defeat',frame:0});
   expect(getCowboyRoundEndPose({...state,mode:'knockdown'},false,0)).toBeUndefined();
   expect(getCowboyRoundEndPose({...state,grounded:false},true,0)).toBeUndefined();
 });
 
-it.each([0,1])('waits for player %i to leave the camera after victory', player => {
+it.each([0,1])('an airborne fighter keeps falling after the round ends and lands lying (loser) or standing (winner): player %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
-  const view = {left: 0, right: 1024};
-  expect(hasCowboyExited(state, 140, state.y, .55, view)).toBe(false);
-  expect(hasCowboyExited(state, 1000, state.y, .55, view)).toBe(true);
-  expect(hasCowboyExited({...state, grounded:false, y:state.y - 60, verticalVelocity:-2}, 0, state.y, .55, view)).toBe(false);
-});
-
-it.each([0,1])('lands visually before the round result for airborne player %i', player => {
-  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
-  const airborne = {...state, y: state.y - 60, grounded: false, verticalVelocity: -2};
-  const falling = getCowboyRoundEndPresentation(airborne, 10, state.y, .55);
-  expect(falling.state.grounded).toBe(false);
-  expect(getCowboyRoundEndPose(falling.state,true,falling.elapsed)).toBeUndefined();
-  const landed = getCowboyRoundEndPresentation(airborne, 40, state.y, .55);
-  expect(landed.state).toMatchObject({y: state.y, grounded:true, verticalVelocity:0});
-  expect(getCowboyRoundEndPose(landed.state,true,landed.elapsed)?.texture).toBe('cowboy-victory');
+  const airborne = {...state, y: state.y - 60, grounded: false, verticalVelocity: -2, mode: 'hitstun' as const};
+  const falling = settleAfterRound(airborne, 10, state.y, .55, true);
+  expect(falling.grounded).toBe(false);
+  expect(falling.y).toBeGreaterThan(airborne.y - 1);
+  const lost = settleAfterRound(airborne, 40, state.y, .55, true);
+  expect(lost).toMatchObject({y: state.y, grounded:true, verticalVelocity:0, mode:'knockdown'});
+  expect(getCowboyRoundEndPose(lost,false,0)).toBeUndefined();            // already lying: no standing defeat pose
+  expect(getCowboySpritePose(lost, 0)?.texture).toBe('cowboy-fall-landing');   // shown lying, not getting up
+  const won = settleAfterRound(airborne, 40, state.y, .55, false);
+  expect(won).toMatchObject({grounded:true, mode:'neutral'});
+  expect(getCowboyRoundEndPose(won,true,0)?.texture).toBe('cowboy-victory');
+  expect(settleAfterRound(airborne, 0, state.y, .55, true).y).toBe(airborne.y);   // it falls from where it was, with no jump
   expect(airborne.grounded).toBe(false);
-  expect(airborne.y).toBe(state.y - 60);
 });
 
 it('keeps the round-end animation clock stable through the result and clears it on reset', () => {
@@ -176,7 +168,7 @@ it.each([0,1])('sincroniza seis poses próprias com os seis disparos da ultimate
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
   expect(getCowboyUltimateActivationPose(state,149)).toMatchObject({texture:'cowboy-exit-taunt',frame:5});
   for(let shot=0;shot<6;shot++) {
-    const attacking={...state,attack:{moveId:'bulls-eye',buttons:[] as const,elapsedFrames:1+shot*18,hasHit:false}};
+    const attacking={...state,attack:{moveId:'bulls-eye',buttons:[] as const,elapsedFrames:cowboy.moves.find(move=>move.id==='bulls-eye')!.startup+shot*18,hasHit:false}};
     expect(getCowboySpritePose(attacking,shot*18)).toMatchObject({texture:'cowboy-ultimate-body',frame:[0,1,2,3,4,5][shot],flipX:player===1});
     if (shot === 1 || shot === 3) expect(getCowboySpritePose({...attacking,attack:{...attacking.attack,elapsedFrames:attacking.attack.elapsedFrames+2}},shot*18+2)?.frame).toBe(shot+1);
   }
@@ -216,13 +208,13 @@ it('holds the initial grab pose throughout the escape window, then falls', () =>
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[0];
   const captured = {...state, mode:'hitstun' as const, grabbedStartedFrame:40};
   for (let frame = 40; frame < 55; frame++) {
-    expect(getCowboySpritePose({...captured, grabbedHold:true}, frame)).toMatchObject({ texture:'cowboy-grabbed', frame: 0, scale: 1 });
+    expect(getCowboySpritePose({...captured, grabbedHold:true}, frame)).toMatchObject({ texture:'cowboy-grabbed', frame: 0, scale: cowboySheetScale('grabbed') });
   }
   const pulled = {...captured, mode:'knockdown' as const, throwPull:{distancePerFrame:1,remainingFrames:5,launchDistance:100,launchFrames:20,liftSpeed:-5}};
-  expect(getCowboySpritePose(pulled,55)).toMatchObject({ texture:'cowboy-grabbed', frame:0, scale:1 });
+  expect(getCowboySpritePose(pulled,55)).toMatchObject({ texture:'cowboy-grabbed', frame:0, scale: cowboySheetScale('grabbed') });
   const normal = getCowboySpritePose({...captured, grabbedStartedFrame:undefined},60)!;
   const held = getCowboySpritePose({...captured, grabbedHold:true},60)!;
-  expect(held.scale).toBeCloseTo(normal.scale * 1.05);
+  expect(held.scale).toBeCloseTo(normal.scale * 1.05, 9);
   expect(getCowboySpritePose({...captured, mode:'knockdown'},55)?.texture).toBe('cowboy-knockdown');
 });
 
@@ -440,4 +432,17 @@ it.each([0,1])('mostra a queda progressiva enquanto o empurrão desloca a Cowboy
   const pushed={...state,mode:'knockdown' as const,grounded:true,stateStartedFrame:100,pushbackMotion:{distancePerFrame:5,remainingFrames:12}};
   for(let age=0;age<12;age++) expect(getCowboySpritePose(pushed,100+age)).toMatchObject({texture:'cowboy-push-fall',frame:Math.floor(age/2),flipX:player===1});
   expect(getCowboySpritePose({...pushed,pushbackMotion:undefined},112)?.texture).toBe('cowboy-knockdown');
+});
+
+
+it.each([0,1])('usa folhas de tiro duplo, queda e levantamento para jogador %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
+  const shooting = {...state, attack: {moveId:'double-shot',buttons:['1','2'] as const,elapsedFrames:14,hasHit:false}};
+  expect(getCowboySpritePose(shooting,14)).toMatchObject({texture:'cowboy-double-shot',frame:3,scale:cowboySheetScale('double-shot'),flipX:player===1});
+  expect(getCowboySpriteLayers(shooting,14).map(layer=>layer.texture)).toContain('cowboy-magic-horizontal');
+  expect(getCowboySpritePose({...state,mode:'knockdown',remainingStateFrames:20},10)).toMatchObject({texture:'cowboy-fall-landing',frame:5,scale:cowboySheetScale('fall-landing',5)});
+  expect(getCowboySpritePose({...state,mode:'knockdown',grounded:false,remainingStateFrames:20,stateStartedFrame:10},10)).toMatchObject({texture:'cowboy-fall-landing',frame:0,scale:cowboySheetScale('fall-landing',0),offsetY:0});
+  expect(getCowboySpritePose({...state,mode:'knockdown',grounded:false,remainingStateFrames:20,stateStartedFrame:10},18)).toMatchObject({texture:'cowboy-fall-landing',frame:2,scale:cowboySheetScale('fall-landing',2)});
+  expect(getCowboySpritePose({...state,mode:'hitstun',grounded:false,juggle:{gravityScale:1,airHits:0}},10)).toMatchObject({texture:'cowboy-launch-hit',scale:cowboySheetScale('launch-hit')});
+  expect(getCowboySpritePose({...state,mode:'hitstun',grounded:false},10)).toMatchObject({texture:'cowboy-air-hurt',scale:cowboySheetScale('air-hurt')});
 });

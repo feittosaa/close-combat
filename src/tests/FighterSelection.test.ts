@@ -1,75 +1,130 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { FighterSelection } from '../ui/FighterSelection';
-import { fighterArt, selectionPortraitSize } from '../ui/fighterArt';
-
-it('scales visible selection portraits to the authored heights and shared baseline', () => {
-  for (const [id,height] of Object.entries({cowboy:160,shoto:170,puppet:175,grappler:205})) {
-    const art = fighterArt[id], size = selectionPortraitSize(id);
-    expect(size.height * (art.bottom-art.top) / art.imageHeight).toBeCloseTo(height/205*125);
-    expect(size.bottom + size.height * (art.imageHeight-art.bottom) / art.imageHeight).toBeCloseTo(0);
-  }
-});
 
 describe('fighter selection', () => {
-  it('keeps independent choices and waits for both players in PvP', () => {
+  it('requires a character and color confirmation for each player', () => {
     const selection = new FighterSelection(3);
     selection.select(0, 1);
+    expect(selection.confirm(0, true)).toBe(false);
+    expect(selection.choosingColor[0]).toBe(true);
+    selection.selectPalette(0, 1);
     expect(selection.confirm(0, true)).toBe(false);
     expect(selection.activePlayer).toBe(1);
     selection.select(1, 2);
+    expect(selection.confirm(1, true)).toBe(false);
     expect(selection.confirm(1, true)).toBe(true);
     expect(selection.indices).toEqual([1, 2]);
+    expect(selection.palettes).toEqual([1, 0]);
   });
 
-  it('allows P2 to confirm first and keeps the same character legal for both', () => {
+  it('never repeats a color for a matching fighter', () => {
     const selection = new FighterSelection(1);
-    expect(selection.confirm(1, true)).toBe(false);
-    expect(selection.activePlayer).toBe(0);
-    expect(selection.confirm(0, true)).toBe(true);
-    expect(selection.indices).toEqual([0, 0]);
-  });
-
-  it('wraps a cursor without moving or unlocking the other player', () => {
-    const selection = new FighterSelection(3);
     selection.confirm(1, true);
-    selection.select(0, -1);
-    expect(selection.indices).toEqual([2, 0]);
-    expect(selection.ready).toEqual([false, true]);
-    selection.select(0, 3);
-    expect(selection.indices[0]).toBe(0);
+    selection.confirm(1, true);
+    selection.confirm(0, true);
+    expect(selection.palettes).toEqual([1, 0]);
+    selection.selectPalette(0, 0);
+    expect(selection.palettes).toEqual([1, 0]);
   });
 
-  it('requires reconfirmation after changing a ready choice or returning from stage selection', () => {
-    const selection = new FighterSelection(3);
+  it('gives the other player the leftover color when the same fighter is picked', () => {
+    const selection = new FighterSelection(1);
     selection.confirm(0, true);
+    selection.confirm(1, true);
+    expect(selection.palettes).toEqual([0, 1]);
+    selection.selectPalette(1, 0);
+    expect(selection.palettes).toEqual([1, 0]);
+  });
+
+  it('locks a color confirmed by one player so the other cannot pick it', () => {
+    const selection = new FighterSelection(1);
+    selection.confirm(0, true); selection.selectPalette(0, 1); selection.confirm(0, true);
+    expect(selection.isPaletteLocked(1, 1)).toBe(true);
+    expect(selection.isPaletteLocked(1, 0)).toBe(false);
+    selection.confirm(1, true);
+    expect(selection.palettes).toEqual([1, 0]);
+    selection.selectPalette(1, 1);
+    expect(selection.palettes).toEqual([1, 0]);
+    selection.move(1, 1);
+    expect(selection.palettes).toEqual([1, 0]);
+  });
+
+  it('moves between colors without changing the fighter and reopens selection', () => {
+    const selection = new FighterSelection(3);
     selection.select(0, 1);
-    expect(selection.confirm(1, true)).toBe(false);
-    expect(selection.confirm(0, true)).toBe(true);
+    selection.confirm(0, false);
+    selection.move(0, 1);
+    expect(selection.indices[0]).toBe(1);
+    expect(selection.palettes[0]).toBe(1);
+    expect(selection.confirm(0, false)).toBe(true);
     selection.reopen();
     expect(selection.ready).toEqual([false, false]);
-    expect(selection.indices).toEqual([1, 0]);
-    expect(selection.confirm(0, true)).toBe(false);
+    expect(selection.choosingColor).toEqual([false, false]);
+    expect(selection.indices[0]).toBe(1);
   });
 
-  it('requires only P1 confirmation in a solo mode', () => {
-    expect(new FighterSelection(3).confirm(0, false)).toBe(true);
-  });
-  it('navigates to random and resolves it only when the player confirms', () => {
-    const random = vi.spyOn(Math, 'random').mockReturnValue(0.8);
-    try {
-      const selection = new FighterSelection(3);
-      selection.move(0, -1);
-      expect(selection.random[0]).toBe(true);
-      expect(selection.indices[0]).toBe(0);
-      expect(selection.confirm(0, true)).toBe(false);
-      expect(selection.indices[0]).toBe(2);
-      expect(selection.random[0]).toBe(false);
-      expect(selection.ready).toEqual([true, false]);
-      selection.selectRandom(1);
-      selection.move(1, 1);
-      expect(selection.random[1]).toBe(false);
-      expect(selection.indices[1]).toBe(0);
-    } finally { random.mockRestore(); }
+  it('confirms the random pick at once, with no colour step and without revealing the fighter', () => {
+    const selection = new FighterSelection(3);
+    selection.move(0, -1);
+    expect(selection.random[0]).toBe(true);
+    expect(selection.confirm(0, false)).toBe(true);
+    expect(selection.ready[0]).toBe(true);
+    expect(selection.choosingColor[0]).toBe(false);
+    expect(selection.random[0]).toBe(true);           // still hidden: nothing is drawn yet
   });
 
+  it('draws fighter and colour only when the fight starts', () => {
+    const selection = new FighterSelection(3);
+    selection.move(0, -1); selection.confirm(0, false);
+    selection.resolveRandoms(() => .8);
+    expect(selection.random[0]).toBe(false);
+    expect(selection.indices[0]).toBe(2);
+    expect(selection.palettes[0]).toBe(1);
+  });
+
+  it('versus: random and hand-picked players become ready independently, and a drawn colour never repeats a picked one', () => {
+    const selection = new FighterSelection(3);
+    selection.select(0, 1); selection.confirm(0, true); selection.confirm(0, true);   // P1: fighter 1, colour 0
+    expect(selection.ready).toEqual([true, false]);
+    selection.move(1, -1);                                                              // P2 on the random tile
+    expect(selection.confirm(1, true)).toBe(true);
+    expect(selection.ready).toEqual([true, true]);
+    selection.resolveRandoms(() => .4);                                                 // draws fighter 1, colour 0: the same as P1
+    expect(selection.indices).toEqual([1, 1]);
+    expect(selection.palettes[0]).toBe(0);
+    expect(selection.palettes[1]).toBe(1);
+  });
+
+  it('two random players draw independently and still end with different colours on the same fighter', () => {
+    const selection = new FighterSelection(1);
+    selection.move(0, -1); selection.confirm(0, true);
+    selection.move(1, -1); selection.confirm(1, true);
+    selection.resolveRandoms(() => .2);
+    expect(selection.indices).toEqual([0, 0]);
+    expect(selection.palettes[0]).not.toBe(selection.palettes[1]);
+  });
+});
+
+import { matchPalettes, selectsOpponent } from '../scenes/matchSetup';
+it('passes chosen palettes to either side and defaults solo mirrors to opposite colors', () => {
+  expect(matchPalettes({ fighterPalette: 1 }, true)).toEqual([true, false]);
+  expect(matchPalettes({ fighterPalette: 0 }, true)).toEqual([false, true]);
+  expect(matchPalettes({ fighterPalette: 1, opponentPalette: 1 }, false)).toEqual([true, true]);
+  expect(matchPalettes({ fighterPalette: 0, opponentPalette: 0 }, true)).toEqual([false, false]);
+});
+
+it('lets training select and confirm a different opponent and palette', () => {
+  expect(selectsOpponent('training')).toBe(true);
+  expect(selectsOpponent('versus')).toBe(true);
+  expect(selectsOpponent('tutorial')).toBe(false);
+  const selection = new FighterSelection(2);
+  selection.confirm(0, selectsOpponent('training'));
+  expect(selection.confirm(0, selectsOpponent('training'))).toBe(false);
+  expect(selection.activePlayer).toBe(1);
+  selection.select(1, 1);
+  selection.confirm(1, selectsOpponent('training'));
+  selection.selectPalette(1, 1);
+  expect(selection.confirm(1, selectsOpponent('training'))).toBe(true);
+  expect(selection.indices).toEqual([0, 1]);
+  expect(selection.palettes).toEqual([0, 1]);
 });

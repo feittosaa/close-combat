@@ -64,10 +64,10 @@ it('starts the cinematic when a buffered ultimate becomes available as a missed 
 
 it('freezes the round clock and entire world for 150 ticks of activation, for any ultimate',()=>{
   expect(ULTIMATE_ACTIVATION_FRAMES).toBe(150);
-  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:250}};
+  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:300}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
-  expect(sim.snapshot().characters[0].rage).toBe(250);
+  expect(sim.snapshot().characters[0].rage).toBe(300);
   const motion=shoto.moves.find(m=>m.id==='crow-ultimate')!.input.sequence!;
   motion.slice(0,-1).forEach(d=>step(sim,input(d)));
   const before=sim.snapshot();step(sim,input('F',['1','2']),0,input('UF',['4']));
@@ -150,32 +150,36 @@ it('reaches both actual panorama walls when the opponent follows, without draggi
   }
 });
 
-it.each([0,1])('allows one ultimate per fighter across rounds and restores it on match reset: player %i', player => {
-  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:250}};
-  const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
-  command(sim,'light-punch',player);wait(sim,80);
-  expect(sim.snapshot().characters[player].rage).toBe(250);
+it.each([0,1])('allows repeated ultimates with sufficient rage: player %i', player => {
+  const sim=create(56); sim.fillTrainingRage();
   command(sim,'crow-ultimate',player);
-  expect(sim.snapshot().characters[player].ultimateUsed).toBe(true);
-  expect(sim.snapshot().characters[1-player].ultimateUsed).toBe(false);
-  for(let i=0;i<900 && sim.snapshot().round===1;i++)step(sim);
-  expect(sim.snapshot()).toMatchObject({round:2,phase:'fight'});
-  expect(sim.snapshot().characters[player].ultimateUsed).toBe(true);
-  command(sim,'light-punch',player);wait(sim,80);
-  expect(sim.snapshot().characters[player].rage).toBe(250);
-  command(sim,'crow-ultimate',player);wait(sim,20);
-  expect(sim.snapshot().ultimateActivation).toBeUndefined();
-  expect(sim.snapshot().characters[player].attack?.moveId).not.toBe('crow-ultimate');
-  sim.resetMatch();
-  expect(sim.snapshot().characters.every(c=>!c.ultimateUsed)).toBe(true);
+  expect(sim.snapshot().characters[player].rage).toBe(600);
+  wait(sim,350);
+  command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().characters[player].rage).toBe(300);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
 });
 
+it.each([0,1])('permits ultimates again in a real match after earning rage in a later round: player %i', player => {
+  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:300}};
+  const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
+  command(sim,'light-punch',player);wait(sim,80);
+  command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().characters[player].rage).toBe(0);
+  for(let i=0;i<900 && sim.snapshot().round===1;i++)step(sim);
+  expect(sim.snapshot()).toMatchObject({round:2,phase:'fight'});
+  command(sim,'light-punch',player);wait(sim,80);
+  expect(sim.snapshot().characters[player].rage).toBe(300);
+  command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
+  expect(sim.snapshot().characters[player].rage).toBe(0);
+});
 
 it.each([0,1])('refills rage and permits repeated ultimates in training: player %i', player => {
   const sim=create(56);sim.fillTrainingRage();command(sim,'crow-ultimate',player);
-  expect(sim.snapshot().characters[player]).toMatchObject({rage:0,ultimateUsed:false});
+  expect(sim.snapshot().characters[player]).toMatchObject({rage:600});
   wait(sim,350);sim.fillTrainingRage();
-  expect(sim.snapshot().characters[player].rage).toBe(250);
+  expect(sim.snapshot().characters[player].rage).toBe(900);
   command(sim,'crow-ultimate',player);
   expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
 });
@@ -202,7 +206,7 @@ it.each([0,1])('uses the shortcut with full cinematic and the same resource rule
   step(sim,N,player);sim.fillTrainingRage();
   step(sim,{...N,ultimate:true},player);
   expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
-  expect(sim.snapshot().characters[player].rage).toBe(0);
+  expect(sim.snapshot().characters[player].rage).toBe(600);
   expect(sim.snapshot().projectiles).toHaveLength(0);
 });
 

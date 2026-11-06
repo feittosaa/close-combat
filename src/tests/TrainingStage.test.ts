@@ -20,9 +20,9 @@ it('usa o Saloon nos modos de combate e preserva a sala no treino',()=>{
   expect(stageForMatch('arcade','saloon')).toBe(saloon);
   expect(stageForMatch('training','saloon')).toBe(trainingStage);
 });
-it.each(['saloon-dia','saloon-noite'])('reutiliza as chamas e ajusta a linha do chão em %s', id => {
+it.each(['saloon-dia','saloon-noite'])('reutiliza as chamas e compartilha a linha do chão em %s', id => {
   const stage = getStageById(id)!;
-  expect(stage.groundY).toBe(getStageById('saloon')!.groundY + 40);
+  expect(stage.groundY).toBe(getStageById('saloon')!.groundY);
   expect(stage.layers.filter(layer => layer.sourceStage === 'saloon')).toHaveLength(7);
   for (const layer of stage.layers.filter(layer => layer.sourceStage === 'saloon')) {
     expect(layer.frames).toHaveLength(5);
@@ -40,10 +40,10 @@ it('mantém o céu da fazenda alinhado à câmera e anima suas camadas', () => {
   expect(stage.layers.find(layer => layer.id === 'fumaca')?.motion?.axis).toBe('y');
   expect(stage.layers.find(layer => layer.id === 'sombra')?.motion?.axis).toBe('x');
 });
-it.each(['training','tutorial','combo-tutorial','versus','arcade'] as MatchMode[])('%s utiliza a sala',mode=>{
+it.each(['training','tutorial','versus','arcade'] as MatchMode[])('%s utiliza a sala',mode=>{
   expect(stageForMatch(mode,'sala-treino')).toBe(trainingStage);
   expect(stageForMatch(mode,'inexistente')).toBe(trainingStage);
-  expect(isTrainingMode(mode)).toBe(['training','tutorial','combo-tutorial'].includes(mode));
+  expect(isTrainingMode(mode)).toBe(['training','tutorial'].includes(mode));
 });
 it('alinha o chão e preserva a câmera fixa',()=>{
   const layout=createStageLayout(defaultStage,1024,576,488);

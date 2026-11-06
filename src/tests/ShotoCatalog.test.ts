@@ -31,6 +31,9 @@ function untilContact(sim: Simulation, player = 0, guard = N, continuous = false
   }
   throw new Error(`No contact: ${JSON.stringify(sim.snapshot().characters.map(c => ({x:c.x,y:c.y,attack:c.attack,mode:c.mode})))}`);
 }
+function untilContactOrIdle(sim: Simulation): void {
+  for (let i = 0; i < 20; i++) step(sim);
+}
 const move = (id: string) => shoto.moves.find(m => m.id === id)!;
 
 describe('manual Shoto catalogue', () => {
@@ -45,8 +48,8 @@ describe('manual Shoto catalogue', () => {
 
   it.each([0,1])('executes every authored string with connected hits for player %i', player => {
     for (const recipe of shoto.combos!) {
-      const sim = create(56), tutorial = new TutorialSession(shoto, 'combo-tutorial');
-      tutorial.index = shoto.combos!.indexOf(recipe);
+      const sim = create(56), tutorial = new TutorialSession(shoto);
+      tutorial.index = tutorial.lessons.findIndex(lesson => lesson.notation === recipe.notation);
       for (const [index,id] of recipe.moveIds.entries()) {
         command(sim, move(id), player);
         untilContact(sim, player, N, index > 0);
@@ -62,6 +65,16 @@ describe('manual Shoto catalogue', () => {
       wait(sim,6);
       expect(sim.snapshot().characters[player].chain?.length ?? 0).toBeLessThanOrEqual(recipe.moveIds.length);
     }
+  });
+
+  it.each([0, 1])('allows a weak kick after a weak punch but not a weak punch after a weak kick for player %i', player => {
+    const sim = create(56);
+    command(sim, move('light-punch'), player); untilContact(sim, player, N, false);
+    command(sim, move('light-kick'), player); untilContact(sim, player, N, true);
+    command(sim, move('light-punch'), player);
+    for (let frame = 0; frame < 60; frame++) step(sim, N, player);
+    expect(sim.snapshot().recentContacts.map(contact => contact.event.moveId)).toEqual(['light-punch', 'light-kick']);
+    expect(sim.snapshot().characters[player].attack?.moveId).not.toBe('light-punch');
   });
 
   it.each([0, 1])('uses faster startup only for the second and third heavy punches for player %i', player => {
@@ -166,11 +179,11 @@ describe('manual Shoto catalogue', () => {
   });
 
   it('builds rage on real contacts, requires a full bar and consumes it on ultimate startup', () => {
-    const fastCharge={...shoto,rage:{...shoto.rage!,onHit:250}};
+    const fastCharge={...shoto,rage:{...shoto.rage!,onHit:300}};
     const noRage=create(300);command(noRage,move('crow-ultimate'));
     expect(noRage.snapshot().characters[0].attack).toBeUndefined();
     const sim=create(56,fastCharge);command(sim,move('light-punch'));untilContact(sim);
-    expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([250,15]);wait(sim);
+    expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([300,15]);wait(sim);
     command(sim,move('crow-ultimate'));
     expect(sim.snapshot().characters[0]).toMatchObject({rage:0,attack:{moveId:'crow-ultimate'}});
     untilContact(sim);expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'crow-ultimate',outcome:'hit'});
@@ -259,7 +272,7 @@ describe('manual Shoto catalogue', () => {
     const fight=new Simulation(config);fight.fillTrainingRage();
     expect(fight.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
     const practice=create();practice.fillTrainingRage();
-    expect(practice.snapshot().characters.map(c=>c.rage)).toEqual([250,250]);
+    expect(practice.snapshot().characters.map(c=>c.rage)).toEqual([900,900]);
     const miss=create(350);command(miss,move('heavy-punch'));wait(miss);
     expect(miss.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
     const blocked=create();command(blocked,move('light-punch'));untilContact(blocked,0,input('B'));
@@ -282,11 +295,99 @@ describe('manual Shoto catalogue', () => {
     wait(sim,220);expect(sim.snapshot().projectiles).toHaveLength(0);
   });
 
+  it('rake ultimate leaves Bob with frame advantage after its knockdown, so he cannot be punished', () => {
+    const sim=create(56);sim.fillTrainingRage();command(sim,move('rake-ultimate'));
+    let last;
+    for(let i=0;i<400&&!last;i++){step(sim);last=sim.snapshot().hitEvents.find(event=>event.volleyStep===move('rake-ultimate').multiHit!.hits-1);}
+    expect(last?.frameAdvantage).toBeGreaterThanOrEqual(10);
+  });
+
+  it('rake ultimate damages shortly after its activation ends, but cannot reach a distant target', () => {
+    const close=create(56);close.fillTrainingRage();command(close,move('rake-ultimate'));
+    let activationEnd=-1, firstHit=-1;
+    for(let i=0;i<400&&firstHit<0;i++){step(close);const snapshot=close.snapshot();
+      if(activationEnd<0&&!snapshot.ultimateActivation)activationEnd=i;
+      if(snapshot.hitEvents.some(event=>event.moveId==='rake-ultimate'))firstHit=i;}
+    expect(firstHit-activationEnd).toBeGreaterThanOrEqual(6);
+    expect(firstHit-activationEnd).toBeLessThanOrEqual(9);
+    const far=create(300);far.fillTrainingRage();command(far,move('rake-ultimate'));
+    let contacts=0;
+    for(let i=0;i<400;i++){step(far);contacts+=far.snapshot().hitEvents.length;}
+    expect(contacts).toBe(0);
+  });
+
+  it('rake ultimate hits the target in place, then its last hit knocks it down and sends it a short way', () => {
+    const sim=create(56);sim.fillTrainingRage();command(sim,move('rake-ultimate'));
+    untilContact(sim);
+    let hitstunSeen=false;
+    for(let i=0;i<200&&sim.snapshot().characters[1].mode!=='knockdown';i++){step(sim);hitstunSeen||=sim.snapshot().characters[1].mode==='hitstun';}
+    const knockedX=sim.snapshot().characters[1].x;
+    wait(sim,16);
+    const target=sim.snapshot().characters[1];
+    expect(hitstunSeen).toBe(true);
+    expect(target.mode).toBe('knockdown');
+    expect(target.x-knockedX).toBeGreaterThan(15);
+    expect(target.x-knockedX).toBeLessThan(60);
+  });
+
+  it.each(['flying-kick-light','flying-kick-heavy'])('%s leaves Bob invulnerable until the kick ends', id => {
+    const kick=move(id);
+    expect(kick.invulnerability).toEqual({kind:'all',until:kick.movement!.until});
+    const sim=create(120);command(sim,kick);wait(sim,kick.startup+2);
+    command(sim,move('light-punch'),1);untilContactOrIdle(sim);
+    expect(sim.snapshot().characters[0].mode).not.toBe('hitstun');
+  });
+
   it.each([0,1])('gates ultimate and respects guard on either side for player %i', player => {
     const sim=create(200);sim.fillTrainingRage();command(sim,move('crow-ultimate'),player);
-    expect(sim.snapshot().characters[player].rage).toBe(0);
+    expect(sim.snapshot().characters[player].rage).toBe(600);
     untilContact(sim,player,input('DB'));
     expect(sim.snapshot().hitEvents[0]).toMatchObject({moveId:'crow-ultimate',outcome:'block',damage:0});
   });
 
+  it('chutes agachados alcançam só até onde o pé chega no desenho', () => {
+    // Ponta do pé no quadro de maior extensão: (pixel − 512) × 182/512 à frente do centro, e altura acima do chão.
+    for (const [id, tip, top] of [['crouch-light-kick', 86, 34], ['crouch-heavy-kick', 118, 15]] as const) {
+      const { hitbox } = shoto.moves.find(move => move.id === id)!;
+      expect(hitbox.forward + hitbox.width, id).toBeGreaterThanOrEqual(tip);
+      expect(hitbox.forward + hitbox.width, id).toBeLessThanOrEqual(tip + 4);
+      expect(-hitbox.yOffset, id).toBeGreaterThanOrEqual(top);
+    }
+  });
+  it.each(['tomato-light', 'tomato-heavy'])('%s bloqueado de perto é punido e a distância não pode ser repetido em sequência', id => {
+    const throwBlocked = (distance: number) => {
+      const sim = create(distance), back = input('B');
+      for (const direction of ['D', 'DF'] as const) sim.stepFrame([input(direction), back]);
+      sim.stepFrame([input('F', [move(id).input.buttons[0]]), back]);
+      let blocked = false;
+      for (let i = 0; i < 200 && (!blocked || sim.snapshot().hitstopFramesRemaining || sim.snapshot().characters[1].mode === 'blockstun'); i++) {
+        sim.stepFrame([N, back]);
+        blocked ||= sim.snapshot().hitEvents.some(event => event.outcome === 'block');
+      }
+      expect(blocked).toBe(true);
+      return sim;
+    };
+    const close = throwBlocked(90);
+    expect(close.snapshot().characters[0].attack).toBeDefined();
+    close.stepFrame([N, input('N', ['1'])]);
+    for (let i = 0; i < 30; i++) close.stepFrame([N, N]);
+    expect(close.snapshot().characters[0].health).toBeLessThan(1000);
+    // Mesmo bloqueado a meia tela, o Bob ainda se recupera depois do adversário: não dá para encadear tomates seguros de longe.
+    const far = throwBlocked(220);
+    expect(far.snapshot().characters[0].attack).toBeDefined();
+    expect(move(id).startup + move(id).activeFrames + move(id).recovery).toBeGreaterThanOrEqual(66);
+  });
+  it('rake ultimate ends with the victim lying on the ground and Bob recovered before it can act', () => {
+    const sim=create(56);sim.fillTrainingRage();command(sim,move('rake-ultimate'));
+    let last;
+    for(let i=0;i<400&&!last;i++){step(sim);last=sim.snapshot().hitEvents.find(event=>event.volleyStep===move('rake-ultimate').multiHit!.hits-1);}
+    expect(move('rake-ultimate').recovery).toBeGreaterThan(8);
+    for(let i=0;i<10;i++)step(sim);
+    expect(sim.snapshot().characters[1]).toMatchObject({mode:'knockdown'});
+    expect(last?.defenderStunFrames).toBeGreaterThanOrEqual(36);
+  });
+
+  it('crouching light kick recovers faster than before', () => {
+    expect(move('crouch-light-kick').recovery).toBeLessThan(18);
+  });
 });
