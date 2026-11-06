@@ -1,4 +1,4 @@
-import { fighterArt } from './fighterArt';
+import { fighterArt, randomArt } from './fighterArt';
 import { t } from '../i18n/i18n';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FighterSelection, SelectionPlayer } from './FighterSelection';
@@ -33,7 +33,11 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
   for (const player of [0, 1] as const satisfies readonly SelectionPlayer[]) {
     const entry = player === 1 && !selectOpponent ? options.opponent : fighters[selection.indices[player]];
     const side = player === 0 ? 'left' : 'right';
-    const hero = node('div', `arena-hero ${side}`); hero.append(fighterPortrait(entry.id, false));
+    // A player who picked the random tile sees the mystery silhouette instead of the fighter last highlighted.
+    const randomPick = selection.random[player] && (player === 0 || selectOpponent);
+    const hero = node('div', `arena-hero ${side}`);
+    if (randomPick) { const image = document.createElement('img'); image.src = randomArt.background; image.alt = ''; hero.append(image); }
+    else hero.append(fighterPortrait(entry.id, false));
     const name = node('div', `arena-fighter-name ${side}`);
     if ((player === 0 || selectOpponent) && selection.choosingColor[player]) {
       const colors = entry.id === 'cowboy'
@@ -56,7 +60,7 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
       name.append(palette);
     }
     const who = player === 1 && !versus ? t('fighter.opponent') : `P${player + 1}`;
-    name.append(node('span', 'arena-eyebrow', player === 1 && !versus ? t('fighter.opponent') : t('fighter.player', { player: player + 1 })), node('h1', '', entry.name));
+    name.append(node('span', 'arena-eyebrow', player === 1 && !versus ? t('fighter.opponent') : t('fighter.player', { player: player + 1 })), node('h1', '', randomPick ? t('fighter.randomName') : entry.name));
     if (selectOpponent) name.append(button(t(selection.ready[player] ? 'fighter.ready' : 'fighter.choose', { who }), 'arena-player-switch', () => { selection.activePlayer = player; options.refresh(); }));
     root.append(hero, name);
   }
@@ -83,12 +87,15 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
       const heading = root.querySelector(`.arena-fighter-name.${side} h1`);
       const status = root.querySelector('.arena-opponent');
       if (hero) hero.src = art.background;
-      if (heading) heading.textContent = t('fighter.inDevelopment', { name: art.name });
+      const eyebrow = root.querySelector(`.arena-fighter-name.${side} .arena-eyebrow`);
+      if (heading) heading.textContent = art.name;
+      if (eyebrow) eyebrow.textContent = t('fighter.unavailable');
       if (status) status.textContent = t('fighter.previewing', { name: art.name.toUpperCase() });
     });
+    tile.classList.add('unavailable');
     tile.setAttribute('aria-label', t('fighter.inDevelopmentLabel', { name: art.name }));
     tile.title = t('fighter.viewArt');
-    tile.append(fighterPortrait(id, true), node('span', '', art.name));
+    tile.append(fighterPortrait(id, true), node('span', '', art.name), node('em', 'arena-unavailable', t('fighter.unavailable')));
     grid.append(tile);
   }
   for (let index = fighters.length + upcoming.length; index < 9; index++) {

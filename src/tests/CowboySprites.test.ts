@@ -3,7 +3,7 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { cowboy } from '../engine/data/fighters/cowboy';
 import type { FrameInput } from '../input/types';
-import { cowboySheetScale, getCowboyRoundEndPose, getCowboyRoundEndPresentation, getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
+import { cowboySheetScale, getCowboyRoundEndPose, settleAfterRound, getCowboySpriteLayers, getCowboySpritePose, getCowboyUltimateActivationPose } from '../rendering/animations/cowboySprites';
 import chargeThrowAtlas from '../assets/sprites/characters/cowboy/high/charge-throw.atlas.json';
 
 it.each([0, 1])('renders each defensive stance with spectral arms in front for player %i', player => {
@@ -68,17 +68,21 @@ it.each([0,1])('renders the round result using the correct orientation for playe
   expect(getCowboyRoundEndPose({...state,grounded:false},true,0)).toBeUndefined();
 });
 
-it.each([0,1])('lands visually before the round result for airborne player %i', player => {
+it.each([0,1])('an airborne fighter keeps falling after the round ends and lands lying (loser) or standing (winner): player %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[cowboy,cowboy]).snapshot().characters[player];
-  const airborne = {...state, y: state.y - 60, grounded: false, verticalVelocity: -2};
-  const falling = getCowboyRoundEndPresentation(airborne, 10, state.y, .55);
-  expect(falling.state.grounded).toBe(false);
-  expect(getCowboyRoundEndPose(falling.state,true,falling.elapsed)).toBeUndefined();
-  const landed = getCowboyRoundEndPresentation(airborne, 40, state.y, .55);
-  expect(landed.state).toMatchObject({y: state.y, grounded:true, verticalVelocity:0});
-  expect(getCowboyRoundEndPose(landed.state,true,landed.elapsed)?.texture).toBe('cowboy-victory');
+  const airborne = {...state, y: state.y - 60, grounded: false, verticalVelocity: -2, mode: 'hitstun' as const};
+  const falling = settleAfterRound(airborne, 10, state.y, .55, true);
+  expect(falling.grounded).toBe(false);
+  expect(falling.y).toBeGreaterThan(airborne.y - 1);
+  const lost = settleAfterRound(airborne, 40, state.y, .55, true);
+  expect(lost).toMatchObject({y: state.y, grounded:true, verticalVelocity:0, mode:'knockdown'});
+  expect(getCowboyRoundEndPose(lost,false,0)).toBeUndefined();            // already lying: no standing defeat pose
+  expect(getCowboySpritePose(lost, 0)?.texture).toBe('cowboy-fall-landing');   // shown lying, not getting up
+  const won = settleAfterRound(airborne, 40, state.y, .55, false);
+  expect(won).toMatchObject({grounded:true, mode:'neutral'});
+  expect(getCowboyRoundEndPose(won,true,0)?.texture).toBe('cowboy-victory');
+  expect(settleAfterRound(airborne, 0, state.y, .55, true).y).toBe(airborne.y);   // it falls from where it was, with no jump
   expect(airborne.grounded).toBe(false);
-  expect(airborne.y).toBe(state.y - 60);
 });
 
 it('keeps the round-end animation clock stable through the result and clears it on reset', () => {

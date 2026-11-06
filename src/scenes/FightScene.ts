@@ -17,7 +17,7 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
-import { getCowboyRoundEndPresentation, preloadCowboySprites } from '../rendering/animations/cowboySprites';
+import { preloadCowboySprites, settleAfterRound } from '../rendering/animations/cowboySprites';
 import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
 import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { ProjectileView } from '../rendering/ProjectileView';
@@ -414,14 +414,17 @@ export class FightScene extends Phaser.Scene {
     this.resizeHud(getHudLogicalWidth(this.scale));
     const visualFrame = snapshot.roundEndedFrame ?? snapshot.frame;
     const resultElapsed = snapshot.phase !== 'fight' && snapshot.roundWinnerId ? this.stagePresentation?.resultElapsed(snapshot.frame) : undefined;
-    const cameraCharacters = resultElapsed === undefined ? snapshot.characters : snapshot.characters.map(character =>
-      getCowboyRoundEndPresentation(character, resultElapsed, this.resultFloorY, this.resultGravity).state);
+    // After the round ends, a fighter still in the air falls at once; the victory/defeat pose clock starts later, with the title.
+    const sinceRoundEnd = snapshot.phase !== 'fight' && snapshot.roundEndedFrame !== undefined ? snapshot.frame - snapshot.roundEndedFrame : undefined;
+    const shown = sinceRoundEnd === undefined ? snapshot.characters : snapshot.characters.map(character =>
+      settleAfterRound(character, sinceRoundEnd, this.resultFloorY, this.resultGravity, Boolean(snapshot.roundWinnerId) && snapshot.roundWinnerId !== character.characterId));
+    const cameraCharacters = shown;
     this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), visualFrame);
     this.ultimateOverlay?.update(Boolean(snapshot.ultimateActivation), this.game.loop.delta);
     const layout = createStageLayout(this.selectedStage, LOGICAL_VIEW.width, LOGICAL_VIEW.height, this.resultFloorY);
-    snapshot.characters.forEach((character, index) => {
+    shown.forEach((character, index) => {
       const result = resultElapsed !== undefined
-        ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed, floorY: this.resultFloorY, gravity: this.resultGravity} : undefined;
+        ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed} : undefined;
       const color = characterColor(this.selectedStage, layout, character.x, this.cameras.main.scrollX,
         this.alternatePalettes[index]);
       this.combatants[index]?.sync(character, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color);

@@ -102,16 +102,21 @@ export function getCowboyUltimateActivationPose(state: CharacterState, elapsed: 
 }
 
 /** Round-end drawings are presentation only and never change combat geometry. */
-export function getCowboyRoundEndPresentation(state: CharacterState, elapsed: number, floorY: number, gravity: number) {
-  if (!['cowboy', 'shoto'].includes(state.fighterId) || state.grounded) return { state, elapsed };
+const LYING_HOLD_FRAMES = 999;
+/**
+ * A fighter still in the air when the round ends keeps falling from that moment, whatever the title on screen:
+ * it lands as soon as physics says so, the loser already lying down and the winner back on its feet.
+ */
+export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number, floorY: number, gravity: number, lost: boolean): CharacterState {
+  if (!['cowboy', 'shoto'].includes(state.fighterId) || state.grounded) return state;
   const landing = flightFramesRemaining(state.y, state.verticalVelocity, floorY, gravity);
-  const ticks = Math.min(Math.max(0, elapsed), landing);
-  const y = Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2);
-  const landed = ticks >= landing;
-  return {
-    state: { ...state, y: landed ? floorY : y, grounded: landed, verticalVelocity: landed ? 0 : state.verticalVelocity + gravity * ticks },
-    elapsed: Math.max(0, elapsed - landing),
-  };
+  const ticks = Math.min(Math.max(0, ageSinceRoundEnd), landing);
+  if (ticks < landing) {
+    return { ...state, y: Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2), verticalVelocity: state.verticalVelocity + gravity * ticks };
+  }
+  // A loser lands already lying: plenty of knockdown time left, so neither fighter's pose reads as getting up.
+  const lying = lost ? { mode: 'knockdown' as const, remainingStateFrames: LYING_HOLD_FRAMES, stateStartedFrame: Number.NEGATIVE_INFINITY } : { mode: 'neutral' as const };
+  return { ...state, y: floorY, grounded: true, verticalVelocity: 0, attack: undefined, juggle: undefined, ...lying };
 }
 
 export function getCowboyRoundEndPose(state: CharacterState, winner: boolean, elapsed: number) {

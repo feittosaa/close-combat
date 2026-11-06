@@ -325,6 +325,8 @@ export class MenuScene extends Phaser.Scene {
   }
   private startFight(): void {
     if (this.transitioning) return; this.transitioning = true;
+    // Random picks are drawn only now, so nobody sees them before the fight starts.
+    this.selection.resolveRandoms();
     const fighter = this.fighters[this.fighterIndex];
     this.scene.start('FightScene', { fighterId: fighter.id, opponentId: selectsOpponent(this.mode) ? this.fighters[this.selection.indices[1]].id : opponentFor(fighter.id).id, stageId: this.chosenStageId, mode: this.mode, arcadeIndex: 0, arcadeRun: this.arcadeRun, difficulty: ARCADE_DIFFICULTIES[this.difficultyIndex].id satisfies ArcadeDifficulty, fighterPalette: this.selection.palettes[0], opponentPalette: selectsOpponent(this.mode) ? this.selection.palettes[1] : undefined });
   }
