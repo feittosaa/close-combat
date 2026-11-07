@@ -38,7 +38,7 @@ describe('developer tuning', () => {
     tuning.setColor('hud:gold', '#123456'); tuning.setColor('hud:playerText.0', '#abcdef');
     expect(HUD.gold).toBe(0x123456); expect(HUD.playerText[0]).toBe('#abcdef');
     expect(tuning.hudDefault('gold')).toBe(`#${gold.toString(16).padStart(6, '0')}`);
-    tuning.resetColors();
+    tuning.assign({ colors: {} });
     expect(HUD.gold).toBe(gold); expect(HUD.playerText[0]).toBe(player);
   });
 

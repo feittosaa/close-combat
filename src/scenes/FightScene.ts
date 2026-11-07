@@ -247,7 +247,8 @@ export class FightScene extends Phaser.Scene {
     // The champion screen closes a PvP match and the whole Arcade run (a win over the last opponent).
     const champion = snapshot.matchWinnerId === 'player-1' ? this.selectedFighter : snapshot.matchWinnerId === 'player-2' ? this.opponentFighter : undefined;
     const arcadeCleared = this.mode === 'arcade' && snapshot.matchWinnerId === 'player-1' && this.arcadeIndex + 1 >= this.arcadeRun!.opponents.length;
-    if (champion && (this.mode === 'versus' || arcadeCleared)) this.victoryScreen = new VictoryScreen(this.game.canvas, this.selectedStage, champion.id, champion.name, this.victoryArt.get(champion.id));
+    if (champion && (this.mode === 'versus' || arcadeCleared)) this.victoryScreen = new VictoryScreen(this.game.canvas, this.selectedStage, champion.id, champion.name, this.victoryArt.get(champion.id),
+      this.mode === 'versus' ? snapshot.matchWinnerId === 'player-1' ? 1 : 2 : undefined);
     this.resultMenu = document.createElement('nav');
     this.resultMenu.className = 'match-result-menu';
     this.resultMenu.setAttribute('aria-label', t('result.label'));

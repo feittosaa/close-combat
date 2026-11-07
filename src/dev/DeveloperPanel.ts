@@ -9,7 +9,7 @@ import { fighterArt } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { VictoryScreen } from '../ui/VictoryScreen';
 import { gameImages, replaceImage, replacedImages, restoreImage } from './assetOverrides';
-import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, type MoveTuning } from './devOverrides';
+import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, type DevOverrides, type MoveTuning } from './devOverrides';
 import { IMAGE_SECTIONS, imageFolder, textureFolder } from './imageCatalog';
 import { devTuning } from './devTools';
 import './developer.css';
@@ -223,7 +223,7 @@ export class DeveloperPanel {
     controls.append(button('◀ Quadro', () => step(-1)), play, button('Quadro ▶', () => step(1)), labelled('Quadros/s', fps), flip);
     viewer.append(canvas, info, controls);
     if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment));
-    viewer.append(this.spriteSave(), this.spriteReset());
+    viewer.append(this.saveToCode('tamanhos', ['spriteScales'], '/__dev/sprite-scales'), this.spriteReset());
     const layout = el('div', 'developer-split'); layout.append(list, viewer);
     page.append(layout);
     draw();
@@ -262,29 +262,49 @@ export class DeveloperPanel {
     return confirmRow('Resetar tamanhos e quadros/s', 'Sim, resetar',
       () => `Tem certeza? Isso remove ${Object.keys(devTuning.overrides.spriteScales).length} ajuste(s) de tamanho de animação e volta para ${SPRITE_FPS} quadros/s.`,
       () => {
-        devTuning.resetSpriteScales(); this.spriteFps = SPRITE_FPS; this.changed();
+        devTuning.assign({ spriteScales: {} }); this.spriteFps = SPRITE_FPS; this.changed();
         this.status.textContent = 'Ajustes de tamanho e quadros/s restaurados.'; this.render();
       });
   }
   /**
-   * Writes the animation size adjustments into each fighter's `calibration.json` through the development server.
-   * They are cleared first: the new calibration already holds them and reloads the game, and they come back on failure.
+   * Asks, then writes the given tuning sections into the sources through the development server. They are cleared
+   * first: the sources already hold them once saved and reload the game, and they come back if saving fails.
    */
-  private spriteSave(): HTMLElement {
-    return confirmRow('Salvar tamanhos no código', 'Salvar e aplicar',
-      () => `Gravar ${Object.keys(devTuning.overrides.spriteScales).length} ajuste(s) de tamanho no calibration.json dos personagens? O jogo recarrega com os novos tamanhos.`,
-      () => void this.saveSpriteScales());
+  private saveToCode(what: string, sections: readonly (keyof DevOverrides)[], endpoint: string): HTMLElement {
+    const count = () => sections.reduce((total, section) => total + Object.values(devTuning.overrides[section]).reduce<number>(
+      (sum, value) => sum + (typeof value === 'object' ? Object.keys(value).length : 1), 0), 0);
+    return confirmRow(`Salvar ${what} no código`, 'Salvar e aplicar',
+      () => `Gravar ${count()} ajuste(s) de ${what} nos arquivos do jogo? O jogo recarrega com os novos valores.`,
+      () => void this.save(what, sections, endpoint, count()));
   }
-  private async saveSpriteScales(): Promise<void> {
-    const spriteScales = { ...devTuning.overrides.spriteScales };
-    if (!Object.keys(spriteScales).length) { this.status.textContent = 'Nenhum ajuste de tamanho para salvar.'; return; }
-    this.status.textContent = 'Salvando tamanhos…';
-    devTuning.resetSpriteScales();
-    const response = await fetch('/__dev/sprite-scales', { method: 'POST', body: JSON.stringify({ spriteScales }) }).catch(() => undefined);
-    if (response?.ok) { this.status.textContent = 'Tamanhos gravados no calibration.json.'; this.changed(); this.render(); return; }
-    for (const [key, scale] of Object.entries(spriteScales)) devTuning.setSpriteScale(key, scale);
-    this.status.textContent = `Falha ao salvar; ajustes mantidos. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
+  private async save(what: string, sections: readonly (keyof DevOverrides)[], endpoint: string, count: number): Promise<void> {
+    if (!count) { this.status.textContent = `Nenhum ajuste de ${what} para salvar.`; return; }
+    const saved = Object.fromEntries(sections.map(section => [section, structuredClone(devTuning.overrides[section])])) as Partial<DevOverrides>;
+    this.status.textContent = `Salvando ${what}…`;
+    devTuning.assign(Object.fromEntries(sections.map(section => [section, {}])));
+    const response = await fetch(endpoint, { method: 'POST', body: JSON.stringify(saved) }).catch(() => undefined);
+    if (!response?.ok) devTuning.assign(saved);
+    this.status.textContent = response?.ok ? `Ajustes de ${what} gravados no código.` :
+      `Falha ao salvar; ajustes mantidos. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
     this.changed(); this.render();
+  }
+  /** Writes every replaced image over its source file, then drops the replacement the file now holds. */
+  private saveImages(): HTMLElement {
+    return confirmRow('Salvar imagens no código', 'Salvar e aplicar',
+      () => `Gravar ${replacedImages().size} imagem(ns) substituída(s) sobre os arquivos originais do jogo?`,
+      () => void this.writeImages());
+  }
+  private async writeImages(): Promise<void> {
+    const failures: string[] = [];
+    for (const [url, replacement] of replacedImages()) {
+      const path = gameImages[url], file = await (await fetch(replacement)).blob();
+      const extension = path.split('.').pop()!.replace('jpg', 'jpeg');
+      if (file.type !== `image/${extension}`) { failures.push(`${path}: o arquivo novo é ${file.type || 'de tipo desconhecido'}, não ${extension}`); continue; }
+      const response = await fetch(`/__dev/image?path=${encodeURIComponent(path)}`, { method: 'POST', body: file }).catch(() => undefined);
+      if (response?.ok) await restoreImage(url); else failures.push(`${path}: ${await response?.text() ?? 'servidor de desenvolvimento indisponível'}`);
+    }
+    this.status.textContent = failures.length ? `Não gravadas: ${failures.join('; ')}.` : 'Imagens gravadas no código.';
+    this.render();
   }
   private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1): void {
     const scale = box / frame.realHeight, center = context.canvas.width / 2, top = feet - footAnchor * box;
@@ -322,7 +342,8 @@ export class DeveloperPanel {
     }
     const scroll = el('div', 'developer-scroll'); scroll.append(table);
     page.append(scroll, el('p', 'developer-hint', 'Valores em quadros de 60 Hz. Células destacadas diferem dos dados do personagem; passe o mouse para ver o original.'),
-      button('Restaurar golpes e combos deste personagem', () => { devTuning.resetFighter(fighter.id); this.changed(); this.status.textContent = 'Ajustes do personagem removidos.'; this.render(); }));
+      button('Restaurar golpes e combos deste personagem', () => { devTuning.resetFighter(fighter.id); this.changed(); this.status.textContent = 'Ajustes do personagem removidos.'; this.render(); }),
+      this.saveToCode('golpes', ['moves'], '/__dev/overrides'));
   }
 
   /** Recipe timings plus manually authored recipes: each step is an existing move and still needs its own input. */
@@ -349,7 +370,7 @@ export class DeveloperPanel {
       if (custom.has(recipe.id)) row.append(button('Excluir', () => { devTuning.removeCombo(fighter.id, recipe.id); this.changed(); this.render(); }));
       card.append(row); list.append(card);
     }
-    page.append(list, this.comboForm(fighter));
+    page.append(list, this.comboForm(fighter), this.saveToCode('combos', ['recipes', 'combos'], '/__dev/overrides'));
   }
   private comboForm(fighter: CharacterDefinition): HTMLElement {
     const form = el('form', 'developer-combo developer-new');
@@ -398,7 +419,7 @@ export class DeveloperPanel {
     for (const name of CSS_COLORS) swatch(`css:${name}`, name, devTuning.overrides.colors[`css:${name}`] ?? cssDefault(name), cssDefault(name));
     grid.append(el('h2', '', 'HUD de combate'));
     for (const token of HUD_COLORS) swatch(`hud:${token}`, `HUD.${token}`, devTuning.overrides.colors[`hud:${token}`] ?? devTuning.hudDefault(token), devTuning.hudDefault(token));
-    page.append(grid, button('Restaurar todas as cores', () => { devTuning.resetColors(); this.changed(); this.render(); }));
+    page.append(grid, button('Restaurar todas as cores', () => { devTuning.assign({ colors: {} }); this.changed(); this.render(); }), this.saveToCode('cores', ['colors'], '/__dev/overrides'));
   }
 
   /** Replaces any shipped image (icons, effects, sprite sheets, titles, scenery) without touching the source file. */
@@ -420,7 +441,7 @@ export class DeveloperPanel {
       line.append(thumb, el('span', '', this.imageFilter ? path : path.split('/').pop()!), file, actions); list.append(line);
     }
     page.append(el('p', 'developer-hint', `${matches.length} imagens${matches.length > limit ? ` (mostrando ${limit}; refine a busca)` : ''}. Folhas de sprites exigem o mesmo tamanho e a mesma grade do original.`),
-      list, button('Recarregar o jogo', () => window.location.reload()));
+      list, button('Recarregar o jogo', () => window.location.reload()), this.saveImages());
   }
   private async replace(url: string, path: string, file: File): Promise<void> {
     const preview = URL.createObjectURL(file);

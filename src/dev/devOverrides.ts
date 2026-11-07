@@ -122,8 +122,8 @@ export class DevTuning {
   resetFighter(fighterId: string): void {
     delete this.overrides.moves[fighterId]; delete this.overrides.recipes[fighterId]; delete this.overrides.combos[fighterId]; this.commit();
   }
-  resetColors(): void { this.overrides.colors = {}; this.commit(); }
-  resetSpriteScales(): void { this.overrides.spriteScales = {}; this.commit(); }
+  /** Replaces whole sections, e.g. `{ colors: {} }` to clear them or a saved copy to bring them back. */
+  assign(sections: Partial<DevOverrides>): void { Object.assign(this.overrides, sections); this.commit(); }
   private commit(): void { saveOverrides(this.overrides); this.apply(); }
 }
 
