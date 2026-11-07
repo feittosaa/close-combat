@@ -198,9 +198,9 @@ it('starts the preparation scene before exposing any menu or fighter selection',
 });
 
 it.each([
-  ['PvP com vencedor', 'versus', 'player-2', 0, [['cowboy', 'Texas']]],
+  ['PvP com vencedor', 'versus', 'player-2', 0, [['cowboy', 'Texas', 2]]],
   ['PvP empatado', 'versus', undefined, 0, []],
-  ['Arcade: vitória sobre o último adversário', 'arcade', 'player-1', -1, [['shoto', 'Bob']]],
+  ['Arcade: vitória sobre o último adversário', 'arcade', 'player-1', -1, [['shoto', 'Bob', undefined]]],
   ['Arcade: vitória no meio da jornada', 'arcade', 'player-1', 0, []],
   ['Arcade: derrota', 'arcade', 'player-2', -1, []],
 ] as const)('tela de vitória: %s', (_name, mode, winner, arcadeIndex, expected) => {
@@ -217,7 +217,7 @@ it.each([
     const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
     snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
     (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
-    expect(victoryScreens.map(([, id, name]) => [id, name])).toEqual(mode === 'arcade' && expected.length ? [['shoto','Bob']] : expected);
+    expect(victoryScreens.map(([, id, name, , player]) => [id, name, player])).toEqual(expected);
   } finally { vi.unstubAllGlobals(); }
 });
 

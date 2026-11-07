@@ -7,6 +7,8 @@
 @font-face { font-family: 'Barlow'; font-weight: 700; font-display: swap; src: url('./assets/fonts/barlow-700-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 @font-face { font-family: 'Barlow'; font-weight: 800; font-display: swap; src: url('./assets/fonts/barlow-800-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: 'Barlow'; font-weight: 800; font-display: swap; src: url('./assets/fonts/barlow-800-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+/* Audiowide, wide rounded capitals of classic arcade cabinets, for the champion screen (SIL OFL, licence beside the file). */
+@font-face { font-family: 'Audiowide'; font-display: block; src: url('./assets/fonts/audiowide-latin.woff2') format('woff2'); }
 
 :root {
   color-scheme: dark;
@@ -142,13 +144,19 @@ canvas.menu-film { filter: sepia(.1) saturate(.95); }
 .victory-veil { position: absolute; inset: 0; background: rgb(0 0 0 / .9); }
 .victory-hero { position: absolute; left: 50%; top: var(--top, -8cqh); height: var(--height, 130cqh); width: auto; max-width: none; transform: translateX(-50%); filter: drop-shadow(0 0 4cqh #0009); }
 /* Both text columns share the same width and height and sit on the screen edges; the letters stand upright, stacked from top to bottom. */
-.victory-strip { position: absolute; top: 0; bottom: 0; width: 11cqw; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.victory-strip { position: absolute; top: 0; bottom: 0; width: 11cqw; display: flex; justify-content: center; overflow: hidden; }
 .victory-strip.left { left: 0; }
 .victory-strip.right { right: 0; }
-.victory-text { writing-mode: vertical-rl; text-orientation: upright; white-space: nowrap; font-weight: 800; letter-spacing: .04em; line-height: 1; text-transform: uppercase; color: var(--cream); }
+/* Flat arcade capitals stacked tight; the track holds two copies and slides by one, down on the left and up on the right. */
+.victory-track { display: flex; flex-direction: column; align-items: center; width: 100%; height: max-content; animation: victory-loop calc(var(--letters) * .35s) linear infinite; }
+.victory-strip.left .victory-track { animation-direction: reverse; }
+.victory-text { display: flex; flex-direction: column; align-items: center; font-family: 'Audiowide', var(--font); font-size: 9.2cqw; line-height: 1; color: var(--cream); }
+.victory-text > span { display: flex; flex-direction: column; align-items: center; padding-bottom: .45em; }
+.victory-text > span > span { line-height: .76; }
 .victory-winner { color: var(--accent); }
+@keyframes victory-loop { from { transform: translateY(0); } to { transform: translateY(-50%); } }
 @keyframes victory-in { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .victory-screen { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .victory-screen, .victory-track { animation: none; } }
 
 .match-result-menu { position: fixed; z-index: 210; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 30px 46px; }
 
