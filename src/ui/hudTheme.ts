@@ -19,6 +19,16 @@ export function hudText(size: number, title = false, color: string = HUD.ivory):
   // A thin ink outline keeps cream print readable over bright stages such as the training room.
   return { fontFamily: HUD_FONT, fontStyle: title ? 'bold' : 'normal', fontSize: `${size}px`, color, resolution: 2, stroke: '#0b0a0a', strokeThickness: title ? 3 : 2, shadow: { offsetX: 0, offsetY: 1, color: '#0b0a0a', blur: 2, fill: true } };
 }
+/**
+ * Phaser redraws a text's canvas and uploads its texture again on every colour call, even an unchanged one;
+ * per-frame HUD updates pass through these so only real changes reach it.
+ */
+export function setTextColor(text: Phaser.GameObjects.Text, color: string): Phaser.GameObjects.Text {
+  return text.style.color === color ? text : text.setColor(color);
+}
+export function setTextBackground(text: Phaser.GameObjects.Text, color: string): Phaser.GameObjects.Text {
+  return text.style.backgroundColor === color ? text : text.setBackgroundColor(color);
+}
 /** A printed ink card: cream border, a fainter inset rule and the owner's colour as a short tab on top. */
 export function drawHudPanel(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, accent: number = HUD.gold, alpha = .94): void {
   g.fillStyle(HUD.ink, alpha).fillRect(x, y, w, h);

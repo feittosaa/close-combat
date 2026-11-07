@@ -123,6 +123,7 @@ export class DevTuning {
     delete this.overrides.moves[fighterId]; delete this.overrides.recipes[fighterId]; delete this.overrides.combos[fighterId]; this.commit();
   }
   resetColors(): void { this.overrides.colors = {}; this.commit(); }
+  resetSpriteScales(): void { this.overrides.spriteScales = {}; this.commit(); }
   private commit(): void { saveOverrides(this.overrides); this.apply(); }
 }
 
