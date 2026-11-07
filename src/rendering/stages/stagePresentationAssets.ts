@@ -16,8 +16,9 @@ export function presentationKey(theme: PresentationTheme, name: PresentationImag
   return `presentation:${theme}:${name}`;
 }
 
-export function preloadPresentations(scene: Phaser.Scene): void {
-  for (const theme of themes) for (const name of [...names, ...(theme === 'saloon' ? ['tumbleweed' as const] : [])]) {
+/** Fight titles of the given stage themes (all of them by default). */
+export function preloadPresentations(scene: Phaser.Scene, only: readonly PresentationTheme[] = themes): void {
+  for (const theme of only) for (const name of [...names, ...(theme === 'saloon' ? ['tumbleweed' as const] : [])]) {
     const key = presentationKey(theme, name);
     const url = images[`../../assets/scenes/${theme}/presentation/${name}.png`];
     if (!url) throw new Error(`Arte de apresentação ausente: ${theme}/${name}`);

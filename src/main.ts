@@ -6,8 +6,10 @@ import { FightScene } from './scenes/FightScene';
 import { MenuScene } from './scenes/MenuScene';
 import { applyDocumentLanguage } from './i18n/i18n';
 import { loadDevTools } from './devMode';
+import { registerPackedAtlasLoader } from './rendering/packedAtlas';
 
 applyDocumentLanguage();
+registerPackedAtlasLoader();
 
 const startGame = (): Phaser.Game => new Phaser.Game({
   type: Phaser.AUTO,

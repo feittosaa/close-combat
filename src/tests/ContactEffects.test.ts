@@ -59,12 +59,13 @@ it('colors only the alternate Texas projectile purple', () => {
   Object.values(graphics).forEach(fn => fn.mockReturnValue(graphics));
   const sprite = () => {
     const matrix = { hue: vi.fn(), brightness: vi.fn() };
-    const pipeline = { palette: 0 };
+    const pipeline: Record<string, unknown> = {};
     const value = { setDepth: vi.fn(), setTexture: vi.fn(), setPosition: vi.fn(), setDisplaySize: vi.fn(),
       setFlipX: vi.fn(), setAngle: vi.fn(), setVisible: vi.fn(), destroy: vi.fn(),
-      setPostPipeline: vi.fn(), getPostPipeline: vi.fn(() => pipeline), preFX: { addColorMatrix: () => matrix, remove: vi.fn() }, postFX: { addColorMatrix: () => matrix, remove: vi.fn() } };
+      pipeline: { name: 'MultiPipeline' }, pipelineData: pipeline, setPipeline: vi.fn((name: string) => { value.pipeline = { name }; return value; }),
+      preFX: { addColorMatrix: () => matrix, remove: vi.fn() }, postFX: { addColorMatrix: () => matrix, remove: vi.fn() } };
     [value.setDepth, value.setTexture, value.setPosition, value.setDisplaySize, value.setFlipX, value.setAngle,
-      value.setVisible, value.destroy, value.setPostPipeline].forEach(fn => fn.mockReturnValue(value));
+      value.setVisible, value.destroy].forEach(fn => fn.mockReturnValue(value));
     return { value, pipeline };
   };
   const original = sprite(), alternate = sprite(), bomb = sprite(), blast = sprite(), otherBlast = sprite();
@@ -78,12 +79,12 @@ it('colors only the alternate Texas projectile purple', () => {
   view.sync([projectile(1, 'player-1'), projectile(2, 'player-2'), dynamite],
     [{ id: 4, ownerId: 'player-2', kind: 'dynamite', x: 100, y: 200, remainingFrames: 12 },
       { id: 5, ownerId: 'player-1', kind: 'dynamite', x: 400, y: 200, remainingFrames: 12 }], 0, [], [], new Set(['player-2']));
-  expect(original.value.setPostPipeline).not.toHaveBeenCalled();
-  expect(alternate.value.setPostPipeline).toHaveBeenCalledWith('character-palette');
+  expect(original.value.setPipeline).not.toHaveBeenCalled();
+  expect(alternate.value.setPipeline).toHaveBeenCalledWith('character-color');
   expect(alternate.pipeline.palette).toBe(3);
   expect(bomb.pipeline.palette).toBe(3);
   expect(blast.pipeline.palette).toBe(3);
-  expect(otherBlast.value.setPostPipeline).not.toHaveBeenCalled();
+  expect(otherBlast.value.setPipeline).not.toHaveBeenCalled();
   view.destroy();
 });
 
@@ -91,10 +92,11 @@ it('colors blocked projectiles by attacker while retaining perfect-block feedbac
   const graphics = { clear: vi.fn(), setDepth: vi.fn(), destroy: vi.fn() };
   Object.values(graphics).forEach(fn => fn.mockReturnValue(graphics));
   const makeSprite = () => {
-    const pipeline = { palette: 0 };
+    const pipeline: Record<string, unknown> = {};
     const value = { setDepth: vi.fn(), setDisplaySize: vi.fn(), setFlipX: vi.fn(), setFrame: vi.fn(), destroy: vi.fn(),
-      setPostPipeline: vi.fn(), getPostPipeline: vi.fn(() => pipeline), preFX: { addColorMatrix: () => ({ hue: vi.fn(), brightness: vi.fn() }), remove: vi.fn() }, postFX: { addColorMatrix: () => ({ hue: vi.fn(), brightness: vi.fn() }), remove: vi.fn() } };
-    [value.setDepth, value.setDisplaySize, value.setFlipX, value.setFrame, value.destroy, value.setPostPipeline].forEach(fn => fn.mockReturnValue(value));
+      pipeline: { name: 'MultiPipeline' }, pipelineData: pipeline, setPipeline: vi.fn((name: string) => { value.pipeline = { name }; return value; }),
+      preFX: { addColorMatrix: () => ({ hue: vi.fn(), brightness: vi.fn() }), remove: vi.fn() }, postFX: { addColorMatrix: () => ({ hue: vi.fn(), brightness: vi.fn() }), remove: vi.fn() } };
+    [value.setDepth, value.setDisplaySize, value.setFlipX, value.setFrame, value.destroy].forEach(fn => fn.mockReturnValue(value));
     return { value, pipeline };
   };
   const original = makeSprite(), alternate = makeSprite(), ultimate = makeSprite(), perfect = makeSprite(), dynamite = makeSprite(), hit = makeSprite();
@@ -110,7 +112,7 @@ it('colors blocked projectiles by attacker while retaining perfect-block feedbac
     { ...blocked, attackerId: 'player-2', targetId: 'player-1', moveId: 'quick-shot' },
     { ...event, attackerId: 'player-2', targetId: 'player-1', moveId: 'quick-shot' }], characters, new Set(['player-2']));
   expect(image.mock.calls.map(call => call[2])).toEqual(['contact-block-light', 'contact-block-blue', 'contact-block-blue', 'contact-block-perfect', 'contact-block-blue', 'contact-hit-blue']);
-  expect(original.value.setPostPipeline).not.toHaveBeenCalled();
+  expect(original.value.setPipeline).not.toHaveBeenCalled();
   expect(alternate.pipeline.palette).toBe(3);
   expect(ultimate.pipeline.palette).toBe(3);
   expect(perfect.pipeline.palette).toBe(4);

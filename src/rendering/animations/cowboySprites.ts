@@ -11,9 +11,9 @@ import cowboyCalibration from '../../assets/sprites/characters/cowboy/calibratio
 import cowboyMeasurements from '../../assets/sprites/characters/cowboy/measurements.json';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/cowboy/*.png', { eager: true, query: '?url', import: 'default' });
-const atlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/cowboy/*.atlas.json', { eager: true, import: 'default' });
+const layouts = import.meta.glob<string>('../../assets/sprites/characters/cowboy/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
 const highImages = import.meta.glob<string>('../../assets/sprites/characters/cowboy/high/*.png', { eager: true, query: '?url', import: 'default' });
-const highAtlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/cowboy/high/*.atlas.json', { eager: true, import: 'default' });
+const highLayouts = import.meta.glob<string>('../../assets/sprites/characters/cowboy/high/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
 const quality = loadGraphicsQuality();
 export const cowboyFrameSize = quality === 'high' ? 1280 : 640;
 
@@ -23,7 +23,7 @@ export const cowboyDisplayHeight = 225 * 1.6 / 1.85 * 640 / 512;
 export function getCowboyFrameSize(texture: string): number {
   const name = texture.replace(/^cowboy-/, '');
   const base = `../../assets/sprites/characters/cowboy/high/${name}`;
-  return quality === 'high' && highImages[`${base}.png`] && highAtlases[`${base}.atlas.json`] ? 1280 : 640;
+  return quality === 'high' && highImages[`${base}.png`] && highLayouts[`${base}.packed.json`] ? 1280 : 640;
 }
 
 export function preloadCowboySprites(scene: Phaser.Scene): void {
@@ -32,8 +32,8 @@ export function preloadCowboySprites(scene: Phaser.Scene): void {
     const key = `cowboy-${name}`;
     const highBase = `../../assets/sprites/characters/cowboy/high/${name}`;
     const useHigh = getCowboyFrameSize(key) === 1280;
-    const atlas = useHigh ? highAtlases[`${highBase}.atlas.json`] : atlases[path.replace(/\.png$/, '.atlas.json')];
-    if (atlas && !scene.textures.exists(key)) scene.load.atlas(key, useHigh ? highImages[`${highBase}.png`] : image, atlas);
+    const layout = useHigh ? highLayouts[`${highBase}.packed.json`] : layouts[path.replace(/\.png$/, '.packed.json')];
+    if (layout && !scene.textures.exists(key)) scene.load.packedAtlas(key, useHigh ? highImages[`${highBase}.png`] : image, layout);
   }
 }
 export const cowboySheetScale = (name: string, frame = 0): number => autoSpriteScale(cowboy, cowboyMeasurements, name, frame, cowboyCalibration);

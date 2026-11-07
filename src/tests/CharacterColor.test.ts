@@ -63,25 +63,28 @@ it('lights a fighter near a flame and follows the layer parallax', () => {
 
 const lit = { exposure: .9, shadow: [.9, .84, .8], occlusion: .2, warmth: .3 } as const;
 const webglSprite = () => {
-  const added: string[] = [], removed: string[] = [];
-  const instances: Record<string, Record<string, unknown>> = { 'character-palette': { palette: 0 }, 'stage-light': {} };
+  const added: string[] = [];
   const sprite = {
     scene: { sys: { game: { renderer: { type: 2 } } } },
-    setPostPipeline: vi.fn((name: string) => { added.push(name); }), removePostPipeline: vi.fn((name: string) => { removed.push(name); }),
-    getPostPipeline: vi.fn((name: string) => instances[name]),
+    pipeline: { name: 'MultiPipeline' }, pipelineData: {} as Record<string, unknown>,
+    setPipeline: vi.fn((name: string) => { added.push(name); sprite.pipeline = { name }; }),
   };
-  return { sprite, added, removed, instances };
+  return { sprite, added };
 };
 
-it.each([['palette first', false], ['light first, palette added later', true]] as const)('applies stage lighting after the clothing recolor (%s)', (_name, plainFirst) => {
-  const { sprite, added, removed, instances } = webglSprite();
+it.each([['palette from the start', false], ['lit first, palette added later', true]] as const)('recolors and lights every sprite through the one shared pipeline (%s)', (_name, plainFirst) => {
+  const { sprite, added } = webglSprite();
   const effect = new CharacterColorEffect();
-  if (plainFirst) effect.apply(sprite as never, { ...lit, alternate: false }, 'bob');
+  if (plainFirst) {
+    effect.apply(sprite as never, { ...lit, alternate: false }, 'bob');
+    expect(sprite.pipelineData).toMatchObject({ palette: 0, lit: true });
+  }
   effect.apply(sprite as never, { ...lit, alternate: true }, 'bob');
   effect.apply(sprite as never, { ...lit, exposure: .8, alternate: true }, 'bob');
-  expect(added.join()).toBe(plainFirst ? 'stage-light,character-palette,stage-light' : 'character-palette,stage-light');
-  expect(removed.join()).toBe(plainFirst ? 'stage-light' : '');
-  expect(instances['stage-light']).toMatchObject({ exposure: .8, occlusion: .2, warmth: .3, shadow: [.9, .84, .8] });
+  expect(added).toEqual(['character-color']);
+  expect(sprite.pipelineData).toMatchObject({ palette: 1, lit: true, exposure: .8, occlusion: .2, warmth: .3, shadow: [.9, .84, .8] });
+  effect.apply(sprite as never, { alternate: false }, 'bob');
+  expect(sprite.pipelineData).toMatchObject({ palette: 0, lit: false });
 });
 
 it('adds no lighting pass to sprites on a neutral stage, and never rotates hue', () => {
