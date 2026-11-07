@@ -11,7 +11,7 @@ import cowboyFullbody from '../assets/art/characters/cowboy/fullbody.png';
 import grapplerFullbody from '../assets/art/characters/grappler/fullbody.png';
 import puppetFullbody from '../assets/art/characters/puppet/fullbody.png';
 import pirateFullbody from '../assets/art/characters/pirate/fullbody.png';
-import stanceFullbody from '../assets/art/characters/stance/fullbody.png';
+import stanceFullbody from '../assets/art/characters/stance/fullbody-2.png';
 import pirateBackground from '../assets/art/characters/pirate/selection-background.png';
 import pirateIcon from '../assets/art/characters/pirate/selection-icon.png';
 import stanceBackground from '../assets/art/characters/stance/selection-background.png';
@@ -25,12 +25,12 @@ export interface IconWindow { x: number; y: number; size: number }
 export interface VictoryFrame { height: number; top: number }
 export interface FighterArt { background: string; icon: string; iconWindow: IconWindow; fullbody: string; victory: VictoryFrame; name: string }
 export const fighterArt: Readonly<Record<string, FighterArt>> = {
-  shoto: {background:shotoBackground,icon:shotoIcon,iconWindow:{x:7,y:26,size:1228},fullbody:shotoFullbody,victory:{height:1.3,top:0},name:'Bob'},
-  cowboy: {background:cowboyBackground,icon:cowboyIcon,iconWindow:{x:0,y:13,size:1241},fullbody:cowboyFullbody,victory:{height:1.28,top:.01},name:'Texas'},
-  grappler: {background:grapplerBackground,icon:grapplerIcon,iconWindow:{x:1,y:0,size:1022},fullbody:grapplerFullbody,victory:{height:1.2,top:-.005},name:'Grappler'},
-  puppet: {background:puppetBackground,icon:puppetIcon,iconWindow:{x:0,y:0,size:928},fullbody:puppetFullbody,victory:{height:1.34,top:.012},name:'Puppet'},
-  pirate: {background:pirateBackground,icon:pirateIcon,iconWindow:{x:0,y:0,size:1152},fullbody:pirateFullbody,victory:{height:1.1,top:.004},name:'Pirate'},
-  stance: {background:stanceBackground,icon:stanceIcon,iconWindow:{x:0,y:7,size:2287},fullbody:stanceFullbody,victory:{height:1.38,top:.009},name:'Stance'},
+  shoto: {background:shotoBackground,icon:shotoIcon,iconWindow:{x:7,y:26,size:1228},fullbody:shotoFullbody,victory:{height:1.56,top:-.004},name:'Bob'},
+  cowboy: {background:cowboyBackground,icon:cowboyIcon,iconWindow:{x:0,y:13,size:1241},fullbody:cowboyFullbody,victory:{height:1.536,top:.008},name:'Texas'},
+  grappler: {background:grapplerBackground,icon:grapplerIcon,iconWindow:{x:1,y:0,size:1022},fullbody:grapplerFullbody,victory:{height:1.44,top:-.01},name:'Grappler'},
+  puppet: {background:puppetBackground,icon:puppetIcon,iconWindow:{x:0,y:0,size:928},fullbody:puppetFullbody,victory:{height:1.608,top:.01},name:'Puppet'},
+  pirate: {background:pirateBackground,icon:pirateIcon,iconWindow:{x:0,y:0,size:1152},fullbody:pirateFullbody,victory:{height:1.32,top:.001},name:'Pirate'},
+  stance: {background:stanceBackground,icon:stanceIcon,iconWindow:{x:0,y:7,size:2287},fullbody:stanceFullbody,victory:{height:1.5,top:-.133},name:'Stance'},
 };
 
 /** Selection art shown for a player who picked the random tile; it is not a fighter, so it never appears in the roster. */

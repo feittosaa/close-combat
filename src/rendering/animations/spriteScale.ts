@@ -72,6 +72,12 @@ export function postureBody(definition: CharacterDefinition, measurements: Sheet
 const settle = (scale: number) => Math.round(scale * 100) / 100;
 
 /**
+ * Multipliers per sheet (`<fighter>:<sheet>`) tried live in the developer mode before they are written into
+ * `calibration.json` (`npm run sprites:apply-scales`); always empty in normal play.
+ */
+export const sheetScaleAdjustments = new Map<string, number>();
+
+/**
  * Multiplier that shows a drawing at the fighter's validated proportions.
  * A validated sheet keeps its validated size: if it was regenerated at another size, it is compared with its own
  * validated version (same pose, so body size and height are directly comparable) and brought back to it.
@@ -81,6 +87,10 @@ const settle = (scale: number) => Math.round(scale * 100) / 100;
  * `LYING_LENGTH` times the standing height end to end.
  */
 export function autoSpriteScale(definition: CharacterDefinition, measurements: SheetMeasurements, name: string, frame = 0, calibration: SpriteCalibration = {}): number {
+  return measuredSpriteScale(definition, measurements, name, frame, calibration) * (sheetScaleAdjustments.get(`${definition.id}:${name}`) ?? 1);
+}
+
+function measuredSpriteScale(definition: CharacterDefinition, measurements: SheetMeasurements, name: string, frame: number, calibration: SpriteCalibration): number {
   const kind = sheetKind(definition, measurements, name), measure = measurements[name], reference = referenceOf(measurements);
   const validated = calibration[name];
   if (validated && measure) return validated.scales[frame] * regenerationRatio(validated, measure, kind === 'lying' ? [frame] : measure.bodies.map((_, index) => index));
