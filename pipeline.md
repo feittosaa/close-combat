@@ -1,5 +1,9 @@
 # Close Combat — Pipeline
 
+## Pátio solar removido — 2026-11-06
+
+A pedido do usuário, `assets/art/menu/patio-solar.png` foi apagada; `identidade-visual.md` passou a citar como exemplos da linguagem compartilhada os turnarounds dos personagens e as artes já usadas no jogo (corpo inteiro, ícone e fundo de seleção). Saíram também a regra do teste de higiene que aceitava imagens ligadas pela documentação e a pasta «Referências de estilo» do modo desenvolvedor, que só existiam por ela.
+
 ## Pátio solar fora do menu — 2026-11-06
 
 A pedido do usuário, `assets/art/menu/patio-solar.png` deixou de ser carregada pelo jogo (antes era o fundo, coberto pelo cartão opaco, das telas de seleção; o menu passa a manter o wallpaper atual). A imagem continua como referência interna de traço citada em `identidade-visual.md`; o teste de higiene passou a aceitar como referência canônica toda imagem ligada pela documentação. No modo desenvolvedor ela aparece em «Referências de estilo», fora de «Menus e wallpapers». O modo desenvolvedor passou a ser carregado por caminhos opacos ao bundler (`src/devMode.ts`): antes, o build já excluía seu código, mas ainda emitia as imagens listadas por ele (60 a mais em `dist`, incluindo referências); agora o build emite somente as imagens do jogo (356). Validação: 855 testes, `tsc`, build, `git diff --check` e conferência no Firefox headless (menu, seleção, painel pelo menu e pela pausa).

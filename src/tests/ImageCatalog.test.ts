@@ -13,7 +13,6 @@ describe('developer image folders', () => {
     expect(imageFolder('assets/art/characters/shoto/revisao/a.png', labels)).toEqual(['Personagens', 'Bob', 'Referências', 'Revisão']);
     expect(imageFolder('src/assets/sprites/effects/contact/hit-light.png', labels)).toEqual(['Efeitos de golpes', 'Contato']);
     expect(imageFolder('assets/art/wallpapers/bob-menu.png', labels)).toEqual(['Menus e wallpapers']);
-    expect(imageFolder('assets/art/menu/patio-solar.png', labels)).toEqual(['Referências de estilo']);
   });
 
   it('places loaded textures in the same folders', () => {

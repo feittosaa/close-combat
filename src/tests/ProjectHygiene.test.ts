@@ -50,10 +50,6 @@ describe('Project asset and documentation hygiene', () => {
     // Full-body art kept for future in-game use (pipeline.md lists it).
     const canonical = import.meta.glob(['../../assets/art/characters/*/turnaround.png', '../../assets/art/characters/*/fullbody*.png'], { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(canonical)) used.add(projectPath(key));
-    // Images linked from the documentation are canonical references too.
-    for (const [key, text] of Object.entries(markdown)) {
-      for (const match of text.matchAll(/\]\(([^)]+\.(?:png|jpg|jpeg|webp))\)/g)) used.add(relativeTo(projectPath(key), match[1]));
-    }
     const reviews = import.meta.glob<string>('../../assets/art/characters/*/revisao.json', { eager: true, query: '?raw', import: 'default' });
     for (const [key, source] of Object.entries(reviews)) {
       const manifest = projectPath(key);

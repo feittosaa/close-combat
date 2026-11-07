@@ -1,5 +1,5 @@
 /** Top-level folders of the developer image browser, in display order. */
-export const IMAGE_SECTIONS = ['Personagens', 'Títulos de luta', 'Cenários', 'Efeitos de golpes', 'Menus e wallpapers', 'Referências de estilo', 'Outras'] as const;
+export const IMAGE_SECTIONS = ['Personagens', 'Títulos de luta', 'Cenários', 'Efeitos de golpes', 'Menus e wallpapers', 'Outras'] as const;
 
 /**
  * Folder of an image in the developer browser, from its project path (`src/assets/...` or `assets/...`).
@@ -19,7 +19,6 @@ export function imageFolder(path: string, labels: Readonly<Record<string, string
   const effect = at('src/assets/sprites/effects/');
   if (effect) return ['Efeitos de golpes', effect[0] === 'contact' ? 'Contato' : effect[0]];
   if (path.startsWith('assets/art/wallpapers/')) return ['Menus e wallpapers'];
-  if (path.startsWith('assets/art/menu/')) return ['Referências de estilo'];
   return ['Outras', parts.slice(0, -1).join('/')];
 }
 

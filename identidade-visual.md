@@ -6,7 +6,7 @@ Regras gerais em [base.md](base.md); definições de personagens, cenários, pe�
 
 Ilustração 2D original com referência estética em Hades: contorno preto expressivo com variação de espessura, desenho angular, massas de cor chapada, sombras recortadas, contraste forte e textura pictórica controlada. Personagens, retratos, cenários, interface e efeitos devem pertencer ao mesmo universo visual.
 
-A paleta é livre por personagem e ambiente; não precisa reproduzir as cores da referência externa. A [referência interna de traço](assets/art/menu/patio-solar.png) exemplifica a linguagem compartilhada. Não copiar personagens, figurinos, logotipos ou interfaces de outros jogos.
+A paleta é livre por personagem e ambiente; não precisa reproduzir as cores da referência externa. Os turnarounds dos personagens (`assets/art/characters/<id>/turnaround.png`) e suas artes já usadas no jogo (`src/assets/art/characters/<id>/`: corpo inteiro, ícone e fundo de seleção) exemplificam a linguagem compartilhada. Não copiar personagens, figurinos, logotipos ou interfaces de outros jogos.
 
 ## Identidade dos personagens
 
