@@ -41,6 +41,8 @@ O motor é a autoridade sobre contato, dano, posições e duração dos estados.
 
 Controles são remapeáveis, direções são relativas ao oponente e transições de pausa/reset/foco não devem reaproveitar comandos antigos. Ferramentas de treino e IA usam entradas legais e a mesma simulação das partidas, sem acertos ou vantagens forçados.
 
+Ferramentas de desenvolvedor existem somente no servidor de desenvolvimento: builds de produção não incluem seu código nem aplicam ajustes guardados no navegador. Esses ajustes são sobreposições locais aos dados e imagens autorais; valores aprovados passam para os dados de cada personagem.
+
 O atalho de reinício de partida funciona somente no treino livre. PvP e Arcade preservam a partida ao receber essa tecla.
 
 Spritesheets e imagens oficiais preservam suas fontes originais. Variações de cor de personagem e iluminação de cenário podem ser aplicadas durante a renderização; sua aparência exige revisão visual. Correções artísticas permanentes pertencem à imagem fonte e exigem aprovação.

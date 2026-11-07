@@ -5,10 +5,11 @@ import { BootScene } from './scenes/BootScene';
 import { FightScene } from './scenes/FightScene';
 import { MenuScene } from './scenes/MenuScene';
 import { applyDocumentLanguage } from './i18n/i18n';
+import { loadDevTools } from './devMode';
 
 applyDocumentLanguage();
 
-const game = new Phaser.Game({
+const startGame = (): Phaser.Game => new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   width: RENDER_SIZE.width,
@@ -33,4 +34,6 @@ const game = new Phaser.Game({
   scene: [BootScene, MenuScene, FightScene],
 });
 
-export default game;
+// The developer mode exists only on the development server: builds and tests never load it nor read its stored tuning.
+if (import.meta.env.MODE === 'development') void loadDevTools().then(tools => tools.installDevTools()).finally(startGame);
+else startGame();

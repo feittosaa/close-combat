@@ -9,6 +9,7 @@ import { getPlayerLayout, getSystemControls, getTrainingControls } from '../inpu
 import { InputHistory } from '../training/InputHistory';
 import { formatCommand, formatMoveTitle } from '../ui/commandNotation';
 import { PauseMenu } from '../ui/PauseMenu';
+import { loadDeveloperPanel } from '../devMode';
 // src/scenes/FightScene.ts
 import Phaser from 'phaser';
 import type { CharacterState } from '../engine/characters/CharacterState';
@@ -165,6 +166,11 @@ export class FightScene extends Phaser.Scene {
     this.pauseMenu?.setVisible(this.paused);
     // DOM search must receive text normally, including letters used by training hotkeys.
   }
+  /** Developer tools over the pause, in any mode; tuning reaches the next action and the HUD is redrawn with the new colours. */
+  private openDeveloper(): void {
+    if (import.meta.env.MODE !== 'development') return;
+    void loadDeveloperPanel().then(({ DeveloperPanel }) => new DeveloperPanel(this, () => this.pauseMenu?.refresh(), () => { this.hudWidth = 0; this.syncViewsAndHud(); }));
+  }
   private canContinueArcade(snapshot: SimulationSnapshot): boolean {
     return snapshot.phase === 'match-over' && snapshot.matchWinnerId === 'player-1' && snapshot.roundEndedFrame !== undefined &&
       snapshot.frame - snapshot.roundEndedFrame >= RESULT_TITLE_END_FRAME;
@@ -304,7 +310,8 @@ export class FightScene extends Phaser.Scene {
     this.pauseMenu = new PauseMenu([this.selectedFighter, this.opponentFighter], Boolean(this.training),
       () => this.togglePause(false),
       () => this.scene.start('MenuScene', { fighterId: this.selectedFighter.id }),
-      (entry, playerIndex) => { this.pinnedMove?.setText(`${t('training.pinned', { title: formatMoveTitle(entry.title,getPlayerLayout(playerIndex)) })}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()), () => { this.simulation?.fillTrainingRage(); this.syncViewsAndHud(); });
+      (entry, playerIndex) => { this.pinnedMove?.setText(`${t('training.pinned', { title: formatMoveTitle(entry.title,getPlayerLayout(playerIndex)) })}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()), () => { this.simulation?.fillTrainingRage(); this.syncViewsAndHud(); },
+      import.meta.env.MODE === 'development' ? { label: 'Desenvolvedor', open: () => this.openDeveloper() } : undefined);
     window.addEventListener('keydown', this.handlePause);
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
     window.addEventListener('keydown', this.handleRestart);
