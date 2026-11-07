@@ -3,3 +3,12 @@
 Organizar fontes ativas e atlas por personagem, efeito ou interface. Exportar enquadramento fixo, alpha verdadeiro e margens suficientes para a ação completa. Dados de células, pivôs, orientação e reprodução ficam nos manifestos.
 
 Não manter variantes substituídas ou arte rejeitada no checkout. O histórico Git preserva essas versões. Aprovação e detalhes individuais ficam na pipeline.
+
+## Entrada de sprites
+
+Todo PNG adicionado ou trocado aqui passa automaticamente por `npm run sprites:prepare` (antes de `npm run dev` e `npm run build` e, com o servidor aberto, a cada arquivo novo ou alterado):
+
+1. limpeza do fundo `#FA02F8` — só saem pixels com o matiz do fundo, inclusive o halo misturado ao contorno; a transparência existente é preservada;
+2. medição das folhas de personagem, da qual o motor deriva o tamanho automático de cada animação.
+
+As duas etapas podem ser ajustadas à mão depois. O tamanho validado fica no `calibration.json` de cada personagem: o modo desenvolvedor ajusta o tamanho da animação na aba Sprites e `npm run sprites:apply-scales -- <arquivo exportado>` grava o ajuste. Uma imagem desenhada de propósito em tons do fundo entra em `keep` de `prepared.json` e não volta a ser limpa. `prepared.json` registra o conteúdo já preparado de cada PNG e a versão da limpeza: mudar a limpeza faz todos os sprites passarem de novo, sem alterar tamanhos validados. Um teste impede sprite sem preparação ou folha sem medição.

@@ -25,10 +25,11 @@
 .developer-combo p { margin: 0; color: var(--cream-dim); }
 .developer-combos { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
 .developer-new { border-color: var(--accent); }
-.developer-split { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 12px; min-height: 0; flex: 1; }
+.developer-split { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 12px; min-height: 0; flex: 1; overflow: hidden; }
+.developer-split > * { max-height: 100%; }
 .developer-list { display: flex; flex-direction: column; gap: 2px; max-height: 520px; overflow: auto; }
 .developer-list button { text-align: left; }
-.developer-viewer { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.developer-viewer { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 0; overflow: auto; }
 .developer-viewer canvas { max-width: 100%; background: repeating-conic-gradient(#2a221c 0 25%, #1d1814 0 50%) 0 0 / 24px 24px; border: 1px solid #efe4cc44; }
 .developer-scroll { overflow: auto; }
 .developer-table { border-collapse: collapse; width: 100%; }

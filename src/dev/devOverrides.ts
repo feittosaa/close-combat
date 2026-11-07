@@ -1,6 +1,7 @@
 import type { CharacterDefinition, ComboRecipe } from '../engine/data/characters';
 import type { MoveDefinition } from '../engine/data/moves';
 import { HUD } from '../ui/hudTheme';
+import { sheetScaleAdjustments } from '../rendering/animations/spriteScale';
 
 /** Move fields the developer mode may retune; everything else stays as authored in the fighter data. */
 export const MOVE_FIELDS = ['startup', 'activeFrames', 'recovery', 'damage', 'hitstun', 'blockstun'] as const;
@@ -19,10 +20,12 @@ export interface DevOverrides {
   recipes: Record<string, Record<string, RecipeTuning>>;
   combos: Record<string, ComboRecipe[]>;
   colors: Record<string, string>;
+  /** Animation size multipliers per `<fighter>:<sheet>`, over the automatic or validated scale. */
+  spriteScales: Record<string, number>;
 }
 
 const STORAGE_KEY = 'close-combat.dev-overrides';
-const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {} });
+const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {} });
 
 export function loadOverrides(storage: Pick<Storage, 'getItem'> | undefined = globalThis.localStorage): DevOverrides {
   try { return { ...empty(), ...JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<DevOverrides> }; } catch { return empty(); }
@@ -79,6 +82,8 @@ export class DevTuning {
       const custom = this.overrides.combos[fighter.id] ?? [];
       (fighter as Mutable<CharacterDefinition>).combos = custom.length ? [...this.authoredCombos(fighter), ...custom] : this.baseline.combos.get(fighter);
     }
+    sheetScaleAdjustments.clear();
+    for (const [sheet, scale] of Object.entries(this.overrides.spriteScales)) sheetScaleAdjustments.set(sheet, scale);
     const hud = JSON.parse(this.baseline.hud) as Record<string, unknown>;
     for (const token of HUD_COLORS) if (this.overrides.colors[`hud:${token}`]) write(hud, token, fromCss(this.overrides.colors[`hud:${token}`], read(hud, token)));
     Object.assign(HUD as Record<string, unknown>, hud);
@@ -108,6 +113,10 @@ export class DevTuning {
   }
   setColor(key: string, value: string | undefined): void {
     if (value) this.overrides.colors[key] = value; else delete this.overrides.colors[key];
+    this.commit();
+  }
+  setSpriteScale(sheet: string, scale: number | undefined): void {
+    if (scale === undefined || scale === 1) delete this.overrides.spriteScales[sheet]; else this.overrides.spriteScales[sheet] = scale;
     this.commit();
   }
   resetFighter(fighterId: string): void {
