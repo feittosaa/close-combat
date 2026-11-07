@@ -6,6 +6,7 @@ import { renderFighterSelection } from '../ui/FighterSelectionView';
 import { renderStageDraw, renderStageSelection } from '../ui/StageSelectionView';
 import { StagePicker } from '../ui/StagePicker';
 import '../ui/menu.css';
+import { loadDeveloperPanel } from '../devMode';
 
 import { ControlSettings } from '../ui/ControlSettings';
 import Phaser from 'phaser';
@@ -14,8 +15,12 @@ import { drawVersusStage, groupsFor, STAGE_GROUPS } from '../rendering/stages/st
 import { ARCADE_DIFFICULTIES, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
 import { createArcadeRun, opponentFor, isTrainingMode, selectsOpponent, type MatchMode } from './matchSetup';
 
-const MODES = ['arcade', 'versus', 'training', 'tutorial', 'settings'] as const;
-const modeEntry = (id: typeof MODES[number]) => ({ title: t(`mode.${id}.title`), tag: t(`mode.${id}.tag`), hint: t(`mode.${id}.hint`) });
+/** The developer entry, below the settings, exists only on the development server (see `src/dev`). */
+const DEVELOPER_ENTRY = import.meta.env.MODE === 'development'
+  ? { title: 'DESENVOLVEDOR', tag: 'FERRAMENTAS INTERNAS', hint: 'Finais, sprites, tempos de golpes, combos, cores e imagens.' } : undefined;
+const MODES = ['arcade', 'versus', 'training', 'tutorial', 'settings', ...(DEVELOPER_ENTRY ? ['developer'] as const : [])] as const;
+const modeEntry = (id: typeof MODES[number]) => id === 'developer' ? DEVELOPER_ENTRY!
+  : { title: t(`mode.${id}.title`), tag: t(`mode.${id}.tag`), hint: t(`mode.${id}.hint`) };
 const difficultyEntry = (id: ArcadeDifficulty) => ({ title: t(`difficulty.${id}.title`), tag: t(`difficulty.${id}.tag`), hint: t(`difficulty.${id}.hint`) });
 
 /** Fluxo público: modo → escolhas dos jogadores → cenário → luta. */
@@ -164,7 +169,6 @@ export class MenuScene extends Phaser.Scene {
   private render(): void {
     if (!this.menuElement) return;
     if (this.background) { this.tweens.killTweensOf(this.background); this.background.setAlpha(1); }
-    this.background?.setTexture(this.page === 'home' || this.page === 'difficulty' ? this.wallpapers[this.wallpaperIndex] : 'menu-reference');
     this.alignMenu();
     this.menuElement.replaceChildren();
     this.renderMenu();
@@ -299,7 +303,13 @@ export class MenuScene extends Phaser.Scene {
   private chooseMode(index: number): void {
     this.selection.reopen();
     this.modeIndex = index; const id = MODES[index];
-    if (id === 'settings') { new ControlSettings(() => this.render()); return; } else { this.mode = id; if (id === 'arcade') this.arcadeRun = createArcadeRun(); this.page = id === 'arcade' ? 'difficulty' : 'fighter'; if (id === 'tutorial') this.fighterIndex = 0; } this.render();
+    if (id === 'settings') { new ControlSettings(() => this.render()); return; }
+    if (id === 'developer') { this.openDeveloper(); return; } else { this.mode = id; if (id === 'arcade') this.arcadeRun = createArcadeRun(); this.page = id === 'arcade' ? 'difficulty' : 'fighter'; if (id === 'tutorial') this.fighterIndex = 0; } this.render();
+  }
+  private openDeveloper(): void {
+    if (import.meta.env.MODE !== 'development') return;
+    this.transitioning = true;
+    void loadDeveloperPanel().then(({ DeveloperPanel }) => new DeveloperPanel(this, () => { this.transitioning = false; this.render(); }));
   }
   private chooseDifficulty(index: number): void {
     this.difficultyIndex = index; this.page = 'fighter'; this.render();
