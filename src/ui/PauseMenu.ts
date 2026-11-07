@@ -30,7 +30,7 @@ export class PauseMenu {
   };
 
   constructor(private readonly fighters: readonly CharacterDefinition[], training: boolean,
-    resume: () => void, menu: () => void, private readonly pin: (entry: MoveListEntry, playerIndex: number) => void, step?: () => void, controls?: () => void, fillRage?: () => void) {
+    resume: () => void, menu: () => void, private readonly pin: (entry: MoveListEntry, playerIndex: number) => void, step?: () => void, controls?: () => void, fillRage?: () => void, developer?: { label: string; open: () => void }) {
     this.root.classList.toggle('match-pause', !training);
     this.root.setAttribute('role', 'dialog'); this.root.setAttribute('aria-modal', 'true');
     this.root.setAttribute('aria-label', t(training ? 'pause.trainingLabel' : 'pause.matchLabel'));
@@ -41,6 +41,7 @@ export class PauseMenu {
     const menuButton = el('button', t('pause.menu')); menuButton.onclick = menu;
     const controlsButton = el('button', t('pause.controls')); controlsButton.onclick = () => controls?.();
     actions.append(resumeButton, controlsButton, menuButton);
+    if (developer) { const developerButton = el('button', developer.label); developerButton.onclick = developer.open; controlsButton.after(developerButton); }
     if (training) {
       const inspect = el('button', t('pause.inspect'));
       inspect.onclick = () => {

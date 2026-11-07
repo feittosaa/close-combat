@@ -3,7 +3,6 @@ import { t } from '../i18n/i18n';
 import { loadInterfaceFonts } from '../ui/hudTheme';
 import menuBackground from '../../assets/art/wallpapers/cowboy-menu.png';
 import bobMenuBackground from '../../assets/art/wallpapers/bob-menu.png';
-import menuReference from '../../assets/art/menu/patio-solar.png';
 import { configureUiCamera } from '../rendering/presentation';
 import { preloadCowboySprites } from '../rendering/animations/cowboySprites';
 import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
@@ -43,7 +42,6 @@ export class BootScene extends Phaser.Scene {
     if (this.loadingScreen) this.wallpaperTimer = window.setInterval(advance, 20000);
     this.load.image('menu-solar', menuBackground);
     this.load.image('menu-bob', bobMenuBackground);
-    this.load.image('menu-reference', menuReference);
     stages.forEach(stage => preloadStage(this, stage));
     preloadCowboySprites(this);
     preloadShotoSprites(this);
