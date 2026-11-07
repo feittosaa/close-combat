@@ -22,7 +22,7 @@ const fighters = [
 const atlases = Object.keys(import.meta.glob('../assets/sprites/characters/*/*.atlas.json'));
 const NOT_A_BODY = /^(effect-|magic-|crow$|tomato$|dynamite$|idle$)/;
 
-/** Escalas do refinamento manual validado (antes da análise automática, com os ajustes pedidos depois). */
+/** Escalas do refinamento manual validado antes da análise automática: medem a precisão do modelo, não a calibração vigente. */
 const manual: Record<string, Record<string, number | readonly number[]>> = {
   shoto: {
     'crouch-guard': 1.08, hurt: .97 * 1.02, 'hurt-high': .97 * 1.02, 'hurt-low': .97 * 1.02, 'air-hurt': 1.05 * .97,
@@ -61,10 +61,10 @@ describe.each(fighters)('escala automática das animações de $definition.name'
     expect(unvalidated, 'folhas de corpo sem validação (rode npm run calibrate:sprites após aprovar)').toEqual([]);
   });
 
-  it('reproduz exatamente o refinamento manual validado em todas as folhas e quadros', () => {
+  it('reproduz exatamente a calibração validada em todas as folhas e quadros', () => {
     const differences = Object.entries(measurements).flatMap(([name, measure]) => !sheetKind(definition, measurements, name) && name !== reference ? [] :
       measure.bodies.flatMap((_, frame) => {
-        const expected = manualScale(definition.id, name, frame), actual = scaleOf(name, frame);
+        const expected = calibration[name]?.scales[frame] ?? 1, actual = scaleOf(name, frame);
         return Math.abs(actual - expected) > 1e-9 ? [`${name} ${frame}: ${actual} ≠ ${expected}`] : [];
       }));
     expect(differences).toEqual([]);
