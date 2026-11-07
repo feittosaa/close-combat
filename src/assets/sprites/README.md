@@ -10,5 +10,6 @@ Todo PNG adicionado ou trocado aqui passa automaticamente por `npm run sprites:p
 
 1. limpeza do fundo `#FA02F8` — só saem pixels com o matiz do fundo, inclusive o halo misturado ao contorno; a transparência existente é preservada;
 2. medição das folhas de personagem, da qual o motor deriva o tamanho automático de cada animação.
+3. recorte do layout de cada folha de personagem (`<folha>.packed.json`, nas duas qualidades): o jogo guarda na memória só a parte desenhada de cada quadro, com o tamanho e o pivô do atlas original. O PNG e o atlas originais não mudam; um teste impede layout desatualizado.
 
 As duas etapas podem ser ajustadas à mão depois. O tamanho validado fica no `calibration.json` de cada personagem: o modo desenvolvedor ajusta o tamanho da animação na aba Sprites e `npm run sprites:apply-scales -- <arquivo exportado>` grava o ajuste. Uma imagem desenhada de propósito em tons do fundo entra em `keep` de `prepared.json` e não volta a ser limpa. `prepared.json` registra o conteúdo já preparado de cada PNG e a versão da limpeza: mudar a limpeza faz todos os sprites passarem de novo, sem alterar tamanhos validados. Um teste impede sprite sem preparação ou folha sem medição.

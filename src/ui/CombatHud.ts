@@ -6,7 +6,7 @@ import { contactLabel, stateLabel } from './combatLabels';
 import { t } from '../i18n/i18n';
 import { getSystemControls, keyLabel } from '../input/controlSettings';
 import { placeFighterIcon } from './fighterArt';
-import { HUD, hudText, drawRoundMarker, healthBarFill } from './hudTheme';
+import { HUD, hudText, drawRoundMarker, healthBarFill, setTextColor } from './hudTheme';
 
 /** How long a combo breaker notice stays up after the freeze, in frames. */
 const BREAKER_NOTICE_FRAMES = 90;
@@ -76,12 +76,13 @@ export class CombatHud {
     this.hitLabel.setText(snapshot.frame-this.lastImpactFrame<=90?this.lastImpactLabel:'');
     snapshot.characters.forEach((character,index) => {
       const notice = snapshot.breakerNotices.find(entry => entry.characterId === character.characterId && snapshot.frame - entry.frame <= BREAKER_NOTICE_FRAMES);
-      this.breakerLabels[index]?.setText(notice ? t(notice.outcome === 'broken' ? 'hud.breakerSuccess' : 'hud.breakerFail') : '')
-        .setColor(notice?.outcome === 'broken' ? HUD.ivory : '#ff4b36');
+      const breaker = this.breakerLabels[index]!;
+      setTextColor(breaker.setText(notice ? t(notice.outcome === 'broken' ? 'hud.breakerSuccess' : 'hud.breakerFail') : ''),
+        notice?.outcome === 'broken' ? HUD.ivory : '#ff4b36');
       const combo = snapshot.comboHistory.filter(record => record.attackerId === character.characterId).pop();
       const shown = !notice && combo && combo.hits > 1 && (combo.active || snapshot.frame - combo.lastFrame <= 120) ? combo : undefined;
       const count = this.comboCounts[index]!, word = this.comboWords[index]!;
-      count.setText(shown ? String(shown.hits) : '').setColor(HUD.ivory);
+      setTextColor(count.setText(shown ? String(shown.hits) : ''), HUD.ivory);
       // The word sits beside the number, on the inner side, so the count always reads first.
       word.setText(shown ? t('hud.comboHits') : '').setX(index === 0 ? count.x + count.width + 6 : count.x - count.width - 6);
       this.comboDetails[index]?.setText(shown ? t('hud.comboDamage', { damage: shown.damage }) : '');
@@ -121,8 +122,8 @@ export class CombatHud {
       this.rageLabels[index]?.setText(character.rush?'RUSH':'');
       this.rageLevels[index]?.setText(character.maxRage > 0 ? String(Math.min(3, Math.floor(character.rage / RAGE_LEVEL))) : '');
       // Fighting states are training instrumentation; a match shows only names, bars and the round.
-      this.modeLabels[index]?.setText(this.training?stateLabel(character.mode):'')
-        .setColor(character.mode==='hitstun'?'#f09a84':character.mode==='blockstun'||character.mode==='blocking'?'#95d7d0':HUD.muted);
+      setTextColor(this.modeLabels[index]!.setText(this.training?stateLabel(character.mode):''),
+        character.mode==='hitstun'?'#f09a84':character.mode==='blockstun'||character.mode==='blocking'?'#95d7d0':HUD.muted);
     });
   }
   destroy():void{this.root.destroy(true);}

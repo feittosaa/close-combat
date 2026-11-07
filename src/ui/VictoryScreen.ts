@@ -14,12 +14,13 @@ export class VictoryScreen {
   private readonly winnerText = document.createElement('span');
   private readonly resize = (): void => { this.align(); this.fit(); };
 
-  constructor(private readonly canvas: HTMLCanvasElement, stage: StageDefinition, fighterId: string, name: string) {
+  /** `hero` is the champion's full-body art already decoded with the match; without it the art is fetched now. */
+  constructor(private readonly canvas: HTMLCanvasElement, stage: StageDefinition, fighterId: string, name: string, hero = document.createElement('img')) {
     const art = fighterArt[fighterId];
     this.root.className = 'victory-screen'; this.root.setAttribute('role', 'img'); this.root.setAttribute('aria-label', t('victory.label', { name }));
     const backdrop = document.createElement('div'); backdrop.className = 'victory-stage'; backdrop.append(stageImage(stage));
     const veil = document.createElement('div'); veil.className = 'victory-veil';
-    const hero = document.createElement('img'); hero.className = 'victory-hero'; hero.alt = ''; hero.src = art.fullbody;
+    hero.className = 'victory-hero'; hero.alt = ''; if (!hero.src) hero.src = art.fullbody;
     hero.style.cssText = `--height:${art.victory.height * 100}cqh;--top:${art.victory.top * 100}cqh`;
     const left = this.strip('left', document.createElement('span')); left.firstElementChild!.textContent = VICTORY_TITLE;
     const winner = document.createElement('span'); winner.className = 'victory-winner'; winner.textContent = VICTORY_WINNER;

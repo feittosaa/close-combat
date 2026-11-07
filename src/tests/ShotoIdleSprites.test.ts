@@ -23,7 +23,7 @@ describe('animação de espera do Shoto', () => {
 
   it('carrega o atlas uma vez', () => {
     const loaded: string[] = [];
-    const scene = { textures: { exists: () => false }, load: { atlas: (key: string) => loaded.push(key), image: (key: string) => loaded.push(key) } };
+    const scene = { textures: { exists: () => false }, load: { packedAtlas: (key: string) => loaded.push(key), image: (key: string) => loaded.push(key) } };
     preloadShotoSprites(scene as never);
     expect(loaded).toContain(shotoIdleTexture);
     const initialCount = loaded.length;

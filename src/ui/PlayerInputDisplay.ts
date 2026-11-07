@@ -1,5 +1,5 @@
 import { t } from '../i18n/i18n';
-import { HUD, hudText, drawHudPanel } from './hudTheme';
+import { HUD, hudText, drawHudPanel, setTextBackground, setTextColor } from './hudTheme';
 import Phaser from 'phaser';
 import type { AttackButton, FrameInput } from '../input/types';
 import { BUTTON_COLORS, getPlayerLayout, keyLabel } from '../input/controlSettings';
@@ -37,9 +37,9 @@ export class PlayerInputDisplay {
   update(input:FrameInput,history:readonly InputHistoryEntry[],facing:'left'|'right'='right',combos:readonly ComboRecord[]=[]):void {
     const layout=getPlayerLayout(this.playerIndex);
     this.updateCombos(combos);
-    this.rageKey.setText(keyLabel(layout.rageAction)).setColor(input.rageAction ? '#ffffff' : HUD.muted);
-    this.directionKeys.forEach((text,dir)=>text.setColor(screenDirection(input.direction,facing)===dir?'#efe4cc':HUD.muted));
-    this.attackKeys.forEach((text,button)=>text.setText(keyLabel(layout.buttons[button])).setBackgroundColor(input.buttons.has(button)?'#5a3a2c':'#221b16').setColor(BUTTON_COLORS[button]));
+    setTextColor(this.rageKey.setText(keyLabel(layout.rageAction)), input.rageAction ? '#ffffff' : HUD.muted);
+    this.directionKeys.forEach((text,dir)=>setTextColor(text, screenDirection(input.direction,facing)===dir?'#efe4cc':HUD.muted));
+    this.attackKeys.forEach((text,button)=>setTextColor(setTextBackground(text.setText(keyLabel(layout.buttons[button])), input.buttons.has(button)?'#5a3a2c':'#221b16'), BUTTON_COLORS[button]));
     const entries=history.slice(-10).reverse();
     this.rows.forEach((row,index)=>{
       const entry=entries[index];row.stamp.setText(entry?`${entry.frame} · ${entry.duration}F`:'');
