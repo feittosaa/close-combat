@@ -2,6 +2,9 @@ import type Phaser from 'phaser';
 import { characters, type CharacterDefinition, type ComboRecipe } from '../engine/data/characters';
 import { attackDurationFrames } from '../engine/combat/frameData';
 import { stages } from '../rendering/stages/stageCatalog';
+import { autoSpriteScale, type SheetMeasurements, type SpriteCalibration } from '../rendering/animations/spriteScale';
+import { cowboyFootAnchor } from '../rendering/animations/cowboySprites';
+import { SHOTO_FRAME } from '../rendering/animations/shotoSprites';
 import { fighterArt } from '../ui/fighterArt';
 import { VictoryScreen } from '../ui/VictoryScreen';
 import { gameImages, replaceImage, replacedImages, restoreImage } from './assetOverrides';
@@ -27,6 +30,14 @@ const FOLDER_LABELS: Readonly<Record<string, string>> = {
 };
 const CHARACTER_IDS = characters.map(fighter => fighter.id);
 type Entry = { folder: string[]; label: string; id: string };
+const sheetData = import.meta.glob<SheetMeasurements | SpriteCalibration>('../assets/sprites/characters/*/{measurements,calibration}.json', { eager: true, import: 'default' });
+/** What the engine needs to size each fighter's animations: measurements, validated scales and the feet line of a frame. */
+const SIZING: Readonly<Record<string, { measurements: SheetMeasurements; calibration: SpriteCalibration; footAnchor: number }>> = Object.fromEntries(
+  ([['cowboy', cowboyFootAnchor], ['shoto', 900 / SHOTO_FRAME]] as const).map(([id, footAnchor]) => [id, {
+    measurements: sheetData[`../assets/sprites/characters/${id}/measurements.json`] as SheetMeasurements,
+    calibration: sheetData[`../assets/sprites/characters/${id}/calibration.json`] as SpriteCalibration, footAnchor,
+  }]));
+const REFERENCE_SHEETS = ['idle-normal', 'idle'];
 
 /**
  * Developer tools, loaded only in development builds: endings, sprite playback, move and combo tuning, colours and
@@ -165,22 +176,29 @@ export class DeveloperPanel {
       entry.setAttribute('aria-pressed', String(texture.id === this.spriteKey)); list.append(entry);
     }
     const viewer = el('div', 'developer-viewer');
-    const canvas = el('canvas'); canvas.width = 420; canvas.height = 420;
+    const canvas = el('canvas'); canvas.width = 360; canvas.height = 360;
     const info = el('p', 'developer-hint');
     const frames = this.spriteKey ? this.frameNames(this.spriteKey) : [];
+    const sheet = this.spriteKey ? this.characterSheet(this.spriteKey) : undefined;
     const draw = () => {
       const context = canvas.getContext('2d');
       if (!context || !this.spriteKey || !frames.length) { info.textContent = 'Nenhuma textura.'; return; }
       this.spriteFrame = (this.spriteFrame + frames.length) % frames.length;
       const frame = this.scene.textures.getFrame(this.spriteKey, frames[this.spriteFrame]);
-      const scale = Math.min(canvas.width / frame.realWidth, canvas.height / frame.realHeight);
       context.clearRect(0, 0, canvas.width, canvas.height);
-      context.save();
-      context.translate(canvas.width / 2, canvas.height / 2); if (this.spriteFlip) context.scale(-1, 1);
-      context.drawImage(frame.source.image as CanvasImageSource, frame.cutX, frame.cutY, frame.cutWidth, frame.cutHeight,
-        (frame.x - frame.realWidth / 2) * scale, (frame.y - frame.realHeight / 2) * scale, frame.cutWidth * scale, frame.cutHeight * scale);
-      context.restore();
-      info.textContent = `${this.spriteKey} · quadro ${frames[this.spriteFrame]} (${this.spriteFrame + 1}/${frames.length}) · ${frame.realWidth}×${frame.realHeight}`;
+      const label = `${this.spriteKey} · quadro ${frames[this.spriteFrame]} (${this.spriteFrame + 1}/${frames.length}) · ${frame.realWidth}×${frame.realHeight}`;
+      if (!sheet) {
+        const scale = Math.min(canvas.width / frame.realWidth, canvas.height / frame.realHeight);
+        this.drawFrame(context, frame, frame.realHeight * scale, (canvas.height + frame.realHeight * scale) / 2, 1);
+        info.textContent = label; return;
+      }
+      // Game proportions: the idle's first drawing at its automatic size as a faint outline behind, on the same feet line.
+      const scale = sheet.scale(sheet.name, this.spriteFrame), reference = this.scene.textures.getFrame(sheet.referenceKey, this.frameNames(sheet.referenceKey)[0]);
+      const referenceScale = sheet.scale(sheet.reference, 0) / (sheet.reference === sheet.name ? sheet.adjustment : 1);
+      const unit = canvas.height * .7 / (sheet.referenceHeight * referenceScale), feet = canvas.height * .95;
+      this.drawFrame(context, reference, unit * referenceScale, feet, .28, sheet.footAnchor);
+      this.drawFrame(context, frame, unit * scale, feet, 1, sheet.footAnchor);
+      info.textContent = `${label} · escala ×${scale.toFixed(3)} (automática ×${(scale / sheet.adjustment).toFixed(3)})`;
     };
     const step = (delta: number) => { this.spritePlaying = false; play.textContent = 'Executar'; this.spriteFrame += delta; draw(); };
     const play = button(this.spritePlaying ? 'Pausar' : 'Executar', () => { this.spritePlaying = !this.spritePlaying; this.render(); });
@@ -189,10 +207,46 @@ export class DeveloperPanel {
     const controls = el('div', 'developer-row');
     controls.append(button('◀ Quadro', () => step(-1)), play, button('Quadro ▶', () => step(1)), labelled('Quadros/s', fps), flip);
     viewer.append(canvas, info, controls);
+    if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment));
     const layout = el('div', 'developer-split'); layout.append(list, viewer);
     page.append(layout);
     draw();
     if (this.spritePlaying && frames.length > 1) this.spriteTimer = window.setInterval(() => { this.spriteFrame += 1; draw(); }, 1000 / this.spriteFps);
+  }
+  /** A fighter's body sheet, with the scale the engine gives each of its frames and the idle it is compared with. */
+  private characterSheet(key: string) {
+    const fighter = CHARACTER_IDS.find(id => key.startsWith(`${id}-`)), sizing = fighter && SIZING[fighter];
+    const name = fighter && key.slice(fighter.length + 1), definition = characters.find(entry => entry.id === fighter);
+    if (!sizing || !name || !definition || !sizing.measurements[name]) return undefined;
+    const reference = REFERENCE_SHEETS.find(sheet => sizing.measurements[sheet] && this.scene.textures.exists(`${fighter}-${sheet}`))!;
+    return {
+      fighter, name, reference, referenceKey: `${fighter}-${reference}`, footAnchor: sizing.footAnchor, referenceHeight: sizing.measurements[reference].maxHeight,
+      adjustment: devTuning.overrides.spriteScales[`${fighter}:${name}`] ?? 1,
+      scale: (sheet: string, frame: number) => autoSpriteScale(definition, sizing.measurements, sheet, frame, sizing.calibration),
+    };
+  }
+  /** Animation size over the automatic (or validated) scale; it applies at once in the game. */
+  private sizeControls(fighter: string, name: string, adjustment: number): HTMLElement {
+    const key = `${fighter}:${name}`;
+    const percent = number(Math.round(adjustment * 100), value => {
+      devTuning.setSpriteScale(key, value ? value / 100 : undefined); this.changed(); this.render();
+    });
+    percent.min = '10'; percent.setAttribute('aria-label', 'Tamanho da animação em porcentagem');
+    const row = el('div', 'developer-row'); row.classList.toggle('developer-changed', adjustment !== 1);
+    row.append(labelled('Tamanho da animação (%)', percent),
+      button('−1%', () => { devTuning.setSpriteScale(key, Math.max(.1, adjustment - .01)); this.changed(); this.render(); }),
+      button('+1%', () => { devTuning.setSpriteScale(key, adjustment + .01); this.changed(); this.render(); }),
+      button('Automático', () => { devTuning.setSpriteScale(key, undefined); this.changed(); this.render(); }),
+      el('p', 'developer-hint', 'Contorno claro: idle no tamanho automático, na mesma proporção do jogo. O ajuste vale na hora em qualquer luta; para gravar na calibração, exporte os ajustes e rode npm run sprites:apply-scales -- <arquivo>.'));
+    return row;
+  }
+  private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1): void {
+    const scale = box / frame.realHeight, center = context.canvas.width / 2, top = feet - footAnchor * box;
+    context.save(); context.globalAlpha = alpha;
+    context.translate(center, 0); if (this.spriteFlip) context.scale(-1, 1);
+    context.drawImage(frame.source.image as CanvasImageSource, frame.cutX, frame.cutY, frame.cutWidth, frame.cutHeight,
+      (frame.x - frame.realWidth / 2) * scale, top + frame.y * scale, frame.cutWidth * scale, frame.cutHeight * scale);
+    context.restore();
   }
   private frameNames(key: string): string[] {
     const names = this.scene.textures.get(key).getFrameNames();

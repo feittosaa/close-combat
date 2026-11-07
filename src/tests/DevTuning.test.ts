@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { characters } from '../engine/data/characters';
 import { DevTuning, loadOverrides } from '../dev/devOverrides';
 import { HUD } from '../ui/hudTheme';
+import { autoSpriteScale, type SheetMeasurements } from '../rendering/animations/spriteScale';
+import cowboyMeasurements from '../assets/sprites/characters/cowboy/measurements.json';
+import cowboyCalibration from '../assets/sprites/characters/cowboy/calibration.json';
 
 const fresh = () => structuredClone(characters);
 
@@ -39,7 +42,18 @@ describe('developer tuning', () => {
     expect(HUD.gold).toBe(gold); expect(HUD.playerText[0]).toBe(player);
   });
 
+  it('resizes one animation on top of its automatic scale and restores it', () => {
+    const fighters = fresh(), cowboy = fighters.find(fighter => fighter.id === 'cowboy')!, tuning = new DevTuning(fighters);
+    const scale = (sheet: string) => autoSpriteScale(cowboy, cowboyMeasurements as SheetMeasurements, sheet, 0, cowboyCalibration);
+    const before = scale('walk'), other = scale('jump');
+    tuning.setSpriteScale('cowboy:walk', 1.1);
+    expect(scale('walk')).toBeCloseTo(before * 1.1);
+    expect(scale('jump')).toBe(other);
+    tuning.setSpriteScale('cowboy:walk', undefined);
+    expect(scale('walk')).toBe(before);
+  });
+
   it('ignores unreadable stored tuning', () => {
-    expect(loadOverrides({ getItem: () => '{broken' })).toEqual({ moves: {}, recipes: {}, combos: {}, colors: {} });
+    expect(loadOverrides({ getItem: () => '{broken' })).toEqual({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {} });
   });
 });
