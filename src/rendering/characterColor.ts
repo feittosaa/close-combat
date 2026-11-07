@@ -1,8 +1,15 @@
 import type Phaser from 'phaser';
 import type { StageDefinition } from './stages/StageDefinition';
 import type { StageLayout } from './stages/stageLayout';
-import type { StageLightPipeline } from './palettePipeline';
 
+export const CHARACTER_COLOR_PIPELINE = 'character-color';
+/**
+ * Colour of one sprite, read by the shared pipeline (`palettePipeline.ts`) while it draws that sprite: the selective
+ * alternate palette (`palette`: 0 none, 1 bob, 2 texas, 3 magic, 4 magic highlight) and, when `lit`, the stage light.
+ */
+export interface CharacterColorData {
+  palette: number; lit: boolean; exposure: number; shadow: readonly [number, number, number]; occlusion: number; warmth: number;
+}
 export type Palette = 'none' | 'bob' | 'texas' | 'magic' | 'magic-highlight';
 /**
  * Stage lighting for a fighter: `exposure` scales the whole figure, `shadow` is the ambient colour taken by its dark tones,
@@ -75,8 +82,6 @@ function hsvToRgb(hue: number, value: number, saturation: number): [number, numb
 export class CharacterColorEffect {
   private readonly canvasColors = new WeakMap<Phaser.GameObjects.Image, CharacterColor>();
   private readonly canvasPalettes = new WeakMap<Phaser.GameObjects.Image, Palette>();
-  private readonly pipelines = new WeakMap<Phaser.GameObjects.Image, { palette: number }>();
-  private readonly lights = new WeakMap<Phaser.GameObjects.Image, StageLightPipeline>();
   apply(sprite: Phaser.GameObjects.Image, color: CharacterColor, palette: Palette = 'none'): void {
     palette = color.alternate ? palette : 'none';
     if (sprite.scene?.sys.game.renderer.type === 1) {
@@ -123,25 +128,18 @@ export class CharacterColorEffect {
       this.canvasPalettes.set(sprite, palette);
       return;
     }
-    if (palette !== 'none' && !this.pipelines.has(sprite)) {
-      // The palette must come first in the chain: a light added earlier is re-added behind it.
-      const relight = this.lights.has(sprite);
-      if (relight) { sprite.removePostPipeline('stage-light'); this.lights.delete(sprite); }
-      sprite.setPostPipeline('character-palette');
-      const pipeline = sprite.getPostPipeline('character-palette') as unknown as { palette: number } | undefined;
-      if (pipeline) this.pipelines.set(sprite, pipeline);
+    // Every coloured sprite draws through one shared pipeline that reads its colour from `pipelineData`.
+    const lit = isLit(color);
+    if (sprite.pipeline?.name !== CHARACTER_COLOR_PIPELINE) {
+      if (palette === 'none' && !lit) return;
+      sprite.setPipeline(CHARACTER_COLOR_PIPELINE);
     }
-    const pipeline = this.pipelines.get(sprite);
-    if (pipeline) pipeline.palette = palette === 'bob' ? 1 : palette === 'texas' ? 2 : palette === 'magic' ? 3 : palette === 'magic-highlight' ? 4 : 0;
-    if (!this.lights.has(sprite) && isLit(color)) {
-      sprite.setPostPipeline('stage-light');
-      const light = sprite.getPostPipeline('stage-light') as unknown as StageLightPipeline | undefined;
-      if (light) this.lights.set(sprite, light);
-    }
-    const light = this.lights.get(sprite);
-    if (light) Object.assign(light, { exposure: color.exposure ?? 1, shadow: color.shadow ?? [1, 1, 1], occlusion: color.occlusion ?? 0, warmth: color.warmth ?? 0 });
+    const data: CharacterColorData = { palette: PALETTE_CODES[palette], lit, exposure: color.exposure ?? 1, shadow: color.shadow ?? [1, 1, 1],
+      occlusion: color.occlusion ?? 0, warmth: color.warmth ?? 0 };
+    Object.assign(sprite.pipelineData, data);
   }
 }
 
+const PALETTE_CODES: Readonly<Record<Palette, number>> = { none: 0, bob: 1, texas: 2, magic: 3, 'magic-highlight': 4 };
 const isLit = (color: CharacterColor): boolean =>
   (color.exposure ?? 1) !== 1 || (color.occlusion ?? 0) > 0 || (color.warmth ?? 0) > 0 || (color.shadow ?? [1, 1, 1]).some(channel => channel !== 1);

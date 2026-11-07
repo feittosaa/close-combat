@@ -3,9 +3,10 @@ import { characters, type CharacterDefinition, type ComboRecipe } from '../engin
 import { attackDurationFrames } from '../engine/combat/frameData';
 import { stages } from '../rendering/stages/stageCatalog';
 import { autoSpriteScale, type SheetMeasurements, type SpriteCalibration } from '../rendering/animations/spriteScale';
-import { cowboyFootAnchor } from '../rendering/animations/cowboySprites';
-import { SHOTO_FRAME } from '../rendering/animations/shotoSprites';
+import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize } from '../rendering/animations/cowboySprites';
+import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shotoSpriteScale } from '../rendering/animations/shotoSprites';
 import { fighterArt } from '../ui/fighterArt';
+import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { VictoryScreen } from '../ui/VictoryScreen';
 import { gameImages, replaceImage, replacedImages, restoreImage } from './assetOverrides';
 import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, type MoveTuning } from './devOverrides';
@@ -31,13 +32,22 @@ const FOLDER_LABELS: Readonly<Record<string, string>> = {
 const CHARACTER_IDS = characters.map(fighter => fighter.id);
 type Entry = { folder: string[]; label: string; id: string };
 const sheetData = import.meta.glob<SheetMeasurements | SpriteCalibration>('../assets/sprites/characters/*/{measurements,calibration}.json', { eager: true, import: 'default' });
-/** What the engine needs to size each fighter's animations: measurements, validated scales and the feet line of a frame. */
-const SIZING: Readonly<Record<string, { measurements: SheetMeasurements; calibration: SpriteCalibration; footAnchor: number }>> = Object.fromEntries(
-  ([['cowboy', cowboyFootAnchor], ['shoto', 900 / SHOTO_FRAME]] as const).map(([id, footAnchor]) => [id, {
-    measurements: sheetData[`../assets/sprites/characters/${id}/measurements.json`] as SheetMeasurements,
-    calibration: sheetData[`../assets/sprites/characters/${id}/calibration.json`] as SpriteCalibration, footAnchor,
-  }]));
+/**
+ * What the engine needs to size each fighter's animations: measurements, validated scales and, per texture, the
+ * game pixels per source pixel and the feet line of a frame (as `CombatantView` applies them).
+ */
+type Sizing = { measurements: SheetMeasurements; calibration: SpriteCalibration; pixelScale: (key: string) => number; footAnchor: (key: string) => number };
+const fighterSizing = (id: string, pixelScale: Sizing['pixelScale'], footAnchor: Sizing['footAnchor']): Sizing => ({
+  measurements: sheetData[`../assets/sprites/characters/${id}/measurements.json`] as SheetMeasurements,
+  calibration: sheetData[`../assets/sprites/characters/${id}/calibration.json`] as SpriteCalibration, pixelScale, footAnchor,
+});
+const SIZING: Readonly<Record<string, Sizing>> = {
+  cowboy: fighterSizing('cowboy', key => cowboyDisplayHeight / getCowboyFrameSize(key), () => cowboyFootAnchor),
+  shoto: fighterSizing('shoto', key => (key === shotoIdleTexture ? shotoIdleScale : shotoSpriteScale) / getShotoResolution(key),
+    key => key === shotoIdleTexture ? 670 / 724 : 900 / SHOTO_FRAME),
+};
 const REFERENCE_SHEETS = ['idle-normal', 'idle'];
+const SPRITE_FPS = 12;
 
 /**
  * Developer tools, loaded only in development builds: endings, sprite playback, move and combo tuning, colours and
@@ -53,7 +63,7 @@ export class DeveloperPanel {
   private spritePath: string[] = [];
   private spriteKey?: string;
   private spriteFrame = 0;
-  private spriteFps = 12;
+  private spriteFps = SPRITE_FPS;
   private spritePlaying = true;
   private spriteFlip = false;
   private spriteTimer?: number;
@@ -76,6 +86,9 @@ export class DeveloperPanel {
     document.body.append(this.root);
     window.addEventListener('keydown', this.onKey, true);
     this.render();
+    // Matches keep only their own fighters and stage: the sprite browser loads the rest while it is open.
+    preloadAllMatchAssets(scene);
+    if (scene.load.list.size) { scene.load.once('complete', () => { if (this.root.isConnected) this.render(); }); scene.load.start(); }
   }
 
   private render(): void {
@@ -193,21 +206,24 @@ export class DeveloperPanel {
         info.textContent = label; return;
       }
       // Game proportions: the idle's first drawing at its automatic size as a faint outline behind, on the same feet line.
+      // Frames are sized in game pixels, so sheets drawn on different frame grids (Bob's legacy idle) compare as in the game.
       const scale = sheet.scale(sheet.name, this.spriteFrame), reference = this.scene.textures.getFrame(sheet.referenceKey, this.frameNames(sheet.referenceKey)[0]);
       const referenceScale = sheet.scale(sheet.reference, 0) / (sheet.reference === sheet.name ? sheet.adjustment : 1);
-      const unit = canvas.height * .7 / (sheet.referenceHeight * referenceScale), feet = canvas.height * .95;
-      this.drawFrame(context, reference, unit * referenceScale, feet, .28, sheet.footAnchor);
-      this.drawFrame(context, frame, unit * scale, feet, 1, sheet.footAnchor);
+      const referenceBox = reference.realHeight * sheet.pixelScale(sheet.referenceKey) * referenceScale;
+      const unit = canvas.height * .7 / (sheet.referenceHeight * referenceBox), feet = canvas.height * .95;
+      this.drawFrame(context, reference, unit * referenceBox, feet, .28, sheet.footAnchor(sheet.referenceKey));
+      this.drawFrame(context, frame, unit * frame.realHeight * sheet.pixelScale(this.spriteKey) * scale, feet, 1, sheet.footAnchor(this.spriteKey));
       info.textContent = `${label} · escala ×${scale.toFixed(3)} (automática ×${(scale / sheet.adjustment).toFixed(3)})`;
     };
     const step = (delta: number) => { this.spritePlaying = false; play.textContent = 'Executar'; this.spriteFrame += delta; draw(); };
     const play = button(this.spritePlaying ? 'Pausar' : 'Executar', () => { this.spritePlaying = !this.spritePlaying; this.render(); });
-    const fps = number(this.spriteFps, value => { this.spriteFps = Math.max(1, Math.min(60, value ?? 12)); this.render(); });
+    const fps = number(this.spriteFps, value => { this.spriteFps = Math.max(1, Math.min(60, value ?? SPRITE_FPS)); this.render(); });
     const flip = button(this.spriteFlip ? 'Virado ←' : 'Virado →', () => { this.spriteFlip = !this.spriteFlip; draw(); flip.textContent = this.spriteFlip ? 'Virado ←' : 'Virado →'; });
     const controls = el('div', 'developer-row');
     controls.append(button('◀ Quadro', () => step(-1)), play, button('Quadro ▶', () => step(1)), labelled('Quadros/s', fps), flip);
     viewer.append(canvas, info, controls);
     if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment));
+    viewer.append(this.spriteSave(), this.spriteReset());
     const layout = el('div', 'developer-split'); layout.append(list, viewer);
     page.append(layout);
     draw();
@@ -220,7 +236,8 @@ export class DeveloperPanel {
     if (!sizing || !name || !definition || !sizing.measurements[name]) return undefined;
     const reference = REFERENCE_SHEETS.find(sheet => sizing.measurements[sheet] && this.scene.textures.exists(`${fighter}-${sheet}`))!;
     return {
-      fighter, name, reference, referenceKey: `${fighter}-${reference}`, footAnchor: sizing.footAnchor, referenceHeight: sizing.measurements[reference].maxHeight,
+      fighter, name, reference, referenceKey: `${fighter}-${reference}`, pixelScale: sizing.pixelScale, footAnchor: sizing.footAnchor,
+      referenceHeight: sizing.measurements[reference].maxHeight,
       adjustment: devTuning.overrides.spriteScales[`${fighter}:${name}`] ?? 1,
       scale: (sheet: string, frame: number) => autoSpriteScale(definition, sizing.measurements, sheet, frame, sizing.calibration),
     };
@@ -237,8 +254,37 @@ export class DeveloperPanel {
       button('−1%', () => { devTuning.setSpriteScale(key, Math.max(.1, adjustment - .01)); this.changed(); this.render(); }),
       button('+1%', () => { devTuning.setSpriteScale(key, adjustment + .01); this.changed(); this.render(); }),
       button('Automático', () => { devTuning.setSpriteScale(key, undefined); this.changed(); this.render(); }),
-      el('p', 'developer-hint', 'Contorno claro: idle no tamanho automático, na mesma proporção do jogo. O ajuste vale na hora em qualquer luta; para gravar na calibração, exporte os ajustes e rode npm run sprites:apply-scales -- <arquivo>.'));
+      el('p', 'developer-hint', 'Contorno claro: idle no tamanho automático, na mesma proporção do jogo. O ajuste vale na hora em qualquer luta; «Salvar tamanhos no código» grava na calibração.'));
     return row;
+  }
+  /** Clears every animation size adjustment and the playback rate, after a confirmation so work is not lost by accident. */
+  private spriteReset(): HTMLElement {
+    return confirmRow('Resetar tamanhos e quadros/s', 'Sim, resetar',
+      () => `Tem certeza? Isso remove ${Object.keys(devTuning.overrides.spriteScales).length} ajuste(s) de tamanho de animação e volta para ${SPRITE_FPS} quadros/s.`,
+      () => {
+        devTuning.resetSpriteScales(); this.spriteFps = SPRITE_FPS; this.changed();
+        this.status.textContent = 'Ajustes de tamanho e quadros/s restaurados.'; this.render();
+      });
+  }
+  /**
+   * Writes the animation size adjustments into each fighter's `calibration.json` through the development server.
+   * They are cleared first: the new calibration already holds them and reloads the game, and they come back on failure.
+   */
+  private spriteSave(): HTMLElement {
+    return confirmRow('Salvar tamanhos no código', 'Salvar e aplicar',
+      () => `Gravar ${Object.keys(devTuning.overrides.spriteScales).length} ajuste(s) de tamanho no calibration.json dos personagens? O jogo recarrega com os novos tamanhos.`,
+      () => void this.saveSpriteScales());
+  }
+  private async saveSpriteScales(): Promise<void> {
+    const spriteScales = { ...devTuning.overrides.spriteScales };
+    if (!Object.keys(spriteScales).length) { this.status.textContent = 'Nenhum ajuste de tamanho para salvar.'; return; }
+    this.status.textContent = 'Salvando tamanhos…';
+    devTuning.resetSpriteScales();
+    const response = await fetch('/__dev/sprite-scales', { method: 'POST', body: JSON.stringify({ spriteScales }) }).catch(() => undefined);
+    if (response?.ok) { this.status.textContent = 'Tamanhos gravados no calibration.json.'; this.changed(); this.render(); return; }
+    for (const [key, scale] of Object.entries(spriteScales)) devTuning.setSpriteScale(key, scale);
+    this.status.textContent = `Falha ao salvar; ajustes mantidos. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
+    this.changed(); this.render();
   }
   private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1): void {
     const scale = box / frame.realHeight, center = context.canvas.width / 2, top = feet - footAnchor * box;
@@ -402,6 +448,14 @@ export class DeveloperPanel {
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag); if (className) node.className = className; if (text) node.textContent = text; return node;
+}
+/** A button that asks before acting: the question replaces it, with confirm and cancel. */
+function confirmRow(label: string, confirmLabel: string, question: () => string, action: () => void): HTMLElement {
+  const row = el('div', 'developer-row');
+  const idle = () => row.replaceChildren(button(label, ask));
+  const ask = () => row.replaceChildren(el('p', 'developer-hint', question()), button(confirmLabel, action), button('Cancelar', idle));
+  idle();
+  return row;
 }
 function button(text: string, action: () => void): HTMLButtonElement {
   const node = el('button', '', text); node.type = 'button'; node.onclick = action; return node;

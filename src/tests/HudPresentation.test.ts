@@ -12,6 +12,7 @@ afterEach(()=>resetControls());
 function mockScene(){
   const texts:{value:string;style:unknown;x:number;setText:(s:string)=>unknown}[]=[];
   const commands:unknown[][]=[];
+  let colorChanges=0;
   const images: {x:number;y:number;key:string;width:number;height:number;scale:number;crop?:number[]}[]=[];
   const graphics=Object.fromEntries(['fillStyle','fillRect','fillPoints','strokePoints','fillCircle','strokeCircle','fillRoundedRect','strokeRoundedRect','lineStyle','lineBetween','strokeRect','clear','destroy'].map(k=>[k,(...args:unknown[])=>{commands.push([k,...args]);return graphics;}]));
   const add={
@@ -22,12 +23,12 @@ function mockScene(){
       images.push(image);return image;
     },
     text:(_x:number,_y:number,value:string,style:unknown)=>{
-      const text={value,style,x:_x,get width(){return text.value.length*10;},setText:(s:string)=>{text.value=s;return text;},setX:(x:number)=>{text.x=x;return text;},setColor:()=>text,setFontSize:()=>text,setOrigin:()=>text,setVisible:()=>text};
+      const text={value,style,x:_x,get width(){return text.value.length*10;},setText:(s:string)=>{text.value=s;return text;},setX:(x:number)=>{text.x=x;return text;},setColor:(color:string)=>{text.style={...(text.style as object),color};colorChanges++;return text;},setFontSize:()=>text,setOrigin:()=>text,setVisible:()=>text};
       texts.push(text);return text;
     },
     container:()=>{const c={setDepth:()=>c,setScrollFactor:()=>c,destroy:vi.fn()};return c;},
   };
-  return {scene:{add} as unknown as Phaser.Scene,texts,commands,images};
+  return {scene:{add} as unknown as Phaser.Scene,texts,commands,images,colorChanges:()=>colorChanges};
 }
 it('positions each fighter icon at the outer edge of the health bar',()=>{
   const {scene,images}=mockScene();
@@ -130,5 +131,16 @@ it('layers white, yellow and red rage fills and shows completed levels', () => {
   expect(texts.some(text => text.value === '2')).toBe(true);
   // No rage value or total is written: only the level (0 to 3) in the seal.
   expect(texts.filter(text => /RAGE|\d+\s*\/\s*\d+|^\d{3,}$/.test(text.value))).toEqual([]);
+  hud.destroy();
+});
+it('only restyles HUD text when its colour changes, so identical frames redraw no text texture',()=>{
+  const {scene,texts,colorChanges}=mockScene();
+  const hud=new CombatHud(scene,1024,['Cowboy','Shoto'],true);
+  const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
+  hud.update(snapshot,1024);
+  const colours=texts.map(text=>(text.style as {color?:string}).color), changes=colorChanges();
+  hud.update(snapshot,1024);
+  expect(colorChanges()).toBe(changes);
+  expect(texts.map(text=>(text.style as {color?:string}).color)).toEqual(colours);
   hud.destroy();
 });

@@ -19,22 +19,23 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import type { FrameInput } from '../input/types';
-import { preloadCowboySprites, settleAfterRound } from '../rendering/animations/cowboySprites';
+import { settleAfterRound } from '../rendering/animations/cowboySprites';
 import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
-import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
 import { ProjectileView } from '../rendering/ProjectileView';
 import { RushEffect } from '../rendering/RushEffect';
 import { characterColor } from '../rendering/characterColor';
-import { registerCharacterPalette } from '../rendering/palettePipeline';
+import { registerCharacterColor } from '../rendering/palettePipeline';
 import { preloadContactEffects } from '../rendering/contactEffects';
 import { StagePresentation } from '../rendering/StagePresentation';
 import { CombatantView } from '../rendering/CombatantView';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
-import { preloadStage, StageView } from '../rendering/stages/StageView';
+import { StageView } from '../rendering/stages/StageView';
+import { preloadMatchAssets, primeMatchTextures } from '../rendering/matchAssets';
+import { showLoadingScreen } from '../ui/loadingScreen';
 import { CombatHud } from '../ui/CombatHud';
-import { preloadFighterIcons } from '../ui/fighterArt';
+import { fighterArt, preloadFighterIcons } from '../ui/fighterArt';
 import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
@@ -58,6 +59,8 @@ export class FightScene extends Phaser.Scene {
   private selectedStage = defaultStage;
   private stageView?: StageView;
   private stagePresentation?: StagePresentation;
+  private closeLoadingScreen?: () => void;
+  private victoryArt = new Map<string, HTMLImageElement>();
   private introBlocked = false;
   private knockoutAt?: number;
   private knockoutSlowRemaining = 0;
@@ -244,7 +247,7 @@ export class FightScene extends Phaser.Scene {
     // The champion screen closes a PvP match and the whole Arcade run (a win over the last opponent).
     const champion = snapshot.matchWinnerId === 'player-1' ? this.selectedFighter : snapshot.matchWinnerId === 'player-2' ? this.opponentFighter : undefined;
     const arcadeCleared = this.mode === 'arcade' && snapshot.matchWinnerId === 'player-1' && this.arcadeIndex + 1 >= this.arcadeRun!.opponents.length;
-    if (champion && (this.mode === 'versus' || arcadeCleared)) this.victoryScreen = new VictoryScreen(this.game.canvas, this.selectedStage, champion.id, champion.name);
+    if (champion && (this.mode === 'versus' || arcadeCleared)) this.victoryScreen = new VictoryScreen(this.game.canvas, this.selectedStage, champion.id, champion.name, this.victoryArt.get(champion.id));
     this.resultMenu = document.createElement('nav');
     this.resultMenu.className = 'match-result-menu';
     this.resultMenu.setAttribute('aria-label', t('result.label'));
@@ -257,14 +260,21 @@ export class FightScene extends Phaser.Scene {
 
   preload(): void {
     preloadFighterIcons(this);
-    preloadStage(this, this.selectedStage);
-    preloadCowboySprites(this);
-    preloadShotoSprites(this);
     preloadContactEffects(this);
+    preloadMatchAssets(this, [this.selectedFighter.id, this.opponentFighter.id], this.selectedStage);
+    // The champion screen's full-body art is fetched and decoded with the match, not when it ends.
+    this.victoryArt = new Map(typeof Image === 'undefined' ? [] : [this.selectedFighter.id, this.opponentFighter.id].filter(id => fighterArt[id]).map(id => {
+      const image = new Image(); image.src = fighterArt[id].fullbody; void image.decode().catch(() => undefined); return [id, image];
+    }));
+    // Fighters and stages that the previous match did not use are loaded here, between selection and the fight.
+    if (this.load.list.size) this.closeLoadingScreen = showLoadingScreen();
   }
 
   create(): void {
-    registerCharacterPalette(this);
+    registerCharacterColor(this);
+    // Every texture of the match reaches the GPU before READY, while the loading screen still covers the change.
+    primeMatchTextures(this);
+    this.closeLoadingScreen?.(); this.closeLoadingScreen = undefined;
     const { width, height } = LOGICAL_VIEW;
     const config = createGameConfig(width, height);
     this.resultFloorY = config.arena.floorY;
@@ -461,6 +471,7 @@ export class FightScene extends Phaser.Scene {
   }
 
   private cleanup(): void {
+    this.closeLoadingScreen?.(); this.closeLoadingScreen = undefined; this.victoryArt.clear();
     window.removeEventListener('keydown', this.resultMenuKey, true);
     window.removeEventListener('resize', this.alignResultMenu);
     this.resultMenu?.remove(); this.resultMenu = undefined; this.resultActions = [];

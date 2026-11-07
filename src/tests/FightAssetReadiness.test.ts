@@ -1,11 +1,11 @@
 import { expect, it, vi } from 'vitest';
-vi.mock('phaser',()=>({default:{Scene:class {},Game:vi.fn(),Scale:{FIT:0,CENTER_BOTH:0},Textures:{FilterMode:{LINEAR:0}}}}));
+vi.mock('phaser',()=>({default:{Scene:class {},Game:vi.fn(),Scale:{FIT:0,CENTER_BOTH:0},Textures:{FilterMode:{LINEAR:0}},
+  Loader:{FileTypes:{ImageFile:class {},JSONFile:class {}},MultiFile:class {},FileTypesManager:{register:vi.fn()}}}}));
 const victoryScreens: unknown[][] = [];
 vi.mock('../ui/VictoryScreen', () => ({ VictoryScreen: class { constructor(...args: unknown[]) { victoryScreens.push(args.slice(1)); } destroy(): void {} } }));
 import { BootScene } from '../scenes/BootScene';
 import { FightScene } from '../scenes/FightScene';
 import { stages, stageTextureKey } from '../rendering/stages/stageCatalog';
-import type { MatchMode } from '../scenes/matchSetup';
 import { Simulation, type SimulationSnapshot } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
@@ -149,42 +149,45 @@ it('discards held keys and buffered commands when the intro ends, so only presse
   expect(buffer.clear).toHaveBeenCalledTimes(2);
 });
 
-it('prepares every match resource before releasing the menu; every mode starts with an empty loader queue',()=>{
+it('boots with shared assets only; each match loads its own fighters, stage and titles and releases the others',()=>{
   const textures=new Map<string,object>();
-  const queued=new Set<string>();
-  const load={image:vi.fn((key:string)=>queued.add(key)),atlas:vi.fn((key:string)=>queued.add(key)),spritesheet:vi.fn((key:string)=>queued.add(key)),audio:vi.fn((key:string)=>queued.add(key))};
-  const text={setOrigin:vi.fn()};
+  const queued=new Set<string>(), removed:string[]=[];
+  const queue=(key:string)=>{queued.add(key);};
+  const load={image:vi.fn(queue),packedAtlas:vi.fn(queue),spritesheet:vi.fn(queue),audio:vi.fn(queue),list:{get size(){return queued.size;}}};
   const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
   Object.values(camera).forEach(method=>method.mockReturnValue(camera));
-  const shared={textures:{exists:(key:string)=>textures.has(key)},cache:{audio:{exists:(key:string)=>textures.has(key)}},load};
+  const shared={textures:{exists:(key:string)=>textures.has(key),getTextureKeys:()=>[...textures.keys()],remove:(key:string)=>{textures.delete(key);removed.push(key);}},
+    cache:{audio:{exists:(key:string)=>textures.has(key)}},load};
+  const finishLoading=()=>{for(const key of queued)textures.set(key,{});queued.clear();};
+  const matchKeys=/^(stage:|presentation:|cowboy-|shoto-)/;
   const boot=new BootScene();
-  Object.assign(boot,shared,{cameras:{main:camera},scale:{width:1920,height:1080},add:{text:()=>text},scene:{start:vi.fn()}});
+  Object.assign(boot,shared,{cameras:{main:camera},scale:{width:1920,height:1080},scene:{start:vi.fn()}});
   boot.preload();
-  for(const stage of stages)for(const layer of stage.layers)expect(queued.has(stageTextureKey(stage,layer))).toBe(true);
-  expect(queued.has('menu-solar')).toBe(true);
-  for (const theme of ['saloon','fazenda','sala-treino']) expect(queued.has(`presentation:${theme}:ko`)).toBe(true);
-  expect(queued.has('cowboy-idle')).toBe(true);
-  expect(queued.has('cowboy-idle-special')).toBe(true);
-  expect(queued.has('cowboy-victory')).toBe(true);
-  expect(queued.has('cowboy-defeat')).toBe(true);
-  expect(queued.has('cowboy-effect-shot')).toBe(true);
-  expect(queued.has('sfx-perfect_block_1')).toBe(true);
-  expect(queued.has('shoto-idle')).toBe(true);
+  for (const key of ['menu-solar','sfx-perfect_block_1','contact-hit-light','wall-bounce']) expect(queued.has(key),key).toBe(true);
   for (const fighter of ['shoto','cowboy','grappler','puppet']) expect(queued.has(`fighter-icon-${fighter}`)).toBe(true);
-  expect(load.atlas).toHaveBeenCalled();
-  for(const key of queued)textures.set(key,{});queued.clear();
+  expect([...queued].filter(key=>matchKeys.test(key))).toEqual([]);
+  finishLoading();
   boot.create();
-  const start=(boot as unknown as {scene:{start:ReturnType<typeof vi.fn>}}).scene.start;
-  expect(start).toHaveBeenCalledWith('MenuScene');
-  load.image.mockClear();load.atlas.mockClear();
-  for(const mode of ['training','tutorial','versus','arcade'] as MatchMode[]) {
-    for(const stage of stages) {
-      const fight=new FightScene();Object.assign(fight,shared);
-      fight.init({mode,stageId:stage.id,fighterId:'shoto'});fight.preload();
-      expect([...queued],`${mode}/${stage.id} must not load after character confirmation`).toEqual([]);
-    }
-  }
-  expect(load.image).not.toHaveBeenCalled();expect(load.atlas).not.toHaveBeenCalled();
+  expect((boot as unknown as {scene:{start:ReturnType<typeof vi.fn>}}).scene.start).toHaveBeenCalledWith('MenuScene');
+  const match=(fighterId:string,opponentId:string,stageId:string)=>{
+    const fight=new FightScene();Object.assign(fight,shared);
+    fight.init({mode:'versus',fighterId,opponentId,stageId});fight.preload();
+    const loaded=[...queued];finishLoading();return loaded;
+  };
+  const farm=stages.find(stage=>stage.id==='fazenda')!, saloon=stages.find(stage=>stage.id==='saloon-dia')!;
+  const first=match('shoto','shoto','fazenda');
+  expect(first).toContain('shoto-idle');expect(first.some(key=>key.startsWith('cowboy-'))).toBe(false);
+  for(const layer of farm.layers)expect(first).toContain(stageTextureKey(farm,layer));
+  expect(first).toContain('presentation:fazenda:ko');
+  expect(first.filter(key=>/^(stage|presentation):/.test(key)&&!/^(stage|presentation):fazenda:/.test(key))).toEqual([]);
+  expect(match('shoto','shoto','fazenda'),'a rematch reuses what is loaded').toEqual([]);
+  const second=match('cowboy','shoto','saloon-dia');
+  expect(second).toContain('cowboy-idle');expect(second.some(key=>key.startsWith('shoto-'))).toBe(false);
+  for(const layer of saloon.layers)expect(second).toContain(stageTextureKey(saloon,layer));
+  expect(second).toContain('presentation:saloon:ko');
+  expect(removed.length).toBeGreaterThan(0);
+  expect(removed.every(key=>/^(stage|presentation):fazenda:/.test(key)),'only the farm leaves memory').toBe(true);
+  expect([...textures.keys()].filter(key=>/^(stage|presentation):fazenda:/.test(key))).toEqual([]);
 });
 
 it('starts the preparation scene before exposing any menu or fighter selection',async()=>{
@@ -216,4 +219,23 @@ it.each([
     (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
     expect(victoryScreens.map(([, id, name]) => [id, name])).toEqual(mode === 'arcade' && expected.length ? [['shoto','Bob']] : expected);
   } finally { vi.unstubAllGlobals(); }
+});
+
+it('draws every loaded texture once, through both sprite shaders, and waits for the GPU before READY', async () => {
+  const { primeMatchTextures } = await import('../rendering/matchAssets');
+  const drawn: string[] = [], removed: string[] = [];
+  const target = { beginDraw: vi.fn(), batchDrawFrame: vi.fn((key: string) => { drawn.push(key); }), batchDraw: vi.fn(), endDraw: vi.fn() };
+  const image = { setPipeline: vi.fn(() => image), destroy: vi.fn() };
+  const finish = vi.fn(), addDynamicTexture = vi.fn(() => target);
+  const scene = { game: { renderer: { gl: { finish } } }, make: { image: () => image },
+    textures: { getTextureKeys: () => ['__DEFAULT', 'shoto-idle', 'stage:fazenda:fundo', 'presentation:fazenda:ready', 'contact-hit-light'],
+      addDynamicTexture, remove: (key: string) => { removed.push(key); } } };
+  primeMatchTextures(scene as never);
+  expect(drawn).toEqual(['shoto-idle', 'stage:fazenda:fundo', 'presentation:fazenda:ready', 'contact-hit-light']);
+  expect(image.setPipeline).toHaveBeenCalledWith('character-color', expect.objectContaining({ palette: 1, lit: true }));
+  expect(target.batchDraw).toHaveBeenCalledWith(image, 0, 0);
+  expect(target.endDraw).toHaveBeenCalledOnce();
+  expect(finish).toHaveBeenCalledOnce();
+  expect(removed).toEqual(['__match-prime']);
+  expect(addDynamicTexture).toHaveBeenCalledWith('__match-prime', 3, 3);
 });

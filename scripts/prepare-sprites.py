@@ -9,6 +9,8 @@ adicionado ou trocado em `src/assets/sprites` (plugin em `vite.config.ts`).
    vinhos (a partir de 320°) ficam intactos.
 2. Se uma folha de personagem entrou, mudou ou saiu, `measure-sprites.py` mede tudo de novo; o motor deriva dessas medidas o tamanho
    automático de cada animação (`spriteScale.ts`).
+3. `pack-sprites.py` recorta de novo o layout (`.packed.json`) de toda folha de personagem nova ou alterada, nas duas
+   qualidades; o jogo guarda na memória só a parte desenhada de cada quadro.
 
 Uma mudança na própria limpeza (`key-magenta.py`) faz todos os sprites passarem de novo. Quando a limpeza muda uma
 folha já validada sem que a arte tenha sido trocada, a calibração recebe a mesma proporção que a limpeza mudou na medição
@@ -100,6 +102,7 @@ def main() -> None:
     if measure:
         subprocess.run([sys.executable, str(Path(__file__).with_name('measure-sprites.py'))], check=True)
         keep_validated_sizes(adopted, before)
+    subprocess.run([sys.executable, str(Path(__file__).with_name('pack-sprites.py'))], check=True)
     print(f'Sprites preparados: {len(pending)} novos ou alterados de {len(sheets)}.')
 
 

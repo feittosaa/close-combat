@@ -9,9 +9,9 @@ import shotoCalibration from '../../assets/sprites/characters/shoto/calibration.
 import shotoMeasurements from '../../assets/sprites/characters/shoto/measurements.json';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/shoto/*.png', { eager: true, query: '?url', import: 'default' });
-const atlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/shoto/*.atlas.json', { eager: true, import: 'default' });
+const layouts = import.meta.glob<string>('../../assets/sprites/characters/shoto/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
 const highImages = import.meta.glob<string>('../../assets/sprites/characters/shoto/high/*.png', { eager: true, query: '?url', import: 'default' });
-const highAtlases = import.meta.glob<Record<string, unknown>>('../../assets/sprites/characters/shoto/high/*.atlas.json', { eager: true, import: 'default' });
+const highLayouts = import.meta.glob<string>('../../assets/sprites/characters/shoto/high/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
 const quality = loadGraphicsQuality();
 export const shotoIdleTexture = 'shoto-idle';
 export const shotoSpriteScale = 182 / 512;
@@ -23,7 +23,7 @@ export const shotoIdleScale = 182 / 640 * 1.01 * 1.01;
 export function getShotoResolution(texture: string): number {
   const name = texture.replace(/^shoto-/, '');
   const base = `../../assets/sprites/characters/shoto/high/${name}`;
-  return quality === 'high' && highImages[`${base}.png`] && highAtlases[`${base}.atlas.json`] ? 2 : 1;
+  return quality === 'high' && highImages[`${base}.png`] && highLayouts[`${base}.packed.json`] ? 2 : 1;
 }
 
 export function preloadShotoSprites(scene: Phaser.Scene): void {
@@ -32,8 +32,8 @@ export function preloadShotoSprites(scene: Phaser.Scene): void {
     const key = `shoto-${name}`;
     const highBase = `../../assets/sprites/characters/shoto/high/${name}`;
     const useHigh = getShotoResolution(key) === 2;
-    const atlas = useHigh ? highAtlases[`${highBase}.atlas.json`] : atlases[path.replace(/\.png$/, '.atlas.json')];
-    if (atlas && !scene.textures.exists(key)) scene.load.atlas(key, useHigh ? highImages[`${highBase}.png`] : image, atlas);
+    const layout = useHigh ? highLayouts[`${highBase}.packed.json`] : layouts[path.replace(/\.png$/, '.packed.json')];
+    if (layout && !scene.textures.exists(key)) scene.load.packedAtlas(key, useHigh ? highImages[`${highBase}.png`] : image, layout);
   }
 }
 
