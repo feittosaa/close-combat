@@ -21,7 +21,7 @@ it('keeps the available wallpaper on the loading screen and removes it afterward
   try {
     const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
     Object.values(camera).forEach(method=>method.mockReturnValue(camera));
-    const load={image:vi.fn(),atlas:vi.fn(),spritesheet:vi.fn(),audio:vi.fn()};
+    const load={image:vi.fn(),atlas:vi.fn(),spritesheet:vi.fn(),once:vi.fn(),audio:vi.fn()};
     const boot=new BootScene();
     Object.assign(boot,{cameras:{main:camera},scale:{width:1920,height:1080},load,
       textures:{exists:()=>false},cache:{audio:{exists:()=>false}},scene:{start:vi.fn()}});
@@ -153,7 +153,7 @@ it('boots with shared assets only; each match loads its own fighters, stage and 
   const textures=new Map<string,object>();
   const queued=new Set<string>(), removed:string[]=[];
   const queue=(key:string)=>{queued.add(key);};
-  const load={image:vi.fn(queue),packedAtlas:vi.fn(queue),spritesheet:vi.fn(queue),audio:vi.fn(queue),list:{get size(){return queued.size;}}};
+  const load={image:vi.fn(queue),packedAtlas:vi.fn(queue),spritesheet:vi.fn(queue),once:vi.fn(),audio:vi.fn(queue),list:{get size(){return queued.size;}}};
   const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
   Object.values(camera).forEach(method=>method.mockReturnValue(camera));
   const shared={textures:{exists:(key:string)=>textures.has(key),getTextureKeys:()=>[...textures.keys()],remove:(key:string)=>{textures.delete(key);removed.push(key);}},

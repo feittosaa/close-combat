@@ -7,7 +7,7 @@ import type { HitEvent } from '../engine/combat/AttackResolver';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import type { ProjectileState } from '../engine/combat/ProjectileState';
 import { getTimedAnimationFrame, type AnimationClip } from './animations/AnimationPlayback';
-import { contactEffectKey } from './contactEffects';
+import { contactEffectKey, contactFrameGrowth } from './contactEffects';
 import { CharacterColorEffect } from './characterColor';
 
 const effectClips: Readonly<Record<string, AnimationClip>> = {
@@ -132,8 +132,9 @@ export class ProjectileView {
       const isBlock = contact.outcome === 'block' && !contact.perfectBlock;
       const bodyY = contact.contactBody?.centerY ?? box.y + box.height / 2;
       const bodyHeight = contact.contactBody?.height ?? box.height;
+      const growth = contactFrameGrowth(key);
       const sprite = this.scene.add.image(x, isBlock ? bodyY : y, key, 0).setDepth(12)
-        .setDisplaySize(isBlock ? 84 : 66, isBlock ? bodyHeight * 1.2 : 66)
+        .setDisplaySize((isBlock ? 84 : 66) * growth.x, (isBlock ? bodyHeight * 1.2 : 66) * growth.y)
         .setFlipX((contact.pushbackDirection ?? attacker.facing) === 'left');
       if (purpleContact) this.colorEffect.apply(sprite, { alternate: true }, purpleBlock && contact.perfectBlock ? 'magic-highlight' : 'magic');
       this.impacts.push({ sprite, started: frame });

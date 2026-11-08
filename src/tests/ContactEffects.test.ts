@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { contactEffectKey, preloadContactEffects } from '../rendering/contactEffects';
+import { applyContactFrames, contactEffectKey, contactFrameCut, contactFrameGrowth, frameSizeAdjustments, preloadContactEffects } from '../rendering/contactEffects';
 import { ProjectileView } from '../rendering/ProjectileView';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
@@ -25,8 +25,9 @@ it.each(['hit','block'] as const)('selects separate images for %s variants', out
 });
 
 it('preloads every image as a six-frame sheet', () => {
-  const spritesheet = vi.fn(), image = vi.fn();
-  preloadContactEffects({textures:{exists:()=>false},load:{spritesheet,image}} as never);
+  const spritesheet = vi.fn(), image = vi.fn(), once = vi.fn();
+  preloadContactEffects({textures:{exists:()=>false},load:{spritesheet,image,once}} as never);
+  expect(once).toHaveBeenCalledWith('filecomplete-spritesheet-contact-hit-blue', expect.any(Function));
   expect(image).toHaveBeenCalledWith('wall-bounce', expect.any(String));
   expect(spritesheet).toHaveBeenCalledTimes(11);
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-light',expect.any(String),{frameWidth:362,frameHeight:724});
@@ -119,4 +120,36 @@ it('colors blocked projectiles by attacker while retaining perfect-block feedbac
   expect(dynamite.pipeline.palette).toBe(3);
   expect(hit.pipeline.palette).toBe(3);
   view.destroy();
+});
+
+it('recorta cada desenho inteiro, sem invadir o vizinho, na posição que ele tem na folha', () => {
+  for (const key of ['contact-hit-blue', 'contact-hit-sweep', 'contact-hit-light', 'contact-block-wine']) {
+    const frames = [0, 1, 2, 3, 4, 5].map(frame => contactFrameCut(key, frame));
+    frames.forEach((cut, index) => {
+      expect(cut.x).toBeGreaterThanOrEqual(index ? frames[index - 1].x + frames[index - 1].width : 0);
+      expect(cut.x + cut.width).toBeLessThanOrEqual(6 * 362);
+      expect(cut.left).toBe(cut.x - index * 362);
+    });
+  }
+  expect(contactFrameCut('contact-hit-heavy', 2)).toEqual({ x: 928, y: 0, width: 464, height: 724, left: 0, top: 0 });
+});
+
+it('aplica os cortes nos quadros carregados mantendo o tamanho do quadro', () => {
+  const frames = [0, 1, 2, 3, 4, 5].map(() => { const frame = { setSize: vi.fn(), setTrim: vi.fn() }; frame.setSize.mockReturnValue(frame); return frame; });
+  const texture = { has: (name: string) => Number(name) < 6, get: (index: number) => frames[index] };
+  applyContactFrames({ exists: () => true, get: () => texture } as never, 'contact-hit-blue');
+  const cut = contactFrameCut('contact-hit-blue', 2);
+  expect(frames[2].setSize).toHaveBeenCalledWith(cut.width, cut.height, cut.x, cut.y);
+  expect(frames[2].setTrim).toHaveBeenCalledWith(362, 724, cut.left, cut.top, cut.width, cut.height);
+});
+
+it('aumenta o quadro em volta do centro sem mudar o desenho no jogo', () => {
+  const frame = { setSize: vi.fn(), setTrim: vi.fn() }; frame.setSize.mockReturnValue(frame);
+  frameSizeAdjustments.set('contact-hit-blue', { width: 462, height: 824 });
+  try {
+    applyContactFrames({ exists: () => true, get: () => ({ has: (name: string) => name === '0', get: () => frame }) } as never, 'contact-hit-blue');
+    const cut = contactFrameCut('contact-hit-blue', 0);
+    expect(frame.setTrim).toHaveBeenCalledWith(462, 824, cut.left + 50, cut.top + 50, cut.width, cut.height);
+    expect(contactFrameGrowth('contact-hit-blue')).toEqual({ x: 462 / 362, y: 824 / 724 });
+  } finally { frameSizeAdjustments.clear(); }
 });

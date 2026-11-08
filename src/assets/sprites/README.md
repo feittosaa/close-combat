@@ -1,6 +1,6 @@
 # Sprites
 
-Organizar fontes ativas e atlas por personagem, efeito ou interface. Exportar enquadramento fixo, alpha verdadeiro e margens suficientes para a ação completa. Dados de células, pivôs, orientação e reprodução ficam nos manifestos.
+Organizar fontes ativas e atlas por personagem, efeito ou interface. Exportar enquadramento fixo, alpha verdadeiro e margens suficientes para a ação completa. Dados de células, pivôs, orientação e reprodução ficam nos manifestos. Nas folhas de efeito de contato, um desenho que atravessa a grade ganha corte próprio em `effects/contact/frames.json` (retângulo na folha e posição dentro do quadro de tamanho fixo), sem editar a imagem; a aba Sprites do modo desenvolvedor ajusta e salva esses cortes.
 
 Não manter variantes substituídas ou arte rejeitada no checkout. O histórico Git preserva essas versões. Aprovação e detalhes individuais ficam na pipeline.
 
