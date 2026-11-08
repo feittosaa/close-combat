@@ -623,7 +623,7 @@ describe('Cowboy protótipo', () => {
   it('tem quatro básicos por postura aérea e no chão e apenas as receitas autoradas', () => {
     expect(cowboy.moves.filter(move => move.category === 'basic' && !move.airborne)).toHaveLength(4);
     expect(cowboy.moves.filter(move => move.category === 'basic' && move.airborne)).toHaveLength(4);
-    expect(cowboy.combos?.map(combo => combo.notation)).toEqual(['d+2,2', '4,4,2', '3,3,3', '1,2,2,2', 'd+1,1,1', 'no ar + 1,1,2', 'no ar + 2,2']);
+    expect(cowboy.combos?.map(combo => combo.notation)).toEqual(['d+2,2', '4,4,2', '3,3,3', '1,2,2,2', 'd+1,1,1', 'no ar + 1,1,2', 'no ar + 2,2', '3,1,4,2,1+2']);
   });
   it.each([0, 1])('executa os disparos e o afastamento do lado %i', player => {
     for (const [button, id, distance] of [['1', 'quick-shot', 65], ['2', 'heavy-shot', 65], ['4', 'push-away', 56]] as const) {
@@ -705,7 +705,7 @@ it('usa proporção de altura de 1,60 m para 1,85 m e chutes curtos', () => {
 });
 
 it.each([0, 1])('tiros especiais têm dano alto e alcance curto: jogador %i', player => {
-  for (const [button, id, damage] of [['1', 'quick-shot', 120], ['2', 'heavy-shot', 140]] as const) {
+  for (const [button, id, damage] of [['1', 'quick-shot', 65], ['2', 'heavy-shot', 80]] as const) {
     for (const [distance, defense, expected] of [[65, 'N', 'hit'], [65, 'B', 'block'], [300, 'N', 'miss'], [65, 'D', 'miss']] as const) {
       const definitions = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
       const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: distance });
@@ -724,7 +724,7 @@ it.each([0, 1])('tiros especiais têm dano alto e alcance curto: jogador %i', pl
 });
 
 it.each([0, 1])('permite segurar os especiais e soltar para disparar: jogador %i', player => {
-  for (const [button,id,damage] of [['1','quick-shot',120],['2','heavy-shot',140]] as const) {
+  for (const [button,id,damage] of [['1','quick-shot',65],['2','heavy-shot',80]] as const) {
     const defs = player === 0 ? [cowboy,shoto] as const : [shoto,cowboy] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
@@ -891,6 +891,23 @@ it.each([0, 1])('permite o chute forte após os três chutes confirmados: jogado
   }
   step(input('N','4'));
   expect(sim.snapshot().characters[player].attack?.moveId).toBe('heavy-kick');
+});
+
+it.each([0, 1])('depois de 3,3,3 o próximo golpe do combo não pode ser outro 3, mesmo com receita que começa com 3: jogador %i', player => {
+  const texas = { ...cowboy, combos: [...cowboy.combos!, { id: 'dev-3-4', name: 'Teste', notation: '3,4', moveIds: ['light-kick', 'heavy-kick'] }] };
+  const run = (next: '3' | '1') => {
+    const sim = new Simulation(createGameConfig(1024,576), [texas,texas], {training:true,initialDistance:65});
+    const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
+    for (const button of ['3','3','3'] as const) {
+      step(input('N',button));
+      for (let tick=0;tick<80 && !sim.snapshot().hitEvents.length;tick++) step();
+      while (sim.snapshot().hitstopFramesRemaining) step();
+    }
+    step(input('N',next)); step();
+    return sim.snapshot().characters[player].attack;
+  };
+  expect(run('3')?.elapsedFrames).toBeGreaterThan(5);
+  expect(run('1')?.moveId).toBe('light-punch');
 });
 
 it.each([0, 1])('cada golpe baixo reinicia a reação de dano da Cowboy: jogador %i', player => {

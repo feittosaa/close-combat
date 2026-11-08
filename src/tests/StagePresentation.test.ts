@@ -40,6 +40,8 @@ it.each(['saloon', 'fazenda', 'sala-treino'])('uses the %s presentations for int
   const readyBounds = presentationBounds[`${theme}:ready`];
   expect(title.setDisplaySize.mock.lastCall![1] * (readyBounds[3] - readyBounds[1])).toBeCloseTo(144);
   presentation.update(snapshot, 1000, 1024);
+  expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:ready`);
+  presentation.update(snapshot, 1000, 1024);
   expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:fight`);
   presentation.update(snapshot, 400, 1024); presentation.update(snapshot, 16, 1024);
   snapshot.phase = 'round-over'; snapshot.roundWinnerId = snapshot.characters[0].characterId; snapshot.roundEndedFrame = 1; snapshot.frame = 20;
@@ -116,7 +118,7 @@ it('shows the final result at full opacity over a 20% dimmer before the victory 
   presentation.destroy();
 });
 
-it('shows ready for one second, then enables fight on the next round', () => {
+it('holds ready longer in the first round and for one second in the next, then enables fight', () => {
   const object = () => {
     const value = {width:1000,height:400,setName:vi.fn(),setOrigin:vi.fn(),setScrollFactor:vi.fn(),setDepth:vi.fn(),setVisible:vi.fn(),
       setTexture:vi.fn(),setPosition:vi.fn(),setDisplaySize:vi.fn(),setAlpha:vi.fn(),setSize:vi.fn(),destroy:vi.fn()};
@@ -167,4 +169,22 @@ it.each(['saloon', 'fazenda', 'sala-treino'])('follows real timeout results thro
   }
   expect(simulation.snapshot()).toMatchObject({ phase: 'match-over', matchWinnerId: 'player-1' });
   presentation.destroy();
+});
+
+it('practice modes start without READY/FIGHT, and the training room keeps them in PvP', () => {
+  const object = () => {
+    const value = {width:1000,height:400,setName:vi.fn(),setOrigin:vi.fn(),setScrollFactor:vi.fn(),setDepth:vi.fn(),setVisible:vi.fn(),
+      setTexture:vi.fn(),setPosition:vi.fn(),setDisplaySize:vi.fn(),setAlpha:vi.fn(),setSize:vi.fn(),destroy:vi.fn()};
+    Object.values(value).forEach(method => { if (typeof method === 'function') method.mockReturnValue(value); });
+    return value;
+  };
+  const scene = () => ({add:{image:object,rectangle:object},cameras:{add:()=>({setViewport:vi.fn(),ignore:vi.fn()}),remove:vi.fn()},
+    scale:{width:1920,height:1080},children:{list:[]}});
+  const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
+  const practice = new StagePresentation(scene() as never, 'sala-treino', 2, false);
+  expect(practice.update(snapshot, 16, 1024)).toBe(false);
+  expect(practice.moveOnly).toBe(false);
+  const versus = new StagePresentation(scene() as never, 'sala-treino', 2);
+  expect(versus.update(snapshot, 16, 1024)).toBe(true);
+  practice.destroy(); versus.destroy();
 });

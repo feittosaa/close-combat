@@ -5,16 +5,19 @@ import { stages } from '../rendering/stages/stageCatalog';
 import { autoSpriteScale, type SheetMeasurements, type SpriteCalibration } from '../rendering/animations/spriteScale';
 import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize } from '../rendering/animations/cowboySprites';
 import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shotoSpriteScale } from '../rendering/animations/shotoSprites';
-import { fighterArt } from '../ui/fighterArt';
+import { fighterArt, frameStyle, heroFrame, tileFrame, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { VictoryScreen } from '../ui/VictoryScreen';
+import { applyContactFrames, contactFrameCut, contactFrameMargin, contactFrameSize, isContactSheet, type FrameCut } from '../rendering/contactEffects';
 import { gameImages, replaceImage, replacedImages, restoreImage } from './assetOverrides';
-import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, type MoveTuning } from './devOverrides';
+import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, type DevOverrides, type MoveTuning, type RecipeTuning, type SelectionTuning } from './devOverrides';
 import { IMAGE_SECTIONS, imageFolder, textureFolder } from './imageCatalog';
 import { devTuning } from './devTools';
 import './developer.css';
 
-const TABS = [['endings', 'Finais'], ['sprites', 'Sprites'], ['moves', 'Golpes'], ['combos', 'Combos'], ['colors', 'Cores'], ['images', 'Imagens']] as const;
+const TABS = [['endings', 'Finais'], ['sprites', 'Sprites'], ['moves', 'Golpes'], ['combos', 'Combos'], ['colors', 'Cores'], ['selection', 'Seleção'], ['images', 'Imagens']] as const;
+/** Areas of the panel that scroll, kept in place when an edit re-renders the same tab. */
+const SCROLLED = '.developer-page, .developer-list, .developer-viewer, .developer-scroll';
 type Tab = typeof TABS[number][0];
 const FIELD_LABELS: Record<keyof MoveTuning, string> = {
   startup: 'Preparação', activeFrames: 'Ativo', recovery: 'Recuperação', damage: 'Dano', hitstun: 'Hitstun', blockstun: 'Blockstun',
@@ -67,9 +70,12 @@ export class DeveloperPanel {
   private spritePlaying = true;
   private spriteFlip = false;
   private spriteTimer?: number;
+  private renderedTab?: Tab;
+  private artId = Object.keys(fighterArt)[0];
   private imageFilter = '';
   private imagePath: string[] = [];
-  private comboSteps: string[] = [];
+  /** Recipe whose card shows the edit form. */
+  private comboEditing?: string;
   private preview?: VictoryScreen;
   private readonly previousFocus = document.activeElement as HTMLElement | null;
   private readonly onKey = (event: KeyboardEvent): void => {
@@ -102,16 +108,20 @@ export class DeveloperPanel {
     const header = el('header', 'developer-header'); header.append(el('h1', '', 'Modo desenvolvedor'), tabs);
     const page = el('div', 'developer-page');
     ({ endings: () => this.endings(page), sprites: () => this.sprites(page), moves: () => this.moves(page),
-      combos: () => this.combos(page), colors: () => this.colors(page), images: () => this.images(page) })[this.tab]();
+      combos: () => this.combos(page), colors: () => this.colors(page), selection: () => this.selection(page), images: () => this.images(page) })[this.tab]();
     const footer = el('footer', 'developer-footer');
     footer.append(button('Exportar ajustes (JSON)', () => this.export()), button('Fechar', () => this.destroy()));
     panel.append(header, page, this.status, footer);
-    this.root.replaceChildren(panel);
-    this.root.querySelector<HTMLElement>('[aria-selected="true"]')?.focus();
+    // Re-rendering after an edit keeps every scrolled area where it was; a new tab starts at the top.
+    const scrolled = (root: ParentNode) => [...root.querySelectorAll<HTMLElement>(SCROLLED)];
+    const positions = this.tab === this.renderedTab ? scrolled(this.root).map(node => [node.scrollTop, node.scrollLeft]) : [];
+    this.root.replaceChildren(panel); this.renderedTab = this.tab;
+    scrolled(panel).forEach((node, index) => { if (positions[index]) [node.scrollTop, node.scrollLeft] = positions[index]; });
+    this.root.querySelector<HTMLElement>('[aria-selected="true"]')?.focus({ preventScroll: true });
   }
 
   private fighterPicker(page: HTMLElement): void {
-    page.append(choice('Personagem', characters.map(fighter => [fighter.id, fighter.name]), this.fighterId, id => { this.fighterId = id; this.comboSteps = []; this.render(); }));
+    page.append(choice('Personagem', characters.map(fighter => [fighter.id, fighter.name]), this.fighterId, id => { this.fighterId = id; this.comboEditing = undefined; this.render(); }));
   }
   private get fighter(): CharacterDefinition { return characters.find(fighter => fighter.id === this.fighterId) ?? characters[0]; }
 
@@ -189,10 +199,11 @@ export class DeveloperPanel {
       entry.setAttribute('aria-pressed', String(texture.id === this.spriteKey)); list.append(entry);
     }
     const viewer = el('div', 'developer-viewer');
-    const canvas = el('canvas'); canvas.width = 360; canvas.height = 360;
+    const canvas = el('canvas', 'developer-preview'); canvas.width = 360; canvas.height = 360;
     const info = el('p', 'developer-hint');
     const frames = this.spriteKey ? this.frameNames(this.spriteKey) : [];
     const sheet = this.spriteKey ? this.characterSheet(this.spriteKey) : undefined;
+    const cuts = this.spriteKey && isContactSheet(this.spriteKey) ? this.frameCutControls(this.spriteKey, () => draw()) : undefined;
     const draw = () => {
       const context = canvas.getContext('2d');
       if (!context || !this.spriteKey || !frames.length) { info.textContent = 'Nenhuma textura.'; return; }
@@ -201,8 +212,19 @@ export class DeveloperPanel {
       context.clearRect(0, 0, canvas.width, canvas.height);
       const label = `${this.spriteKey} · quadro ${frames[this.spriteFrame]} (${this.spriteFrame + 1}/${frames.length}) · ${frame.realWidth}×${frame.realHeight}`;
       if (!sheet) {
-        const scale = Math.min(canvas.width / frame.realWidth, canvas.height / frame.realHeight);
-        this.drawFrame(context, frame, frame.realHeight * scale, (canvas.height + frame.realHeight * scale) / 2, 1);
+        // Recut sheets show their fixed frame as an outline, so a drawing that overflows it stands out.
+        const scale = Math.min(canvas.width / frame.realWidth, canvas.height / frame.realHeight) * (cuts ? .7 : 1);
+        const top = (canvas.height - frame.realHeight * scale) / 2;
+        this.drawFrame(context, frame, frame.realHeight * scale, top + frame.realHeight * scale, 1);
+        if (cuts) {
+          context.strokeStyle = '#efe4cc88'; context.setLineDash([6, 4]);
+          const left = (canvas.width - frame.realWidth * scale) / 2;
+          context.strokeRect(left, top, frame.realWidth * scale, frame.realHeight * scale);
+          // The cut, outlined as in the sheet overview, where it sits inside the frame.
+          context.setLineDash([]); context.strokeStyle = '#e23a1c'; context.lineWidth = 2;
+          context.strokeRect(left + frame.x * scale, top + frame.y * scale, frame.cutWidth * scale, frame.cutHeight * scale);
+          context.lineWidth = 1; cuts.show(this.spriteFrame);
+        }
         info.textContent = label; return;
       }
       // Game proportions: the idle's first drawing at its automatic size as a faint outline behind, on the same feet line.
@@ -223,7 +245,10 @@ export class DeveloperPanel {
     controls.append(button('◀ Quadro', () => step(-1)), play, button('Quadro ▶', () => step(1)), labelled('Quadros/s', fps), flip);
     viewer.append(canvas, info, controls);
     if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment));
-    viewer.append(this.spriteSave(), this.spriteReset());
+    const actions = el('div', 'developer-row');
+    if (cuts) { viewer.append(cuts.element); actions.append(this.saveToCode('cortes', ['frameCuts', 'frameSizes'], '/__dev/overrides')); }
+    if (sheet) actions.append(this.saveToCode('tamanhos', ['spriteScales'], '/__dev/sprite-scales'));
+    viewer.append(actions); actions.append(this.spriteReset());
     const layout = el('div', 'developer-split'); layout.append(list, viewer);
     page.append(layout);
     draw();
@@ -241,6 +266,75 @@ export class DeveloperPanel {
       adjustment: devTuning.overrides.spriteScales[`${fighter}:${name}`] ?? 1,
       scale: (sheet: string, frame: number) => autoSpriteScale(definition, sizing.measurements, sheet, frame, sizing.calibration),
     };
+  }
+  /**
+   * Cut of the shown frame in the sheet and its place inside the fixed frame, beside the whole sheet with the cut
+   * outlined. Editing pauses on that frame and applies at once in the game; `redraw` repaints the preview while dragging.
+   */
+  private frameCutControls(key: string, redraw: () => void): { element: HTMLElement; show: (frame: number) => void } {
+    const image = this.scene.textures.get(key).getSourceImage() as HTMLImageElement;
+    const overview = el('canvas'); overview.width = 360; overview.height = Math.round(360 * image.height / image.width);
+    const fields = [['x', 'Corte X'], ['y', 'Corte Y'], ['width', 'Largura'], ['height', 'Altura'], ['left', 'Posição X'], ['top', 'Posição Y']] as const;
+    const inputs = fields.map(([field]) => {
+      const editor = input('number', ''); editor.step = '1';
+      editor.onchange = () => {
+        if (editor.value === '') return;
+        this.spritePlaying = false;
+        // Positions are typed against the dashed frame but kept against the grid frame, so resizing the frame moves no drawing.
+        const value = Math.round(Number(editor.value)) - (field === 'left' ? margin.x : field === 'top' ? margin.y : 0);
+        devTuning.setFrameCut(key, this.spriteFrame, { ...contactFrameCut(key, this.spriteFrame), [field]: value });
+        applyContactFrames(this.scene.textures, key); this.changed(); this.render();
+      };
+      return editor;
+    });
+    const margin = contactFrameMargin(key), size = contactFrameSize(key);
+    const row = el('div', 'developer-row');
+    const restore = button('Restaurar quadro', () => {
+      devTuning.setFrameCut(key, this.spriteFrame, undefined); applyContactFrames(this.scene.textures, key); this.changed(); this.render();
+    });
+    row.append(...fields.map(([, label], index) => labelled(label, inputs[index])), restore,
+      el('p', 'developer-hint', 'Corte: retângulo vermelho na folha; arraste as bordas para redimensioná-lo sem mover o desenho, ou o interior para deslocá-lo. Posição: canto do corte dentro do quadro tracejado.'));
+    // The dashed frame is the same for the whole sheet; it grows around its center and the game compensates its scale.
+    const resize = (dimension: 'width' | 'height') => number(size[dimension], value => {
+      const next = { ...size, [dimension]: Math.max(1, Math.round(value ?? 0)) };
+      devTuning.setFrameSize(key, value ? next : undefined); applyContactFrames(this.scene.textures, key); this.changed(); this.render();
+    });
+    const sizeRow = el('div', 'developer-row'); sizeRow.classList.toggle('developer-changed', Boolean(devTuning.overrides.frameSizes[key]));
+    sizeRow.append(labelled('Largura do quadro', resize('width')), labelled('Altura do quadro', resize('height')),
+      button('Restaurar tamanho do quadro', () => { devTuning.setFrameSize(key, undefined); applyContactFrames(this.scene.textures, key); this.changed(); this.render(); }),
+      el('p', 'developer-hint', 'Quadro tracejado da folha inteira: cresce a partir do centro para envolver os desenhos, sem mudar o tamanho do efeito no jogo.'));
+    // Dragging an edge of the outline resizes the cut and keeps the drawing in place; dragging inside moves the cut.
+    overview.onpointerdown = down => {
+      const start = contactFrameCut(key, this.spriteFrame), box = overview.getBoundingClientRect(), scale = box.width / image.width;
+      const at = (event: PointerEvent) => ({ x: (event.clientX - box.left) / scale, y: (event.clientY - box.top) / scale });
+      const origin = at(down), near = (value: number, edge: number) => Math.abs(value - edge) * scale <= 6;
+      const within = (value: number, from: number, size: number) => value > from - 6 / scale && value < from + size + 6 / scale;
+      if (!within(origin.x, start.x, start.width) || !within(origin.y, start.y, start.height)) return;
+      const edges = { left: near(origin.x, start.x), right: near(origin.x, start.x + start.width), top: near(origin.y, start.y), bottom: near(origin.y, start.y + start.height) };
+      const move = !Object.values(edges).some(Boolean);
+      window.clearInterval(this.spriteTimer); this.spritePlaying = false; overview.setPointerCapture(down.pointerId);
+      overview.onpointermove = event => {
+        const point = at(event), dx = Math.round(point.x - origin.x), dy = Math.round(point.y - origin.y), cut = { ...start };
+        if (move) { cut.x += dx; cut.y += dy; }
+        if (edges.left) { const d = Math.min(dx, start.width - 1); cut.x += d; cut.width -= d; cut.left += d; }
+        if (edges.top) { const d = Math.min(dy, start.height - 1); cut.y += d; cut.height -= d; cut.top += d; }
+        if (edges.right) cut.width = Math.max(1, start.width + dx);
+        if (edges.bottom) cut.height = Math.max(1, start.height + dy);
+        devTuning.setFrameCut(key, this.spriteFrame, cut); applyContactFrames(this.scene.textures, key); redraw();
+      };
+      overview.onpointerup = () => { overview.onpointermove = overview.onpointerup = null; this.changed(); this.render(); };
+    };
+    const element = el('div', 'developer-cuts'); element.append(overview, row, sizeRow);
+    const show = (frame: number) => {
+      const cut: FrameCut = contactFrameCut(key, frame), scale = overview.width / image.width, context = overview.getContext('2d');
+      const shown = { ...cut, left: cut.left + margin.x, top: cut.top + margin.y };
+      fields.forEach(([field], index) => { if (document.activeElement !== inputs[index]) inputs[index].value = String(shown[field]); });
+      row.classList.toggle('developer-changed', Boolean(devTuning.overrides.frameCuts[key]?.[frame]));
+      if (!context) return;
+      context.clearRect(0, 0, overview.width, overview.height); context.drawImage(image, 0, 0, overview.width, overview.height);
+      context.strokeStyle = '#e23a1c'; context.lineWidth = 2; context.strokeRect(cut.x * scale, cut.y * scale, cut.width * scale, cut.height * scale);
+    };
+    return { element, show };
   }
   /** Animation size over the automatic (or validated) scale; it applies at once in the game. */
   private sizeControls(fighter: string, name: string, adjustment: number): HTMLElement {
@@ -262,29 +356,53 @@ export class DeveloperPanel {
     return confirmRow('Resetar tamanhos e quadros/s', 'Sim, resetar',
       () => `Tem certeza? Isso remove ${Object.keys(devTuning.overrides.spriteScales).length} ajuste(s) de tamanho de animação e volta para ${SPRITE_FPS} quadros/s.`,
       () => {
-        devTuning.resetSpriteScales(); this.spriteFps = SPRITE_FPS; this.changed();
+        devTuning.assign({ spriteScales: {} }); this.spriteFps = SPRITE_FPS; this.changed();
         this.status.textContent = 'Ajustes de tamanho e quadros/s restaurados.'; this.render();
       });
   }
   /**
-   * Writes the animation size adjustments into each fighter's `calibration.json` through the development server.
-   * They are cleared first: the new calibration already holds them and reloads the game, and they come back on failure.
+   * Asks, then writes the given tuning sections into the sources through the development server. They are cleared
+   * first: the sources already hold them once saved and reload the game, and they come back if saving fails.
    */
-  private spriteSave(): HTMLElement {
-    return confirmRow('Salvar tamanhos no código', 'Salvar e aplicar',
-      () => `Gravar ${Object.keys(devTuning.overrides.spriteScales).length} ajuste(s) de tamanho no calibration.json dos personagens? O jogo recarrega com os novos tamanhos.`,
-      () => void this.saveSpriteScales());
+  private saveToCode(what: string, sections: readonly (keyof DevOverrides)[], endpoint: string): HTMLElement {
+    const count = () => sections.reduce((total, section) => total + Object.values(devTuning.overrides[section]).reduce<number>(
+      (sum, value) => sum + (typeof value === 'object' ? Object.keys(value).length : 1), 0), 0);
+    return confirmRow(`Salvar ${what} no código`, 'Salvar e aplicar',
+      () => `Gravar ${count()} ajuste(s) de ${what} nos arquivos do jogo? O jogo recarrega com os novos valores.`,
+      () => void this.save(what, sections, endpoint, count()));
   }
-  private async saveSpriteScales(): Promise<void> {
-    const spriteScales = { ...devTuning.overrides.spriteScales };
-    if (!Object.keys(spriteScales).length) { this.status.textContent = 'Nenhum ajuste de tamanho para salvar.'; return; }
-    this.status.textContent = 'Salvando tamanhos…';
-    devTuning.resetSpriteScales();
-    const response = await fetch('/__dev/sprite-scales', { method: 'POST', body: JSON.stringify({ spriteScales }) }).catch(() => undefined);
-    if (response?.ok) { this.status.textContent = 'Tamanhos gravados no calibration.json.'; this.changed(); this.render(); return; }
-    for (const [key, scale] of Object.entries(spriteScales)) devTuning.setSpriteScale(key, scale);
-    this.status.textContent = `Falha ao salvar; ajustes mantidos. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
+  private async save(what: string, sections: readonly (keyof DevOverrides)[], endpoint: string, count: number): Promise<void> {
+    if (!count) { this.status.textContent = `Nenhum ajuste de ${what} para salvar.`; return; }
+    const saved = Object.fromEntries(sections.map(section => [section, structuredClone(devTuning.overrides[section])])) as Partial<DevOverrides>;
+    this.status.textContent = `Salvando ${what}…`;
+    devTuning.assign(Object.fromEntries(sections.map(section => [section, {}])));
+    const response = await post(endpoint, JSON.stringify(saved));
+    if (response === 'reloading') return;
+    if (!response?.ok) devTuning.assign(saved);
+    this.status.textContent = response?.ok ? `Ajustes de ${what} gravados no código.` :
+      `Falha ao salvar; ajustes mantidos. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
     this.changed(); this.render();
+  }
+  /** Writes every replaced image over its source file, then drops the replacement the file now holds. */
+  private saveImages(): HTMLElement {
+    return confirmRow('Salvar imagens no código', 'Salvar e aplicar',
+      () => `Gravar ${replacedImages().size} imagem(ns) substituída(s) sobre os arquivos originais do jogo?`,
+      () => void this.writeImages());
+  }
+  private async writeImages(): Promise<void> {
+    const failures: string[] = [];
+    for (const [url, replacement] of replacedImages()) {
+      const path = gameImages[url], file = await (await fetch(replacement)).blob();
+      const extension = path.split('.').pop()!.replace('jpg', 'jpeg');
+      if (file.type !== `image/${extension}`) { failures.push(`${path}: o arquivo novo é ${file.type || 'de tipo desconhecido'}, não ${extension}`); continue; }
+      // The replacement leaves before writing, like the other saves, and comes back if the write fails.
+      await restoreImage(url);
+      const response = await post(`/__dev/image?path=${encodeURIComponent(path)}`, file);
+      if (response === 'reloading') return;
+      if (!response?.ok) { await replaceImage(url, file); failures.push(`${path}: ${await response?.text() ?? 'servidor de desenvolvimento indisponível'}`); }
+    }
+    this.status.textContent = failures.length ? `Não gravadas: ${failures.join('; ')}.` : 'Imagens gravadas no código.';
+    this.render();
   }
   private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1): void {
     const scale = box / frame.realHeight, center = context.canvas.width / 2, top = feet - footAnchor * box;
@@ -322,64 +440,75 @@ export class DeveloperPanel {
     }
     const scroll = el('div', 'developer-scroll'); scroll.append(table);
     page.append(scroll, el('p', 'developer-hint', 'Valores em quadros de 60 Hz. Células destacadas diferem dos dados do personagem; passe o mouse para ver o original.'),
-      button('Restaurar golpes e combos deste personagem', () => { devTuning.resetFighter(fighter.id); this.changed(); this.status.textContent = 'Ajustes do personagem removidos.'; this.render(); }));
+      confirmRow('Restaurar golpes deste personagem', 'Restaurar golpes',
+        () => `Descartar ${Object.keys(devTuning.overrides.moves[fighter.id] ?? {}).length} golpe(s) ajustado(s) de ${fighter.name} que ainda não foram salvos no código? Os combos não mudam.`,
+        () => { devTuning.resetMoves(fighter.id); this.changed(); this.status.textContent = `Ajustes de golpes de ${fighter.name} descartados.`; this.render(); }),
+      this.saveToCode('golpes', ['moves'], '/__dev/overrides'));
   }
 
-  /** Recipe timings plus manually authored recipes: each step is an existing move and still needs its own input. */
+  /** Authored and manually created recipes, each editable in place; every step is an existing move and still needs its own input. */
   private combos(page: HTMLElement): void {
     this.fighterPicker(page);
     const fighter = this.fighter, custom = new Set((devTuning.overrides.combos[fighter.id] ?? []).map(recipe => recipe.id));
     const list = el('div', 'developer-combos');
     for (const recipe of fighter.combos ?? []) {
-      const card = el('article', 'developer-combo');
-      card.append(el('h2', '', recipe.name), el('p', '', `${recipe.notation} · ${recipe.moveIds.join(' → ')}${recipe.finisherMoveId ? ` ⇒ ${recipe.finisherMoveId}` : ''}`));
-      const startup = input('text', recipe.startupFrames?.join(', ') ?? '', 'Preparação por etapa (ex.: 12, 10, 10)');
-      const recovery = number(recipe.recoveryFrames, () => undefined);
-      const save = () => {
-        const frames = frameList(startup.value);
-        const tuning = { startupFrames: frames.length ? frames : undefined, recoveryFrames: recovery.value === '' ? undefined : Number(recovery.value) };
-        if (custom.has(recipe.id)) {
-          devTuning.removeCombo(fighter.id, recipe.id);
-          devTuning.addCombo(fighter.id, { ...recipe, ...withoutEmpty(tuning) });
-        } else devTuning.setRecipe(fighter.id, recipe.id, sameAs(devTuning.originalRecipe(recipe), tuning) ? {} : withoutEmpty(tuning));
-        this.changed(); this.status.textContent = `Tempos de “${recipe.name}” salvos.`; this.render();
-      };
+      if (recipe.id === this.comboEditing) { list.append(this.comboForm(fighter, recipe)); continue; }
+      const card = el('article', 'developer-combo'), edited = Boolean(devTuning.overrides.recipes[fighter.id]?.[recipe.id]);
+      card.classList.toggle('developer-changed', edited);
+      card.append(el('h2', '', recipe.name), el('p', '', `${recipe.notation} · ${recipe.moveIds.join(' → ')}${recipe.finisherMoveId ? ` ⇒ ${recipe.finisherMoveId}` : ''}`),
+        el('p', '', `Preparação: ${recipe.startupFrames?.join(', ') ?? '—'} · Recuperação final: ${recipe.recoveryFrames ?? '—'}`));
       const row = el('div', 'developer-row');
-      row.append(labelled('Preparação por etapa', startup), labelled('Recuperação final', recovery), button('Salvar tempos', save));
+      row.append(button('Editar', () => { this.comboEditing = recipe.id; this.render(); }));
       if (custom.has(recipe.id)) row.append(button('Excluir', () => { devTuning.removeCombo(fighter.id, recipe.id); this.changed(); this.render(); }));
+      else if (edited) row.append(button('Restaurar original', () => { devTuning.setRecipe(fighter.id, recipe.id, {}); this.changed(); this.render(); }));
       card.append(row); list.append(card);
     }
-    page.append(list, this.comboForm(fighter));
+    const edits = Object.keys(devTuning.overrides.recipes[fighter.id] ?? {}).length;
+    page.append(list, this.comboForm(fighter), this.saveToCode('combos', ['recipes', 'combos'], '/__dev/overrides'),
+      confirmRow('Restaurar combos deste personagem', 'Restaurar combos',
+        () => `Descartar ${custom.size} combo(s) criado(s) e ${edits} combo(s) editado(s) de ${fighter.name} que ainda não foram salvos no código? Os golpes não mudam.`,
+        () => { devTuning.resetCombos(fighter.id); this.changed(); this.status.textContent = `Combos de ${fighter.name} restaurados.`; this.render(); }));
   }
-  private comboForm(fighter: CharacterDefinition): HTMLElement {
-    const form = el('form', 'developer-combo developer-new');
+  /** Form of a new recipe or, given one, of an existing recipe: authored ones keep only what differs from the original. */
+  private comboForm(fighter: CharacterDefinition, recipe?: ComboRecipe): HTMLElement {
+    const form = el('form', `developer-combo${recipe ? '' : ' developer-new'}`);
     const options: [string, string][] = fighter.moves.map(move => [move.id, `${move.name} (${move.notation ?? move.input.buttons.join('+')})`]);
-    const name = input('text', '', 'Nome do combo'), notation = input('text', '', 'Notação (ex.: 1,1,2)');
-    const steps = el('div', 'developer-row');
-    this.comboSteps.forEach((moveId, index) => {
-      steps.append(choice(`Etapa ${index + 1}`, options, moveId, id => { this.comboSteps[index] = id; }),
-        button('×', () => { this.comboSteps.splice(index, 1); this.render(); }));
-    });
-    steps.append(button('+ Etapa', () => { this.comboSteps.push(fighter.moves[0].id); this.render(); }));
-    const finisher = choice('Finalizador dedicado (opcional)', [['', '—'], ...options], '', () => undefined);
-    const startup = input('text', '', 'Preparação por etapa (opcional)');
-    const recovery = number(undefined, () => undefined);
-    const continueOnHit = checkbox('Acerto final continua em outra receita'), endsBasicChain = checkbox('Encerra golpes comuns');
-    form.append(el('h2', '', 'Novo combo'), labelled('Nome', name), labelled('Notação', notation), steps, finisher,
-      labelled('Preparação por etapa', startup), labelled('Recuperação final', recovery), continueOnHit, endsBasicChain, button('Criar combo', () => form.requestSubmit()));
+    const name = input('text', recipe?.name ?? '', 'Nome do combo'), notation = input('text', recipe?.notation ?? '', 'Notação (ex.: 1,1,2)');
+    // Adding or removing a step redraws only the steps, so the rest of the form keeps what was typed.
+    const stepIds = [...(recipe?.moveIds ?? [])], steps = el('div', 'developer-row');
+    const drawSteps = () => {
+      steps.replaceChildren(...stepIds.flatMap((moveId, index) => [
+        choice(`Etapa ${index + 1}`, options, moveId, id => { stepIds[index] = id; }),
+        button('×', () => { stepIds.splice(index, 1); drawSteps(); }),
+      ]), button('+ Etapa', () => { stepIds.push(fighter.moves[0].id); drawSteps(); }));
+    };
+    drawSteps();
+    const finisher = choice('Finalizador dedicado (opcional)', [['', '—'], ...options], recipe?.finisherMoveId ?? '', () => undefined);
+    const startup = input('text', recipe?.startupFrames?.join(', ') ?? '', 'Preparação por etapa (opcional)');
+    const recovery = number(recipe?.recoveryFrames, () => undefined);
+    const continueOnHit = checkbox('Acerto final continua em outra receita', recipe?.continueOnHit);
+    const endsBasicChain = checkbox('Encerra golpes comuns', recipe?.endsBasicChain);
+    const actions = el('div', 'developer-row');
+    actions.append(button(recipe ? 'Salvar combo' : 'Criar combo', () => form.requestSubmit()));
+    if (recipe) actions.append(button('Cancelar', () => { this.comboEditing = undefined; this.render(); }));
+    form.append(el('h2', '', recipe ? `Editar “${recipe.name}”` : 'Novo combo'), labelled('Nome', name), labelled('Notação', notation), steps, finisher,
+      labelled('Preparação por etapa', startup), labelled('Recuperação final', recovery), continueOnHit, endsBasicChain, actions);
     form.onsubmit = event => {
       event.preventDefault();
-      if (!name.value.trim() || !notation.value.trim() || this.comboSteps.length < 2) { this.status.textContent = 'Informe nome, notação e pelo menos duas etapas.'; return; }
-      const frames = frameList(startup.value);
-      const finisherId = finisher.querySelector('select')!.value;
-      const recipe: ComboRecipe = {
-        id: `dev-${Date.now().toString(36)}`, name: name.value.trim(), notation: notation.value.trim(), moveIds: [...this.comboSteps],
-        ...(frames.length ? { startupFrames: frames } : {}), ...(recovery.value !== '' ? { recoveryFrames: Number(recovery.value) } : {}),
-        ...(finisherId ? { finisherMoveId: finisherId } : {}),
-        ...(continueOnHit.querySelector('input')!.checked ? { continueOnHit: true } : {}), ...(endsBasicChain.querySelector('input')!.checked ? { endsBasicChain: true } : {}),
-      };
-      devTuning.addCombo(fighter.id, recipe); this.comboSteps = []; this.changed();
-      this.status.textContent = `Combo “${recipe.name}” criado.`; this.render();
+      if (!name.value.trim() || !notation.value.trim() || stepIds.length < 2) { this.status.textContent = 'Informe nome, notação e pelo menos duas etapas.'; return; }
+      const frames = frameList(startup.value), finisherId = finisher.querySelector('select')!.value;
+      const fields: Omit<ComboRecipe, 'id'> = withoutEmpty({
+        name: name.value.trim(), notation: notation.value.trim(), moveIds: [...stepIds],
+        startupFrames: frames.length ? frames : undefined, recoveryFrames: recovery.value === '' ? undefined : Number(recovery.value),
+        finisherMoveId: finisherId || undefined,
+        continueOnHit: continueOnHit.querySelector('input')!.checked || undefined, endsBasicChain: endsBasicChain.querySelector('input')!.checked || undefined,
+      });
+      const custom = devTuning.overrides.combos[fighter.id]?.some(entry => entry.id === recipe?.id), original = recipe && devTuning.originalRecipe(recipe);
+      if (!recipe) devTuning.addCombo(fighter.id, { id: `dev-${Date.now().toString(36)}`, ...fields });
+      else if (custom || !original) devTuning.replaceCombo(fighter.id, { id: recipe.id, ...fields });
+      else devTuning.setRecipe(fighter.id, recipe.id, recipeChanges(original, fields));
+      this.comboEditing = undefined; this.changed();
+      this.status.textContent = `Combo “${fields.name}” ${recipe ? 'salvo' : 'criado'}.`; this.render();
     };
     return form;
   }
@@ -398,7 +527,7 @@ export class DeveloperPanel {
     for (const name of CSS_COLORS) swatch(`css:${name}`, name, devTuning.overrides.colors[`css:${name}`] ?? cssDefault(name), cssDefault(name));
     grid.append(el('h2', '', 'HUD de combate'));
     for (const token of HUD_COLORS) swatch(`hud:${token}`, `HUD.${token}`, devTuning.overrides.colors[`hud:${token}`] ?? devTuning.hudDefault(token), devTuning.hudDefault(token));
-    page.append(grid, button('Restaurar todas as cores', () => { devTuning.resetColors(); this.changed(); this.render(); }));
+    page.append(grid, button('Restaurar todas as cores', () => { devTuning.assign({ colors: {} }); this.changed(); this.render(); }), this.saveToCode('cores', ['colors'], '/__dev/overrides'));
   }
 
   /** Replaces any shipped image (icons, effects, sprite sheets, titles, scenery) without touching the source file. */
@@ -410,17 +539,65 @@ export class DeveloperPanel {
     const matches = this.browse(page, images, this.imagePath, path => { this.imagePath = path; this.render(); }, this.imageFilter);
     const list = el('div', 'developer-images');
     const limit = this.imageFilter ? IMAGE_LIMIT : matches.length;
-    for (const { id: url, label: path } of matches.slice(0, limit)) {
-      const line = el('div', 'developer-image'); line.classList.toggle('developer-changed', replacedImages().has(url));
-      const thumb = el('img'); thumb.loading = 'lazy'; thumb.alt = ''; thumb.src = url;
-      const file = input('file', ''); file.accept = 'image/*'; file.hidden = true;
-      file.onchange = () => { if (file.files?.[0]) void this.replace(url, path, file.files[0]); };
-      const actions = el('div', 'developer-row'); actions.append(button('Substituir', () => file.click()));
-      if (replacedImages().has(url)) actions.append(button('Restaurar', () => void restoreImage(url).then(() => { this.status.textContent = `${path} restaurada. Recarregue para atualizar o que já foi carregado.`; this.render(); })));
-      line.append(thumb, el('span', '', this.imageFilter ? path : path.split('/').pop()!), file, actions); list.append(line);
-    }
+    for (const { id: url, label: path } of matches.slice(0, limit)) list.append(this.imageLine(url, path, this.imageFilter ? path : path.split('/').pop()!));
     page.append(el('p', 'developer-hint', `${matches.length} imagens${matches.length > limit ? ` (mostrando ${limit}; refine a busca)` : ''}. Folhas de sprites exigem o mesmo tamanho e a mesma grade do original.`),
-      list, button('Recarregar o jogo', () => window.location.reload()));
+      list, button('Recarregar o jogo', () => window.location.reload()), this.saveImages());
+  }
+  /** A shipped image with its thumbnail and the buttons that replace or restore it. */
+  private imageLine(url: string, path: string, label: string): HTMLElement {
+    const line = el('div', 'developer-image'); line.classList.toggle('developer-changed', replacedImages().has(url));
+    const thumb = el('img'); thumb.loading = 'lazy'; thumb.alt = ''; thumb.src = url;
+    const file = input('file', ''); file.accept = 'image/*'; file.hidden = true;
+    file.onchange = () => { if (file.files?.[0]) void this.replace(url, path, file.files[0]); };
+    const actions = el('div', 'developer-row'); actions.append(button('Substituir', () => file.click()));
+    if (replacedImages().has(url)) actions.append(button('Restaurar', () => void restoreImage(url).then(() => { this.status.textContent = `${path} restaurada. Recarregue para atualizar o que já foi carregado.`; this.render(); })));
+    line.append(thumb, el('span', '', label), file, actions);
+    return line;
+  }
+
+  /** Framing of a fighter's art on the selection screen (panel and tile), the HUD icon window and the victory frame, with the three images. */
+  private selection(page: HTMLElement): void {
+    const id = this.artId, art = fighterArt[id], authored = devTuning.authoredSelection(id)!;
+    page.append(choice('Personagem', Object.entries(fighterArt).map(([key, entry]) => [key, entry.name]), id, key => { this.artId = key; this.render(); }));
+    const hero = el('div', 'developer-hero'), heroImage = el('img'); heroImage.alt = ''; heroImage.src = art.background; heroImage.style.cssText = frameStyle(heroFrame(art)); hero.append(heroImage);
+    const tile = el('div', 'developer-tile'), tileImage = el('img'); tileImage.alt = ''; tileImage.src = art.icon; tileImage.style.cssText = frameStyle(tileFrame(art)); tile.append(tileImage);
+    const icon = el('div', 'developer-icon'), iconImage = el('img'); iconImage.alt = ''; iconImage.src = art.icon;
+    const cropBox = el('div', 'developer-icon-window'); icon.append(iconImage, cropBox);
+    iconImage.onload = () => {
+      const { x, y, size } = art.iconWindow, { naturalWidth: width, naturalHeight: height } = iconImage;
+      Object.assign(cropBox.style, { left: `${x / width * 100}%`, top: `${y / height * 100}%`, width: `${size / width * 100}%`, height: `${size / height * 100}%` });
+    };
+    const previews = el('div', 'developer-previews');
+    for (const [title, preview] of [['Painel de seleção', hero], ['Quadro da grade', tile], ['Janela do ícone no HUD', icon]] as const) {
+      const box = el('figure', 'developer-figure'); box.append(preview, el('figcaption', '', title)); previews.append(box);
+    }
+    const group = (field: keyof SelectionTuning, title: string, labels: Record<string, [string, number]>, current: SelectionFrame | IconWindow | VictoryFrame, original: SelectionFrame | IconWindow | VictoryFrame) => {
+      const row = el('div', 'developer-row'), values: Record<string, number> = { ...current }, base: Record<string, number> = { ...original };
+      row.classList.toggle('developer-changed', JSON.stringify(current) !== JSON.stringify(original));
+      row.append(el('h2', '', title));
+      for (const [key, [label, step]] of Object.entries(labels)) {
+        const box = input('number', String(values[key])); box.step = String(step);
+        box.onchange = () => {
+          const value = Number(box.value); if (!Number.isFinite(value)) return;
+          const next = { ...values, [key]: value } as unknown as typeof current;
+          devTuning.setSelection(id, field, JSON.stringify(next) === JSON.stringify(original) ? undefined : next); this.changed(); this.render();
+        };
+        row.append(labelled(`${label} (${base[key]})`, box));
+      }
+      row.append(button('↺', () => { devTuning.setSelection(id, field, undefined); this.changed(); this.render(); }));
+      return row;
+    };
+    const focal: Record<string, [string, number]> = { zoom: ['Zoom', .05], x: ['Foco X %', 1], y: ['Foco Y %', 1] };
+        const fields = el('div', 'developer-selection');
+    fields.append(
+      group('hero', 'Painel de seleção (zoom e foco da arte)', focal, heroFrame(art), authored.hero),
+      group('tile', 'Quadro da grade (zoom e foco do ícone)', focal, tileFrame(art), authored.tile),
+      group('iconWindow', 'Janela do ícone (HUD de vida, px da imagem)', { x: ['X', 1], y: ['Y', 1], size: ['Lado', 1] }, art.iconWindow, authored.iconWindow),
+      group('victory', 'Tela de vencedor (altura e topo, em telas)', { height: ['Altura', .01], top: ['Topo', .001] }, art.victory, authored.victory));
+    const images = el('div', 'developer-images');
+    for (const [label, url] of [['Arte de seleção', art.background], ['Ícone', art.icon], ['Pose de vitória', art.fullbody]] as const) images.append(this.imageLine(url, gameImages[url] ?? label, `${label} — ${gameImages[url] ?? ''}`));
+    page.append(previews, fields, images, el('p', 'developer-hint', 'Foco e zoom valem para a tela de seleção; o foco é o ponto da arte que fica fixo ao ampliar. Entre parênteses, o valor gravado no código.'),
+      button('Ver tela de vencedor', () => this.showEnding(id, art.name)), this.saveToCode('seleção', ['selection'], '/__dev/overrides'), this.saveImages());
   }
   private async replace(url: string, path: string, file: File): Promise<void> {
     const preview = URL.createObjectURL(file);
@@ -471,7 +648,7 @@ function number(value: number | undefined, change: (value: number | undefined) =
 function labelled(text: string, control: HTMLElement): HTMLElement {
   const label = el('label', 'developer-field'); label.append(el('span', '', text), control); return label;
 }
-function checkbox(text: string): HTMLElement { const box = input('checkbox', ''); return labelled(text, box); }
+function checkbox(text: string, checked = false): HTMLElement { const box = input('checkbox', ''); box.checked = checked; return labelled(text, box); }
 function choice(text: string, options: readonly (readonly [string, string])[], value: string, change: (value: string) => void): HTMLElement {
   const select = el('select');
   for (const [id, label] of options) { const option = el('option', '', label); option.value = id; select.append(option); }
@@ -492,8 +669,25 @@ function frameList(text: string): number[] {
 function withoutEmpty<T extends object>(value: T): T {
   return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as T;
 }
-function sameAs(recipe: ComboRecipe | undefined, tuning: { startupFrames?: number[]; recoveryFrames?: number }): boolean {
-  return String(recipe?.startupFrames ?? '') === String(tuning.startupFrames ?? '') && recipe?.recoveryFrames === tuning.recoveryFrames;
+/** Fields of an edited authored recipe that differ from the original; `null` drops an optional field. */
+function recipeChanges(original: ComboRecipe, edited: Omit<ComboRecipe, 'id'>): RecipeTuning {
+  const changes: Record<string, unknown> = {};
+  for (const field of RECIPE_FIELDS) {
+    if (JSON.stringify(original[field]) !== JSON.stringify(edited[field])) changes[field] = edited[field] ?? null;
+  }
+  return changes as RecipeTuning;
+}
+/**
+ * Sends a save to the development server. Writing the files makes the server reload the page, which aborts the request:
+ * that is a success (`'reloading'`), and restoring the adjustments then would bring back what the code now holds.
+ */
+async function post(url: string, body: BodyInit): Promise<Response | 'reloading' | undefined> {
+  let reloading = false;
+  const leave = () => { reloading = true; };
+  window.addEventListener('beforeunload', leave);
+  const response = await fetch(url, { method: 'POST', body }).catch(() => undefined);
+  window.removeEventListener('beforeunload', leave);
+  return reloading ? 'reloading' : response;
 }
 function imageSize(url: string): Promise<{ width: number; height: number }> {
   return new Promise(resolve => {

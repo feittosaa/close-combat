@@ -12,16 +12,14 @@ import { shoto } from '../engine/data/fighters/shoto';
 
 it('keeps the available wallpaper on the loading screen and removes it afterwards', () => {
   vi.useFakeTimers();
-  const screen = {className:'', textContent:'', style:{setProperty:vi.fn()}, setAttribute:vi.fn(), remove:vi.fn()};
+  const screen = {className:'', textContent:'', style:{setProperty:vi.fn()}, classList:{add:vi.fn()}, setAttribute:vi.fn(), remove:vi.fn()};
   const document = {createElement:vi.fn(() => screen), body:{appendChild:vi.fn()}};
-  const sessionStorage = {setItem:vi.fn()};
   vi.stubGlobal('document', document);
-  vi.stubGlobal('window', {setInterval, clearInterval});
-  vi.stubGlobal('sessionStorage', sessionStorage);
+  vi.stubGlobal('window', {setInterval, clearInterval, setTimeout});
   try {
     const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
     Object.values(camera).forEach(method=>method.mockReturnValue(camera));
-    const load={image:vi.fn(),atlas:vi.fn(),spritesheet:vi.fn(),audio:vi.fn()};
+    const load={image:vi.fn(),atlas:vi.fn(),spritesheet:vi.fn(),once:vi.fn(),audio:vi.fn()};
     const boot=new BootScene();
     Object.assign(boot,{cameras:{main:camera},scale:{width:1920,height:1080},load,
       textures:{exists:()=>false},cache:{audio:{exists:()=>false}},scene:{start:vi.fn()}});
@@ -31,8 +29,10 @@ it('keeps the available wallpaper on the loading screen and removes it afterward
     vi.advanceTimersByTime(20000);
     expect(screen.style.setProperty.mock.calls[1][1]).not.toBe(first);
     expect(screen.className).toBe('loading-screen wallpaper-right');
-    expect(sessionStorage.setItem).toHaveBeenCalledTimes(2);
     boot.create();
+    expect(screen.classList.add).toHaveBeenCalledWith('leaving');
+    expect(screen.remove).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(600);
     expect(screen.remove).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
   } finally {
@@ -153,7 +153,7 @@ it('boots with shared assets only; each match loads its own fighters, stage and 
   const textures=new Map<string,object>();
   const queued=new Set<string>(), removed:string[]=[];
   const queue=(key:string)=>{queued.add(key);};
-  const load={image:vi.fn(queue),packedAtlas:vi.fn(queue),spritesheet:vi.fn(queue),audio:vi.fn(queue),list:{get size(){return queued.size;}}};
+  const load={image:vi.fn(queue),packedAtlas:vi.fn(queue),spritesheet:vi.fn(queue),once:vi.fn(),audio:vi.fn(queue),list:{get size(){return queued.size;}}};
   const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
   Object.values(camera).forEach(method=>method.mockReturnValue(camera));
   const shared={textures:{exists:(key:string)=>textures.has(key),getTextureKeys:()=>[...textures.keys()],remove:(key:string)=>{textures.delete(key);removed.push(key);}},
@@ -198,9 +198,9 @@ it('starts the preparation scene before exposing any menu or fighter selection',
 });
 
 it.each([
-  ['PvP com vencedor', 'versus', 'player-2', 0, [['cowboy', 'Texas']]],
+  ['PvP com vencedor', 'versus', 'player-2', 0, [['cowboy', 'Texas', 2]]],
   ['PvP empatado', 'versus', undefined, 0, []],
-  ['Arcade: vitória sobre o último adversário', 'arcade', 'player-1', -1, [['shoto', 'Bob']]],
+  ['Arcade: vitória sobre o último adversário', 'arcade', 'player-1', -1, [['shoto', 'Bob', undefined]]],
   ['Arcade: vitória no meio da jornada', 'arcade', 'player-1', 0, []],
   ['Arcade: derrota', 'arcade', 'player-2', -1, []],
 ] as const)('tela de vitória: %s', (_name, mode, winner, arcadeIndex, expected) => {
@@ -217,7 +217,7 @@ it.each([
     const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
     snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
     (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
-    expect(victoryScreens.map(([, id, name]) => [id, name])).toEqual(mode === 'arcade' && expected.length ? [['shoto','Bob']] : expected);
+    expect(victoryScreens.map(([, id, name, , player]) => [id, name, player])).toEqual(expected);
   } finally { vi.unstubAllGlobals(); }
 });
 
