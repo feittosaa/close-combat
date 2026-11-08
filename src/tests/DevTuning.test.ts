@@ -26,8 +26,10 @@ describe('developer tuning', () => {
     const tuning = new DevTuning(fighters);
     tuning.addCombo(fighter.id, { id: 'dev-test', name: 'Teste', notation: '1,2', moveIds: [fighter.moves[0].id, fighter.moves[1].id] });
     expect(fighter.combos!.map(recipe => recipe.id)).toEqual([...authored.map(recipe => recipe.id), 'dev-test']);
-    tuning.setRecipe(fighter.id, authored[0].id, { recoveryFrames: 77 });
-    expect(authored[0].recoveryFrames).toBe(77);
+    tuning.setRecipe(fighter.id, authored[0].id, { recoveryFrames: 77, name: 'Editado', moveIds: [fighter.moves[1].id, fighter.moves[0].id] });
+    expect(authored[0]).toMatchObject({ recoveryFrames: 77, name: 'Editado', moveIds: [fighter.moves[1].id, fighter.moves[0].id] });
+    tuning.replaceCombo(fighter.id, { id: 'dev-test', name: 'Outro', notation: '2,1', moveIds: [fighter.moves[1].id, fighter.moves[0].id] });
+    expect(fighter.combos![fighter.combos!.length - 1].name).toBe('Outro');
     tuning.resetFighter(fighter.id);
     expect(fighter.combos).toBe(authored);
     expect(authored[0].recoveryFrames).toBe(structuredClone(characters.find(entry => entry.id === fighter.id)!.combos![0]).recoveryFrames);

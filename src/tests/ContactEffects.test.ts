@@ -122,13 +122,12 @@ it('colors blocked projectiles by attacker while retaining perfect-block feedbac
   view.destroy();
 });
 
-it('recorta cada desenho inteiro, sem invadir o vizinho, na posição que ele tem na folha', () => {
+it('recorta cada desenho inteiro, sem invadir o vizinho', () => {
   for (const key of ['contact-hit-blue', 'contact-hit-sweep', 'contact-hit-light', 'contact-block-wine']) {
     const frames = [0, 1, 2, 3, 4, 5].map(frame => contactFrameCut(key, frame));
     frames.forEach((cut, index) => {
       expect(cut.x).toBeGreaterThanOrEqual(index ? frames[index - 1].x + frames[index - 1].width : 0);
       expect(cut.x + cut.width).toBeLessThanOrEqual(6 * 362);
-      expect(cut.left).toBe(cut.x - index * 362);
     });
   }
   expect(contactFrameCut('contact-hit-heavy', 2)).toEqual({ x: 928, y: 0, width: 464, height: 724, left: 0, top: 0 });

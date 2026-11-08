@@ -8,7 +8,7 @@ Não manter variantes substituídas ou arte rejeitada no checkout. O histórico 
 
 Todo PNG adicionado ou trocado aqui passa automaticamente por `npm run sprites:prepare` (antes de `npm run dev` e `npm run build` e, com o servidor aberto, a cada arquivo novo ou alterado):
 
-1. limpeza do fundo `#FA02F8` — só saem pixels com o matiz do fundo, inclusive o halo misturado ao contorno; a transparência existente é preservada;
+1. limpeza do fundo `#FA02F8` — só saem pixels com o matiz do fundo, inclusive o halo misturado ao contorno; tons escuros e pouco saturados desse matiz (sombras arroxeadas da arte) só saem quando encostam no fundo, para não furar o desenho; a transparência existente é preservada;
 2. medição das folhas de personagem, da qual o motor deriva o tamanho automático de cada animação.
 3. recorte do layout de cada folha de personagem (`<folha>.packed.json`, nas duas qualidades): o jogo guarda na memória só a parte desenhada de cada quadro, com o tamanho e o pivô do atlas original. O PNG e o atlas originais não mudam; um teste impede layout desatualizado.
 

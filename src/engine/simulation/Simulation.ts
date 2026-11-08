@@ -1006,8 +1006,11 @@ export class Simulation {
 
   private canContinueRecipe(character: CharacterState, index: number, move: MoveDefinition): boolean {
     if (character.attack?.hitOutcome !== 'hit' || !character.chain || this.characters[1 - index].mode !== 'hitstun') return false;
+    // The next recipe never begins with the move that just hit, so a recipe that continues cannot restart itself
+    // through another recipe opening with that move (3,3,3 then 3 again).
+    if (move.id === character.attack.moveId) return false;
     const combos = this.definitions[index].combos ?? [];
-    const starter = this.move(index, character.attack.moveId)?.startsComboOnHit && move.id !== character.attack.moveId;
+    const starter = this.move(index, character.attack.moveId)?.startsComboOnHit;
     const completed = character.hitSequence && combos.find(recipe => recipe.continueOnHit && character.chain!.length <= recipe.moveIds.length &&
       character.chain!.every((id, step) => id === recipe.moveIds[step]));
     return Boolean(combos.some(recipe => recipe.moveIds[0] === move.id && (starter || (completed && recipe.id !== completed.id))));

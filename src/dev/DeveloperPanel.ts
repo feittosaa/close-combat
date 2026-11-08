@@ -10,12 +10,14 @@ import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { VictoryScreen } from '../ui/VictoryScreen';
 import { applyContactFrames, contactFrameCut, contactFrameMargin, contactFrameSize, isContactSheet, type FrameCut } from '../rendering/contactEffects';
 import { gameImages, replaceImage, replacedImages, restoreImage } from './assetOverrides';
-import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, type DevOverrides, type MoveTuning } from './devOverrides';
+import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, type DevOverrides, type MoveTuning, type RecipeTuning } from './devOverrides';
 import { IMAGE_SECTIONS, imageFolder, textureFolder } from './imageCatalog';
 import { devTuning } from './devTools';
 import './developer.css';
 
 const TABS = [['endings', 'Finais'], ['sprites', 'Sprites'], ['moves', 'Golpes'], ['combos', 'Combos'], ['colors', 'Cores'], ['images', 'Imagens']] as const;
+/** Areas of the panel that scroll, kept in place when an edit re-renders the same tab. */
+const SCROLLED = '.developer-page, .developer-list, .developer-viewer, .developer-scroll';
 type Tab = typeof TABS[number][0];
 const FIELD_LABELS: Record<keyof MoveTuning, string> = {
   startup: 'Preparação', activeFrames: 'Ativo', recovery: 'Recuperação', damage: 'Dano', hitstun: 'Hitstun', blockstun: 'Blockstun',
@@ -68,9 +70,11 @@ export class DeveloperPanel {
   private spritePlaying = true;
   private spriteFlip = false;
   private spriteTimer?: number;
+  private renderedTab?: Tab;
   private imageFilter = '';
   private imagePath: string[] = [];
-  private comboSteps: string[] = [];
+  /** Recipe whose card shows the edit form. */
+  private comboEditing?: string;
   private preview?: VictoryScreen;
   private readonly previousFocus = document.activeElement as HTMLElement | null;
   private readonly onKey = (event: KeyboardEvent): void => {
@@ -107,12 +111,16 @@ export class DeveloperPanel {
     const footer = el('footer', 'developer-footer');
     footer.append(button('Exportar ajustes (JSON)', () => this.export()), button('Fechar', () => this.destroy()));
     panel.append(header, page, this.status, footer);
-    this.root.replaceChildren(panel);
-    this.root.querySelector<HTMLElement>('[aria-selected="true"]')?.focus();
+    // Re-rendering after an edit keeps every scrolled area where it was; a new tab starts at the top.
+    const scrolled = (root: ParentNode) => [...root.querySelectorAll<HTMLElement>(SCROLLED)];
+    const positions = this.tab === this.renderedTab ? scrolled(this.root).map(node => [node.scrollTop, node.scrollLeft]) : [];
+    this.root.replaceChildren(panel); this.renderedTab = this.tab;
+    scrolled(panel).forEach((node, index) => { if (positions[index]) [node.scrollTop, node.scrollLeft] = positions[index]; });
+    this.root.querySelector<HTMLElement>('[aria-selected="true"]')?.focus({ preventScroll: true });
   }
 
   private fighterPicker(page: HTMLElement): void {
-    page.append(choice('Personagem', characters.map(fighter => [fighter.id, fighter.name]), this.fighterId, id => { this.fighterId = id; this.comboSteps = []; this.render(); }));
+    page.append(choice('Personagem', characters.map(fighter => [fighter.id, fighter.name]), this.fighterId, id => { this.fighterId = id; this.comboEditing = undefined; this.render(); }));
   }
   private get fighter(): CharacterDefinition { return characters.find(fighter => fighter.id === this.fighterId) ?? characters[0]; }
 
@@ -367,7 +375,8 @@ export class DeveloperPanel {
     const saved = Object.fromEntries(sections.map(section => [section, structuredClone(devTuning.overrides[section])])) as Partial<DevOverrides>;
     this.status.textContent = `Salvando ${what}…`;
     devTuning.assign(Object.fromEntries(sections.map(section => [section, {}])));
-    const response = await fetch(endpoint, { method: 'POST', body: JSON.stringify(saved) }).catch(() => undefined);
+    const response = await post(endpoint, JSON.stringify(saved));
+    if (response === 'reloading') return;
     if (!response?.ok) devTuning.assign(saved);
     this.status.textContent = response?.ok ? `Ajustes de ${what} gravados no código.` :
       `Falha ao salvar; ajustes mantidos. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
@@ -385,8 +394,11 @@ export class DeveloperPanel {
       const path = gameImages[url], file = await (await fetch(replacement)).blob();
       const extension = path.split('.').pop()!.replace('jpg', 'jpeg');
       if (file.type !== `image/${extension}`) { failures.push(`${path}: o arquivo novo é ${file.type || 'de tipo desconhecido'}, não ${extension}`); continue; }
-      const response = await fetch(`/__dev/image?path=${encodeURIComponent(path)}`, { method: 'POST', body: file }).catch(() => undefined);
-      if (response?.ok) await restoreImage(url); else failures.push(`${path}: ${await response?.text() ?? 'servidor de desenvolvimento indisponível'}`);
+      // The replacement leaves before writing, like the other saves, and comes back if the write fails.
+      await restoreImage(url);
+      const response = await post(`/__dev/image?path=${encodeURIComponent(path)}`, file);
+      if (response === 'reloading') return;
+      if (!response?.ok) { await replaceImage(url, file); failures.push(`${path}: ${await response?.text() ?? 'servidor de desenvolvimento indisponível'}`); }
     }
     this.status.textContent = failures.length ? `Não gravadas: ${failures.join('; ')}.` : 'Imagens gravadas no código.';
     this.render();
@@ -431,61 +443,65 @@ export class DeveloperPanel {
       this.saveToCode('golpes', ['moves'], '/__dev/overrides'));
   }
 
-  /** Recipe timings plus manually authored recipes: each step is an existing move and still needs its own input. */
+  /** Authored and manually created recipes, each editable in place; every step is an existing move and still needs its own input. */
   private combos(page: HTMLElement): void {
     this.fighterPicker(page);
     const fighter = this.fighter, custom = new Set((devTuning.overrides.combos[fighter.id] ?? []).map(recipe => recipe.id));
     const list = el('div', 'developer-combos');
     for (const recipe of fighter.combos ?? []) {
-      const card = el('article', 'developer-combo');
-      card.append(el('h2', '', recipe.name), el('p', '', `${recipe.notation} · ${recipe.moveIds.join(' → ')}${recipe.finisherMoveId ? ` ⇒ ${recipe.finisherMoveId}` : ''}`));
-      const startup = input('text', recipe.startupFrames?.join(', ') ?? '', 'Preparação por etapa (ex.: 12, 10, 10)');
-      const recovery = number(recipe.recoveryFrames, () => undefined);
-      const save = () => {
-        const frames = frameList(startup.value);
-        const tuning = { startupFrames: frames.length ? frames : undefined, recoveryFrames: recovery.value === '' ? undefined : Number(recovery.value) };
-        if (custom.has(recipe.id)) {
-          devTuning.removeCombo(fighter.id, recipe.id);
-          devTuning.addCombo(fighter.id, { ...recipe, ...withoutEmpty(tuning) });
-        } else devTuning.setRecipe(fighter.id, recipe.id, sameAs(devTuning.originalRecipe(recipe), tuning) ? {} : withoutEmpty(tuning));
-        this.changed(); this.status.textContent = `Tempos de “${recipe.name}” salvos.`; this.render();
-      };
+      if (recipe.id === this.comboEditing) { list.append(this.comboForm(fighter, recipe)); continue; }
+      const card = el('article', 'developer-combo'), edited = Boolean(devTuning.overrides.recipes[fighter.id]?.[recipe.id]);
+      card.classList.toggle('developer-changed', edited);
+      card.append(el('h2', '', recipe.name), el('p', '', `${recipe.notation} · ${recipe.moveIds.join(' → ')}${recipe.finisherMoveId ? ` ⇒ ${recipe.finisherMoveId}` : ''}`),
+        el('p', '', `Preparação: ${recipe.startupFrames?.join(', ') ?? '—'} · Recuperação final: ${recipe.recoveryFrames ?? '—'}`));
       const row = el('div', 'developer-row');
-      row.append(labelled('Preparação por etapa', startup), labelled('Recuperação final', recovery), button('Salvar tempos', save));
+      row.append(button('Editar', () => { this.comboEditing = recipe.id; this.render(); }));
       if (custom.has(recipe.id)) row.append(button('Excluir', () => { devTuning.removeCombo(fighter.id, recipe.id); this.changed(); this.render(); }));
+      else if (edited) row.append(button('Restaurar original', () => { devTuning.setRecipe(fighter.id, recipe.id, {}); this.changed(); this.render(); }));
       card.append(row); list.append(card);
     }
     page.append(list, this.comboForm(fighter), this.saveToCode('combos', ['recipes', 'combos'], '/__dev/overrides'));
   }
-  private comboForm(fighter: CharacterDefinition): HTMLElement {
-    const form = el('form', 'developer-combo developer-new');
+  /** Form of a new recipe or, given one, of an existing recipe: authored ones keep only what differs from the original. */
+  private comboForm(fighter: CharacterDefinition, recipe?: ComboRecipe): HTMLElement {
+    const form = el('form', `developer-combo${recipe ? '' : ' developer-new'}`);
     const options: [string, string][] = fighter.moves.map(move => [move.id, `${move.name} (${move.notation ?? move.input.buttons.join('+')})`]);
-    const name = input('text', '', 'Nome do combo'), notation = input('text', '', 'Notação (ex.: 1,1,2)');
-    const steps = el('div', 'developer-row');
-    this.comboSteps.forEach((moveId, index) => {
-      steps.append(choice(`Etapa ${index + 1}`, options, moveId, id => { this.comboSteps[index] = id; }),
-        button('×', () => { this.comboSteps.splice(index, 1); this.render(); }));
-    });
-    steps.append(button('+ Etapa', () => { this.comboSteps.push(fighter.moves[0].id); this.render(); }));
-    const finisher = choice('Finalizador dedicado (opcional)', [['', '—'], ...options], '', () => undefined);
-    const startup = input('text', '', 'Preparação por etapa (opcional)');
-    const recovery = number(undefined, () => undefined);
-    const continueOnHit = checkbox('Acerto final continua em outra receita'), endsBasicChain = checkbox('Encerra golpes comuns');
-    form.append(el('h2', '', 'Novo combo'), labelled('Nome', name), labelled('Notação', notation), steps, finisher,
-      labelled('Preparação por etapa', startup), labelled('Recuperação final', recovery), continueOnHit, endsBasicChain, button('Criar combo', () => form.requestSubmit()));
+    const name = input('text', recipe?.name ?? '', 'Nome do combo'), notation = input('text', recipe?.notation ?? '', 'Notação (ex.: 1,1,2)');
+    // Adding or removing a step redraws only the steps, so the rest of the form keeps what was typed.
+    const stepIds = [...(recipe?.moveIds ?? [])], steps = el('div', 'developer-row');
+    const drawSteps = () => {
+      steps.replaceChildren(...stepIds.flatMap((moveId, index) => [
+        choice(`Etapa ${index + 1}`, options, moveId, id => { stepIds[index] = id; }),
+        button('×', () => { stepIds.splice(index, 1); drawSteps(); }),
+      ]), button('+ Etapa', () => { stepIds.push(fighter.moves[0].id); drawSteps(); }));
+    };
+    drawSteps();
+    const finisher = choice('Finalizador dedicado (opcional)', [['', '—'], ...options], recipe?.finisherMoveId ?? '', () => undefined);
+    const startup = input('text', recipe?.startupFrames?.join(', ') ?? '', 'Preparação por etapa (opcional)');
+    const recovery = number(recipe?.recoveryFrames, () => undefined);
+    const continueOnHit = checkbox('Acerto final continua em outra receita', recipe?.continueOnHit);
+    const endsBasicChain = checkbox('Encerra golpes comuns', recipe?.endsBasicChain);
+    const actions = el('div', 'developer-row');
+    actions.append(button(recipe ? 'Salvar combo' : 'Criar combo', () => form.requestSubmit()));
+    if (recipe) actions.append(button('Cancelar', () => { this.comboEditing = undefined; this.render(); }));
+    form.append(el('h2', '', recipe ? `Editar “${recipe.name}”` : 'Novo combo'), labelled('Nome', name), labelled('Notação', notation), steps, finisher,
+      labelled('Preparação por etapa', startup), labelled('Recuperação final', recovery), continueOnHit, endsBasicChain, actions);
     form.onsubmit = event => {
       event.preventDefault();
-      if (!name.value.trim() || !notation.value.trim() || this.comboSteps.length < 2) { this.status.textContent = 'Informe nome, notação e pelo menos duas etapas.'; return; }
-      const frames = frameList(startup.value);
-      const finisherId = finisher.querySelector('select')!.value;
-      const recipe: ComboRecipe = {
-        id: `dev-${Date.now().toString(36)}`, name: name.value.trim(), notation: notation.value.trim(), moveIds: [...this.comboSteps],
-        ...(frames.length ? { startupFrames: frames } : {}), ...(recovery.value !== '' ? { recoveryFrames: Number(recovery.value) } : {}),
-        ...(finisherId ? { finisherMoveId: finisherId } : {}),
-        ...(continueOnHit.querySelector('input')!.checked ? { continueOnHit: true } : {}), ...(endsBasicChain.querySelector('input')!.checked ? { endsBasicChain: true } : {}),
-      };
-      devTuning.addCombo(fighter.id, recipe); this.comboSteps = []; this.changed();
-      this.status.textContent = `Combo “${recipe.name}” criado.`; this.render();
+      if (!name.value.trim() || !notation.value.trim() || stepIds.length < 2) { this.status.textContent = 'Informe nome, notação e pelo menos duas etapas.'; return; }
+      const frames = frameList(startup.value), finisherId = finisher.querySelector('select')!.value;
+      const fields: Omit<ComboRecipe, 'id'> = withoutEmpty({
+        name: name.value.trim(), notation: notation.value.trim(), moveIds: [...stepIds],
+        startupFrames: frames.length ? frames : undefined, recoveryFrames: recovery.value === '' ? undefined : Number(recovery.value),
+        finisherMoveId: finisherId || undefined,
+        continueOnHit: continueOnHit.querySelector('input')!.checked || undefined, endsBasicChain: endsBasicChain.querySelector('input')!.checked || undefined,
+      });
+      const custom = devTuning.overrides.combos[fighter.id]?.some(entry => entry.id === recipe?.id), original = recipe && devTuning.originalRecipe(recipe);
+      if (!recipe) devTuning.addCombo(fighter.id, { id: `dev-${Date.now().toString(36)}`, ...fields });
+      else if (custom || !original) devTuning.replaceCombo(fighter.id, { id: recipe.id, ...fields });
+      else devTuning.setRecipe(fighter.id, recipe.id, recipeChanges(original, fields));
+      this.comboEditing = undefined; this.changed();
+      this.status.textContent = `Combo “${fields.name}” ${recipe ? 'salvo' : 'criado'}.`; this.render();
     };
     return form;
   }
@@ -577,7 +593,7 @@ function number(value: number | undefined, change: (value: number | undefined) =
 function labelled(text: string, control: HTMLElement): HTMLElement {
   const label = el('label', 'developer-field'); label.append(el('span', '', text), control); return label;
 }
-function checkbox(text: string): HTMLElement { const box = input('checkbox', ''); return labelled(text, box); }
+function checkbox(text: string, checked = false): HTMLElement { const box = input('checkbox', ''); box.checked = checked; return labelled(text, box); }
 function choice(text: string, options: readonly (readonly [string, string])[], value: string, change: (value: string) => void): HTMLElement {
   const select = el('select');
   for (const [id, label] of options) { const option = el('option', '', label); option.value = id; select.append(option); }
@@ -598,8 +614,25 @@ function frameList(text: string): number[] {
 function withoutEmpty<T extends object>(value: T): T {
   return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as T;
 }
-function sameAs(recipe: ComboRecipe | undefined, tuning: { startupFrames?: number[]; recoveryFrames?: number }): boolean {
-  return String(recipe?.startupFrames ?? '') === String(tuning.startupFrames ?? '') && recipe?.recoveryFrames === tuning.recoveryFrames;
+/** Fields of an edited authored recipe that differ from the original; `null` drops an optional field. */
+function recipeChanges(original: ComboRecipe, edited: Omit<ComboRecipe, 'id'>): RecipeTuning {
+  const changes: Record<string, unknown> = {};
+  for (const field of RECIPE_FIELDS) {
+    if (JSON.stringify(original[field]) !== JSON.stringify(edited[field])) changes[field] = edited[field] ?? null;
+  }
+  return changes as RecipeTuning;
+}
+/**
+ * Sends a save to the development server. Writing the files makes the server reload the page, which aborts the request:
+ * that is a success (`'reloading'`), and restoring the adjustments then would bring back what the code now holds.
+ */
+async function post(url: string, body: BodyInit): Promise<Response | 'reloading' | undefined> {
+  let reloading = false;
+  const leave = () => { reloading = true; };
+  window.addEventListener('beforeunload', leave);
+  const response = await fetch(url, { method: 'POST', body }).catch(() => undefined);
+  window.removeEventListener('beforeunload', leave);
+  return reloading ? 'reloading' : response;
 }
 function imageSize(url: string): Promise<{ width: number; height: number }> {
   return new Promise(resolve => {

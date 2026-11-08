@@ -1,4 +1,4 @@
-import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, type DevOverrides } from './devOverrides';
+import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, type DevOverrides } from './devOverrides';
 
 /**
  * Writes developer tuning into the authored sources as text edits, so formatting and comments stay as they are:
@@ -50,6 +50,14 @@ function setEntry(source: string, open: number, key: string, text: string): stri
   return last ? splice(source, { start: last.end, end: last.end }, `, ${key}: ${text}`) : splice(source, { start: open + 1, end: open + 1 }, ` ${key}: ${text} `);
 }
 
+/** Removes `key` and its comma from the object literal opened at `open`, if present. */
+function removeEntry(source: string, open: number, key: string): string {
+  const { parts: found } = parts(source, open), index = found.findIndex(part => new RegExp(`^'?${key}'?\\s*:`).test(source.slice(part.start, part.end)));
+  if (index < 0) return source;
+  return index ? splice(source, { start: found[index - 1].end, end: found[index].end }, '')
+    : splice(source, { start: found[0].start, end: found[1]?.start ?? found[0].end }, '');
+}
+
 /** The opening bracket of the array or object assigned to `key`, as `moves: [` or `HUD = {`. */
 function opening(source: string, key: string): number {
   const match = new RegExp(`\\b${key}\\s*[:=]\\s*[[{]`).exec(source);
@@ -75,7 +83,7 @@ export function literal(value: unknown): string {
   return String(value);
 }
 
-/** One fighter's data file with its move timings, recipe timings and new recipes written in. */
+/** One fighter's data file with its move timings, edited recipes and new recipes written in. */
 export function editFighter(source: string, fighterId: string, overrides: Pick<DevOverrides, 'moves' | 'recipes' | 'combos'>): string {
   for (const [moveId, tuning] of Object.entries(overrides.moves[fighterId] ?? {})) {
     for (const field of MOVE_FIELDS) if (tuning[field] !== undefined) source = setEntry(source, item(source, 'moves', moveId), field, String(tuning[field]));
@@ -86,11 +94,22 @@ export function editFighter(source: string, fighterId: string, overrides: Pick<D
       source = setEntry(source, pushback.start, key, String(tuning[field]));
     }
   }
+  // Edits of a recipe created in the developer mode go into that new recipe, which is not in the file yet.
+  const added = (overrides.combos[fighterId] ?? []).map(recipe => {
+    const merged: Record<string, unknown> = { ...recipe };
+    for (const [field, value] of Object.entries(overrides.recipes[fighterId]?.[recipe.id] ?? {})) {
+      if (value === null) delete merged[field]; else merged[field] = value;
+    }
+    return merged;
+  });
   for (const [recipeId, tuning] of Object.entries(overrides.recipes[fighterId] ?? {})) {
-    if (tuning.startupFrames) source = setEntry(source, item(source, 'combos', recipeId), 'startupFrames', literal(tuning.startupFrames));
-    if (tuning.recoveryFrames !== undefined) source = setEntry(source, item(source, 'combos', recipeId), 'recoveryFrames', String(tuning.recoveryFrames));
+    if (added.some(recipe => recipe.id === recipeId)) continue;
+    for (const field of RECIPE_FIELDS) {
+      const value = tuning[field];
+      if (value === null) source = removeEntry(source, item(source, 'combos', recipeId), field);
+      else if (value !== undefined) source = setEntry(source, item(source, 'combos', recipeId), field, literal(value));
+    }
   }
-  const added = overrides.combos[fighterId] ?? [];
   if (added.length) {
     // New recipes go after the last one, one per line with its indentation and a trailing comma, like the authored ones.
     const array = opening(source, 'combos'), { parts: found, close } = parts(source, array), last = found[found.length - 1];
