@@ -8,6 +8,7 @@ import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shot
 import { fighterArt } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { VictoryScreen } from '../ui/VictoryScreen';
+import { applyContactFrames, contactFrameCut, contactFrameMargin, contactFrameSize, isContactSheet, type FrameCut } from '../rendering/contactEffects';
 import { gameImages, replaceImage, replacedImages, restoreImage } from './assetOverrides';
 import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, type DevOverrides, type MoveTuning } from './devOverrides';
 import { IMAGE_SECTIONS, imageFolder, textureFolder } from './imageCatalog';
@@ -189,10 +190,11 @@ export class DeveloperPanel {
       entry.setAttribute('aria-pressed', String(texture.id === this.spriteKey)); list.append(entry);
     }
     const viewer = el('div', 'developer-viewer');
-    const canvas = el('canvas'); canvas.width = 360; canvas.height = 360;
+    const canvas = el('canvas', 'developer-preview'); canvas.width = 360; canvas.height = 360;
     const info = el('p', 'developer-hint');
     const frames = this.spriteKey ? this.frameNames(this.spriteKey) : [];
     const sheet = this.spriteKey ? this.characterSheet(this.spriteKey) : undefined;
+    const cuts = this.spriteKey && isContactSheet(this.spriteKey) ? this.frameCutControls(this.spriteKey, () => draw()) : undefined;
     const draw = () => {
       const context = canvas.getContext('2d');
       if (!context || !this.spriteKey || !frames.length) { info.textContent = 'Nenhuma textura.'; return; }
@@ -201,8 +203,19 @@ export class DeveloperPanel {
       context.clearRect(0, 0, canvas.width, canvas.height);
       const label = `${this.spriteKey} · quadro ${frames[this.spriteFrame]} (${this.spriteFrame + 1}/${frames.length}) · ${frame.realWidth}×${frame.realHeight}`;
       if (!sheet) {
-        const scale = Math.min(canvas.width / frame.realWidth, canvas.height / frame.realHeight);
-        this.drawFrame(context, frame, frame.realHeight * scale, (canvas.height + frame.realHeight * scale) / 2, 1);
+        // Recut sheets show their fixed frame as an outline, so a drawing that overflows it stands out.
+        const scale = Math.min(canvas.width / frame.realWidth, canvas.height / frame.realHeight) * (cuts ? .7 : 1);
+        const top = (canvas.height - frame.realHeight * scale) / 2;
+        this.drawFrame(context, frame, frame.realHeight * scale, top + frame.realHeight * scale, 1);
+        if (cuts) {
+          context.strokeStyle = '#efe4cc88'; context.setLineDash([6, 4]);
+          const left = (canvas.width - frame.realWidth * scale) / 2;
+          context.strokeRect(left, top, frame.realWidth * scale, frame.realHeight * scale);
+          // The cut, outlined as in the sheet overview, where it sits inside the frame.
+          context.setLineDash([]); context.strokeStyle = '#e23a1c'; context.lineWidth = 2;
+          context.strokeRect(left + frame.x * scale, top + frame.y * scale, frame.cutWidth * scale, frame.cutHeight * scale);
+          context.lineWidth = 1; cuts.show(this.spriteFrame);
+        }
         info.textContent = label; return;
       }
       // Game proportions: the idle's first drawing at its automatic size as a faint outline behind, on the same feet line.
@@ -223,7 +236,10 @@ export class DeveloperPanel {
     controls.append(button('◀ Quadro', () => step(-1)), play, button('Quadro ▶', () => step(1)), labelled('Quadros/s', fps), flip);
     viewer.append(canvas, info, controls);
     if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment));
-    viewer.append(this.saveToCode('tamanhos', ['spriteScales'], '/__dev/sprite-scales'), this.spriteReset());
+    const actions = el('div', 'developer-row');
+    if (cuts) { viewer.append(cuts.element); actions.append(this.saveToCode('cortes', ['frameCuts', 'frameSizes'], '/__dev/overrides')); }
+    if (sheet) actions.append(this.saveToCode('tamanhos', ['spriteScales'], '/__dev/sprite-scales'));
+    viewer.append(actions); actions.append(this.spriteReset());
     const layout = el('div', 'developer-split'); layout.append(list, viewer);
     page.append(layout);
     draw();
@@ -241,6 +257,75 @@ export class DeveloperPanel {
       adjustment: devTuning.overrides.spriteScales[`${fighter}:${name}`] ?? 1,
       scale: (sheet: string, frame: number) => autoSpriteScale(definition, sizing.measurements, sheet, frame, sizing.calibration),
     };
+  }
+  /**
+   * Cut of the shown frame in the sheet and its place inside the fixed frame, beside the whole sheet with the cut
+   * outlined. Editing pauses on that frame and applies at once in the game; `redraw` repaints the preview while dragging.
+   */
+  private frameCutControls(key: string, redraw: () => void): { element: HTMLElement; show: (frame: number) => void } {
+    const image = this.scene.textures.get(key).getSourceImage() as HTMLImageElement;
+    const overview = el('canvas'); overview.width = 360; overview.height = Math.round(360 * image.height / image.width);
+    const fields = [['x', 'Corte X'], ['y', 'Corte Y'], ['width', 'Largura'], ['height', 'Altura'], ['left', 'Posição X'], ['top', 'Posição Y']] as const;
+    const inputs = fields.map(([field]) => {
+      const editor = input('number', ''); editor.step = '1';
+      editor.onchange = () => {
+        if (editor.value === '') return;
+        this.spritePlaying = false;
+        // Positions are typed against the dashed frame but kept against the grid frame, so resizing the frame moves no drawing.
+        const value = Math.round(Number(editor.value)) - (field === 'left' ? margin.x : field === 'top' ? margin.y : 0);
+        devTuning.setFrameCut(key, this.spriteFrame, { ...contactFrameCut(key, this.spriteFrame), [field]: value });
+        applyContactFrames(this.scene.textures, key); this.changed(); this.render();
+      };
+      return editor;
+    });
+    const margin = contactFrameMargin(key), size = contactFrameSize(key);
+    const row = el('div', 'developer-row');
+    const restore = button('Restaurar quadro', () => {
+      devTuning.setFrameCut(key, this.spriteFrame, undefined); applyContactFrames(this.scene.textures, key); this.changed(); this.render();
+    });
+    row.append(...fields.map(([, label], index) => labelled(label, inputs[index])), restore,
+      el('p', 'developer-hint', 'Corte: retângulo vermelho na folha; arraste as bordas para redimensioná-lo sem mover o desenho, ou o interior para deslocá-lo. Posição: canto do corte dentro do quadro tracejado.'));
+    // The dashed frame is the same for the whole sheet; it grows around its center and the game compensates its scale.
+    const resize = (dimension: 'width' | 'height') => number(size[dimension], value => {
+      const next = { ...size, [dimension]: Math.max(1, Math.round(value ?? 0)) };
+      devTuning.setFrameSize(key, value ? next : undefined); applyContactFrames(this.scene.textures, key); this.changed(); this.render();
+    });
+    const sizeRow = el('div', 'developer-row'); sizeRow.classList.toggle('developer-changed', Boolean(devTuning.overrides.frameSizes[key]));
+    sizeRow.append(labelled('Largura do quadro', resize('width')), labelled('Altura do quadro', resize('height')),
+      button('Restaurar tamanho do quadro', () => { devTuning.setFrameSize(key, undefined); applyContactFrames(this.scene.textures, key); this.changed(); this.render(); }),
+      el('p', 'developer-hint', 'Quadro tracejado da folha inteira: cresce a partir do centro para envolver os desenhos, sem mudar o tamanho do efeito no jogo.'));
+    // Dragging an edge of the outline resizes the cut and keeps the drawing in place; dragging inside moves the cut.
+    overview.onpointerdown = down => {
+      const start = contactFrameCut(key, this.spriteFrame), box = overview.getBoundingClientRect(), scale = box.width / image.width;
+      const at = (event: PointerEvent) => ({ x: (event.clientX - box.left) / scale, y: (event.clientY - box.top) / scale });
+      const origin = at(down), near = (value: number, edge: number) => Math.abs(value - edge) * scale <= 6;
+      const within = (value: number, from: number, size: number) => value > from - 6 / scale && value < from + size + 6 / scale;
+      if (!within(origin.x, start.x, start.width) || !within(origin.y, start.y, start.height)) return;
+      const edges = { left: near(origin.x, start.x), right: near(origin.x, start.x + start.width), top: near(origin.y, start.y), bottom: near(origin.y, start.y + start.height) };
+      const move = !Object.values(edges).some(Boolean);
+      window.clearInterval(this.spriteTimer); this.spritePlaying = false; overview.setPointerCapture(down.pointerId);
+      overview.onpointermove = event => {
+        const point = at(event), dx = Math.round(point.x - origin.x), dy = Math.round(point.y - origin.y), cut = { ...start };
+        if (move) { cut.x += dx; cut.y += dy; }
+        if (edges.left) { const d = Math.min(dx, start.width - 1); cut.x += d; cut.width -= d; cut.left += d; }
+        if (edges.top) { const d = Math.min(dy, start.height - 1); cut.y += d; cut.height -= d; cut.top += d; }
+        if (edges.right) cut.width = Math.max(1, start.width + dx);
+        if (edges.bottom) cut.height = Math.max(1, start.height + dy);
+        devTuning.setFrameCut(key, this.spriteFrame, cut); applyContactFrames(this.scene.textures, key); redraw();
+      };
+      overview.onpointerup = () => { overview.onpointermove = overview.onpointerup = null; this.changed(); this.render(); };
+    };
+    const element = el('div', 'developer-cuts'); element.append(overview, row, sizeRow);
+    const show = (frame: number) => {
+      const cut: FrameCut = contactFrameCut(key, frame), scale = overview.width / image.width, context = overview.getContext('2d');
+      const shown = { ...cut, left: cut.left + margin.x, top: cut.top + margin.y };
+      fields.forEach(([field], index) => { if (document.activeElement !== inputs[index]) inputs[index].value = String(shown[field]); });
+      row.classList.toggle('developer-changed', Boolean(devTuning.overrides.frameCuts[key]?.[frame]));
+      if (!context) return;
+      context.clearRect(0, 0, overview.width, overview.height); context.drawImage(image, 0, 0, overview.width, overview.height);
+      context.strokeStyle = '#e23a1c'; context.lineWidth = 2; context.strokeRect(cut.x * scale, cut.y * scale, cut.width * scale, cut.height * scale);
+    };
+    return { element, show };
   }
   /** Animation size over the automatic (or validated) scale; it applies at once in the game. */
   private sizeControls(fighter: string, name: string, adjustment: number): HTMLElement {

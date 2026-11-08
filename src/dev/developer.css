@@ -30,6 +30,11 @@
 .developer-list { display: flex; flex-direction: column; gap: 2px; max-height: 520px; overflow: auto; }
 .developer-list button { text-align: left; }
 .developer-viewer { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 0; overflow: auto; }
+/* The preview takes whatever height the controls leave, so the viewer fits without scrolling. */
+.developer-preview { flex: 1 1 0; min-height: 120px; max-height: 360px; width: auto; aspect-ratio: 1; }
+.developer-viewer > :not(.developer-preview) { flex: none; }
+.developer-cuts { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: none; }
+.developer-cuts canvas { cursor: crosshair; touch-action: none; }
 .developer-viewer canvas { max-width: 100%; background: repeating-conic-gradient(#2a221c 0 25%, #1d1814 0 50%) 0 0 / 24px 24px; border: 1px solid #efe4cc44; }
 .developer-scroll { overflow: auto; }
 .developer-table { border-collapse: collapse; width: 100%; }

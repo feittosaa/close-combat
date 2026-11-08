@@ -2,6 +2,7 @@ import type { CharacterDefinition, ComboRecipe } from '../engine/data/characters
 import type { MoveDefinition } from '../engine/data/moves';
 import { HUD } from '../ui/hudTheme';
 import { sheetScaleAdjustments } from '../rendering/animations/spriteScale';
+import { frameCutAdjustments, frameSizeAdjustments, type FrameCut, type FrameSize } from '../rendering/contactEffects';
 
 /** Move fields the developer mode may retune; everything else stays as authored in the fighter data. */
 export const MOVE_FIELDS = ['startup', 'activeFrames', 'recovery', 'damage', 'hitstun', 'blockstun'] as const;
@@ -22,10 +23,14 @@ export interface DevOverrides {
   colors: Record<string, string>;
   /** Animation size multipliers per `<fighter>:<sheet>`, over the automatic or validated scale. */
   spriteScales: Record<string, number>;
+  /** Frame cuts of contact sheets per texture and frame index (`frames.json` beside the sheets). */
+  frameCuts: Record<string, Record<string, FrameCut>>;
+  /** Frame sizes of contact sheets per texture (`frames.json` beside the sheets). */
+  frameSizes: Record<string, FrameSize>;
 }
 
 const STORAGE_KEY = 'close-combat.dev-overrides';
-const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {} });
+const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {} });
 
 export function loadOverrides(storage: Pick<Storage, 'getItem'> | undefined = globalThis.localStorage): DevOverrides {
   try { return { ...empty(), ...JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<DevOverrides> }; } catch { return empty(); }
@@ -84,6 +89,10 @@ export class DevTuning {
     }
     sheetScaleAdjustments.clear();
     for (const [sheet, scale] of Object.entries(this.overrides.spriteScales)) sheetScaleAdjustments.set(sheet, scale);
+    frameCutAdjustments.clear();
+    for (const [texture, frames] of Object.entries(this.overrides.frameCuts)) frameCutAdjustments.set(texture, frames);
+    frameSizeAdjustments.clear();
+    for (const [texture, size] of Object.entries(this.overrides.frameSizes)) frameSizeAdjustments.set(texture, size);
     const hud = JSON.parse(this.baseline.hud) as Record<string, unknown>;
     for (const token of HUD_COLORS) if (this.overrides.colors[`hud:${token}`]) write(hud, token, fromCss(this.overrides.colors[`hud:${token}`], read(hud, token)));
     Object.assign(HUD as Record<string, unknown>, hud);
@@ -121,6 +130,16 @@ export class DevTuning {
   }
   resetFighter(fighterId: string): void {
     delete this.overrides.moves[fighterId]; delete this.overrides.recipes[fighterId]; delete this.overrides.combos[fighterId]; this.commit();
+  }
+  setFrameCut(texture: string, frame: number, cut: FrameCut | undefined): void {
+    const frames = { ...(this.overrides.frameCuts[texture] ?? {}) };
+    if (cut) frames[frame] = cut; else delete frames[frame];
+    if (Object.keys(frames).length) this.overrides.frameCuts[texture] = frames; else delete this.overrides.frameCuts[texture];
+    this.commit();
+  }
+  setFrameSize(texture: string, size: FrameSize | undefined): void {
+    if (size) this.overrides.frameSizes[texture] = size; else delete this.overrides.frameSizes[texture];
+    this.commit();
   }
   /** Replaces whole sections, e.g. `{ colors: {} }` to clear them or a saved copy to bring them back. */
   assign(sections: Partial<DevOverrides>): void { Object.assign(this.overrides, sections); this.commit(); }
