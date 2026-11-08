@@ -38,6 +38,20 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
     expect(literal(recipe)).toBe("{ id: 'dev-x', name: 'Teste', notation: '1,2', moveIds: ['light-punch', 'heavy-punch'], recoveryFrames: 12 }");
   });
 
+  it('edita nome, etapas e opções de uma receita existente, removendo opções desmarcadas', () => {
+    const edited = editFighter(cowboySource, 'cowboy', { ...none, recipes: { cowboy: { 'rapid-kicks': {
+      name: 'Chutes', moveIds: ['light-kick', 'heavy-kick'], continueOnHit: null, endsBasicChain: true,
+    } } } });
+    expect(edited.split('\n')[line(edited, 'rapid-kicks')])
+      .toBe("    { id: 'rapid-kicks', name: 'Chutes', notation: '3,3,3', moveIds: ['light-kick', 'heavy-kick'], endsBasicChain: true },");
+  });
+
+  it('aplica a edição de uma receita criada no painel na própria receita nova', () => {
+    const recipe = { id: 'dev-y', name: 'Teste', notation: '3,4', moveIds: ['light-kick', 'heavy-kick'], recoveryFrames: 12 };
+    const edited = editFighter(cowboySource, 'cowboy', { moves: {}, recipes: { cowboy: { 'dev-y': { name: 'Novo', recoveryFrames: null } } }, combos: { cowboy: [recipe] } });
+    expect(edited.split('\n')[line(edited, 'dev-y')]).toBe("    { id: 'dev-y', name: 'Novo', notation: '3,4', moveIds: ['light-kick', 'heavy-kick'] },");
+  });
+
   it('recusa golpes e receitas que não existem no arquivo', () => {
     expect(() => editFighter(shotoSource, 'shoto', { ...none, moves: { shoto: { inexistente: { startup: 1 } } } })).toThrow('inexistente');
   });

@@ -8,7 +8,11 @@ import { frameCutAdjustments, frameSizeAdjustments, type FrameCut, type FrameSiz
 export const MOVE_FIELDS = ['startup', 'activeFrames', 'recovery', 'damage', 'hitstun', 'blockstun'] as const;
 export type MoveField = typeof MOVE_FIELDS[number];
 export type MoveTuning = Partial<Record<MoveField | 'pushbackHit' | 'pushbackBlock', number>>;
-export type RecipeTuning = { startupFrames?: number[]; recoveryFrames?: number };
+/** Recipe fields the developer mode may edit; projectile sequences and launches stay as authored. */
+export const RECIPE_FIELDS = ['name', 'notation', 'moveIds', 'startupFrames', 'finisherMoveId', 'recoveryFrames', 'continueOnHit', 'endsBasicChain'] as const;
+type RecipeField = typeof RECIPE_FIELDS[number];
+/** Edited recipe fields; `null` removes an authored optional field. */
+export type RecipeTuning = { -readonly [K in RecipeField]?: ComboRecipe[K] | null };
 
 /** CSS custom properties of the menus and overlays, declared on `:root` in style.css. */
 export const CSS_COLORS = ['--ink', '--cream', '--cream-dim', '--paper-light', '--paper-shade', '--print', '--print-soft', '--red', '--accent'] as const;
@@ -67,7 +71,7 @@ export class DevTuning {
     for (const [move, original] of this.baseline.moves) Object.assign(move as Mutable<MoveDefinition>, structuredClone(original));
     for (const [recipe, original] of this.baseline.recipes) {
       const target = recipe as Mutable<ComboRecipe>;
-      target.startupFrames = original.startupFrames; target.recoveryFrames = original.recoveryFrames;
+      for (const field of RECIPE_FIELDS) (target as Record<string, unknown>)[field] = original[field];
     }
     for (const fighter of this.fighters) {
       const tuning = this.overrides.moves[fighter.id] ?? {};
@@ -81,8 +85,7 @@ export class DevTuning {
       for (const recipe of this.baseline.combos.get(fighter) ?? []) {
         const values = this.overrides.recipes[fighter.id]?.[recipe.id]; if (!values) continue;
         const target = recipe as Mutable<ComboRecipe>;
-        if (values.startupFrames) target.startupFrames = values.startupFrames;
-        if (values.recoveryFrames !== undefined) target.recoveryFrames = values.recoveryFrames;
+        for (const field of RECIPE_FIELDS) if (values[field] !== undefined) (target as Record<string, unknown>)[field] = values[field] ?? undefined;
       }
       const custom = this.overrides.combos[fighter.id] ?? [];
       (fighter as Mutable<CharacterDefinition>).combos = custom.length ? [...this.authoredCombos(fighter), ...custom] : this.baseline.combos.get(fighter);
@@ -111,11 +114,14 @@ export class DevTuning {
   }
   setRecipe(fighterId: string, recipeId: string, tuning: RecipeTuning): void {
     const recipes = { ...(this.overrides.recipes[fighterId] ?? {}) };
-    if (tuning.startupFrames || tuning.recoveryFrames !== undefined) recipes[recipeId] = tuning; else delete recipes[recipeId];
+    if (Object.keys(tuning).length) recipes[recipeId] = tuning; else delete recipes[recipeId];
     this.overrides.recipes[fighterId] = recipes; this.commit();
   }
   addCombo(fighterId: string, recipe: ComboRecipe): void {
     this.overrides.combos[fighterId] = [...(this.overrides.combos[fighterId] ?? []), recipe]; this.commit();
+  }
+  replaceCombo(fighterId: string, recipe: ComboRecipe): void {
+    this.overrides.combos[fighterId] = (this.overrides.combos[fighterId] ?? []).map(custom => custom.id === recipe.id ? recipe : custom); this.commit();
   }
   removeCombo(fighterId: string, recipeId: string): void {
     this.overrides.combos[fighterId] = (this.overrides.combos[fighterId] ?? []).filter(recipe => recipe.id !== recipeId); this.commit();
