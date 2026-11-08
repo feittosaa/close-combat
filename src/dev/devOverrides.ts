@@ -1,6 +1,7 @@
 import type { CharacterDefinition, ComboRecipe } from '../engine/data/characters';
 import type { MoveDefinition } from '../engine/data/moves';
 import { HUD } from '../ui/hudTheme';
+import { DEFAULT_HERO_FRAME, DEFAULT_TILE_FRAME, fighterArt, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { sheetScaleAdjustments } from '../rendering/animations/spriteScale';
 import { frameCutAdjustments, frameSizeAdjustments, type FrameCut, type FrameSize } from '../rendering/contactEffects';
 
@@ -20,6 +21,10 @@ export const CSS_COLORS = ['--ink', '--cream', '--cream-dim', '--paper-light', '
 export const HUD_COLORS = ['ink', 'inset', 'rail', 'gold', 'lightGold', 'ivory', 'muted', 'goldText',
   'players.0', 'players.1', 'playerText.0', 'playerText.1', 'rage.0', 'rage.1', 'rage.2', 'phases.0', 'phases.1', 'phases.2'] as const;
 
+/** Framing of one fighter's selection art: panel and tile images, HUD icon window and victory screen. */
+export interface SelectionTuning { hero?: SelectionFrame; tile?: SelectionFrame; iconWindow?: IconWindow; victory?: VictoryFrame }
+export const SELECTION_FIELDS = ['hero', 'tile', 'iconWindow', 'victory'] as const;
+
 export interface DevOverrides {
   moves: Record<string, Record<string, MoveTuning>>;
   recipes: Record<string, Record<string, RecipeTuning>>;
@@ -31,10 +36,12 @@ export interface DevOverrides {
   frameCuts: Record<string, Record<string, FrameCut>>;
   /** Frame sizes of contact sheets per texture (`frames.json` beside the sheets). */
   frameSizes: Record<string, FrameSize>;
+  /** Selection-screen framing per fighter id (`fighterArt.ts`). */
+  selection: Record<string, SelectionTuning>;
 }
 
 const STORAGE_KEY = 'close-combat.dev-overrides';
-const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {} });
+const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {}, selection: {} });
 
 export function loadOverrides(storage: Pick<Storage, 'getItem'> | undefined = globalThis.localStorage): DevOverrides {
   try { return { ...empty(), ...JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<DevOverrides> }; } catch { return empty(); }
@@ -44,7 +51,7 @@ export function saveOverrides(overrides: DevOverrides, storage: Pick<Storage, 's
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
-type Baseline = { moves: Map<MoveDefinition, MoveDefinition>; recipes: Map<ComboRecipe, ComboRecipe>; combos: Map<CharacterDefinition, readonly ComboRecipe[] | undefined>; hud: string };
+type Baseline = { moves: Map<MoveDefinition, MoveDefinition>; recipes: Map<ComboRecipe, ComboRecipe>; combos: Map<CharacterDefinition, readonly ComboRecipe[] | undefined>; hud: string; art: Map<FighterArt, SelectionTuning> };
 
 /**
  * Applies developer tuning to the live fighter data. The simulation reads these objects every frame, so changes reach
@@ -58,13 +65,32 @@ export class DevTuning {
       recipes: new Map(fighters.flatMap(fighter => (fighter.combos ?? []).map(recipe => [recipe, structuredClone(recipe)] as const))),
       combos: new Map(fighters.map(fighter => [fighter, fighter.combos] as const)),
       hud: JSON.stringify(HUD),
+      art: new Map(Object.values(fighterArt).map(art => [art, structuredClone({ hero: art.hero, tile: art.tile, iconWindow: art.iconWindow, victory: art.victory })] as const)),
     };
+    if (this.dropOrphanRecipes()) saveOverrides(this.overrides);
     this.apply();
   }
 
+  /**
+   * Edits of a recipe that is neither authored nor created in the panel (left behind when a created combo went away)
+   * cannot be shown or saved, and made saving combos fail; they are dropped. Returns whether anything was dropped.
+   */
+  private dropOrphanRecipes(): boolean {
+    let dropped = false;
+    for (const [fighterId, edits] of Object.entries(this.overrides.recipes)) {
+      const fighter = this.fighters.find(entry => entry.id === fighterId);
+      const known = new Set([...(fighter ? this.authoredCombos(fighter) : []), ...(this.overrides.combos[fighterId] ?? [])].map(recipe => recipe.id));
+      for (const recipeId of Object.keys(edits)) if (!known.has(recipeId)) { delete edits[recipeId]; dropped = true; }
+      if (!Object.keys(edits).length) delete this.overrides.recipes[fighterId];
+    }
+    return dropped;
+  }
   original(move: MoveDefinition): MoveDefinition { return this.baseline.moves.get(move) ?? move; }
   originalRecipe(recipe: ComboRecipe): ComboRecipe | undefined { return this.baseline.recipes.get(recipe); }
   authoredCombos(fighter: CharacterDefinition): readonly ComboRecipe[] { return this.baseline.combos.get(fighter) ?? []; }
+  authoredSelection(id: string): Required<SelectionTuning> | undefined {
+    const base = this.baseline.art.get(fighterArt[id]); return base && { hero: base.hero ?? DEFAULT_HERO_FRAME, tile: base.tile ?? DEFAULT_TILE_FRAME, iconWindow: base.iconWindow!, victory: base.victory! };
+  }
   hudDefault(token: string): string { return toCss(read(JSON.parse(this.baseline.hud) as Record<string, unknown>, token)); }
 
   apply(): void {
@@ -96,6 +122,10 @@ export class DevTuning {
     for (const [texture, frames] of Object.entries(this.overrides.frameCuts)) frameCutAdjustments.set(texture, frames);
     frameSizeAdjustments.clear();
     for (const [texture, size] of Object.entries(this.overrides.frameSizes)) frameSizeAdjustments.set(texture, size);
+    for (const [art, original] of this.baseline.art) Object.assign(art as Mutable<FighterArt>, structuredClone(original));
+    for (const [id, tuning] of Object.entries(this.overrides.selection)) {
+      const art = fighterArt[id]; if (art) Object.assign(art as Mutable<FighterArt>, structuredClone(tuning));
+    }
     const hud = JSON.parse(this.baseline.hud) as Record<string, unknown>;
     for (const token of HUD_COLORS) if (this.overrides.colors[`hud:${token}`]) write(hud, token, fromCss(this.overrides.colors[`hud:${token}`], read(hud, token)));
     Object.assign(HUD as Record<string, unknown>, hud);
@@ -134,9 +164,17 @@ export class DevTuning {
     if (scale === undefined || scale === 1) delete this.overrides.spriteScales[sheet]; else this.overrides.spriteScales[sheet] = scale;
     this.commit();
   }
-  resetFighter(fighterId: string): void {
-    delete this.overrides.moves[fighterId]; delete this.overrides.recipes[fighterId]; delete this.overrides.combos[fighterId]; this.commit();
+  /** Sets one framing of a fighter's selection art; `undefined` returns it to the authored value. */
+  setSelection(id: string, field: keyof SelectionTuning, value: SelectionFrame | IconWindow | VictoryFrame | undefined): void {
+    const tuning: Record<string, unknown> = { ...(this.overrides.selection[id] ?? {}) };
+    if (value === undefined) delete tuning[field]; else tuning[field] = value;
+    if (Object.keys(tuning).length) this.overrides.selection[id] = tuning as SelectionTuning; else delete this.overrides.selection[id];
+    this.commit();
   }
+  /** Drops the move tuning of one fighter; its combos stay as they are. */
+  resetMoves(fighterId: string): void { delete this.overrides.moves[fighterId]; this.commit(); }
+  /** Drops the recipe edits and the panel-created combos of one fighter; its move tuning stays as it is. */
+  resetCombos(fighterId: string): void { delete this.overrides.recipes[fighterId]; delete this.overrides.combos[fighterId]; this.commit(); }
   setFrameCut(texture: string, frame: number, cut: FrameCut | undefined): void {
     const frames = { ...(this.overrides.frameCuts[texture] ?? {}) };
     if (cut) frames[frame] = cut; else delete frames[frame];

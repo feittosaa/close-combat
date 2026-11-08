@@ -44,8 +44,10 @@
 .fighter-selection .arena-step, .stage-selection .arena-step { margin: 0; padding: .8cqw 2.6cqw; font: 700 1.8cqw/1 var(--font); letter-spacing: .06em; text-shadow: var(--misprint); }
 .arena-hero { position: absolute; top: 0; left: 0; width: 50%; height: 100%; overflow: hidden; }
 .arena-hero.right { left: auto; right: 0; }
-.arena-hero img, .arena-hero svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: left center; filter: sepia(.08); }
-.arena-hero.right img, .arena-hero.right svg { transform: scaleX(-1); }
+/* Zoom and focal point by layout alone: the image box grows around the focal point. */
+.arena-hero img, .arena-hero svg { position: absolute; width: calc(var(--zoom, 1) * 100%); height: calc(var(--zoom, 1) * 100%); left: calc((1 - var(--zoom, 1)) * var(--x, 0%)); top: calc((1 - var(--zoom, 1)) * var(--y, 50%)); object-fit: cover; object-position: var(--x, 0%) var(--y, 50%); filter: sepia(.08); }
+/* Player 2 sees the art mirrored: the image flips in place and its box sits at the mirrored focal point. */
+.arena-hero.right img, .arena-hero.right svg { left: calc((1 - var(--zoom, 1)) * (100% - var(--x, 0%))); transform: scaleX(-1); }
 .arena-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, var(--ink) 4%, transparent 55%); }
 /* The hourglass between the fighters: solid black, pinched at the middle. */
 .fighter-selection::before { content: ''; position: absolute; top: 0; bottom: 0; left: 43%; width: 14%; z-index: 2; pointer-events: none; background: #000; clip-path: polygon(0 0, 100% 0, 64% 45%, 100% 100%, 0 100%, 36% 45%); }
@@ -67,10 +69,17 @@
 .arena-palette[aria-pressed="true"] { outline: .18cqw solid var(--red); outline-offset: .18cqw; }
 .arena-palette:disabled { opacity: .3; filter: grayscale(.8); cursor: not-allowed; }
 .arena-selection { position: absolute; z-index: 4; left: 18%; bottom: 4%; width: 64%; padding: 1.2cqw 1.6cqw; text-align: center; }
+/* Character and stage select: no card behind the roster. Tiles and buttons keep their own boxes with a drop shadow around them; text outside boxes reads over the art through a text shadow. */
+.arena-selection:is(.fighter-selection *, .stage-selection *) { background: none; border: 0; outline: 0; box-shadow: none; padding: 0; }
+.arena-selection:is(.fighter-selection *, .stage-selection *) > :is(.arena-eyebrow, h2, .arena-opponent) { text-shadow: 0 0 .35cqw #000, 0 0 .12cqw #000, .08cqw .1cqw 0 #000; }
+.arena-selection:is(.fighter-selection *, .stage-selection *) > :is(.arena-eyebrow, .arena-opponent) { color: var(--cream); }
+.arena-selection:is(.fighter-selection *, .stage-selection *) :is(.arena-portrait, .arena-empty, .arena-random, .arena-back) { box-shadow: .15cqw .2cqw .4cqw #000c; }
+.arena-selection:is(.fighter-selection *, .stage-selection *) .arena-back:not(:hover, :focus-visible) { background: var(--paper-light) !important; }
+.arena-selection:is(.fighter-selection *, .stage-selection *) .arena-confirm { box-shadow: inset 0 0 0 .12cqw var(--paper-light), .15cqw .2cqw .4cqw #000c; }
 .arena-selection h2 { margin: .2cqw 0 .6cqw; font: 700 1.4cqw var(--font); letter-spacing: .05em; text-transform: uppercase; color: var(--red); text-shadow: var(--misprint); }
 .arena-roster { display: grid; grid-template-columns: repeat(10, 5cqw); justify-content: center; gap: .35cqw; }
 .arena-portrait, .arena-empty, .arena-random { position: relative; width: 5cqw; aspect-ratio: 1; box-sizing: border-box; overflow: hidden; padding: 0; border: .14cqw solid var(--print); background: var(--paper-shade); }
-.arena-portrait img, .arena-portrait svg { width: 100%; height: 100%; object-fit: cover; filter: sepia(.08); }
+.arena-portrait img, .arena-portrait svg { position: absolute; width: calc(var(--zoom, 1) * 100%); height: calc(var(--zoom, 1) * 100%); left: calc((1 - var(--zoom, 1)) * var(--x, 50%)); top: calc((1 - var(--zoom, 1)) * var(--y, 50%)); object-fit: cover; object-position: var(--x, 50%) var(--y, 50%); filter: sepia(.08); }
 .arena-portrait span { position: absolute; inset: auto 0 0; background: var(--paper-light); border-top: .1cqw solid var(--print); font: 600 .75cqw var(--font); color: var(--print); }
 .arena-portrait[aria-pressed="true"], .arena-random[aria-pressed="true"] { outline: .22cqw solid var(--red); outline-offset: .08cqw; }
 .arena-portrait.unavailable img { filter: grayscale(.85) brightness(.7); }

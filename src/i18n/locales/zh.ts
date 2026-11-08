@@ -279,7 +279,7 @@ export const zh: Locale = {
     'move.cowboy.heavy-shot': '对空炸药', 'move.cowboy.push-away': '推开', 'move.cowboy.bulls-eye': '终极技 — 正中靶心',
     'combo.cowboy.crouch-anti-air-double': '双重对空', 'combo.cowboy.heavy-kicks-shot': '重脚与射击', 'combo.cowboy.rapid-kicks': '快速连踢',
     'combo.cowboy.delayed-shots': '连续射击', 'combo.cowboy.crouch-butt-shot': '枪托与射击', 'combo.cowboy.air-light-light-heavy': '空中轻射与重射',
-    'combo.cowboy.air-heavy-heavy': '空中重射', 'chain.cowboy.0': '快速连踢与射击',
+    'combo.cowboy.air-heavy-heavy': '空中重射', 'combo.cowboy.dev-mw7eonvm': '舞蹈', 'chain.cowboy.0': '快速连踢与射击',
     'stage.fazenda': '农场', 'stage.sala-treino': '训练室', 'stage.saloon-dia': '酒馆 · 白天', 'stage.saloon-noite': '酒馆 · 夜晚', 'stage.saloon': '酒馆 · 复古',
   },
 };

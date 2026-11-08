@@ -1,4 +1,4 @@
-import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, type DevOverrides } from './devOverrides';
+import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, SELECTION_FIELDS, type DevOverrides } from './devOverrides';
 
 /**
  * Writes developer tuning into the authored sources as text edits, so formatting and comments stay as they are:
@@ -117,6 +117,21 @@ export function editFighter(source: string, fighterId: string, overrides: Pick<D
     const indent = /([ \t]*)$/.exec(source.slice(0, last.start))![1], trailing = source.slice(last.end, close).trimStart().startsWith(',');
     const at = trailing ? source.indexOf(',', last.end) + 1 : last.end;
     source = splice(source, { start: at, end: at }, `${trailing ? '' : ','}${added.map(recipe => `\n${indent}${literal(recipe)},`).join('')}`);
+  }
+  return source;
+}
+
+/** fighterArt.ts with the selection framing (panel and tile images, HUD icon window, victory frame) of each fighter written in. */
+export function editFighterArt(source: string, selection: DevOverrides['selection']): string {
+  for (const [id, tuning] of Object.entries(selection)) {
+    for (const field of SELECTION_FIELDS) {
+      if (!tuning[field]) continue;
+      const registry = /\bfighterArt:[^=]*=\s*\{/.exec(source);
+      if (!registry) throw new Error('“fighterArt” não encontrado.');
+      const art = entry(source, registry.index + registry[0].length - 1, id);
+      if (!art || source[art.start] !== '{') throw new Error(`“${id}” não encontrado em fighterArt.`);
+      source = setEntry(source, art.start, field, literal(tuning[field]));
+    }
   }
   return source;
 }

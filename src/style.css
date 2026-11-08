@@ -33,6 +33,7 @@ canvas { display: block; }
 canvas.menu-film { filter: sepia(.1) saturate(.95); }
 
 .loading-screen { position: fixed; inset: 0; z-index: 200; display: flex; align-items: end; justify-content: end; padding: 6vw; background-color: var(--ink); color: var(--cream); font: 600 clamp(15px, 2vw, 28px) var(--font); letter-spacing: .14em; text-shadow: var(--misprint); isolation: isolate; overflow: hidden; }
+.loading-screen.leaving { opacity: 0; pointer-events: none; transition: opacity .6s ease-out; }
 .loading-screen::before { content: ''; position: absolute; inset: -1.5%; z-index: -1; background-image: linear-gradient(0deg, #0b0a0add, transparent 70%), var(--loading-wallpaper); background-size: cover; background-position: left center; filter: sepia(.1); animation: loading-wallpaper-left 20s linear, loading-wallpaper-fade 20s linear; }
 .loading-screen::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--grain) 0 0 / 180px 180px; box-shadow: var(--vignette); mix-blend-mode: overlay; opacity: .3; }
 .loading-screen.wallpaper-right::before { animation-name: loading-wallpaper-right, loading-wallpaper-fade; }

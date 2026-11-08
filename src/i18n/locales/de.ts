@@ -279,7 +279,7 @@ export const de: Locale = {
     'move.cowboy.heavy-shot': 'Anti-Air-Dynamit', 'move.cowboy.push-away': 'Wegstoßen', 'move.cowboy.bulls-eye': 'Ultimate — Bulls Eye',
     'combo.cowboy.crouch-anti-air-double': 'Doppelter Anti-Air', 'combo.cowboy.heavy-kicks-shot': 'Schwere Tritte und Schuss', 'combo.cowboy.rapid-kicks': 'Schnelle Tritte',
     'combo.cowboy.delayed-shots': 'Schussfolge', 'combo.cowboy.crouch-butt-shot': 'Kolbenhiebe und Schuss', 'combo.cowboy.air-light-light-heavy': 'Leichte und schwerer Luftschuss',
-    'combo.cowboy.air-heavy-heavy': 'Schwere Luftschüsse', 'chain.cowboy.0': 'Schnelle Tritte und Schüsse',
+    'combo.cowboy.air-heavy-heavy': 'Schwere Luftschüsse', 'combo.cowboy.dev-mw7eonvm': 'Tanz', 'chain.cowboy.0': 'Schnelle Tritte und Schüsse',
     'stage.fazenda': 'Bauernhof', 'stage.sala-treino': 'Trainingsraum', 'stage.saloon-dia': 'Saloon · Tag', 'stage.saloon-noite': 'Saloon · Nacht', 'stage.saloon': 'Saloon · Retro',
   },
 };

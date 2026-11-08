@@ -1,4 +1,4 @@
-import { fighterArt, randomArt } from './fighterArt';
+import { fighterArt, frameStyle, heroFrame, holdSelectionArt, randomArt, tileFrame } from './fighterArt';
 import { t } from '../i18n/i18n';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FighterSelection, SelectionPlayer } from './FighterSelection';
@@ -18,6 +18,7 @@ interface SelectionViewOptions {
 /** One selection layout for every mode, with mode-specific confirmation only. */
 export function renderFighterSelection(root: HTMLElement, options: SelectionViewOptions): void {
   const { fighters, selection, versus, selectOpponent } = options;
+  holdSelectionArt();
   const node = (tag: string, className: string, text = ''): HTMLElement => {
     const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
   };
@@ -26,7 +27,11 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
   };
   const fighterPortrait = (id: string, small: boolean): HTMLImageElement => {
     const image = document.createElement('img');
-    image.src = small ? fighterArt[id].icon : fighterArt[id].background;
+    // Decoded ahead of time: painting waits for the decoded copy instead of showing an empty frame for an instant.
+    image.decoding = 'sync';
+    const art = fighterArt[id];
+    image.src = small ? art.icon : art.background;
+    image.style.cssText = frameStyle(small ? tileFrame(art) : heroFrame(art));
     image.alt = '';
     return image;
   };
@@ -36,7 +41,7 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
     // A player who picked the random tile sees the mystery silhouette instead of the fighter last highlighted.
     const randomPick = selection.random[player] && (player === 0 || selectOpponent);
     const hero = node('div', `arena-hero ${side}`);
-    if (randomPick) { const image = document.createElement('img'); image.src = randomArt.background; image.alt = ''; hero.append(image); }
+    if (randomPick) { const image = document.createElement('img'); image.decoding = 'sync'; image.src = randomArt.background; image.alt = ''; hero.append(image); }
     else hero.append(fighterPortrait(entry.id, false));
     const name = node('div', `arena-fighter-name ${side}`);
     if ((player === 0 || selectOpponent) && selection.choosingColor[player]) {
@@ -86,7 +91,7 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
       const hero = root.querySelector(`.arena-hero.${side} img`) as HTMLImageElement | null;
       const heading = root.querySelector(`.arena-fighter-name.${side} h1`);
       const status = root.querySelector('.arena-opponent');
-      if (hero) hero.src = art.background;
+      if (hero) { hero.src = art.background; hero.style.cssText = frameStyle(heroFrame(art)); }
       const eyebrow = root.querySelector(`.arena-fighter-name.${side} .arena-eyebrow`);
       if (heading) heading.textContent = art.name;
       if (eyebrow) eyebrow.textContent = t('fighter.unavailable');

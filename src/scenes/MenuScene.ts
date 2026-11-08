@@ -3,6 +3,7 @@ import { t } from '../i18n/i18n';
 
 import { FighterSelection } from '../ui/FighterSelection';
 import { renderFighterSelection } from '../ui/FighterSelectionView';
+import { releaseSelectionArt } from '../ui/fighterArt';
 import { renderStageDraw, renderStageSelection } from '../ui/StageSelectionView';
 import { StagePicker } from '../ui/StagePicker';
 import '../ui/menu.css';
@@ -14,6 +15,7 @@ import { getCharacterById, playableCharacters } from '../engine/data/characters'
 import { drawVersusStage, groupsFor, STAGE_GROUPS } from '../rendering/stages/stageGroups';
 import { ARCADE_DIFFICULTIES, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
 import { createArcadeRun, opponentFor, isTrainingMode, selectsOpponent, type MatchMode } from './matchSetup';
+import { createWallpaperShuffle } from '../ui/wallpaperShuffle';
 
 /** The developer entry, below the settings, exists only on the development server (see `src/dev`). */
 const DEVELOPER_ENTRY = import.meta.env.MODE === 'development'
@@ -43,8 +45,9 @@ export class MenuScene extends Phaser.Scene {
   private get fighterIndex(): number { return this.selection.indices[0]; }
   private set fighterIndex(index: number) { this.selection.select(0, index); }
   private background?: Phaser.GameObjects.Image;
-  private wallpaperIndex = 0;
-  private readonly wallpapers = ['menu-solar', 'menu-bob'];
+  private wallpapersShown = 0;
+  private readonly nextWallpaperIndex = createWallpaperShuffle(3);
+  private readonly wallpapers = ['menu-solar', 'menu-bob', 'menu-grappler'];
   private readonly wallpaperMotion = { progress: 0 };
   private menuElement?: HTMLElement;
   private resizeObserver?: ResizeObserver;
@@ -57,7 +60,7 @@ export class MenuScene extends Phaser.Scene {
       const moving = this.page === 'home' && !this.motionPreference?.matches;
       const scale = frame.scale * (moving ? 1.03 : 1);
       const travel = Math.max(0, this.background.frame.width * scale - frame.x);
-      const progress = this.wallpaperIndex % 2 === 0 ? 1 - this.wallpaperMotion.progress : this.wallpaperMotion.progress;
+      const progress = this.wallpapersShown % 2 === 0 ? 1 - this.wallpaperMotion.progress : this.wallpaperMotion.progress;
       this.background.setPosition(frame.x + (moving ? travel * progress : 0), frame.y).setScale(scale);
       configureUiCamera(this.cameras.main, rect);
     }
@@ -103,7 +106,7 @@ export class MenuScene extends Phaser.Scene {
   constructor() { super('MenuScene'); }
   init(data: { fighterId?: string; selectVersus?: boolean; stageChooser?: 0 | 1 } = {}): void {
     this.page = data.selectVersus ? 'fighter' : 'home'; this.mode = data.selectVersus ? 'versus' : 'arcade'; this.transitioning = false; this.selection.reopen();
-    this.wallpaperIndex = 0;
+    this.wallpapersShown = 0;
     this.picker = undefined; this.drawing = false; this.chosenStageId = undefined; this.stageWinner = data.stageChooser;
     const index = this.fighters.findIndex(f => f.id === data.fighterId);
     if (index >= 0) this.fighterIndex = index;
@@ -111,8 +114,8 @@ export class MenuScene extends Phaser.Scene {
   create(): void {
     configureUiCamera(this.cameras.main, this.scale);
     const { width, height } = LOGICAL_VIEW;
-    this.textures.get('menu-solar').setFilter(Phaser.Textures.FilterMode.LINEAR);
-    const background = this.add.image(width, height / 2, 'menu-solar').setOrigin(1, .5);
+    for (const key of this.wallpapers) this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+    const background = this.add.image(width, height / 2, this.wallpapers[this.nextWallpaperIndex()]).setOrigin(1, .5);
     this.background = background;
     const startWallpaperMotion = () => {
       this.tweens.killTweensOf(this.wallpaperMotion);
@@ -125,8 +128,8 @@ export class MenuScene extends Phaser.Scene {
       if (this.page !== 'home') return;
       const switchWallpaper = () => {
         if (this.page !== 'home' || !this.background) return;
-        this.wallpaperIndex = (this.wallpaperIndex + 1) % this.wallpapers.length;
-        this.background.setTexture(this.wallpapers[this.wallpaperIndex]);
+        this.wallpapersShown++;
+        this.background.setTexture(this.wallpapers[this.nextWallpaperIndex()]);
         startWallpaperMotion();
         this.alignMenu();
       };
@@ -164,6 +167,7 @@ export class MenuScene extends Phaser.Scene {
       window.removeEventListener('resize', this.alignMenu);
       this.menuElement?.remove(); this.menuElement = undefined;
       this.game.canvas.classList.remove('menu-film');
+      releaseSelectionArt();
     });
   }
   private render(): void {
@@ -171,6 +175,8 @@ export class MenuScene extends Phaser.Scene {
     if (this.background) { this.tweens.killTweensOf(this.background); this.background.setAlpha(1); }
     this.alignMenu();
     this.menuElement.replaceChildren();
+    // The character select holds its decoded art (see `renderFighterSelection`); every other page lets it go.
+    if (this.page !== 'fighter') releaseSelectionArt();
     this.renderMenu();
   }
   private renderMenu(): void {

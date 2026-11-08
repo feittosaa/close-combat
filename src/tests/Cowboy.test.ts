@@ -623,7 +623,7 @@ describe('Cowboy protótipo', () => {
   it('tem quatro básicos por postura aérea e no chão e apenas as receitas autoradas', () => {
     expect(cowboy.moves.filter(move => move.category === 'basic' && !move.airborne)).toHaveLength(4);
     expect(cowboy.moves.filter(move => move.category === 'basic' && move.airborne)).toHaveLength(4);
-    expect(cowboy.combos?.map(combo => combo.notation)).toEqual(['d+2,2', '4,4,2', '3,3,3', '1,2,2,2', 'd+1,1,1', 'no ar + 1,1,2', 'no ar + 2,2']);
+    expect(cowboy.combos?.map(combo => combo.notation)).toEqual(['d+2,2', '4,4,2', '3,3,3', '1,2,2,2', 'd+1,1,1', 'no ar + 1,1,2', 'no ar + 2,2', '3,1,4,2,1+2']);
   });
   it.each([0, 1])('executa os disparos e o afastamento do lado %i', player => {
     for (const [button, id, distance] of [['1', 'quick-shot', 65], ['2', 'heavy-shot', 65], ['4', 'push-away', 56]] as const) {

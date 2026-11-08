@@ -40,7 +40,7 @@ import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
 import { ArcadeController, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
-import { createArcadeRun, opponentFor, stageForMatch, matchPalettes, type ArcadeRun, type FightSetup, type MatchMode } from './matchSetup';
+import { createArcadeRun, isTrainingMode, opponentFor, stageForMatch, matchPalettes, type ArcadeRun, type FightSetup, type MatchMode } from './matchSetup';
 import { FightSounds } from '../audio/FightSounds';
 import { UltimateOverlay } from '../ui/UltimateOverlay';
 import type { HitEvent } from '../engine/combat/AttackResolver';
@@ -115,7 +115,7 @@ export class FightScene extends Phaser.Scene {
   private readonly handledTrainingEvents = new WeakSet<KeyboardEvent>();
   private readonly trainingKeys: ReadonlyArray<readonly [string, () => void]> = [
     ['step', () => this.advanceOneFrame()],
-    ['reset', () => { if (this.training) this.resetFight(); }],
+    ['reset', () => { if (this.training) this.resetFight(!this.tutorial); }],
     ['opponent', () => { this.training?.cycleOpponent(); }],
     ['speed', () => { this.training?.cycleSpeed(); }],
     ['autoLife', () => {
@@ -126,7 +126,7 @@ export class FightScene extends Phaser.Scene {
     ['distance', () => {
       if (!this.training) return;
       this.training.cycleDistance();
-      this.resetFight();
+      this.resetFight(!this.tutorial);
     }],
     ['geometry', () => {
       if (!this.training) return;
@@ -192,7 +192,7 @@ export class FightScene extends Phaser.Scene {
     if (ControlSettings.active || event.repeat) return;
     event.preventDefault();
     this.handledTrainingEvents.add(event);
-    this.resetFight();
+    this.resetFight(true);
   };
 
   constructor() {
@@ -284,7 +284,8 @@ export class FightScene extends Phaser.Scene {
     // The full panorama defines the walls; shared viewport separation still limits lone retreat.
     Object.assign(config.arena,getStageArenaBounds(stageLayout));
     this.stageView = new StageView(this, this.selectedStage, stageLayout);
-    this.stagePresentation = new StagePresentation(this, this.selectedStage.id, config.match.roundCount);
+    // Practice (training and tutorial) starts without READY/FIGHT; the training room keeps them when it hosts a PvP match.
+    this.stagePresentation = new StagePresentation(this, this.selectedStage.id, config.match.roundCount, !isTrainingMode(this.mode));
     this.ultimateOverlay = new UltimateOverlay(this, this.selectedStage.id);
     this.simulation = new Simulation(config, [this.selectedFighter, this.opponentFighter], this.training
       ? { training: true, initialDistance: this.training.initialDistance } : {});
@@ -394,8 +395,9 @@ export class FightScene extends Phaser.Scene {
     return this.currentInputs;
   }
 
-  private resetFight(): void {
-    this.simulation?.resetMatch(this.training?.initialDistance);
+  /** `reposition` is free training's reset: fighters go back to the centre and keep their rage. */
+  private resetFight(reposition = false): void {
+    this.simulation?.resetMatch(this.training?.initialDistance, reposition);
     this.stagePresentation?.reset();
     this.knockoutAt = undefined; this.knockoutSlowRemaining = 0; this.introBlocked = false;
     this.fightSounds?.reset();
