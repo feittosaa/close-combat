@@ -3,6 +3,8 @@ import { commandNode, formatCommand, formatMoveTitle } from './commandNotation';
 import type { CharacterDefinition } from '../engine/data/characters';
 import { t } from '../i18n/i18n';
 import { fighterMoveList, filterMoveList, type MoveListCategory, type MoveListEntry } from '../training/MoveList';
+import { gamepads, type PadPress } from '../input/GamepadHub';
+import { navigateFocus } from './gamepadFocus';
 
 const CATEGORIES: readonly MoveListCategory[] = ['all', 'basics', 'combos', 'crouching', 'power', 'throw', 'special', 'ultimate'];
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string): HTMLElementTagNameMap[K] => {
@@ -21,6 +23,12 @@ export class PauseMenu {
   private category: MoveListCategory = 'all';
   private fighterIndex = 0;
   private visible = false;
+  private releasePad?: () => void;
+  /** Controller over the pause: Start or B/○ resume, the rest walks through the buttons. */
+  private readonly onPad = (press: PadPress): void => {
+    if (press.action === 'start' || press.action === 'back') this.resume();
+    else if (press.action) navigateFocus(this.root, press.action);
+  };
   private readonly onKey = (event: KeyboardEvent): void => {
     if (event.key !== 'Tab') return;
     const focusable = [...this.root.querySelectorAll<HTMLElement>('button,input')].filter(node => !node.hasAttribute('disabled') && node.getClientRects().length > 0);
@@ -30,7 +38,7 @@ export class PauseMenu {
   };
 
   constructor(private readonly fighters: readonly CharacterDefinition[], training: boolean,
-    resume: () => void, menu: () => void, private readonly pin: (entry: MoveListEntry, playerIndex: number) => void, step?: () => void, controls?: () => void, fillRage?: () => void, developer?: { label: string; open: () => void }) {
+    private readonly resume: () => void, menu: () => void, private readonly pin: (entry: MoveListEntry, playerIndex: number) => void, step?: () => void, controls?: () => void, fillRage?: () => void, developer?: { label: string; open: () => void }) {
     this.root.classList.toggle('match-pause', !training);
     this.root.setAttribute('role', 'dialog'); this.root.setAttribute('aria-modal', 'true');
     this.root.setAttribute('aria-label', t(training ? 'pause.trainingLabel' : 'pause.matchLabel'));
@@ -73,6 +81,7 @@ export class PauseMenu {
   }
 
   setVisible(visible: boolean): void {
+    if (visible !== this.visible) { this.releasePad?.(); this.releasePad = visible ? gamepads.subscribe(this.onPad) : undefined; }
     this.visible = visible; this.root.hidden = !visible;
     if (visible) { this.root.classList.remove('inspection'); this.root.querySelectorAll('button').forEach(button => { if (button.textContent === t('pause.moveList')) button.textContent = t('pause.inspect'); }); }
     if (visible) this.root.querySelector<HTMLButtonElement>('button')?.focus();
@@ -81,7 +90,7 @@ export class PauseMenu {
   refresh(): void { this.loadFighter(); }
   isVisible(): boolean { return this.visible; }
   isEditing(): boolean { return this.root.contains(document.activeElement) && document.activeElement === this.search; }
-  destroy(): void { this.root.removeEventListener('keydown', this.onKey); this.root.remove(); }
+  destroy(): void { this.releasePad?.(); this.root.removeEventListener('keydown', this.onKey); this.root.remove(); }
 
   private loadFighter(): void {
     this.entries = fighterMoveList(this.fighters[this.fighterIndex]);

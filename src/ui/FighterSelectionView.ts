@@ -1,4 +1,4 @@
-import { fighterArt, frameStyle, heroFrame, holdSelectionArt, randomArt, tileFrame } from './fighterArt';
+import { arcadeFrame, fighterArt, frameStyle, heroFrame, holdSelectionArt, randomArt, tileFrame } from './fighterArt';
 import { t } from '../i18n/i18n';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FighterSelection, SelectionPlayer } from './FighterSelection';
@@ -9,6 +9,8 @@ interface SelectionViewOptions {
   opponent: CharacterDefinition;
   versus: boolean;
   selectOpponent: boolean;
+  /** Arcade: only P1's fighter, over the whole screen; the opponent stays hidden. */
+  solo: boolean;
   modeTitle: string;
   refresh: () => void;
   confirm: () => void;
@@ -25,17 +27,18 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
   const button = (label: string, className: string, action: () => void): HTMLButtonElement => {
     const element = document.createElement('button'); element.className = className; element.textContent = label; element.onclick = action; return element;
   };
+  const panelFrame = options.solo ? arcadeFrame : heroFrame;
   const fighterPortrait = (id: string, small: boolean): HTMLImageElement => {
     const image = document.createElement('img');
     // Decoded ahead of time: painting waits for the decoded copy instead of showing an empty frame for an instant.
     image.decoding = 'sync';
     const art = fighterArt[id];
     image.src = small ? art.icon : art.background;
-    image.style.cssText = frameStyle(small ? tileFrame(art) : heroFrame(art));
+    image.style.cssText = frameStyle(small ? tileFrame(art) : panelFrame(art));
     image.alt = '';
     return image;
   };
-  for (const player of [0, 1] as const satisfies readonly SelectionPlayer[]) {
+  for (const player of (options.solo ? [0] : [0, 1]) as readonly SelectionPlayer[]) {
     const entry = player === 1 && !selectOpponent ? options.opponent : fighters[selection.indices[player]];
     const side = player === 0 ? 'left' : 'right';
     // A player who picked the random tile sees the mystery silhouette instead of the fighter last highlighted.
@@ -91,7 +94,7 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
       const hero = root.querySelector(`.arena-hero.${side} img`) as HTMLImageElement | null;
       const heading = root.querySelector(`.arena-fighter-name.${side} h1`);
       const status = root.querySelector('.arena-opponent');
-      if (hero) { hero.src = art.background; hero.style.cssText = frameStyle(heroFrame(art)); }
+      if (hero) { hero.src = art.background; hero.style.cssText = frameStyle(panelFrame(art)); }
       const eyebrow = root.querySelector(`.arena-fighter-name.${side} .arena-eyebrow`);
       if (heading) heading.textContent = art.name;
       if (eyebrow) eyebrow.textContent = t('fighter.unavailable');
