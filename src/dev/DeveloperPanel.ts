@@ -5,17 +5,17 @@ import { stages } from '../rendering/stages/stageCatalog';
 import { autoSpriteScale, type SheetMeasurements, type SpriteCalibration } from '../rendering/animations/spriteScale';
 import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize } from '../rendering/animations/cowboySprites';
 import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shotoSpriteScale } from '../rendering/animations/shotoSprites';
-import { fighterArt } from '../ui/fighterArt';
+import { fighterArt, frameStyle, heroFrame, tileFrame, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { VictoryScreen } from '../ui/VictoryScreen';
 import { applyContactFrames, contactFrameCut, contactFrameMargin, contactFrameSize, isContactSheet, type FrameCut } from '../rendering/contactEffects';
 import { gameImages, replaceImage, replacedImages, restoreImage } from './assetOverrides';
-import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, type DevOverrides, type MoveTuning, type RecipeTuning } from './devOverrides';
+import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, type DevOverrides, type MoveTuning, type RecipeTuning, type SelectionTuning } from './devOverrides';
 import { IMAGE_SECTIONS, imageFolder, textureFolder } from './imageCatalog';
 import { devTuning } from './devTools';
 import './developer.css';
 
-const TABS = [['endings', 'Finais'], ['sprites', 'Sprites'], ['moves', 'Golpes'], ['combos', 'Combos'], ['colors', 'Cores'], ['images', 'Imagens']] as const;
+const TABS = [['endings', 'Finais'], ['sprites', 'Sprites'], ['moves', 'Golpes'], ['combos', 'Combos'], ['colors', 'Cores'], ['selection', 'Seleção'], ['images', 'Imagens']] as const;
 /** Areas of the panel that scroll, kept in place when an edit re-renders the same tab. */
 const SCROLLED = '.developer-page, .developer-list, .developer-viewer, .developer-scroll';
 type Tab = typeof TABS[number][0];
@@ -71,6 +71,7 @@ export class DeveloperPanel {
   private spriteFlip = false;
   private spriteTimer?: number;
   private renderedTab?: Tab;
+  private artId = Object.keys(fighterArt)[0];
   private imageFilter = '';
   private imagePath: string[] = [];
   /** Recipe whose card shows the edit form. */
@@ -107,7 +108,7 @@ export class DeveloperPanel {
     const header = el('header', 'developer-header'); header.append(el('h1', '', 'Modo desenvolvedor'), tabs);
     const page = el('div', 'developer-page');
     ({ endings: () => this.endings(page), sprites: () => this.sprites(page), moves: () => this.moves(page),
-      combos: () => this.combos(page), colors: () => this.colors(page), images: () => this.images(page) })[this.tab]();
+      combos: () => this.combos(page), colors: () => this.colors(page), selection: () => this.selection(page), images: () => this.images(page) })[this.tab]();
     const footer = el('footer', 'developer-footer');
     footer.append(button('Exportar ajustes (JSON)', () => this.export()), button('Fechar', () => this.destroy()));
     panel.append(header, page, this.status, footer);
@@ -439,7 +440,9 @@ export class DeveloperPanel {
     }
     const scroll = el('div', 'developer-scroll'); scroll.append(table);
     page.append(scroll, el('p', 'developer-hint', 'Valores em quadros de 60 Hz. Células destacadas diferem dos dados do personagem; passe o mouse para ver o original.'),
-      button('Restaurar golpes e combos deste personagem', () => { devTuning.resetFighter(fighter.id); this.changed(); this.status.textContent = 'Ajustes do personagem removidos.'; this.render(); }),
+      confirmRow('Restaurar golpes deste personagem', 'Restaurar golpes',
+        () => `Descartar ${Object.keys(devTuning.overrides.moves[fighter.id] ?? {}).length} golpe(s) ajustado(s) de ${fighter.name} que ainda não foram salvos no código? Os combos não mudam.`,
+        () => { devTuning.resetMoves(fighter.id); this.changed(); this.status.textContent = `Ajustes de golpes de ${fighter.name} descartados.`; this.render(); }),
       this.saveToCode('golpes', ['moves'], '/__dev/overrides'));
   }
 
@@ -460,7 +463,11 @@ export class DeveloperPanel {
       else if (edited) row.append(button('Restaurar original', () => { devTuning.setRecipe(fighter.id, recipe.id, {}); this.changed(); this.render(); }));
       card.append(row); list.append(card);
     }
-    page.append(list, this.comboForm(fighter), this.saveToCode('combos', ['recipes', 'combos'], '/__dev/overrides'));
+    const edits = Object.keys(devTuning.overrides.recipes[fighter.id] ?? {}).length;
+    page.append(list, this.comboForm(fighter), this.saveToCode('combos', ['recipes', 'combos'], '/__dev/overrides'),
+      confirmRow('Restaurar combos deste personagem', 'Restaurar combos',
+        () => `Descartar ${custom.size} combo(s) criado(s) e ${edits} combo(s) editado(s) de ${fighter.name} que ainda não foram salvos no código? Os golpes não mudam.`,
+        () => { devTuning.resetCombos(fighter.id); this.changed(); this.status.textContent = `Combos de ${fighter.name} restaurados.`; this.render(); }));
   }
   /** Form of a new recipe or, given one, of an existing recipe: authored ones keep only what differs from the original. */
   private comboForm(fighter: CharacterDefinition, recipe?: ComboRecipe): HTMLElement {
@@ -532,17 +539,65 @@ export class DeveloperPanel {
     const matches = this.browse(page, images, this.imagePath, path => { this.imagePath = path; this.render(); }, this.imageFilter);
     const list = el('div', 'developer-images');
     const limit = this.imageFilter ? IMAGE_LIMIT : matches.length;
-    for (const { id: url, label: path } of matches.slice(0, limit)) {
-      const line = el('div', 'developer-image'); line.classList.toggle('developer-changed', replacedImages().has(url));
-      const thumb = el('img'); thumb.loading = 'lazy'; thumb.alt = ''; thumb.src = url;
-      const file = input('file', ''); file.accept = 'image/*'; file.hidden = true;
-      file.onchange = () => { if (file.files?.[0]) void this.replace(url, path, file.files[0]); };
-      const actions = el('div', 'developer-row'); actions.append(button('Substituir', () => file.click()));
-      if (replacedImages().has(url)) actions.append(button('Restaurar', () => void restoreImage(url).then(() => { this.status.textContent = `${path} restaurada. Recarregue para atualizar o que já foi carregado.`; this.render(); })));
-      line.append(thumb, el('span', '', this.imageFilter ? path : path.split('/').pop()!), file, actions); list.append(line);
-    }
+    for (const { id: url, label: path } of matches.slice(0, limit)) list.append(this.imageLine(url, path, this.imageFilter ? path : path.split('/').pop()!));
     page.append(el('p', 'developer-hint', `${matches.length} imagens${matches.length > limit ? ` (mostrando ${limit}; refine a busca)` : ''}. Folhas de sprites exigem o mesmo tamanho e a mesma grade do original.`),
       list, button('Recarregar o jogo', () => window.location.reload()), this.saveImages());
+  }
+  /** A shipped image with its thumbnail and the buttons that replace or restore it. */
+  private imageLine(url: string, path: string, label: string): HTMLElement {
+    const line = el('div', 'developer-image'); line.classList.toggle('developer-changed', replacedImages().has(url));
+    const thumb = el('img'); thumb.loading = 'lazy'; thumb.alt = ''; thumb.src = url;
+    const file = input('file', ''); file.accept = 'image/*'; file.hidden = true;
+    file.onchange = () => { if (file.files?.[0]) void this.replace(url, path, file.files[0]); };
+    const actions = el('div', 'developer-row'); actions.append(button('Substituir', () => file.click()));
+    if (replacedImages().has(url)) actions.append(button('Restaurar', () => void restoreImage(url).then(() => { this.status.textContent = `${path} restaurada. Recarregue para atualizar o que já foi carregado.`; this.render(); })));
+    line.append(thumb, el('span', '', label), file, actions);
+    return line;
+  }
+
+  /** Framing of a fighter's art on the selection screen (panel and tile), the HUD icon window and the victory frame, with the three images. */
+  private selection(page: HTMLElement): void {
+    const id = this.artId, art = fighterArt[id], authored = devTuning.authoredSelection(id)!;
+    page.append(choice('Personagem', Object.entries(fighterArt).map(([key, entry]) => [key, entry.name]), id, key => { this.artId = key; this.render(); }));
+    const hero = el('div', 'developer-hero'), heroImage = el('img'); heroImage.alt = ''; heroImage.src = art.background; heroImage.style.cssText = frameStyle(heroFrame(art)); hero.append(heroImage);
+    const tile = el('div', 'developer-tile'), tileImage = el('img'); tileImage.alt = ''; tileImage.src = art.icon; tileImage.style.cssText = frameStyle(tileFrame(art)); tile.append(tileImage);
+    const icon = el('div', 'developer-icon'), iconImage = el('img'); iconImage.alt = ''; iconImage.src = art.icon;
+    const cropBox = el('div', 'developer-icon-window'); icon.append(iconImage, cropBox);
+    iconImage.onload = () => {
+      const { x, y, size } = art.iconWindow, { naturalWidth: width, naturalHeight: height } = iconImage;
+      Object.assign(cropBox.style, { left: `${x / width * 100}%`, top: `${y / height * 100}%`, width: `${size / width * 100}%`, height: `${size / height * 100}%` });
+    };
+    const previews = el('div', 'developer-previews');
+    for (const [title, preview] of [['Painel de seleção', hero], ['Quadro da grade', tile], ['Janela do ícone no HUD', icon]] as const) {
+      const box = el('figure', 'developer-figure'); box.append(preview, el('figcaption', '', title)); previews.append(box);
+    }
+    const group = (field: keyof SelectionTuning, title: string, labels: Record<string, [string, number]>, current: SelectionFrame | IconWindow | VictoryFrame, original: SelectionFrame | IconWindow | VictoryFrame) => {
+      const row = el('div', 'developer-row'), values: Record<string, number> = { ...current }, base: Record<string, number> = { ...original };
+      row.classList.toggle('developer-changed', JSON.stringify(current) !== JSON.stringify(original));
+      row.append(el('h2', '', title));
+      for (const [key, [label, step]] of Object.entries(labels)) {
+        const box = input('number', String(values[key])); box.step = String(step);
+        box.onchange = () => {
+          const value = Number(box.value); if (!Number.isFinite(value)) return;
+          const next = { ...values, [key]: value } as unknown as typeof current;
+          devTuning.setSelection(id, field, JSON.stringify(next) === JSON.stringify(original) ? undefined : next); this.changed(); this.render();
+        };
+        row.append(labelled(`${label} (${base[key]})`, box));
+      }
+      row.append(button('↺', () => { devTuning.setSelection(id, field, undefined); this.changed(); this.render(); }));
+      return row;
+    };
+    const focal: Record<string, [string, number]> = { zoom: ['Zoom', .05], x: ['Foco X %', 1], y: ['Foco Y %', 1] };
+        const fields = el('div', 'developer-selection');
+    fields.append(
+      group('hero', 'Painel de seleção (zoom e foco da arte)', focal, heroFrame(art), authored.hero),
+      group('tile', 'Quadro da grade (zoom e foco do ícone)', focal, tileFrame(art), authored.tile),
+      group('iconWindow', 'Janela do ícone (HUD de vida, px da imagem)', { x: ['X', 1], y: ['Y', 1], size: ['Lado', 1] }, art.iconWindow, authored.iconWindow),
+      group('victory', 'Tela de vencedor (altura e topo, em telas)', { height: ['Altura', .01], top: ['Topo', .001] }, art.victory, authored.victory));
+    const images = el('div', 'developer-images');
+    for (const [label, url] of [['Arte de seleção', art.background], ['Ícone', art.icon], ['Pose de vitória', art.fullbody]] as const) images.append(this.imageLine(url, gameImages[url] ?? label, `${label} — ${gameImages[url] ?? ''}`));
+    page.append(previews, fields, images, el('p', 'developer-hint', 'Foco e zoom valem para a tela de seleção; o foco é o ponto da arte que fica fixo ao ampliar. Entre parênteses, o valor gravado no código.'),
+      button('Ver tela de vencedor', () => this.showEnding(id, art.name)), this.saveToCode('seleção', ['selection'], '/__dev/overrides'), this.saveImages());
   }
   private async replace(url: string, path: string, file: File): Promise<void> {
     const preview = URL.createObjectURL(file);

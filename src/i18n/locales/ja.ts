@@ -279,7 +279,7 @@ export const ja: Locale = {
     'move.cowboy.heavy-shot': '対空ダイナマイト', 'move.cowboy.push-away': '突き放し', 'move.cowboy.bulls-eye': 'アルティメット — ブルズアイ',
     'combo.cowboy.crouch-anti-air-double': 'ダブル対空', 'combo.cowboy.heavy-kicks-shot': '強キックと射撃', 'combo.cowboy.rapid-kicks': '連続キック',
     'combo.cowboy.delayed-shots': '連続射撃', 'combo.cowboy.crouch-butt-shot': '銃床打ちと射撃', 'combo.cowboy.air-light-light-heavy': '空中弱射撃と強射撃',
-    'combo.cowboy.air-heavy-heavy': '空中強射撃', 'chain.cowboy.0': '連続キックと射撃',
+    'combo.cowboy.air-heavy-heavy': '空中強射撃', 'combo.cowboy.dev-mw7eonvm': 'ダンス', 'chain.cowboy.0': '連続キックと射撃',
     'stage.fazenda': '農場', 'stage.sala-treino': 'トレーニングルーム', 'stage.saloon-dia': 'サルーン · 昼', 'stage.saloon-noite': 'サルーン · 夜', 'stage.saloon': 'サルーン · レトロ',
   },
 };

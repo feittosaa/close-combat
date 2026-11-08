@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error Node's built-in module is available to the test runner.
 import { readFileSync } from 'node:fs';
-import { editCss, editFighter, editHud, literal } from '../dev/sourceEdits';
+import { cowboy } from '../engine/data/fighters/cowboy';
+import { editCss, editFighter, editFighterArt, editHud, literal } from '../dev/sourceEdits';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const shotoSource = read('../engine/data/fighters/shoto.ts'), cowboySource = read('../engine/data/fighters/cowboy.ts');
-const cssSource = read('../style.css'), hudSource = read('../ui/hudTheme.ts');
+const artSource = read('../ui/fighterArt.ts'), cssSource = read('../style.css'), hudSource = read('../ui/hudTheme.ts');
 const none = { moves: {}, recipes: {}, combos: {} };
 const line = (source: string, id: string) => source.split('\n').findIndex(text => text.includes(`{ id: '${id}'`));
 
@@ -14,6 +15,7 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
     expect(editFighter(shotoSource, 'shoto', none)).toBe(shotoSource);
     expect(editCss(cssSource, {})).toBe(cssSource);
     expect(editHud(hudSource, {})).toBe(hudSource);
+    expect(editFighterArt(artSource, {})).toBe(artSource);
   });
 
   it('grava tempos, dano e recuos só no golpe ajustado, inclusive no golpe aéreo de mesmo nome', () => {
@@ -33,7 +35,7 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
     const lines = edited.split('\n');
     expect(lines[line(edited, 'rapid-kicks')]).toContain("continueOnHit: true, startupFrames: [7, 7, 7], recoveryFrames: 20 },");
     expect(lines[line(edited, 'dev-x')]).toBe(`    ${literal(recipe)},`);
-    expect(lines[line(edited, 'dev-x') - 1]).toContain("{ id: 'air-heavy-heavy'");
+    expect(lines[line(edited, 'dev-x') - 1]).toContain(`{ id: '${cowboy.combos![cowboy.combos!.length - 1].id}'`);
     expect(lines[line(edited, 'dev-x') + 1]).toBe('  ],');
     expect(literal(recipe)).toBe("{ id: 'dev-x', name: 'Teste', notation: '1,2', moveIds: ['light-punch', 'heavy-punch'], recoveryFrames: 12 }");
   });
@@ -61,5 +63,16 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
     const hud = editHud(hudSource, { 'hud:gold': '#123456', 'hud:players.1': '#ABCDEF', 'hud:playerText.0': '#000000' });
     expect(hud).toContain('rail: 0x221b16, gold: 0x123456, lightGold');
     expect(hud).toContain('players: [0xc8463a, 0xabcdef], playerText: [\'#000000\', \'#9fd8d1\']');
+  });
+
+  it('grava o enquadramento da seleção só no personagem ajustado, acrescentando hero e tile quando faltam', () => {
+    const edited = editFighterArt(artSource, { cowboy: { hero: { zoom: 1.3, x: 20, y: 40 }, iconWindow: { x: 1, y: 2, size: 1200 }, victory: { height: 1.4, top: .02 } } });
+    const before = artSource.split('\n'), after = edited.split('\n');
+    const at = after.findIndex(text => text.includes('cowboy: {background'));
+    expect(after[at]).toContain('hero: { zoom: 1.3, x: 20, y: 40 }');
+    expect(after[at]).toContain('iconWindow:{ x: 1, y: 2, size: 1200 }');
+    expect(after[at]).toContain('victory:{ height: 1.4, top: 0.02 }');
+    expect(after.filter((text, index) => text !== before[index])).toHaveLength(1);
+    expect(() => editFighterArt(artSource, { nobody: { hero: { zoom: 1, x: 0, y: 0 } } })).toThrow('nobody');
   });
 });

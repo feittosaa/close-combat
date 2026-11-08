@@ -34,6 +34,23 @@ export function fullFrames(layout: PackedLayout): { frames: Record<string, { fra
 }
 
 /**
+ * Full sheets are decoded a couple at a time: the loader downloads dozens in parallel, and decoding all of them at once
+ * (6144 × 4096 in high quality, about 100 MB each) made the browser refuse some decodes, leaving fighters without
+ * those animations. A refused decode is tried once more after the others.
+ */
+const DECODE_SLOTS = 2;
+let decoding = 0;
+const waiting: (() => void)[] = [];
+async function decodeSheet(blob: Blob, retry = true): Promise<ImageBitmap> {
+  if (decoding >= DECODE_SLOTS) await new Promise<void>(resolve => waiting.push(resolve));
+  decoding += 1;
+  try { return await createImageBitmap(blob); }
+  catch (error) { if (!retry) throw error; }
+  finally { decoding -= 1; waiting.shift()?.(); }
+  return decodeSheet(blob, false);
+}
+
+/**
  * Adds `load.packedAtlas` to every scene's loader; called once before the game starts. The original sheet is decoded
  * as an `ImageBitmap` (off the main thread) and closed right after its frames are copied, so its pixels are freed under
  * the loading screen. An `<img>` would keep them until the browser discards them on its own, a stall seconds into the round.
@@ -42,7 +59,7 @@ export function registerPackedAtlasLoader(): void {
   class SheetFile extends Phaser.Loader.FileTypes.ImageFile {
     override onProcess(): void {
       this.state = Phaser.Loader.FILE_PROCESSING;
-      createImageBitmap(this.xhrLoader!.response as Blob).then(bitmap => { this.data = bitmap; this.onProcessComplete(); }, () => this.onProcessError());
+      decodeSheet(this.xhrLoader!.response as Blob).then(bitmap => { this.data = bitmap; this.onProcessComplete(); }, () => this.onProcessError());
     }
   }
   class PackedAtlasFile extends Phaser.Loader.MultiFile {

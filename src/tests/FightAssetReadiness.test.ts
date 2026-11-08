@@ -12,12 +12,10 @@ import { shoto } from '../engine/data/fighters/shoto';
 
 it('keeps the available wallpaper on the loading screen and removes it afterwards', () => {
   vi.useFakeTimers();
-  const screen = {className:'', textContent:'', style:{setProperty:vi.fn()}, setAttribute:vi.fn(), remove:vi.fn()};
+  const screen = {className:'', textContent:'', style:{setProperty:vi.fn()}, classList:{add:vi.fn()}, setAttribute:vi.fn(), remove:vi.fn()};
   const document = {createElement:vi.fn(() => screen), body:{appendChild:vi.fn()}};
-  const sessionStorage = {setItem:vi.fn()};
   vi.stubGlobal('document', document);
-  vi.stubGlobal('window', {setInterval, clearInterval});
-  vi.stubGlobal('sessionStorage', sessionStorage);
+  vi.stubGlobal('window', {setInterval, clearInterval, setTimeout});
   try {
     const camera={setOrigin:vi.fn(),setZoom:vi.fn(),setScroll:vi.fn()};
     Object.values(camera).forEach(method=>method.mockReturnValue(camera));
@@ -31,8 +29,10 @@ it('keeps the available wallpaper on the loading screen and removes it afterward
     vi.advanceTimersByTime(20000);
     expect(screen.style.setProperty.mock.calls[1][1]).not.toBe(first);
     expect(screen.className).toBe('loading-screen wallpaper-right');
-    expect(sessionStorage.setItem).toHaveBeenCalledTimes(2);
     boot.create();
+    expect(screen.classList.add).toHaveBeenCalledWith('leaving');
+    expect(screen.remove).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(600);
     expect(screen.remove).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
   } finally {

@@ -149,12 +149,13 @@ export class Simulation {
     this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
   }
   isMatchOver(): boolean { return this.phase === 'match-over'; }
-  resetMatch(distance?: number): void {
+  /** Starts the match over; in training, `keepRage` only repositions the fighters and leaves their rage as it is. */
+  resetMatch(distance?: number, keepRage = false): void {
     if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
     // Training only repositions the fighters: finished combos stay listed (closed, and old enough not to show on the HUD).
     const keptCombos = this.options.training ? this.comboHistory.map(combo => ({ ...combo, active: false, lastFrame: Number.NEGATIVE_INFINITY })) : [];
     this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
-    this.resetRound(false);
+    this.resetRound(keepRage && Boolean(this.options.training));
     this.comboHistory = keptCombos;
   }
   fillTrainingRage(): void {

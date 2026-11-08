@@ -24,6 +24,7 @@ export const cowboy: CharacterDefinition = {
     { id: 'crouch-butt-shot', name: 'Coronhadas e tiro', notation: 'd+1,1,1', moveIds: ['crouch-punch','crouch-punch','crouch-punch'], finisherMoveId: 'crouch-combo-shot' },
     { id: 'air-light-light-heavy', name: 'Tiros aéreos leves e forte', notation: 'no ar + 1,1,2', moveIds: ['air-light-punch','air-light-punch','air-heavy-punch'], projectileSequence: { startupFrames: [8, 8, 14], continueOnBlock: false, airRecoil: { liftSpeed: -0.8, gravityScale: 0.35 } } },
     { id: 'air-heavy-heavy', name: 'Tiros aéreos fortes', notation: 'no ar + 2,2', moveIds: ['air-heavy-punch','air-heavy-punch'], projectileSequence: { startupFrames: [14, 14], continueOnBlock: false, airRecoil: { liftSpeed: -0.8, gravityScale: 0.35 } } },
+    { id: 'dev-mw7eonvm', name: 'Dança', notation: '3,1,4,2,1+2', moveIds: ['light-kick', 'light-punch', 'heavy-kick', 'heavy-punch', 'double-shot'] },
   ],
   comboChains: [{ name: 'Chutes rápidos e tiros', recipeIds: ['rapid-kicks', 'delayed-shots'] }],
   moves: [
