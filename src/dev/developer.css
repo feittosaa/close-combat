@@ -1,7 +1,7 @@
 /* Developer tools: the same ink card as the settings, wider and denser, above every other overlay. */
 .developer-panel { position: fixed; inset: 0; z-index: 210; display: grid; place-items: center; padding: 16px; background: #070606ee; color: var(--cream); font: 500 14px var(--font); scrollbar-color: var(--cream-dim) #0b0a0a; }
 .developer-panel[hidden] { display: none; }
-.developer-card { display: flex; flex-direction: column; gap: 12px; width: min(1180px, 100%); height: min(760px, calc(100vh - 32px)); padding: 18px 20px; background: linear-gradient(160deg, #1c1713, #100d0b 70%); border: 1px solid var(--cream); outline: 1px solid #efe4cc55; outline-offset: -7px; box-shadow: 0 0 0 4px #0b0a0a, 0 20px 60px #000c; }
+.developer-card { display: flex; flex-direction: column; gap: 12px; width: min(1680px, 100%); height: calc(100vh - 32px); padding: 18px 20px; background: linear-gradient(160deg, #1c1713, #100d0b 70%); border: 1px solid var(--cream); outline: 1px solid #efe4cc55; outline-offset: -7px; box-shadow: 0 0 0 4px #0b0a0a, 0 20px 60px #000c; }
 .developer-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .developer-header h1 { margin: 0; font: 800 22px var(--font); text-transform: uppercase; letter-spacing: .04em; }
 .developer-tabs, .developer-row { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
@@ -57,14 +57,22 @@
 .developer-folders button { text-align: left; }
 .developer-list .developer-folders { flex-direction: column; }
 
-.developer-previews { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
 .developer-figure { display: flex; flex-direction: column; gap: 4px; margin: 0; color: var(--cream-dim); font-size: 12px; }
-.developer-hero, .developer-tile, .developer-icon { position: relative; overflow: hidden; background: repeating-conic-gradient(#2a221c 0 25%, #1d1814 0 50%) 0 0 / 16px 16px; }
+.developer-hero, .developer-arcade, .developer-tile, .developer-icon { position: relative; overflow: hidden; background: repeating-conic-gradient(#2a221c 0 25%, #1d1814 0 50%) 0 0 / 16px 16px; }
 .developer-hero { width: 240px; aspect-ratio: 8 / 9; }
+.developer-arcade { width: 384px; aspect-ratio: 16 / 9; }
 .developer-tile { width: 120px; aspect-ratio: 1; }
 .developer-icon { width: 160px; overflow: visible; }
-.developer-hero img, .developer-tile img { position: absolute; width: calc(var(--zoom) * 100%); height: calc(var(--zoom) * 100%); left: calc((1 - var(--zoom)) * var(--x)); top: calc((1 - var(--zoom)) * var(--y)); object-fit: cover; object-position: var(--x) var(--y); }
+.developer-victory { position: relative; width: 360px; }
+.developer-hero img, .developer-arcade img, .developer-tile img { position: absolute; width: calc(var(--zoom) * 100%); height: calc(var(--zoom) * 100%); left: calc((1 - var(--zoom)) * var(--x)); top: calc((1 - var(--zoom)) * var(--y)); object-fit: cover; object-position: var(--x) var(--y); }
 .developer-icon img { display: block; width: 100%; }
 .developer-icon-window { position: absolute; border: 2px solid var(--accent); box-sizing: border-box; pointer-events: none; }
-.developer-selection { display: flex; flex-direction: column; gap: 12px; }
+/* The selection screen over its previews, without the art (the hero preview is its left half). */
+.arena-menu.developer-overlay { position: absolute; top: 0; left: 0; width: 100%; aspect-ratio: 16 / 9; background: none; pointer-events: none; }
+.arena-menu.developer-overlay::after, .developer-overlay .arena-hero img, .developer-no-overlay .developer-overlay { display: none; }
+.developer-hero .developer-overlay { width: 200%; }
+.developer-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 12px; }
+/* Preview on the left, its fields on the right. */
+.developer-tuning { display: flex; align-items: flex-start; gap: 12px; padding: 10px; border: 1px solid #efe4cc44; }
+.developer-tuning > .developer-row { flex: 1; min-width: 0; }
 .developer-selection h2 { margin: 0; flex: 1 0 100%; font: 700 15px var(--font); }

@@ -18,6 +18,7 @@ import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation } from '../engine/simulation/Simulation';
 import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
+import { GamepadInput, gamepads, mergeInputs, type PadPress } from '../input/GamepadHub';
 import type { FrameInput } from '../input/types';
 import { settleAfterRound } from '../rendering/animations/cowboySprites';
 import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
@@ -41,10 +42,13 @@ import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
 import { ArcadeController, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
 import { createArcadeRun, isTrainingMode, opponentFor, stageForMatch, matchPalettes, type ArcadeRun, type FightSetup, type MatchMode } from './matchSetup';
-import { FightSounds } from '../audio/FightSounds';
+import { FightSounds, preloadFightSounds } from '../audio/FightSounds';
 import { UltimateOverlay } from '../ui/UltimateOverlay';
 import type { HitEvent } from '../engine/combat/AttackResolver';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
+
+/** Rounds of loading again the files that failed, before the match starts without them. */
+const MAX_LOAD_ATTEMPTS = 5;
 
 export class FightScene extends Phaser.Scene {
   private selectedFighter = defaultCharacter;
@@ -61,6 +65,8 @@ export class FightScene extends Phaser.Scene {
   private stagePresentation?: StagePresentation;
   private closeLoadingScreen?: () => void;
   private victoryArt = new Map<string, HTMLImageElement>();
+  private victoryArtReady: Promise<void> = Promise.resolve();
+  private loadAttempts = 0;
   private introBlocked = false;
   private knockoutAt?: number;
   private knockoutSlowRemaining = 0;
@@ -80,17 +86,27 @@ export class FightScene extends Phaser.Scene {
     const up = event.code === 'ArrowUp' || layouts.some(layout => event.code === layout.directions.up);
     const down = event.code === 'ArrowDown' || layouts.some(layout => event.code === layout.directions.down);
     const confirm = event.code === 'Enter' || layouts.some(layout => event.code === layout.buttons['1']);
-    if (up || down) {
-      event.preventDefault();
-      this.resultMenuIndex = (this.resultMenuIndex + (up ? -1 : 1) + this.resultActions.length) % this.resultActions.length;
-      this.renderResultMenu();
-    } else if (confirm) { event.preventDefault(); event.stopImmediatePropagation(); this.resultActions[this.resultMenuIndex]?.run(); }
+    if (up || down || confirm) { event.preventDefault(); if (confirm) event.stopImmediatePropagation(); this.chooseResult(up ? 'up' : down ? 'down' : 'confirm'); }
   };
+  private chooseResult(action: 'up' | 'down' | 'confirm'): void {
+    if (action === 'confirm') { this.resultActions[this.resultMenuIndex]?.run(); return; }
+    this.resultMenuIndex = (this.resultMenuIndex + (action === 'up' ? -1 : 1) + this.resultActions.length) % this.resultActions.length;
+    this.renderResultMenu();
+  }
+  /** Controller outside the pause: Start pauses, Select restarts free training, and A/✕ and the d-pad drive the end-of-match menu. */
+  private readonly onPad = (press: PadPress): void => {
+    if (this.resultMenu && (press.action === 'up' || press.action === 'down' || press.action === 'confirm')) { this.chooseResult(press.action); return; }
+    if (press.action === 'start' && !this.resultMenu) this.togglePause(true);
+    else if (press.action === 'select' && this.mode === 'training' && this.simulation) this.resetFight(true);
+    else if (press.action === 'confirm') this.handleContinue();
+  };
+  private releasePad?: () => void;
   private ultimateOverlay?: UltimateOverlay;
   private simulation?: Simulation;
   private fightSounds?: FightSounds;
   private pendingVisualHits: HitEvent[] = [];
   private keyboardInputs: KeyboardInput[] = [];
+  private readonly gamepadInputs = [new GamepadInput(0), new GamepadInput(1)];
   private inputHistories = [new InputHistory(), new InputHistory()];
   private commandBuffers: [CommandBuffer, CommandBuffer] = [new CommandBuffer(), new CommandBuffer()];
   private currentInputs: [FrameInput, FrameInput] = [neutralInput(), neutralInput()];
@@ -164,7 +180,7 @@ export class FightScene extends Phaser.Scene {
       this.keyboardInputs = [new KeyboardInput(getPlayerLayout(0)), new KeyboardInput(getPlayerLayout(1))];
     }
     if (this.training) this.training.paused = this.paused;
-    this.keyboardInputs.forEach(input => input.clear());
+    this.clearHeldInputs();
     this.simulation?.clearInputHistory();
     this.pauseMenu?.setVisible(this.paused);
     // DOM search must receive text normally, including letters used by training hotkeys.
@@ -260,22 +276,47 @@ export class FightScene extends Phaser.Scene {
   }
 
   preload(): void {
-    preloadFighterIcons(this);
-    preloadContactEffects(this);
-    preloadMatchAssets(this, [this.selectedFighter.id, this.opponentFighter.id], this.selectedStage);
+    this.loadAttempts = 0;
+    this.queueMatchAssets();
     // The champion screen's full-body art is fetched and decoded with the match, not when it ends.
-    this.victoryArt = new Map(typeof Image === 'undefined' ? [] : [this.selectedFighter.id, this.opponentFighter.id].filter(id => fighterArt[id]).map(id => {
-      const image = new Image(); image.src = fighterArt[id].fullbody; void image.decode().catch(() => undefined); return [id, image];
-    }));
+    const victoryIds = typeof Image === 'undefined' ? [] : [this.selectedFighter.id, this.opponentFighter.id].filter(id => fighterArt[id]);
+    this.victoryArt = new Map(victoryIds.map(id => { const image = new Image(); image.src = fighterArt[id].fullbody; return [id, image]; }));
+    this.victoryArtReady = Promise.all([...this.victoryArt.values()].map(image => image.decode().catch(() => undefined))).then(() => undefined);
     // Fighters and stages that the previous match did not use are loaded here, between selection and the fight.
     if (this.load.list.size) this.closeLoadingScreen = showLoadingScreen();
   }
 
+  /** Queues whatever the match draws or plays and is not in memory yet: icons, contact effects, sounds, both fighters and the stage. */
+  private queueMatchAssets(): void {
+    preloadFighterIcons(this);
+    preloadContactEffects(this);
+    preloadFightSounds(this);
+    preloadMatchAssets(this, [this.selectedFighter.id, this.opponentFighter.id], this.selectedStage);
+  }
+
+  /**
+   * The match starts only with every asset in memory: a file whose download or decode failed is queued and loaded
+   * again under the loading screen, and the champion art is decoded, before the fight is built.
+   */
   create(): void {
+    this.queueMatchAssets();
+    if (this.load.list.size && this.loadAttempts < MAX_LOAD_ATTEMPTS) {
+      this.loadAttempts += 1;
+      this.closeLoadingScreen ??= showLoadingScreen();
+      this.load.once(Phaser.Loader.Events.COMPLETE, () => this.create());
+      this.load.start();
+      return;
+    }
+    if (this.load.list.size) { console.error('Close Combat: assets still missing after retries', this.load.list.entries.map(file => file.key)); this.load.reset(); }
+    void this.victoryArtReady.then(() => { if (this.sys.isActive()) this.startMatch(); });
+  }
+
+  private startMatch(): void {
     registerCharacterColor(this);
     // Every texture of the match reaches the GPU before READY, while the loading screen still covers the change.
     primeMatchTextures(this);
-    this.closeLoadingScreen?.(); this.closeLoadingScreen = undefined;
+    // The loading screen leaves only after the first frame of the fight is drawn, so no first draw happens in sight.
+    this.game.events.once(Phaser.Core.Events.POST_RENDER, () => { this.closeLoadingScreen?.(); this.closeLoadingScreen = undefined; });
     const { width, height } = LOGICAL_VIEW;
     const config = createGameConfig(width, height);
     this.resultFloorY = config.arena.floorY;
@@ -325,6 +366,7 @@ export class FightScene extends Phaser.Scene {
       (entry, playerIndex) => { this.pinnedMove?.setText(`${t('training.pinned', { title: formatMoveTitle(entry.title,getPlayerLayout(playerIndex)) })}\n${formatCommand(entry.notation,getPlayerLayout(playerIndex))}`); this.togglePause(false); }, () => this.advanceOneFrame(), () => new ControlSettings(() => this.pauseMenu?.refresh()), () => { this.simulation?.fillTrainingRage(); this.syncViewsAndHud(); },
       import.meta.env.MODE === 'development' ? { label: 'Desenvolvedor', open: () => this.openDeveloper() } : undefined);
     window.addEventListener('keydown', this.handlePause);
+    this.releasePad = gamepads.subscribe(this.onPad);
     this.input.keyboard?.on('keydown-ESC', this.handleEscape);
     window.addEventListener('keydown', this.handleRestart);
     this.input.keyboard?.on('keydown-ENTER', this.handleContinue);
@@ -340,7 +382,7 @@ export class FightScene extends Phaser.Scene {
     this.fightSounds?.prepareRound(current);
     const intro = this.stagePresentation?.update(current, this.paused ? 0 : delta, getHudLogicalWidth(this.scale));
     if (this.introBlocked && !intro) {
-      this.keyboardInputs.forEach(input => input.clear());
+      this.clearHeldInputs();
       this.commandBuffers.forEach(buffer => buffer.clear());
     }
     this.introBlocked = Boolean(intro);
@@ -372,7 +414,10 @@ export class FightScene extends Phaser.Scene {
   }
 
   private readInputs(characters: readonly CharacterState[], frame: number): readonly FrameInput[] {
-    const inputs = this.keyboardInputs.map((input, index) => input.read(characters[index]?.facing ?? (index === 0 ? 'right' : 'left')));
+    const inputs = this.keyboardInputs.map((input, index) => {
+      const facing = characters[index]?.facing ?? (index === 0 ? 'right' : 'left');
+      return mergeInputs(input.read(facing), this.gamepadInputs[index].read(facing));
+    });
     const snapshot = this.tutorial || this.bot ? this.simulation?.snapshot() : undefined;
     const opponentInput = this.training?.opponentInput(frame, characters);
     if (opponentInput) inputs[1] = opponentInput;
@@ -406,12 +451,18 @@ export class FightScene extends Phaser.Scene {
     this.tutorial?.resetAttempt();
     this.botRound = 0;
     this.training?.resetInspection();
-    this.keyboardInputs.forEach((input) => input.clear());
+    this.clearHeldInputs();
     this.commandBuffers.forEach((buffer) => buffer.clear());
     // Free training keeps the input history; only the fighters go back to the centre.
     if (!this.training || this.tutorial) this.inputHistories.forEach(history => history.clear());
     this.currentInputs = [neutralInput(), neutralInput()];
     this.syncViewsAndHud();
+  }
+
+  /** Keys and buttons held through a pause, reset or the round start count again only after being released. */
+  private clearHeldInputs(): void {
+    this.keyboardInputs.forEach(input => input.clear());
+    this.gamepadInputs.forEach(input => input.clear());
   }
 
   private resizeHud(width: number): void {
@@ -485,6 +536,7 @@ export class FightScene extends Phaser.Scene {
     this.pinnedMove?.destroy(); this.pinnedMove = undefined;
     this.paused = false;
     window.removeEventListener('keydown', this.handleRestart);
+    this.releasePad?.(); this.releasePad = undefined;
     this.input.keyboard?.off('keydown-ENTER', this.handleContinue);
     this.trainingListeners.forEach(listener => window.removeEventListener('keydown', listener));
     this.trainingListeners.clear();

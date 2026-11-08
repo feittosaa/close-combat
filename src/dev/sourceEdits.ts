@@ -121,7 +121,7 @@ export function editFighter(source: string, fighterId: string, overrides: Pick<D
   return source;
 }
 
-/** fighterArt.ts with the selection framing (panel and tile images, HUD icon window, victory frame) of each fighter written in. */
+/** fighterArt.ts with the selection framing (panel, arcade and tile images, HUD icon window, victory frame) of each fighter written in. */
 export function editFighterArt(source: string, selection: DevOverrides['selection']): string {
   for (const [id, tuning] of Object.entries(selection)) {
     for (const field of SELECTION_FIELDS) {

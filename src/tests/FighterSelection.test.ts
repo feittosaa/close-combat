@@ -111,6 +111,8 @@ it('passes chosen palettes to either side and defaults solo mirrors to opposite 
   expect(matchPalettes({ fighterPalette: 0 }, true)).toEqual([false, true]);
   expect(matchPalettes({ fighterPalette: 1, opponentPalette: 1 }, false)).toEqual([true, true]);
   expect(matchPalettes({ fighterPalette: 0, opponentPalette: 0 }, true)).toEqual([false, false]);
+  expect(matchPalettes({ mode: 'arcade', fighterPalette: 1 }, false)).toEqual([false, false]);
+  expect(matchPalettes({ mode: 'arcade', fighterPalette: 1 }, true)).toEqual([false, true]);
 });
 
 it('lets training select and confirm a different opponent and palette', () => {
@@ -127,4 +129,12 @@ it('lets training select and confirm a different opponent and palette', () => {
   expect(selection.confirm(1, selectsOpponent('training'))).toBe(true);
   expect(selection.indices).toEqual([0, 1]);
   expect(selection.palettes).toEqual([0, 1]);
+});
+
+it('confirms an Arcade fighter at once, in its default colour', () => {
+  const selection = new FighterSelection(2);
+  selection.select(0, 1);
+  expect(selection.confirm(0, false, false)).toBe(true);
+  expect(selection.choosingColor[0]).toBe(false);
+  expect(selection.palettes[0]).toBe(0);
 });

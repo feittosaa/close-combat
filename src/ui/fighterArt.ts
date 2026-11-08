@@ -30,24 +30,28 @@ export interface VictoryFrame { height: number; top: number }
 export interface SelectionFrame { zoom: number; x: number; y: number }
 export const DEFAULT_HERO_FRAME: SelectionFrame = { zoom: 1, x: 0, y: 50 };
 export const DEFAULT_TILE_FRAME: SelectionFrame = { zoom: 1, x: 50, y: 50 };
+export const DEFAULT_ARCADE_FRAME: SelectionFrame = { zoom: 1, x: 50, y: 50 };
 export interface FighterArt {
   background: string; icon: string; iconWindow: IconWindow; fullbody: string; victory: VictoryFrame; name: string;
   /** Framing of `background` in the big selection panel; the default shows it from the left edge. */
   hero?: SelectionFrame;
+  /** Framing of `background` over the whole screen in the arcade select; the default centres it. */
+  arcade?: SelectionFrame;
   /** Framing of `icon` in the selection grid tile; the default centres it. */
   tile?: SelectionFrame;
 }
 export const fighterArt: Readonly<Record<string, FighterArt>> = {
-  shoto: {background:shotoBackground,icon:shotoIcon,iconWindow:{x:7,y:26,size:1228},fullbody:shotoFullbody,victory:{height:1.56,top:-.004},name:'Bob', hero: { zoom: 1, x: 25, y: 50 }, tile: { zoom: 1.15, x: 50, y: 50 }},
-  cowboy: {background:cowboyBackground,icon:cowboyIcon,iconWindow:{x:0,y:13,size:1241},fullbody:cowboyFullbody,victory:{height:1.536,top:.008},name:'Texas'},
-  grappler: {background:grapplerBackground,icon:grapplerIcon,iconWindow:{x:1,y:0,size:1022},fullbody:grapplerFullbody,victory:{height:1.44,top:.004},name:'Grappler'},
-  puppet: {background:puppetBackground,icon:puppetIcon,iconWindow:{x:0,y:0,size:928},fullbody:puppetFullbody,victory:{height:1.608,top:.01},name:'Mr. Apple'},
-  gimmick: {background:gimmickBackground,icon:gimmickIcon,iconWindow:{x:0,y:0,size:1254},fullbody:gimmickFullbody,victory:{height:1.2,top:.01},name:'Gimmick'},
-  rushdown: {background:rushdownBackground,icon:rushdownIcon,iconWindow:{x:0,y:0,size:1254},fullbody:rushdownFullbody,victory:{height:1.45,top:.006},name:'Rushdown', hero: { zoom: 1, x: 16, y: 50 }},
-  stance: {background:stanceBackground,icon:stanceIcon,iconWindow:{x:0,y:0,size:1254},fullbody:stanceFullbody,victory:{height:1.5,top:-.133},name:'Stance', hero: { zoom: 1, x: 3, y: 50 }},
+  shoto: {background:shotoBackground,icon:shotoIcon,iconWindow:{x:7,y:26,size:1228},fullbody:shotoFullbody,victory:{height:1.4557,top:.0441},name:'Bob', hero: { zoom: 1, x: 25, y: 50 }, arcade: { zoom: 1.15, x: 100, y: 0 }, tile: { zoom: 1.15, x: 50, y: 50 }},
+  cowboy: {background:cowboyBackground,icon:cowboyIcon,iconWindow:{x:0,y:13,size:1241},fullbody:cowboyFullbody,victory:{height:1.4639,top:.0455},name:'Texas', arcade: { zoom: 1.15, x: 10, y: 0 }},
+  grappler: {background:grapplerBackground,icon:grapplerIcon,iconWindow:{ x: 10, y: 0, size: 1228 },fullbody:grapplerFullbody,victory:{ height: 1.4922, top: .0934 },name:'Grappler', arcade: { zoom: 1.15, x: 30, y: 0 }},
+  puppet: {background:puppetBackground,icon:puppetIcon,iconWindow:{x:0,y:0,size:928},fullbody:puppetFullbody,victory:{height:1.4709,top:.052},name:'Mr. Apple', arcade: { zoom: 1, x: 50, y: 0 }},
+  gimmick: {background:gimmickBackground,icon:gimmickIcon,iconWindow:{x:0,y:0,size:1254},fullbody:gimmickFullbody,victory:{height:1.1435,top:.0405},name:'Gimmick', arcade: { zoom: 1.05, x: 70, y: 0 }},
+  rushdown: {background:rushdownBackground,icon:rushdownIcon,iconWindow:{x:0,y:0,size:1254},fullbody:rushdownFullbody,victory:{height:1.3624,top:.0504},name:'Rushdown', hero: { zoom: 1, x: 16, y: 50 }, arcade: { zoom: 1.15, x: 70, y: 0 }},
+  stance: {background:stanceBackground,icon:stanceIcon,iconWindow:{x:0,y:0,size:1254},fullbody:stanceFullbody,victory:{ height: 1.2616, top: .0739 },name:'Stance', hero: { zoom: 1, x: 3, y: 50 }, arcade: { zoom: 1, x: 50, y: 0 }},
 };
 
 export const heroFrame = (art: FighterArt): SelectionFrame => art.hero ?? DEFAULT_HERO_FRAME;
+export const arcadeFrame = (art: FighterArt): SelectionFrame => art.arcade ?? DEFAULT_ARCADE_FRAME;
 export const tileFrame = (art: FighterArt): SelectionFrame => art.tile ?? DEFAULT_TILE_FRAME;
 /** Inline custom properties that `menu.css` turns into the image's zoom and focal point. */
 export const frameStyle = (frame: SelectionFrame): string => `--zoom:${frame.zoom};--x:${frame.x}%;--y:${frame.y}%`;

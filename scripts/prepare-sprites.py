@@ -12,6 +12,12 @@ adicionado ou trocado em `src/assets/sprites` (plugin em `vite.config.ts`).
 3. `pack-sprites.py` recorta de novo o layout (`.packed.json`) de toda folha de personagem nova ou alterada, nas duas
    qualidades; o jogo guarda na memória só a parte desenhada de cada quadro.
 
+4. As artes de personagem com fundo recortado (`src/assets/art/characters/<id>/fullbody*.png`, a pose de vitória, e
+   `selection-icon.png`) passam pela limpeza de artes de `key-magenta.py`; a pose de vitória também é recortada até o
+   desenho (as bordas laterais por igual, para o centro não se mover), e `victory` de `fighterArt.ts` é corrigido na
+   mesma proporção, para a arte continuar no mesmo lugar e tamanho na tela de vencedor. O ícone não é recortado: o
+   enquadramento da grade e a janela do HUD dependem das suas dimensões. A arte de seleção é um fundo e fica intacta.
+
 Uma mudança na própria limpeza (`key-magenta.py`) faz todos os sprites passarem de novo. Quando a limpeza muda uma
 folha já validada sem que a arte tenha sido trocada, a calibração recebe a mesma proporção que a limpeza mudou na medição
 (área e altura da silhueta), para que tirar o halo do fundo não altere o tamanho aprovado. Ambos podem ser ajustados à
@@ -20,10 +26,12 @@ desenvolvedor ajusta e exporta), e um PNG listado em `keep` de `prepared.json` n
 `prepared.json` guarda o SHA-256 de cada PNG já preparado e da versão da limpeza; arquivos inalterados são pulados.
 """
 from concurrent.futures import ProcessPoolExecutor
+import fcntl
 from hashlib import sha256
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 import json
+import re
 import subprocess
 import sys
 
@@ -34,6 +42,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SPRITES = ROOT / 'src/assets/sprites'
 REGISTRY = SPRITES / 'prepared.json'
 CHARACTERS = SPRITES / 'characters'
+ART = ROOT / 'src/assets/art/characters'
+FIGHTER_ART = ROOT / 'src/ui/fighterArt.ts'
 
 
 def keyer():
@@ -76,6 +86,56 @@ def keep_validated_sizes(sheets: list[Path], before: dict[Path, dict]) -> None:
         calibration_file.write_text(json.dumps(calibration, indent=1) + '\n')
 
 
+def art_files() -> list[Path]:
+    return sorted([*ART.glob('*/fullbody*.png'), *ART.glob('*/selection-icon.png')])
+
+
+def prepare_art(path: Path) -> tuple[int, tuple[int, int, int] | None]:
+    """Cleans one character art; a victory pose is also trimmed to the drawing, its frame moved first. Returns how many
+    pixels left and, for a trimmed pose, its original height and the rows cut from the top and bottom."""
+    pixels = np.array(Image.open(path).convert('RGBA'))
+    removed = keyer().clean(pixels)
+    trim = None
+    if path.stem.startswith('fullbody'):
+        rows, columns = np.nonzero(pixels[..., 3])
+        if len(rows):
+            height, width = pixels.shape[:2]
+            top, bottom, side = rows.min(), height - 1 - rows.max(), min(columns.min(), width - 1 - columns.max())
+            if top or bottom or side:
+                pixels = pixels[top:height - bottom, side:width - side]
+                trim = (height, int(top), int(bottom))
+                keep_victory_frame(path.parent.name, *trim)
+    if removed or trim: Image.fromarray(pixels).save(path, optimize=True)
+    return removed, trim
+
+
+def number(value: float) -> str:
+    text = f'{value:.4f}'.rstrip('0').rstrip('.')
+    return text.replace('0.', '.', 1) if text.lstrip('-').startswith('0.') else text
+
+
+def keep_victory_frame(fighter: str, height: int, top: int, bottom: int) -> None:
+    """Moves the victory frame of `fighter` by the rows trimmed from its pose, so the drawing stays where it was."""
+    source = FIGHTER_ART.read_text()
+    pattern = re.compile(rf'(\n  {re.escape(fighter)}: \{{.*?victory:\s*\{{\s*height:\s*)(-?[\d.]+)(\s*,\s*top:\s*)(-?[\d.]+)(\s*\}})')
+    match = pattern.search(source)
+    if not match: raise SystemExit(f'victory de “{fighter}” não encontrado em fighterArt.ts.')
+    scale = float(match[2]) / height
+    frame = number(scale * (height - top - bottom)), number(float(match[4]) + scale * top)
+    FIGHTER_ART.write_text(source[:match.start()] + f'{match[1]}{frame[0]}{match[3]}{frame[1]}{match[5]}' + source[match.end():])
+
+
+def main_art(registry: dict) -> None:
+    files, keep = registry.setdefault('art', {}), set(registry['keep'])
+    arts = art_files()
+    pending = [path for path in arts if path.relative_to(ROOT).as_posix() not in keep
+               and (registry.get('cleanup') != registry.get('artCleanup') or files.get(path.relative_to(ROOT).as_posix()) != digest(path))]
+    for path in pending:
+        removed, trim = prepare_art(path)
+        if removed or trim: print(f'{path.relative_to(ROOT).as_posix()}: {removed} pixels do fundo removidos' + (f', recortada ({trim[1]} px em cima, {trim[2]} embaixo)' if trim else ''))
+    registry['art'] = {path.relative_to(ROOT).as_posix(): digest(path) for path in arts}
+
+
 def main() -> None:
     registry = json.loads(REGISTRY.read_text()) if REGISTRY.exists() else {'keep': [], 'files': {}}
     files, keep = registry['files'], set(registry['keep'])
@@ -98,6 +158,8 @@ def main() -> None:
     present = {path.relative_to(ROOT).as_posix() for path in sheets}
     measure = measure or any(Path(key).parent.parent == CHARACTERS.relative_to(ROOT) for key in files if key not in present)
     registry['cleanup'], registry['files'] = cleanup, {key: files[key] for key in sorted(files) if key in present}
+    main_art(registry)
+    registry['artCleanup'] = cleanup
     REGISTRY.write_text(json.dumps(registry, indent=1) + '\n')
     if measure:
         subprocess.run([sys.executable, str(Path(__file__).with_name('measure-sprites.py'))], check=True)
@@ -107,4 +169,8 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    # Every development server open on the checkout reacts to the same file: runs wait for each other, so a change is
+    # prepared (and a victory frame corrected) only once.
+    with open(__file__) as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        main()
