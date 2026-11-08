@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
@@ -30,32 +31,53 @@ function spriteIntake(): Plugin {
   };
 }
 
+const IMAGE_PATH = /^(src\/assets|assets\/art)\/[\w./-]+\.(png|jpe?g|webp)$/;
+
 /**
- * Lets the developer mode save its animation sizes into each fighter's `calibration.json`: the posted adjustments go
- * through `scripts/apply-sprite-scales.ts`, the same step as `npm run sprites:apply-scales`.
+ * Lets the developer mode save its tuning into the sources: animation sizes into each fighter's `calibration.json`
+ * (`scripts/apply-sprite-scales.ts`), moves, recipes and colours into the authored data (`scripts/apply-dev-overrides.ts`)
+ * and replaced images over the existing files.
  */
-function spriteScaleSaving(): Plugin {
+function developerSaving(): Plugin {
+  const body = (request: IncomingMessage): Promise<Buffer> => new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    request.on('data', (chunk: Buffer) => chunks.push(chunk)).on('end', () => resolve(Buffer.concat(chunks))).on('error', reject);
+  });
+  /** Runs a script over the posted JSON and answers with its output. */
+  const script = (path: string) => async (request: IncomingMessage, response: ServerResponse) => {
+    const folder = mkdtempSync(join(tmpdir(), 'close-combat-')), file = join(folder, 'ajustes.json');
+    writeFileSync(file, await body(request));
+    let output = '';
+    const child = spawn('npx', ['vite-node', path, file]);
+    child.stdout.on('data', chunk => { output += chunk; }); child.stderr.on('data', chunk => { output += chunk; });
+    child.on('close', code => {
+      rmSync(folder, { recursive: true, force: true });
+      response.statusCode = code === 0 ? 200 : 500; response.end(output);
+    });
+  };
+  /** Writes the posted bytes over an existing image of the game. */
+  const image = async (request: IncomingMessage, response: ServerResponse) => {
+    const path = new URL(request.url ?? '', 'http://localhost').searchParams.get('path') ?? '';
+    if (!IMAGE_PATH.test(path) || path.includes('..') || !existsSync(path)) { response.statusCode = 400; response.end(`Imagem inválida: ${path}`); return; }
+    writeFileSync(path, await body(request)); response.end(`${path} gravada.`);
+  };
+  const routes: Record<string, (request: IncomingMessage, response: ServerResponse) => Promise<void>> = {
+    '/__dev/sprite-scales': script('scripts/apply-sprite-scales.ts'),
+    '/__dev/overrides': script('scripts/apply-dev-overrides.ts'),
+    '/__dev/image': image,
+  };
   return {
-    name: 'close-combat-sprite-scale-saving',
+    name: 'close-combat-developer-saving',
     apply: 'serve',
     configureServer(server) {
-      server.middlewares.use('/__dev/sprite-scales', (request, response) => {
+      server.middlewares.use((request, response, next) => {
+        const route = routes[(request.url ?? '').split('?')[0]];
+        if (!route) { next(); return; }
         if (request.method !== 'POST') { response.statusCode = 405; response.end(); return; }
-        let body = '';
-        request.on('data', chunk => { body += chunk; }).on('end', () => {
-          const folder = mkdtempSync(join(tmpdir(), 'close-combat-')), file = join(folder, 'ajustes.json');
-          writeFileSync(file, body);
-          let output = '';
-          const child = spawn('npx', ['vite-node', 'scripts/apply-sprite-scales.ts', file]);
-          child.stdout.on('data', chunk => { output += chunk; }); child.stderr.on('data', chunk => { output += chunk; });
-          child.on('close', code => {
-            rmSync(folder, { recursive: true, force: true });
-            response.statusCode = code === 0 ? 200 : 500; response.end(output);
-          });
-        });
+        route(request, response).catch(error => { response.statusCode = 500; response.end(String(error)); });
       });
     },
   };
 }
 
-export default defineConfig({ plugins: [spriteIntake(), spriteScaleSaving()] });
+export default defineConfig({ plugins: [spriteIntake(), developerSaving()] });

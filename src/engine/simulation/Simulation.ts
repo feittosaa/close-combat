@@ -149,12 +149,13 @@ export class Simulation {
     this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
   }
   isMatchOver(): boolean { return this.phase === 'match-over'; }
-  resetMatch(distance?: number): void {
+  /** Starts the match over; in training, `keepRage` only repositions the fighters and leaves their rage as it is. */
+  resetMatch(distance?: number, keepRage = false): void {
     if (this.options.training && distance !== undefined && Number.isFinite(distance)) this.trainingDistance = distance;
     // Training only repositions the fighters: finished combos stay listed (closed, and old enough not to show on the HUD).
     const keptCombos = this.options.training ? this.comboHistory.map(combo => ({ ...combo, active: false, lastFrame: Number.NEGATIVE_INFINITY })) : [];
     this.frame = 0; this.elapsedFrames = 0; this.round = 1; this.roundWins = [0, 0]; this.phase = 'fight'; this.matchWinnerId = undefined;
-    this.resetRound(false);
+    this.resetRound(keepRage && Boolean(this.options.training));
     this.comboHistory = keptCombos;
   }
   fillTrainingRage(): void {
@@ -1006,8 +1007,11 @@ export class Simulation {
 
   private canContinueRecipe(character: CharacterState, index: number, move: MoveDefinition): boolean {
     if (character.attack?.hitOutcome !== 'hit' || !character.chain || this.characters[1 - index].mode !== 'hitstun') return false;
+    // The next recipe never begins with the move that just hit, so a recipe that continues cannot restart itself
+    // through another recipe opening with that move (3,3,3 then 3 again).
+    if (move.id === character.attack.moveId) return false;
     const combos = this.definitions[index].combos ?? [];
-    const starter = this.move(index, character.attack.moveId)?.startsComboOnHit && move.id !== character.attack.moveId;
+    const starter = this.move(index, character.attack.moveId)?.startsComboOnHit;
     const completed = character.hitSequence && combos.find(recipe => recipe.continueOnHit && character.chain!.length <= recipe.moveIds.length &&
       character.chain!.every((id, step) => id === recipe.moveIds[step]));
     return Boolean(combos.some(recipe => recipe.moveIds[0] === move.id && (starter || (completed && recipe.id !== completed.id))));

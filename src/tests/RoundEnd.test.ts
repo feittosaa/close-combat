@@ -44,8 +44,8 @@ it('o READY bloqueia tudo, o FIGHT libera só o movimento e os golpes esperam 8 
   presentation.update(snapshot, 0, 1024);          // começa o round
   const tick = (ms: number) => presentation.update(snapshot, ms, 1024);
   expect(phase(0)).toMatchObject({ blocked: true, moveOnly: false });
-  tick(999);                                       // ainda no READY
-  expect(phase(999)).toMatchObject({ blocked: true, moveOnly: false });
+  tick(1999);                                      // ainda no READY, mais longo no primeiro round
+  expect(phase(1999)).toMatchObject({ blocked: true, moveOnly: false });
   tick(2);                                         // READY terminou: o FIGHT aparece
   expect(presentation.moveOnly).toBe(true);
   expect(tick(0)).toBe(false);

@@ -279,7 +279,7 @@ export const ko: Locale = {
     'move.cowboy.heavy-shot': '대공 다이너마이트', 'move.cowboy.push-away': '밀쳐내기', 'move.cowboy.bulls-eye': '얼티밋 — 불스아이',
     'combo.cowboy.crouch-anti-air-double': '이중 대공', 'combo.cowboy.heavy-kicks-shot': '강킥과 사격', 'combo.cowboy.rapid-kicks': '연속 킥',
     'combo.cowboy.delayed-shots': '연속 사격', 'combo.cowboy.crouch-butt-shot': '개머리판과 사격', 'combo.cowboy.air-light-light-heavy': '공중 약사격과 강사격',
-    'combo.cowboy.air-heavy-heavy': '공중 강사격', 'chain.cowboy.0': '연속 킥과 사격',
+    'combo.cowboy.air-heavy-heavy': '공중 강사격', 'combo.cowboy.dev-mw7eonvm': '댄스', 'chain.cowboy.0': '연속 킥과 사격',
     'stage.fazenda': '농장', 'stage.sala-treino': '트레이닝 룸', 'stage.saloon-dia': '살롱 · 낮', 'stage.saloon-noite': '살롱 · 밤', 'stage.saloon': '살롱 · 레트로',
   },
 };

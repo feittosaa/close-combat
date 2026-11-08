@@ -30,6 +30,11 @@
 .developer-list { display: flex; flex-direction: column; gap: 2px; max-height: 520px; overflow: auto; }
 .developer-list button { text-align: left; }
 .developer-viewer { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 0; overflow: auto; }
+/* The preview takes whatever height the controls leave, so the viewer fits without scrolling. */
+.developer-preview { flex: 1 1 0; min-height: 120px; max-height: 360px; width: auto; aspect-ratio: 1; }
+.developer-viewer > :not(.developer-preview) { flex: none; }
+.developer-cuts { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: none; }
+.developer-cuts canvas { cursor: crosshair; touch-action: none; }
 .developer-viewer canvas { max-width: 100%; background: repeating-conic-gradient(#2a221c 0 25%, #1d1814 0 50%) 0 0 / 24px 24px; border: 1px solid #efe4cc44; }
 .developer-scroll { overflow: auto; }
 .developer-table { border-collapse: collapse; width: 100%; }
@@ -51,3 +56,15 @@
 .developer-crumbs button[aria-current="true"] { color: var(--accent); }
 .developer-folders button { text-align: left; }
 .developer-list .developer-folders { flex-direction: column; }
+
+.developer-previews { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
+.developer-figure { display: flex; flex-direction: column; gap: 4px; margin: 0; color: var(--cream-dim); font-size: 12px; }
+.developer-hero, .developer-tile, .developer-icon { position: relative; overflow: hidden; background: repeating-conic-gradient(#2a221c 0 25%, #1d1814 0 50%) 0 0 / 16px 16px; }
+.developer-hero { width: 240px; aspect-ratio: 8 / 9; }
+.developer-tile { width: 120px; aspect-ratio: 1; }
+.developer-icon { width: 160px; overflow: visible; }
+.developer-hero img, .developer-tile img { position: absolute; width: calc(var(--zoom) * 100%); height: calc(var(--zoom) * 100%); left: calc((1 - var(--zoom)) * var(--x)); top: calc((1 - var(--zoom)) * var(--y)); object-fit: cover; object-position: var(--x) var(--y); }
+.developer-icon img { display: block; width: 100%; }
+.developer-icon-window { position: absolute; border: 2px solid var(--accent); box-sizing: border-box; pointer-events: none; }
+.developer-selection { display: flex; flex-direction: column; gap: 12px; }
+.developer-selection h2 { margin: 0; flex: 1 0 100%; font: 700 15px var(--font); }
