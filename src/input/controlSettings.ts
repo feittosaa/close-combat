@@ -3,7 +3,7 @@ import { PLAYER_ONE_KEYS, PLAYER_TWO_KEYS } from './keyboardLayouts';
 import type { AttackButton } from './types';
 export type ControlLayouts = [KeyboardLayout, KeyboardLayout];
 export interface SystemControlLayout { pause: string; reset: string }
-const defaults = (): ControlLayouts => structuredClone([PLAYER_ONE_KEYS, PLAYER_TWO_KEYS]);
+export const defaultControls = (): ControlLayouts => structuredClone([PLAYER_ONE_KEYS, PLAYER_TWO_KEYS]);
 const reserved = new Set(['Escape','Enter','Tab','Space','F1']);
 export const defaultTrainingControls = () => ({ step:'Period', speed:'KeyL', reset:'F2', autoLife:'F3', distance:'F4', opponent:'KeyG', geometry:'KeyH', inputs:'KeyI' });
 export type TrainingControls = ReturnType<typeof defaultTrainingControls>;
@@ -32,8 +32,8 @@ export function validateControlSet(players: ControlLayouts, system: SystemContro
 const systemDefaultKeys = new Set(['KeyP','KeyR']);
 const storageKey = 'close-combat-controls-v1';
 const systemStorageKey = 'close-combat-system-controls-v1';
-const defaultSystem = (): SystemControlLayout => ({ pause: 'KeyP', reset: 'KeyR' });
-let systemControls = defaultSystem();
+export const defaultSystemControls = (): SystemControlLayout => ({ pause: 'KeyP', reset: 'KeyR' });
+let systemControls = defaultSystemControls();
 export function validateSystemControls(value: unknown): value is SystemControlLayout {
   if (!value || typeof value !== 'object') return false;
   const controls = value as SystemControlLayout;
@@ -58,13 +58,13 @@ export function loadControls(storage?: Pick<Storage,'getItem'>): ControlLayouts 
       const used = new Set([...data.flatMap(layout => [...Object.values(layout.directions ?? {}), ...Object.values(layout.buttons ?? {}), layout.ultimate, layout.taunt, layout.rageAction].filter(Boolean)), ...(validateSystemControls(storedSystem) ? Object.values(storedSystem) : []), ...Object.values(trainingControls)]);
       for (const [index, layout] of data.entries()) for (const action of ['ultimate', 'taunt', 'rageAction'] as const) {
         if (typeof layout[action] === 'string') continue;
-        const key = [defaults()[index][action], ...'ETUYOQZXCVB'.split('').map(letter => `Key${letter}`), 'Numpad5','Numpad6','Numpad7','Numpad8'].find(code => !used.has(code) && !reserved.has(code) && !systemDefaultKeys.has(code));
-        if (!key) return defaults();
+        const key = [defaultControls()[index][action], ...'ETUYOQZXCVB'.split('').map(letter => `Key${letter}`), 'Numpad5','Numpad6','Numpad7','Numpad8'].find(code => !used.has(code) && !reserved.has(code) && !systemDefaultKeys.has(code));
+        if (!key) return defaultControls();
         layout[action] = key; used.add(key);
       }
     }
-    return validateLayouts(data) ? data : defaults();
-  } catch { return defaults(); }
+    return validateLayouts(data) ? data : defaultControls();
+  } catch { return defaultControls(); }
 }
 let layouts = loadControls();
 export function getPlayerLayout(index = 0): KeyboardLayout { return structuredClone(layouts[index === 1 ? 1 : 0]); }
@@ -74,8 +74,8 @@ export function saveControls(value: ControlLayouts, storage?: Pick<Storage,'setI
   try { (storage ?? globalThis.localStorage)?.setItem(storageKey, JSON.stringify(value)); } catch { /* Session mapping still works when storage is unavailable. */ }
   return true;
 }
-export function resetControls(): void { saveControls(defaults()); saveSystemControls(defaultSystem()); saveTrainingControls(defaultTrainingControls()); }
-systemControls = (() => { try { const v = JSON.parse(globalThis.localStorage?.getItem(systemStorageKey) ?? 'null'); return validateSystemControls(v) ? v : defaultSystem(); } catch { return defaultSystem(); } })();
+export function resetControls(): void { saveControls(defaultControls()); saveSystemControls(defaultSystemControls()); saveTrainingControls(defaultTrainingControls()); }
+systemControls = (() => { try { const v = JSON.parse(globalThis.localStorage?.getItem(systemStorageKey) ?? 'null'); return validateSystemControls(v) ? v : defaultSystemControls(); } catch { return defaultSystemControls(); } })();
 export function getSystemControls(): SystemControlLayout { return { ...systemControls }; }
 export function saveSystemControls(value: SystemControlLayout, storage?: Pick<Storage,'setItem'>): boolean {
   if (!validateSystemControls(value)) return false;

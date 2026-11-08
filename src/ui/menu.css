@@ -49,8 +49,10 @@
 /* Player 2 sees the art mirrored: the image flips in place and its box sits at the mirrored focal point. */
 .arena-hero.right img, .arena-hero.right svg { left: calc((1 - var(--zoom, 1)) * (100% - var(--x, 0%))); transform: scaleX(-1); }
 .arena-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, var(--ink) 4%, transparent 55%); }
+/* Arcade shows only P1: the whole selection art over the screen with its own framing, without the hourglass. */
+.arcade-selection .arena-hero { width: 100%; }
 /* The hourglass between the fighters: solid black, pinched at the middle. */
-.fighter-selection::before { content: ''; position: absolute; top: 0; bottom: 0; left: 43%; width: 14%; z-index: 2; pointer-events: none; background: #000; clip-path: polygon(0 0, 100% 0, 64% 45%, 100% 100%, 0 100%, 36% 45%); }
+.fighter-selection:not(.arcade-selection)::before { content: ''; position: absolute; top: 0; bottom: 0; left: 43%; width: 14%; z-index: 2; pointer-events: none; background: #000; clip-path: polygon(0 0, 100% 0, 64% 45%, 100% 100%, 0 100%, 36% 45%); }
 /* Names sit directly on the art, in cream print with a dark edge, so the illustration stays visible. */
 .arena-fighter-name { position: absolute; z-index: 3; left: 3%; bottom: 30%; width: 28%; color: var(--cream); }
 .arena-fighter-name .arena-eyebrow { color: var(--cream); text-shadow: 0 0 .3cqw #000, 0 0 .1cqw #000; }

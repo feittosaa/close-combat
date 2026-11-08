@@ -14,10 +14,11 @@ export class VictoryScreen {
   private readonly resize = (): void => this.align();
 
   /**
-   * `hero` is the champion's full-body art already decoded with the match; without it the art is fetched now.
-   * `player` names the winning side in a PvP match.
+   * Over the game `canvas`, or filling `host` (the developer tools' miniature, sized like the canvas: the layout
+   * scales with its box). `hero` is the champion's full-body art already decoded with the match; without it the art is
+   * fetched now. `player` names the winning side in a PvP match.
    */
-  constructor(private readonly canvas: HTMLCanvasElement, stage: StageDefinition, fighterId: string, name: string, hero = document.createElement('img'), player?: 1 | 2) {
+  constructor(private readonly anchor: HTMLCanvasElement | HTMLElement, stage: StageDefinition, fighterId: string, name: string, hero = document.createElement('img'), player?: 1 | 2) {
     const art = fighterArt[fighterId];
     this.root.className = 'victory-screen'; this.root.setAttribute('role', 'img'); this.root.setAttribute('aria-label', t('victory.label', { name }));
     const backdrop = document.createElement('div'); backdrop.className = 'victory-stage'; backdrop.append(stageImage(stage));
@@ -25,9 +26,8 @@ export class VictoryScreen {
     hero.className = 'victory-hero'; hero.alt = ''; if (!hero.src) hero.src = art.fullbody;
     hero.style.cssText = `--height:${art.victory.height * 100}cqh;--top:${art.victory.top * 100}cqh`;
     this.root.append(backdrop, veil, hero, this.strip('left', [...VICTORY_TITLE]), this.strip('right', winnerWords(name, player)));
-    document.body.append(this.root);
-    this.align();
-    window.addEventListener('resize', this.resize);
+    if (anchor instanceof HTMLCanvasElement) { document.body.append(this.root); this.align(); window.addEventListener('resize', this.resize); }
+    else { this.root.classList.add('inline'); anchor.append(this.root); }
   }
 
   /** Two copies of the words one after the other: sliding the pair by one copy loops without a seam. */
@@ -51,7 +51,7 @@ export class VictoryScreen {
 
   /** Covers exactly the game canvas, like the post-match menu. */
   private align(): void {
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = this.anchor.getBoundingClientRect();
     Object.assign(this.root.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
   }
 

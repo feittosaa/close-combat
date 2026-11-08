@@ -1,11 +1,14 @@
 import type Phaser from 'phaser';
-import { characters, type CharacterDefinition, type ComboRecipe } from '../engine/data/characters';
+import { characters, playableCharacters, type CharacterDefinition, type ComboRecipe } from '../engine/data/characters';
+import { FighterSelection } from '../ui/FighterSelection';
+import { renderFighterSelection } from '../ui/FighterSelectionView';
+import { t } from '../i18n/i18n';
 import { attackDurationFrames } from '../engine/combat/frameData';
 import { stages } from '../rendering/stages/stageCatalog';
 import { autoSpriteScale, type SheetMeasurements, type SpriteCalibration } from '../rendering/animations/spriteScale';
 import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize } from '../rendering/animations/cowboySprites';
 import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shotoSpriteScale } from '../rendering/animations/shotoSprites';
-import { fighterArt, frameStyle, heroFrame, tileFrame, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
+import { arcadeFrame, fighterArt, frameStyle, heroFrame, tileFrame, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { VictoryScreen } from '../ui/VictoryScreen';
 import { applyContactFrames, contactFrameCut, contactFrameMargin, contactFrameSize, isContactSheet, type FrameCut } from '../rendering/contactEffects';
@@ -13,6 +16,7 @@ import { gameImages, replaceImage, replacedImages, restoreImage } from './assetO
 import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, type DevOverrides, type MoveTuning, type RecipeTuning, type SelectionTuning } from './devOverrides';
 import { IMAGE_SECTIONS, imageFolder, textureFolder } from './imageCatalog';
 import { devTuning } from './devTools';
+import { gamepads } from '../input/GamepadHub';
 import './developer.css';
 
 const TABS = [['endings', 'Finais'], ['sprites', 'Sprites'], ['moves', 'Golpes'], ['combos', 'Combos'], ['colors', 'Cores'], ['selection', 'Seleção'], ['images', 'Imagens']] as const;
@@ -72,12 +76,15 @@ export class DeveloperPanel {
   private spriteTimer?: number;
   private renderedTab?: Tab;
   private artId = Object.keys(fighterArt)[0];
+  /** Whether the selection previews show the screen's title, names and buttons over the art. */
+  private selectionOverlay = true;
   private imageFilter = '';
   private imagePath: string[] = [];
   /** Recipe whose card shows the edit form. */
   private comboEditing?: string;
   private preview?: VictoryScreen;
   private readonly previousFocus = document.activeElement as HTMLElement | null;
+  private readonly releasePad: () => void;
   private readonly onKey = (event: KeyboardEvent): void => {
     // Game shortcuts never see keys typed into the panel.
     event.stopImmediatePropagation();
@@ -91,6 +98,8 @@ export class DeveloperPanel {
     this.status.setAttribute('role', 'status');
     document.body.append(this.root);
     window.addEventListener('keydown', this.onKey, true);
+    // Controllers are not supported here: holding them keeps their presses from reaching the screen underneath.
+    this.releasePad = gamepads.subscribe(() => undefined);
     this.render();
     // Matches keep only their own fighters and stage: the sprite browser loads the rest while it is open.
     preloadAllMatchAssets(scene);
@@ -110,7 +119,7 @@ export class DeveloperPanel {
     ({ endings: () => this.endings(page), sprites: () => this.sprites(page), moves: () => this.moves(page),
       combos: () => this.combos(page), colors: () => this.colors(page), selection: () => this.selection(page), images: () => this.images(page) })[this.tab]();
     const footer = el('footer', 'developer-footer');
-    footer.append(button('Exportar ajustes (JSON)', () => this.export()), button('Fechar', () => this.destroy()));
+    footer.append(this.saveAll(), button('Exportar ajustes (JSON)', () => this.export()), button('Fechar', () => this.destroy()));
     panel.append(header, page, this.status, footer);
     // Re-rendering after an edit keeps every scrolled area where it was; a new tab starts at the top.
     const scrolled = (root: ParentNode) => [...root.querySelectorAll<HTMLElement>(SCROLLED)];
@@ -365,8 +374,7 @@ export class DeveloperPanel {
    * first: the sources already hold them once saved and reload the game, and they come back if saving fails.
    */
   private saveToCode(what: string, sections: readonly (keyof DevOverrides)[], endpoint: string): HTMLElement {
-    const count = () => sections.reduce((total, section) => total + Object.values(devTuning.overrides[section]).reduce<number>(
-      (sum, value) => sum + (typeof value === 'object' ? Object.keys(value).length : 1), 0), 0);
+    const count = () => countAdjustments(sections);
     return confirmRow(`Salvar ${what} no código`, 'Salvar e aplicar',
       () => `Gravar ${count()} ajuste(s) de ${what} nos arquivos do jogo? O jogo recarrega com os novos valores.`,
       () => void this.save(what, sections, endpoint, count()));
@@ -390,19 +398,64 @@ export class DeveloperPanel {
       () => void this.writeImages());
   }
   private async writeImages(): Promise<void> {
-    const failures: string[] = [];
+    // A victory pose is trimmed to the drawing once written, with its frame in the code corrected to match; a frame
+    // still unsaved here was tuned for the untrimmed image, so it must reach the code first.
+    const unsaved = [...replacedImages().keys()].map(url => /art\/characters\/([\w-]+)\/fullbody[\w-]*\.png$/.exec(gameImages[url] ?? '')?.[1])
+      .filter((id): id is string => Boolean(id && devTuning.overrides.selection[id]?.victory));
+    if (unsaved.length) { this.status.textContent = `A tela de vencedor de ${unsaved.map(id => fighterArt[id]?.name ?? id).join(', ')} tem ajuste não salvo, feito para a pose antes do recorte: use «Salvar tudo no código», que grava ajustes e imagens juntos e na ordem certa.`; return; }
+    const { files, sent, failures } = await this.collectImages();
+    // One request writes every image: the reload that follows the first written file cannot leave the others behind.
+    // The replacements leave before writing, like the other saves, and come back if the write fails.
+    if (sent.length) {
+      for (const [url] of sent) await restoreImage(url);
+      const response = await post('/__dev/everything', files);
+      if (response === 'reloading') return;
+      if (!response?.ok) {
+        for (const [url, file] of sent) await replaceImage(url, file);
+        failures.push(await response?.text() ?? 'servidor de desenvolvimento indisponível');
+      }
+    }
+    this.status.textContent = failures.length ? `Não gravadas: ${failures.join('; ')}.` : 'Imagens gravadas no código.';
+    this.render();
+  }
+  /** The replaced images as form fields named by their source path, with those whose type differs from the file they replace. */
+  private async collectImages(): Promise<{ files: FormData; sent: [string, Blob][]; failures: string[] }> {
+    const failures: string[] = [], files = new FormData(), sent: [string, Blob][] = [];
     for (const [url, replacement] of replacedImages()) {
       const path = gameImages[url], file = await (await fetch(replacement)).blob();
       const extension = path.split('.').pop()!.replace('jpg', 'jpeg');
       if (file.type !== `image/${extension}`) { failures.push(`${path}: o arquivo novo é ${file.type || 'de tipo desconhecido'}, não ${extension}`); continue; }
-      // The replacement leaves before writing, like the other saves, and comes back if the write fails.
-      await restoreImage(url);
-      const response = await post(`/__dev/image?path=${encodeURIComponent(path)}`, file);
-      if (response === 'reloading') return;
-      if (!response?.ok) { await replaceImage(url, file); failures.push(`${path}: ${await response?.text() ?? 'servidor de desenvolvimento indisponível'}`); }
+      files.append(path, file); sent.push([url, file]);
     }
-    this.status.textContent = failures.length ? `Não gravadas: ${failures.join('; ')}.` : 'Imagens gravadas no código.';
-    this.render();
+    return { files, sent, failures };
+  }
+  /** Writes every pending adjustment of every tab and every replaced image in one request (see `/__dev/everything`). */
+  private saveAll(): HTMLElement {
+    const sections = Object.keys(devTuning.overrides) as (keyof DevOverrides)[];
+    return confirmRow('Salvar tudo no código', 'Salvar tudo',
+      () => `Gravar ${countAdjustments(sections)} ajuste(s) e ${replacedImages().size} imagem(ns) nos arquivos do jogo? O jogo recarrega com tudo aplicado.`,
+      () => void this.writeEverything(sections));
+  }
+  private async writeEverything(sections: readonly (keyof DevOverrides)[]): Promise<void> {
+    const { files, sent, failures } = await this.collectImages();
+    if (failures.length) { this.status.textContent = `Nada foi gravado: ${failures.join('; ')}.`; return; }
+    const count = countAdjustments(sections);
+    if (!count && !sent.length) { this.status.textContent = 'Nenhum ajuste ou imagem para salvar.'; return; }
+    const saved = structuredClone(devTuning.overrides);
+    if (count) files.append('tuning', JSON.stringify(saved));
+    // Like the other saves, what is written leaves the browser first and comes back if writing fails.
+    this.status.textContent = 'Salvando tudo…';
+    devTuning.assign(Object.fromEntries(sections.map(section => [section, {}])));
+    for (const [url] of sent) await restoreImage(url);
+    const response = await post('/__dev/everything', files);
+    if (response === 'reloading') return;
+    if (!response?.ok) {
+      devTuning.assign(saved);
+      for (const [url, file] of sent) await replaceImage(url, file);
+    }
+    this.status.textContent = response?.ok ? 'Ajustes e imagens gravados no código.' :
+      `Falha ao salvar; ajustes e imagens mantidos no navegador. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
+    this.changed(); this.render();
   }
   private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1): void {
     const scale = box / frame.realHeight, center = context.canvas.width / 2, top = feet - footAnchor * box;
@@ -555,11 +608,12 @@ export class DeveloperPanel {
     return line;
   }
 
-  /** Framing of a fighter's art on the selection screen (panel and tile), the HUD icon window and the victory frame, with the three images. */
+  /** Framing of a fighter's art on the selection screen (panel, arcade and tile), the HUD icon window and the victory frame, with the three images. */
   private selection(page: HTMLElement): void {
     const id = this.artId, art = fighterArt[id], authored = devTuning.authoredSelection(id)!;
     page.append(choice('Personagem', Object.entries(fighterArt).map(([key, entry]) => [key, entry.name]), id, key => { this.artId = key; this.render(); }));
-    const hero = el('div', 'developer-hero'), heroImage = el('img'); heroImage.alt = ''; heroImage.src = art.background; heroImage.style.cssText = frameStyle(heroFrame(art)); hero.append(heroImage);
+    const hero = el('div', 'developer-hero'), heroImage = el('img'); heroImage.alt = ''; heroImage.src = art.background; heroImage.style.cssText = frameStyle(heroFrame(art)); hero.append(heroImage, selectionScreen(id, false));
+    const arcade = el('div', 'developer-arcade'), arcadeImage = el('img'); arcadeImage.alt = ''; arcadeImage.src = art.background; arcadeImage.style.cssText = frameStyle(arcadeFrame(art)); arcade.append(arcadeImage, selectionScreen(id, true));
     const tile = el('div', 'developer-tile'), tileImage = el('img'); tileImage.alt = ''; tileImage.src = art.icon; tileImage.style.cssText = frameStyle(tileFrame(art)); tile.append(tileImage);
     const icon = el('div', 'developer-icon'), iconImage = el('img'); iconImage.alt = ''; iconImage.src = art.icon;
     const cropBox = el('div', 'developer-icon-window'); icon.append(iconImage, cropBox);
@@ -567,10 +621,10 @@ export class DeveloperPanel {
       const { x, y, size } = art.iconWindow, { naturalWidth: width, naturalHeight: height } = iconImage;
       Object.assign(cropBox.style, { left: `${x / width * 100}%`, top: `${y / height * 100}%`, width: `${size / width * 100}%`, height: `${size / height * 100}%` });
     };
-    const previews = el('div', 'developer-previews');
-    for (const [title, preview] of [['Painel de seleção', hero], ['Quadro da grade', tile], ['Janela do ícone no HUD', icon]] as const) {
-      const box = el('figure', 'developer-figure'); box.append(preview, el('figcaption', '', title)); previews.append(box);
-    }
+    // The champion screen in miniature, with the game's proportions and the stage chosen in «Finais».
+    const victory = el('div', 'developer-victory'), canvas = this.scene.game.canvas;
+    victory.style.aspectRatio = `${canvas.width} / ${canvas.height}`;
+    new VictoryScreen(victory, stages.find(entry => entry.id === this.stageId) ?? stages[0], id, art.name);
     const group = (field: keyof SelectionTuning, title: string, labels: Record<string, [string, number]>, current: SelectionFrame | IconWindow | VictoryFrame, original: SelectionFrame | IconWindow | VictoryFrame) => {
       const row = el('div', 'developer-row'), values: Record<string, number> = { ...current }, base: Record<string, number> = { ...original };
       row.classList.toggle('developer-changed', JSON.stringify(current) !== JSON.stringify(original));
@@ -588,15 +642,25 @@ export class DeveloperPanel {
       return row;
     };
     const focal: Record<string, [string, number]> = { zoom: ['Zoom', .05], x: ['Foco X %', 1], y: ['Foco Y %', 1] };
-        const fields = el('div', 'developer-selection');
-    fields.append(
-      group('hero', 'Painel de seleção (zoom e foco da arte)', focal, heroFrame(art), authored.hero),
-      group('tile', 'Quadro da grade (zoom e foco do ícone)', focal, tileFrame(art), authored.tile),
-      group('iconWindow', 'Janela do ícone (HUD de vida, px da imagem)', { x: ['X', 1], y: ['Y', 1], size: ['Lado', 1] }, art.iconWindow, authored.iconWindow),
-      group('victory', 'Tela de vencedor (altura e topo, em telas)', { height: ['Altura', .01], top: ['Topo', .001] }, art.victory, authored.victory));
+    // Each preview sits beside its own fields, so a change is seen while it is typed.
+    const fields = el('div', 'developer-selection');
+    fields.classList.toggle('developer-no-overlay', !this.selectionOverlay);
+    const overlay = checkbox('Mostrar título, nomes e botões da tela sobre as prévias de seleção', this.selectionOverlay);
+    overlay.querySelector('input')!.onchange = event => { this.selectionOverlay = (event.target as HTMLInputElement).checked; fields.classList.toggle('developer-no-overlay', !this.selectionOverlay); };
+    page.append(overlay);
+    for (const [title, preview, controls] of [
+      ['Painel de seleção', hero, group('hero', 'Painel de seleção (zoom e foco da arte)', focal, heroFrame(art), authored.hero)],
+      ['Seleção do arcade', arcade, group('arcade', 'Seleção do arcade (zoom e foco da arte na tela inteira)', focal, arcadeFrame(art), authored.arcade)],
+      ['Quadro da grade', tile, group('tile', 'Quadro da grade (zoom e foco do ícone)', focal, tileFrame(art), authored.tile)],
+      ['Janela do ícone no HUD', icon, group('iconWindow', 'Janela do ícone (HUD de vida, px da imagem)', { x: ['X', 1], y: ['Y', 1], size: ['Lado', 1] }, art.iconWindow, authored.iconWindow)],
+      ['Tela de vencedor', victory, group('victory', 'Tela de vencedor (altura e topo, em telas)', { height: ['Altura', .01], top: ['Topo', .001] }, art.victory, authored.victory)],
+    ] as const) {
+      const box = el('figure', 'developer-figure'), item = el('div', 'developer-tuning');
+      box.append(preview, el('figcaption', '', title)); item.append(box, controls); fields.append(item);
+    }
     const images = el('div', 'developer-images');
     for (const [label, url] of [['Arte de seleção', art.background], ['Ícone', art.icon], ['Pose de vitória', art.fullbody]] as const) images.append(this.imageLine(url, gameImages[url] ?? label, `${label} — ${gameImages[url] ?? ''}`));
-    page.append(previews, fields, images, el('p', 'developer-hint', 'Foco e zoom valem para a tela de seleção; o foco é o ponto da arte que fica fixo ao ampliar. Entre parênteses, o valor gravado no código.'),
+    page.append(fields, images, el('p', 'developer-hint', 'Foco e zoom valem para a tela de seleção; o foco é o ponto da arte que fica fixo ao ampliar. Entre parênteses, o valor gravado no código.'),
       button('Ver tela de vencedor', () => this.showEnding(id, art.name)), this.saveToCode('seleção', ['selection'], '/__dev/overrides'), this.saveImages());
   }
   private async replace(url: string, path: string, file: File): Promise<void> {
@@ -619,10 +683,31 @@ export class DeveloperPanel {
     window.clearInterval(this.spriteTimer);
     this.preview?.destroy();
     window.removeEventListener('keydown', this.onKey, true);
+    this.releasePad();
     this.root.remove(); this.previousFocus?.focus(); this.close();
   }
 }
 
+/** How many adjustments the given sections hold (a nested entry counts each of its keys). */
+function countAdjustments(sections: readonly (keyof DevOverrides)[]): number {
+  return sections.reduce((total, section) => total + Object.values(devTuning.overrides[section]).reduce<number>(
+    (sum, value) => sum + (typeof value === 'object' ? Object.keys(value).length : 1), 0), 0);
+}
+/** The real character select without its art (versus, or Arcade when `solo`), laid over a preview to show what covers the fighter. */
+function selectionScreen(id: string, solo: boolean): HTMLElement {
+  const screen = el('div', `arena-menu fighter-selection developer-overlay${solo ? ' arcade-selection' : ''}`);
+  const header = el('header', 'arena-header'); header.append(el('h1', 'arena-step', t('menu.fighterStep')));
+  screen.append(header);
+  const index = Math.max(0, playableCharacters.findIndex(entry => entry.id === id)), selection = new FighterSelection(playableCharacters.length);
+  selection.select(0, index);
+  const idle = () => undefined;
+  renderFighterSelection(screen, { fighters: playableCharacters, selection, opponent: playableCharacters[index], versus: !solo, selectOpponent: !solo, solo,
+    modeTitle: t(solo ? 'mode.arcade.title' : 'mode.versus.title'), refresh: idle, confirm: idle, back: idle });
+  screen.append(el('footer', 'arena-footer', t(solo ? 'menu.fighterControls' : 'menu.versusControls')));
+  screen.querySelector('.arena-fighter-name.left h1')!.textContent = fighterArt[id].name;
+  screen.inert = true;
+  return screen;
+}
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag); if (className) node.className = className; if (text) node.textContent = text; return node;
 }
