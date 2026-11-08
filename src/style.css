@@ -58,8 +58,8 @@ canvas.menu-film { filter: sepia(.1) saturate(.95); }
 .pause-eyebrow { margin: 0; color: var(--print-soft); font-size: 12px; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; }
 .combat-pause button, .combat-pause input, .controls-panel button, .controls-panel select { font: 600 15px var(--font); color: var(--print); background: transparent; border: 2px solid var(--print); border-radius: 0; padding: 8px 16px; box-shadow: inset 0 0 0 2px var(--paper-light); }
 .combat-pause button, .controls-panel button, .controls-panel select { cursor: pointer; transition: background .15s ease, color .15s ease; }
-.combat-pause button:hover, .combat-pause button:focus-visible, .combat-pause button[aria-pressed="true"], .controls-panel button:hover, .controls-panel button:focus-visible, .controls-panel select:hover { background: var(--accent); color: var(--print); }
-.combat-pause :focus-visible, .controls-panel :focus-visible, .match-result-menu :focus-visible { outline: 2px dashed var(--red); outline-offset: 3px; }
+.combat-pause button:hover, .combat-pause button:is(:focus-visible, .pad-navigation :focus), .combat-pause button[aria-pressed="true"], .controls-panel button:hover, .controls-panel button:is(:focus-visible, .pad-navigation :focus), .controls-panel select:hover { background: var(--accent); color: var(--print); }
+.combat-pause :is(:focus-visible, .pad-navigation :focus), .controls-panel :is(:focus-visible, .pad-navigation :focus), .match-result-menu :is(:focus-visible, .pad-navigation :focus) { outline: 2px dashed var(--red); outline-offset: 3px; }
 .controls-panel select option { background: var(--paper-light); color: var(--print); }
 
 .pause-panel { width: min(1220px, 100%); display: flex; flex-direction: column; }
@@ -77,7 +77,7 @@ canvas.menu-film { filter: sepia(.1) saturate(.95); }
 .pause-move { display: flex; flex-direction: column; text-align: left; gap: 6px; flex-shrink: 0; }
 .pause-move strong { font-size: 15px; overflow-wrap: anywhere; }
 .pause-move span { color: var(--print-soft); font-size: 13px; }
-.pause-move:hover span, .pause-move:focus-visible span { color: var(--print); }
+.pause-move:hover span, .pause-move:is(:focus-visible, .pad-navigation :focus) span { color: var(--print); }
 .pause-details { padding: 18px; background: var(--paper-light); border: 2px solid var(--print); box-shadow: inset 0 0 0 4px var(--paper-light), inset 0 0 0 5px var(--print-soft); font-size: 14px; line-height: 1.5; }
 .pause-details h2 { margin: 10px 0; font: 700 21px var(--font); text-transform: uppercase; letter-spacing: .03em; color: var(--red); text-shadow: var(--misprint); overflow-wrap: anywhere; }
 .pause-command { overflow-wrap: anywhere; }
@@ -95,7 +95,7 @@ canvas.menu-film { filter: sepia(.1) saturate(.95); }
 .combat-pause.match-pause .pause-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; }
 .combat-pause.match-pause .pause-actions button, .match-result-menu button { display: flex; align-items: baseline; gap: 14px; border: 0; box-shadow: none; background: none; padding: 3px 0; font: 700 clamp(20px, 2.3vw, 28px)/1.15 var(--font); text-transform: uppercase; letter-spacing: .03em; color: var(--cream-dim); text-shadow: var(--misprint); cursor: pointer; }
 .combat-pause.match-pause .pause-actions button::before, .match-result-menu button::before { counter-increment: entry; content: counter(entry, decimal-leading-zero); font-size: .5em; font-weight: 600; color: var(--cream-dim); }
-.combat-pause.match-pause .pause-actions button:hover, .combat-pause.match-pause .pause-actions button:focus-visible, .match-result-menu button.selected, .match-result-menu button:hover, .match-result-menu button:focus-visible { background: none; color: var(--red); outline: 0; animation: boil .5s steps(2) infinite; }
+.combat-pause.match-pause .pause-actions button:hover, .combat-pause.match-pause .pause-actions button:is(:focus-visible, .pad-navigation :focus), .match-result-menu button.selected, .match-result-menu button:hover, .match-result-menu button:focus-visible { background: none; color: var(--red); outline: 0; animation: boil .5s steps(2) infinite; }
 .combat-pause.match-pause .pause-legend { margin-top: 18px; }
 .combat-pause.inspection { background: transparent; align-items: start; padding-top: 90px; pointer-events: none; }
 .combat-pause.inspection::after { display: none; }
@@ -125,11 +125,14 @@ canvas.menu-film { filter: sepia(.1) saturate(.95); }
 .controls-page > .control-system-row { max-width: 520px; }
 .controls-panel button, .controls-panel select { min-width: 130px; }
 /* Every key box has the same size in every tab, whatever the glyph (arrows come from fallback fonts with taller lines) or the label length: long labels wrap instead. */
+.control-system-row .controls-fixed { flex: none; width: 112px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; text-align: center; font-size: 13px; color: var(--cream-dim); overflow-wrap: anywhere; }
+.controls-pad-status { margin: 0 0 6px; color: var(--cream-dim); font-size: 13px; overflow-wrap: anywhere; }
 .controls-panel .control-system-row button { flex: none; width: 112px; min-width: 0; height: 32px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; overflow: hidden; white-space: nowrap; }
 .controls-volume { display: flex; align-items: center; gap: 12px; }
 .controls-volume input { width: 240px; accent-color: var(--accent); cursor: pointer; }
 .controls-volume-value { min-width: 3.5em; text-align: right; font-weight: 700; }
 .controls-panel footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.controls-panel.controls-confirm { width: min(620px, 100%); height: auto; gap: 16px; }
 .controls-panel footer button:last-child { background: var(--accent); }
 /* Attack keys keep their button colours, printed on a dark chip like the command notation. */
 .controls-grid button[style*="color"] { background: #0b0a0a; box-shadow: none; }
@@ -140,6 +143,7 @@ canvas.menu-film { filter: sepia(.1) saturate(.95); }
 
 /* Champion screen: veiled scenery, the winner in the middle, upright lettering down each edge. */
 .victory-screen { position: fixed; z-index: 205; container-type: size; overflow: hidden; background: #000; color: var(--cream); font-family: var(--font); animation: victory-in .5s ease-out; }
+.victory-screen.inline { position: absolute; inset: 0; z-index: auto; animation: none; }
 .victory-stage { position: absolute; inset: 0; }
 .victory-stage svg { width: 100%; height: 100%; }
 .victory-veil { position: absolute; inset: 0; background: rgb(0 0 0 / .9); }

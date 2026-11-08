@@ -286,5 +286,22 @@
   "src/assets/sprites/effects/contact/hit-wine.png": "43e84ef097f31047f1b1c1029e4496186d05d4d2c044eef225e2ea33164df1aa",
   "src/assets/sprites/effects/contact/wall-bounce.png": "24cb2079a5c93bd9bc19c1552874f00c84ce3b608ae260764fbf4970de5d69bd"
  },
- "cleanup": "767e3cb8db4602dfc0ce2ef2163cc78a04fc60405489bb8508fbda42130a36c7"
+ "cleanup": "767e3cb8db4602dfc0ce2ef2163cc78a04fc60405489bb8508fbda42130a36c7",
+ "art": {
+  "src/assets/art/characters/cowboy/fullbody.png": "576fe0fc5097e34c76d036aa326dd896afa93df3c69f4cedbe9db4339f925823",
+  "src/assets/art/characters/cowboy/selection-icon.png": "799cb2c418c7f517f9961a1ca1eeb75a5ab71f283586e0361de064b740888282",
+  "src/assets/art/characters/gimmick/fullbody.png": "825798781e85abe78cb575644c75573f471ab0a0d5f3fd0bcc0b6de04dc81b12",
+  "src/assets/art/characters/gimmick/selection-icon.png": "3babaf2380448e6065dbf4996f6686109627057b2649a7517d9c52e33eae01ca",
+  "src/assets/art/characters/grappler/fullbody.png": "9c035114599385921ea48c34a6a582647ef6a2ccdae47919e4e87adf9532fb85",
+  "src/assets/art/characters/grappler/selection-icon.png": "11be36257ef59136c112c496a7a8eebcb5ce25b3b6ebe7a280bb860f68264370",
+  "src/assets/art/characters/puppet/fullbody.png": "cde441285233f3051becd026925ff8717a377e26737707dd70441cd9b5879b04",
+  "src/assets/art/characters/puppet/selection-icon.png": "d794edba99700972ebedd834ad7e4b5ac0b1587dd0ff72f26f0430a2d0777117",
+  "src/assets/art/characters/rushdown/fullbody.png": "8aa406009ac41f9be14dedac25b13d0a05887d74fff1b70b5c3141f427249ce2",
+  "src/assets/art/characters/rushdown/selection-icon.png": "0eb4c0ee686b26d78d5967bd02388a7392a574e8698d6c24107a827d49e3b931",
+  "src/assets/art/characters/shoto/fullbody.png": "15b1c95d42315748bc2d51ceb671d1152aa18640e556d93520c0597f1fd16b1f",
+  "src/assets/art/characters/shoto/selection-icon.png": "c548dcc5f3d34f456bbccd124ef545ae7757b1dbaff7fe5f3f616e7b7bd0d27b",
+  "src/assets/art/characters/stance/fullbody-2.png": "c64ceb77f4634a33aeafb5bb180e44042a431d853c4fa1eeea4ef96ae036793f",
+  "src/assets/art/characters/stance/selection-icon.png": "f3e7d0f89ae8148a319f184958b50b2da82776431e0d0500b0f0f69aeca818e0"
+ },
+ "artCleanup": "767e3cb8db4602dfc0ce2ef2163cc78a04fc60405489bb8508fbda42130a36c7"
 }

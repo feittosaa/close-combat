@@ -1,7 +1,7 @@
 import type { CharacterDefinition, ComboRecipe } from '../engine/data/characters';
 import type { MoveDefinition } from '../engine/data/moves';
 import { HUD } from '../ui/hudTheme';
-import { DEFAULT_HERO_FRAME, DEFAULT_TILE_FRAME, fighterArt, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
+import { DEFAULT_ARCADE_FRAME, DEFAULT_HERO_FRAME, DEFAULT_TILE_FRAME, fighterArt, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { sheetScaleAdjustments } from '../rendering/animations/spriteScale';
 import { frameCutAdjustments, frameSizeAdjustments, type FrameCut, type FrameSize } from '../rendering/contactEffects';
 
@@ -22,8 +22,8 @@ export const HUD_COLORS = ['ink', 'inset', 'rail', 'gold', 'lightGold', 'ivory',
   'players.0', 'players.1', 'playerText.0', 'playerText.1', 'rage.0', 'rage.1', 'rage.2', 'phases.0', 'phases.1', 'phases.2'] as const;
 
 /** Framing of one fighter's selection art: panel and tile images, HUD icon window and victory screen. */
-export interface SelectionTuning { hero?: SelectionFrame; tile?: SelectionFrame; iconWindow?: IconWindow; victory?: VictoryFrame }
-export const SELECTION_FIELDS = ['hero', 'tile', 'iconWindow', 'victory'] as const;
+export interface SelectionTuning { hero?: SelectionFrame; arcade?: SelectionFrame; tile?: SelectionFrame; iconWindow?: IconWindow; victory?: VictoryFrame }
+export const SELECTION_FIELDS = ['hero', 'arcade', 'tile', 'iconWindow', 'victory'] as const;
 
 export interface DevOverrides {
   moves: Record<string, Record<string, MoveTuning>>;
@@ -65,7 +65,7 @@ export class DevTuning {
       recipes: new Map(fighters.flatMap(fighter => (fighter.combos ?? []).map(recipe => [recipe, structuredClone(recipe)] as const))),
       combos: new Map(fighters.map(fighter => [fighter, fighter.combos] as const)),
       hud: JSON.stringify(HUD),
-      art: new Map(Object.values(fighterArt).map(art => [art, structuredClone({ hero: art.hero, tile: art.tile, iconWindow: art.iconWindow, victory: art.victory })] as const)),
+      art: new Map(Object.values(fighterArt).map(art => [art, structuredClone({ hero: art.hero, arcade: art.arcade, tile: art.tile, iconWindow: art.iconWindow, victory: art.victory })] as const)),
     };
     if (this.dropOrphanRecipes()) saveOverrides(this.overrides);
     this.apply();
@@ -89,7 +89,7 @@ export class DevTuning {
   originalRecipe(recipe: ComboRecipe): ComboRecipe | undefined { return this.baseline.recipes.get(recipe); }
   authoredCombos(fighter: CharacterDefinition): readonly ComboRecipe[] { return this.baseline.combos.get(fighter) ?? []; }
   authoredSelection(id: string): Required<SelectionTuning> | undefined {
-    const base = this.baseline.art.get(fighterArt[id]); return base && { hero: base.hero ?? DEFAULT_HERO_FRAME, tile: base.tile ?? DEFAULT_TILE_FRAME, iconWindow: base.iconWindow!, victory: base.victory! };
+    const base = this.baseline.art.get(fighterArt[id]); return base && { hero: base.hero ?? DEFAULT_HERO_FRAME, arcade: base.arcade ?? DEFAULT_ARCADE_FRAME, tile: base.tile ?? DEFAULT_TILE_FRAME, iconWindow: base.iconWindow!, victory: base.victory! };
   }
   hudDefault(token: string): string { return toCss(read(JSON.parse(this.baseline.hud) as Record<string, unknown>, token)); }
 

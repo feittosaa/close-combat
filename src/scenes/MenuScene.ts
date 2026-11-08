@@ -4,6 +4,7 @@ import { t } from '../i18n/i18n';
 import { FighterSelection } from '../ui/FighterSelection';
 import { renderFighterSelection } from '../ui/FighterSelectionView';
 import { releaseSelectionArt } from '../ui/fighterArt';
+import { gamepads, type PadPress } from '../input/GamepadHub';
 import { renderStageDraw, renderStageSelection } from '../ui/StageSelectionView';
 import { StagePicker } from '../ui/StagePicker';
 import '../ui/menu.css';
@@ -99,6 +100,30 @@ export class MenuScene extends Phaser.Scene {
     }
   };
 
+  /**
+   * Controller in the menus: the d-pad or stick moves, A/✕ or Start confirms and B/○ goes back. In PvP each
+   * controller drives its own player's cursor; elsewhere any controller drives the player choosing.
+   */
+  private readonly handlePad = (press: PadPress): void => {
+    if (this.transitioning || !press.action || press.action === 'select') return;
+    const action = press.action === 'start' ? 'confirm' : press.action;
+    const step = action === 'left' || action === 'up' ? -1 : action === 'right' || action === 'down' ? 1 : 0;
+    if (action === 'back') { if (this.page !== 'home') this.back(); return; }
+    if (this.page === 'home' || this.page === 'difficulty') {
+      if (action === 'up' || action === 'down') this.selectHomeMode((this.cursor + step + this.entries.length) % this.entries.length);
+      else if (action === 'confirm') this.page === 'difficulty' ? this.chooseDifficulty(this.difficultyIndex) : this.chooseMode(this.modeIndex);
+    } else if (this.page === 'fighter') {
+      const player = this.mode === 'versus' ? press.player : this.selection.activePlayer;
+      if (step) { this.selection.move(player, step); this.render(); } else this.confirmFighter(player);
+    } else if (this.page === 'stage' && !this.drawing) {
+      const picker = this.stagePicker, player = picker.active.length === 1 ? picker.active[0] : press.player;
+      if (!picker.active.includes(player)) return;
+      if (!step) { this.confirmStage(player); return; }
+      if (picker.plateFor === player) picker.moveVariant(player, step); else picker.move(player, step);
+      this.render();
+    }
+  };
+
   private get fighters() {
     return playableCharacters;
   }
@@ -161,8 +186,10 @@ export class MenuScene extends Phaser.Scene {
     this.alignMenu();
     this.render();
     window.addEventListener('keydown', this.handleKey);
+    const releasePad = gamepads.subscribe(this.handlePad);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener('keydown', this.handleKey);
+      releasePad();
       this.resizeObserver?.disconnect();
       window.removeEventListener('resize', this.alignMenu);
       this.menuElement?.remove(); this.menuElement = undefined;
@@ -183,6 +210,7 @@ export class MenuScene extends Phaser.Scene {
     const root = this.menuElement!;
     root.classList.toggle('fighter-selection', this.page === 'fighter');
     root.classList.toggle('stage-selection', this.page === 'stage');
+    root.classList.toggle('arcade-selection', this.page === 'fighter' && this.mode === 'arcade');
     root.classList.toggle('arena-home', this.page === 'home' || this.page === 'difficulty');
     const node = (tag: string, className: string, text = ''): HTMLElement => {
       const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
@@ -238,6 +266,7 @@ export class MenuScene extends Phaser.Scene {
         opponent: this.mode === 'arcade' ? getCharacterById(this.arcadeRun.opponents[0]) ?? opponentFor(this.fighters[this.fighterIndex].id) : opponentFor(this.fighters[this.fighterIndex].id),
         versus: this.mode === 'versus',
         selectOpponent: selectsOpponent(this.mode),
+        solo: this.mode === 'arcade',
         modeTitle: modeEntry(this.mode).title,
         refresh: () => this.render(),
         confirm: () => this.confirmFighter(),
@@ -335,7 +364,7 @@ export class MenuScene extends Phaser.Scene {
     this.page = this.page === 'stage' ? 'fighter' : this.page === 'fighter' && this.mode === 'arcade' ? 'difficulty' : 'home'; this.render();
   }
   private confirmFighter(player = this.selection.activePlayer): void {
-    if (!this.selection.confirm(player, selectsOpponent(this.mode))) { this.render(); return; }
+    if (!this.selection.confirm(player, selectsOpponent(this.mode), this.mode !== 'arcade')) { this.render(); return; }
     if (isTrainingMode(this.mode) || this.mode === 'arcade') this.startFight();
     else { this.picker = undefined; this.page = 'stage'; this.render(); }
   }
