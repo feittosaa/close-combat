@@ -21,7 +21,7 @@ import { CommandBuffer } from '../input/CommandBuffer';
 import { KeyboardInput } from '../input/KeyboardInput';
 import { GamepadInput, gamepads, mergeInputs, type PadPress } from '../input/GamepadHub';
 import type { FrameInput } from '../input/types';
-import { settleAfterRound } from '../rendering/animations/cowboySprites';
+import { settleAfterRound } from '../rendering/animations/texasSprites';
 import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
 import { ProjectileView } from '../rendering/ProjectileView';
 import { RushEffect } from '../rendering/RushEffect';

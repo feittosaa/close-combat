@@ -54,7 +54,7 @@ it.each([['KeyS','KeyJ',undefined],['ArrowDown','Numpad1','player-2']] as const)
     const fight = new FightScene();
     const start=vi.fn();
     Object.assign(fight,{scene:{start,restart:vi.fn()},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
-    fight.init({mode:'versus',fighterId:'shoto',opponentId:'cowboy'});
+    fight.init({mode:'versus',fighterId:'shoto',opponentId:'texas'});
     const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
     snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
     (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
@@ -76,7 +76,7 @@ const postMatch = (mode: 'versus' | 'arcade', winner: string | undefined, arcade
   const fight = new FightScene();
   const start=vi.fn(), restart=vi.fn();
   Object.assign(fight,{scene:{start,restart},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
-  fight.init({mode,fighterId:'shoto',opponentId:'cowboy',arcadeIndex});
+  fight.init({mode,fighterId:'shoto',opponentId:'texas',arcadeIndex});
   const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
   snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
   (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
@@ -159,12 +159,12 @@ it('boots with shared assets only; each match loads its own fighters, stage and 
   const shared={textures:{exists:(key:string)=>textures.has(key),getTextureKeys:()=>[...textures.keys()],remove:(key:string)=>{textures.delete(key);removed.push(key);}},
     cache:{audio:{exists:(key:string)=>textures.has(key)}},load};
   const finishLoading=()=>{for(const key of queued)textures.set(key,{});queued.clear();};
-  const matchKeys=/^(stage:|presentation:|cowboy-|shoto-)/;
+  const matchKeys=/^(stage:|presentation:|texas-|shoto-)/;
   const boot=new BootScene();
   Object.assign(boot,shared,{cameras:{main:camera},scale:{width:1920,height:1080},scene:{start:vi.fn()}});
   boot.preload();
   for (const key of ['menu-solar','sfx-perfect_block_1','contact-hit-light','wall-bounce']) expect(queued.has(key),key).toBe(true);
-  for (const fighter of ['shoto','cowboy','grappler','puppet']) expect(queued.has(`fighter-icon-${fighter}`)).toBe(true);
+  for (const fighter of ['shoto','texas','grappler','mrapple']) expect(queued.has(`fighter-icon-${fighter}`)).toBe(true);
   expect([...queued].filter(key=>matchKeys.test(key))).toEqual([]);
   finishLoading();
   boot.create();
@@ -176,13 +176,13 @@ it('boots with shared assets only; each match loads its own fighters, stage and 
   };
   const farm=stages.find(stage=>stage.id==='fazenda')!, saloon=stages.find(stage=>stage.id==='saloon-dia')!;
   const first=match('shoto','shoto','fazenda');
-  expect(first).toContain('shoto-idle');expect(first.some(key=>key.startsWith('cowboy-'))).toBe(false);
+  expect(first).toContain('shoto-idle');expect(first.some(key=>key.startsWith('texas-'))).toBe(false);
   for(const layer of farm.layers)expect(first).toContain(stageTextureKey(farm,layer));
   expect(first).toContain('presentation:fazenda:ko');
   expect(first.filter(key=>/^(stage|presentation):/.test(key)&&!/^(stage|presentation):fazenda:/.test(key))).toEqual([]);
   expect(match('shoto','shoto','fazenda'),'a rematch reuses what is loaded').toEqual([]);
-  const second=match('cowboy','shoto','saloon-dia');
-  expect(second).toContain('cowboy-idle');expect(second.some(key=>key.startsWith('shoto-'))).toBe(false);
+  const second=match('texas','shoto','saloon-dia');
+  expect(second).toContain('texas-idle');expect(second.some(key=>key.startsWith('shoto-'))).toBe(false);
   for(const layer of saloon.layers)expect(second).toContain(stageTextureKey(saloon,layer));
   expect(second).toContain('presentation:saloon:ko');
   expect(removed.length).toBeGreaterThan(0);
@@ -198,7 +198,7 @@ it('starts the preparation scene before exposing any menu or fighter selection',
 });
 
 it.each([
-  ['PvP com vencedor', 'versus', 'player-2', 0, [['cowboy', 'Texas', 2]]],
+  ['PvP com vencedor', 'versus', 'player-2', 0, [['texas', 'Texas', 2]]],
   ['PvP empatado', 'versus', undefined, 0, []],
   ['Arcade: vitória sobre o último adversário', 'arcade', 'player-1', -1, [['shoto', 'Bob', undefined]]],
   ['Arcade: vitória no meio da jornada', 'arcade', 'player-1', 0, []],
@@ -211,7 +211,7 @@ it.each([
   try {
     const fight = new FightScene();
     Object.assign(fight,{scene:{start:vi.fn(),restart:vi.fn()},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
-    fight.init({mode,fighterId:'shoto',opponentId:'cowboy',arcadeIndex:Math.max(0,arcadeIndex)});
+    fight.init({mode,fighterId:'shoto',opponentId:'texas',arcadeIndex:Math.max(0,arcadeIndex)});
     if (arcadeIndex < 0) arcadeIndex = (fight as unknown as {arcadeRun:{opponents:string[]}}).arcadeRun.opponents.length - 1;
     if (mode === 'arcade') fight.init({mode,fighterId:'shoto',arcadeIndex:Math.max(0,arcadeIndex),arcadeRun:(fight as unknown as {arcadeRun:object}).arcadeRun as never});
     const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();

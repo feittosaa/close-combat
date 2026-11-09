@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { characters, type CharacterDefinition } from '../engine/data/characters';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import { parseCommand, routeInputs, type FighterRoutes, type RouteStep } from '../training/comboRoute';
 import { TUTORIAL_START_DISTANCE, approachInputs, lessonCommands, playExample, routeNotation } from '../training/tutorialLessons';
 import { TutorialSession } from '../training/TutorialSession';
@@ -24,22 +24,22 @@ it('lê comandos da notação universal, incluindo agachado, simultâneo, sequê
 
 it('o combo de exemplo do Bob (1,1,2 levantamento, 1,1,1,3,3,2,2,2 e chute antiaéreo forte) está no avançado', () => {
   expect(routes.shoto.advanced.map(route => route.steps.map(step => step.command).join(' '))).toContain('1 1 2 1 1 1 3 3 2 2 2 f,d,df,4');
-  expect(routes.cowboy.advanced.map(route => route.steps.map(step => step.command).join(' '))).toContain('3 3 3 1 d+1 d+1 4 4 2 d,df,f,2');
+  expect(routes.texas.advanced.map(route => route.steps.map(step => step.command).join(' '))).toContain('3 3 3 1 d+1 d+1 4 4 2 d,df,f,2');
 });
 
 it('o dano mostrado acompanha uma mudança nos dados do golpe', () => {
-  const softer = { ...cowboy, moves: cowboy.moves.map(move => move.id === 'power-kick' ? { ...move, damage: move.damage - 10 } : move) };
+  const softer = { ...texas, moves: texas.moves.map(move => move.id === 'power-kick' ? { ...move, damage: move.damage - 10 } : move) };
   const lessonOf = (fighter: CharacterDefinition) => {
     const tutorial = new TutorialSession(fighter);
     return tutorial.stats(tutorial.sections[0].lessons.find(lesson => lesson.key === 'move:power-kick')!);
   };
-  expect(lessonOf(softer)!.damage).toBe(lessonOf(cowboy)!.damage - 10);
+  expect(lessonOf(softer)!.damage).toBe(lessonOf(texas)!.damage - 10);
 });
 
 it('o combo de exemplo da Texas (3,3,3,1, agacha 1,1, levanta 4,4,2 e dinamite antiaérea) dá 10 hits e 336 de dano', () => {
-  const route = routes.cowboy.advanced.find(entry => entry.steps.map(step => step.command).join(' ') === '3 3 3 1 d+1 d+1 4 4 2 d,df,f,2');
+  const route = routes.texas.advanced.find(entry => entry.steps.map(step => step.command).join(' ') === '3 3 3 1 d+1 d+1 4 4 2 d,df,f,2');
   expect(route).toMatchObject({ hits: 10, damage: 336 });
-  const combos = play(cowboy, route!.steps);
+  const combos = play(texas, route!.steps);
   expect(combos).toHaveLength(1);
   expect(combos[0]).toMatchObject({ hits: 10, damage: 336 });
 });

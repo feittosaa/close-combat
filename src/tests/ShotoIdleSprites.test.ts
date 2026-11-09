@@ -251,7 +251,7 @@ describe('animação de espera do Shoto', () => {
   });
 
   it('Bob que perde no ar pousa deitado, sem a pose de levantar nem a de pé', async () => {
-    const { settleAfterRound } = await import('../rendering/animations/cowboySprites');
+    const { settleAfterRound } = await import('../rendering/animations/texasSprites');
     const base = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
     const airborne = { ...base, y: base.y - 200, grounded: false, verticalVelocity: -3, mode: 'airborne' as const, remainingStateFrames: 0, stateStartedFrame: 540 };
     const landed = settleAfterRound(airborne, 200, base.y, .55, true);

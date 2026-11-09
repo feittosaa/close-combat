@@ -32,9 +32,9 @@ function mockScene(){
 }
 it('positions each fighter icon at the outer edge of the health bar',()=>{
   const {scene,images}=mockScene();
-  const hud=new CombatHud(scene,1024,['Cowboy','Shoto'],false,'TREINO LIVRE',['cowboy','shoto']);
+  const hud=new CombatHud(scene,1024,['Texas','Shoto'],false,'TREINO LIVRE',['texas','shoto']);
   // Every icon shows a square window of its art at exactly 76 × 76 px, centred at the outer edge of its bar.
-  expect(images.map(image=>image.key)).toEqual(['fighter-icon-cowboy','fighter-icon-shoto']);
+  expect(images.map(image=>image.key)).toEqual(['fighter-icon-texas','fighter-icon-shoto']);
   images.forEach((image,index)=>{
     const [cropX,cropY,cropWidth,cropHeight]=image.crop!;
     expect(cropWidth).toBe(cropHeight);
@@ -76,7 +76,7 @@ it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar
 });
 it('mostra o combo com o número de acertos grande e o dano embaixo, no lado do jogador',()=>{
   const {scene,texts}=mockScene();
-  const hud=new CombatHud(scene,1024,['Cowboy','Shoto'],true);
+  const hud=new CombatHud(scene,1024,['Texas','Shoto'],true);
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
   hud.update({...snapshot,comboHistory:[{attackerId:'player-1',targetId:'player-2',hits:3,damage:72,active:true,lastFrame:0}]},1024);
   const count=texts.find(text=>text.value==='3')!;
@@ -135,7 +135,7 @@ it('layers white, yellow and red rage fills and shows completed levels', () => {
 });
 it('only restyles HUD text when its colour changes, so identical frames redraw no text texture',()=>{
   const {scene,texts,colorChanges}=mockScene();
-  const hud=new CombatHud(scene,1024,['Cowboy','Shoto'],true);
+  const hud=new CombatHud(scene,1024,['Texas','Shoto'],true);
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
   hud.update(snapshot,1024);
   const colours=texts.map(text=>(text.style as {color?:string}).color), changes=colorChanges();

@@ -4,8 +4,8 @@ import { DevTuning, loadOverrides } from '../dev/devOverrides';
 import { HUD } from '../ui/hudTheme';
 import { fighterArt, heroFrame, tileFrame } from '../ui/fighterArt';
 import { autoSpriteScale, type SheetMeasurements } from '../rendering/animations/spriteScale';
-import cowboyMeasurements from '../assets/sprites/characters/cowboy/measurements.json';
-import cowboyCalibration from '../assets/sprites/characters/cowboy/calibration.json';
+import texasMeasurements from '../assets/sprites/characters/texas/measurements.json';
+import texasCalibration from '../assets/sprites/characters/texas/calibration.json';
 
 const fresh = () => structuredClone(characters);
 
@@ -50,13 +50,13 @@ describe('developer tuning', () => {
   });
 
   it('resizes one animation on top of its automatic scale and restores it', () => {
-    const fighters = fresh(), cowboy = fighters.find(fighter => fighter.id === 'cowboy')!, tuning = new DevTuning(fighters);
-    const scale = (sheet: string) => autoSpriteScale(cowboy, cowboyMeasurements as SheetMeasurements, sheet, 0, cowboyCalibration);
+    const fighters = fresh(), texas = fighters.find(fighter => fighter.id === 'texas')!, tuning = new DevTuning(fighters);
+    const scale = (sheet: string) => autoSpriteScale(texas, texasMeasurements as SheetMeasurements, sheet, 0, texasCalibration);
     const before = scale('walk'), other = scale('jump');
-    tuning.setSpriteScale('cowboy:walk', 1.1);
+    tuning.setSpriteScale('texas:walk', 1.1);
     expect(scale('walk')).toBeCloseTo(before * 1.1);
     expect(scale('jump')).toBe(other);
-    tuning.setSpriteScale('cowboy:walk', undefined);
+    tuning.setSpriteScale('texas:walk', undefined);
     expect(scale('walk')).toBe(before);
   });
 
@@ -65,15 +65,15 @@ describe('developer tuning', () => {
   });
 
   it('reframes the selection art over the authored values and restores them', () => {
-    const tuning = new DevTuning(fresh()), art = fighterArt.cowboy, authored = structuredClone({ hero: heroFrame(art), tile: tileFrame(art), icon: art.iconWindow });
-    tuning.setSelection('cowboy', 'hero', { zoom: 1.5, x: 10, y: 30 });
-    tuning.setSelection('cowboy', 'iconWindow', { x: 3, y: 4, size: 900 });
+    const tuning = new DevTuning(fresh()), art = fighterArt.texas, authored = structuredClone({ hero: heroFrame(art), tile: tileFrame(art), icon: art.iconWindow });
+    tuning.setSelection('texas', 'hero', { zoom: 1.5, x: 10, y: 30 });
+    tuning.setSelection('texas', 'iconWindow', { x: 3, y: 4, size: 900 });
     expect(heroFrame(art)).toEqual({ zoom: 1.5, x: 10, y: 30 });
     expect(art.iconWindow).toEqual({ x: 3, y: 4, size: 900 });
     expect(tileFrame(art)).toEqual(authored.tile);
-    expect(tuning.authoredSelection('cowboy')).toMatchObject({ hero: authored.hero, iconWindow: authored.icon });
-    tuning.setSelection('cowboy', 'hero', undefined);
-    tuning.setSelection('cowboy', 'iconWindow', undefined);
+    expect(tuning.authoredSelection('texas')).toMatchObject({ hero: authored.hero, iconWindow: authored.icon });
+    tuning.setSelection('texas', 'hero', undefined);
+    tuning.setSelection('texas', 'iconWindow', undefined);
     expect(tuning.overrides.selection).toEqual({});
     expect({ hero: heroFrame(art), tile: tileFrame(art), icon: art.iconWindow }).toEqual(authored);
   });
@@ -87,4 +87,12 @@ describe('developer tuning', () => {
     expect(tuning.overrides.recipes[fighter.id]).toEqual({ [authored.id]: { recoveryFrames: 33 } });
     expect(tuning.overrides.combos[fighter.id]).toEqual([created]);
   });
+});
+
+it('ajustes salvos com os ids antigos dos personagens passam para os ids novos', () => {
+  const saved = { moves: { cowboy: { 'light-punch': { damage: 30 } } }, spriteScales: { 'cowboy:idle': 1.1, 'shoto:idle': .9 }, selection: { puppet: { hero: { zoom: 2 } } } };
+  const loaded = loadOverrides({ getItem: () => JSON.stringify(saved) });
+  expect(loaded.moves).toEqual({ texas: { 'light-punch': { damage: 30 } } });
+  expect(loaded.spriteScales).toEqual({ 'texas:idle': 1.1, 'shoto:idle': .9 });
+  expect(Object.keys(loaded.selection)).toEqual(['mrapple']);
 });

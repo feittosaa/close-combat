@@ -29,7 +29,7 @@ export class HitboxView {
     characters.forEach((character) => {
       const box = createHurtbox(character);
       this.graphics.lineStyle(1, 0x71f5b3, 0.9);
-      if ((character.fighterId === 'cowboy' || character.fighterId === 'shoto') && character.mode !== 'knockdown') {
+      if ((character.fighterId === 'texas' || character.fighterId === 'shoto') && character.mode !== 'knockdown') {
         const zones = createHurtZones(character);
         for (const zone of Object.values(zones)) this.graphics.strokeRect(zone.x, zone.y, zone.width, zone.height);
       } else this.graphics.strokeRect(box.x, box.y, box.width, box.height);

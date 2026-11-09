@@ -1,15 +1,15 @@
-import puppetBackground from '../assets/art/characters/puppet/selection-background.png';
+import mrappleBackground from '../assets/art/characters/mrapple/selection-background.png';
 import grapplerBackground from '../assets/art/characters/grappler/selection-background.png';
 import shotoBackground from '../assets/art/characters/shoto/selection-background.png';
-import cowboyBackground from '../assets/art/characters/cowboy/selection-background.png';
-import cowboyIcon from '../assets/art/characters/cowboy/selection-icon.png';
+import texasBackground from '../assets/art/characters/texas/selection-background.png';
+import texasIcon from '../assets/art/characters/texas/selection-icon.png';
 import shotoIcon from '../assets/art/characters/shoto/selection-icon.png';
 import grapplerIcon from '../assets/art/characters/grappler/selection-icon.png';
-import puppetIcon from '../assets/art/characters/puppet/selection-icon.png';
+import mrappleIcon from '../assets/art/characters/mrapple/selection-icon.png';
 import shotoFullbody from '../assets/art/characters/shoto/fullbody.png';
-import cowboyFullbody from '../assets/art/characters/cowboy/fullbody.png';
+import texasFullbody from '../assets/art/characters/texas/fullbody.png';
 import grapplerFullbody from '../assets/art/characters/grappler/fullbody.png';
-import puppetFullbody from '../assets/art/characters/puppet/fullbody.png';
+import mrappleFullbody from '../assets/art/characters/mrapple/fullbody.png';
 import gimmickFullbody from '../assets/art/characters/gimmick/fullbody.png';
 import rushdownFullbody from '../assets/art/characters/rushdown/fullbody.png';
 import stanceFullbody from '../assets/art/characters/stance/fullbody-2.png';
@@ -42,9 +42,9 @@ export interface FighterArt {
 }
 export const fighterArt: Readonly<Record<string, FighterArt>> = {
   shoto: {background:shotoBackground,icon:shotoIcon,iconWindow:{x:7,y:26,size:1228},fullbody:shotoFullbody,victory:{height:1.4557,top:.0441},name:'Bob', hero: { zoom: 1, x: 25, y: 50 }, arcade: { zoom: 1.15, x: 100, y: 0 }, tile: { zoom: 1.15, x: 50, y: 50 }},
-  cowboy: {background:cowboyBackground,icon:cowboyIcon,iconWindow:{x:0,y:13,size:1241},fullbody:cowboyFullbody,victory:{height:1.4639,top:.0455},name:'Texas', arcade: { zoom: 1.15, x: 10, y: 0 }},
+  texas: {background:texasBackground,icon:texasIcon,iconWindow:{x:0,y:13,size:1241},fullbody:texasFullbody,victory:{height:1.4639,top:.0455},name:'Texas', arcade: { zoom: 1.15, x: 10, y: 0 }},
   grappler: {background:grapplerBackground,icon:grapplerIcon,iconWindow:{ x: 10, y: 0, size: 1228 },fullbody:grapplerFullbody,victory:{ height: 1.4922, top: .0934 },name:'Grappler', arcade: { zoom: 1.15, x: 30, y: 0 }},
-  puppet: {background:puppetBackground,icon:puppetIcon,iconWindow:{x:0,y:0,size:928},fullbody:puppetFullbody,victory:{height:1.4709,top:.052},name:'Mr. Apple', arcade: { zoom: 1, x: 50, y: 0 }},
+  mrapple: {background:mrappleBackground,icon:mrappleIcon,iconWindow:{x:0,y:0,size:928},fullbody:mrappleFullbody,victory:{height:1.4709,top:.052},name:'Mr. Apple', arcade: { zoom: 1, x: 50, y: 0 }},
   gimmick: {background:gimmickBackground,icon:gimmickIcon,iconWindow:{x:0,y:0,size:1254},fullbody:gimmickFullbody,victory:{height:1.1435,top:.0405},name:'Gimmick', arcade: { zoom: 1.05, x: 70, y: 0 }},
   rushdown: {background:rushdownBackground,icon:rushdownIcon,iconWindow:{x:0,y:0,size:1254},fullbody:rushdownFullbody,victory:{height:1.3624,top:.0504},name:'Rushdown', hero: { zoom: 1, x: 16, y: 50 }, arcade: { zoom: 1.15, x: 70, y: 0 }},
   stance: {background:stanceBackground,icon:stanceIcon,iconWindow:{x:0,y:0,size:1254},fullbody:stanceFullbody,victory:{ height: 1.2616, top: .0739 },name:'Stance', hero: { zoom: 1, x: 3, y: 50 }, arcade: { zoom: 1, x: 50, y: 0 }},

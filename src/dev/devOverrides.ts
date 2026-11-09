@@ -43,8 +43,19 @@ export interface DevOverrides {
 const STORAGE_KEY = 'close-combat.dev-overrides';
 const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {}, selection: {} });
 
+/** Fighter ids renamed in the code (2026-11-08); tuning saved under the old ids follows them. */
+const RENAMED_FIGHTERS: Readonly<Record<string, string>> = { cowboy: 'texas', puppet: 'mrapple' };
+const renamedKey = (key: string): string => {
+  const [fighter, ...rest] = key.split(':');
+  return RENAMED_FIGHTERS[fighter] ? [RENAMED_FIGHTERS[fighter], ...rest].join(':') : key;
+};
+function migrateFighterIds(overrides: DevOverrides): DevOverrides {
+  return Object.fromEntries(Object.entries(overrides).map(([section, entries]) => [section,
+    Object.fromEntries(Object.entries(entries as Record<string, unknown>).map(([key, value]) => [renamedKey(key), value]))])) as unknown as DevOverrides;
+}
+
 export function loadOverrides(storage: Pick<Storage, 'getItem'> | undefined = globalThis.localStorage): DevOverrides {
-  try { return { ...empty(), ...JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<DevOverrides> }; } catch { return empty(); }
+  try { return migrateFighterIds({ ...empty(), ...JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<DevOverrides> }); } catch { return empty(); }
 }
 export function saveOverrides(overrides: DevOverrides, storage: Pick<Storage, 'setItem'> | undefined = globalThis.localStorage): boolean {
   try { storage?.setItem(STORAGE_KEY, JSON.stringify(overrides)); return true; } catch { return false; }

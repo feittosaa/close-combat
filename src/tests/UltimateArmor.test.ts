@@ -3,7 +3,7 @@ import { AttackResolver } from '../engine/combat/AttackResolver';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { getCharacterById } from '../engine/data/characters';
 import { Simulation } from '../engine/simulation/Simulation';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import { shoto } from '../engine/data/fighters/shoto';
 import { ULTIMATE_ACTIVATION_FRAMES } from '../engine/combat/ultimateActivation';
 import type { FrameInput } from '../input/types';
@@ -12,9 +12,9 @@ import type { ProjectileState } from '../engine/combat/ProjectileState';
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
 const resolver = new AttackResolver((fighter, id) => getCharacterById(fighter)?.moves.find(move => move.id === id));
 
-it.each(['shoto', 'cowboy'])('protects %s ultimate against strikes and throws without cancelling it', fighter => {
+it.each(['shoto', 'texas'])('protects %s ultimate against strikes and throws without cancelling it', fighter => {
   for (const attackId of ['light-punch', 'throw-13']) {
-    const sim = new Simulation(createGameConfig(1024, 576), [shoto, fighter === 'shoto' ? shoto : cowboy], { training: true, initialDistance: 60 });
+    const sim = new Simulation(createGameConfig(1024, 576), [shoto, fighter === 'shoto' ? shoto : texas], { training: true, initialDistance: 60 });
     const characters = [...sim.snapshot().characters];
     const attacker = characters[0], target = characters[1];
     const move = shoto.moves.find(item => item.id === attackId)!;
@@ -30,7 +30,7 @@ it.each(['shoto', 'cowboy'])('protects %s ultimate against strikes and throws wi
 });
 
 it('halves projectile damage and consumes the projectile without stopping the ultimate', () => {
-  const characters = [...new Simulation(createGameConfig(1024, 576), [shoto, cowboy], { training: true, initialDistance: 60 }).snapshot().characters];
+  const characters = [...new Simulation(createGameConfig(1024, 576), [shoto, texas], { training: true, initialDistance: 60 }).snapshot().characters];
   const move = shoto.moves.find(item => item.id === 'tomato-light')!;
   const target = characters[1];
   target.mode = 'recovery';
