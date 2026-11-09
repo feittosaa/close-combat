@@ -992,8 +992,9 @@ export class Simulation {
     if (!previous) return true;
     if (authoredContinuation && previous.hitOutcome === 'hit') return true;
     if (this.canContinueRecipe(character, index, move)) return true;
-    // A chord completed within the input grace window replaces its uncommitted single.
-    if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
+    // A chord completed within the input grace window replaces its uncommitted single. Never a move that spent rage:
+    // an ultimate's activation freezes its frame count, so its end would still look like that window.
+    if (!this.move(index, previous.moveId)?.rageCost && !previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
       previous.buttons.every(button => move.input.buttons.includes(button))) return true;
     const chain = [...(character.chain ?? [previous.moveId]), move.id];
     const projectileRecipe = this.projectileRecipe(index, chain);
