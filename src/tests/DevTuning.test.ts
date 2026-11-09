@@ -61,7 +61,7 @@ describe('developer tuning', () => {
   });
 
   it('ignores unreadable stored tuning', () => {
-    expect(loadOverrides({ getItem: () => '{broken' })).toEqual({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {}, selection: {} });
+    expect(loadOverrides({ getItem: () => '{broken' })).toEqual({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
   });
 
   it('reframes the selection art over the authored values and restores them', () => {

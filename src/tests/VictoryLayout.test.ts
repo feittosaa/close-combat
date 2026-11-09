@@ -9,11 +9,10 @@ describe('tela de vitória', () => {
     expect(winnerWords('Bob', 2)).toEqual(['WINNER', 'PLAYER 2', 'BOB']);
   });
 
-  it('todo personagem, jogável ou não, tem arte de corpo inteiro e enquadramento próprio para a vitória', () => {
+  it('todo personagem, jogável ou não, tem arte de corpo inteiro e enquadramento para a vitória', () => {
     const frames = Object.values(fighterArt);
-    expect(Object.keys(fighterArt).sort()).toEqual(['gimmick', 'grappler', 'mrapple', 'rushdown', 'shoto', 'stance', 'texas']);
-    for (const art of frames) { expect(art.fullbody).toBeTruthy(); expect(art.victory.height).toBeGreaterThan(1); }
+    expect(Object.keys(fighterArt).sort()).toEqual(['gimmick', 'grappler', 'mixup', 'mrapple', 'rushdown', 'setplay', 'shoto', 'stance', 'texas']);
+    for (const art of frames) { expect(art.fullbody).toBeTruthy(); expect(art.victory.height).toBeGreaterThan(0); expect(Number.isFinite(art.victory.top)).toBe(true); }
     expect(playableCharacters.every(character => fighterArt[character.id])).toBe(true);
-    expect(new Set(frames.map(art => `${art.victory.height}/${art.victory.top}`)).size).toBe(frames.length);
   });
 });

@@ -1,4 +1,8 @@
 /* Developer tools: the same ink card as the settings, wider and denser, above every other overlay. */
+.developer-saving { position: fixed; inset: 0; z-index: 230; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #070606dd; color: var(--cream); font: 500 14px var(--font); cursor: wait; }
+.developer-saving p:first-child { margin: 0; padding: 28px 56px; border: 2px solid var(--accent); background: #0b0a0a; font: 700 40px var(--font); letter-spacing: .08em; text-transform: uppercase; animation: developer-saving 1.2s ease-in-out infinite alternate; }
+@keyframes developer-saving { to { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .developer-saving p:first-child { animation: none; } }
 .developer-panel { position: fixed; inset: 0; z-index: 210; display: grid; place-items: center; padding: 16px; background: #070606ee; color: var(--cream); font: 500 14px var(--font); scrollbar-color: var(--cream-dim) #0b0a0a; }
 .developer-panel[hidden] { display: none; }
 .developer-card { display: flex; flex-direction: column; gap: 12px; width: min(1680px, 100%); height: calc(100vh - 32px); padding: 18px 20px; background: linear-gradient(160deg, #1c1713, #100d0b 70%); border: 1px solid var(--cream); outline: 1px solid #efe4cc55; outline-offset: -7px; box-shadow: 0 0 0 4px #0b0a0a, 0 20px 60px #000c; }
@@ -22,6 +26,14 @@
 .developer-ending, .developer-combo { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #efe4cc44; }
 .developer-ending img { width: 96px; height: 96px; object-fit: contain; }
 .developer-ending h2, .developer-combo h2, .developer-colors h2 { margin: 0; font: 700 16px var(--font); }
+.developer-alternative-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.developer-alternative { display: flex; flex-direction: column; gap: 4px; margin: 0; font-size: 12px; }
+.developer-alternative-pick { padding: 0; }
+.developer-alternative-pick[aria-pressed="true"] { outline: 3px solid var(--accent); outline-offset: -3px; }
+.developer-alternative-pick:disabled { cursor: default; opacity: 1; }
+.developer-alternative-pick.developer-removed img { opacity: .3; filter: grayscale(1); }
+.developer-panel .developer-alternative img { display: block; width: 100%; height: 130px; object-fit: contain; background: repeating-conic-gradient(#2a221c 0 25%, #1d1814 0 50%) 0 0 / 12px 12px; }
+.developer-alternative .developer-row { flex-wrap: wrap; }
 .developer-combo p { margin: 0; color: var(--cream-dim); }
 .developer-combos { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
 .developer-new { border-color: var(--accent); }
