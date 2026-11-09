@@ -1,4 +1,7 @@
 import { expect, it } from 'vitest';
+import { characters } from '../engine/data/characters';
+import { routeInputs, type RouteStep } from '../training/comboRoute';
+import { TUTORIAL_DISTANCE, tutorialGameConfig } from '../training/tutorialLessons';
 import { Simulation } from '../engine/simulation/Simulation';
 import { shoto } from '../engine/data/fighters/shoto';
 import { createGameConfig } from '../engine/data/gameConfig';
@@ -150,11 +153,13 @@ it('reaches both actual panorama walls when the opponent follows, without draggi
   }
 });
 
+/** An ultimate ends its combo: another one starts only after the opponent has recovered. */
+function untilRecovered(sim:Simulation,player:number){for(let i=0;i<600 && ['hitstun','knockdown'].includes(sim.snapshot().characters[1-player].mode);i++)step(sim,N,player);}
 it.each([0,1])('allows repeated ultimates with sufficient rage: player %i', player => {
   const sim=create(56); sim.fillTrainingRage();
   command(sim,'crow-ultimate',player);
   expect(sim.snapshot().characters[player].rage).toBe(600);
-  wait(sim,350);
+  wait(sim,350); untilRecovered(sim,player);
   command(sim,'crow-ultimate',player);
   expect(sim.snapshot().characters[player].rage).toBe(300);
   expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
@@ -178,7 +183,7 @@ it.each([0,1])('permits ultimates again in a real match after earning rage in a 
 it.each([0,1])('refills rage and permits repeated ultimates in training: player %i', player => {
   const sim=create(56);sim.fillTrainingRage();command(sim,'crow-ultimate',player);
   expect(sim.snapshot().characters[player]).toMatchObject({rage:600});
-  wait(sim,350);sim.fillTrainingRage();
+  wait(sim,350);untilRecovered(sim,player);sim.fillTrainingRage();
   expect(sim.snapshot().characters[player].rage).toBe(900);
   command(sim,'crow-ultimate',player);
   expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
@@ -254,3 +259,21 @@ it.each([0, 1])('sends twelve crows in varied and simultaneous groups from the u
   expect(sim.snapshot().projectiles).toHaveLength(0);
   expect(sim.snapshot().ultimateActivation).toBeUndefined();
 });
+
+it.each([['shoto', 'd,df,f,d,df,f,1', ['d,df,f,d,df,f,1', 'b,f,b,f,1+2', '1', 'd,df,f,1']], ['cowboy', 'b,db,d,df,f,1+2', ['b,db,d,df,f,1+2', '1', 'd,df,f,2']]] as const)(
+  'a ultimate de %s é sempre o último golpe do combo', (id, ultimate, followUps) => {
+    const fighter = characters.find(entry => entry.id === id)!;
+    const firstCombo = (steps: RouteStep[]) => {
+      const sim = new Simulation(tutorialGameConfig(), [fighter, fighter], { training: true, initialDistance: TUTORIAL_DISTANCE });
+      sim.fillTrainingRage();
+      for (const input of routeInputs(steps, 300)) sim.stepFrame([input, { direction: 'N', buttons: new Set() }]);
+      return sim.snapshot().comboHistory.find(combo => combo.attackerId === 'player-1')!;
+    };
+    const alone = firstCombo([{ wait: 8, command: ultimate }]);
+    expect(alone.usedUltimate).toBe(true);
+    // Whatever follows may only start a new combo once the opponent has recovered.
+    // Presses start once the activation is over and the ultimate is under way, up to its last hits.
+    for (const command of followUps) for (let wait = 170; wait <= 400; wait += 5) {
+      expect(firstCombo([{ wait: 8, command: ultimate }, { wait, command }]).hits, `${command} após ${wait}`).toBe(alone.hits);
+    }
+  });

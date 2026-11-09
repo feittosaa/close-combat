@@ -1,6 +1,7 @@
 import { createStageLayout, getFightCameraFrame } from '../rendering/stages/stageLayout';
 import { afterEach, describe, expect, it } from 'vitest';
-import { getPlayerLayout, getSystemControls, keyLabel, loadControls, resetControls, saveControls, saveSystemControls, validateLayouts, validateSystemControls, validateControlSet, getTrainingControls, BUTTON_COLORS } from '../input/controlSettings';
+import { keySlots } from '../ui/ControlSettings';
+import { getPlayerLayout, getSystemControls, keyLabel, loadControls, resetControls, saveControls, saveSystemControls, validateLayouts, validateSystemControls, validateControlSet, getTrainingControls, loadTrainingControls, defaultTrainingControls, BUTTON_COLORS } from '../input/controlSettings';
 import { commandTokens, formatCommand, screenDirection, formatCommandProse } from '../ui/commandNotation';
 import { InputHistory } from '../training/InputHistory';
 import { KeyboardInput } from '../input/KeyboardInput';
@@ -43,10 +44,28 @@ describe('controles configuráveis e apresentação',()=>{
   });
   it('permite remapear atalhos de treino e rejeita conflitos entre todos os comandos',()=>{
     const players:[ReturnType<typeof getPlayerLayout>,ReturnType<typeof getPlayerLayout>]=[getPlayerLayout(0),getPlayerLayout(1)];
-    const training={...getTrainingControls(), geometry:'KeyX', inputs:'KeyC'};
+    const training={...getTrainingControls(), geometry:'KeyO', inputs:'KeyQ'};
     players[0].ultimate='KeyH'; players[0].taunt='KeyI';
     expect(validateControlSet(players,getSystemControls(),training)).toBe(true);
     expect(validateControlSet(players,getSystemControls(),{...training,inputs:'KeyH'})).toBe(false);
+  });
+  it('mapeamento de treino salvo antes dos atalhos do tutorial recebe as teclas padrão novas',()=>{
+    const old={ step:'Period', speed:'KeyO', reset:'F2', autoLife:'F3', distance:'F4', opponent:'KeyG', geometry:'KeyH', inputs:'KeyI' };
+    expect(loadTrainingControls({getItem:()=>JSON.stringify(old)})).toEqual({...defaultTrainingControls(),speed:'KeyO'});
+    // A saved key wins over the new default it collides with: the history toggle on B survives, C goes to the next free key.
+    const custom={...old,inputs:'KeyB',geometry:'KeyC'};
+    const loaded=loadTrainingControls({getItem:()=>JSON.stringify(custom)});
+    expect(loaded).toMatchObject({inputs:'KeyB',geometry:'KeyC',speed:'KeyO',tutorialPrevious:'KeyZ',tutorialNext:'KeyX',tutorialDemo:'KeyV'});
+    expect(new Set(Object.values(loaded)).size).toBe(Object.keys(loaded).length);
+    expect(loadTrainingControls({getItem:()=>JSON.stringify(old)},['KeyC','KeyZ']).tutorialSection).not.toMatch(/^Key[CZ]$/);
+  });
+  it('tecla já em uso troca de lugar com a do comando escolhido',()=>{
+    const players:[ReturnType<typeof getPlayerLayout>,ReturnType<typeof getPlayerLayout>]=[getPlayerLayout(0),getPlayerLayout(1)];
+    const system=getSystemControls(), training=getTrainingControls(), slots=keySlots(players,system,training);
+    const own=slots.find(slot=>slot.id==='training.inputs')!, other=slots.find(slot=>slot.get()===players[0].buttons['1'])!;
+    const previous=own.get(); own.set(players[0].buttons['1']); other.set(previous);
+    expect(training.inputs).toBe('KeyJ'); expect(players[0].buttons['1']).toBe(previous);
+    expect(validateControlSet(players,system,training)).toBe(true);
   });
   it('configura pausa e reinício sem sobrepor controles dos jogadores ou atalhos de treino',()=>{
     let saved='';
