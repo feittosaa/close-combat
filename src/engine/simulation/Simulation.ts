@@ -15,7 +15,7 @@ import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { flightFramesRemaining } from '../combat/airPhysics';
 import { attackDurationFrames } from '../combat/frameData';
 import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
-import { COWBOY_GRAB_LAUNCH, COWBOY_GRAB_SHOTS } from '../combat/cowboyGrab';
+import { TEXAS_GRAB_LAUNCH, TEXAS_GRAB_SHOTS } from '../combat/texasGrab';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
 export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number; starterWeakFamily?: '1' | '3'; usedLightPunch?: boolean; usedStandingLightKick?: boolean; usedWeakKick?: boolean; usedHeavyPunch?: boolean; usedHeavyKick?: boolean; usedAntiAir?: boolean; usedUltimate?: boolean }
@@ -244,9 +244,9 @@ export class Simulation {
       const targetIndex = 1 - attackerIndex;
       const target = this.characters[targetIndex], attacker = this.characters[attackerIndex];
       const move = this.move(attackerIndex, pending.event.moveId)!;
-      if (pending.confirmed && attacker.fighterId === 'cowboy' && move.id === 'throw-24' &&
+      if (pending.confirmed && attacker.fighterId === 'texas' && move.id === 'throw-24' &&
           attacker.attack?.throwConfirmedFrame !== undefined &&
-          COWBOY_GRAB_SHOTS.some(shot => this.frame - attacker.attack!.throwConfirmedFrame! === shot)) {
+          TEXAS_GRAB_SHOTS.some(shot => this.frame - attacker.attack!.throwConfirmedFrame! === shot)) {
         target.hitReaction = { level: 'mid', startedFrame: this.frame };
       }
       const buttons = (inputs[targetIndex] ?? neutral()).buttons;
@@ -261,8 +261,8 @@ export class Simulation {
         this.pendingCommands[targetIndex] = undefined; this.parsers[targetIndex].clear();
         attacker.attack = undefined; attacker.mode = 'neutral'; attacker.remainingStateFrames = 0;
         this.pendingThrow = undefined;
-      } else if (--pending.remaining <= 0 && !pending.confirmed && attacker.fighterId === 'cowboy' && move.id === 'throw-24') {
-        pending.confirmed = true; pending.remaining = COWBOY_GRAB_LAUNCH;
+      } else if (--pending.remaining <= 0 && !pending.confirmed && attacker.fighterId === 'texas' && move.id === 'throw-24') {
+        pending.confirmed = true; pending.remaining = TEXAS_GRAB_LAUNCH;
         attacker.attack.throwConfirmedFrame = this.frame;
         target.remainingStateFrames = 2;
       } else if (pending.remaining <= 0) {
@@ -387,7 +387,7 @@ export class Simulation {
       } else this.dashFrames[index] = 0;
       const tauntPressed = Boolean(input.taunt) && !this.tauntHeld[index];
       this.tauntHeld[index] = Boolean(input.taunt);
-      if ((character.fighterId === 'cowboy' || character.fighterId === 'shoto') && tauntPressed && !input.rageAction && character.mode === 'neutral' && !character.attack) character.tauntStartedFrame = this.frame;
+      if ((character.fighterId === 'texas' || character.fighterId === 'shoto') && tauntPressed && !input.rageAction && character.mode === 'neutral' && !character.attack) character.tauntStartedFrame = this.frame;
       if (character.tauntStartedFrame !== undefined && (character.mode !== 'neutral' || character.attack || this.frame - character.tauntStartedFrame >= 132)) character.tauntStartedFrame = undefined;
       if (character.knockdown) { character.x += character.knockdown.velocityX; character.knockdown.velocityX *= .94; }
       if (character.throwPull) {
@@ -500,7 +500,7 @@ export class Simulation {
     this.lastHitEvents = this.lastHitEvents.filter(event => {
       const attackerIndex = this.characters.findIndex(c => c.characterId === event.attackerId);
       const move = this.move(attackerIndex, event.moveId);
-      if (event.armored || this.characters[attackerIndex].fighterId !== 'cowboy' || move?.category !== 'throw' || event.outcome !== 'hit' || this.pendingThrow) return true;
+      if (event.armored || this.characters[attackerIndex].fighterId !== 'texas' || move?.category !== 'throw' || event.outcome !== 'hit' || this.pendingThrow) return true;
       const targetIndex = 1 - attackerIndex, target = this.characters[targetIndex];
       const attacker = this.characters[attackerIndex];
       if (attacker.attack) attacker.attack.throwCapturedFrame = this.frame;
@@ -523,8 +523,8 @@ export class Simulation {
         this.comboHistory.push(combo);
       }
       combo.hits += 1; combo.damage += hit.damage; combo.lastFrame = this.frame;
-      if (hit.moveId === 'light-punch' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'cowboy') combo.usedLightPunch = true;
-      if (hit.moveId === 'light-kick' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'cowboy') combo.usedStandingLightKick = true;
+      if (hit.moveId === 'light-punch' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'texas') combo.usedLightPunch = true;
+      if (hit.moveId === 'light-kick' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'texas') combo.usedStandingLightKick = true;
       const hitMove = this.move(this.characters.findIndex(character => character.characterId === hit.attackerId), hit.moveId);
       if (this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'shoto' && hitMove && isWeakButton(hitMove, '3')) combo.usedWeakKick = true;
       if (this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'shoto' && hit.moveId === 'heavy-punch') combo.usedHeavyPunch = true;
@@ -692,7 +692,7 @@ export class Simulation {
       if (sourceMove.throwFlight && event.outcome === 'hit') {
         const destination = contactPositions[attackerIndex] + pushSign * (Math.abs(contactPositions[targetIndex] - contactPositions[attackerIndex]) + event.pushback);
         target.throwFlight = true;
-        if (attacker.attack?.throwDirection !== 'backward' && !(attacker.fighterId === 'cowboy' && sourceMove.id === 'throw-24')) {
+        if (attacker.attack?.throwDirection !== 'backward' && !(attacker.fighterId === 'texas' && sourceMove.id === 'throw-24')) {
           const pullTo = attacker.x + pushSign * ((attacker.collision.bodyWidth + target.collision.bodyWidth) / 2 + 5);
           target.throwPull = { distancePerFrame: (pullTo - target.x) / 8, remainingFrames: 8,
             launchDistance: destination - pullTo, launchFrames: sourceMove.throwFlight.frames, liftSpeed: sourceMove.throwFlight.liftSpeed };
@@ -977,11 +977,11 @@ export class Simulation {
         this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.usedHeavyKick)) return false;
     // Bob: a standing and a crouching heavy kick never follow each other, in either order.
     if (this.definitions[index].id === 'shoto' && previous && SHOTO_HEAVY_KICKS.has(move.id) && SHOTO_HEAVY_KICKS.has(previous.moveId) && previous.moveId !== move.id) return false;
-    if (this.definitions[index].id === 'cowboy' && move.id === 'light-kick' && previous?.moveId !== 'light-kick' &&
+    if (this.definitions[index].id === 'texas' && move.id === 'light-kick' && previous?.moveId !== 'light-kick' &&
         this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedStandingLightKick)) return false;
-    if (this.definitions[index].id === 'cowboy' && move.id === 'crouch-light-kick' &&
+    if (this.definitions[index].id === 'texas' && move.id === 'crouch-light-kick' &&
         this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedStandingLightKick)) return false;
-    if (this.definitions[index].id === 'cowboy' && move.id === 'light-punch' && previous?.moveId !== 'light-punch' &&
+    if (this.definitions[index].id === 'texas' && move.id === 'light-punch' && previous?.moveId !== 'light-punch' &&
         this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedLightPunch)) return false;
     if (move.category !== 'ultimate' && !move.screenVolley && (previous?.hitOutcome === 'hit' || previous?.hitOutcome === 'block') && character.chain && this.definitions[index].combos?.some(recipe =>
       !recipe.launch && recipe.moveIds.length === character.chain!.length &&
@@ -992,8 +992,9 @@ export class Simulation {
     if (!previous) return true;
     if (authoredContinuation && previous.hitOutcome === 'hit') return true;
     if (this.canContinueRecipe(character, index, move)) return true;
-    // A chord completed within the input grace window replaces its uncommitted single.
-    if (!previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
+    // A chord completed within the input grace window replaces its uncommitted single. Never a move that spent rage:
+    // an ultimate's activation freezes its frame count, so its end would still look like that window.
+    if (!this.move(index, previous.moveId)?.rageCost && !previous.hasHit && previous.elapsedFrames <= 3 && move.input.buttons.length > previous.buttons.length &&
       previous.buttons.every(button => move.input.buttons.includes(button))) return true;
     const chain = [...(character.chain ?? [previous.moveId]), move.id];
     const projectileRecipe = this.projectileRecipe(index, chain);

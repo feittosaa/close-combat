@@ -30,7 +30,7 @@ Auditoria feita em 2026-11-07 na branch `revisao-codigo`, a partir da `developme
 | Alta | Folhas em `src/assets/sprites/characters` | Quadros sem recorte: 84% transparente | VRAM/RAM ~6× maior | Médio (pipeline de assets) | **Corrigido** (autorizado) |
 | Alta | `CombatHud.ts`, `PlayerInputDisplay.ts` | `setColor`/`setBackgroundColor` todo frame redesenham texto e reenviam textura | 6 / 42 uploads por frame | Nenhum | **Corrigido** |
 | Média | `palettePipeline.ts`, `characterColor.ts` | Paleta e luz em dois PostFX por sprite | Passe extra de framebuffer | Médio | **Corrigido** (autorizado) |
-| Média | `cowboySprites.ts`, `shotoSprites.ts` | Atlas JSON das duas qualidades no bundle | +≈200 KB de JS, só uma qualidade usada | Baixo | **Corrigido** (autorizado) |
+| Média | `texasSprites.ts`, `shotoSprites.ts` | Atlas JSON das duas qualidades no bundle | +≈200 KB de JS, só uma qualidade usada | Baixo | **Corrigido** (autorizado) |
 | Média | `Simulation.ts` (`snapshot`) + `FightScene` | `structuredClone` em 3–4 snapshots por frame; 2/3 do custo é o perfil de colisão estático | ~17–40 µs cada + lixo para o GC | Médio (contrato testado) | Proposta |
 | Média | `src/assets/audio/effects` (83 WAV) | PCM sem compressão: 32 MB | Download e RAM de áudio | Alto se lossy; baixo sem perdas | Proposta |
 | Baixa | `StageView.syncHudCamera`, `StagePresentation.syncCamera`, `sharpenSceneText` | Percorrem todos os objetos da cena todo frame | O(n), sem GPU | Baixo | Proposta |
@@ -100,7 +100,7 @@ Auditoria feita em 2026-11-07 na branch `revisao-codigo`, a partir da `developme
 
 ### 4.5 Atlas por qualidade sob demanda
 
-- **Onde:** `cowboySprites.ts` e `shotoSprites.ts` importam só as URLs dos layouts (`?url&no-inline`); o loader baixa o da qualidade em uso.
+- **Onde:** `texasSprites.ts` e `shotoSprites.ts` importam só as URLs dos layouts (`?url&no-inline`); o loader baixa o da qualidade em uso.
 - **Resultado:** o bundle JS caiu de 2 198 329 para 1 991 780 B. Os 272 layouts (1,1 MB) são arquivos separados, e cada partida baixa só os seus.
 
 ## 5. Comparação antes e depois

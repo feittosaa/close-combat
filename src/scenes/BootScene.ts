@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { loadInterfaceFonts } from '../ui/hudTheme';
-import menuBackground from '../../assets/art/wallpapers/cowboy-menu.png';
+import menuBackground from '../../assets/art/wallpapers/texas-menu.png';
 import bobMenuBackground from '../../assets/art/wallpapers/bob-menu.png';
 import grapplerMenuBackground from '../../assets/art/wallpapers/grappler-menu.png';
 import { configureUiCamera } from '../rendering/presentation';

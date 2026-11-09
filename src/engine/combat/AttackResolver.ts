@@ -71,7 +71,7 @@ export class AttackResolver {
       const hitLevel = volleyStep === 0 ? move.screenVolley?.firstHitLevel ?? move.hitLevel : move.hitLevel;
       if (hitLevel === 'high' && target.crouching) return [];
       const box = projectile ? createProjectileHitbox({ownerId:attacker.characterId,x:attacker.x,y:attacker.y,facing:attacker.facing},move) : createHitbox(attacker,move);
-      const zonedTarget = target.fighterId === 'cowboy' || target.fighterId === 'shoto';
+      const zonedTarget = target.fighterId === 'texas' || target.fighterId === 'shoto';
       const hurtboxes = zonedTarget && move.category !== 'throw'
         ? Object.values(createHurtZones(target)) : [createHurtbox(target)];
       const contacted = hurtboxes.find(hurtbox => intersects(box, hurtbox));
@@ -92,7 +92,7 @@ export class AttackResolver {
       }
       const recovery = projectile ? (ownerMove && owner.attack ? Math.max(0, attackDurationFrames(ownerMove, owner.attack) - owner.attack.elapsedFrames - 1) : 0) : attackDurationFrames(move, attack) - attack.elapsedFrames - 1;
       const stun = blocked ? move.blockstun : move.hitstun;
-      const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward' && !(attacker.fighterId === 'cowboy' && move.id === 'throw-24')
+      const pushbackDirection = move.category === 'throw' && attack.throwDirection === 'backward' && !(attacker.fighterId === 'texas' && move.id === 'throw-24')
         ? (attacker.facing === 'right' ? 'left' : 'right') : attacker.facing;
       const chargeSteps = move.charge ? Math.min(move.charge.maxSteps, Math.floor((attack.chargeFrames ?? 0) / move.charge.framesPerStep)) : 0;
       const baseDamage = !blocked && volleyStep !== undefined && damageOverride

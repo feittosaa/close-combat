@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { ArcadeController, ARCADE_DIFFICULTIES, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
 import { Simulation } from '../engine/simulation/Simulation';
 import { shoto } from '../engine/data/fighters/shoto';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import { createGameConfig } from '../engine/data/gameConfig';
 import type { CharacterDefinition } from '../engine/data/characters';
 
@@ -33,14 +33,14 @@ describe('IA do Arcade', () => {
     const read = () => Array.from({ length: 400 }, (_, f) => bot.readInput(f, states[1], states[0]));
     const first = read(); bot.reset(); expect(read()).toEqual(first);
   });
-  it.each([[shoto, cowboy], [cowboy, shoto]])('o nível difícil vence o fácil, com o lado trocado também (%#)', (a, b) => {
+  it.each([[shoto, texas], [texas, shoto]])('o nível difícil vence o fácil, com o lado trocado também (%#)', (a, b) => {
     const outcomes = [duel([a, 'hard'], [b, 'easy']).snapshot.matchWinnerId, duel([b, 'easy'], [a, 'hard']).snapshot.matchWinnerId];
     expect(outcomes).toEqual(['player-1', 'player-2']);
   });
   it('o nível difícil usa especiais e golpes agachados que o fácil nunca usa', () => {
-    const used = (level: ArcadeDifficulty) => [...duel([cowboy, level], [shoto, 'normal']).moves].filter(entry => entry.startsWith('player-1:')).map(entry => entry.split(':')[1]);
+    const used = (level: ArcadeDifficulty) => [...duel([texas, level], [shoto, 'normal']).moves].filter(entry => entry.startsWith('player-1:')).map(entry => entry.split(':')[1]);
     const easy = used('easy'), hard = used('hard');
-    expect(easy.every(id => cowboy.moves.find(move => move.id === id)?.category !== 'special')).toBe(true);
-    expect(hard.some(id => cowboy.moves.find(move => move.id === id)?.category === 'special' || id.includes('crouch'))).toBe(true);
+    expect(easy.every(id => texas.moves.find(move => move.id === id)?.category !== 'special')).toBe(true);
+    expect(hard.some(id => texas.moves.find(move => move.id === id)?.category === 'special' || id.includes('crouch'))).toBe(true);
   });
 });

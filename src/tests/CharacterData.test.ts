@@ -5,11 +5,11 @@ import { fighterMoveList, filterMoveList } from '../training/MoveList';
 import { createArcadeRun, opponentFor } from '../scenes/matchSetup';
 
 describe('elenco reiniciado', () => {
-  it('registra Cowboy e Shoto, preservando os quatro básicos e o catálogo manual', () => {
-    expect(characters.map(fighter => fighter.id)).toEqual(['shoto', 'cowboy']);
+  it('registra Texas e Shoto, preservando os quatro básicos e o catálogo manual', () => {
+    expect(characters.map(fighter => fighter.id)).toEqual(['shoto', 'texas']);
     expect(playableCharacters).toEqual(characters);
     expect(defaultCharacter.name).toBe('Bob');
-    expect(getCharacterById('cowboy')?.name).toBe('Texas');
+    expect(getCharacterById('texas')?.name).toBe('Texas');
     expect(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne).map(move => [move.name, move.input.buttons])).toEqual([
       ['Soco fraco', ['1']], ['Soco forte', ['2']], ['Chute fraco', ['3']], ['Chute forte', ['4']],
     ]);
@@ -19,7 +19,7 @@ describe('elenco reiniciado', () => {
   });
   it.each(['ayla', 'gris', 'tester', 'dummy'])('não resolve o personagem removido %s', id => expect(getCharacterById(id)).toBeUndefined());
   it('espelha o personagem fora do Arcade e recorre ao Shoto para id inválido', () => {
-    expect(opponentFor('cowboy').id).toBe('cowboy');
+    expect(opponentFor('texas').id).toBe('texas');
     expect(opponentFor('id-inválido').id).toBe('shoto');
   });
   it('sorteia no Arcade todos os personagens, um cenário por luta e sem repetir o anterior', () => {

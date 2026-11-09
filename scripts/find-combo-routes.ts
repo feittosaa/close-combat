@@ -32,7 +32,7 @@ const PLAIN_ROUTES = 6;
 const ULTIMATE_ROUTES = 2;
 /** Routes the user gave as examples (one press per entry); kept whenever the simulation confirms them. */
 const SUGGESTED: Readonly<Record<string, readonly (readonly string[])[]>> = {
-  cowboy: [['3', '3', '3', '1', 'd+1', 'd+1', '4', '4', '2', 'd,df,f,2']],
+  texas: [['3', '3', '3', '1', 'd+1', 'd+1', '4', '4', '2', 'd,df,f,2']],
   shoto: [['1', '1', '2', '1', '1', '1', '3', '3', '2', '2', '2', 'f,d,df,4']],
 };
 /** Advanced routes join several presses; shorter ones belong to the combos section. */
@@ -288,7 +288,7 @@ function auditRules(search: RouteSearch, nodes: readonly SearchNode[]): string[]
   return warnings;
 }
 
-/** `npm run combos:find -- <personagem> <comando> <comando>…` (ex.: `cowboy 3 3 d,df,f,2`) reports where a given route drops instead of searching. */
+/** `npm run combos:find -- <personagem> <comando> <comando>…` (ex.: `texas 3 3 d,df,f,2`) reports where a given route drops instead of searching. */
 function testRoute(fighterId: string, commands: readonly string[]): void {
   const fighter = characters.find(character => character.id === fighterId);
   if (!fighter) throw new Error(`Personagem desconhecido: ${fighterId}`);
@@ -306,7 +306,7 @@ function testRoute(fighterId: string, commands: readonly string[]): void {
 const args = process.argv.slice(2);
 if (args.length && args[0] !== '--only') testRoute(args[0], args.slice(1));
 else {
-  // `--only shoto,cowboy` searches just those fighters and keeps the routes already saved for the others.
+  // `--only shoto,texas` searches just those fighters and keeps the routes already saved for the others.
   const only = args[0] === '--only' ? new Set(args.slice(1).join(',').split(',').filter(Boolean)) : undefined;
   const unknown = [...only ?? []].filter(id => !characters.some(fighter => fighter.id === id));
   if (unknown.length) throw new Error(`Personagem desconhecido: ${unknown.join(', ')}`);

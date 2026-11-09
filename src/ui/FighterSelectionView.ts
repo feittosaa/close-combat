@@ -48,7 +48,7 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
     else hero.append(fighterPortrait(entry.id, false));
     const name = node('div', `arena-fighter-name ${side}`);
     if ((player === 0 || selectOpponent) && selection.choosingColor[player]) {
-      const colors = entry.id === 'cowboy'
+      const colors = entry.id === 'texas'
         ? [['#b72b36', '#f5bd35', '#328bde'], ['#201d22', '#f5bd35', '#a55de3']]
         : [['#50683b', '#e4b34e', '#714a2d'], ['#d22529', '#e4b34e', '#714a2d']];
       const palette = node('div', 'arena-palettes');

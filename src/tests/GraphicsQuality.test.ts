@@ -10,7 +10,7 @@ const layouts = import.meta.glob<Layout>('../assets/sprites/characters/**/*.pack
 const layoutOf = (url: string): Layout => layouts[Object.keys(layouts).find(path => url.split('?')[0].endsWith(path.slice(2)))!];
 
 it.each(['guard', 'perfect-block'])('keeps every high-resolution %s frame inside its image', name => {
-  const base = new URL(`../assets/sprites/characters/cowboy/high/${name}`, import.meta.url);
+  const base = new URL(`../assets/sprites/characters/texas/high/${name}`, import.meta.url);
   const png = readFileSync(`${base.pathname}.png`);
   const atlas = JSON.parse(readFileSync(`${base.pathname}.atlas.json`, 'utf8'));
   const width = png.readUInt32BE(16), height = png.readUInt32BE(20);
@@ -24,19 +24,19 @@ it.each(['guard', 'perfect-block'])('keeps every high-resolution %s frame inside
 it.each([['low', 640], ['high', 1280]] as const)('loads only the %s texture set at its native frame size', async (quality, size) => {
   vi.stubGlobal('localStorage', { getItem: () => quality, setItem: vi.fn() });
   vi.resetModules();
-  const { preloadCowboySprites, cowboyFrameSize, getCowboyFrameSize } = await import('../rendering/animations/cowboySprites');
+  const { preloadTexasSprites, texasFrameSize, getTexasFrameSize } = await import('../rendering/animations/texasSprites');
   const packedAtlas = vi.fn();
-  preloadCowboySprites({ textures: { exists: () => false }, load: { packedAtlas } } as never);
-  expect(cowboyFrameSize).toBe(size);
+  preloadTexasSprites({ textures: { exists: () => false }, load: { packedAtlas } } as never);
+  expect(texasFrameSize).toBe(size);
   expect(packedAtlas).toHaveBeenCalledTimes(80);
   for (const name of ['double-shot', 'fall-landing', 'launch-hit']) {
-    const art = packedAtlas.mock.calls.find(([key]) => key === `cowboy-${name}`)!;
+    const art = packedAtlas.mock.calls.find(([key]) => key === `texas-${name}`)!;
     expect(layoutOf(art[2]).frames['0'].sourceSize.w).toBe(size);
     expect(Object.keys(layoutOf(art[2]).frames)).toHaveLength(6);
   }
-  const idle = packedAtlas.mock.calls.find(([key]) => key === 'cowboy-idle')!;
+  const idle = packedAtlas.mock.calls.find(([key]) => key === 'texas-idle')!;
   expect(layoutOf(idle[2]).frames['0'].sourceSize.w).toBe(size);
-  expect(getCowboyFrameSize('cowboy-idle')).toBe(size);
+  expect(getTexasFrameSize('texas-idle')).toBe(size);
 });
 
 it.each(['low', 'high'] as const)('loads every Bob atlas at %s quality without changing display scale', async quality => {
