@@ -3,9 +3,25 @@ import type { StageDefinition } from './stages/StageDefinition';
 import type { StageLayout } from './stages/stageLayout';
 
 export const CHARACTER_COLOR_PIPELINE = 'character-color';
+/** Colour correction of one sheet: a 3×3 matrix by rows, each followed by its offset, over RGB from 0 to 1. */
+export type SheetCorrection = readonly number[];
+export const IDENTITY_CORRECTION: SheetCorrection = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0];
+const correctionFiles = import.meta.glob<Record<string, SheetCorrection>>('../assets/sprites/characters/*/colors.json', { eager: true, import: 'default' });
+/**
+ * Per-sheet corrections written by `scripts/verify-character-colors.py`, keyed by texture (`<fighter>-<sheet>`): they
+ * bring the materials of a sheet to the colours of the fighter's idle without touching its image.
+ */
+const corrections = new Map<string, SheetCorrection>(Object.entries(correctionFiles).flatMap(([path, sheets]) => {
+  const fighter = path.split('/').slice(-2)[0];
+  return Object.entries(sheets).map(([sheet, correction]) => [`${fighter}-${sheet}`, correction] as const);
+}));
+const correctedFighters = new Set([...corrections.keys()].map(texture => texture.split('-')[0]));
+/** The correction of the sheet behind a texture key, if it has one. */
+export const sheetCorrection = (texture: string | undefined): SheetCorrection | undefined => texture === undefined ? undefined : corrections.get(texture);
 /**
  * Colour of one sprite, read by the shared pipeline (`palettePipeline.ts`) while it draws that sprite: the selective
  * alternate palette (`palette`: 0 none, 1 bob, 2 texas, 3 magic, 4 magic highlight) and, when `lit`, the stage light.
+ * The sheet correction is read by the pipeline from the texture being drawn.
  */
 export interface CharacterColorData {
   palette: number; lit: boolean; exposure: number; shadow: readonly [number, number, number]; occlusion: number; warmth: number;
@@ -43,6 +59,13 @@ export function characterColor(stage: StageDefinition, layout: StageLayout, x: n
     }
   }
   return { ...base, warmth: light, alternate };
+}
+
+/** Applies a sheet correction to one pixel (0–255), as the pipeline does before the palette. */
+export function correctedPixel(r: number, g: number, b: number, correction: SheetCorrection): [number, number, number] {
+  const rgb = [r / 255, g / 255, b / 255];
+  return [0, 1, 2].map(row => Math.round(Math.min(1, Math.max(0,
+    correction[row * 4] * rgb[0] + correction[row * 4 + 1] * rgb[1] + correction[row * 4 + 2] * rgb[2] + correction[row * 4 + 3])) * 255)) as [number, number, number];
 }
 
 /** Change selected chromatic ranges only, retaining shading and transparency. */
@@ -96,7 +119,8 @@ export class CharacterColorEffect {
           const context = renderer.currentContext;
           context.save();
           context.filter = `brightness(${current.exposure ?? 1})`;
-          if (selected === 'none') {
+          const correction = sheetCorrection(sprite.texture?.key);
+          if (selected === 'none' && !correction) {
             try { render.call(image, renderer, ...args); } finally { context.restore(); }
             return;
           }
@@ -114,7 +138,9 @@ export class CharacterColorEffect {
                 const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < pixels.data.length; i += 4) {
                   if (!pixels.data[i + 3]) continue;
-                  const [r, g, b] = palettePixel(pixels.data[i], pixels.data[i + 1], pixels.data[i + 2], selected);
+                  let [r, g, b] = [pixels.data[i], pixels.data[i + 1], pixels.data[i + 2]];
+                  if (correction) [r, g, b] = correctedPixel(r, g, b, correction);
+                  [r, g, b] = palettePixel(r, g, b, selected);
                   pixels.data[i] = r; pixels.data[i + 1] = g; pixels.data[i + 2] = b;
                 }
                 ctx.putImageData(pixels, 0, 0); previousFrame = frame; previousPalette = selected;
@@ -131,7 +157,8 @@ export class CharacterColorEffect {
     // Every coloured sprite draws through one shared pipeline that reads its colour from `pipelineData`.
     const lit = isLit(color);
     if (sprite.pipeline?.name !== CHARACTER_COLOR_PIPELINE) {
-      if (palette === 'none' && !lit) return;
+      // A fighter with corrected sheets always draws through the pipeline, which picks each sheet's correction.
+      if (palette === 'none' && !lit && !correctedFighters.has(sprite.texture?.key.split('-')[0] ?? '')) return;
       sprite.setPipeline(CHARACTER_COLOR_PIPELINE);
     }
     const data: CharacterColorData = { palette: PALETTE_CODES[palette], lit, exposure: color.exposure ?? 1, shadow: color.shadow ?? [1, 1, 1],

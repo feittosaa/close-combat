@@ -1,17 +1,19 @@
 """Separate the authored pose proposals into transparent, foot-aligned game atlases.
 
-Uso: python3 scripts/prepare-shoto-actions.py [ação...]
-Sem argumentos, prepara todas as ações na qualidade normal. Com ações nomeadas, prepara só essas, nas qualidades normal
-e alta (`high/`, células e escala dobradas), a partir da mesma fonte; as demais folhas high fornecidas ficam intactas.
-O fundo de cada pose sai pela limpeza de `key-magenta.py` antes da redução, para o contorno preto manter sua largura.
+Uso: python3 scripts/prepare-shoto-actions.py [folha...]
+Sem argumentos, prepara todas as ações, o tomate e o corvo; com nomes, só essas folhas. Cada folha sai nas qualidades
+normal e alta (`high/`, células e escala dobradas), a partir da mesma fonte.
+O fundo sai por desmistura de cor antes da redução: cada pixel que o fundo alcança vira a cor desenhada com a cobertura
+correspondente, então contornos, rastros e brilhos semitransparentes perdem o magenta sem afinar nem sumir. Cada pose
+leva os pedaços desenhados soltos mais próximos dela (palha, pontas de rastro), não só a maior mancha.
 """
-from importlib.util import module_from_spec, spec_from_file_location
+from functools import cache, partial
 from pathlib import Path
 import json
 import sys
 import numpy as np
 from PIL import Image
-from scipy.ndimage import find_objects, label
+from scipy.ndimage import distance_transform_edt, find_objects, label
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / 'assets/art/characters/shoto/revisao'
@@ -127,48 +129,113 @@ ANCHORS = {
     'grabbed': [190, 560, 900, 1260, 1600, 1980],
     'defeat': [150, 400, 680, 1040, 1430, 1910],
 }
+# Objects already released in the drawing (left, top, right, bottom in the source): the game draws them as their own
+# projectile, so they leave the body sheet.
+RELEASED = {
+    'tomato-throw': ((1805, 215, 1885, 272),),
+}
 CELL = 1024
 FOOT = 900
-sys.dont_write_bytecode = True
-spec = spec_from_file_location('key_magenta', Path(__file__).with_name('key-magenta.py'))
-key_magenta = module_from_spec(spec); spec.loader.exec_module(key_magenta)
+EFFECT_CELL = 512
+TOMATO_CENTERS = [275, 650, 990, 1370, 1690, 2100]
+TOMATO_MIDDLE = 365
+# Key blend: how far red and blue exceed green. The drawn palette has almost none; the few purple shades it has are
+# enclosed by the outline, where the background never reaches.
+SPILL_REACH = 0
+# Pockets of background enclosed between limbs are darker blends that never reach the pure key.
+POCKET_SPILL = 100
+# Spill of the drawn colors per unit of brightness: the light browns, skin and straw sit near -0.2.
+PALETTE_SPILL = -.2
+# Coverage below this is the background's own noise.
+MIN_ALPHA = .1
+# Detached specks smaller than this (in source pixels) are noise, not drawing.
+MIN_DETAIL = 4
+# A piece with at least this share of its pixels in one slot belongs whole to that pose.
+WHOLE_SHARE = .85
+# Coverage from which a pixel is solid drawing rather than a soft edge.
+SOLID_ALPHA = 128
 
 
-def prepare(name: str, quality: int, target: Path) -> None:
-    """Writes the atlas of one action at `quality` times the normal cell and scale."""
-    filename, scale, floor = ACTIONS[name]
-    scale *= 0.8 * quality
-    cell, foot = CELL * quality, FOOT * quality
+def spill(rgb: np.ndarray) -> np.ndarray:
+    return np.minimum(rgb[..., 0], rgb[..., 2]) - rgb[..., 1]
+
+
+def separate(rgb: np.ndarray, key: np.ndarray, alpha: np.ndarray) -> np.ndarray:
+    return np.clip((rgb - (1 - alpha[..., None]) * key) / np.maximum(alpha, MIN_ALPHA)[..., None], 0, 255)
+
+
+def unmix(pixels: np.ndarray) -> None:
+    """Splits each pixel the magenta background reaches into the drawn color and its coverage, in place."""
+    rgb = pixels[..., :3].astype(float)
+    amount = spill(rgb)
+    key = np.median(rgb[amount > 200], axis=0)
+    regions, _ = label(amount > SPILL_REACH)
+    reached = np.isin(regions, np.unique(regions[amount > POCKET_SPILL])) & (regions > 0)
+    alpha = np.where(reached, np.clip(1 - amount / spill(key), 0, 1), 1)
+    color = separate(rgb, key, alpha)
+    # Light drawn colors have negative spill (blue below green); estimated from the first separation, it refines the
+    # coverage so pale strokes do not keep a pink cast.
+    drawn = PALETTE_SPILL * color.max(axis=2)
+    alpha = np.where(reached, np.clip((spill(key) - amount) / (spill(key) - drawn), 0, 1), 1)
+    alpha[alpha < MIN_ALPHA] = 0
+    color = separate(rgb, key, alpha)
+    pixels[..., :3] = np.where(reached[..., None], color, rgb).round()
+    pixels[..., 3] = (pixels[..., 3] * alpha).round()
+
+
+@cache
+def poses(filename: str, centers: tuple[int, ...] | None = None,
+          released: tuple[tuple[int, int, int, int], ...] = ()) -> list[tuple[np.ndarray, int, int]]:
+    """The six poses of a source, left to right: each crop with its source top row and left column. The sheet is cut
+    at the emptiest column between consecutive pose centers (evenly spaced when not given). A solid piece goes whole to
+    the slot holding most of it (a kick reaching past the cut stays with its pose); only a piece that really spans
+    slots (effects touching between poses) is split at the cut. Soft pixels (blur, smears, antialiasing) follow the
+    nearest solid pixel, so blurred edges touching between poses do not join them."""
     pixels = np.asarray(Image.open(SOURCES / filename).convert('RGBA')).copy()
-    rgb = pixels[:, :, :3].astype(np.int16)
-    magenta = np.minimum(rgb[:, :, 0], rgb[:, :, 2])
-    is_background = (magenta > 70) & (magenta > rgb[:, :, 1] * 1.5)
-    labels, _ = label(~is_background)
-    counts = np.bincount(labels.ravel())
-    components = np.argsort(counts[1:])[-6:] + 1
-    regions = find_objects(labels)
-    components = sorted(components, key=lambda i: regions[i - 1][1].start)
-    sheet = Image.new('RGBA', (cell * 3, cell * 2))
-    frames = {}
-    for index, component in enumerate(components):
-        rows, cols = regions[component - 1]
+    unmix(pixels)
+    for left, top, right, bottom in released:
+        pixels[top:bottom, left:right, 3] = 0
+    drawn, solid = pixels[..., 3] > 0, pixels[..., 3] >= SOLID_ALPHA
+    width = drawn.shape[1]
+    centers = centers or tuple(round((pose + .5) * width / 6) for pose in range(6))
+    coverage = pixels[..., 3].sum(axis=0)
+    cuts = [0]
+    for left, right in zip(centers, centers[1:]):
+        start, stop = left + (right - left) // 4, right - (right - left) // 4
+        cuts.append(start + int(np.argmin(coverage[start:stop])))
+    cuts.append(width)
+    slot = np.broadcast_to(np.searchsorted(cuts, np.arange(width), side='right') - 1, drawn.shape)
+    pieces, count = label(solid, structure=np.ones((3, 3)))
+    shares = np.bincount(pieces[solid] * 6 + slot[solid], minlength=(count + 1) * 6).reshape(-1, 6)
+    sizes = shares.sum(axis=1)
+    whole = np.where(shares.max(axis=1) >= WHOLE_SHARE * sizes, shares.argmax(axis=1), -1)
+    owner = np.where(whole[pieces] >= 0, whole[pieces], slot)
+    owner[~solid | (sizes[pieces] < MIN_DETAIL)] = -1
+    # Soft pixels detached from any solid drawing are background noise.
+    regions, _ = label(drawn, structure=np.ones((3, 3)))
+    attached = np.isin(regions, np.unique(regions[owner >= 0])) & drawn
+    rows, cols = distance_transform_edt(~solid, return_distances=False, return_indices=True)
+    owner = np.where(attached, owner[rows, cols], -1)
+    result = []
+    for pose in range(6):
+        mine = owner == pose
+        rows, cols = find_objects(mine.astype(int))[0]
         data = pixels[rows, cols].copy()
-        # Other poses reaching into this box go; the background, including its blend with the outline, goes by the cleanup.
-        frame_labels = labels[rows, cols]
-        data[:, :, 3] = np.where((frame_labels == component) | (frame_labels == 0), data[:, :, 3], 0)
-        key_magenta.clean(data, key_magenta.SPRITE_HUE_TOLERANCE)
-        drawing = Image.fromarray(data)
-        if scale != 1:
-            drawing = drawing.resize((round(drawing.width * scale), round(drawing.height * scale)), Image.Resampling.LANCZOS)
-        local_x = cell // 2 - round((ANCHORS[name][index] - cols.start) * scale)
-        frame_floor = floor[index] if isinstance(floor, list) else floor
-        local_y = foot + round((rows.start - frame_floor) * scale)
+        data[..., 3] = np.where(mine[rows, cols], data[..., 3], 0)
+        result.append((data, rows.start, cols.start))
+    return result
+
+
+def atlas(target: Path, name: str, cell: int, frames: list[tuple[Image.Image, int, int]]) -> None:
+    """Writes a 3×2 atlas with each drawing pasted at its position inside its cell."""
+    sheet = Image.new('RGBA', (cell * 3, cell * 2))
+    layout = {}
+    for index, (drawing, local_x, local_y) in enumerate(frames):
         if local_x < 0 or local_y < 0 or local_x + drawing.width > cell or local_y + drawing.height > cell:
             raise ValueError(f'{name}: frame {index} exceeds its atlas cell')
-        x = index % 3 * cell
-        y = index // 3 * cell
+        x, y = index % 3 * cell, index // 3 * cell
         sheet.paste(drawing, (x + local_x, y + local_y))
-        frames[str(index)] = {
+        layout[str(index)] = {
             'frame': {'x': x, 'y': y, 'w': cell, 'h': cell},
             'rotated': False, 'trimmed': False,
             'spriteSourceSize': {'x': 0, 'y': 0, 'w': cell, 'h': cell},
@@ -176,58 +243,46 @@ def prepare(name: str, quality: int, target: Path) -> None:
         }
     target.mkdir(parents=True, exist_ok=True)
     sheet.save(target / f'{name}.png')
-    (target / f'{name}.atlas.json').write_text(json.dumps({'frames': frames}, indent=2) + '\n')
+    (target / f'{name}.atlas.json').write_text(json.dumps({'frames': layout}, indent=2) + '\n')
 
 
-selected = sys.argv[1:]
-unknown = [name for name in selected if name not in ACTIONS]
-if unknown: raise SystemExit(f'Ações desconhecidas: {", ".join(unknown)}')
-for name in selected or ACTIONS:
-    prepare(name, 1, TARGET)
-    if selected: prepare(name, 2, TARGET / 'high')
-if selected: raise SystemExit
-
-pixels = np.asarray(Image.open(SOURCES / 'tomate-projetil.png').convert('RGBA')).copy()
-rgb = pixels[:, :, :3].astype(np.int16)
-magenta = np.minimum(rgb[:, :, 0], rgb[:, :, 2])
-labels, _ = label(~((magenta > 70) & (magenta > rgb[:, :, 1] * 1.5)))
-counts = np.bincount(labels.ravel())
-regions = find_objects(labels)
-components = sorted(np.argsort(counts[1:])[-6:] + 1, key=lambda i: regions[i - 1][1].start)
-tomato_centers = [275, 650, 990, 1370, 1690, 2100]
-size = 512
-sheet = Image.new('RGBA', (size * 3, size * 2))
-frames = {}
-for index, component in enumerate(components):
-    rows, cols = regions[component - 1]
-    data = pixels[rows, cols].copy()
-    data[:, :, 3] = np.where(labels[rows, cols] == component, data[:, :, 3], 0)
+def resized(data: np.ndarray, scale: float) -> Image.Image:
     drawing = Image.fromarray(data)
-    x, y = index % 3 * size, index // 3 * size
-    sheet.paste(drawing, (x + 384 - (tomato_centers[index] - cols.start), y + 256 - (365 - rows.start)))
-    frames[str(index)] = {'frame': {'x': x, 'y': y, 'w': size, 'h': size}, 'rotated': False, 'trimmed': False,
-                          'spriteSourceSize': {'x': 0, 'y': 0, 'w': size, 'h': size}, 'sourceSize': {'w': size, 'h': size}}
-sheet.save(TARGET / 'tomato.png')
-(TARGET / 'tomato.atlas.json').write_text(json.dumps({'frames': frames}, indent=2) + '\n')
+    if scale == 1: return drawing
+    return drawing.resize((round(drawing.width * scale), round(drawing.height * scale)), Image.Resampling.LANCZOS)
 
-pixels = np.asarray(Image.open(SOURCES / 'corvo.png').convert('RGBA')).copy()
-rgb = pixels[:, :, :3].astype(np.int16)
-magenta = np.minimum(rgb[:, :, 0], rgb[:, :, 2])
-labels, _ = label(~((magenta > 70) & (magenta > rgb[:, :, 1] * 1.5)))
-counts = np.bincount(labels.ravel())
-regions = find_objects(labels)
-components = sorted(np.argsort(counts[1:])[-6:] + 1, key=lambda i: regions[i - 1][1].start)
-size = 512
-sheet = Image.new('RGBA', (size * 3, size * 2))
-frames = {}
-for index, component in enumerate(components):
-    rows, cols = regions[component - 1]
-    data = pixels[rows, cols].copy()
-    data[:, :, 3] = np.where(labels[rows, cols] == component, data[:, :, 3], 0)
-    bird = Image.fromarray(data)
-    x, y = index % 3 * size, index // 3 * size
-    sheet.paste(bird, (x + (size - bird.width) // 2, y + (size - bird.height) // 2))
-    frames[str(index)] = {'frame': {'x': x, 'y': y, 'w': size, 'h': size}, 'rotated': False, 'trimmed': False,
-                          'spriteSourceSize': {'x': 0, 'y': 0, 'w': size, 'h': size}, 'sourceSize': {'w': size, 'h': size}}
-sheet.save(TARGET / 'crow.png')
-(TARGET / 'crow.atlas.json').write_text(json.dumps({'frames': frames}, indent=2) + '\n')
+
+def action(name: str, quality: int) -> list[tuple[Image.Image, int, int]]:
+    filename, scale, floor = ACTIONS[name]
+    scale *= 0.8 * quality
+    frames = []
+    for index, (data, top, left) in enumerate(poses(filename, tuple(ANCHORS[name]), RELEASED.get(name, ()))):
+        frame_floor = floor[index] if isinstance(floor, list) else floor
+        frames.append((resized(data, scale),
+                       CELL * quality // 2 - round((ANCHORS[name][index] - left) * scale),
+                       FOOT * quality + round((top - frame_floor) * scale)))
+    return frames
+
+
+def tomato(quality: int) -> list[tuple[Image.Image, int, int]]:
+    return [(resized(data, quality), quality * (384 - (TOMATO_CENTERS[index] - left)), quality * (256 - (TOMATO_MIDDLE - top)))
+            for index, (data, top, left) in enumerate(poses('tomate-projetil.png', tuple(TOMATO_CENTERS)))]
+
+
+def crow(quality: int) -> list[tuple[Image.Image, int, int]]:
+    cell = EFFECT_CELL * quality
+    birds = [resized(data, quality) for data, _, _ in poses('corvo.png')]
+    return [(bird, (cell - bird.width) // 2, (cell - bird.height) // 2) for bird in birds]
+
+
+SHEETS = {**{name: (CELL, partial(action, name)) for name in ACTIONS},
+          'tomato': (EFFECT_CELL, tomato), 'crow': (EFFECT_CELL, crow)}
+
+if __name__ == '__main__':
+    selected = sys.argv[1:] or list(SHEETS)
+    unknown = [name for name in selected if name not in SHEETS]
+    if unknown: raise SystemExit(f'Folhas desconhecidas: {", ".join(unknown)}')
+    for name in selected:
+        cell, frames = SHEETS[name]
+        for quality, target in ((1, TARGET), (2, TARGET / 'high')):
+            atlas(target, name, cell * quality, frames(quality))
