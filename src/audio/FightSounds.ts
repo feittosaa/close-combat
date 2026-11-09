@@ -2,8 +2,8 @@ import { RAGE_LEVEL } from '../engine/combat/rage';
 import type Phaser from 'phaser';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import { getCharacterById } from '../engine/data/characters';
-import { getCowboySpriteLayers } from '../rendering/animations/cowboySprites';
-import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
+import { getTexasSpriteLayers } from '../rendering/animations/texasSprites';
+import { TEXAS_GRAB_SHOTS } from '../engine/combat/texasGrab';
 import { effectGain } from './audioSettings';
 
 const files = import.meta.glob<string>('../assets/audio/effects/*.wav', { eager: true, query: '?url', import: 'default' });
@@ -133,7 +133,7 @@ export class FightSounds {
     const owners = new Set(snapshot.ultimateActivation?.ownerIds ?? []);
     for (const ownerId of owners) if (!this.ultimateOwners.has(ownerId)) {
       this.play('ultimate_activation');
-      if (snapshot.characters.find(character => character.characterId === ownerId)?.fighterId === 'cowboy') {
+      if (snapshot.characters.find(character => character.characterId === ownerId)?.fighterId === 'texas') {
         this.pendingDraws.set(ownerId, { due: snapshot.elapsedFrames + PISTOL_DRAW_DELAY, kind: 'ultimate' });
       }
     }
@@ -146,9 +146,9 @@ export class FightSounds {
       const attacker = snapshot.characters.find(character => character.characterId === event.attackerId);
       const move = attacker && getCharacterById(attacker.fighterId)?.moves.find(candidate => candidate.id === event.moveId);
       const heavy = move && (move.category === 'special' || move.category === 'ultimate' || move.input.buttons.includes('2') || move.input.buttons.includes('4'));
-      if (move?.category === 'throw') { if (attacker?.fighterId !== 'cowboy') this.play('grab'); this.play('throw'); }
-      if (event.moveId === 'crouch-heavy-kick' && attacker?.fighterId === 'cowboy') this.play('kick_on_the_ground');
-      this.play(event.moveId === 'push-away' && attacker?.fighterId === 'cowboy' ? 'push_hit' : heavy ? 'heavy_hit' : 'hit');
+      if (move?.category === 'throw') { if (attacker?.fighterId !== 'texas') this.play('grab'); this.play('throw'); }
+      if (event.moveId === 'crouch-heavy-kick' && attacker?.fighterId === 'texas') this.play('kick_on_the_ground');
+      this.play(event.moveId === 'push-away' && attacker?.fighterId === 'texas' ? 'push_hit' : heavy ? 'heavy_hit' : 'hit');
       if (event.context === 'counter-hit') this.play('counter_hit');
     }
     for (const character of snapshot.characters) {
@@ -158,7 +158,7 @@ export class FightSounds {
       if (character.mode === 'dashing') {
         if (!this.dashing.has(character.characterId) && !character.grounded) this.play('air_dash');
         this.dashing.add(character.characterId);
-      } else if (this.dashing.delete(character.characterId) && character.fighterId === 'cowboy' && character.grounded &&
+      } else if (this.dashing.delete(character.characterId) && character.fighterId === 'texas' && character.grounded &&
         this.grounded.get(character.characterId) === true && snapshot.phase === 'fight') this.play('heavy_step');
       if (this.grounded.get(character.characterId) === false && character.grounded) this.play('landing');
       this.grounded.set(character.characterId, character.grounded);
@@ -169,11 +169,11 @@ export class FightSounds {
           this.lastSteps.set(character.characterId, snapshot.frame);
         }
       } else this.lastSteps.delete(character.characterId);
-      if (character.fighterId !== 'cowboy') continue;
+      if (character.fighterId !== 'texas') continue;
       const attack = character.attack;
       if (attack?.moveId === 'light-kick') {
         const previous = this.kickFrames.get(character.characterId);
-        const impact = attack.startupFrames ?? getCharacterById('cowboy')!.moves.find(move => move.id === 'light-kick')!.startup;
+        const impact = attack.startupFrames ?? getCharacterById('texas')!.moves.find(move => move.id === 'light-kick')!.startup;
         if (attack.elapsedFrames >= impact && (previous === undefined || previous < impact || previous > attack.elapsedFrames)) this.play('heavy_step');
         this.kickFrames.set(character.characterId, attack.elapsedFrames);
       } else this.kickFrames.delete(character.characterId);
@@ -198,26 +198,26 @@ export class FightSounds {
         if (attack.throwCapturedFrame !== undefined && this.lassoCaptures.get(character.characterId) !== attack.throwCapturedFrame) {
           this.lassoCaptures.set(character.characterId, attack.throwCapturedFrame); this.lassoHits.add(character.characterId); this.play('lace_catch');
         }
-        const move = getCharacterById('cowboy')!.moves.find(candidate => candidate.id === 'throw-13')!;
+        const move = getCharacterById('texas')!.moves.find(candidate => candidate.id === 'throw-13')!;
         if (attack.elapsedFrames >= (attack.startupFrames ?? move.startup) + move.activeFrames && !this.lassoHits.has(character.characterId) && !this.lassoMisses.has(character.characterId)) {
           this.lassoMisses.add(character.characterId); this.play('lace_error');
         }
       } else if (this.lassoActive.delete(character.characterId)) {
         this.lassoHits.delete(character.characterId); this.lassoMisses.delete(character.characterId);
       }
-      const layers = getCowboySpriteLayers(character, snapshot.frame);
-      const materialized = layers.some(layer => layer.texture.startsWith('cowboy-magic-')) ||
+      const layers = getTexasSpriteLayers(character, snapshot.frame);
+      const materialized = layers.some(layer => layer.texture.startsWith('texas-magic-')) ||
         Boolean(attack?.moveId === 'bulls-eye' && !snapshot.ultimateActivation);
       if (materialized && !this.arms.get(character.characterId)) this.play('magical_arms');
       this.arms.set(character.characterId, materialized);
       if (attack?.projectileId !== undefined && !this.projectiles.has(attack.projectileId)) {
         this.projectiles.add(attack.projectileId);
-        const move = getCharacterById('cowboy')?.moves.find(candidate => candidate.id === attack.moveId);
+        const move = getCharacterById('texas')?.moves.find(candidate => candidate.id === attack.moveId);
         if (move?.projectile?.visual === 'bullet') this.play('magical_shot');
       }
       if (attack?.moveId === 'throw-24' && attack.throwConfirmedFrame !== undefined) {
         const age = snapshot.frame - attack.throwConfirmedFrame;
-        for (const [index, shotFrame] of COWBOY_GRAB_SHOTS.entries()) {
+        for (const [index, shotFrame] of TEXAS_GRAB_SHOTS.entries()) {
           const id = `${character.characterId}:${attack.throwConfirmedFrame}:${index}`;
           if (age >= shotFrame && !this.grabShots.has(id)) { this.grabShots.add(id); this.play('magical_shot'); }
         }

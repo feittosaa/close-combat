@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import { shoto } from '../engine/data/fighters/shoto';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
@@ -40,10 +40,10 @@ it.each([0, 1])('Shoto continua golpes defendidos e preserva sua família fraca,
   }
 });
 
-it.each([0, 1])('Cowboy pode trocar entre golpes fracos defendidos, jogador %i', player => {
+it.each([0, 1])('Texas pode trocar entre golpes fracos defendidos, jogador %i', player => {
   for (const [first, next] of [['1', '3'], ['3', '1']] as const) {
     guardDirection = first === '3' ? 'DB' : 'B';
-    const defs = player === 0 ? [cowboy, shoto] as const : [shoto, cowboy] as const;
+    const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
     const sim = new Simulation(config, defs, { training: true, initialDistance: 65 });
     block(sim, player, first);
     send(sim, player, input('N', next));
@@ -53,7 +53,7 @@ it.each([0, 1])('Cowboy pode trocar entre golpes fracos defendidos, jogador %i',
 });
 
 it.each([0, 1])('cancela um golpe defendido em especial para cada personagem, jogador %i', player => {
-  for (const fighter of [shoto, cowboy]) {
+  for (const fighter of [shoto, texas]) {
     guardDirection = 'B';
     const defs = player === 0 ? [fighter, shoto] as const : [shoto, fighter] as const;
     const sim = new Simulation(config, defs, { training: true, initialDistance: 56 });

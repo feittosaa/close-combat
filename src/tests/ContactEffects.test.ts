@@ -3,22 +3,22 @@ import { applyContactFrames, contactEffectKey, contactFrameCut, contactFrameGrow
 import { ProjectileView } from '../rendering/ProjectileView';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import { shoto } from '../engine/data/fighters/shoto';
 import type { HitEvent } from '../engine/combat/AttackResolver';
 import type { ProjectileState } from '../engine/combat/ProjectileState';
 
 const event: HitEvent = { attackerId:'player-1',targetId:'player-2',moveId:'light-punch',damage:20,outcome:'hit',
   pushback:0,attackerRecoveryFrames:0,defenderStunFrames:0,frameAdvantage:0 };
-const move = (fighter: typeof cowboy, id: string) => fighter.moves.find(item => item.id === id)!;
+const move = (fighter: typeof texas, id: string) => fighter.moves.find(item => item.id === id)!;
 
 it.each(['hit','block'] as const)('selects separate images for %s variants', outcome => {
   const contact = {...event,outcome};
-  expect(contactEffectKey(contact,move(cowboy,'light-kick'))).toBe(`${outcome}-light`);
-  expect(contactEffectKey(contact,move(cowboy,'heavy-punch'))).toBe(`${outcome}-heavy`);
-  expect(contactEffectKey(contact,move(cowboy,'crouch-heavy-kick'))).toBe(`${outcome}-sweep`);
-  expect(contactEffectKey(contact,move(cowboy,'push-away'))).toBe(`${outcome}-sweep`);
-  expect(contactEffectKey(contact,move(cowboy,'quick-shot'))).toBe(`${outcome}-blue`);
+  expect(contactEffectKey(contact,move(texas,'light-kick'))).toBe(`${outcome}-light`);
+  expect(contactEffectKey(contact,move(texas,'heavy-punch'))).toBe(`${outcome}-heavy`);
+  expect(contactEffectKey(contact,move(texas,'crouch-heavy-kick'))).toBe(`${outcome}-sweep`);
+  expect(contactEffectKey(contact,move(texas,'push-away'))).toBe(`${outcome}-sweep`);
+  expect(contactEffectKey(contact,move(texas,'quick-shot'))).toBe(`${outcome}-blue`);
   expect(contactEffectKey(contact,move(shoto,'tomato-light'))).toBe(`${outcome}-wine`);
   expect(contactEffectKey(contact,move(shoto,'tomato-heavy'))).toBe(`${outcome}-wine`);
   expect(contactEffectKey(contact,move(shoto,'crow-ultimate'))).toBe(`${outcome}-heavy`);
@@ -43,7 +43,7 @@ it('renders simultaneous contacts using sprites, advances frames and clears them
   const first=makeSprite(),second=makeSprite();
   const image=vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
   const view=new ProjectileView({add:{graphics:()=>graphics,image},textures:{exists:()=>true}} as never);
-  const characters=new Simulation(createGameConfig(1024,576),[cowboy,shoto]).snapshot().characters;
+  const characters=new Simulation(createGameConfig(1024,576),[texas,shoto]).snapshot().characters;
   view.sync([],[],10,[{...event,contactPoint:{x:300,y:250}}, {...event,outcome:'block',perfectBlock:true,contactPoint:{x:400,y:200},attackerId:'player-2',targetId:'player-1'}],characters);
   expect(image).toHaveBeenCalledTimes(2);
   expect(image).toHaveBeenNthCalledWith(2,400,200,'contact-block-perfect',0);
@@ -73,7 +73,7 @@ it('colors only the alternate Texas projectile purple', () => {
   const image = vi.fn().mockReturnValueOnce(original.value).mockReturnValueOnce(alternate.value)
     .mockReturnValueOnce(bomb.value).mockReturnValueOnce(blast.value).mockReturnValueOnce(otherBlast.value);
   const view = new ProjectileView({ add: { graphics: () => graphics, image }, textures: { exists: () => true } } as never);
-  const projectile = (id: number, ownerId: string): ProjectileState => ({ id, ownerId, fighterId: 'cowboy', x: 200, y: 400,
+  const projectile = (id: number, ownerId: string): ProjectileState => ({ id, ownerId, fighterId: 'texas', x: 200, y: 400,
     facing: 'right', velocity: 9, remainingFrames: 50, visual: 'bullet',
     attack: { moveId: 'light-punch', buttons: ['1'], elapsedFrames: 8, hasHit: false } });
   const dynamite: ProjectileState = { ...projectile(3, 'player-2'), visual: 'dynamite', attack: { moveId: 'quick-shot', buttons: ['1'], elapsedFrames: 14, hasHit: false } };
@@ -105,7 +105,7 @@ it('colors blocked projectiles by attacker while retaining perfect-block feedbac
     .mockReturnValueOnce(ultimate.value).mockReturnValueOnce(perfect.value).mockReturnValueOnce(dynamite.value).mockReturnValueOnce(hit.value);
   const scene = { add: { graphics: () => graphics, image }, textures: { exists: () => true } };
   const view = new ProjectileView(scene as never);
-  const characters = new Simulation(createGameConfig(1024, 576), [cowboy, cowboy]).snapshot().characters;
+  const characters = new Simulation(createGameConfig(1024, 576), [texas, texas]).snapshot().characters;
   const blocked = { ...event, outcome: 'block' as const, damage: 0 };
   view.sync([], [], 0, [blocked, { ...blocked, attackerId: 'player-2', targetId: 'player-1' },
     { ...blocked, attackerId: 'player-2', targetId: 'player-1', moveId: 'bulls-eye' },

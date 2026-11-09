@@ -14,7 +14,7 @@ const effectClips: Readonly<Record<string, AnimationClip>> = {
   shot:{key:'shot',start:0,end:5,frameRate:20,frameDurations:[2,3,3,3,3,3],repeat:-1},
 };
 
-/** Cowboy effects follow the existing projectile geometry and simulation clock. */
+/** Texas effects follow the existing projectile geometry and simulation clock. */
 export class ProjectileView {
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly colorEffect = new CharacterColorEffect();
@@ -44,7 +44,7 @@ export class ProjectileView {
       if (age >= 12 || age < 0) { effect.sprite.destroy(); this.wallEffects.delete(id); }
       else effect.sprite.setAlpha(1 - age / 12);
     }
-    const active = new Set(projectiles.filter(p => p.fighterId === 'cowboy' || p.visual === 'tomato' || p.visual === 'crow').map(p => p.id));
+    const active = new Set(projectiles.filter(p => p.fighterId === 'texas' || p.visual === 'tomato' || p.visual === 'crow').map(p => p.id));
     for (const [id,sprite] of this.sprites) if (!active.has(id)) { sprite.destroy(); this.sprites.delete(id); }
     for (const p of projectiles) {
       const move = getCharacterById(p.fighterId)?.moves.find(m=>m.id===p.attack.moveId);
@@ -70,7 +70,7 @@ export class ProjectileView {
         continue;
       }
       if (p.visual === 'volley') {
-        const key = 'cowboy-effect-volley';
+        const key = 'texas-effect-volley';
         if (this.scene.textures.exists(key)) {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, key, '0').setDepth(11);
           this.sprites.set(p.id, sprite);
@@ -86,9 +86,9 @@ export class ProjectileView {
         g.fillStyle(alternateOwnerIds.has(p.ownerId) ? 0xe1c4ff : 0xbdefff, .9).fillRoundedRect(box.x, y - box.height * .16, box.width, box.height * .32, box.height * .16);
         continue;
       }
-      if (p.fighterId === 'cowboy' && (p.visual === 'bullet' || p.visual === 'dynamite')) {
+      if (p.fighterId === 'texas' && (p.visual === 'bullet' || p.visual === 'dynamite')) {
         const effect = p.visual === 'dynamite' ? 'dynamite' : 'shot';
-        const key = `cowboy-effect-${effect}`;
+        const key = `texas-effect-${effect}`;
         if (this.scene.textures.exists(key)) {
           const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0,0,key,'0').setDepth(11);
           this.sprites.set(p.id, sprite);
@@ -120,7 +120,7 @@ export class ProjectileView {
       const defender = characters.find(character => character.characterId === contact.targetId);
       if (!attacker || !defender) continue;
       const move = getCharacterById(attacker.fighterId)?.moves.find(candidate => candidate.id === contact.moveId);
-      const purpleContact = alternateOwnerIds.has(attacker.characterId) && attacker.fighterId === 'cowboy';
+      const purpleContact = alternateOwnerIds.has(attacker.characterId) && attacker.fighterId === 'texas';
       const purpleBlock = contact.outcome === 'block' && purpleContact &&
         (move?.projectile?.visual === 'bullet' || move?.projectile?.visual === 'dynamite');
       const key = `contact-${purpleBlock && !contact.perfectBlock ? 'block-blue' : contactEffectKey(contact, move)}`;
@@ -149,11 +149,11 @@ export class ProjectileView {
     for (const [id,sprite] of this.dynamiteExplosions) if (!activeExplosions.has(id)) { sprite.destroy(); this.dynamiteExplosions.delete(id); }
     for (const explosion of explosions) {
       if (explosion.kind === 'dynamite') {
-        if (this.scene.textures.exists('cowboy-effect-dynamite-blast')) {
-          const sprite = this.dynamiteExplosions.get(explosion.id!) ?? this.scene.add.image(explosion.x, explosion.y, 'cowboy-effect-dynamite-blast', '0').setDepth(11);
+        if (this.scene.textures.exists('texas-effect-dynamite-blast')) {
+          const sprite = this.dynamiteExplosions.get(explosion.id!) ?? this.scene.add.image(explosion.x, explosion.y, 'texas-effect-dynamite-blast', '0').setDepth(11);
           this.dynamiteExplosions.set(explosion.id!, sprite);
           this.colorEffect.apply(sprite, { alternate: Boolean(explosion.ownerId && alternateOwnerIds.has(explosion.ownerId)) }, 'magic');
-          sprite.setTexture('cowboy-effect-dynamite-blast', String(Math.min(5, Math.floor((12 - explosion.remainingFrames) / 2))))
+          sprite.setTexture('texas-effect-dynamite-blast', String(Math.min(5, Math.floor((12 - explosion.remainingFrames) / 2))))
             .setPosition(explosion.x, explosion.y).setDisplaySize(130, 130);
         }
         continue;

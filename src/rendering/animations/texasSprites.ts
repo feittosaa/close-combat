@@ -1,61 +1,61 @@
 import type Phaser from 'phaser';
 import type { CharacterState } from '../../engine/characters/CharacterState';
-import { cowboy } from '../../engine/data/fighters/cowboy';
+import { texas } from '../../engine/data/fighters/texas';
 import { recoveryFrames } from '../../engine/combat/frameData';
 import { getPhaseAnimationFrame, getTimedAnimationFrame, type AnimationClip } from './AnimationPlayback';
 import { ULTIMATE_ACTIVATION_FRAMES } from '../../engine/combat/ultimateActivation';
 import { flightFramesRemaining } from '../../engine/combat/airPhysics';
 import { loadGraphicsQuality } from '../../ui/graphicsSettings';
 import { autoSpriteScale, bodyCenterShift, lyingFloorAnchor } from './spriteScale';
-import cowboyCalibration from '../../assets/sprites/characters/cowboy/calibration.json';
-import cowboyMeasurements from '../../assets/sprites/characters/cowboy/measurements.json';
+import texasCalibration from '../../assets/sprites/characters/texas/calibration.json';
+import texasMeasurements from '../../assets/sprites/characters/texas/measurements.json';
 
-const images = import.meta.glob<string>('../../assets/sprites/characters/cowboy/*.png', { eager: true, query: '?url', import: 'default' });
-const layouts = import.meta.glob<string>('../../assets/sprites/characters/cowboy/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
-const highImages = import.meta.glob<string>('../../assets/sprites/characters/cowboy/high/*.png', { eager: true, query: '?url', import: 'default' });
-const highLayouts = import.meta.glob<string>('../../assets/sprites/characters/cowboy/high/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
+const images = import.meta.glob<string>('../../assets/sprites/characters/texas/*.png', { eager: true, query: '?url', import: 'default' });
+const layouts = import.meta.glob<string>('../../assets/sprites/characters/texas/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
+const highImages = import.meta.glob<string>('../../assets/sprites/characters/texas/high/*.png', { eager: true, query: '?url', import: 'default' });
+const highLayouts = import.meta.glob<string>('../../assets/sprites/characters/texas/high/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
 const quality = loadGraphicsQuality();
-export const cowboyFrameSize = quality === 'high' ? 1280 : 640;
+export const texasFrameSize = quality === 'high' ? 1280 : 640;
 
 /** Sprite positions remain authored in the source grid and anchored to the feet. */
-export const cowboyFootAnchor = 465 / 640;
-export const cowboyDisplayHeight = 225 * 1.6 / 1.85 * 640 / 512;
-export function getCowboyFrameSize(texture: string): number {
-  const name = texture.replace(/^cowboy-/, '');
-  const base = `../../assets/sprites/characters/cowboy/high/${name}`;
+export const texasFootAnchor = 465 / 640;
+export const texasDisplayHeight = 225 * 1.6 / 1.85 * 640 / 512;
+export function getTexasFrameSize(texture: string): number {
+  const name = texture.replace(/^texas-/, '');
+  const base = `../../assets/sprites/characters/texas/high/${name}`;
   return quality === 'high' && highImages[`${base}.png`] && highLayouts[`${base}.packed.json`] ? 1280 : 640;
 }
 
-export function preloadCowboySprites(scene: Phaser.Scene): void {
+export function preloadTexasSprites(scene: Phaser.Scene): void {
   for (const [path, image] of Object.entries(images)) {
     const name = path.split('/').pop()!.replace('.png', '');
-    const key = `cowboy-${name}`;
-    const highBase = `../../assets/sprites/characters/cowboy/high/${name}`;
-    const useHigh = getCowboyFrameSize(key) === 1280;
+    const key = `texas-${name}`;
+    const highBase = `../../assets/sprites/characters/texas/high/${name}`;
+    const useHigh = getTexasFrameSize(key) === 1280;
     const layout = useHigh ? highLayouts[`${highBase}.packed.json`] : layouts[path.replace(/\.png$/, '.packed.json')];
     if (layout && !scene.textures.exists(key)) scene.load.packedAtlas(key, useHigh ? highImages[`${highBase}.png`] : image, layout);
   }
 }
-export const cowboySheetScale = (name: string, frame = 0): number => autoSpriteScale(cowboy, cowboyMeasurements, name, frame, cowboyCalibration);
+export const texasSheetScale = (name: string, frame = 0): number => autoSpriteScale(texas, texasMeasurements, name, frame, texasCalibration);
 const pose = (name: string, frame: number, state: CharacterState) => {
   const horizontal: Record<string, readonly number[]> = {
     'enter-taunt': [-4, -5, -5, -11, -16, -30],
     taunt: [-1, -8, -11, 9, 29, 42],
   };
-  const direction = state.facing === 'left' ? -1 : 1, scale = cowboySheetScale(name, frame);
+  const direction = state.facing === 'left' ? -1 : 1, scale = texasSheetScale(name, frame);
   // A lying drawing on the floor rests on its lowest row instead of the feet line.
-  const floor = state.grounded ? lyingFloorAnchor(cowboy, cowboyMeasurements, name, frame) : undefined;
+  const floor = state.grounded ? lyingFloorAnchor(texas, texasMeasurements, name, frame) : undefined;
   return {
-    texture: `cowboy-${name}`, frame, scale, alpha: 1,
+    texture: `texas-${name}`, frame, scale, alpha: 1,
     flipX: direction === -1,
-    offsetX: ((horizontal[name]?.[frame] ?? 0) / 640 + bodyCenterShift(cowboy, cowboyMeasurements, name, frame) * scale) * cowboyDisplayHeight * direction,
-    offsetY: floor === undefined ? 0 : (cowboyFootAnchor - floor) * cowboyDisplayHeight * scale,
+    offsetX: ((horizontal[name]?.[frame] ?? 0) / 640 + bodyCenterShift(texas, texasMeasurements, name, frame) * scale) * texasDisplayHeight * direction,
+    offsetY: floor === undefined ? 0 : (texasFootAnchor - floor) * texasDisplayHeight * scale,
   };
 };
 const isShotCombo = (state: CharacterState) => state.attack?.moveId === 'heavy-punch' &&
   state.chain?.[0] === 'light-punch' && state.chain.every((id,index) => id === (index ? 'heavy-punch' : 'light-punch'));
 /** Per-action drawing cadence in simulation ticks; contact remains tied to combat. */
-export const cowboyAnimationClips: Readonly<Record<string, AnimationClip>> = {
+export const texasAnimationClips: Readonly<Record<string, AnimationClip>> = {
   idle: {key:'idle',start:0,end:5,frameRate:4,frameDurations:[15,12,12,15,12,12],repeat:-1},
   walk: {key:'walk',start:0,end:5,frameRate:10,frameDurations:[7,5,6,7,5,6],repeat:-1},
   backward: {key:'backward',start:0,end:5,frameRate:8,frameDurations:[8,7,8,8,7,8],repeat:-1},
@@ -85,9 +85,9 @@ const attackRhythm: Readonly<Record<string, {startup: readonly number[]; recover
   'power-kick':{startup:[3,2,1],recovery:[1,2]}, 'double-shot':{startup:[3,2,1],recovery:[1,2]},
   'throw-13':{startup:[3,2,1],recovery:[1,2]}, 'throw-24':{startup:[3,2,1],recovery:[1,2]},
 };
-const sample = (name: string, elapsed: number) => getTimedAnimationFrame(cowboyAnimationClips[name], elapsed);
+const sample = (name: string, elapsed: number) => getTimedAnimationFrame(texasAnimationClips[name], elapsed);
 
-export function getCowboyUltimateActivationPose(state: CharacterState, elapsed: number) {
+export function getTexasUltimateActivationPose(state: CharacterState, elapsed: number) {
   if (elapsed >= ULTIMATE_ACTIVATION_FRAMES - 18) {
     return pose('exit-taunt', Math.min(5, Math.floor((elapsed - (ULTIMATE_ACTIVATION_FRAMES - 18)) / 3)), state);
   }
@@ -108,7 +108,7 @@ const LYING_HOLD_FRAMES = 999;
  * it lands as soon as physics says so, the loser already lying down and the winner back on its feet.
  */
 export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number, floorY: number, gravity: number, lost: boolean): CharacterState {
-  if (!['cowboy', 'shoto'].includes(state.fighterId) || state.grounded) return state;
+  if (!['texas', 'shoto'].includes(state.fighterId) || state.grounded) return state;
   const landing = flightFramesRemaining(state.y, state.verticalVelocity, floorY, gravity);
   const ticks = Math.min(Math.max(0, ageSinceRoundEnd), landing);
   if (ticks < landing) {
@@ -120,18 +120,18 @@ export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number
   return { ...state, y: floorY, grounded: true, verticalVelocity: 0, attack: undefined, juggle: undefined, ...lying };
 }
 
-export function getCowboyRoundEndPose(state: CharacterState, winner: boolean, elapsed: number) {
-  if (state.fighterId !== 'cowboy' || !state.grounded) return undefined;
+export function getTexasRoundEndPose(state: CharacterState, winner: boolean, elapsed: number) {
+  if (state.fighterId !== 'texas' || !state.grounded) return undefined;
   if (!winner && state.mode === 'knockdown') return undefined;
   const durations = winner ? [10, 9, 14, 12, 11, 24] : [8, 8, 10, 10, 12, 32];
   return pose(winner ? 'victory' : 'defeat', getPhaseAnimationFrame([0,1,2,3,4,5], durations, Math.max(0, elapsed), 80), state);
 }
 
 
-export function getCowboySpritePose(state: CharacterState, frame: number) {
-  if (state.fighterId !== 'cowboy') return undefined;
+export function getTexasSpritePose(state: CharacterState, frame: number) {
+  if (state.fighterId !== 'texas') return undefined;
   if (state.attack) {
-    const move = cowboy.moves.find(candidate => candidate.id === state.attack!.moveId);
+    const move = texas.moves.find(candidate => candidate.id === state.attack!.moveId);
     if (!move) return undefined;
     const elapsed = state.attack.elapsedFrames;
     const startup = state.attack.startupFrames ?? move.startup;
@@ -273,8 +273,8 @@ export function getCowboySpritePose(state: CharacterState, frame: number) {
 }
 
 /** Defensive arms appear in front; attacking arms materialize behind the fighter. */
-export function getCowboySpriteLayers(state: CharacterState, frame: number) {
-  const character = getCowboySpritePose(state, frame);
+export function getTexasSpriteLayers(state: CharacterState, frame: number) {
+  const character = getTexasSpritePose(state, frame);
   if (!character) return [];
   if (!state.attack) {
     const defending = state.mode === 'blocking' || state.mode === 'blockstun';
@@ -291,7 +291,7 @@ export function getCowboySpriteLayers(state: CharacterState, frame: number) {
     }
     return [character];
   }
-  const move = cowboy.moves.find(candidate => candidate.id === state.attack!.moveId);
+  const move = texas.moves.find(candidate => candidate.id === state.attack!.moveId);
   if (move?.id === 'throw-24' && state.attack.hasHit) {
     const shotAge = state.attack.throwConfirmedFrame === undefined ? -1 : frame - state.attack.throwConfirmedFrame;
     if (shotAge >= 0 && shotAge < 24) {

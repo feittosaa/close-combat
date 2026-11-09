@@ -3,7 +3,7 @@ import { TrainingSession, OPPONENT_MODES } from '../training/TrainingSession';
 import { TutorialSession, type TutorialLesson } from '../training/TutorialSession';
 import { Simulation } from '../engine/simulation/Simulation';
 import { defaultCharacter as shoto } from '../engine/data/characters';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import { fighterMoveList } from '../training/MoveList';
 import { createGameConfig } from '../engine/data/gameConfig';
 import type { FrameInput } from '../input/types';
@@ -55,9 +55,9 @@ it('golpe básico só conta com contato real e fica marcado como concluído', ()
   tutorial.changeLesson(1); expect(tutorial.passed).toBe(false); expect(tutorial.isCompleted(tutorial.sections[0], lesson)).toBe(true);
 });
 it('combos trazem receitas, sequências encadeadas, especiais e ultimates de cada personagem', () => {
-  const combos = new TutorialSession(cowboy).sections[1].lessons;
-  expect(combos.map(lesson => lesson.key)).toEqual([...cowboy.combos!.map(combo => `combo:${combo.id}`), 'chain:0',
-    ...cowboy.moves.filter(move => move.category === 'special' || move.category === 'ultimate').map(move => `move:${move.id}`)]);
+  const combos = new TutorialSession(texas).sections[1].lessons;
+  expect(combos.map(lesson => lesson.key)).toEqual([...texas.combos!.map(combo => `combo:${combo.id}`), 'chain:0',
+    ...texas.moves.filter(move => move.category === 'special' || move.category === 'ultimate').map(move => `move:${move.id}`)]);
   expect(combos.find(lesson => lesson.key === 'chain:0')?.moves).toEqual(['light-kick', 'light-kick', 'light-kick', 'light-punch', 'heavy-punch', 'heavy-punch', 'heavy-punch']);
   expect(new TutorialSession(shoto).sections[1].lessons.filter(lesson => lesson.key.startsWith('move:')).map(lesson => lesson.key))
     .toEqual(shoto.moves.filter(move => !move.comboOnly && (move.category === 'special' || move.category === 'ultimate')).map(move => `move:${move.id}`));
@@ -74,17 +74,17 @@ it('exemplo substitui as entradas até o fim e não conclui a lição sozinho', 
   tutorial.resetAttempt(); expect(tutorial.demonstrating).toBe(false);
 });
 it('tutorial reconhece finalizador agachado e lista não o oferece como golpe independente', () => {
-  const tutorial=new TutorialSession(cowboy);
+  const tutorial=new TutorialSession(texas);
   const lesson=openLesson(tutorial,entry=>entry.notation==='d+1,1,1');
   expect(lesson?.moves).toEqual(['crouch-punch','crouch-punch','crouch-combo-shot']);
-  const list=fighterMoveList(cowboy);
+  const list=fighterMoveList(texas);
   expect(list.some(entry=>entry.id==='crouch-combo-shot')).toBe(false);
   expect(list.some(entry=>entry.id==='crouch-butt-shot')).toBe(true);
 });
 it('tutorial de combo agachado reconhece as duas coronhadas e o projétil', () => {
-  const tutorial=new TutorialSession(cowboy);
+  const tutorial=new TutorialSession(texas);
   openLesson(tutorial,lesson=>lesson.notation==='d+1,1,1');
-  const sim=new Simulation(createGameConfig(1024,576),[cowboy,shoto],{training:true,initialDistance:65});
+  const sim=new Simulation(createGameConfig(1024,576),[texas,shoto],{training:true,initialDistance:65});
   const down:FrameInput={direction:'D',buttons:new Set()};
   const step=(value:FrameInput)=>{sim.stepFrame([value,N]);tutorial.observe(sim.snapshot(),value);};
   for(const move of ['crouch-punch','crouch-punch','crouch-combo-shot']) {

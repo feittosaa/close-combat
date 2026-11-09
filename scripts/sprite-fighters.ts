@@ -1,14 +1,14 @@
 /** Fighters, measurements and calibrations shared by the sprite analysis scripts. */
 import { shoto } from '../src/engine/data/fighters/shoto';
-import { cowboy } from '../src/engine/data/fighters/cowboy';
+import { texas } from '../src/engine/data/fighters/texas';
 import type { CharacterDefinition } from '../src/engine/data/characters';
 import type { SheetMeasurements, SpriteCalibration } from '../src/rendering/animations/spriteScale';
 import { SHOTO_FRAME, shotoSpriteScale } from '../src/rendering/animations/shotoSprites';
-import { cowboyDisplayHeight, cowboyFootAnchor } from '../src/rendering/animations/cowboySprites';
+import { texasDisplayHeight, texasFootAnchor } from '../src/rendering/animations/texasSprites';
 import shotoMeasurements from '../src/assets/sprites/characters/shoto/measurements.json';
-import cowboyMeasurements from '../src/assets/sprites/characters/cowboy/measurements.json';
+import texasMeasurements from '../src/assets/sprites/characters/texas/measurements.json';
 import shotoCalibration from '../src/assets/sprites/characters/shoto/calibration.json';
-import cowboyCalibration from '../src/assets/sprites/characters/cowboy/calibration.json';
+import texasCalibration from '../src/assets/sprites/characters/texas/calibration.json';
 
 export interface SpriteFighter {
   definition: CharacterDefinition; measurements: SheetMeasurements; calibration: SpriteCalibration;
@@ -17,5 +17,5 @@ export interface SpriteFighter {
 }
 export const spriteFighters: SpriteFighter[] = [
   { definition: shoto, measurements: shotoMeasurements as SheetMeasurements, calibration: shotoCalibration, frameWorld: SHOTO_FRAME * shotoSpriteScale, footAnchor: 900 / SHOTO_FRAME },
-  { definition: cowboy, measurements: cowboyMeasurements as SheetMeasurements, calibration: cowboyCalibration, frameWorld: cowboyDisplayHeight, footAnchor: cowboyFootAnchor },
+  { definition: texas, measurements: texasMeasurements as SheetMeasurements, calibration: texasCalibration, frameWorld: texasDisplayHeight, footAnchor: texasFootAnchor },
 ];

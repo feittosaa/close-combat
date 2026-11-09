@@ -6,7 +6,7 @@ import { t } from '../i18n/i18n';
 import { attackDurationFrames } from '../engine/combat/frameData';
 import { stages } from '../rendering/stages/stageCatalog';
 import { autoSpriteScale, type SheetMeasurements, type SpriteCalibration } from '../rendering/animations/spriteScale';
-import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize } from '../rendering/animations/cowboySprites';
+import { texasDisplayHeight, texasFootAnchor, getTexasFrameSize } from '../rendering/animations/texasSprites';
 import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shotoSpriteScale } from '../rendering/animations/shotoSprites';
 import { arcadeFrame, fighterArt, frameStyle, heroFrame, tileFrame, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
@@ -49,7 +49,7 @@ const fighterSizing = (id: string, pixelScale: Sizing['pixelScale'], footAnchor:
   calibration: sheetData[`../assets/sprites/characters/${id}/calibration.json`] as SpriteCalibration, pixelScale, footAnchor,
 });
 const SIZING: Readonly<Record<string, Sizing>> = {
-  cowboy: fighterSizing('cowboy', key => cowboyDisplayHeight / getCowboyFrameSize(key), () => cowboyFootAnchor),
+  texas: fighterSizing('texas', key => texasDisplayHeight / getTexasFrameSize(key), () => texasFootAnchor),
   shoto: fighterSizing('shoto', key => (key === shotoIdleTexture ? shotoIdleScale : shotoSpriteScale) / getShotoResolution(key),
     key => key === shotoIdleTexture ? 670 / 724 : 900 / SHOTO_FRAME),
 };

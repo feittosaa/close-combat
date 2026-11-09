@@ -260,7 +260,7 @@ it.each([0, 1])('sends twelve crows in varied and simultaneous groups from the u
   expect(sim.snapshot().ultimateActivation).toBeUndefined();
 });
 
-it.each([['shoto', 'd,df,f,d,df,f,1', ['d,df,f,d,df,f,1', 'b,f,b,f,1+2', '1', 'd,df,f,1']], ['cowboy', 'b,db,d,df,f,1+2', ['b,db,d,df,f,1+2', '1', 'd,df,f,2']]] as const)(
+it.each([['shoto', 'd,df,f,d,df,f,1', ['d,df,f,d,df,f,1', 'b,f,b,f,1+2', '1', 'd,df,f,1']], ['texas', 'b,db,d,df,f,1+2', ['b,db,d,df,f,1+2', '1', 'd,df,f,2']]] as const)(
   'a ultimate de %s é sempre o último golpe do combo', (id, ultimate, followUps) => {
     const fighter = characters.find(entry => entry.id === id)!;
     const firstCombo = (steps: RouteStep[]) => {
