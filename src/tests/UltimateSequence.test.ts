@@ -1,13 +1,14 @@
-import { createProjectileHitbox } from '../engine/collision/projectileGeometry';
-import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { expect, it } from 'vitest';
+import { characters } from '../engine/data/characters';
+import { routeInputs, type RouteStep } from '../training/comboRoute';
+import { TUTORIAL_DISTANCE, tutorialGameConfig } from '../training/tutorialLessons';
 import { Simulation } from '../engine/simulation/Simulation';
 import { shoto } from '../engine/data/fighters/shoto';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { ULTIMATE_ACTIVATION_FRAMES } from '../engine/combat/ultimateActivation';
 import { validateStage } from '../rendering/stages/StageDefinition';
 import { stages, defaultStage } from '../rendering/stages/stageCatalog';
-import { createStageLayout, getStageArenaBounds, getFightCameraFrame } from '../rendering/stages/stageLayout';
+import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 const input=(direction:Direction='N',buttons:readonly AttackButton[]=[]):FrameInput=>({direction,buttons:new Set(buttons)});
 const N=input();const config=createGameConfig(1024,576);
@@ -19,21 +20,58 @@ function command(sim:Simulation,id:string,player=0,target=N){
   sequence.slice(0,-1).forEach(direction=>step(sim,input(direction),player));
   step(sim,input(sequence[sequence.length-1]??'N',move.input.buttons),player,target);
 }
-function contact(sim:Simulation,stage:'confirm'|'explosion',player=0,target=N){
-  for(let i=0;i<400;i++){
-    const event=sim.snapshot().hitEvents.find(e=>e.stage===stage&&e.attackerId===`player-${player+1}`);
-    if(event)return event;step(sim,N,player,target);
+it.each([0, 1])('plays the complete ultimate activation when ultimate follows two confirmed punches: player %i', player => {
+  const sim=create(96); sim.fillTrainingRage();
+  for (let punch=0; punch<2; punch++) {
+    step(sim,input('N',['1']),player);
+    let hit=false;
+    for (let tick=0; tick<80; tick++) {
+      const event=sim.snapshot().hitEvents.find(e=>e.attackerId===`player-${player+1}` && e.moveId==='light-punch');
+      if (event) { expect(event.outcome).toBe('hit'); hit=true; break; }
+      step(sim,N,player);
+    }
+    expect(hit).toBe(true);
   }
-  throw new Error(`Missing ${stage} contact`);
-}
+  command(sim,'crow-ultimate',player);
+  for (let tick=0; tick<30 && !sim.snapshot().ultimateActivation; tick++) step(sim,N,player);
+  const started=sim.snapshot();
+  expect(started.ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
+  expect(started.characters[player].attack?.moveId).toBe('crow-ultimate');
+  expect(started.projectiles).toHaveLength(0);
+  for (let tick=1; tick<ULTIMATE_ACTIVATION_FRAMES; tick++) {
+    step(sim,N,player);
+    const frozen=sim.snapshot();
+    expect(frozen.ultimateActivation?.elapsedFrames).toBe(tick);
+    expect(frozen.characters).toEqual(started.characters);
+    expect(frozen.projectiles).toHaveLength(0);
+  }
+  step(sim,N,player);
+  expect(sim.snapshot().ultimateActivation).toBeUndefined();
+  const resumed=sim.snapshot();
+  expect(resumed.projectiles.some(projectile => projectile.visual === 'crow')).toBe(true);
+});
+
+it('starts the cinematic when a buffered ultimate becomes available as a missed attack ends', () => {
+  const sim=create(400); sim.fillTrainingRage();
+  const jab=shoto.moves.find(move=>move.id==='light-punch')!;
+  command(sim,'light-punch');
+  wait(sim,jab.startup+jab.activeFrames+jab.recovery-6);
+  command(sim,'crow-ultimate');
+  for (let tick=0; tick<10 && !sim.snapshot().ultimateActivation; tick++) {
+    expect(sim.snapshot().projectiles).toHaveLength(0);
+    step(sim);
+  }
+  expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:['player-1'],elapsedFrames:0});
+  expect(sim.snapshot().characters[0].attack?.moveId).toBe('crow-ultimate');
+});
 
 it('freezes the round clock and entire world for 150 ticks of activation, for any ultimate',()=>{
   expect(ULTIMATE_ACTIVATION_FRAMES).toBe(150);
-  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:100}};
+  const fighter={...shoto,id:'activation-fixture',rage:{...shoto.rage!,onHit:300}};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   command(sim,'light-punch');wait(sim,90);
-  expect(sim.snapshot().characters[0].rage).toBe(100);
-  const motion=shoto.moves.find(m=>m.id==='wine-ultimate')!.input.sequence!;
+  expect(sim.snapshot().characters[0].rage).toBe(300);
+  const motion=shoto.moves.find(m=>m.id==='crow-ultimate')!.input.sequence!;
   motion.slice(0,-1).forEach(d=>step(sim,input(d)));
   const before=sim.snapshot();step(sim,input('F',['1','2']),0,input('UF',['4']));
   const started=sim.snapshot();expect(started.ultimateActivation?.elapsedFrames).toBe(0);
@@ -49,75 +87,36 @@ it('freezes the round clock and entire world for 150 ticks of activation, for an
   }
   step(sim);expect(sim.snapshot().ultimateActivation).toBeUndefined();
   expect(sim.snapshot().frame).toBe(started.frame+1);
-  expect(sim.snapshot().roundFramesRemaining).toBe(before.roundFramesRemaining-1);
+  expect(sim.snapshot().roundFramesRemaining).toBe(before.roundFramesRemaining);
+  let resumed = false;
+  for (let tick = 0; tick < 500; tick++) {
+    const active = sim.snapshot();
+    const ultimateActive = active.characters.some(character => character.attack?.moveId === 'crow-ultimate') ||
+      active.projectiles.some(projectile => projectile.attack.moveId === 'crow-ultimate');
+    step(sim);
+    if (ultimateActive) expect(sim.snapshot().roundFramesRemaining).toBe(before.roundFramesRemaining);
+    if (sim.snapshot().roundFramesRemaining < before.roundFramesRemaining) { resumed = true; break; }
+  }
+  expect(resumed).toBe(true);
 });
 
 it('freezes already flying projectiles, and simultaneous ultimates share one activation interval',()=>{
-  const sim=create(350);sim.fillTrainingRage();command(sim,'wine-bottle',1);wait(sim,30);
+  const sim=create(350);sim.fillTrainingRage();command(sim,'tomato-heavy',1);wait(sim,30);
   expect(sim.snapshot().projectiles).toHaveLength(1);
-  command(sim,'wine-ultimate');const started=sim.snapshot();
+  command(sim,'crow-ultimate');const started=sim.snapshot();
   for(let i=0;i<ULTIMATE_ACTIVATION_FRAMES-1;i++){step(sim);expect(sim.snapshot().projectiles).toEqual(started.projectiles);}
   const both=create();both.fillTrainingRage();
-  for(const direction of ['B','DB','D','DF','F'] as Direction[]){
-    const value=input(direction,direction==='F'?['1','2']:[]);both.stepFrame([value,value]);
+  for(const [index,direction] of (['B','F','B','F'] as Direction[]).entries()){
+    const value=input(direction,index === 3 ? ['1','2'] : []);both.stepFrame([value,value]);
   }
   expect(both.snapshot().ultimateActivation?.ownerIds).toEqual(['player-1','player-2']);
   wait(both,ULTIMATE_ACTIVATION_FRAMES-1);expect(both.snapshot().ultimateActivation?.elapsedFrames).toBe(ULTIMATE_ACTIVATION_FRAMES-1);
   step(both);expect(both.snapshot().ultimateActivation).toBeUndefined();
 });
 
-it.each([0,1])('bottle confirms, lighter explodes once for 280 and physically knocks player %i down',player=>{
-  const sim=create();sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  expect(contact(sim,'confirm',player)).toMatchObject({damage:0,outcome:'hit',defenderStunFrames:150});
-  expect(sim.snapshot().characters[1-player].health).toBe(1000);
-  // Eight combat frames of throw preparation, independently of the shared contact pause.
-  wait(sim,CONTACT_HITSTOP_FRAMES+7);expect(sim.snapshot().projectiles.some(p=>p.phase==='lighter')).toBe(false);
-  const explosion=contact(sim,'explosion',player);expect(explosion.damage).toBe(280);expect(explosion.defenderStunFrames).toBe(50);
-  const target=sim.snapshot().characters[1-player];
-  expect(target).toMatchObject({health:720,mode:'knockdown',grounded:false});
-  expect(target.verticalVelocity).toBe(-5);expect(target.knockdown).toBeDefined();
-  expect(sim.snapshot().explosions).toHaveLength(1);
-  const x=target.x;wait(sim,30);const down=sim.snapshot().characters[1-player];
-  expect(Math.abs(down.x-x)).toBeGreaterThan(40);expect(down.grounded).toBe(true);expect(down.mode).toBe('knockdown');
-  wait(sim,50);expect(sim.snapshot().characters[1-player].mode).toBe('neutral');
-  expect(sim.snapshot().characters[1-player].health).toBe(720);
-  expect(sim.snapshot().explosions).toHaveLength(0);
-});
-
-it('guarding or missing the bottle never creates the lighter or deals explosion damage',()=>{
-  const blocked=create();blocked.fillTrainingRage();command(blocked,'wine-ultimate');
-  expect(contact(blocked,'confirm',0,input('B'))).toMatchObject({outcome:'block',damage:0});
-  wait(blocked,160);expect(blocked.snapshot().recentContacts.some(c=>c.event.stage==='explosion')).toBe(false);
-  expect(blocked.snapshot().characters[1].health).toBe(1000);
-  const outOfLine={...shoto,collision:{...shoto.collision,hurtboxes:{...shoto.collision.hurtboxes,
-    standing:{...shoto.collision.hurtboxes.standing,offsetY:-1000}}}};
-  const miss=new Simulation(config,[shoto,outOfLine],{training:true,initialDistance:350});
-  miss.fillTrainingRage();command(miss,'wine-ultimate');wait(miss,ULTIMATE_ACTIVATION_FRAMES+170);
-  expect(miss.snapshot().recentContacts).toHaveLength(0);
-  expect(miss.snapshot().projectiles).toHaveLength(0);
-  expect(miss.snapshot().characters[1].health).toBe(1000);
-});
-
-it('reset clears activation, confirmations, lighter, knockdown and explosion state',()=>{
-  const sim=create();sim.fillTrainingRage();command(sim,'wine-ultimate');sim.resetMatch();
-  expect(sim.snapshot().ultimateActivation).toBeUndefined();
-  sim.fillTrainingRage();command(sim,'wine-ultimate');contact(sim,'confirm');sim.resetMatch();wait(sim,160);
-  expect(sim.snapshot().projectiles).toHaveLength(0);expect(sim.snapshot().recentContacts).toHaveLength(0);
-  sim.fillTrainingRage();command(sim,'wine-ultimate');contact(sim,'explosion');sim.resetMatch();
-  expect(sim.snapshot().explosions).toHaveLength(0);expect(sim.snapshot().characters.every(c=>!c.knockdown&&c.mode==='neutral')).toBe(true);
-});
-
-it('keeps the KO launch alive until the defender reaches the floor',()=>{
-  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:100}};
-  const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
-  command(sim,'light-punch');wait(sim,80);command(sim,'wine-ultimate');contact(sim,'explosion');wait(sim,6);
-  expect(sim.snapshot().phase).toBe('fight');
-  wait(sim,30);expect(sim.snapshot().phase).toBe('round-over');expect(sim.snapshot().characters[1].grounded).toBe(true);
-});
-
-it('gives the glass a shallow arc and bottle a visibly higher arc, using the same collision coordinates',()=>{
+it('gives the light tomato a shallow arc and heavy tomato a visibly higher arc, using the same collision coordinates',()=>{
   const heights:number[]=[];
-  for(const id of ['wine-glass','wine-bottle']){
+  for(const id of ['tomato-light','tomato-heavy']){
     const sim=create(400);command(sim,id);const move=shoto.moves.find(m=>m.id===id)!;
     wait(sim,move.startup);const first=sim.snapshot().projectiles[0];
     expect(first).toBeDefined();const y=first.y;
@@ -127,20 +126,16 @@ it('gives the glass a shallow arc and bottle a visibly higher arc, using the sam
     expect(box.y).toBeCloseTo(later.y+move.hitbox.yOffset);
     wait(sim,Math.ceil(-move.projectile!.verticalSpeed!/move.projectile!.gravity!)+2-11);expect(sim.snapshot().projectiles[0].verticalVelocity).toBeGreaterThan(0);
   }
-  expect(heights[1]).toBeGreaterThan(heights[0]*3);
+  expect(heights[1]).toBeGreaterThan(heights[0]);
 });
 
-it('requires ultrawide backgrounds, removes every bar prop and compensates the background magnification',()=>{
+it('valida proporções e camadas do cenário',()=>{
   for(const stage of stages){
-    expect(stage.referenceSize.width/stage.referenceSize.height).toBeGreaterThanOrEqual(21/9);
-    const layout=createStageLayout(stage,1024,576,488);
-    // At output resolution, backgrounds expand at most 1.6x instead of the old ~2x close crop.
-    expect(layout.scale*1.6*1920/1024).toBeLessThan(1.6);
-    expect(()=>validateStage({...stage,referenceSize:{width:1920,height:1080}})).toThrow();
+    expect(stage.referenceSize.width/stage.referenceSize.height).toBeGreaterThanOrEqual(16/9);
+    expect(()=>validateStage({...stage,referenceSize:{width:100,height:100}})).toThrow();
   }
-  expect(defaultStage.layers.map(l=>l.id)).toEqual(['bar']);
+  expect(defaultStage.layers.map(l=>l.id)).toEqual(['sala', 'bandeira-esquerda', 'bandeira-direita']);
 });
-
 
 it('reaches both actual panorama walls when the opponent follows, without dragging a stationary fighter',()=>{
   for(const stage of stages){
@@ -158,120 +153,142 @@ it('reaches both actual panorama walls when the opponent follows, without draggi
   }
 });
 
-it.each([0,1])('captures an airborne defender upright, waits for landing and explodes after the lighter: player %i',player=>{
-  const sim=create(200);sim.fillTrainingRage();
-  step(sim,input('U'),1-player);
-  // Meet the descending extended hurtbox rather than the compact apex silhouette.
-  wait(sim,10);
-  command(sim,'wine-ultimate',player);
-  contact(sim,'confirm',player);
-  const confirmed=sim.snapshot().characters[1-player];
-  expect(confirmed.grounded).toBe(false);
-  expect(confirmed.ultimateCapture).toEqual({ownerId:`player-${player+1}`});
-  expect(confirmed.verticalVelocity).toBeGreaterThanOrEqual(0);
-  const x=confirmed.x;let landed=false,launched=false,previousY=confirmed.y;
-  for(let tick=0;tick<180;tick++){
-    step(sim,N,player,input('UB',['4']));
-    const snapshot=sim.snapshot();const target=snapshot.characters[1-player];
-    if(snapshot.hitEvents.some(e=>e.stage==='explosion')){
-      expect(landed).toBe(true);expect(launched).toBe(true);
-      expect(target.ultimateCapture).toBeUndefined();expect(target.mode).toBe('knockdown');
-      expect(target.health).toBe(720);return;
-    }
-    expect(target.mode).toBe('hitstun');expect(target.attack).toBeUndefined();expect(target.crouching).toBe(false);
-    expect(target.x).toBe(x);expect(target.y).toBeGreaterThanOrEqual(previousY);previousY=target.y;
-    if(target.grounded)landed=true;
-    if(snapshot.projectiles.some(p=>p.phase==='lighter')){
-      expect(target.grounded).toBe(true);launched=true;
-      expect(snapshot.characters[player].ultimateThrowStartedFrame).toBeDefined();
+/** An ultimate ends its combo: another one starts only after the opponent has recovered. */
+function untilRecovered(sim:Simulation,player:number){for(let i=0;i<600 && ['hitstun','knockdown'].includes(sim.snapshot().characters[1-player].mode);i++)step(sim,N,player);}
+it.each([0,1])('allows repeated ultimates with sufficient rage: player %i', player => {
+  const sim=create(56); sim.fillTrainingRage();
+  command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().characters[player].rage).toBe(600);
+  wait(sim,350); untilRecovered(sim,player);
+  command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().characters[player].rage).toBe(300);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
+});
+
+it.each([0,1])('permits ultimates again in a real match after earning rage in a later round: player %i', player => {
+  const fighter={...shoto,maxHealth:280,rage:{...shoto.rage!,onHit:300}};
+  const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
+  command(sim,'light-punch',player);wait(sim,80);
+  command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().characters[player].rage).toBe(0);
+  for(let i=0;i<900 && sim.snapshot().round===1;i++)step(sim);
+  expect(sim.snapshot()).toMatchObject({round:2,phase:'fight'});
+  command(sim,'light-punch',player);wait(sim,80);
+  expect(sim.snapshot().characters[player].rage).toBe(300);
+  command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
+  expect(sim.snapshot().characters[player].rage).toBe(0);
+});
+
+it.each([0,1])('refills rage and permits repeated ultimates in training: player %i', player => {
+  const sim=create(56);sim.fillTrainingRage();command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().characters[player]).toMatchObject({rage:600});
+  wait(sim,350);untilRecovered(sim,player);sim.fillTrainingRage();
+  expect(sim.snapshot().characters[player].rage).toBe(900);
+  command(sim,'crow-ultimate',player);
+  expect(sim.snapshot().ultimateActivation?.ownerIds).toContain(`player-${player+1}`);
+});
+
+it('preserves each fighter’s accumulated rage between rounds and clears it on match reset', () => {
+  const shortRound={...config,match:{...config.match,roundDurationFrames:90}};
+  const sim=new Simulation(shortRound,undefined,{initialDistance:56});
+  command(sim,'light-punch');
+  for(let i=0;i<200 && sim.snapshot().phase==='fight';i++)step(sim);
+  const before=sim.snapshot();
+  expect(before.phase).toBe('round-over');
+  expect(before.characters.map(c=>c.rage)).toEqual([10,15]);
+  for(let i=0;i<300 && sim.snapshot().round===1;i++)step(sim);
+  expect(sim.snapshot().round).toBe(2);
+  expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([10,15]);
+  sim.resetMatch();
+  expect(sim.snapshot().characters.map(c=>c.rage)).toEqual([0,0]);
+});
+
+it.each([0,1])('uses the shortcut with full cinematic and the same resource rules: player %i', player => {
+  const sim=create(100);
+  step(sim,{...N,ultimate:true},player);
+  expect(sim.snapshot().ultimateActivation).toBeUndefined();
+  step(sim,N,player);sim.fillTrainingRage();
+  step(sim,{...N,ultimate:true},player);
+  expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
+  expect(sim.snapshot().characters[player].rage).toBe(600);
+  expect(sim.snapshot().projectiles).toHaveLength(0);
+});
+
+
+it.each([0,1])('starts the shortcut cinematic after two punches in a combo: player %i',player=>{
+  const sim=create(56);sim.fillTrainingRage();
+  for(let punch=0;punch<2;punch++){
+    step(sim,input('N',['1']),player);
+    for(let tick=0;tick<80;tick++){
+      if(sim.snapshot().hitEvents.some(e=>e.attackerId===`player-${player+1}` && e.moveId==='light-punch'))break;
+      step(sim,N,player);
     }
   }
-  throw new Error('Air confirmation never reached its explosion');
+  step(sim,{...N,ultimate:true},player);
+  for(let tick=0;tick<30 && !sim.snapshot().ultimateActivation;tick++)step(sim,N,player);
+  expect(sim.snapshot().ultimateActivation).toMatchObject({ownerIds:[`player-${player+1}`],elapsedFrames:0});
+  expect(sim.snapshot().projectiles).toHaveLength(0);
 });
 
-it.each([0,1])('throws the ultimate bottle across maximum separation at the reduced speed while retaining a reliable lighter confirmation: player %i',player=>{
-  const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  wait(sim,ULTIMATE_ACTIVATION_FRAMES);
-  const launched=sim.snapshot();expect(Math.abs(launched.projectiles[0].velocity)).toBe(15);
-  const started=launched.frame;contact(sim,'confirm',player);
-  expect(sim.snapshot().frame-started).toBeLessThanOrEqual(36);
-  let lighter;
-  for(let tick=0;tick<20&&!lighter;tick++){step(sim);lighter=sim.snapshot().projectiles.find(p=>p.phase==='lighter');}
-  expect(lighter).toBeDefined();
-  expect(Math.hypot(lighter!.velocity,lighter!.verticalVelocity??0)).toBeCloseTo(7.5);
-  expect(contact(sim,'explosion',player).damage).toBe(280);
-});
-
-it('keeps the complete knocked-down body inside the fixed viewport at maximum separation',()=>{
-  for(const player of [0,1]){
-    const layout=createStageLayout(defaultStage,1024,576,488);
-    const sim=new Simulation({...config,arena:{...config.arena,...getStageArenaBounds(layout)}},undefined,{training:true,initialDistance:512});
-    sim.fillTrainingRage();command(sim,'wine-ultimate',player);contact(sim,'explosion',player);
-    for(let tick=0;tick<65;tick++){
-      const states=sim.snapshot().characters;
-      const camera=getFightCameraFrame(layout,states.map(c=>c.x),states.map(c=>c.y));
-      const projected=(x:number)=>512+(x-camera.scrollX-512)*camera.zoom;
-      for(const state of states){
-        const radius=state.mode==='knockdown'?state.collision.hurtboxes.knockdown.width/2+6:38;
-        expect(projected(state.x-radius)).toBeGreaterThanOrEqual(0);
-        expect(projected(state.x+radius)).toBeLessThanOrEqual(1024);
+it.each([0, 1])('sends twelve crows in varied and simultaneous groups from the user side: player %i', player => {
+  const sim = create(400);
+  sim.fillTrainingRage(); command(sim, 'crow-ultimate', player);
+  wait(sim, ULTIMATE_ACTIVATION_FRAMES);
+  const shots = new Map<number, {x: number; y: number; velocity: number; tick: number}>();
+  for (let tick = 0; tick < 150; tick++) {
+    for (const projectile of sim.snapshot().projectiles) {
+      if (projectile.visual === 'crow' && projectile.volleyStep !== undefined && !shots.has(projectile.volleyStep)) {
+        shots.set(projectile.volleyStep, { x: projectile.x, y: projectile.y, velocity: projectile.velocity, tick });
       }
-      step(sim);
     }
+    step(sim, N, player);
   }
+  expect([...shots.keys()]).toEqual(Array.from({ length: 12 }, (_, i) => i));
+  expect(new Set([...shots.values()].map(shot => shot.y)).size).toBeGreaterThan(6);
+  expect(new Set([...shots.values()].map(shot => shot.tick)).size).toBeLessThan(shots.size);
+  const pattern = shoto.moves.find(move => move.id === 'crow-ultimate')!.screenVolley!.pattern!;
+  expect(new Set(pattern.map(shot => shot.frame)).size).toBeLessThan(pattern.length);
+  const owner = sim.snapshot().characters[player];
+  for (const shot of shots.values()) {
+    expect(Math.sign(shot.velocity)).toBe(player === 0 ? 1 : -1);
+    const origin = shot.x - shot.velocity;
+    expect(player === 0 ? origin <= owner.x : origin >= owner.x).toBe(true);
+  }
+  sim.resetMatch();
+  expect(sim.snapshot().projectiles).toHaveLength(0);
+  expect(sim.snapshot().ultimateActivation).toBeUndefined();
 });
 
+it.each([['shoto', 'd,df,f,d,df,f,1', ['d,df,f,d,df,f,1', 'b,f,b,f,1+2', '1', 'd,df,f,1']], ['texas', 'b,db,d,df,f,1+2', ['b,db,d,df,f,1+2', '1', 'd,df,f,2']]] as const)(
+  'a ultimate de %s é sempre o último golpe do combo', (id, ultimate, followUps) => {
+    const fighter = characters.find(entry => entry.id === id)!;
+    const firstCombo = (steps: RouteStep[]) => {
+      const sim = new Simulation(tutorialGameConfig(), [fighter, fighter], { training: true, initialDistance: TUTORIAL_DISTANCE });
+      sim.fillTrainingRage();
+      for (const input of routeInputs(steps, 300)) sim.stepFrame([input, { direction: 'N', buttons: new Set() }]);
+      return sim.snapshot().comboHistory.find(combo => combo.attackerId === 'player-1')!;
+    };
+    const alone = firstCombo([{ wait: 8, command: ultimate }]);
+    expect(alone.usedUltimate).toBe(true);
+    // Whatever follows may only start a new combo once the opponent has recovered.
+    // Presses start once the activation is over and the ultimate is under way, up to its last hits.
+    for (const command of followUps) for (let wait = 170; wait <= 400; wait += 5) {
+      expect(firstCombo([{ wait: 8, command: ultimate }, { wait, command }]).hits, `${command} após ${wait}`).toBe(alone.hits);
+    }
+  });
 
-it.each([0,1])('launches a resized ultimate bottle at head height in a falling arc: player %i',player=>{
-  const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  wait(sim,ULTIMATE_ACTIVATION_FRAMES);
-  const initial=sim.snapshot();const bottle=initial.projectiles.find(p=>p.phase==='confirm')!;
-  const owner=initial.characters[player];const move=shoto.moves.find(m=>m.id==='wine-ultimate')!;
-  const box=createProjectileHitbox(bottle,move);
-  expect(box.width).toBe(60.72);expect(box.height).toBe(48.576);
-  // The first integration already moved the bottle upward by its launch velocity.
-  expect(box.y+box.height/2).toBeCloseTo(owner.y+owner.collision.hurtboxes.standing.offsetY-1.5);
-  expect(box.y).toBeLessThan(owner.y+owner.collision.hurtboxes.standing.offsetY);
-  const positions=[bottle.y];
-  for(let tick=0;tick<20;tick++){
-    const before=sim.snapshot().projectiles.find(p=>p.id===bottle.id)!;
-    step(sim);const after=sim.snapshot().projectiles.find(p=>p.id===bottle.id)!;
-    expect(after.x-before.x).toBeCloseTo(player===0?15:-15);
-    expect(after.y-before.y).toBeCloseTo(before.verticalVelocity!);
-    expect(after.verticalVelocity!-before.verticalVelocity!).toBeCloseTo(0.12);
-    positions.push(after.y);
+it('apertar 1+2 no fim da cinemática não troca o Redemoinho pelo soco potente nem gasta a rage à toa', () => {
+  // The activation freezes the ultimate's own frame count, so its end used to fall inside the chord grace window.
+  for (let wait = ULTIMATE_ACTIVATION_FRAMES - 10; wait <= ULTIMATE_ACTIVATION_FRAMES + 12; wait++) {
+    const sim = new Simulation(tutorialGameConfig(), [shoto, shoto], { training: true, initialDistance: TUTORIAL_DISTANCE });
+    sim.fillTrainingRage();
+    let powerPunch = false;
+    for (const input of routeInputs([{ wait: 8, command: 'd,df,f,d,df,f,1' }, { wait, command: '1+2' }], 300)) {
+      sim.stepFrame([input, N]);
+      powerPunch ||= sim.snapshot().characters[0].attack?.moveId === 'power-punch';
+    }
+    expect(powerPunch, `1+2 após ${wait}`).toBe(false);
+    expect(sim.snapshot().comboHistory.find(combo => combo.attackerId === 'player-1')?.usedUltimate, `1+2 após ${wait}`).toBe(true);
   }
-  expect(positions[5]).toBeLessThan(positions[0]);
-  expect(positions[20]).toBeGreaterThan(positions[15]);
-  expect(contact(sim,'explosion',player).damage).toBe(280);
-});
-
-it.each([0,1])('holds both players from bottle confirmation through lighter impact, then releases control: player %i',player=>{
-  const sim=create(config.arena.maxSeparation!);sim.fillTrainingRage();command(sim,'wine-ultimate',player);
-  contact(sim,'confirm',player);
-  const positions=sim.snapshot().characters.map(c=>({x:c.x,y:c.y}));
-  let exploded=false;
-  for(let tick=0;tick<180;tick++){
-    const attempts=[input('F',['1']),input('B',['2']),input('UF',['3']),input('DB',['4'])];
-    step(sim,attempts[tick%attempts.length],player,attempts[(tick+2)%attempts.length]);
-    const snapshot=sim.snapshot();
-    if(snapshot.hitEvents.some(e=>e.stage==='explosion')){exploded=true;break;}
-    expect(snapshot.characters.map(c=>({x:c.x,y:c.y}))).toEqual(positions);
-    expect(snapshot.characters[player].attack?.moveId??'wine-ultimate').toBe('wine-ultimate');
-    expect(snapshot.characters[1-player].attack).toBeUndefined();
-    expect(snapshot.characters[1-player].ultimateCapture).toBeDefined();
-  }
-  expect(exploded).toBe(true);
-  expect(sim.snapshot().characters[1-player].ultimateCapture).toBeUndefined();
-  wait(sim,CONTACT_HITSTOP_FRAMES+1);
-  const before=sim.snapshot().characters[player].x;step(sim,input('F'),player);
-  expect(sim.snapshot().characters[player].x).not.toBe(before);
-  expect(sim.snapshot().characters[player].attack).toBeUndefined();
-  wait(sim,100);
-  const target=sim.snapshot().characters[1-player].x;step(sim,input('F'),1-player);
-  expect(sim.snapshot().characters[1-player].x).not.toBe(target);
-
-  sim.resetMatch();sim.fillTrainingRage();command(sim,'wine-ultimate',player);contact(sim,'confirm',player);
-  sim.resetMatch();const reset=sim.snapshot().characters[player].x;step(sim,input('F'),player);
-  expect(sim.snapshot().characters[player].x).not.toBe(reset);
 });

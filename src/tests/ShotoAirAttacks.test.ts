@@ -3,7 +3,6 @@ import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
-import { getShotoSpritePose } from '../rendering/animations/shotoSprites';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
 const config = createGameConfig(1024,576);
@@ -20,6 +19,22 @@ function contact(sim: Simulation, player: number, guard = input()) {
   throw new Error('Missing contact');
 }
 
+it('aumenta em aproximadamente 15% a altura do salto normal', () => {
+  const peak = (jumpVelocity: number) => {
+    const fighter = { ...shoto, movement: { ...shoto.movement, jumpVelocity } };
+    const sim = new Simulation(config, [fighter, fighter], { training: true, initialDistance: 400 });
+    const floor = config.arena.floorY;
+    step(sim, 0, input('U'));
+    let highest = floor;
+    for (let tick = 0; tick < 70; tick++) {
+      highest = Math.min(highest, sim.snapshot().characters[0].y);
+      step(sim);
+    }
+    return floor - highest;
+  };
+  expect(peak(shoto.movement.jumpVelocity) / peak(-10.7)).toBeCloseTo(1.15, 1);
+});
+
 it.each([0,1])('executes each air basic, preserves gravity and mirrors the existing strike poses: player %i', player => {
   for (const move of shoto.moves.filter(move => move.airborne && move.category === 'basic')) {
     const sim = new Simulation(config,undefined,{training:true,initialDistance:56});
@@ -28,9 +43,6 @@ it.each([0,1])('executes each air basic, preserves gravity and mirrors the exist
     const started = sim.snapshot().characters[player];
     expect(started.attack?.moveId).toBe(move.id);
     expect(started.verticalVelocity).toBeCloseTo(shoto.movement.jumpVelocity+2*config.movement.gravity);
-    const pose = getShotoSpritePose(started,sim.snapshot().frame)!;
-    expect(pose.texture === `shoto-${move.pose}` || pose.texture === 'shoto-enter-defense').toBe(true);
-    expect(pose.flipX).toBe(player===1);
     expect(contact(sim,player)).toMatchObject({moveId:move.id,damage:move.damage});
     for(let tick=0;tick<100;tick++)step(sim);
     expect(sim.snapshot().characters[player]).toMatchObject({grounded:true,mode:'neutral',attack:undefined});
@@ -58,9 +70,16 @@ it.each([0,1])('launches only the confirmed final hit of 1,1,2: player %i', play
     for (const button of ['1','1','2'] as const) {
       step(sim,player,input('N',button),input(guard?'B':'N'));
       contact(sim,player,input(guard?'B':'N'));
+      if (guard) {
+        step(sim,player,input('N','1'),input('B'));
+        const state = sim.snapshot().characters[player];
+        expect(state.attack?.moveId).toBe('light-punch');
+        expect(state.attack?.hitOutcome).toBe('block');
+        break;
+      }
     }
     const target = sim.snapshot().characters[1-player];
-    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(guard?undefined:6);
+    if (!guard) expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(6);
     expect(target.grounded).toBe(guard);
     expect(target.verticalVelocity).toBe(guard?0:-10);
     if(!guard) {
@@ -72,7 +91,7 @@ it.each([0,1])('launches only the confirmed final hit of 1,1,2: player %i', play
     const sim = new Simulation(config,undefined,{training:true,initialDistance:56});
     for(const button of buttons){step(sim,player,input('N',button));contact(sim,player);}
     expect(sim.snapshot().characters[1-player].grounded).toBe(true);
-    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBeUndefined();
+    expect(sim.snapshot().characters[player].attack?.recoveryFrames).toBe(buttons.length === 3 ? 30 : undefined);
   }
 });
 
@@ -89,5 +108,21 @@ it.each([0,1])('air basics block against legal air guard, whiff out of range, an
     for(let tick=0;tick<80;tick++)step(sim);
     expect(sim.snapshot().recentContacts).toHaveLength(0);
     sim.resetMatch();expect(sim.snapshot().characters.every(c=>c.grounded && !c.attack && c.verticalVelocity===0)).toBe(true);
+  }
+});
+
+it.each([0,1])('keeps a missed air kick vulnerable after landing during recovery: player %i', player => {
+  for (const button of ['3','4'] as const) {
+    const sim = new Simulation(config,undefined,{training:true,initialDistance:400});
+    step(sim,player,input('U'));
+    for (let tick=0;tick<18;tick++) step(sim);
+    step(sim,player,input('N',button));
+    for (let tick=0;tick<50 && !sim.snapshot().characters[player].grounded;tick++) step(sim,player,input('B'));
+    const landed = sim.snapshot().characters[player];
+    expect(landed).toMatchObject({grounded:true,mode:'recovery',attack:{hasHit:false}});
+    step(sim,player,input('B'));
+    expect(sim.snapshot().characters[player].mode).toBe('recovery');
+    for (let tick=0;tick<60 && sim.snapshot().characters[player].attack;tick++) step(sim,player,input('B'));
+    expect(sim.snapshot().characters[player].attack).toBeUndefined();
   }
 });

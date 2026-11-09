@@ -4,11 +4,12 @@ import { getPlayerLayout, keyLabel } from '../input/controlSettings';
 import { recoveryFrames } from '../engine/combat/frameData';
 import type Phaser from 'phaser';
 import { HUD, hudText, drawHudPanel } from './hudTheme';
-import { getSystemControls } from '../input/controlSettings';
+import { getSystemControls, getTrainingControls } from '../input/controlSettings';
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
 import type { TrainingSession } from '../training/TrainingSession';
-import { OPPONENT_LABELS } from '../training/TrainingSession';
-import { MODE_LABELS, moveInputLabel, signedFrames } from './combatLabels';
+import { moveInputLabel, signedFrames, stateLabel } from './combatLabels';
+import { t } from '../i18n/i18n';
+import type { MoveDefinition } from '../engine/data/moves';
 
 /** Read-only training instrumentation, kept below the feet to leave jumps unobstructed. */
 export class TrainingHud {
@@ -38,22 +39,26 @@ export class TrainingHud {
   }
 
   update(snapshot: SimulationSnapshot, session: TrainingSession): void {
-    this.status.setText(`TREINO  /  ${session.paused ? 'PAUSADO' : 'EM CURSO'} · ${session.speed * 100}% · ${OPPONENT_LABELS[session.opponentMode].replace(/\b[1-4]\b/g,button=>keyLabel(getPlayerLayout(1).buttons[button as AttackButton]))} · VIDA AUTO ${session.autoRestore ? 'ON' : 'OFF'}`);
-    const controls=getSystemControls();
-    this.footer.setText(`${keyLabel(controls.pause)} PAUSA · . FRAME · L VELOCIDADE · ${keyLabel(controls.reset)} / F2 RESET · F3 VIDA AUTO · F4 DISTÂNCIA · G ADVERSÁRIO · H COLISÕES · I ENTRADAS · ESC PAUSA`);
+    const toggle = (on: boolean) => t(on ? 'training.on' : 'training.off');
+    const opponent = t(`opponent.${session.opponentMode}`).replace(/\b[1-4]\b/g,button=>keyLabel(getPlayerLayout(1).buttons[button as AttackButton]));
+    this.status.setText(t('training.status', { state: t(session.paused ? 'training.paused' : 'training.running'), speed: session.speed * 100, opponent, auto: toggle(session.autoRestore) }));
+    const controls=getSystemControls(), keys=getTrainingControls();
+    this.footer.setText(t('training.footer', { pause: keyLabel(controls.pause), step: keyLabel(keys.step), speed: keyLabel(keys.speed), reset: keyLabel(controls.reset),
+      resetShortcut: keyLabel(keys.reset), autoLife: keyLabel(keys.autoLife), distance: keyLabel(keys.distance), opponent: keyLabel(keys.opponent),
+      geometry: keyLabel(keys.geometry), inputs: keyLabel(keys.inputs) }));
     this.progress.clear();
     snapshot.characters.forEach((character, index) => {
       const move = session.lastMoves[index];
       const recovery = move ? recoveryFrames(move, character.attack) : 0;
-      const recoveryLabel = String(recovery);
       const lockedFrames = move && character.attack
         ? move.startup + move.activeFrames + recoveryFrames(move, character.attack) - character.attack.elapsedFrames
         : character.remainingStateFrames;
-      const levels = { high: 'ALTO', mid: 'MÉDIO', low: 'BAIXO', air: 'AÉREO', throw: 'AGARRÃO', special: 'ESPECIAL' };
+      const level = (id: MoveDefinition['hitLevel']) => t(`level.${id}`).toLocaleUpperCase();
       const detail = move
-        ? `${character.attack ? 'GOLPE' : 'ÚLTIMO'} ${formatCommand(moveInputLabel(move),getPlayerLayout(index))} · S${move.startup} A${move.activeFrames} R${recoveryLabel} · ${levels[move.hitLevel]} · DANO ${move.damage}`
-        : 'S: preparo · A: ativo · R: recuperação';
-      this.fighters[index]?.setText(`P${index + 1} · ${MODE_LABELS[character.mode]} · ${lockedFrames > 0 ? `RESTAM ${lockedFrames}F` : 'LIVRE'}\n${detail}`);
+        ? t('training.move', { which: t(character.attack ? 'training.current' : 'training.last'), command: formatCommand(moveInputLabel(move),getPlayerLayout(index)),
+          startup: move.startup, active: move.activeFrames, recovery, level: `${move.screenVolley?.firstHitLevel ? `${level(move.screenVolley.firstHitLevel)} / ` : ''}${level(move.hitLevel)}`, damage: move.damage })
+        : t('training.legend');
+      this.fighters[index]?.setText(`${t('training.fighter', { player: index + 1, state: stateLabel(character.mode), lock: lockedFrames > 0 ? t('training.remaining', { frames: lockedFrames }) : t('training.free') })}\n${detail}`);
       const left = 30 + index * (this.width / 2 - 18);
       const barWidth = this.width / 2 - 42;
       const barY = this.panelY + 52;
@@ -61,22 +66,22 @@ export class TrainingHud {
       if (!move) return;
       const total = move.startup + move.activeFrames + recovery;
       let offset = 0;
-      for (const [duration, color] of [[move.startup, 0xffb454], [move.activeFrames, 0xff687d], [recovery, 0x76b8e7]]) {
+      for (const [duration, color] of [[move.startup, HUD.phases[0]], [move.activeFrames, HUD.phases[1]], [recovery, HUD.phases[2]]]) {
         const width = duration / total * barWidth;
         this.progress.fillStyle(color).fillRect(left + offset, barY, width, 5);
         offset += width;
       }
       if (character.attack) {
         const cursor = Math.min(1, character.attack.elapsedFrames / total) * barWidth;
-        this.progress.fillStyle(0xffffff).fillRect(left + cursor, barY - 2, 2, 9);
+        this.progress.fillStyle(HUD.lightGold).fillRect(left + cursor, barY - 2, 2, 9);
       }
     });
     const distance = Math.round(Math.abs(snapshot.characters[0].x - snapshot.characters[1].x));
-    this.distance.setText(`FRAME ${snapshot.frame} · DISTÂNCIA ${distance} · CAIXAS ${session.showGeometry ? 'ON' : 'OFF'}`);
+    this.distance.setText(t('training.frameInfo', { frame: snapshot.frame, distance, boxes: t(session.showGeometry ? 'training.on' : 'training.off') }));
     const contact = snapshot.recentContacts[snapshot.recentContacts.length - 1]?.event;
     this.contact.setText(contact
-      ? `${contact.attackerId === 'player-1' ? 'P1' : 'P2'}: DANO ${contact.damage} · REC ${contact.attackerRecoveryFrames}F · STUN ${contact.defenderStunFrames}F · ADV ${signedFrames(contact.frameAdvantage)}`
-      : 'S: preparo · A: ativo · R: recuperação');
+      ? t('training.contact', { player: contact.attackerId === 'player-1' ? 'P1' : 'P2', damage: contact.damage, recovery: contact.attackerRecoveryFrames, stun: contact.defenderStunFrames, advantage: signedFrames(contact.frameAdvantage) })
+      : t('training.legend'));
   }
 
   destroy(): void {

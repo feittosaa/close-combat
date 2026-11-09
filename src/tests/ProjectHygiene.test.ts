@@ -17,7 +17,7 @@ const markdown = import.meta.glob<string>(
 );
 
 describe('Project asset and documentation hygiene', () => {
-  it('keeps only consumed images, active preparation sources and canonical references', () => {
+  it('keeps only consumed images and canonical references', () => {
     const images = import.meta.glob<string>(
       ['../../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg,bmp}', '../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg,bmp}', '../../docs/**/*.{png,jpg,jpeg,webp,avif,gif,svg,bmp}'],
       { eager: true, query: '?url', import: 'default' },
@@ -32,20 +32,32 @@ describe('Project asset and documentation hygiene', () => {
     }
     const stages = import.meta.glob<string>('../assets/scenes/*/stage.json', { eager: true, query: '?raw', import: 'default' });
     for (const [key, source] of Object.entries(stages)) {
-      const stage = JSON.parse(source) as { layers: { file: string }[] };
-      for (const layer of stage.layers) used.add(relativeTo(projectPath(key), layer.file));
-    }
-    const alignments = import.meta.glob<string>('../assets/sprites/characters/*/alignment.json', { eager: true, query: '?raw', import: 'default' });
-    for (const [key, source] of Object.entries(alignments)) {
-      const alignment = JSON.parse(source) as { clips: Record<string, { source?: string; sourceFrames?: string[] }> };
-      for (const clip of Object.values(alignment.clips)) {
-        for (const file of [...(clip.source ? [clip.source] : []), ...(clip.sourceFrames ?? [])]) {
-          used.add(relativeTo(projectPath(key), `source/${file}`));
-        }
+      const stage = JSON.parse(source) as { source?: string; layers: { file: string; sourceStage?: string; highFile?: string; frames?: string[] }[] };
+      if (stage.source) used.add(relativeTo(projectPath(key), stage.source));
+      for (const layer of stage.layers) for (const file of [layer.file, ...(layer.highFile ? [layer.highFile] : []), ...(layer.frames ?? [])]) {
+        used.add(layer.sourceStage ? `src/assets/scenes/${layer.sourceStage}/${file}` : relativeTo(projectPath(key), file));
       }
     }
-    const canonical = import.meta.glob('../../assets/art/characters/*/turnaround.png', { eager: true, query: '?url', import: 'default' });
+    for (const stage of ['saloon', 'fazenda', 'sala-treino']) {
+      for (const name of ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'round-win', 'round-lose', 'ko', ...(stage === 'saloon' ? ['tumbleweed'] : [])]) {
+        used.add(`src/assets/scenes/${stage}/presentation/${name}.png`);
+      }
+    }
+    const texasAtlases = import.meta.glob('../assets/sprites/characters/texas/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
+    for (const key of Object.keys(texasAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
+    const shotoAtlases = import.meta.glob('../assets/sprites/characters/shoto/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
+    for (const key of Object.keys(shotoAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
+    // Full-body art kept for future in-game use (pipeline.md lists it).
+    const canonical = import.meta.glob(['../../assets/art/characters/*/turnaround*.png', '../../assets/art/characters/*/fullbody*.png'], { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(canonical)) used.add(projectPath(key));
+    const alternatives = import.meta.glob('../assets/art/characters/*/{victory-poses,selection-backgrounds,selection-icons}/*.png', { eager: true, query: '?url', import: 'default' });
+    for (const key of Object.keys(alternatives)) used.add(projectPath(key));
+    const reviews = import.meta.glob<string>('../../assets/art/characters/*/revisao.json', { eager: true, query: '?raw', import: 'default' });
+    for (const [key, source] of Object.entries(reviews)) {
+      const manifest = projectPath(key);
+      expect(markdown['../../pipeline.md']).toContain(manifest);
+      for (const file of (JSON.parse(source) as { propostas: string[] }).propostas) used.add(relativeTo(manifest, file));
+    }
     expect([...new Set(Object.keys(images).map(projectPath))].sort()).toEqual([...used].sort());
   });
 

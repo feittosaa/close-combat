@@ -1,0 +1,22 @@
+{
+ "victory-poses": {
+  "1.png": {
+   "victory": {
+    "height": 1.75,
+    "top": 0
+   }
+  },
+  "2.png": {
+   "victory": {
+    "height": 1,
+    "top": 0
+   }
+  },
+  "3.png": {
+   "victory": {
+    "height": 1.3624,
+    "top": 0
+   }
+  }
+ }
+}

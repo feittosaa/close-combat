@@ -4,10 +4,20 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "npm run sprites:prepare",
     "dev": "vite",
+    "prebuild": "npm run sprites:prepare",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "test:visual": "python3 scripts/verify-shoto-visual.py",
+    "measure:sprites": "python3 scripts/measure-sprites.py",
+    "guides:sprites": "python3 scripts/measure-sprites.py && vite-node scripts/export-sprite-layout.ts && python3 scripts/render-sprite-guides.py",
+    "calibrate:sprites": "python3 scripts/measure-sprites.py && vite-node scripts/calibrate-sprites.ts",
+    "sprites:prepare": "python3 scripts/prepare-sprites.py",
+    "sprites:apply-scales": "vite-node scripts/apply-sprite-scales.ts",
+    "dev:apply": "vite-node scripts/apply-dev-overrides.ts",
+    "combos:find": "vite-node scripts/find-combo-routes.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"

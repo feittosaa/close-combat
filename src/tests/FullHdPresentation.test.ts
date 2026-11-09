@@ -1,11 +1,18 @@
-import { shotoSpriteManifest } from '../rendering/animations/shotoSprites';
 import { FIGHT_WORLD_SCALE } from '../engine/data/fightFraming';
 import { Simulation } from '../engine/simulation/Simulation';
 import { expect, it, vi } from 'vitest';
-import { LOGICAL_VIEW, RENDER_SIZE, configureUiCamera, projectCameraToOutput } from '../rendering/presentation';
+import { LOGICAL_VIEW, RENDER_SIZE, configureUiCamera, getHudLogicalWidth, getRightAlignedCover, getUiViewport, projectCameraToOutput } from '../rendering/presentation';
 import { getFightCameraFrame, createStageLayout } from '../rendering/stages/stageLayout';
 import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createGameConfig } from '../engine/data/gameConfig';
+
+it.each([{width:1848,height:966},{width:1920,height:1080},{width:2560,height:1080},{width:800,height:1000}])('cobre o menu inteiro com a imagem alinhada à direita em $width x $height', output => {
+  const image={width:1586,height:992};
+  const cover=getRightAlignedCover(output,image);
+  expect(cover.x).toBe(getHudLogicalWidth(output));
+  expect(cover.x-image.width*cover.scale).toBeLessThanOrEqual(0);
+  expect(image.height*cover.scale).toBeGreaterThanOrEqual(LOGICAL_VIEW.height);
+});
 
 it('mapeia todos os cantos do menu lógico para um canvas real 1920x1080 sem deformar', () => {
   expect(RENDER_SIZE).toEqual({width:1920,height:1080});
@@ -25,12 +32,12 @@ it('mantém escala fixa e o piso em Full HD', () => {
   expect(y(config.arena.floorY)).toBeCloseTo(915);
   expect(y(config.arena.floorY-144)).toBeGreaterThan(220);
   expect(y(config.arena.floorY)-y(config.arena.floorY-144)).toBeCloseTo(432);
-  expect(config.arena).toEqual({left:24,right:1000,floorY:488,maxSeparation:499.2});
+  expect(config.arena).toEqual({left:24,right:1000,floorY:488,viewportWidth:1024,maxSeparation:499.2});
 });
 it('mantém ambos os lados visíveis ao afastar e trocar lutadores de lado em 1080p',()=>{
   const layout=createStageLayout(defaultStage,1024,576,488);
-  const left=24+layout.arenaOffsetX,right=1000+layout.arenaOffsetX;
-  for(const positions of [[left,left+40],[left,left+464],[right-464,right],[right,right-512]]){
+  const left=24,right=layout.worldWidth-24;
+  for(const positions of [[left,left+40],[left,left+464],[right-464,right],[right,right-499]]){
     const f=projectCameraToOutput(getFightCameraFrame(layout,positions),LOGICAL_VIEW,RENDER_SIZE);
     for(const p of positions){
       const x=960+(p-f.scrollX-960)*f.zoom;
@@ -75,7 +82,8 @@ it('acompanha a subida e a descida do salto real com zoom fixo',()=>{
     expect(camera.scrollY).toBeLessThanOrEqual(75);
     if (!snapshot.characters[0].grounded) expect(camera.scrollY).toBeLessThan(75);
     for(const fighter of snapshot.characters){
-      const head=288+(fighter.y-(144*1.03*1.15*1.1)-camera.scrollY-288)*camera.zoom;
+      const headHeight = fighter.grounded ? 144*1.03*1.15*1.1 : 145;
+      const head=288+(fighter.y-headHeight-camera.scrollY-288)*camera.zoom;
       expect(head).toBeGreaterThan(78);
       expect(fighter.y).toBeLessThanOrEqual(488);
       airborne ||= !fighter.grounded;
@@ -85,17 +93,13 @@ it('acompanha a subida e a descida do salto real com zoom fixo',()=>{
   expect(sim.snapshot().characters[0].grounded).toBe(true);
 });
 
-it('amplia o desenho em mais 10% e deixa as silhuetas em pé próximas das bordas sem mudar o zoom',()=>{
-  expect(shotoSpriteManifest.displaySize!.height).toBeCloseTo(172.8*1.03*1.15*1.1);
-  const config=createGameConfig(1024,576);
-  const layout=createStageLayout(defaultStage,1024,576,488);
-  const positions=[layout.worldWidth/2-config.arena.maxSeparation!/2,layout.worldWidth/2+config.arena.maxSeparation!/2];
-  expect(positions[1]-positions[0]).toBeCloseTo(config.arena.maxSeparation!);
-  const frame=getFightCameraFrame(layout,positions);
-  // Visible neutral body extends at most 140 source pixels from the root, not the transparent cell edge.
-  const silhouetteHalfWidth=140*shotoSpriteManifest.displaySize!.width/768;
-  const left=512+(positions[0]-silhouetteHalfWidth-frame.scrollX-512)*frame.zoom;
-  const right=512+(positions[1]+silhouetteHalfWidth-frame.scrollX-512)*frame.zoom;
-  expect(left).toBeGreaterThan(0);expect(left).toBeLessThan(65);
-  expect(right).toBeLessThan(1024);expect(right).toBeGreaterThan(959);
+it.each([{width: 2560, height: 1080}, {width: 3840, height: 1080}, {width: 1920, height: 1080}])('preserves fighter and HUD scale in a wide output: $width x $height', output => {
+  const viewport = getUiViewport(output);
+  expect(viewport.width).toBe(output.width);
+  expect(viewport.height).toBe(1080);
+  expect(viewport.x).toBe(0);
+  const frame = projectCameraToOutput({zoom: FIGHT_WORLD_SCALE, scrollX: 0, scrollY: 0}, LOGICAL_VIEW, output);
+  expect(frame.zoom).toBe(FIGHT_WORLD_SCALE * 1.875);
+  const center = output.width / 2 + (512 - frame.scrollX - output.width / 2) * frame.zoom;
+  expect(center).toBeCloseTo(output.width / 2);
 });

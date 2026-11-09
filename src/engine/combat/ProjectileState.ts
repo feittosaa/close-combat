@@ -4,6 +4,9 @@ import type { CharacterAttack } from '../characters/CharacterState';
 export interface ProjectileState {
   id: number;
   ownerId: string;
+  comboId?: number;
+  comboStep?: number;
+  volleyStep?: number;
   fighterId: string;
   x: number;
   y: number;
@@ -11,9 +14,7 @@ export interface ProjectileState {
   velocity: number;
   verticalVelocity?: number;
   gravity?: number;
-  phase?: 'confirm' | 'lighter';
-  targetId?: string;
   remainingFrames: number;
-  visual: 'glass' | 'bottle' | 'molotov' | 'lighter';
+  visual: 'tomato' | 'crow' | 'bullet' | 'volley' | 'dynamite';
   attack: CharacterAttack;
 }
