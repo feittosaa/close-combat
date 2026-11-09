@@ -7,7 +7,9 @@ ao fundo removido (a mistura com o contorno escuro); dentro do desenho são somb
 ficam fora da faixa de matiz. Sprites usam uma faixa mais estreita (`SPRITE_HUE_TOLERANCE`): neles o fundo e sua
 mistura com o contorno ficam perto de 300°, enquanto franjas e acessórios carmim chegam a 325°.
 Uma entrada já recortada mantém sua transparência (inclusive a parcial de bordas e efeitos; o resíduo quase invisível,
-com alfa abaixo de 16, conta como fundo para alcançar o halo, mas só sai se for magenta); os pixels removidos ficam com alfa 0. `prepare-sprites.py` aplica esta limpeza a todo sprite novo ou alterado.
+com alfa abaixo de 16, conta como fundo para alcançar o halo, mas só sai se for magenta); os pixels removidos ficam com alfa 0,
+exceto a mistura do fundo com o contorno preto, que vira preto com a cobertura do contorno (a linha preta não afina).
+`prepare-sprites.py` aplica esta limpeza a todo sprite novo ou alterado.
 """
 import sys
 
@@ -35,6 +37,9 @@ SHADING_SATURATION = .85
 OUTLINE_VALUE = .3
 # Residue of a background already made transparent (alpha up to 15) is invisible and counts as background.
 FAINT_ALPHA = 16
+# Brightest channel of the key: a removed pixel this saturated is the key blended with the black outline, whose share of
+# black stays as a black pixel with that coverage, so the outline keeps its width and antialiasing.
+KEY_VALUE = 250
 
 
 def magenta(rgb: np.ndarray, min_saturation: float, tolerance: float, blue_tolerance: float | None = None) -> np.ndarray:
@@ -69,7 +74,14 @@ def clean(pixels: np.ndarray, tolerance: float = HUE_TOLERANCE) -> int:
     # Faint pixels lead the cleanup to the background around them, but only magenta ones are cleared.
     kept = faint & ~magenta(pixels[..., :3], EDGE_MIN_SATURATION, tolerance)
     removed = background_mask(pixels[..., :3], faint, tolerance) & ~kept & (pixels[..., 3] > 0)
+    color = pixels[..., :3].astype(float)
+    high = color.max(axis=2)
+    outline = removed & ~faint & (color.min(axis=2) < high * (1 - SHADING_SATURATION))
+    coverage = np.clip(1 - high / KEY_VALUE, 0, 1) * pixels[..., 3]
+    outline &= coverage >= FAINT_ALPHA
     pixels[..., 3][removed] = 0
+    pixels[..., 3][outline] = coverage[outline].round().astype(np.uint8)
+    pixels[..., :3][outline] = 0
     return int(removed.sum())
 
 

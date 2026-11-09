@@ -60,7 +60,7 @@
   "src/assets/sprites/characters/shoto/high/hurt-high.png": "11b7fd3c1c14e0afc81cf057aa372aa533a5f250b74fac28b97fba37cfb1a959",
   "src/assets/sprites/characters/shoto/high/hurt-low.png": "bf6bea04d63b4e58080b54a3ef8c21f18856c08f63dacba10e63eb23c70fb1c4",
   "src/assets/sprites/characters/shoto/high/hurt.png": "a9e83b54639c6b15ea1d946e3af0dbfbe0bb2017e2da45a54bc9f3495021e244",
-  "src/assets/sprites/characters/shoto/high/idle-normal.png": "4b22d31619e48e90cf1c2b8b823078968e29666e95688c6486c4f65675759b5e",
+  "src/assets/sprites/characters/shoto/high/idle-normal.png": "5947df3029648765bb6a39591169ec97067d4a1fd2c0c49894f4d82ee56815fd",
   "src/assets/sprites/characters/shoto/high/idle.png": "a06ae34e7aa0fe4daff0e1841d2ee898d112512f227b4b1971787650688999fe",
   "src/assets/sprites/characters/shoto/high/ippon-victim.png": "e65cadda69384c0a113c3f4e89a042df035ea8de8529a47fd470edc41d33086d",
   "src/assets/sprites/characters/shoto/high/ippon.png": "9a7660e070cbca39a39b21f337df1dff31df8d70db0f26e0f813a5d3c2298b81",
@@ -88,7 +88,7 @@
   "src/assets/sprites/characters/shoto/hurt-high.png": "821dc7b3973a511068c14352d5317234206d87ffed61dc6dbb9cc435bbea6812",
   "src/assets/sprites/characters/shoto/hurt-low.png": "6e2edf50891129ffde5055eaf5e40f3652c7abee0cd224a9064a5efe16e26fc5",
   "src/assets/sprites/characters/shoto/hurt.png": "0d3109e2a4a67a60bd52aab3c95a45114246b9d96b526c3839252c19eabc36db",
-  "src/assets/sprites/characters/shoto/idle-normal.png": "0a0efd855948b600912c325ed1bf6abb3403ffb5e3489ec3142000269774aee5",
+  "src/assets/sprites/characters/shoto/idle-normal.png": "bdce265fe6570c5d8a459214bec3311652342ad2d33655a1aabc71df44de4207",
   "src/assets/sprites/characters/shoto/idle.png": "bdd25c4d7104d973b859a8cc36136469c7e8e12e22111004e02f7b18557df647",
   "src/assets/sprites/characters/shoto/ippon-victim.png": "b2b66c74ce5111459ea80bc8138e9900ffee4b21571df4fba84273247417c287",
   "src/assets/sprites/characters/shoto/ippon.png": "ac2d172cd3a00abe1bee5a281e3b7c0fa434aa003b6c2301a31320f630b731d9",
@@ -286,7 +286,7 @@
   "src/assets/sprites/effects/contact/hit-wine.png": "43e84ef097f31047f1b1c1029e4496186d05d4d2c044eef225e2ea33164df1aa",
   "src/assets/sprites/effects/contact/wall-bounce.png": "24cb2079a5c93bd9bc19c1552874f00c84ce3b608ae260764fbf4970de5d69bd"
  },
- "cleanup": "81298fd7d8816d3d0744887e4f925f145b8398038bbfa8e736e5352ed2907cd4",
+ "cleanup": "d038e11b0a4dc64ed850a32f2e0b55b6a38e769de7b62f232c6b1e8432547122",
  "art": {
   "src/assets/art/characters/gimmick/fullbody.png": "244f15ff267957a0af78817077f89f5aad70489ba3d75b909bfcb68947d995c3",
   "src/assets/art/characters/gimmick/selection-icon.png": "3babaf2380448e6065dbf4996f6686109627057b2649a7517d9c52e33eae01ca",
@@ -322,5 +322,5 @@
   "src/assets/art/characters/texas/selection-icon.png": "799cb2c418c7f517f9961a1ca1eeb75a5ab71f283586e0361de064b740888282",
   "src/assets/art/characters/texas/victory-poses/1.png": "bda50f9fba0d52447282086f73486c4d8a1ef210631e358e4c63149311b560db"
  },
- "artCleanup": "81298fd7d8816d3d0744887e4f925f145b8398038bbfa8e736e5352ed2907cd4"
+ "artCleanup": "d038e11b0a4dc64ed850a32f2e0b55b6a38e769de7b62f232c6b1e8432547122"
 }
