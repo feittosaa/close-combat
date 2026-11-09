@@ -16,7 +16,8 @@
     "calibrate:sprites": "python3 scripts/measure-sprites.py && vite-node scripts/calibrate-sprites.ts",
     "sprites:prepare": "python3 scripts/prepare-sprites.py",
     "sprites:apply-scales": "vite-node scripts/apply-sprite-scales.ts",
-    "dev:apply": "vite-node scripts/apply-dev-overrides.ts"
+    "dev:apply": "vite-node scripts/apply-dev-overrides.ts",
+    "combos:find": "vite-node scripts/find-combo-routes.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"

@@ -70,6 +70,8 @@ export interface CharacterState {
   pushbackMotion?: { distancePerFrame: number; remainingFrames: number };
   /** A bounce blocks the next received combo until its reaction ends. */
   wallBounceProtection?: 'waiting' | 'receiving';
+  /** After Bob's flying kick no ordinary air attack starts until he lands. */
+  landingRequired?: boolean;
   wallBouncePending?: { direction: -1 | 1; attackerId: string; moveId: string };
   wallBounceEffect?: { x: number; y: number; frame: number; direction: -1 | 1 };
   throwFlight?: boolean;
