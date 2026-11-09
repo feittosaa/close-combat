@@ -31,7 +31,9 @@ export class CombatHud {
   private readonly barWidth: number;
   private readonly sidePadding = 82;
 
-  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = [t('hud.player', { player: 1 }),t('hud.player', { player: 2 })], private readonly training = false, private readonly practiceLabel = t('hud.freeTraining'), fighterIds?: readonly [string,string]) {
+  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = [t('hud.player', { player: 1 }),t('hud.player', { player: 2 })], private readonly training = false, private readonly practiceLabel = t('hud.freeTraining'), fighterIds?: readonly [string,string],
+    /** Free training lifts the rage bars above its footer panel; matches and the tutorial keep them at the bottom. */
+    private readonly rageRaised = training) {
     this.barWidth = Math.max(360, width / 2 - this.sidePadding - 90);
     const decoration=scene.add.graphics();
     // The timer hangs from the top edge on an ink plaque with rounded lower corners and a doubled cream rule.
@@ -44,8 +46,8 @@ export class CombatHud {
       scene.add.text(width-(fighterIds ? 82 : 28),30,fighterNames[1].toUpperCase(),hudText(18,true)).setOrigin(1,0)];
     const portraits = fighterIds ? fighterIds.map((id,index) => { const icon = scene.add.image(0,0,`fighter-icon-${id}`); placeFighterIcon(icon,id,index === 0 ? 40 : width-40,39,76); return icon; }) : [];
     this.healthGraphics=scene.add.graphics();
-    this.rageLabels=[scene.add.text(45,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)),scene.add.text(width-45,training?heightForRage(true)+12:heightForRage(false)+12,'',hudText(10,true,HUD.goldText)).setOrigin(1,0)];
-    this.rageLevels=[scene.add.text(24,heightForRage(training)+5,'0',hudText(16,true,HUD.goldText)).setOrigin(.5),scene.add.text(width-24,heightForRage(training)+5,'0',hudText(16,true,HUD.goldText)).setOrigin(.5)];
+    this.rageLabels=[scene.add.text(45,heightForRage(rageRaised)+12,'',hudText(10,true,HUD.goldText)),scene.add.text(width-45,heightForRage(rageRaised)+12,'',hudText(10,true,HUD.goldText)).setOrigin(1,0)];
+    this.rageLevels=[scene.add.text(24,heightForRage(rageRaised)+5,'0',hudText(16,true,HUD.goldText)).setOrigin(.5),scene.add.text(width-24,heightForRage(rageRaised)+5,'0',hudText(16,true,HUD.goldText)).setOrigin(.5)];
     this.modeLabels=[scene.add.text(fighterIds ? 82 : 30,53,'',hudText(10,false,HUD.muted)),
       scene.add.text(width-(fighterIds ? 82 : 30),53,'',hudText(10,false,HUD.muted)).setOrigin(1,0)];
     this.timer=scene.add.text(width/2,4,'99',hudText(28,true)).setOrigin(.5,0);
@@ -99,7 +101,7 @@ export class CombatHud {
       g.lineStyle(2,HUD.gold,.95).strokeRect(x-4,6,this.barWidth+8,25);
       for(let round=0;round<2;round++)drawRoundMarker(g,index===0?width/2-52-round*14:width/2+52+round*14,40,4,HUD.players[index],snapshot.roundWins[index]>round);
       if(character.maxRage>0){
-        const rageWidth=260, rageX=index===0?45:width-45-rageWidth, rageY=heightForRage(this.training);
+        const rageWidth=260, rageX=index===0?45:width-45-rageWidth, rageY=heightForRage(this.rageRaised);
         // Rage: one separate cell per meter section; each bar fills white, then yellow, then red, from the outer edge inwards.
         const sections = RAGE_LEVEL / RAGE_SEGMENT, gap = 4, cell = (rageWidth - 10 - gap * (sections - 1)) / sections;
         for (let section = 0; section < sections; section++) {
@@ -129,4 +131,4 @@ export class CombatHud {
   destroy():void{this.root.destroy(true);}
 }
 
-function heightForRage(training: boolean): number { return LOGICAL_VIEW.height - (training ? 122 : 39); }
+function heightForRage(raised: boolean): number { return LOGICAL_VIEW.height - (raised ? 122 : 39); }

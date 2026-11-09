@@ -5,7 +5,8 @@ export type ControlLayouts = [KeyboardLayout, KeyboardLayout];
 export interface SystemControlLayout { pause: string; reset: string }
 export const defaultControls = (): ControlLayouts => structuredClone([PLAYER_ONE_KEYS, PLAYER_TWO_KEYS]);
 const reserved = new Set(['Escape','Enter','Tab','Space','F1']);
-export const defaultTrainingControls = () => ({ step:'Period', speed:'KeyL', reset:'F2', autoLife:'F3', distance:'F4', opponent:'KeyG', geometry:'KeyH', inputs:'KeyI' });
+export const defaultTrainingControls = () => ({ step:'Period', speed:'KeyL', reset:'F2', autoLife:'F3', distance:'F4', opponent:'KeyG', geometry:'KeyH', inputs:'KeyI',
+  tutorialSection:'KeyC', tutorialPrevious:'KeyZ', tutorialNext:'KeyX', tutorialDemo:'KeyV' });
 export type TrainingControls = ReturnType<typeof defaultTrainingControls>;
 const trainingStorageKey = 'close-combat-training-controls-v1';
 const validKey = (code: unknown) => typeof code === 'string' && /^(Key[A-Z]|Digit[0-9]|Numpad[0-9]|Arrow(Up|Down|Left|Right)|Period|F[2-9]|F1[0-2])$/.test(code) && !reserved.has(code);
@@ -16,7 +17,32 @@ export function validateTrainingControls(value: unknown): value is TrainingContr
   const values = keys.map(key => controls[key]);
   return values.every(validKey) && new Set(values).size === keys.length;
 }
-let trainingControls: TrainingControls = (() => { try { const value = JSON.parse(globalThis.localStorage?.getItem(trainingStorageKey) ?? 'null'); return validateTrainingControls(value) ? value : defaultTrainingControls(); } catch { return defaultTrainingControls(); } })();
+const SPARE_KEYS = [...'CZXVBQOYFGHIL'].map(letter => `Key${letter}`).concat([...'123456789'].map(digit => `Digit${digit}`), ['F5','F6','F7','F8','F9','F10','F11','F12']);
+/**
+ * Keeps every saved key; a command added after the mapping was saved gets its default key when free,
+ * otherwise the first free spare key, so a new command never discards the player's mapping.
+ */
+export function loadTrainingControls(storage?: Pick<Storage,'getItem'>, reserved: Iterable<string> = []): TrainingControls {
+  const defaults = defaultTrainingControls();
+  let saved: Record<string, unknown> = {};
+  try { saved = JSON.parse((storage ?? globalThis.localStorage)?.getItem(trainingStorageKey) ?? 'null') ?? {}; } catch { /* Defaults below. */ }
+  const keys = Object.keys(defaults) as (keyof TrainingControls)[];
+  const used = new Set(reserved), value = {} as TrainingControls;
+  for (const key of keys) {
+    const code = saved[key];
+    if (validKey(code) && !used.has(code as string)) { value[key] = code as string; used.add(code as string); }
+  }
+  // Free defaults first, so a command left without one never takes the default of another new command.
+  for (const key of keys) if (!value[key] && !used.has(defaults[key])) { value[key] = defaults[key]; used.add(defaults[key]); }
+  for (const key of keys) {
+    if (value[key]) continue;
+    const code = SPARE_KEYS.find(candidate => validKey(candidate) && !used.has(candidate) && !Object.values(defaults).includes(candidate));
+    if (!code) return defaults;
+    value[key] = code; used.add(code);
+  }
+  return value;
+}
+let trainingControls: TrainingControls = loadTrainingControls();
 export const getTrainingControls = (): TrainingControls => ({ ...trainingControls });
 export function saveTrainingControls(value: TrainingControls): boolean {
   if (!validateTrainingControls(value)) return false;
@@ -76,6 +102,8 @@ export function saveControls(value: ControlLayouts, storage?: Pick<Storage,'setI
 }
 export function resetControls(): void { saveControls(defaultControls()); saveSystemControls(defaultSystemControls()); saveTrainingControls(defaultTrainingControls()); }
 systemControls = (() => { try { const v = JSON.parse(globalThis.localStorage?.getItem(systemStorageKey) ?? 'null'); return validateSystemControls(v) ? v : defaultSystemControls(); } catch { return defaultSystemControls(); } })();
+// With the players' and system keys known, new training commands avoid them as well.
+trainingControls = loadTrainingControls(undefined, [...layouts.flatMap(layout => [...Object.values(layout.directions), ...Object.values(layout.buttons), layout.ultimate, layout.taunt, layout.rageAction]), ...Object.values(systemControls)]);
 export function getSystemControls(): SystemControlLayout { return { ...systemControls }; }
 export function saveSystemControls(value: SystemControlLayout, storage?: Pick<Storage,'setItem'>): boolean {
   if (!validateSystemControls(value)) return false;

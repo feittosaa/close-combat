@@ -4,6 +4,7 @@ import { HUD_FONT } from '../ui/hudTheme';
 import { t } from '../i18n/i18n';
 import { TutorialSession } from '../training/TutorialSession';
 import { TutorialHud } from '../ui/TutorialHud';
+import { TUTORIAL_START_DISTANCE } from '../training/tutorialLessons';
 import { ControlSettings } from '../ui/ControlSettings';
 import { getPlayerLayout, getSystemControls, getTrainingControls } from '../input/controlSettings';
 import { InputHistory } from '../training/InputHistory';
@@ -96,6 +97,7 @@ export class FightScene extends Phaser.Scene {
   /** Controller outside the pause: Start pauses, Select restarts free training, and A/✕ and the d-pad drive the end-of-match menu. */
   private readonly onPad = (press: PadPress): void => {
     if (this.resultMenu && (press.action === 'up' || press.action === 'down' || press.action === 'confirm')) { this.chooseResult(press.action); return; }
+    if (this.tutorial && !this.paused && press.player === 0 && press.action !== 'start') { this.tutorialPad(press.action); return; }
     if (press.action === 'start' && !this.resultMenu) this.togglePause(true);
     else if (press.action === 'select' && this.mode === 'training' && this.simulation) this.resetFight(true);
     else if (press.action === 'confirm') this.handleContinue();
@@ -155,6 +157,37 @@ export class FightScene extends Phaser.Scene {
       this.inputDisplays.forEach((display) => display.setVisible(this.training!.showInputs));
     }],
   ];
+  /** Tutorial navigation; a change of lesson always starts a fresh attempt. */
+  private readonly tutorialKeys: ReadonlyArray<readonly [string, () => void]> = [
+    ['tutorialSection', () => this.changeTutorial(tutorial => tutorial.changeSection(1))],
+    ['tutorialPrevious', () => this.changeTutorial(tutorial => tutorial.changeLesson(-1))],
+    ['tutorialNext', () => this.changeTutorial(tutorial => tutorial.changeLesson(1))],
+    ['tutorialDemo', () => this.playTutorialDemo()],
+  ];
+  /** Select opens the lesson browser on the controller: d-pad picks, A/✕ shows the example, B/○ or Select closes. */
+  private tutorialBrowsing = false;
+  private changeTutorial(apply: (tutorial: TutorialSession) => void): void {
+    if (!this.tutorial || this.paused) return;
+    apply(this.tutorial); this.resetFight();
+  }
+  private playTutorialDemo(): void {
+    if (!this.tutorial || this.paused) return;
+    this.resetFight(); this.tutorial.startDemo();
+  }
+  /** The example hands control back only after its inputs, the ultimate cinematic, every projectile and the opponent's reaction end. */
+  private tutorialDemoOver(snapshot: SimulationSnapshot): boolean {
+    const [self, target] = snapshot.characters;
+    return Boolean(this.tutorial?.demoFinished) && !snapshot.ultimateActivation && !snapshot.projectiles.length &&
+      !self.attack && self.grounded && target.grounded && target.mode !== 'hitstun' && target.mode !== 'knockdown';
+  }
+  private tutorialPad(action: PadPress['action']): void {
+    if (action === 'select') { this.tutorialBrowsing = !this.tutorialBrowsing; return; }
+    if (!this.tutorialBrowsing) return;
+    if (action === 'left' || action === 'right') this.changeTutorial(tutorial => tutorial.changeSection(action === 'left' ? -1 : 1));
+    else if (action === 'up' || action === 'down') this.changeTutorial(tutorial => tutorial.changeLesson(action === 'up' ? -1 : 1));
+    else if (action === 'confirm') { this.tutorialBrowsing = false; this.playTutorialDemo(); }
+    else if (action === 'back') this.tutorialBrowsing = false;
+  }
   private advanceOneFrame(): void {
     if (!this.training?.paused || !this.simulation || this.introBlocked) return;
     const snapshot = this.simulation.snapshot();
@@ -195,7 +228,7 @@ export class FightScene extends Phaser.Scene {
       snapshot.frame - snapshot.roundEndedFrame >= RESULT_TITLE_END_FRAME;
   }
   private readonly handleContinue = (): void => {
-    if (this.tutorial && !this.paused && this.tutorial.next()) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.resetFight(); return; }
+    if (this.tutorial) { this.changeTutorial(tutorial => tutorial.changeLesson(1)); return; }
     if (this.resultMenu) return;
     const snapshot = this.simulation?.snapshot();
     if (this.mode !== 'arcade' || !snapshot || !this.canContinueArcade(snapshot)) return;
@@ -226,7 +259,8 @@ export class FightScene extends Phaser.Scene {
     this.selectedStage = stageForMatch(this.mode,this.arcadeRun?.stages[this.arcadeIndex] ?? data.stageId);
     this.tutorial = this.mode === 'tutorial' ? new TutorialSession(this.selectedFighter) : undefined;
     this.training = data.mode === 'training' || this.tutorial ? new TrainingSession() : undefined;
-    if (this.tutorial) { this.training!.initialDistance = this.tutorial.lesson?.distance ?? 96; this.training!.showGeometry = false; this.training!.autoRestore = false; }
+    if (this.tutorial) { this.training!.initialDistance = TUTORIAL_START_DISTANCE; this.training!.showGeometry = false; this.training!.autoRestore = false; }
+    this.tutorialBrowsing = false;
     this.difficulty = data.difficulty;
     this.bot = this.mode === 'arcade' ? new ArcadeController(this.opponentFighter, this.selectedFighter, this.difficulty) : undefined;
     this.botRound = 0;
@@ -332,6 +366,7 @@ export class FightScene extends Phaser.Scene {
       ? { training: true, initialDistance: this.training.initialDistance } : {});
     this.fightSounds = new FightSounds(this, Boolean(this.training), this.mode === 'arcade', config.match.roundCount);
     this.simulation.setTrainingAutoRestore(this.training?.autoRestore ?? false);
+    if (this.tutorial) this.simulation.fillTrainingRage();
     this.keyboardInputs = [new KeyboardInput(getPlayerLayout(0)), new KeyboardInput(getPlayerLayout(1))];
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
 
@@ -344,8 +379,8 @@ export class FightScene extends Phaser.Scene {
     this.hitboxView = new HitboxView(this);
     this.hitboxView.setVisible(this.training?.showGeometry ?? false);
     this.hudWidth = 0;
-    if (this.training && !this.tutorial) {
-      this.trainingKeys.forEach(([key, handler]) => {
+    if (this.training) {
+      (this.tutorial ? this.tutorialKeys : this.trainingKeys).forEach(([key, handler]) => {
         const listener = (event: KeyboardEvent): void => {
           // Phaser can revisit a queued DOM event before the queue is cleared.
           // In particular, a single-step event must never advance twice.
@@ -394,8 +429,9 @@ export class FightScene extends Phaser.Scene {
       this.simulation.advance(delta * (this.training?.speed ?? 1) * (slow ? .25 : 1), (characters, frame) => this.readInputs(characters, frame), snapshot => {
         const newlyKnockedOut = snapshot.knockoutStartedAt !== undefined && snapshot.knockoutStartedAt !== this.knockoutAt;
         this.observeFrame(snapshot);
-        return snapshot.round === round && !newlyKnockedOut;
+        return snapshot.round === round && !newlyKnockedOut && !this.tutorialDemoOver(snapshot);
       });
+      if (this.tutorialDemoOver(this.simulation.snapshot())) this.resetFight();
     }
     this.syncViewsAndHud();
   }
@@ -423,8 +459,9 @@ export class FightScene extends Phaser.Scene {
     if (opponentInput) inputs[1] = opponentInput;
     if (this.tutorial && snapshot) {
       this.tutorial.observe(snapshot, this.currentInputs[0]);
-      inputs[1] = !this.tutorial.passed && this.tutorial.lesson?.guard && frame % 90 === 0 ? { direction: 'N', buttons: new Set(['1']) } : neutralInput();
-      if (this.tutorial.passed) inputs[0] = neutralInput();
+      const demo = this.tutorial.demoInput();
+      if (demo) inputs[0] = demo; else if (this.tutorialBrowsing || this.tutorial.demoFinished) inputs[0] = neutralInput();
+      inputs[1] = this.tutorial.lesson?.check === 'guard' && frame % 90 === 0 ? { direction: 'N', buttons: new Set(['1']) } : neutralInput();
     }
     if (this.bot && snapshot) {
       if (this.botRound !== snapshot.round) { this.bot.reset(); this.botRound = snapshot.round; }
@@ -449,6 +486,8 @@ export class FightScene extends Phaser.Scene {
     this.pendingVisualHits = [];
     this.bot?.reset();
     this.tutorial?.resetAttempt();
+    // Specials and ultimates are taught with the resource they need.
+    if (this.tutorial) this.simulation?.fillTrainingRage();
     this.botRound = 0;
     this.training?.resetInspection();
     this.clearHeldInputs();
@@ -470,7 +509,7 @@ export class FightScene extends Phaser.Scene {
     this.hudWidth = width;
     this.hud?.destroy();
     this.hud = new CombatHud(this, width, [this.selectedFighter.name, this.opponentFighter.name],
-      Boolean(this.training), t(this.mode === 'tutorial' ? 'hud.tutorial' : 'hud.freeTraining'), [this.selectedFighter.id,this.opponentFighter.id]);
+      Boolean(this.training), t(this.mode === 'tutorial' ? 'hud.tutorial' : 'hud.freeTraining'), [this.selectedFighter.id,this.opponentFighter.id], Boolean(this.training && !this.tutorial));
     this.trainingHud?.destroy(); this.trainingHud = undefined;
     this.inputDisplays.forEach(display => display.destroy()); this.inputDisplays = [];
     if (this.training && !this.tutorial) {
@@ -480,7 +519,6 @@ export class FightScene extends Phaser.Scene {
       this.inputDisplays.forEach(display => display.setVisible(this.training!.showInputs));
     }
     this.pinnedMove?.setX(width / 2);
-    this.tutorialHud?.setCenter(width / 2);
   }
 
   private syncViewsAndHud(): void {
@@ -515,7 +553,7 @@ export class FightScene extends Phaser.Scene {
       this.trainingHud?.update(snapshot, this.training);
     }
     if (this.tutorial) this.tutorial.observe(snapshot, this.currentInputs[0]);
-    this.tutorialHud?.update();
+    this.tutorialHud?.update(this.tutorialBrowsing);
     this.stageView?.syncHudCamera();
     this.inputDisplays.forEach((display, index) => {
       display.update(this.currentInputs[index] ?? neutralInput(), this.inputHistories[index].snapshot(), snapshot.characters[index].facing,

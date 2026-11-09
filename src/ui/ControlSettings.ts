@@ -11,7 +11,8 @@ const movement = [['directions','left','settings.left'],['directions','right','s
 const attacks = [['buttons','1','settings.button1'],['buttons','2','settings.button2'],['buttons','3','settings.button3'],['buttons','4','settings.button4']] as const;
 const specials = [['ultimate','settings.ultimate'],['taunt','settings.taunt'],['rageAction','settings.rageAction']] as const;
 const fightCommands = [['pause','settings.pause'],['reset','settings.resetTraining']] as const;
-const trainingCommands = [['step','settings.step'],['speed','settings.speed'],['reset','settings.resetShortcut'],['autoLife','settings.autoLife'],['distance','settings.distance'],['opponent','settings.opponent'],['geometry','settings.geometry'],['inputs','settings.inputs']] as const;
+const trainingCommands = [['step','settings.step'],['speed','settings.speed'],['reset','settings.resetShortcut'],['autoLife','settings.autoLife'],['distance','settings.distance'],['opponent','settings.opponent'],['geometry','settings.geometry'],['inputs','settings.inputs'],
+  ['tutorialSection','settings.tutorialSection'],['tutorialPrevious','settings.tutorialPrevious'],['tutorialNext','settings.tutorialNext'],['tutorialDemo','settings.tutorialDemo']] as const;
 const TABS = [['general','settings.tabGeneral'],['volume','settings.tabVolume'],['keyboard','settings.tabKeyboard'],['gamepad','settings.tabGamepad']] as const;
 const PAD_TABS = [['p1','settings.player'],['p2','settings.player']] as const;
 const KEY_TABS = [['p1','settings.player'],['p2','settings.player'],['commands','settings.tabCommands']] as const;
@@ -19,6 +20,19 @@ type Tab = typeof TABS[number][0];
 type KeyTab = typeof KEY_TABS[number][0];
 type Capture = { player?: number; group?: 'directions'|'buttons'|'ultimate'|'taunt'|'rageAction'; action: string; system?: true; training?: true; gamepad?: true; button: HTMLButtonElement };
 
+/** Every keyboard command of a draft as a slot that reads and writes its key, so two commands can swap keys. */
+export function keySlots(players: ControlLayouts, system: SystemControlLayout, training: TrainingControls): { id: string; get: () => string; set: (code: string) => void }[] {
+  const slot = <T extends Record<string, string>>(id: string, owner: T, key: keyof T) => ({ id, get: () => owner[key], set: (code: string) => { owner[key] = code as T[keyof T]; } });
+  return [
+    ...players.flatMap((layout, player) => [
+      ...(Object.keys(layout.directions) as (keyof typeof layout.directions)[]).map(key => slot(`p${player}.directions.${key}`, layout.directions, key)),
+      ...(Object.keys(layout.buttons) as (keyof typeof layout.buttons)[]).map(key => slot(`p${player}.buttons.${key}`, layout.buttons, key)),
+      ...(['ultimate', 'taunt', 'rageAction'] as const).map(key => slot(`p${player}.${key}`, layout as unknown as Record<string, string>, key)),
+    ]),
+    ...(Object.keys(system) as (keyof SystemControlLayout)[]).map(key => slot(`system.${key}`, system as unknown as Record<string, string>, key)),
+    ...(Object.keys(training) as (keyof TrainingControls)[]).map(key => slot(`training.${key}`, training as unknown as Record<string, string>, key)),
+  ];
+}
 /**
  * Settings card with tabs, so every page fits without scrolling: general, volume, keyboard (per player, plus fight and
  * training shortcuts) and controller (each player's buttons, remappable once a controller is connected).
@@ -221,17 +235,17 @@ export class ControlSettings {
     if(event.code==='Escape'){event.preventDefault(); this.leave(); return;}
     if(!this.capture || this.capture.gamepad || event.repeat)return;
     event.preventDefault(); const {player,group,action}=this.capture;
-    if(this.capture.system || this.capture.training){
-      const system=this.capture.system ? {...this.systemDraft,[action]:event.code} : this.systemDraft;
-      const training=this.capture.training ? {...this.trainingDraft,[action]:event.code} : this.trainingDraft;
-      if(!validateControlSet(this.draft,system,training)){this.status.textContent=t('settings.keyRejected');return;}
-      this.systemDraft=system;this.trainingDraft=training;this.capture=undefined;this.status.textContent=t('settings.commandChanged');this.render();return;
-    }
-    if(player===undefined||group===undefined)return;
-    const candidate=structuredClone(this.draft);if (group === 'ultimate' || group === 'taunt' || group === 'rageAction') candidate[player][group] = event.code; else (candidate[player][group] as Record<string,string>)[action]=event.code;
+    const id=this.capture.system ? `system.${action}` : this.capture.training ? `training.${action}` : group==='directions'||group==='buttons' ? `p${player}.${group}.${action}` : `p${player}.${group}`;
+    const players=structuredClone(this.draft), system={...this.systemDraft}, training={...this.trainingDraft};
+    const slots=keySlots(players,system,training), own=slots.find(slot=>slot.id===id);
+    if(!own)return;
+    // A key already in use changes places: the other command takes the key this one had.
+    const other=slots.find(slot=>slot.id!==id && slot.get()===event.code), previous=own.get();
+    own.set(event.code); other?.set(previous);
     // Validation is pure; saving happens only on explicit Save.
-    if(!validateControlSet(candidate,this.systemDraft,this.trainingDraft)){this.status.textContent=t('settings.keyRejected');return;}
-    this.draft=candidate;this.capture=undefined;this.status.textContent=t('settings.keyChanged');this.render();
+    if(!validateControlSet(players,system,training)){this.status.textContent=t('settings.keyRejected');return;}
+    this.draft=players;this.systemDraft=system;this.trainingDraft=training;this.capture=undefined;
+    this.status.textContent=t(other ? 'settings.keySwapped' : id.startsWith('p') ? 'settings.keyChanged' : 'settings.commandChanged');this.render();
   };
   /**
    * Controller in the settings: while a button is awaited, the next press becomes the new button (Start cancels);

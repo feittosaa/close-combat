@@ -49,7 +49,7 @@ describe('manual Shoto catalogue', () => {
   it.each([0,1])('executes every authored string with connected hits for player %i', player => {
     for (const recipe of shoto.combos!) {
       const sim = create(56), tutorial = new TutorialSession(shoto);
-      tutorial.index = tutorial.lessons.findIndex(lesson => lesson.notation === recipe.notation);
+      tutorial.sectionIndex = 1; tutorial.lessonIndex = tutorial.section.lessons.findIndex(lesson => lesson.notation === recipe.notation);
       for (const [index,id] of recipe.moveIds.entries()) {
         command(sim, move(id), player);
         untilContact(sim, player, N, index > 0);
@@ -247,7 +247,8 @@ describe('manual Shoto catalogue', () => {
     expect(sim.snapshot().characters[player].attack?.moveId).toBe('flying-kick-followup');
   });
 
-  it.each([0, 1])('permite continuar após voadoras conectadas, jogador %i', player => {
+  // Rule changed by the user (2026-11-08): after a flying kick Bob must land before another attack.
+  it.each([0, 1])('não ataca no ar logo após voadoras conectadas, jogador %i', player => {
     for (const id of ['flying-kick-light', 'flying-kick-heavy']) {
       const sim = create(56);
       command(sim, move(id), player);
@@ -255,7 +256,7 @@ describe('manual Shoto catalogue', () => {
       expect(sim.snapshot().hitEvents[0].outcome).toBe('hit');
       step(sim, input('N', ['1']), player);
       wait(sim, CONTACT_HITSTOP_FRAMES + 2, player);
-      expect(sim.snapshot().characters[player].attack?.moveId).toBe('air-light-punch');
+      expect(sim.snapshot().characters[player].attack?.moveId).not.toBe('air-light-punch');
     }
   });
 

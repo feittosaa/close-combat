@@ -18,7 +18,7 @@ import { CONTACT_HITSTOP_FRAMES } from '../combat/hitstop';
 import { COWBOY_GRAB_LAUNCH, COWBOY_GRAB_SHOTS } from '../combat/cowboyGrab';
 
 export interface CombatLogEntry { frame: number; event: HitEvent }
-export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number; starterWeakFamily?: '1' | '3'; usedLightPunch?: boolean; usedStandingLightKick?: boolean; usedWeakKick?: boolean }
+export interface ComboRecord { attackerId: string; targetId: string; hits: number; damage: number; active: boolean; lastFrame: number; starterWeakFamily?: '1' | '3'; usedLightPunch?: boolean; usedStandingLightKick?: boolean; usedWeakKick?: boolean; usedHeavyPunch?: boolean; usedHeavyKick?: boolean; usedAntiAir?: boolean; usedUltimate?: boolean }
 export interface SimulationSnapshot {
   /** frame is combat/animation time; elapsedFrames counts every fixed tick, including hitstop. */
   frame: number; elapsedFrames: number; round: number; roundFramesRemaining: number;
@@ -66,6 +66,7 @@ const locked = (state: CharacterState): boolean => state.mode === 'hitstun' || s
 const axis = (input: FrameInput): number => input.direction.endsWith('F') ? 1 : input.direction.endsWith('B') ? -1 : 0;
 const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
 const PERFECT_BLOCK_WINDOW = 3;
+const SHOTO_HEAVY_KICKS = new Set(['heavy-kick', 'crouch-heavy-kick']);
 
 export interface BreakerNotice { characterId: string; outcome: 'broken' | 'missed'; frame: number }
 /** Deterministic combat. Commands, resources and allowed routes belong to each fighter's data. */
@@ -340,7 +341,9 @@ export class Simulation {
         const move = this.move(index, character.attack.moveId)!;
         const elapsed = character.attack.elapsedFrames;
         if (!character.grounded && !move.movement) this.moveInDirection(character, axis(input), index);
-        if (move.movement && elapsed < move.movement.until) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
+        // A special's own travel ends at contact: once it connects the attacker does not fly over and past the target.
+        const stopped = move.category === 'special' && character.attack.hasHit;
+        if (move.movement && elapsed < move.movement.until && !stopped) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
         const volley = move.screenVolley;
         const volleyElapsed = elapsed - (character.attack.startupFrames ?? move.startup);
         const volleyShots = volley?.pattern
@@ -421,7 +424,7 @@ export class Simulation {
           if (character.mode === 'dashing') this.dashFrames[index] = 0;
           character.airborneStartedFrame=undefined; character.airborneElapsedFrames=undefined;
           character.y = this.config.arena.floorY; character.grounded = true; character.verticalVelocity = 0;
-          character.airDashUsed = false;
+          character.airDashUsed = false; character.landingRequired = undefined;
           const juggleRules = this.definitions[index].juggle;
           if (character.juggle && juggleRules) {
             character.juggle = undefined;
@@ -524,6 +527,10 @@ export class Simulation {
       if (hit.moveId === 'light-kick' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'cowboy') combo.usedStandingLightKick = true;
       const hitMove = this.move(this.characters.findIndex(character => character.characterId === hit.attackerId), hit.moveId);
       if (this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'shoto' && hitMove && isWeakButton(hitMove, '3')) combo.usedWeakKick = true;
+      if (this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'shoto' && hit.moveId === 'heavy-punch') combo.usedHeavyPunch = true;
+      if (this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'shoto' && SHOTO_HEAVY_KICKS.has(hit.moveId)) combo.usedHeavyKick = true;
+      if (this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'shoto' && hit.moveId === 'crouch-uppercut') combo.usedAntiAir = true;
+      if (hitMove?.category === 'ultimate') combo.usedUltimate = true;
     }
     this.comboHistory = this.comboHistory.slice(-12);
     for (const projectile of this.projectiles) {
@@ -803,6 +810,7 @@ export class Simulation {
           } : {}),
           ...(move.category === 'throw' ? { throwDirection: this.pendingCommands[index]?.throwDirection ?? 'forward' } : {}) };
         character.crouching = Boolean(move.crouching); this.dashFrames[index] = 0;
+        if (character.fighterId === 'shoto' && move.id.startsWith('flying-kick-')) character.landingRequired = true;
         this.pendingCommands[index] = undefined;
         if (move.movement?.launch) {
           character.grounded = false; character.airborneStartedFrame = this.frame;
@@ -941,6 +949,12 @@ export class Simulation {
     if ((move.rageCost ?? 0) > character.rage) return false;
     if (Boolean(move.airborne) !== !character.grounded) return false;
     const previous = character.attack;
+    // Bob: after a flying kick he must reach the floor before another attack; only its authored follow-up stays.
+    if (character.landingRequired && move.airborne && move.id !== 'flying-kick-followup') return false;
+    // An ultimate is always the last attack of a combo: nothing new starts until its target has recovered.
+    if (this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.usedUltimate)) return false;
+    // Bob: the power kick (3+4) finishes a combo; nothing, not even a special or the ultimate, continues after it connects.
+    if (this.definitions[index].id === 'shoto' && previous?.moveId === 'power-kick' && previous.hasHit) return false;
     if (move.id === 'flying-kick-followup') {
       const starter = previous?.moveId === 'flying-kick-light' ? this.move(index, previous.moveId) : undefined;
       return Boolean(starter && previous && previous.elapsedFrames >= starter.startup);
@@ -955,6 +969,14 @@ export class Simulation {
       // A weak kick may follow a weak punch, never the reverse, so 1,1,3,3,1,1,3,3… cannot loop.
       if (combo?.usedWeakKick && isWeakButton(move, '1')) return false;
     }
+    // Bob: once a standing heavy punch connects, or the anti-air (d+2) itself, the anti-air is out for the rest of that combo.
+    if (this.definitions[index].id === 'shoto' && move.id === 'crouch-uppercut' &&
+        this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && (combo.usedHeavyPunch || combo.usedAntiAir))) return false;
+    // Bob: one heavy kick per combo; a flying kick in between does not grant another.
+    if (this.definitions[index].id === 'shoto' && SHOTO_HEAVY_KICKS.has(move.id) &&
+        this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.usedHeavyKick)) return false;
+    // Bob: a standing and a crouching heavy kick never follow each other, in either order.
+    if (this.definitions[index].id === 'shoto' && previous && SHOTO_HEAVY_KICKS.has(move.id) && SHOTO_HEAVY_KICKS.has(previous.moveId) && previous.moveId !== move.id) return false;
     if (this.definitions[index].id === 'cowboy' && move.id === 'light-kick' && previous?.moveId !== 'light-kick' &&
         this.comboHistory.some(combo => combo.active && combo.attackerId === character.characterId && combo.targetId === this.characters[1-index].characterId && combo.usedStandingLightKick)) return false;
     if (this.definitions[index].id === 'cowboy' && move.id === 'crouch-light-kick' &&
