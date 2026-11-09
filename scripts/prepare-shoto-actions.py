@@ -1,6 +1,14 @@
-"""Separate the authored pose proposals into transparent, foot-aligned game atlases."""
+"""Separate the authored pose proposals into transparent, foot-aligned game atlases.
+
+Uso: python3 scripts/prepare-shoto-actions.py [ação...]
+Sem argumentos, prepara todas as ações na qualidade normal. Com ações nomeadas, prepara só essas, nas qualidades normal
+e alta (`high/`, células e escala dobradas), a partir da mesma fonte; as demais folhas high fornecidas ficam intactas.
+O fundo de cada pose sai pela limpeza de `key-magenta.py` antes da redução, para o contorno preto manter sua largura.
+"""
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 import json
+import sys
 import numpy as np
 from PIL import Image
 from scipy.ndimage import find_objects, label
@@ -121,9 +129,16 @@ ANCHORS = {
 }
 CELL = 1024
 FOOT = 900
-TARGET.mkdir(parents=True, exist_ok=True)
-for name, (filename, scale, floor) in ACTIONS.items():
-    scale *= 0.8
+sys.dont_write_bytecode = True
+spec = spec_from_file_location('key_magenta', Path(__file__).with_name('key-magenta.py'))
+key_magenta = module_from_spec(spec); spec.loader.exec_module(key_magenta)
+
+
+def prepare(name: str, quality: int, target: Path) -> None:
+    """Writes the atlas of one action at `quality` times the normal cell and scale."""
+    filename, scale, floor = ACTIONS[name]
+    scale *= 0.8 * quality
+    cell, foot = CELL * quality, FOOT * quality
     pixels = np.asarray(Image.open(SOURCES / filename).convert('RGBA')).copy()
     rgb = pixels[:, :, :3].astype(np.int16)
     magenta = np.minimum(rgb[:, :, 0], rgb[:, :, 2])
@@ -133,31 +148,44 @@ for name, (filename, scale, floor) in ACTIONS.items():
     components = np.argsort(counts[1:])[-6:] + 1
     regions = find_objects(labels)
     components = sorted(components, key=lambda i: regions[i - 1][1].start)
-    sheet = Image.new('RGBA', (CELL * 3, CELL * 2))
+    sheet = Image.new('RGBA', (cell * 3, cell * 2))
     frames = {}
     for index, component in enumerate(components):
         rows, cols = regions[component - 1]
         data = pixels[rows, cols].copy()
-        data[:, :, 3] = np.where(labels[rows, cols] == component, data[:, :, 3], 0)
+        # Other poses reaching into this box go; the background, including its blend with the outline, goes by the cleanup.
+        frame_labels = labels[rows, cols]
+        data[:, :, 3] = np.where((frame_labels == component) | (frame_labels == 0), data[:, :, 3], 0)
+        key_magenta.clean(data, key_magenta.SPRITE_HUE_TOLERANCE)
         drawing = Image.fromarray(data)
         if scale != 1:
             drawing = drawing.resize((round(drawing.width * scale), round(drawing.height * scale)), Image.Resampling.LANCZOS)
-        local_x = CELL // 2 - round((ANCHORS[name][index] - cols.start) * scale)
+        local_x = cell // 2 - round((ANCHORS[name][index] - cols.start) * scale)
         frame_floor = floor[index] if isinstance(floor, list) else floor
-        local_y = FOOT + round((rows.start - frame_floor) * scale)
-        if local_x < 0 or local_y < 0 or local_x + drawing.width > CELL or local_y + drawing.height > CELL:
+        local_y = foot + round((rows.start - frame_floor) * scale)
+        if local_x < 0 or local_y < 0 or local_x + drawing.width > cell or local_y + drawing.height > cell:
             raise ValueError(f'{name}: frame {index} exceeds its atlas cell')
-        x = index % 3 * CELL + local_x
-        y = index // 3 * CELL + local_y
-        sheet.paste(drawing, (x, y))
+        x = index % 3 * cell
+        y = index // 3 * cell
+        sheet.paste(drawing, (x + local_x, y + local_y))
         frames[str(index)] = {
-            'frame': {'x': index % 3 * CELL, 'y': index // 3 * CELL, 'w': CELL, 'h': CELL},
+            'frame': {'x': x, 'y': y, 'w': cell, 'h': cell},
             'rotated': False, 'trimmed': False,
-            'spriteSourceSize': {'x': 0, 'y': 0, 'w': CELL, 'h': CELL},
-            'sourceSize': {'w': CELL, 'h': CELL},
+            'spriteSourceSize': {'x': 0, 'y': 0, 'w': cell, 'h': cell},
+            'sourceSize': {'w': cell, 'h': cell},
         }
-    sheet.save(TARGET / f'{name}.png')
-    (TARGET / f'{name}.atlas.json').write_text(json.dumps({'frames': frames}, indent=2) + '\n')
+    target.mkdir(parents=True, exist_ok=True)
+    sheet.save(target / f'{name}.png')
+    (target / f'{name}.atlas.json').write_text(json.dumps({'frames': frames}, indent=2) + '\n')
+
+
+selected = sys.argv[1:]
+unknown = [name for name in selected if name not in ACTIONS]
+if unknown: raise SystemExit(f'Ações desconhecidas: {", ".join(unknown)}')
+for name in selected or ACTIONS:
+    prepare(name, 1, TARGET)
+    if selected: prepare(name, 2, TARGET / 'high')
+if selected: raise SystemExit
 
 pixels = np.asarray(Image.open(SOURCES / 'tomate-projetil.png').convert('RGBA')).copy()
 rgb = pixels[:, :, :3].astype(np.int16)
