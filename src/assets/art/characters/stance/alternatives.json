@@ -1,0 +1,52 @@
+{
+ "victory-poses": {
+  "1.png": {
+   "victory": {
+    "height": 1,
+    "top": 0
+   }
+  },
+  "2.png": {
+   "victory": {
+    "height": 1.4,
+    "top": -0.34
+   }
+  },
+  "3.png": {
+   "victory": {
+    "height": 1,
+    "top": 0
+   }
+  },
+  "4.png": {
+   "victory": {
+    "height": 1.2616,
+    "top": 0
+   }
+  },
+  "5.png": {
+   "victory": {
+    "height": 1.4,
+    "top": -0.25
+   }
+  },
+  "6.png": {
+   "victory": {
+    "height": 1.2616,
+    "top": -0.25
+   }
+  },
+  "7.png": {
+   "victory": {
+    "height": 1.2616,
+    "top": -0.15
+   }
+  },
+  "8.png": {
+   "victory": {
+    "height": 1,
+    "top": 0
+   }
+  }
+ }
+}

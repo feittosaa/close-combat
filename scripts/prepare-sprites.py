@@ -2,7 +2,7 @@
 
 Uso: python3 scripts/prepare-sprites.py
 Roda sozinho antes de `npm run dev` e `npm run build` e, com o servidor de desenvolvimento aberto, a cada PNG
-adicionado ou trocado em `src/assets/sprites` (plugin em `vite.config.ts`).
+adicionado ou trocado em `src/assets/sprites` ou nas artes de personagem (plugin em `vite.config.ts`).
 
 1. Todo PNG novo ou alterado passa pela limpeza de `key-magenta.py`, com a faixa de matiz dos sprites (só pixels com
    o matiz do fundo saem; a transparência existente é preservada), e só é regravado se algo mudou. Vermelhos, carmins e
@@ -16,7 +16,10 @@ adicionado ou trocado em `src/assets/sprites` (plugin em `vite.config.ts`).
    `selection-icon.png`) passam pela limpeza de artes de `key-magenta.py`; a pose de vitória também é recortada até o
    desenho (as bordas laterais por igual, para o centro não se mover), e `victory` de `fighterArt.ts` é corrigido na
    mesma proporção, para a arte continuar no mesmo lugar e tamanho na tela de vencedor. O ícone não é recortado: o
-   enquadramento da grade e a janela do HUD dependem das suas dimensões. A arte de seleção é um fundo e fica intacta.
+   enquadramento da grade e a janela do HUD dependem das suas dimensões. As poses e os ícones alternativos
+   (`victory-poses/*.png`, `selection-icons/*.png`) passam só pela limpeza. A arte de seleção, principal ou alternativa,
+   é um fundo e fica intacta. Antes disso, poses e artes de seleção em resolução muito baixa passam pelo upscale
+   automático de `upscale-art.py`.
 
 Uma mudança na própria limpeza (`key-magenta.py`) faz todos os sprites passarem de novo. Quando a limpeza muda uma
 folha já validada sem que a arte tenha sido trocada, a calibração recebe a mesma proporção que a limpeza mudou na medição
@@ -46,9 +49,10 @@ ART = ROOT / 'src/assets/art/characters'
 FIGHTER_ART = ROOT / 'src/ui/fighterArt.ts'
 
 
-def keyer():
-    sys.dont_write_bytecode = True  # loading key-magenta.py must not leave a cache beside the scripts
-    spec = spec_from_file_location('key_magenta', Path(__file__).with_name('key-magenta.py'))
+def sibling(name: str):
+    """Loads another script of this folder (`key-magenta`, `upscale-art`), whose names cannot be imported."""
+    sys.dont_write_bytecode = True  # loading it must not leave a cache beside the scripts
+    spec = spec_from_file_location(name.replace('-', '_'), Path(__file__).with_name(f'{name}.py'))
     module = module_from_spec(spec); spec.loader.exec_module(module)
     return module
 
@@ -60,7 +64,7 @@ def digest(path: Path) -> str:
 def prepare(path: Path) -> tuple[str, int, str]:
     """Cleans one sheet; returns its registry key, how many pixels left and the stored file's hash."""
     pixels = np.array(Image.open(path).convert('RGBA'))
-    module = keyer()
+    module = sibling('key-magenta')
     removed = module.clean(pixels, module.SPRITE_HUE_TOLERANCE)
     if removed: Image.fromarray(pixels).save(path)
     return path.relative_to(ROOT).as_posix(), removed, digest(path)
@@ -87,14 +91,14 @@ def keep_validated_sizes(sheets: list[Path], before: dict[Path, dict]) -> None:
 
 
 def art_files() -> list[Path]:
-    return sorted([*ART.glob('*/fullbody*.png'), *ART.glob('*/selection-icon.png')])
+    return sorted([*ART.glob('*/fullbody*.png'), *ART.glob('*/victory-poses/*.png'), *ART.glob('*/selection-icon.png'), *ART.glob('*/selection-icons/*.png')])
 
 
 def prepare_art(path: Path) -> tuple[int, tuple[int, int, int] | None]:
     """Cleans one character art; a victory pose is also trimmed to the drawing, its frame moved first. Returns how many
     pixels left and, for a trimmed pose, its original height and the rows cut from the top and bottom."""
     pixels = np.array(Image.open(path).convert('RGBA'))
-    removed = keyer().clean(pixels)
+    removed = sibling('key-magenta').clean(pixels)
     trim = None
     if path.stem.startswith('fullbody'):
         rows, columns = np.nonzero(pixels[..., 3])
@@ -126,6 +130,7 @@ def keep_victory_frame(fighter: str, height: int, top: int, bottom: int) -> None
 
 
 def main_art(registry: dict) -> None:
+    sibling('upscale-art').main()
     files, keep = registry.setdefault('art', {}), set(registry['keep'])
     arts = art_files()
     pending = [path for path in arts if path.relative_to(ROOT).as_posix() not in keep

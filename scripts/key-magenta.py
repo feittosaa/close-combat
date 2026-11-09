@@ -2,7 +2,7 @@
 
 Uso: python3 scripts/key-magenta.py <entrada.png> <saida.png>
 As artes não usam tons rosados: todo pixel claro com o matiz do fundo sai, inclusive as ilhas presas entre braços,
-cabelo e acessórios e as bordas em que o magenta se misturou a cores claras. Os tons escuros desse matiz só saem junto
+cabelo e acessórios e as bordas em que o magenta se misturou a cores claras (do lado azul, só até 20° do fundo). Os tons escuros desse matiz só saem junto
 ao fundo removido (a mistura com o contorno escuro); dentro do desenho são sombras arroxeadas da própria arte. Vermelhos (a partir de 340°)
 ficam fora da faixa de matiz. Sprites usam uma faixa mais estreita (`SPRITE_HUE_TOLERANCE`): neles o fundo e sua
 mistura com o contorno ficam perto de 300°, enquanto franjas e acessórios carmim chegam a 325°.
@@ -21,6 +21,9 @@ SPRITE_HUE_TOLERANCE = 20
 MIN_SATURATION = .25
 # Next to the cut, magenta blended into white hair or highlights leaves a pale pink of low saturation.
 EDGE_MIN_SATURATION = .1
+# That fringe is pink, so on the blue side it stops near the key: lilac and violet skin (around 260°) touching the
+# background, as on the Gimmick's arms, belongs to the drawing.
+EDGE_BLUE_TOLERANCE = 20
 # The pale fringe is followed inward until nothing more is reached; on the game's sprites it settles within 21 passes.
 EDGE_PASSES = 32
 MIN_VALUE = .08
@@ -34,7 +37,8 @@ OUTLINE_VALUE = .3
 FAINT_ALPHA = 16
 
 
-def magenta(rgb: np.ndarray, min_saturation: float, tolerance: float) -> np.ndarray:
+def magenta(rgb: np.ndarray, min_saturation: float, tolerance: float, blue_tolerance: float | None = None) -> np.ndarray:
+    """Pixels within `tolerance` of the key hue (`blue_tolerance` on the blue side, when given)."""
     color = rgb.astype(float) / 255
     red, green, blue = color[..., 0], color[..., 1], color[..., 2]
     high, low = color.max(axis=2), color.min(axis=2)
@@ -42,7 +46,8 @@ def magenta(rgb: np.ndarray, min_saturation: float, tolerance: float) -> np.ndar
     hue = np.where(high == red, ((green - blue) / spread) % 6,
                    np.where(high == green, (blue - red) / spread + 2, (red - green) / spread + 4)) * 60
     saturation = spread / np.maximum(high, 1e-9)
-    return (np.abs(hue - KEY_HUE) <= tolerance) & (saturation > min_saturation) & (high > MIN_VALUE)
+    offset = hue - KEY_HUE
+    return (offset <= tolerance) & (offset >= -min(tolerance, blue_tolerance or tolerance)) & (saturation > min_saturation) & (high > MIN_VALUE)
 
 
 def background_mask(rgb: np.ndarray, transparent: np.ndarray, tolerance: float = HUE_TOLERANCE) -> np.ndarray:
@@ -50,7 +55,7 @@ def background_mask(rgb: np.ndarray, transparent: np.ndarray, tolerance: float =
     value, saturation = color.max(axis=2), 1 - color.min(axis=2) / np.maximum(color.max(axis=2), 1e-9)
     drawing = (value < OUTLINE_VALUE) | ((value < SHADING_VALUE) & (saturation < SHADING_SATURATION))
     removed = transparent | (magenta(rgb, MIN_SATURATION, tolerance) & ~drawing)
-    pale = magenta(rgb, EDGE_MIN_SATURATION, tolerance)
+    pale = magenta(rgb, EDGE_MIN_SATURATION, tolerance, EDGE_BLUE_TOLERANCE)
     for _ in range(EDGE_PASSES):
         reached = pale & ndimage.binary_dilation(removed) & ~removed
         if not reached.any(): break

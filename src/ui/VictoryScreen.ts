@@ -1,5 +1,5 @@
 import type { StageDefinition } from '../rendering/stages/StageDefinition';
-import { fighterArt } from './fighterArt';
+import { fighterArt, type FighterArt } from './fighterArt';
 import { stageImage } from './StageSelectionView';
 import { VICTORY_TITLE, VICTORY_WINNER, winnerWords } from './victoryLayout';
 import { t } from '../i18n/i18n';
@@ -16,10 +16,9 @@ export class VictoryScreen {
   /**
    * Over the game `canvas`, or filling `host` (the developer tools' miniature, sized like the canvas: the layout
    * scales with its box). `hero` is the champion's full-body art already decoded with the match; without it the art is
-   * fetched now. `player` names the winning side in a PvP match.
+   * fetched now. `player` names the winning side in a PvP match; `art` replaces the fighter's own (an alternative pose).
    */
-  constructor(private readonly anchor: HTMLCanvasElement | HTMLElement, stage: StageDefinition, fighterId: string, name: string, hero = document.createElement('img'), player?: 1 | 2) {
-    const art = fighterArt[fighterId];
+  constructor(private readonly anchor: HTMLCanvasElement | HTMLElement, stage: StageDefinition, fighterId: string, name: string, hero = document.createElement('img'), player?: 1 | 2, art: FighterArt = fighterArt[fighterId]) {
     this.root.className = 'victory-screen'; this.root.setAttribute('role', 'img'); this.root.setAttribute('aria-label', t('victory.label', { name }));
     const backdrop = document.createElement('div'); backdrop.className = 'victory-stage'; backdrop.append(stageImage(stage));
     const veil = document.createElement('div'); veil.className = 'victory-veil';

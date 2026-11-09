@@ -1,7 +1,7 @@
 import type { CharacterDefinition, ComboRecipe } from '../engine/data/characters';
 import type { MoveDefinition } from '../engine/data/moves';
 import { HUD } from '../ui/hudTheme';
-import { DEFAULT_ARCADE_FRAME, DEFAULT_HERO_FRAME, DEFAULT_TILE_FRAME, fighterArt, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
+import { DEFAULT_ARCADE_FRAME, DEFAULT_HERO_FRAME, DEFAULT_TILE_FRAME, fighterArt, type AlternativeFramings, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { sheetScaleAdjustments } from '../rendering/animations/spriteScale';
 import { frameCutAdjustments, frameSizeAdjustments, type FrameCut, type FrameSize } from '../rendering/contactEffects';
 
@@ -38,10 +38,12 @@ export interface DevOverrides {
   frameSizes: Record<string, FrameSize>;
   /** Selection-screen framing per fighter id (`fighterArt.ts`). */
   selection: Record<string, SelectionTuning>;
+  /** Framings of alternative art per `<fighter>/<kind>/<file>` (`alternatives.json` beside the art). */
+  alternatives: Record<string, AlternativeFramings>;
 }
 
 const STORAGE_KEY = 'close-combat.dev-overrides';
-const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {}, selection: {} });
+const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
 
 /** Fighter ids renamed in the code (2026-11-08); tuning saved under the old ids follows them. */
 const RENAMED_FIGHTERS: Readonly<Record<string, string>> = { cowboy: 'texas', puppet: 'mrapple' };
@@ -180,6 +182,13 @@ export class DevTuning {
     const tuning: Record<string, unknown> = { ...(this.overrides.selection[id] ?? {}) };
     if (value === undefined) delete tuning[field]; else tuning[field] = value;
     if (Object.keys(tuning).length) this.overrides.selection[id] = tuning as SelectionTuning; else delete this.overrides.selection[id];
+    this.commit();
+  }
+  /** Sets one framing of an alternative art (`<fighter>/<kind>/<file>`); `undefined` returns it to the value in the code. */
+  setAlternative(key: string, field: keyof AlternativeFramings, value: SelectionFrame | IconWindow | VictoryFrame | undefined): void {
+    const framings: Record<string, unknown> = { ...(this.overrides.alternatives[key] ?? {}) };
+    if (value === undefined) delete framings[field]; else framings[field] = value;
+    if (Object.keys(framings).length) this.overrides.alternatives[key] = framings as AlternativeFramings; else delete this.overrides.alternatives[key];
     this.commit();
   }
   /** Drops the move tuning of one fighter; its combos stay as they are. */

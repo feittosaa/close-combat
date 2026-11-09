@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -7,11 +7,11 @@ import { defineConfig, type HotPayload, type Plugin, type ViteDevServer } from '
 
 /**
  * Sprite intake while the development server runs: every PNG added, replaced or removed in `src/assets/sprites`, and
- * every victory pose or icon of a fighter (including those saved by the developer mode), goes through
- * `scripts/prepare-sprites.py` (background cleanup, measurement for the automatic animation size, the trimmed layout of
- * character sheets and the trimmed victory pose). The same step runs once before `npm run dev` and `npm run build`.
+ * every victory pose, selection art or icon of a fighter (including those saved by the developer mode), goes through
+ * `scripts/prepare-sprites.py` (upscale of art in very low resolution, background cleanup, measurement for the automatic
+ * animation size, the trimmed layout of character sheets and the trimmed victory pose). The same step runs once before `npm run dev` and `npm run build`.
  */
-const PREPARED = /src\/assets\/(sprites\/.*|art\/characters\/[\w-]+\/(fullbody[\w-]*|selection-icon))\.png$/;
+const PREPARED = /src\/assets\/(sprites\/.*|art\/characters\/[\w-]+\/(fullbody[\w-]*|selection-(icon|background)|(victory-poses|selection-icons|selection-backgrounds)\/[\w-]+))\.png$/;
 function spriteIntake(): Plugin {
   let timer: ReturnType<typeof setTimeout> | undefined, running = false, again = false;
   const run = (): void => {
@@ -33,12 +33,15 @@ function spriteIntake(): Plugin {
   };
 }
 
+/** Field naming where an added alternative image goes, and a saved alternative image (fighter, kind, file). */
+const ALTERNATIVE_TARGET = /^alternative:[\w-]+\/(victory-poses|selection-backgrounds|selection-icons)$/;
+const ALTERNATIVE_IMAGE = /^src\/assets\/art\/characters\/([\w-]+)\/(victory-poses|selection-backgrounds|selection-icons)\/([\w-]+\.png)$/;
 const IMAGE_PATH = /^(src\/assets|assets\/art)\/[\w./-]+\.(png|jpe?g|webp)$/;
 
 /**
  * Lets the developer mode save its tuning into the sources: animation sizes into each fighter's `calibration.json`
- * (`scripts/apply-sprite-scales.ts`), moves, recipes and colours into the authored data (`scripts/apply-dev-overrides.ts`)
- * and replaced images over the existing files.
+ * (`scripts/apply-sprite-scales.ts`), moves, recipes and colours into the authored data (`scripts/apply-dev-overrides.ts`),
+ * replaced images over the existing files, and alternative art added or removed (all through `/__dev/everything`).
  */
 function developerSaving(): Plugin {
   const body = (request: IncomingMessage): Promise<Buffer> => new Promise((resolve, reject) => {
@@ -68,16 +71,69 @@ function developerSaving(): Plugin {
   const writeImages = async (files: [string, FormDataEntryValue][]) => {
     for (const [path, file] of files) writeFileSync(path, Buffer.from(await (file as Blob).arrayBuffer()));
   };
+  /** Where an added alternative image goes: `alternative:<fighter>/<kind>` → `src/assets/art/characters/<fighter>/<kind>`. */
+  const alternativeFolder = (name: string) => `src/assets/art/characters/${name.slice('alternative:'.length)}`;
+  /** Alternative art to add that is not a PNG for an existing fighter and kind, and alternative images to remove that do not exist. */
+  const invalidAlternatives = (added: [string, FormDataEntryValue][], removed: string[]) => [
+    ...added.filter(([name, file]) => !ALTERNATIVE_TARGET.test(name) || !existsSync(alternativeFolder(name).replace(/\/[\w-]+$/, '')) || (file as Blob).type !== 'image/png')
+      .map(([name]) => `${name} (só PNG, de personagem existente)`),
+    ...removed.filter(path => !ALTERNATIVE_IMAGE.test(path) || !existsSync(path)),
+  ];
+  /** Reads, changes and writes a fighter's `alternatives.json` (framings by kind and file), deleting it once empty. */
+  const editFramings = (fighter: string, change: (file: Record<string, Record<string, unknown>>) => void) => {
+    const path = `src/assets/art/characters/${fighter}/alternatives.json`;
+    if (!existsSync(path)) return;
+    const file = JSON.parse(readFileSync(path, 'utf8')) as Record<string, Record<string, unknown>>;
+    change(file);
+    for (const kind of Object.keys(file)) if (!Object.keys(file[kind]).length) delete file[kind];
+    if (Object.keys(file).length) writeFileSync(path, `${JSON.stringify(file, null, 1)}\n`); else rmSync(path);
+  };
+  /** Numbers the images of an alternative folder again from 1, in order, with their framings following them. */
+  const renumber = (fighter: string, kind: string) => {
+    const folder = `src/assets/art/characters/${fighter}/${kind}`, moved: [string, string][] = [];
+    const images = readdirSync(folder).filter(name => /^\d+\.png$/.test(name)).sort((a, b) => parseInt(a) - parseInt(b));
+    // Each image moves down to a number already freed, so no rename overwrites another image.
+    images.forEach((name, index) => { if (name !== `${index + 1}.png`) { renameSync(`${folder}/${name}`, `${folder}/${index + 1}.png`); moved.push([name, `${index + 1}.png`]); } });
+    if (!images.length) rmSync(folder, { recursive: true });
+    editFramings(fighter, file => {
+      const framings = file[kind] ?? {};
+      for (const [from, to] of moved) if (framings[from]) { framings[to] = framings[from]; delete framings[from]; }
+    });
+  };
   /**
-   * Saves every adjustment (field `tuning`) and replaced image in one request and in the order the art needs: the
-   * tuning first, with the victory frames set for the untrimmed poses; then the images; then their cleanup and trim,
-   * which corrects those frames. Images alone are saved the same way. The images are checked before anything is written.
+   * Adds alternative art (victory poses, selection art or icons; fields `alternative:<fighter>/<kind>`) as the next
+   * `<n>.png` of its folder, and deletes alternative images (fields `remove-alternative`, project paths) with their
+   * framings in `alternatives.json`; the images left are numbered again from 1, without gaps.
+   */
+  const writeAlternatives = async (added: [string, FormDataEntryValue][], removed: string[]) => {
+    const emptied = new Set<string>();
+    for (const path of removed) {
+      rmSync(path);
+      const [, fighter, kind, image] = ALTERNATIVE_IMAGE.exec(path)!;
+      editFramings(fighter, file => { delete file[kind]?.[image]; });
+      emptied.add(`${fighter}/${kind}`);
+    }
+    for (const folder of emptied) renumber(...folder.split('/') as [string, string]);
+    for (const [name, file] of added) {
+      const folder = alternativeFolder(name);
+      mkdirSync(folder, { recursive: true });
+      const next = Math.max(0, ...readdirSync(folder).map(image => Number(/^(\d+)\.png$/.exec(image)?.[1] ?? 0))) + 1;
+      writeFileSync(`${folder}/${next}.png`, Buffer.from(await (file as Blob).arrayBuffer()));
+    }
+  };
+  /**
+   * Saves adjustments (field `tuning`), alternative art added or removed and replaced images (fields named by their
+   * path) in one request and in the order the art needs: the tuning first, with the victory frames set for the
+   * untrimmed poses; then the alternative art and the images; then their cleanup and trim, which corrects those frames.
+   * Everything is checked before anything is written.
    */
   const everything = async (request: IncomingMessage, response: ServerResponse) => {
     const fields = await form(request), tuning = fields.get('tuning');
-    const files = [...fields.entries()].filter(([name]) => name !== 'tuning');
-    const invalid = invalidImages(files);
-    if (invalid.length) { response.statusCode = 400; response.end(`Imagens inválidas: ${invalid.join(', ')}`); return; }
+    const added = [...fields.entries()].filter(([name]) => name.startsWith('alternative:'));
+    const removed = fields.getAll('remove-alternative').map(String);
+    const files = [...fields.entries()].filter(([name]) => name !== 'tuning' && name !== 'remove-alternative' && !name.startsWith('alternative:'));
+    const invalid = [...invalidImages(files), ...invalidAlternatives(added, removed)];
+    if (invalid.length) { response.statusCode = 400; response.end(`Inválido: ${invalid.join(', ')}`); return; }
     let output = '';
     const step = ({ ok, output: printed }: { ok: boolean; output: string }) => {
       output += printed;
@@ -87,7 +143,9 @@ function developerSaving(): Plugin {
     if (typeof tuning === 'string') {
       for (const path of ['scripts/apply-sprite-scales.ts', 'scripts/apply-dev-overrides.ts']) if (!step(await applyTuning(path, tuning))) return;
     }
-    if (files.length) { await writeImages(files); if (!step(await run('python3', ['scripts/prepare-sprites.py']))) return; }
+    await writeAlternatives(added, removed);
+    await writeImages(files);
+    if (files.length || added.length || removed.length) { if (!step(await run('python3', ['scripts/prepare-sprites.py']))) return; }
     response.end(output || 'Tudo gravado.');
   };
   const routes: Record<string, (request: IncomingMessage, response: ServerResponse) => Promise<void>> = {
