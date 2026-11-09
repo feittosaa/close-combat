@@ -10,7 +10,8 @@ Anime fighters, especialmente Guilty Gear Xrd Rev 2, orientam a intenção de ri
 
 ## Autoria e decisões
 
-- Combos são definidos pelo usuário, manualmente e individualmente. Não gerar receitas, catálogos ou rotas por combinação automática.
+- Receitas de combo são definidas pelo usuário, manualmente e individualmente. Não gerar receitas ou catálogos de receitas por combinação automática.
+- Rotas de treino — sequências abertas que unem golpes, receitas e especiais já existentes — podem ser encontradas por ferramenta que testa entradas legais na simulação real. Elas não criam receitas, regras nem dados de combate e só valem enquanto a simulação as reproduzir; mudanças de golpes ou receitas exigem refazer a busca.
 - Não inferir regras, personagens, golpes ou sistemas de uma referência estética ou de um arquétipo.
 - Números provisórios e conteúdo exploratório não equivalem a aprovação de design, balanceamento ou arte.
 - Uma definição de personagem não se torna regra universal por estar implementada primeiro. Cada kit tem dados e revisão próprios.
@@ -71,7 +72,7 @@ Uma continuação de golpes iniciada enquanto o alvo ainda reage mantém sua vul
 
 A ativação de toda ultimate usa uma preparação cinematográfica prolongada com pausa global: somente a sequência de ativação do autor avança; adversários, projéteis, física, efeitos e relógio do round ficam congelados. Essa pausa é distinta da micro pausa de contato. Ativações simultâneas compartilham o mesmo intervalo, sem acumular tempo. O combate retoma ao terminar a animação de preparação, sem pular frames ou conservar esse estado após reset.
 
-Uma ultimate pode continuar uma sequência de golpes confirmados e deve executar a preparação cinematográfica completa antes de seus efeitos, inclusive quando seu comando fica armazenado durante outra ação.
+Uma ultimate pode continuar uma sequência de golpes confirmados e deve executar a preparação cinematográfica completa antes de seus efeitos, inclusive quando seu comando fica armazenado durante outra ação. A ultimate é sempre o último golpe da sequência: depois que ela conecta, nenhum golpe novo começa contra o alvo até ele recuperar o controle.
 
 Fundos de combate são ultrawide, com proporção mínima 21:9. Preservar a proporção nativa e ajustar o enquadramento do cenário para evitar ampliação excessiva; a escala dos lutadores e o tamanho de saída da tela são decisões separadas. Não esticar a imagem nem aplicar zoom dinâmico.
 
