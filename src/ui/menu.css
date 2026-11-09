@@ -1,42 +1,121 @@
+/* Menus: old printed cards on dark film. Lists in cream on black, cards in beige stock with navy print, the chosen line in red. */
 .arena-menu[hidden] { display: none; }
-.arena-menu { position: fixed; z-index: 10; container-type: inline-size; color: #f9ecd6; background: linear-gradient(110deg,#16121bf5 2%,#251a22da 43%,#17131a20 80%); overflow: hidden; font-family: Arial,sans-serif; }
+.arena-menu { position: fixed; z-index: 10; container-type: inline-size; overflow: hidden; isolation: isolate; color: var(--cream); font-family: var(--font); background: transparent; }
+.arena-menu::after { content: ''; position: absolute; inset: 0; z-index: 20; pointer-events: none; background: var(--grain) 0 0 / 180px 180px; box-shadow: var(--vignette); mix-blend-mode: overlay; opacity: .3; animation: film-grain .9s steps(5) infinite; }
 .arena-menu button { font: inherit; color: inherit; cursor: pointer; border-radius: 0; }
-.arena-menu :focus-visible { outline: 3px solid #fff2c8; outline-offset: 3px; }
-.arena-header { position: absolute; inset: 5% 4.5% auto; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c8a77780; padding-bottom: 1.5%; }
-.arena-brand { font: bold 2.7cqw Georgia,serif; letter-spacing: -.05em; }
-.arena-step, .arena-eyebrow { color: #e3bc7c; font-size: 1cqw; letter-spacing: .15em; font-weight: 700; }
-.arena-modes { position: absolute; left: 5%; top: 24%; width: 53%; display: grid; gap: .6cqw; }
-.arena-mode { position: relative; display: grid; grid-template-columns: 3cqw 1fr auto; gap: 0 1cqw; align-items: center; text-align: left; padding: .65cqw 1.3cqw; border: 1px solid #bc957755; background: linear-gradient(100deg,#201b23ed,#201b2380); transition: background .15s, transform .15s; }
-.arena-mode.selected, .arena-mode:hover { background: linear-gradient(110deg,#963f36,#49272ce8); border-color: #eac68c; transform: translateX(.6cqw); box-shadow: -.5cqw 0 #eac68c; }
-.arena-number { grid-row: span 2; font: italic 2.2cqw Georgia,serif; color: #e6bb7d; opacity: .7; }
-.arena-mode strong { font-size: 1.65cqw; letter-spacing: .03em; }
-.arena-mode small { font-size: .75cqw; color: #e2c493; }
-.arena-mode-hint { grid-column: 2 / -1; font-size: .95cqw; color: #d6c6ba; margin-top: .25cqw; }
-.arena-footer { position: absolute; inset: auto 0 0; padding: 1.1cqw 5%; background: #110f17ee; border-top: 1px solid #c8a77766; font-size: .95cqw; color: #d6bea0; }
-.arena-hero { position: absolute; left: 0; top: 17%; width: 31%; height: 73%; background: radial-gradient(ellipse at 50% 60%,#ae665b55,transparent 65%); }
-.arena-hero svg { position: relative; width: 100%; height: 100%; }
-.arena-fighter-name { position: absolute; left: 5%; bottom: 9%; text-shadow: 0 3px 7px #000; }
-.arena-fighter-name h1 { font: italic 900 4cqw Arial,sans-serif; text-transform: uppercase; margin: .3cqw 0; letter-spacing: -.05em; }
-.arena-selection { position: absolute; top: 21%; left: 32%; width: 36%; padding: 1cqw; background: linear-gradient(120deg,#17131aee,#17131a99); border-top: 2px solid #c8a777; }
-.arena-selection h2 { font: italic 900 1.8cqw Arial,sans-serif; margin: .6cqw 0 1.1cqw; }
-.arena-roster { width: 100%; display: grid; grid-template-columns: repeat(4,1fr); gap: .7cqw; }
-.arena-portrait, .arena-empty { position: relative; aspect-ratio: 1; overflow: hidden; background: linear-gradient(140deg,#5c4446,#241d28); border: 1px solid #b18e6855; padding: 0; }
-.arena-portrait svg { width: 100%; height: 100%; }
-.arena-portrait[aria-pressed="true"] { border: 2px solid #f3d494; box-shadow: 0 0 0 .25cqw #b94c40; background: #97634d; }
-.arena-portrait span { position: absolute; inset: auto 0 0; background: #1d1720d9; font: bold .9cqw Arial,sans-serif; padding: .3cqw; text-transform: uppercase; }
-.arena-empty { display: grid; place-items: center; color: #b7976a33; font: 2cqw Georgia,serif; background: repeating-linear-gradient(130deg,#25202a99 0 5px,#34273577 5px 6px); }
-.arena-opponent { color: #d6bea0; font-size: 1cqw; margin: 1.2cqw 0; }
-.arena-confirm { width: 100%; padding: 1cqw; border: 1px solid #efc387; background: linear-gradient(110deg,#a34a3c,#65302f); font-weight: bold !important; font-size: 1.2cqw !important; letter-spacing: .1em; }
-.arena-confirm:hover { background: #b35b43; }
-.arena-back { border: 0; background: transparent; margin-top: .7cqw; padding: .4cqw 0; color: #dac6a7 !important; font-size: 1cqw !important; }
-@media (prefers-reduced-motion: reduce) { .arena-mode { transition: none; } }
+.arena-menu :focus-visible { outline: .18cqw dashed var(--red); outline-offset: .3cqw; }
+/* An ink card, as in the overlays: dark stock, a doubled cream rule and cream print. */
+.arena-feature, .arena-selection, .fighter-selection .arena-step, .stage-selection .arena-step {
+  --print: var(--cream); --print-soft: var(--cream-dim); --paper-light: #1d1814; --paper-shade: #2a221c; --red: #ff4b36;
+  color: var(--print); background: linear-gradient(160deg, #1c1713f2, #100d0bf2 70%);
+  border: .08cqw solid var(--cream); outline: .06cqw solid #efe4cc55; outline-offset: -.4cqw; box-shadow: 0 0 0 .25cqw #0b0a0a, .35cqw .45cqw 0 #000a;
+}
+.arena-header { position: absolute; inset: 5% 4.5% auto; display: flex; justify-content: space-between; align-items: center; }
+.arena-brand { font: 800 2.4cqw/1 var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--cream); text-shadow: var(--misprint); }
+.arena-step, .arena-eyebrow { font: 600 .85cqw var(--font); letter-spacing: .22em; text-transform: uppercase; }
+.arena-eyebrow { color: var(--print-soft); }
+.arena-footer, .arena-home-controls { white-space: pre-wrap; }
+.arena-footer { position: absolute; inset: auto 0 0; z-index: 4; padding: .7cqw 5%; font: 600 .9cqw var(--font); letter-spacing: .1em; color: var(--cream); text-align: center; text-shadow: var(--misprint); background: linear-gradient(0deg, var(--ink) 30%, transparent); }
+
+/* Home and difficulty: the list in cream over the dark side of the wallpaper, the chosen entry described on a card. */
+.arena-home { background: linear-gradient(90deg, #0b0a0af5 0%, #0b0a0ae0 24%, #0b0a0a70 42%, transparent 66%); }
+.arena-home .arena-header { z-index: 5; inset: 4% 4% auto; }
+.arena-home-note { position: absolute; z-index: 4; left: 4%; top: 13%; font: 600 .85cqw var(--font); color: var(--cream-dim); letter-spacing: .3em; }
+.arena-home .arena-modes { position: absolute; z-index: 4; left: 3.5%; top: 18%; width: 33%; display: grid; gap: .2cqw; }
+.arena-home .arena-mode { position: relative; display: grid; grid-template-columns: 2.4cqw minmax(0, 1fr); align-items: baseline; column-gap: .6cqw; padding: .45cqw 1cqw; text-align: left; border: 0; background: none; color: var(--cream-dim); transition: color .12s ease; }
+.arena-home .arena-mode strong { font: 700 2.1cqw/1.05 var(--font); text-shadow: var(--misprint); letter-spacing: .03em; text-transform: uppercase; overflow-wrap: anywhere; }
+.arena-home .arena-mode small { grid-column: 2; font: 600 .7cqw var(--font); letter-spacing: .2em; color: var(--cream-dim); opacity: .75; }
+.arena-home .arena-number { grid-row: span 2; font: 600 1cqw var(--font); color: var(--cream-dim); opacity: .75; }
+.arena-home .arena-mode:hover { color: var(--cream); }
+.arena-home .arena-mode.selected strong { color: #ff4b36; text-shadow: var(--misprint); animation: boil .5s steps(2) infinite; }
+.arena-home .arena-mode.selected .arena-number, .arena-home .arena-mode.selected small { color: var(--cream); opacity: 1; }
+.arena-home .arena-mode-hint { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.arena-feature { position: absolute; z-index: 3; left: 4%; bottom: 10%; width: 32%; padding: 1.4cqw 1.8cqw; display: flex; flex-direction: column; gap: .35cqw; }
+.arena-feature-number { font: 600 .7cqw var(--font); letter-spacing: .2em; color: var(--print-soft); }
+.arena-feature-title { font: 700 1.6cqw/1.05 var(--font); text-transform: uppercase; color: var(--red); text-shadow: var(--misprint); overflow-wrap: anywhere; }
+.arena-feature-hint { font: 500 .9cqw/1.4 var(--font); color: var(--print); }
+.arena-home-back { justify-self: start; margin: .8cqw 0 0 1cqw; border: .1cqw solid var(--cream) !important; padding: .35cqw 1cqw; background: #0b0a0aa6 !important; font: 600 .85cqw var(--font) !important; letter-spacing: .1em; text-transform: uppercase; }
+.arena-home-back:hover, .arena-home-back:focus-visible { background: var(--accent) !important; }
+.arena-home-controls { position: absolute; z-index: 5; left: 4%; bottom: 3.5%; color: var(--cream); font: 600 .9cqw var(--font); letter-spacing: .12em; text-shadow: var(--misprint); }
+
+/* Character and stage select: the art fills the screen; names, title and roster sit on printed cards. */
+.fighter-selection, .stage-selection { background: var(--ink); }
+.fighter-selection .arena-header, .stage-selection .arena-header { z-index: 6; inset: 3% 0 auto; justify-content: center; }
+.fighter-selection .arena-step, .stage-selection .arena-step { margin: 0; padding: .8cqw 2.6cqw; font: 700 1.8cqw/1 var(--font); letter-spacing: .06em; text-shadow: var(--misprint); }
+.arena-hero { position: absolute; top: 0; left: 0; width: 50%; height: 100%; overflow: hidden; }
 .arena-hero.right { left: auto; right: 0; }
-.arena-hero.right svg { transform: scaleX(-1); }
-.arena-fighter-name.right { left: auto; right: 5%; text-align: right; }
-.arena-player-switch { display: block; margin-top: .6cqw; padding: .55cqw .8cqw; border: 1px solid #c8a777; background: #231b26dd; font-size: 1cqw !important; }
-.arena-fighter-name.right .arena-player-switch { margin-left: auto; border-color: #83c9ca; }
+/* Zoom and focal point by layout alone: the image box grows around the focal point. */
+.arena-hero img, .arena-hero svg { position: absolute; width: calc(var(--zoom, 1) * 100%); height: calc(var(--zoom, 1) * 100%); left: calc((1 - var(--zoom, 1)) * var(--x, 0%)); top: calc((1 - var(--zoom, 1)) * var(--y, 50%)); object-fit: cover; object-position: var(--x, 0%) var(--y, 50%); filter: sepia(.08); }
+/* Player 2 sees the art mirrored: the image flips in place and its box sits at the mirrored focal point. */
+.arena-hero.right img, .arena-hero.right svg { left: calc((1 - var(--zoom, 1)) * (100% - var(--x, 0%))); transform: scaleX(-1); }
+.arena-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, var(--ink) 4%, transparent 55%); }
+/* Arcade shows only P1: the whole selection art over the screen with its own framing, without the hourglass. */
+.arcade-selection .arena-hero { width: 100%; }
+/* The hourglass between the fighters: solid black, pinched at the middle. */
+.fighter-selection:not(.arcade-selection)::before { content: ''; position: absolute; top: 0; bottom: 0; left: 43%; width: 14%; z-index: 2; pointer-events: none; background: #000; clip-path: polygon(0 0, 100% 0, 64% 45%, 100% 100%, 0 100%, 36% 45%); }
+/* Names sit directly on the art, in cream print with a dark edge, so the illustration stays visible. */
+.arena-fighter-name { position: absolute; z-index: 3; left: 3%; bottom: 30%; width: 28%; color: var(--cream); }
+.arena-fighter-name .arena-eyebrow { color: var(--cream); text-shadow: 0 0 .3cqw #000, 0 0 .1cqw #000; }
+.arena-fighter-name.right { left: auto; right: 3%; text-align: right; }
+.arena-fighter-name.right .arena-palettes { margin-left: auto; }
+.arena-fighter-name h1 { margin: .2cqw 0 .4cqw; font: 800 2.6cqw/1 var(--font); letter-spacing: .04em; text-transform: uppercase; color: var(--cream); text-shadow: .1cqw .1cqw 0 var(--ink), -.06em 0 0 #ff2a5a55, .06em 0 0 #2ad7ff44, 0 0 .6cqw #000; overflow-wrap: anywhere; }
+.arena-player-switch { border: .14cqw solid var(--cream) !important; padding: .3cqw .8cqw; background: #0b0a0aa6 !important; color: var(--cream) !important; font: 600 .8cqw var(--font) !important; letter-spacing: .08em; }
+.arena-back { border: .14cqw solid var(--print) !important; padding: .3cqw .8cqw; background: none !important; color: var(--print) !important; font: 600 .8cqw var(--font) !important; letter-spacing: .08em; }
+.arena-player-switch:hover, .arena-back:hover, .arena-back:focus-visible { background: var(--accent) !important; }
+/* Colour choice on its own ink plate so the swatches read over any artwork. */
+.arena-palettes { display: flex; width: max-content; gap: .5cqw; margin: 0 0 .5cqw; padding: .45cqw .55cqw; background: #0b0a0ad9; border: .08cqw solid var(--cream); outline: .06cqw solid #efe4cc55; outline-offset: -.3cqw; }
+
+.arena-palette { position: relative; width: 2.2cqw; height: 2.2cqw; padding: 0; border: .14cqw solid var(--cream); overflow: hidden; background: var(--palette-main); }
+.arena-palette::before, .arena-palette::after { content: ''; position: absolute; right: 0; bottom: 0; width: 52%; height: 52%; clip-path: polygon(100% 0, 100% 100%, 0 100%); background: var(--palette-accent); }
+.arena-palette::after { width: 34%; height: 34%; background: var(--palette-detail); }
+.arena-palette[aria-pressed="true"] { outline: .18cqw solid var(--red); outline-offset: .18cqw; }
+.arena-palette:disabled { opacity: .3; filter: grayscale(.8); cursor: not-allowed; }
+.arena-selection { position: absolute; z-index: 4; left: 18%; bottom: 4%; width: 64%; padding: 1.2cqw 1.6cqw; text-align: center; }
+/* Character and stage select: no card behind the roster. Tiles and buttons keep their own boxes with a drop shadow around them; text outside boxes reads over the art through a text shadow. */
+.arena-selection:is(.fighter-selection *, .stage-selection *) { background: none; border: 0; outline: 0; box-shadow: none; padding: 0; }
+.arena-selection:is(.fighter-selection *, .stage-selection *) > :is(.arena-eyebrow, h2, .arena-opponent) { text-shadow: 0 0 .35cqw #000, 0 0 .12cqw #000, .08cqw .1cqw 0 #000; }
+.arena-selection:is(.fighter-selection *, .stage-selection *) > :is(.arena-eyebrow, .arena-opponent) { color: var(--cream); }
+.arena-selection:is(.fighter-selection *, .stage-selection *) :is(.arena-portrait, .arena-empty, .arena-random, .arena-back) { box-shadow: .15cqw .2cqw .4cqw #000c; }
+.arena-selection:is(.fighter-selection *, .stage-selection *) .arena-back:not(:hover, :focus-visible) { background: var(--paper-light) !important; }
+.arena-selection:is(.fighter-selection *, .stage-selection *) .arena-confirm { box-shadow: inset 0 0 0 .12cqw var(--paper-light), .15cqw .2cqw .4cqw #000c; }
+.arena-selection h2 { margin: .2cqw 0 .6cqw; font: 700 1.4cqw var(--font); letter-spacing: .05em; text-transform: uppercase; color: var(--red); text-shadow: var(--misprint); }
+.arena-roster { display: grid; grid-template-columns: repeat(10, 5cqw); justify-content: center; gap: .35cqw; }
+.arena-portrait, .arena-empty, .arena-random { position: relative; width: 5cqw; aspect-ratio: 1; box-sizing: border-box; overflow: hidden; padding: 0; border: .14cqw solid var(--print); background: var(--paper-shade); }
+.arena-portrait img, .arena-portrait svg { position: absolute; width: calc(var(--zoom, 1) * 100%); height: calc(var(--zoom, 1) * 100%); left: calc((1 - var(--zoom, 1)) * var(--x, 50%)); top: calc((1 - var(--zoom, 1)) * var(--y, 50%)); object-fit: cover; object-position: var(--x, 50%) var(--y, 50%); filter: sepia(.08); }
+.arena-portrait span { position: absolute; inset: auto 0 0; background: var(--paper-light); border-top: .1cqw solid var(--print); font: 600 .75cqw var(--font); color: var(--print); }
+.arena-portrait[aria-pressed="true"], .arena-random[aria-pressed="true"] { outline: .22cqw solid var(--red); outline-offset: .08cqw; }
+.arena-portrait.unavailable img { filter: grayscale(.85) brightness(.7); }
+.arena-unavailable { position: absolute; inset: 0 0 auto; padding: .1cqw 0; background: #0b0a0ad9; border-bottom: .08cqw solid var(--red); font: 700 .55cqw var(--font); font-style: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--cream); text-align: center; }
+.arena-empty { background: repeating-linear-gradient(135deg, transparent 0 .3cqw, #27263a22 .3cqw .42cqw), var(--paper-shade); border-color: #27263a66; }
+.arena-random { display: grid; place-items: center; margin: 0; color: var(--print); font: 800 2.2cqw/1 var(--font) !important; }
 .arena-cursors { position: absolute; inset: 0 0 auto; display: flex; justify-content: space-between; }
-.arena-cursors b { padding: .2cqw .4cqw; font-size: .8cqw; color: #14121b; }
-.cursor-p1 { background: #efb379; }
-.cursor-p2 { background: #83c9ca; }
-.versus-selection { background: linear-gradient(90deg,#211722dd,#16121bf0 40% 60%,#162528dd); }
+.arena-cursors b { padding: .1cqw .35cqw; font: 700 .65cqw var(--font); color: var(--paper-light); }
+.cursor-p1 { background: var(--red); } .cursor-p2 { background: var(--print); }
+.arena-cursors b.ready { outline: .12cqw solid var(--cream); }
+.arena-opponent { margin: .5cqw 0; font: 600 .8cqw var(--font); letter-spacing: .08em; color: var(--print-soft); }
+.arena-confirm, .arena-back { margin: 0 .3cqw; padding: .45cqw 1.4cqw; font: 700 1cqw var(--font) !important; letter-spacing: .06em; text-transform: uppercase; }
+.arena-confirm { border: .14cqw solid var(--print) !important; background: var(--accent) !important; color: var(--print) !important; box-shadow: inset 0 0 0 .12cqw var(--paper-light); }
+.arena-confirm:hover, .arena-confirm:focus-visible { color: var(--print) !important; background: #ff5530 !important; }
+
+.arena-stage-preview { position: absolute; inset: 0; z-index: -1; overflow: hidden; filter: sepia(.08) brightness(.9); }
+.arena-stage-preview svg { width: 100%; height: 100%; }
+.arena-stage-selection { bottom: 8%; }
+.arena-stage-tile svg { width: 100%; height: 100%; }
+.arena-stage-actions { margin-top: .9cqw; }
+/* Variation choice and stage draw: a plate centred on the screen, like the colour plate of the character select. */
+.arena-variants, .arena-draw { position: absolute; z-index: 8; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 1cqw; padding: 1.4cqw 2cqw 1.6cqw; background: #0b0a0af2; border: .08cqw solid var(--cream); outline: .06cqw solid #efe4cc55; outline-offset: -.3cqw; box-shadow: 0 0 0 200cqw #000a; }
+.arena-variant-row { display: flex; gap: 1.2cqw; }
+.arena-variant { display: flex; flex-direction: column; align-items: center; gap: .5cqw; padding: .5cqw; background: none; border: .12cqw solid transparent; color: var(--cream-dim); }
+.arena-variant-picture { display: block; width: 12cqw; height: 6.8cqw; overflow: hidden; border: .12cqw solid var(--cream); }
+.arena-variant-picture svg { width: 100%; height: 100%; }
+.arena-variant strong { font: 700 1cqw var(--font); letter-spacing: .08em; text-transform: uppercase; }
+.arena-variant:hover, .arena-variant[aria-pressed="true"], .arena-variant.lit { color: var(--cream); border-color: var(--red); }
+.arena-variant.lit .arena-variant-picture { outline: .2cqw solid var(--red); outline-offset: .15cqw; }
+.arena-variant.won { border-color: var(--cream); background: #ff4b3633; }
+.arena-variant.won .arena-variant-picture { outline-color: var(--cream); }
+
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-menu::after, .arena-home .arena-mode.selected strong { animation: none; }
+  .arena-home .arena-mode { transition: none; }
+}

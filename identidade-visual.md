@@ -6,7 +6,7 @@ Regras gerais em [base.md](base.md); definições de personagens, cenários, pe�
 
 Ilustração 2D original com referência estética em Hades: contorno preto expressivo com variação de espessura, desenho angular, massas de cor chapada, sombras recortadas, contraste forte e textura pictórica controlada. Personagens, retratos, cenários, interface e efeitos devem pertencer ao mesmo universo visual.
 
-A paleta é livre por personagem e ambiente; não precisa reproduzir as cores da referência externa. A [referência interna de traço](assets/art/menu/patio-solar.png) exemplifica a linguagem compartilhada. Não copiar personagens, figurinos, logotipos ou interfaces de outros jogos.
+A paleta é livre por personagem e ambiente; não precisa reproduzir as cores da referência externa. Os turnarounds dos personagens (`assets/art/characters/<id>/turnaround.png`) e suas artes já usadas no jogo (`src/assets/art/characters/<id>/`: corpo inteiro, ícone e fundo de seleção) exemplificam a linguagem compartilhada. Não copiar personagens, figurinos, logotipos ou interfaces de outros jogos.
 
 ## Identidade dos personagens
 
@@ -16,9 +16,11 @@ Preservar rosto, relação cabeça/corpo, anatomia, silhueta, roupa, materiais e
 
 Não aumentar cabeça ou corpo para enfatizar um golpe, nem mudar tom de pele, roupa ou acessórios entre quadros. Conferir assimetrias e espelhamento. Correções de cor não devem produzir posterização, manchas, bordas coloridas ou rachaduras nas sombras.
 
-Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É proibido ajustar suas cores por CSS ou código, incluindo filtros, tint, shaders, LUTs, recoloração de pixels ou pós-processamento. Correções artísticas pertencem à imagem fonte e exigem aprovação; recorte, transparência, escala, alinhamento e espelhamento técnicos não autorizam recoloração.
+As fontes oficiais preservam suas cores originais. Variações de personagem e iluminação de cenário podem alterar sua apresentação em tempo de execução e exigem revisão visual; correções artísticas permanentes pertencem à imagem fonte e exigem aprovação.
 
 ## Animação
+
+Buscar a cadência expressiva da animação tradicional desenhada à mão, com referências de ritmo como desenhos clássicos dos anos 1960 e Skullgirls, sem copiar sua identidade ou seus desenhos. Cada ação pode ter velocidade e duração de quadros próprias: alternar antecipação, acento, contato legível e recuperação conforme a intenção da pose. A velocidade de reprodução visual não altera o relógio determinístico nem as regras de combate.
 
 Antecipação, contato e recuperação precisam ser legíveis. Usar transições autoradas, continuidade dos membros, apoios estáveis e proporções constantes. A raiz não deriva com braços, roupas ou variação da silhueta. Locomoção real pertence à simulação.
 
@@ -34,6 +36,6 @@ HUD e menus usam sombras de tinta, acentos contidos, títulos com serifa e núme
 
 Imagens exploratórias dependem de aval manual antes da integração. Manter no checkout somente arte consumida pelo jogo, fontes ativas necessárias para reproduzi-la e referências canônicas vigentes. Variantes substituídas e propostas rejeitadas ficam no histórico Git.
 
-Exportar sprites em PNG RGBA com alpha verdadeiro, enquadramento fixo e margens suficientes. Fundos opacos podem ser RGB. Preservar a procedência e os parâmetros de preparação em metadados; detalhes de uma peça e seu estado de aprovação ficam na pipeline.
+Gerar novas spritesheets de personagens com fundo magenta uniforme (#FF00FF), para facilitar a remoção do fundo. Exportar sprites para o jogo em PNG RGBA com alpha verdadeiro, enquadramento fixo e margens suficientes. Fundos opacos podem ser RGB. Preservar a procedência e os parâmetros de preparação em metadados; detalhes de uma peça e seu estado de aprovação ficam na pipeline.
 
 Revisar no jogo em velocidade normal, câmera lenta e passo único: silhueta, contraste, proporções, rosto, materiais, transições, direção, pés, contato, ciclos, extremos da arena e dois lados. Testes e build não substituem essa revisão nem a aprovação artística manual.

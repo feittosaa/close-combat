@@ -65,3 +65,23 @@ it('requires a fresh release after reset even if the browser repeats a held atta
   expect(input.read().buttons.has('1')).toBe(true);
   input.destroy();
 });
+
+it('maps each player’s dedicated ultimate key independently', () => {
+  const target=new EventTarget() as Window;
+  const one=new KeyboardInput(PLAYER_ONE_KEYS,target),two=new KeyboardInput(PLAYER_TWO_KEYS,target);
+  dispatchKey(target,'keydown','KeyU');
+  expect(one.read().ultimate).toBe(true);expect(two.read().ultimate).toBeUndefined();
+  dispatchKey(target,'keydown','Numpad5');expect(two.read().ultimate).toBe(true);
+  one.clear();expect(one.read().ultimate).toBeUndefined();
+  one.destroy();two.destroy();
+});
+
+
+it('maps rage action independently for both players', () => {
+  const target = new EventTarget() as Window;
+  const one = new KeyboardInput(PLAYER_ONE_KEYS, target), two = new KeyboardInput(PLAYER_TWO_KEYS, target);
+  dispatchKey(target, 'keydown', 'KeyE');
+  expect(one.read().rageAction).toBe(true); expect(two.read().rageAction).toBeUndefined();
+  dispatchKey(target, 'keydown', 'Numpad7'); expect(two.read().rageAction).toBe(true);
+  one.destroy(); two.destroy();
+});

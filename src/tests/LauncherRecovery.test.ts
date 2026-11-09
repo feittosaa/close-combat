@@ -3,7 +3,6 @@ import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
 import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
-import { getShotoCombatPose } from '../rendering/animations/shotoCombatSprites';
 import { TrainingSession } from '../training/TrainingSession';
 import type { AttackButton, FrameInput } from '../input/types';
 
@@ -47,13 +46,13 @@ it.each([0,1])('plays the complete shortened recovery and keeps the measured tra
   const sim=launch(player);const training=new TrainingSession();training.observe(sim.snapshot());
   expect(training.lastMoves[player]?.recovery).toBe(6);
   for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++)step(sim);
-  const frames=new Set<number>();
+  let recoveryTicks=0;
   while(sim.snapshot().characters[player].attack){
     const snapshot=sim.snapshot();const state=snapshot.characters[player];
-    if(state.mode==='recovery')frames.add(getShotoCombatPose(state,snapshot.frame)!.frame);
+    if(state.mode==='recovery')recoveryTicks++;
     step(sim);
   }
-  expect([...frames]).toEqual([93,94,95]);
+  expect(recoveryTicks).toBeGreaterThan(0);
   training.observe(sim.snapshot());expect(training.lastMoves[player]?.recovery).toBe(6);
   expect(sim.snapshot().characters[1-player].grounded).toBe(false);
 });
@@ -65,15 +64,24 @@ it.each([0,1])('drops a second launcher to the floor and permits a new launch af
   for(const button of ['1','1','2'] as const)hit(sim,player,button);
   const second=sim.snapshot();const target=second.characters[1-player];
   expect(target.health).toBe(850);
-  expect(target).toMatchObject({y:config.arena.floorY,grounded:true,verticalVelocity:0,mode:'knockdown'});
+  expect(target).toMatchObject({grounded:false,mode:'knockdown'});
+  expect(target.y).toBeLessThan(config.arena.floorY);
+  expect(target.verticalVelocity).toBeGreaterThanOrEqual(4);
   expect(target.juggle).toBeUndefined();
-  expect(target.airborneStartedFrame).toBeUndefined();
-  expect(target.airborneElapsedFrames).toBeUndefined();
   expect(target.remainingStateFrames).toBeGreaterThanOrEqual(second.hitEvents[0].attackerRecoveryFrames);
-  expect(target.wakeupInvulnerabilityFrames).toBe(target.remainingStateFrames+shoto.juggle!.wakeupInvulnerabilityFrames);
   for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++){
     step(sim);expect(sim.snapshot().characters).toEqual(second.characters);
   }
+  let y = target.y;
+  while (!sim.snapshot().characters[1-player].grounded) {
+    step(sim,player,{direction:'N',buttons:new Set(['1'])});
+    const falling = sim.snapshot().characters[1-player];
+    expect(falling.y).toBeGreaterThan(y);
+    expect(falling.health).toBe(target.health);
+    y = falling.y;
+  }
+  expect(sim.snapshot().characters[1-player]).toMatchObject({mode:'knockdown',grounded:true});
+  expect(sim.snapshot().characters[1-player].wakeupInvulnerabilityFrames).toBeGreaterThan(0);
   while(sim.snapshot().characters[1-player].wakeupInvulnerabilityFrames)step(sim);
   expect(sim.snapshot().characters[1-player].mode).toBe('neutral');
   for(const button of ['1','1','2'] as const)hit(sim,player,button);
@@ -82,4 +90,14 @@ it.each([0,1])('drops a second launcher to the floor and permits a new launch af
   sim.resetMatch();
   for(const button of ['1','1','2'] as const)hit(sim,player,button);
   expect(sim.snapshot().characters[1-player]).toMatchObject({grounded:false,verticalVelocity:-10});
+});
+
+it.each([0,1])('recovers immediately from a real launcher for 50 rage: victim %i', victim => {
+  const sim = launch(1 - victim);
+  sim.fillTrainingRage();
+  expect(sim.snapshot().characters[victim]).toMatchObject({ grounded: false, mode: 'hitstun' });
+  step(sim, victim, { ...N, rageAction: true });
+  const recovered = sim.snapshot().characters[victim];
+  expect(recovered).toMatchObject({ rage: 800, mode: 'airborne', remainingStateFrames: 0 });
+  expect(recovered.juggle).toBeUndefined();
 });

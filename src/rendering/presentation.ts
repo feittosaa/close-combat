@@ -16,6 +16,25 @@ export function projectCameraToOutput(
     scrollY: frame.scrollY + (logical.height - output.height) / 2 };
 }
 
+/** Keep the logical HUD centered at its existing scale inside a wider output. */
+export function getUiViewport(output: { width: number; height: number }) {
+  const scale = Math.min(output.width / LOGICAL_VIEW.width, output.height / LOGICAL_VIEW.height);
+  const width = LOGICAL_VIEW.width * scale;
+  const height = LOGICAL_VIEW.height * scale;
+  return { x: 0, y: (output.height - height) / 2, width: Math.max(width, output.width), height };
+}
+
+export function getHudLogicalWidth(output: { width: number; height: number }): number {
+  const scale = Math.min(output.width / LOGICAL_VIEW.width, output.height / LOGICAL_VIEW.height);
+  return output.width / scale;
+}
+
+/** Cover the complete output, keeping the right edge of the image at the right edge of the viewport. */
+export function getRightAlignedCover(output: {width:number; height:number}, image: {width:number; height:number}) {
+  const width = getHudLogicalWidth(output);
+  return { x:width, y:LOGICAL_VIEW.height / 2, scale:Math.max(width / image.width, LOGICAL_VIEW.height / image.height) };
+}
+
 export function configureUiCamera(camera: Phaser.Cameras.Scene2D.Camera, output: { width: number; height: number }): void {
   const scale = Math.min(output.width / LOGICAL_VIEW.width, output.height / LOGICAL_VIEW.height);
   // HUD objects use scrollFactor=0. A top-left zoom origin avoids a center offset

@@ -1,96 +1,181 @@
+/* Barlow, a grotesque with flat-topped capitals and the feel of mid-century signage (SIL OFL, licence beside the files). CJK text falls back to system sans faces. */
+@font-face { font-family: 'Barlow'; font-weight: 500; font-display: swap; src: url('./assets/fonts/barlow-500-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow'; font-weight: 500; font-display: swap; src: url('./assets/fonts/barlow-500-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Barlow'; font-weight: 600; font-display: swap; src: url('./assets/fonts/barlow-600-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow'; font-weight: 600; font-display: swap; src: url('./assets/fonts/barlow-600-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Barlow'; font-weight: 700; font-display: swap; src: url('./assets/fonts/barlow-700-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow'; font-weight: 700; font-display: swap; src: url('./assets/fonts/barlow-700-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Barlow'; font-weight: 800; font-display: swap; src: url('./assets/fonts/barlow-800-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow'; font-weight: 800; font-display: swap; src: url('./assets/fonts/barlow-800-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+/* Audiowide, wide rounded capitals of classic arcade cabinets, for the champion screen (SIL OFL, licence beside the file). */
+@font-face { font-family: 'Audiowide'; font-display: block; src: url('./assets/fonts/audiowide-latin.woff2') format('woff2'); }
+
 :root {
   color-scheme: dark;
-  font-family: Arial, sans-serif;
+  /* Dark film, cream print and ink cards; a red for the chosen line and a saturated vermilion, like the posters in the art, for buttons. */
+  --ink: #0b0a0a; --cream: #efe4cc; --cream-dim: #b8aa90;
+  --paper-light: #efe2c6; --paper-shade: #c9b18c; --print: #27263a; --print-soft: #5b5566;
+  --red: #c41f3f; --accent: #e23a1c;
+  --font: 'Barlow', 'Helvetica Neue', Arial, 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+  /* Misregistered print: faint red and cyan ghosts beside the ink. */
+  --misprint: -.06em 0 0 #ff2a5a33, .06em 0 0 #2ad7ff2b;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 .55 -.18'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --vignette: inset 0 0 12vw 1vw #000a;
+  font-family: var(--font);
   background: #101014;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
+* { box-sizing: border-box; }
+html, body, #game { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { min-width: 320px; min-height: 240px; background: #101014; }
+canvas { display: block; }
+canvas.menu-film { filter: sepia(.1) saturate(.95); }
 
-* {
-  box-sizing: border-box;
-}
+.loading-screen { position: fixed; inset: 0; z-index: 200; display: flex; align-items: end; justify-content: end; padding: 6vw; background-color: var(--ink); color: var(--cream); font: 600 clamp(15px, 2vw, 28px) var(--font); letter-spacing: .14em; text-shadow: var(--misprint); isolation: isolate; overflow: hidden; }
+.loading-screen.leaving { opacity: 0; pointer-events: none; transition: opacity .6s ease-out; }
+.loading-screen::before { content: ''; position: absolute; inset: -1.5%; z-index: -1; background-image: linear-gradient(0deg, #0b0a0add, transparent 70%), var(--loading-wallpaper); background-size: cover; background-position: left center; filter: sepia(.1); animation: loading-wallpaper-left 20s linear, loading-wallpaper-fade 20s linear; }
+.loading-screen::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--grain) 0 0 / 180px 180px; box-shadow: var(--vignette); mix-blend-mode: overlay; opacity: .3; }
+.loading-screen.wallpaper-right::before { animation-name: loading-wallpaper-right, loading-wallpaper-fade; }
+@keyframes loading-wallpaper-left { from { background-position: left center; } to { background-position: right center; } }
+@keyframes loading-wallpaper-right { from { background-position: right center; } to { background-position: left center; } }
+@keyframes loading-wallpaper-fade { 0%, 100% { opacity: 0; } 5%, 95% { opacity: 1; } }
+/* Film grain shared by every menu overlay. */
+@keyframes film-grain { 0% { background-position: 0 0; } 20% { background-position: -40px 30px; } 40% { background-position: 30px -50px; } 60% { background-position: -60px -20px; } 80% { background-position: 50px 40px; } 100% { background-position: 0 0; } }
+@keyframes boil { 0% { transform: rotate(-.5deg); } 100% { transform: rotate(.5deg) translateY(-1px); } }
 
-html,
-body,
-#game {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-}
-
-body {
-  min-width: 320px;
-  min-height: 240px;
-  background: #101014;
-}
-
-canvas {
-  display: block;
-}
-
+/* Overlays (pause, settings): printed cards laid on dark film. */
+.combat-pause, .control-settings { position: fixed; inset: 0; display: grid; place-items: center; padding: 20px; color: var(--print); font-family: var(--font); background: #070606e6; }
+.combat-pause::after, .control-settings::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--grain) 0 0 / 180px 180px; box-shadow: var(--vignette); mix-blend-mode: overlay; opacity: .3; animation: film-grain .9s steps(5) infinite; }
 .combat-pause[hidden] { display: none; }
-.combat-pause { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e12cc; backdrop-filter: blur(5px); color: #f6e6ce; }
-.pause-panel { width: min(1220px, 100%); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border: 1px solid #b7905c; background: linear-gradient(120deg,#302029,#17131a 65%); padding: 26px; border-top: 4px solid #dcaf71; box-shadow: 0 0 0 5px #16121ae0, 0 24px 90px #000b; }
+.combat-pause { z-index: 100; }
+.control-settings { z-index: 200; }
+/* An ink card: dark stock, a cream rule doubled just inside the edge and a red tab on top. Inside it, print colours turn to cream. */
+.pause-panel, .controls-panel, .match-result-menu { --print: var(--cream); --print-soft: var(--cream-dim); --paper-light: #1d1814; --paper-shade: #2a221c; --red: #ff4b36; position: relative; z-index: 1; color: var(--print); background: linear-gradient(160deg, #1c1713, #100d0b 70%); border: 1px solid var(--cream); outline: 1px solid #efe4cc55; outline-offset: -7px; box-shadow: 0 0 0 4px #0b0a0a, 0 20px 60px #000c; }
+.pause-panel::before, .controls-panel::before, .match-result-menu::before { content: ''; position: absolute; left: 28px; top: -2px; width: 72px; height: 4px; background: #c41f3f; }
+.pause-panel, .controls-panel { max-height: calc(100dvh - 40px); padding: 40px 46px; }
+.pause-panel h1, .controls-panel h1 { margin: 0; font: 700 clamp(24px, 3vw, 38px)/1.1 var(--font); letter-spacing: .04em; text-transform: uppercase; text-shadow: var(--misprint); }
+.pause-eyebrow { margin: 0; color: var(--print-soft); font-size: 12px; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; }
+.combat-pause button, .combat-pause input, .controls-panel button, .controls-panel select { font: 600 15px var(--font); color: var(--print); background: transparent; border: 2px solid var(--print); border-radius: 0; padding: 8px 16px; box-shadow: inset 0 0 0 2px var(--paper-light); }
+.combat-pause button, .controls-panel button, .controls-panel select { cursor: pointer; transition: background .15s ease, color .15s ease; }
+.combat-pause button:hover, .combat-pause button:is(:focus-visible, .pad-navigation :focus), .combat-pause button[aria-pressed="true"], .controls-panel button:hover, .controls-panel button:is(:focus-visible, .pad-navigation :focus), .controls-panel select:hover { background: var(--accent); color: var(--print); }
+.combat-pause :is(:focus-visible, .pad-navigation :focus), .controls-panel :is(:focus-visible, .pad-navigation :focus), .match-result-menu :is(:focus-visible, .pad-navigation :focus) { outline: 2px dashed var(--red); outline-offset: 3px; }
+.controls-panel select option { background: var(--paper-light); color: var(--print); }
+
+.pause-panel { width: min(1220px, 100%); display: flex; flex-direction: column; }
 .pause-panel header { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.pause-panel h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(20px, 3vw, 32px); }
-.pause-eyebrow { color: #efac66; font-size: 11px; letter-spacing: .14em; margin: 0; }
 .pause-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
-.combat-pause button, .combat-pause input { font: inherit; color: inherit; background: #33272b; border: 1px solid #8d6a47; padding: 10px 12px; border-radius: 0; }
-.combat-pause button { cursor: pointer; }
-.combat-pause button:hover, .combat-pause button[aria-pressed="true"] { background: #754835; border-color: #f1c98c; }
-.combat-pause :focus-visible { outline: 2px solid #ffc485; outline-offset: 2px; }
 .pause-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 12px; }
-.pause-tools input { flex: 1; min-width: 180px; }
-.pause-count { color: #bcb5c5; font-size: 12px; }
-.pause-body { display: grid; grid-template-columns: 155px minmax(210px, 1fr) minmax(260px, 1fr); gap: 14px; min-height: 0; height: min(540px, 58dvh); }
-.pause-categories, .pause-moves, .pause-details { overflow-y: auto; scrollbar-color: #76697a #15151f; padding: 4px; }
-.pause-categories { display: flex; flex-direction: column; gap: 5px; }
-.pause-categories button { text-align: left; font-size: 13px; }
-.pause-moves { display: flex; flex-direction: column; gap: 7px; }
+.pause-tools input { flex: 1; min-width: 180px; cursor: text; background: var(--paper-light); }
+.pause-tools input::placeholder { color: var(--print-soft); }
+.pause-count { color: var(--print-soft); font-size: 13px; }
+.pause-body { display: grid; grid-template-columns: 160px minmax(210px, 1fr) minmax(260px, 1fr); gap: 14px; min-height: 0; height: min(540px, 58dvh); }
+.pause-categories, .pause-moves, .pause-details { overflow-y: auto; scrollbar-color: var(--print-soft) var(--paper-shade); padding: 4px; }
+.pause-categories { display: flex; flex-direction: column; gap: 6px; }
+.pause-categories button { text-align: left; font-size: 14px; }
+.pause-moves { display: flex; flex-direction: column; gap: 8px; }
 .pause-move { display: flex; flex-direction: column; text-align: left; gap: 6px; flex-shrink: 0; }
-.pause-move strong { color: #ffd49d; font-size: 15px; overflow-wrap: anywhere; }
-.pause-move span, .pause-move small { color: #c6c0ce; font-size: 11px; }
-.pause-move small { color: #d6ac74; }
-.pause-details { padding: 14px; border: 1px solid #725537; background: #251d23; font-size: 13px; line-height: 1.5; }
-.pause-details h2 { margin: 10px 0; font-size: 19px; overflow-wrap: anywhere; }
-.pause-command { color: #ffd49d; overflow-wrap: anywhere; }
-.pause-note, .pause-legend { color: #aaa5b6; font-size: 11px; line-height: 1.6; }
+.pause-move strong { font-size: 15px; overflow-wrap: anywhere; }
+.pause-move span { color: var(--print-soft); font-size: 13px; }
+.pause-move:hover span, .pause-move:is(:focus-visible, .pad-navigation :focus) span { color: var(--print); }
+.pause-details { padding: 18px; background: var(--paper-light); border: 2px solid var(--print); box-shadow: inset 0 0 0 4px var(--paper-light), inset 0 0 0 5px var(--print-soft); font-size: 14px; line-height: 1.5; }
+.pause-details h2 { margin: 10px 0; font: 700 21px var(--font); text-transform: uppercase; letter-spacing: .03em; color: var(--red); text-shadow: var(--misprint); overflow-wrap: anywhere; }
+.pause-command { overflow-wrap: anywhere; }
+.pause-note, .pause-legend { color: var(--print-soft); font-size: 12px; line-height: 1.6; }
 .pause-legend { margin: 15px 0 0; }
 .pause-timeline { display: flex; gap: 3px; margin: 16px 0; }
-.pause-timeline span { padding: 5px; font-size: 10px; text-align: center; color: #101014; }
-.pause-timeline .startup { background: #eeb065; } .pause-timeline .active { background: #ec7e89; } .pause-timeline .recovery { background: #8fc6e7; }
-@media (max-width: 760px) { .combat-pause { padding: 8px; } .pause-panel { padding: 12px; max-height: calc(100dvh - 16px); } .pause-body { grid-template-columns: 100px 1fr; height: 60dvh; } .pause-details { grid-column: 1 / -1; min-height: 150px; } .pause-body { overflow-y: auto; } .pause-actions { margin-left: 0; } }
-
+.pause-timeline span { padding: 5px; font-size: 11px; font-weight: 600; text-align: center; color: var(--print); border: 1px solid var(--print); }
+.pause-timeline .startup { background: #e8b56d; } .pause-timeline .active { background: #e88a8f; } .pause-timeline .recovery { background: #9ec4d8; }
+/* Match pause: a small centred card listing the choices, the chosen line printed in red. */
+/* Match pause and result: the main menu's numbered list, printed on an ink card. */
+.combat-pause.match-pause .pause-panel { width: min(520px, 100%); padding: 40px 46px 34px; }
+.combat-pause.match-pause header { display: block; }
+.combat-pause.match-pause h1 { margin: 8px 0 22px; }
+.combat-pause.match-pause .pause-actions, .match-result-menu { counter-reset: entry; }
+.combat-pause.match-pause .pause-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; }
+.combat-pause.match-pause .pause-actions button, .match-result-menu button { display: flex; align-items: baseline; gap: 14px; border: 0; box-shadow: none; background: none; padding: 3px 0; font: 700 clamp(20px, 2.3vw, 28px)/1.15 var(--font); text-transform: uppercase; letter-spacing: .03em; color: var(--cream-dim); text-shadow: var(--misprint); cursor: pointer; }
+.combat-pause.match-pause .pause-actions button::before, .match-result-menu button::before { counter-increment: entry; content: counter(entry, decimal-leading-zero); font-size: .5em; font-weight: 600; color: var(--cream-dim); }
+.combat-pause.match-pause .pause-actions button:hover, .combat-pause.match-pause .pause-actions button:is(:focus-visible, .pad-navigation :focus), .match-result-menu button.selected, .match-result-menu button:hover, .match-result-menu button:focus-visible { background: none; color: var(--red); outline: 0; animation: boil .5s steps(2) infinite; }
+.combat-pause.match-pause .pause-legend { margin-top: 18px; }
 .combat-pause.inspection { background: transparent; align-items: start; padding-top: 90px; pointer-events: none; }
-.combat-pause.inspection .pause-panel { pointer-events: auto; padding: 12px; width: auto; max-width: calc(100% - 30px); }
+.combat-pause.inspection::after { display: none; }
+.combat-pause.inspection .pause-panel { pointer-events: auto; padding: 22px; width: auto; max-width: calc(100% - 30px); }
 .combat-pause.inspection .pause-tools, .combat-pause.inspection .pause-body, .combat-pause.inspection .pause-legend, .combat-pause.inspection .pause-eyebrow { display: none; }
 .combat-pause.inspection h1 { font-size: 16px; }
 .combat-pause.inspection button { padding: 8px; font-size: 12px; }
 .command-notation { font-family: Arial, sans-serif; font-size: 1.1em; line-height: 1.65; }
-.command-button { display: inline-block; min-width: 1.35em; padding: 0 .17em; margin: 0 .1em; text-align: center; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; background: #10101a; }
-.control-settings { position: fixed; inset: 0; z-index: 200; background: #100e12df; display: grid; place-items: center; padding: 20px; color: #eee9f2; }
-.controls-panel { width: min(850px,100%); max-height: 95dvh; overflow: auto; background: linear-gradient(135deg, #282024, #17151b); border: 2px solid #b7905c; box-shadow: 0 0 0 5px #171219, 0 24px 80px #000b; padding: 24px; }
-.controls-panel h1 { margin: 0; font-family: Georgia, serif; color: #ffe0a4; letter-spacing: .08em; }
-.controls-panel p { font-size: 13px; color: #c4bbc9; min-height: 1.5em; }
-.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.controls-grid h2 { font-size: 17px; }
-.controls-grid > div > div { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 14px; }
-.controls-panel button { color: #fff1da; background: #48302b; border: 1px solid #b7905c; border-radius: 0; padding: 9px 14px; cursor: pointer; min-width: 100px; font: inherit; }
-.controls-panel button:focus-visible { outline: 2px solid #ffd68b; }
-.controls-panel footer { display: flex; justify-content: flex-end; gap: 12px; }
-@media(max-width:600px) { .controls-grid {grid-template-columns:1fr;} }
+.command-button { display: inline-block; min-width: 1.35em; padding: 0 .17em; margin: 0 .1em; text-align: center; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; background: #0b0a0a; }
+.command-direction { font-weight: 700; letter-spacing: .08em; }
 .pause-move .command-notation { font-size: 18px; }
 .pause-move .command-notation > span { font-size: inherit; color: inherit; }
 .pause-command .command-notation { font-size: 21px; }
-.command-direction { font-weight: 700; letter-spacing: .08em; }
 
-.controls-panel button:hover { background: #793f32; border-color: #f0c68a; }
-.controls-panel h2 { color: #ead3ad; font-family: Georgia, serif; }
+.controls-panel { width: min(940px, 100%); height: min(640px, calc(100dvh - 40px)); overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.controls-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.controls-tabs, .controls-subtabs { display: flex; gap: 6px; }
+.controls-panel [role="tab"] { min-width: 0; }
+.controls-panel [role="tab"][aria-selected="true"] { color: var(--paper-light); background: var(--print); box-shadow: none; }
+.controls-tabs [role="tab"] { font-size: 16px; text-transform: uppercase; letter-spacing: .06em; }
+.controls-page { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; border-top: 2px solid var(--print); padding-top: 16px; }
+.controls-panel p { margin: 0; color: var(--print-soft); font-size: 14px; line-height: 1.4; }
+.controls-status { min-height: 1.4em; }
+.controls-panel h2 { margin: 4px 0 10px; font: 700 18px var(--font); letter-spacing: .05em; text-transform: uppercase; }
+.controls-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 40px; margin-top: 6px; }
+.control-system-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 15px; font-weight: 500; }
+.controls-page > .control-system-row { max-width: 520px; }
+.controls-panel button, .controls-panel select { min-width: 130px; }
+/* Every key box has the same size in every tab, whatever the glyph (arrows come from fallback fonts with taller lines) or the label length: long labels wrap instead. */
+.control-system-row .controls-fixed { flex: none; width: 112px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; text-align: center; font-size: 13px; color: var(--cream-dim); overflow-wrap: anywhere; }
+.controls-pad-status { margin: 0 0 6px; color: var(--cream-dim); font-size: 13px; overflow-wrap: anywhere; }
+.controls-panel .control-system-row button { flex: none; width: 112px; min-width: 0; height: 32px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; overflow: hidden; white-space: nowrap; }
+.controls-volume { display: flex; align-items: center; gap: 12px; }
+.controls-volume input { width: 240px; accent-color: var(--accent); cursor: pointer; }
+.controls-volume-value { min-width: 3.5em; text-align: right; font-weight: 700; }
+.controls-panel footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.controls-panel.controls-confirm { width: min(620px, 100%); height: auto; gap: 16px; }
+.controls-panel footer button:last-child { background: var(--accent); }
+/* Attack keys keep their button colours, printed on a dark chip like the command notation. */
+.controls-grid button[style*="color"] { background: #0b0a0a; box-shadow: none; }
+/* Fight and training shortcuts: the eight training keys share two columns so the tab needs no scrolling. */
+.controls-grid.controls-commands { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.controls-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; align-content: start; }
+.controls-split h2 { grid-column: 1 / -1; }
 
-.combat-pause.match-pause .pause-panel { width: min(640px,100%); padding: 38px; }
-.combat-pause.match-pause header { display: block; }
-.combat-pause.match-pause h1 { margin: 12px 0 28px; font-style: italic; font-size: clamp(26px,4vw,44px); }
-.combat-pause.match-pause .pause-actions { display: grid; gap: 10px; }
-.combat-pause.match-pause button { text-align: left; padding: 16px 20px; border-left: 4px solid #b7905c; }
-.combat-pause.match-pause button:first-child { background: #803e34; border-color: #f0c68a; }
+/* Champion screen: veiled scenery, the winner in the middle, upright lettering down each edge. */
+.victory-screen { position: fixed; z-index: 205; container-type: size; overflow: hidden; background: #000; color: var(--cream); font-family: var(--font); animation: victory-in .5s ease-out; }
+.victory-screen.inline { position: absolute; inset: 0; z-index: auto; animation: none; }
+.victory-stage { position: absolute; inset: 0; }
+.victory-stage svg { width: 100%; height: 100%; }
+.victory-veil { position: absolute; inset: 0; background: rgb(0 0 0 / .9); }
+.victory-hero { position: absolute; left: 50%; top: var(--top, -8cqh); height: var(--height, 130cqh); width: auto; max-width: none; transform: translateX(-50%); filter: drop-shadow(0 0 4cqh #0009); }
+/* Both text columns share the same width and height and sit on the screen edges; the letters stand upright, stacked from top to bottom. */
+.victory-strip { position: absolute; top: 0; bottom: 0; width: 11cqw; display: flex; justify-content: center; overflow: hidden; }
+.victory-strip.left { left: 0; }
+.victory-strip.right { right: 0; }
+/* Flat arcade capitals stacked tight; the track holds two copies and slides by one, down on the left and up on the right. */
+.victory-track { display: flex; flex-direction: column; align-items: center; width: 100%; height: max-content; animation: victory-loop calc(var(--letters) * .35s) linear infinite; }
+.victory-strip.left .victory-track { animation-direction: reverse; }
+.victory-text { display: flex; flex-direction: column; align-items: center; font-family: 'Audiowide', var(--font); font-size: 9.2cqw; line-height: 1; color: var(--cream); }
+.victory-text > span { display: flex; flex-direction: column; align-items: center; padding-bottom: .45em; }
+.victory-text > span > span { line-height: .76; }
+.victory-winner { color: var(--accent); }
+@keyframes victory-loop { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+@keyframes victory-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .victory-screen, .victory-track { animation: none; } }
+
+.match-result-menu { position: fixed; z-index: 210; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 30px 46px; }
+
+@media (max-width: 760px) {
+  .combat-pause, .control-settings { padding: 8px; }
+  .pause-panel, .controls-panel { padding: 28px 24px; max-height: calc(100dvh - 16px); }
+  .pause-body { grid-template-columns: 110px 1fr; height: 60dvh; overflow-y: auto; }
+  .pause-details { grid-column: 1 / -1; min-height: 150px; }
+  .pause-actions { margin-left: 0; }
+  .controls-grid { grid-template-columns: 1fr; }
+  .controls-panel { height: calc(100dvh - 16px); overflow: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen::before { animation: none; opacity: 1; }
+  .combat-pause::after, .control-settings::after, .combat-pause.match-pause .pause-actions button, .match-result-menu button { animation: none !important; }
+  .combat-pause button, .controls-panel button, .controls-panel select { transition: none; }
+}

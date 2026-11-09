@@ -5,7 +5,6 @@ Jogo de luta 2D para navegador de computador, com simulação determinística e 
 - [Base](base.md): princípios e decisões gerais.
 - [Identidade visual](identidade-visual.md): linguagem artística e critérios de produção.
 - [Pipeline](pipeline.md): conteúdo específico, estado do trabalho, tarefas e validações.
-- [CI/CD](docs/ci-cd.md): processo de entrega.
 
 ## Executar
 
@@ -23,6 +22,8 @@ npm test -- --run
 npm run build
 git diff --check
 ```
+
+As rotas de exemplo e os combos avançados do tutorial vêm de `npm run combos:find`, que testa entradas legais na simulação e grava `src/training/comboRoutes.json`; refazer após mudar golpes ou receitas (os testes acusam rotas desatualizadas); `npm run combos:find -- --only <personagem>[,<personagem>]` refaz só os personagens indicados e preserva os demais. `npm run combos:find -- <personagem> <comando> <comando>…` mostra onde uma rota específica cai.
 
 Para conferir a versão compilada, executar `npm run preview`. Mudanças visuais e de controles também precisam de revisão no navegador; testes e build não comprovam qualidade visual.
 

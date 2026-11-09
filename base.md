@@ -10,7 +10,8 @@ Anime fighters, especialmente Guilty Gear Xrd Rev 2, orientam a intenção de ri
 
 ## Autoria e decisões
 
-- Combos são definidos pelo usuário, manualmente e individualmente. Não gerar receitas, catálogos ou rotas por combinação automática.
+- Receitas de combo são definidas pelo usuário, manualmente e individualmente. Não gerar receitas ou catálogos de receitas por combinação automática.
+- Rotas de treino — sequências abertas que unem golpes, receitas e especiais já existentes — podem ser encontradas por ferramenta que testa entradas legais na simulação real. Elas não criam receitas, regras nem dados de combate e só valem enquanto a simulação as reproduzir; mudanças de golpes ou receitas exigem refazer a busca.
 - Não inferir regras, personagens, golpes ou sistemas de uma referência estética ou de um arquétipo.
 - Números provisórios e conteúdo exploratório não equivalem a aprovação de design, balanceamento ou arte.
 - Uma definição de personagem não se torna regra universal por estar implementada primeiro. Cada kit tem dados e revisão próprios.
@@ -41,13 +42,19 @@ O motor é a autoridade sobre contato, dano, posições e duração dos estados.
 
 Controles são remapeáveis, direções são relativas ao oponente e transições de pausa/reset/foco não devem reaproveitar comandos antigos. Ferramentas de treino e IA usam entradas legais e a mesma simulação das partidas, sem acertos ou vantagens forçados.
 
-Spritesheets e imagens oficiais devem ser exibidas com suas cores originais. É proibido ajustar suas cores por CSS ou código, incluindo filtros, tint, shaders, LUTs, recoloração de pixels ou pós-processamento. Correções artísticas pertencem à imagem fonte e exigem aprovação; recorte, transparência, escala, alinhamento e espelhamento técnicos não autorizam recoloração.
+Ferramentas de desenvolvedor existem somente no servidor de desenvolvimento: builds de produção não incluem seu código nem aplicam ajustes guardados no navegador. Esses ajustes são sobreposições locais aos dados e imagens autorais; valores aprovados passam para os dados de cada personagem.
+
+O atalho de reinício de partida funciona somente no treino livre. PvP e Arcade preservam a partida ao receber essa tecla.
+
+Spritesheets e imagens oficiais preservam suas fontes originais. Variações de cor de personagem e iluminação de cenário podem ser aplicadas durante a renderização; sua aparência exige revisão visual. Correções artísticas permanentes pertencem à imagem fonte e exigem aprovação.
 
 ## Apresentação compartilhada
 
-A saída padrão é Full HD 1920 × 1080, em 16:9, com composição lógica 1024 × 576 e projeção uniforme. A câmera de combate tem escala fixa, acompanha o combate no eixo horizontal e o personagem mais alto no eixo vertical durante a subida e a descida. O tamanho visual dos personagens é independente da escala do cenário; o enquadramento deve preservar ambos nos limites laterais. Não aplicar zoom dinâmico por distância, ação ou postura.
+A composição lógica de combate é 1024 × 576, com projeção uniforme; a saída acompanha o tamanho da janela, expondo mais cenário nas laterais sem mudar a escala relativa dos lutadores, do HUD ou das colisões. A câmera de combate tem escala fixa, acompanha o combate no eixo horizontal e o personagem mais alto no eixo vertical durante a subida e a descida. O tamanho visual dos personagens é independente da escala do cenário; o enquadramento deve preservar ambos nos limites laterais. Não aplicar zoom dinâmico por distância, ação ou postura.
 
 O piso, os lutadores e os cenários compartilham o mesmo espaço. O limite lateral da visão deve preservar ambos os lados sem arrastar um personagem parado. Mudanças autorizadas no tamanho dos lutadores exigem revisão proporcional de corpo, hurtboxes, hitboxes e seus deslocamentos nos dados de cada personagem. As caixas físicas não são inferidas automaticamente de silhuetas ou do desenho do cenário.
+
+A rage acumulada permanece entre rounds e pode alimentar ultimates repetidas e ações defensivas. A ultimate exige o recurso correspondente e também pode ser acionada por uma tecla configurável, obedecendo às mesmas condições e animação do comando original. Uma ação de rage configurável permite recuperação aérea e tentativa de interrupção de combos, respeitando o recurso disponível. Uma defesa iniciada pouco antes do impacto pode gerar um perfect block, com indicação e som próprios e maior ganho de rage.
 
 O HUD deve ser minimalista: barras de vida contínuas próximas ao topo, sem divisões verticais ou molduras grandes. Mostrar dados reais; detalhes de diagnóstico pertencem às ferramentas de treino. Animações decorativas respeitam movimento reduzido e não prejudicam leitura ou foco.
 
@@ -55,20 +62,30 @@ O HUD deve ser minimalista: barras de vida contínuas próximas ao topo, sem div
 
 Acertos e bloqueios confirmados recebem uma micro pausa compartilhada na pose de impacto; golpes que erram não pausam. A duração da pausa é compartilhada entre acerto e bloqueio e definida na configuração de contato. Durante ela, combate, física e animação ficam congelados, enquanto o relógio do round continua contando normalmente. Contatos simultâneos não somam pausas. A retomada não deve pular desenhos nem alterar os tempos próprios dos golpes. Reset e encerramento de round devem tratar esse intervalo de forma consistente.
 
-Em sequências abertas de golpes confirmados, ataques fortes impedem o retorno a ataques fracos até o defensor recuperar o controle. Repetições pertencem às receitas autoradas. Receitas fechadas podem continuar mesmo sem contato, depois de concluir a atividade de cada golpe. Golpes bloqueados ou que erram não liberam continuação aberta. Quando o último golpe acertado mantém o alvo no chão, os dois recuperam o controle juntos, sem recuperação exposta do atacante. Levantamentos confirmados usam recuperação mais curta e reiniciam a sequência do atacante, liberando golpes fracos novamente para continuar o combo. Lançamentos preservam a trajetória e a recuperação aérea protegida; capturas cinematográficas mantêm suas regras próprias.
+Em sequências abertas de golpes conectados, inclusive na defesa, um soco forte ou chute forte impede tanto o retorno a golpes fracos quanto a troca para o outro tipo de golpe forte até o fim da sequência. Repetições pertencem às receitas autoradas. Receitas fechadas podem continuar mesmo sem contato, depois de concluir a atividade de cada golpe. Golpes básicos, agachados e potentes conectados podem ser cancelados em especiais por comando manual, inclusive durante ou ao fim de receitas; a restrição de família de golpes fortes não impede esses especiais. Restrições adicionais de família dependem do personagem. Algumas receitas encerram continuações de golpes comuns conforme os dados do personagem, sem impedir o cancelamento em especiais autorizado. Golpes que erram não liberam continuação aberta. A continuação de golpes bloqueados não prolonga o tempo de defesa do adversário. Quando o último golpe acertado mantém o alvo no chão, os dois recuperam o controle juntos, sem recuperação exposta do atacante. Levantamentos confirmados usam recuperação mais curta e reiniciam a sequência do atacante, liberando golpes fracos novamente para continuar o combo. Lançamentos preservam a trajetória e a recuperação aérea protegida; capturas cinematográficas mantêm suas regras próprias.
+
+Chutes aéreos que erram e aterrissam durante a recuperação mantêm o atacante vulnerável até o fim dessa recuperação.
+
+Combos fechados de socos fortes confirmados terminam sem aceitar outros golpes até o fim da recuperação; levantamentos preservam sua regra de continuação.
+
+Uma continuação de golpes iniciada enquanto o alvo ainda reage mantém sua vulnerabilidade durante o preparo e a atividade do próximo golpe. Se a sequência de acertos terminar no chão, ambos recuperam o controle juntos; os tempos de recuperação de cada receita são definidos nos dados do personagem.
 
 A ativação de toda ultimate usa uma preparação cinematográfica prolongada com pausa global: somente a sequência de ativação do autor avança; adversários, projéteis, física, efeitos e relógio do round ficam congelados. Essa pausa é distinta da micro pausa de contato. Ativações simultâneas compartilham o mesmo intervalo, sem acumular tempo. O combate retoma ao terminar a animação de preparação, sem pular frames ou conservar esse estado após reset.
+
+Uma ultimate pode continuar uma sequência de golpes confirmados e deve executar a preparação cinematográfica completa antes de seus efeitos, inclusive quando seu comando fica armazenado durante outra ação. A ultimate é sempre o último golpe da sequência: depois que ela conecta, nenhum golpe novo começa contra o alvo até ele recuperar o controle.
 
 Fundos de combate são ultrawide, com proporção mínima 21:9. Preservar a proporção nativa e ajustar o enquadramento do cenário para evitar ampliação excessiva; a escala dos lutadores e o tamanho de saída da tela são decisões separadas. Não esticar a imagem nem aplicar zoom dinâmico.
 
 Ataques aéreos básicos preservam o deslocamento e a gravidade do salto; iniciar um golpe não interrompe a trajetória horizontal. Deslocamentos próprios de especiais continuam definidos nos dados do golpe. A caixa de receber golpes do salto livre acompanha fases estendida e recolhida declaradas no perfil do personagem; ataques, guardas e reações mantêm seus próprios perfis.
 
-Um alvo só pode sofrer um levantamento por sequência sem recuperar o controle. Um segundo levantamento confirmado derruba o alvo imediatamente no chão, com recuperação protegida; após recuperar o controle, ele pode ser levantado novamente. Um alvo lançado permanece em reação aérea até aterrissar. A gravidade inicial do levantamento é reduzida e aumenta progressivamente a cada novo acerto recebido no ar. Cada novo impacto suspende brevemente o alvo, preservando sua velocidade vertical para a retomada; esse intervalo é separado da pausa de contato compartilhada. Ao tocar o chão, o alvo entra em recuperação protegida e recebe uma breve invencibilidade ao retornar ao controle normal. O salto livre não usa a gravidade de juggle; valores de cada personagem pertencem aos seus dados. Capturas cinematográficas mantêm sua sequência própria.
+Após um quique na parede, o próximo combo recebido não pode provocar outro quique; a proteção termina quando esse combo acaba, mesmo que o alvo tenha recuperado o controle antes de recebê-lo. A regra vale para todos os personagens.
+
+Um alvo só pode sofrer um levantamento por sequência sem recuperar o controle. Um segundo levantamento confirmado acelera a queda do alvo pelo ar, com proteção até a recuperação; após recuperar o controle, ele pode ser levantado novamente. Um alvo lançado permanece em reação aérea até aterrissar. A gravidade inicial do levantamento é reduzida e aumenta progressivamente a cada novo acerto recebido no ar. Cada novo impacto no ar aplica uma pequena elevação; em um malabarismo, também suspende brevemente o alvo antes de retomar a trajetória. Esse intervalo é separado da pausa de contato compartilhada. Ao tocar o chão, o alvo entra em recuperação protegida e recebe uma breve invencibilidade ao retornar ao controle normal. O salto livre não usa a gravidade de juggle; valores de cada personagem pertencem aos seus dados. Capturas cinematográficas mantêm sua sequência própria.
 
 ## Qualidade e entrega
 
 Priorizar código limpo, legível e bem organizado, com nomes claros, responsabilidades coesas e soluções proporcionais à necessidade atual. Manter somente código, dependências, documentação e assets necessários ao escopo autorizado; retirar sobras, duplicações e peças substituídas após conferir seus consumidores. Artes rejeitadas ou sem aprovação não compõem o acervo ativo; propostas em revisão só permanecem enquanto necessárias a uma tarefa autorizada registrada na pipeline. Fontes ativas de preparação e referências canônicas são parte desse acervo necessário. O Git preserva versões descartadas.
 
-Seguir [docs/ci-cd.md](docs/ci-cd.md). Instalação reproduzível, testes, build e diff são obrigatórios. Mudanças de arte, interface, animação ou controles também exigem conferência no jogo. Validação local, CI remota e aprovação artística são evidências distintas.
+Instalação reproduzível, testes, build e diff são obrigatórios. Mudanças de arte, interface, animação ou controles também exigem conferência no jogo. Validação local e aprovação artística são evidências distintas.
 
 Não remover ou enfraquecer testes para mascarar falhas. Alterações de regra exigem atualização explícita das regressões correspondentes. Código e documentação devem comunicar o estado real, sem apresentar tarefas pendentes como concluídas.

@@ -1,23 +1,36 @@
 import Phaser from 'phaser';
-import menuBackground from '../../assets/art/menu/patio-solar.png';
-import { configureUiCamera, LOGICAL_VIEW } from '../rendering/presentation';
-import { preloadShotoSprites } from '../rendering/animations/shotoSprites';
-import { stages } from '../rendering/stages/stageCatalog';
-import { preloadStage } from '../rendering/stages/StageView';
+import { loadInterfaceFonts } from '../ui/hudTheme';
+import menuBackground from '../../assets/art/wallpapers/texas-menu.png';
+import bobMenuBackground from '../../assets/art/wallpapers/bob-menu.png';
+import grapplerMenuBackground from '../../assets/art/wallpapers/grappler-menu.png';
+import { configureUiCamera } from '../rendering/presentation';
+import { preloadFighterIcons } from '../ui/fighterArt';
+import { preloadFightSounds } from '../audio/FightSounds';
+import { preloadContactEffects } from '../rendering/contactEffects';
+import { showLoadingScreen } from '../ui/loadingScreen';
 
-/** Shared match assets are ready before character selection becomes interactive. */
+/** Menu art and what every match shares (icons, contact effects and sounds); each match loads its own fighters and stage. */
 export class BootScene extends Phaser.Scene {
+  private closeLoadingScreen?: () => void;
   constructor() { super('BootScene'); }
   preload(): void {
     configureUiCamera(this.cameras.main, this.scale);
-    this.add.text(LOGICAL_VIEW.width / 2, LOGICAL_VIEW.height / 2, 'PREPARANDO A ARENA…', {
-      fontSize: '18px', color: '#e6c78d',
-    }).setOrigin(.5);
+    this.closeLoadingScreen = showLoadingScreen();
     this.load.image('menu-solar', menuBackground);
-    stages.forEach(stage => preloadStage(this, stage));
-    preloadShotoSprites(this);
+    this.load.image('menu-bob', bobMenuBackground);
+    this.load.image('menu-grappler', grapplerMenuBackground);
+    preloadContactEffects(this);
+    preloadFightSounds(this);
+    preloadFighterIcons(this);
   }
   create(): void {
-    this.scene.start('MenuScene');
+    // Canvas text (HUD, tutorial) uses the menu faces: start once they are ready.
+    const start = () => {
+      this.closeLoadingScreen?.();
+      this.closeLoadingScreen = undefined;
+      this.scene.start('MenuScene');
+    };
+    const fonts = loadInterfaceFonts();
+    if (fonts) void fonts.then(start); else start();
   }
 }
