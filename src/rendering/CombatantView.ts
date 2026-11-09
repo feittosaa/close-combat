@@ -1,10 +1,10 @@
 import type Phaser from 'phaser';
-import { cowboyDisplayHeight, cowboyFootAnchor, getCowboyFrameSize, getCowboyRoundEndPose, getCowboySpriteLayers, getCowboyUltimateActivationPose } from './animations/cowboySprites';
+import { texasDisplayHeight, texasFootAnchor, getTexasFrameSize, getTexasRoundEndPose, getTexasSpriteLayers, getTexasUltimateActivationPose } from './animations/texasSprites';
 import { getShotoSpritePose, getShotoUltimatePose, getShotoResolution, shotoIdleScale, shotoSpriteScale, getShotoRoundEndPose } from './animations/shotoSprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
-import { COWBOY_GRAB_SHOTS } from '../engine/combat/cowboyGrab';
+import { TEXAS_GRAB_SHOTS } from '../engine/combat/texasGrab';
 import { CharacterColorEffect, type CharacterColor } from './characterColor';
 
 export function combatantDepth(state: CharacterState, frame: number): number {
@@ -30,30 +30,30 @@ export class CombatantView {
     this.graphics.setDepth(depth);
     const grabAge = state.attack?.moveId === 'throw-24' && state.attack.throwConfirmedFrame !== undefined
       ? frame - state.attack.throwConfirmedFrame : -1;
-    const shotIndex = COWBOY_GRAB_SHOTS.findIndex(start => grabAge >= start && grabAge < start + 7);
-    if (shotIndex >= 0 && this.scene.textures.exists('cowboy-effect-shot')) {
+    const shotIndex = TEXAS_GRAB_SHOTS.findIndex(start => grabAge >= start && grabAge < start + 7);
+    if (shotIndex >= 0 && this.scene.textures.exists('texas-effect-shot')) {
       const sign = state.facing === 'right' ? 1 : -1;
-      const shot = this.grabShots[0] ??= this.scene.add.image(0, 0, 'cowboy-effect-shot', '0').setDepth(11);
+      const shot = this.grabShots[0] ??= this.scene.add.image(0, 0, 'texas-effect-shot', '0').setDepth(11);
       this.colorEffect.apply(shot, { alternate: color.alternate }, 'magic');
-      const travel = grabAge - COWBOY_GRAB_SHOTS[shotIndex];
+      const travel = grabAge - TEXAS_GRAB_SHOTS[shotIndex];
       const horizontal = shotIndex === 2;
-      shot.setTexture('cowboy-effect-shot', String(Math.min(5, travel)))
+      shot.setTexture('texas-effect-shot', String(Math.min(5, travel)))
         .setDisplaySize(horizontal ? 90 : 54, horizontal ? 70 : 44)
         .setPosition(state.x + sign * (35 + travel * 3), state.y - 114 + (horizontal ? 0 : travel * 3))
         .setFlipX(sign < 0).setAngle(horizontal ? 0 : sign * 45).setVisible(true);
     } else this.grabShots.forEach(shot => shot.setVisible(false));
-    const volley = state.fighterId === 'cowboy' && state.attack?.moveId === 'bulls-eye' && activationFrame === undefined;
-    if (volley && this.scene.textures.exists('cowboy-magic-volley')) {
+    const volley = state.fighterId === 'texas' && state.attack?.moveId === 'bulls-eye' && activationFrame === undefined;
+    if (volley && this.scene.textures.exists('texas-magic-volley')) {
       const camera = this.scene.cameras.main;
       for (let i = 0; i < 6; i++) {
-        const arms = this.volleyArms[i] ??= this.scene.add.image(0, 0, 'cowboy-magic-volley', '0').setDepth(9);
+        const arms = this.volleyArms[i] ??= this.scene.add.image(0, 0, 'texas-magic-volley', '0').setDepth(9);
         this.colorEffect.apply(arms, color, 'magic');
         const elapsed = state.attack!.elapsedFrames;
         const fadeIn = Math.min(1, (elapsed + 10) / 15);
         const fadeOut = Math.max(0, Math.min(1, (112 - elapsed) / 18));
         const shotAge = elapsed - (1 + i * 18);
         const shotFrame = shotAge < 0 || shotAge >= 12 ? 0 : Math.min(5, 1 + Math.floor(shotAge / 2));
-        arms.setTexture('cowboy-magic-volley', String(shotFrame)).setDisplaySize(300, 300)
+        arms.setTexture('texas-magic-volley', String(shotFrame)).setDisplaySize(300, 300)
           .setPosition(state.facing === 'right' ? camera.worldView.left + 100 : camera.worldView.right - 100,
             state.y - (i + .5) * 44 + 56)
           .setFlipX(state.facing === 'left').setAlpha(fadeIn * fadeOut).setVisible(elapsed < 112);
@@ -84,24 +84,24 @@ export class CombatantView {
       this.dust?.setVisible(false);
       return;
     }
-    const roundEndPose = result && getCowboyRoundEndPose(state, result.winner, result.elapsed);
-    const layers=state.fighterId === 'cowboy' ? roundEndPose ? [roundEndPose] : activationFrame !== undefined ? [getCowboyUltimateActivationPose(state,activationFrame)] : getCowboySpriteLayers(state, frame) : [];
+    const roundEndPose = result && getTexasRoundEndPose(state, result.winner, result.elapsed);
+    const layers=state.fighterId === 'texas' ? roundEndPose ? [roundEndPose] : activationFrame !== undefined ? [getTexasUltimateActivationPose(state,activationFrame)] : getTexasSpriteLayers(state, frame) : [];
     if(layers.length && layers.every(pose=>this.scene.textures?.exists(pose.texture))){
       layers.forEach((pose,index)=>{
         const sprite=this.sprites[index]??=this.scene.add.image(0,0,pose.texture,String(pose.frame)).setDepth(10);
-        const magic = pose.texture.startsWith('cowboy-magic-');
+        const magic = pose.texture.startsWith('texas-magic-');
         this.colorEffect.apply(sprite, magic ? { alternate: color.alternate } : color, magic ? 'magic' : 'texas');
         sprite.setDepth(depth).setTexture(pose.texture,String(pose.frame))
-          .setOrigin(.5,cowboyFootAnchor)
-          .setScale(cowboyDisplayHeight / getCowboyFrameSize(pose.texture) * pose.scale)
+          .setOrigin(.5,texasFootAnchor)
+          .setScale(texasDisplayHeight / getTexasFrameSize(pose.texture) * pose.scale)
           .setAngle(0)
           .setPosition(state.x+pose.offsetX,state.y+pose.offsetY).setFlipX(pose.flipX).setAlpha(pose.alpha).setVisible(true);
       });
       this.sprites.slice(layers.length).forEach(sprite=>sprite.setVisible(false));
       this.graphics.clear();
-      const move = state.fighterId === 'cowboy' && state.attack
+      const move = state.fighterId === 'texas' && state.attack
         ? getCharacterById(state.fighterId)?.moves.find(candidate => candidate.id === state.attack!.moveId) : undefined;
-      const lassoTexture = 'cowboy-effect-lasso';
+      const lassoTexture = 'texas-effect-lasso';
       if (move?.id === 'throw-13' && state.mode === 'active' && this.scene.textures.exists(lassoTexture)) {
         const box = createHitbox(state, move);
         const sign = state.facing === 'right' ? 1 : -1;
@@ -117,12 +117,12 @@ export class CombatantView {
       const dustKind = move?.id === 'power-kick' ? 'power' :
         move && (move.id === 'light-kick' || move.id === 'crouch-light-kick') ? 'light' : undefined;
       const dustAge = move && state.attack ? state.attack.elapsedFrames - (state.attack.startupFrames ?? move.startup) : -1;
-      if (dustKind && move && dustAge >= 0 && dustAge < 12 && this.scene.textures.exists(`cowboy-effect-dust-${dustKind}`)) {
+      if (dustKind && move && dustAge >= 0 && dustAge < 12 && this.scene.textures.exists(`texas-effect-dust-${dustKind}`)) {
         const box = createHitbox(state, move);
-        const effect = this.dust ??= this.scene.add.image(0, 0, `cowboy-effect-dust-${dustKind}`, '0').setDepth(11);
+        const effect = this.dust ??= this.scene.add.image(0, 0, `texas-effect-dust-${dustKind}`, '0').setDepth(11);
         this.colorEffect.apply(effect, { alternate: color.alternate }, 'magic');
         const height = box.height * (dustKind === 'power' ? 1.375 : 1.625);
-        effect.setTexture(`cowboy-effect-dust-${dustKind}`, String(Math.min(5, dustKind === 'light' ? 1 + Math.floor(dustAge / 3) : Math.floor(dustAge / 2))))
+        effect.setTexture(`texas-effect-dust-${dustKind}`, String(Math.min(5, dustKind === 'light' ? 1 + Math.floor(dustAge / 3) : Math.floor(dustAge / 2))))
           .setOrigin(.5, 1).setDisplaySize(box.width * 1.25, height)
           .setPosition(box.x + box.width / 2, state.y + height * (dustKind === 'power' ? .15 : .24) + 4)
           .setFlipX(state.facing === 'left').setVisible(true);

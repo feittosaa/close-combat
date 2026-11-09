@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import { shoto } from '../engine/data/fighters/shoto';
 import type { FrameInput } from '../input/types';
 
@@ -9,7 +9,7 @@ const neutral = (): FrameInput => ({direction:'N',buttons:new Set()});
 const kick = (): FrameInput => ({direction:'N',buttons:new Set(['3'])});
 
 it.each([0,1])('soma golpes até o adversário recuperar a defesa: jogador %i', player => {
-  const fighters=player===0?[cowboy,shoto] as const:[shoto,cowboy] as const;
+  const fighters=player===0?[texas,shoto] as const:[shoto,texas] as const;
   const sim=new Simulation(createGameConfig(1024,576),fighters,{training:true,initialDistance:65});
   const step=(value:FrameInput=neutral(), guard:FrameInput=neutral())=>sim.stepFrame(player===0?[value,guard]:[guard,value]);
   for(let count=1;count<=3;count++) {

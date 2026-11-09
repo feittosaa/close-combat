@@ -2,8 +2,8 @@ import { RAGE_LEVEL, RAGE_MAX } from '../../combat/rage';
 import type { CharacterDefinition } from '../characters';
 
 /** Protótipo jogável; comandos, medidas e balanceamento aguardam revisão. */
-export const cowboy: CharacterDefinition = {
-  id: 'cowboy', name: 'Texas', maxHealth: 1000,
+export const texas: CharacterDefinition = {
+  id: 'texas', name: 'Texas', maxHealth: 1000,
   movement: { walkSpeed: 2.6, backwardWalkSpeed: 2.1, jumpVelocity: -12, dashSpeed: 5, backdashSpeed: 4.1, airDash: true },
   collision: {
     bodyWidth: 52,

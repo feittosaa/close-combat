@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error Node's built-in module is available to the test runner.
 import { readFileSync } from 'node:fs';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import { editCss, editFighter, editFighterArt, editHud, literal } from '../dev/sourceEdits';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
-const shotoSource = read('../engine/data/fighters/shoto.ts'), cowboySource = read('../engine/data/fighters/cowboy.ts');
+const shotoSource = read('../engine/data/fighters/shoto.ts'), texasSource = read('../engine/data/fighters/texas.ts');
 const artSource = read('../ui/fighterArt.ts'), cssSource = read('../style.css'), hudSource = read('../ui/hudTheme.ts');
 const none = { moves: {}, recipes: {}, combos: {} };
 const line = (source: string, id: string) => source.split('\n').findIndex(text => text.includes(`{ id: '${id}'`));
@@ -29,19 +29,19 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
 
   it('retempera receitas existentes, acrescentando o campo quando falta, e adiciona receitas novas ao fim da lista', () => {
     const recipe = { id: 'dev-x', name: 'Teste', notation: '1,2', moveIds: ['light-punch', 'heavy-punch'], recoveryFrames: 12 };
-    const edited = editFighter(cowboySource, 'cowboy', {
-      moves: {}, recipes: { cowboy: { 'rapid-kicks': { startupFrames: [7, 7, 7], recoveryFrames: 20 } } }, combos: { cowboy: [recipe] },
+    const edited = editFighter(texasSource, 'texas', {
+      moves: {}, recipes: { texas: { 'rapid-kicks': { startupFrames: [7, 7, 7], recoveryFrames: 20 } } }, combos: { texas: [recipe] },
     });
     const lines = edited.split('\n');
     expect(lines[line(edited, 'rapid-kicks')]).toContain("continueOnHit: true, startupFrames: [7, 7, 7], recoveryFrames: 20 },");
     expect(lines[line(edited, 'dev-x')]).toBe(`    ${literal(recipe)},`);
-    expect(lines[line(edited, 'dev-x') - 1]).toContain(`{ id: '${cowboy.combos![cowboy.combos!.length - 1].id}'`);
+    expect(lines[line(edited, 'dev-x') - 1]).toContain(`{ id: '${texas.combos![texas.combos!.length - 1].id}'`);
     expect(lines[line(edited, 'dev-x') + 1]).toBe('  ],');
     expect(literal(recipe)).toBe("{ id: 'dev-x', name: 'Teste', notation: '1,2', moveIds: ['light-punch', 'heavy-punch'], recoveryFrames: 12 }");
   });
 
   it('edita nome, etapas e opções de uma receita existente, removendo opções desmarcadas', () => {
-    const edited = editFighter(cowboySource, 'cowboy', { ...none, recipes: { cowboy: { 'rapid-kicks': {
+    const edited = editFighter(texasSource, 'texas', { ...none, recipes: { texas: { 'rapid-kicks': {
       name: 'Chutes', moveIds: ['light-kick', 'heavy-kick'], continueOnHit: null, endsBasicChain: true,
     } } } });
     expect(edited.split('\n')[line(edited, 'rapid-kicks')])
@@ -50,7 +50,7 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
 
   it('aplica a edição de uma receita criada no painel na própria receita nova', () => {
     const recipe = { id: 'dev-y', name: 'Teste', notation: '3,4', moveIds: ['light-kick', 'heavy-kick'], recoveryFrames: 12 };
-    const edited = editFighter(cowboySource, 'cowboy', { moves: {}, recipes: { cowboy: { 'dev-y': { name: 'Novo', recoveryFrames: null } } }, combos: { cowboy: [recipe] } });
+    const edited = editFighter(texasSource, 'texas', { moves: {}, recipes: { texas: { 'dev-y': { name: 'Novo', recoveryFrames: null } } }, combos: { texas: [recipe] } });
     expect(edited.split('\n')[line(edited, 'dev-y')]).toBe("    { id: 'dev-y', name: 'Novo', notation: '3,4', moveIds: ['light-kick', 'heavy-kick'] },");
   });
 
@@ -66,9 +66,9 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
   });
 
   it('grava o enquadramento da seleção só no personagem ajustado, acrescentando hero e tile quando faltam', () => {
-    const edited = editFighterArt(artSource, { cowboy: { hero: { zoom: 1.3, x: 20, y: 40 }, iconWindow: { x: 1, y: 2, size: 1200 }, victory: { height: 1.4, top: .02 } } });
+    const edited = editFighterArt(artSource, { texas: { hero: { zoom: 1.3, x: 20, y: 40 }, iconWindow: { x: 1, y: 2, size: 1200 }, victory: { height: 1.4, top: .02 } } });
     const before = artSource.split('\n'), after = edited.split('\n');
-    const at = after.findIndex(text => text.includes('cowboy: {background'));
+    const at = after.findIndex(text => text.includes('texas: {background'));
     expect(after[at]).toContain('hero: { zoom: 1.3, x: 20, y: 40 }');
     expect(after[at]).toContain('iconWindow:{ x: 1, y: 2, size: 1200 }');
     expect(after[at]).toContain('victory:{ height: 1.4, top: 0.02 }');

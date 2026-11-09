@@ -4,7 +4,7 @@ import { AttackResolver } from '../engine/combat/AttackResolver';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { shoto } from '../engine/data/fighters/shoto';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
@@ -88,7 +88,7 @@ it('increases gravity once per real air hit, caps it, and lifts on ordinary hits
   expect(hits).toBeGreaterThanOrEqual(2);
 });
 
-it.each([shoto, cowboy])('levanta o alvo $name quando é atingido enquanto cai', defender => {
+it.each([shoto, texas])('levanta o alvo $name quando é atingido enquanto cai', defender => {
   const sim = new Simulation(config, [juggleFixture, defender], { training: true, initialDistance: 56 });
   step(sim, 1, input('U'));
   for (let tick = 0; tick < 26; tick++) step(sim);

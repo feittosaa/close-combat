@@ -43,13 +43,15 @@ describe('Project asset and documentation hygiene', () => {
         used.add(`src/assets/scenes/${stage}/presentation/${name}.png`);
       }
     }
-    const cowboyAtlases = import.meta.glob('../assets/sprites/characters/cowboy/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
-    for (const key of Object.keys(cowboyAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
+    const texasAtlases = import.meta.glob('../assets/sprites/characters/texas/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
+    for (const key of Object.keys(texasAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
     const shotoAtlases = import.meta.glob('../assets/sprites/characters/shoto/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
     for (const key of Object.keys(shotoAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
     // Full-body art kept for future in-game use (pipeline.md lists it).
     const canonical = import.meta.glob(['../../assets/art/characters/*/turnaround*.png', '../../assets/art/characters/*/fullbody*.png'], { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(canonical)) used.add(projectPath(key));
+    const alternatives = import.meta.glob('../assets/art/characters/*/{victory-poses,selection-backgrounds,selection-icons}/*.png', { eager: true, query: '?url', import: 'default' });
+    for (const key of Object.keys(alternatives)) used.add(projectPath(key));
     const reviews = import.meta.glob<string>('../../assets/art/characters/*/revisao.json', { eager: true, query: '?raw', import: 'default' });
     for (const [key, source] of Object.entries(reviews)) {
       const manifest = projectPath(key);

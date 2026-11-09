@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { accents, accentShare } from '../rendering/accentColor';
 import { palettePixel } from '../rendering/characterColor';
 import shotoHues from '../assets/sprites/characters/shoto/hues.json';
-import cowboyHues from '../assets/sprites/characters/cowboy/hues.json';
+import texasHues from '../assets/sprites/characters/texas/hues.json';
 
 const MIN_ACCENT_SHARE = .05;
 const hueOf = ([r, g, b]: readonly number[]): number => {
@@ -11,7 +11,7 @@ const hueOf = ([r, g, b]: readonly number[]): number => {
 };
 
 describe('cor de destaque', () => {
-  it.each([['Bob', shotoHues, 'shoto'], ['Texas', cowboyHues, 'cowboy']] as const)('%s tem a cor de destaque presente nas folhas', (_name, hues, id) => {
+  it.each([['Bob', shotoHues, 'shoto'], ['Texas', texasHues, 'texas']] as const)('%s tem a cor de destaque presente nas folhas', (_name, hues, id) => {
     expect(accentShare(hues, accents[id])).toBeGreaterThanOrEqual(MIN_ACCENT_SHARE);
   });
 

@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { shoto } from '../engine/data/fighters/shoto';
-import { cowboy } from '../engine/data/fighters/cowboy';
+import { texas } from '../engine/data/fighters/texas';
 import type { CharacterDefinition } from '../engine/data/characters';
 import {
   autoSpriteScale, bodyCenterShift, CROUCH_EXIT, LYING_LENGTH, lyingFloorAnchor, POSE_BAND, postureBody, sheetKind,
   type SheetMeasure, type SheetMeasurements, type SpriteCalibration,
 } from '../rendering/animations/spriteScale';
-import { cowboySheetScale } from '../rendering/animations/cowboySprites';
+import { texasSheetScale } from '../rendering/animations/texasSprites';
 import { getShotoSpritePose } from '../rendering/animations/shotoSprites';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import shotoMeasurements from '../assets/sprites/characters/shoto/measurements.json';
-import cowboyMeasurements from '../assets/sprites/characters/cowboy/measurements.json';
+import texasMeasurements from '../assets/sprites/characters/texas/measurements.json';
 import shotoCalibration from '../assets/sprites/characters/shoto/calibration.json';
-import cowboyCalibration from '../assets/sprites/characters/cowboy/calibration.json';
+import texasCalibration from '../assets/sprites/characters/texas/calibration.json';
 
 const fighters = [
   { definition: shoto, measurements: shotoMeasurements as SheetMeasurements, calibration: shotoCalibration as SpriteCalibration, reference: 'idle-normal' },
-  { definition: cowboy, measurements: cowboyMeasurements as SheetMeasurements, calibration: cowboyCalibration as SpriteCalibration, reference: 'idle' },
+  { definition: texas, measurements: texasMeasurements as SheetMeasurements, calibration: texasCalibration as SpriteCalibration, reference: 'idle' },
 ] satisfies { definition: CharacterDefinition; measurements: SheetMeasurements; calibration: SpriteCalibration; reference: string }[];
 const atlases = Object.keys(import.meta.glob('../assets/sprites/characters/*/*.atlas.json'));
 const NOT_A_BODY = /^(effect-|magic-|crow$|tomato$|dynamite$|idle$)/;
@@ -28,7 +28,7 @@ const manual: Record<string, Record<string, number | readonly number[]>> = {
     'crouch-guard': 1.08, hurt: .97 * 1.02, 'hurt-high': .97 * 1.02, 'hurt-low': .97 * 1.02, 'air-hurt': 1.05 * .97,
     defeat: 1.1 * .8, fall: [1.3 * .92 * 1.1, 1.3 * .92 * 1.1, 1.3 * .92 * 1.1, 1.08 * 1.1, 1.08 * 1.1, 1.08 * 1.1],
   },
-  cowboy: {
+  texas: {
     backward: 1.02 * .99, 'enter-backward': .99, walk: .99, 'enter-walk': .99, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
     'throw-low': 1.01 * 1.05, 'throw-close-anticipation': 1.01,
     'ultimate-body': .99, taunt: 1.08, guard: .96 * .98 * 1.01 * 1.02 * 1.02 * 1.05 * 1.01 * 1.01, 'crouch-guard': 1.02 * 1.02 * .99, 'perfect-block': 1.02 * .98 * 1.02,
@@ -99,7 +99,7 @@ describe.each(fighters)('escala automática das animações de $definition.name'
 
 describe('uso das escalas no jogo', () => {
   it('a Texas e o Bob desenham cada folha com a escala validada', () => {
-    expect(cowboySheetScale('fall-landing', 5)).toBeCloseTo(2.4 * .8 * .92, 9);
+    expect(texasSheetScale('fall-landing', 5)).toBeCloseTo(2.4 * .8 * .92, 9);
     const state = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
     expect(getShotoSpritePose({ ...state, mode: 'blocking', crouching: true, stateStartedFrame: 0 }, 4)?.scale).toBeCloseTo(1.08, 9);
     expect(getShotoSpritePose({ ...state, mode: 'knockdown', grounded: false, stateStartedFrame: 0 }, 4)?.scale).toBe(1);
@@ -121,10 +121,10 @@ describe('modelo por postura para folhas ainda não validadas', () => {
   const sheets = (extra: Record<string, SheetMeasure>): SheetMeasurements =>
     ({ idle: measure(.5, .6, .3), walk: measure(.5, .6, .3), guard: measure(.5, .6, .3), crouch: measure(.35, .6, .27), ...extra });
   it('mantém uma pose dentro da variação natural e corrige uma fora dela até a borda', () => {
-    expect(autoSpriteScale(cowboy, sheets({ hurt: measure(.4, .5, .29) }), 'hurt')).toBe(1);
-    expect(autoSpriteScale(cowboy, sheets({ hurt: measure(.4, .5, .2) }), 'hurt')).toBeCloseTo(.3 / .2 / (1 + POSE_BAND), 2);
-    expect(autoSpriteScale(cowboy, sheets({ hurt: measure(.4, .7, .45) }), 'hurt')).toBeCloseTo(.3 / .45 / (1 - POSE_BAND), 2);
-    expect(postureBody(cowboy, sheets({}), 'standing')).toBe(.3);
+    expect(autoSpriteScale(texas, sheets({ hurt: measure(.4, .5, .29) }), 'hurt')).toBe(1);
+    expect(autoSpriteScale(texas, sheets({ hurt: measure(.4, .5, .2) }), 'hurt')).toBeCloseTo(.3 / .2 / (1 + POSE_BAND), 2);
+    expect(autoSpriteScale(texas, sheets({ hurt: measure(.4, .7, .45) }), 'hurt')).toBeCloseTo(.3 / .45 / (1 - POSE_BAND), 2);
+    expect(postureBody(texas, sheets({}), 'standing')).toBe(.3);
   });
   it('compara agachados com agachados e golpes que se levantam com as poses em pé', () => {
     const set = sheets({ 'crouch-punch': measure(.33, .34, .27), 'crouch-uppercut': measure(.36, .35 * CROUCH_EXIT + .05, .25) });
@@ -133,11 +133,11 @@ describe('modelo por postura para folhas ainda não validadas', () => {
     expect(sheetKind(shoto, set, 'crouch-uppercut')).toBe('standing');
   });
   it('amplia por quadro um corpo caído desenhado pequeno, limitado pelo comprimento aprendido', () => {
-    expect(autoSpriteScale(cowboy, sheets({ fall: measure(.2, .2, .2, .4) }), 'fall')).toBeCloseTo(LYING_LENGTH * .6 / .4, 2);
-    expect(autoSpriteScale(cowboy, sheets({ fall: measure(.5, .5, .2, .5) }), 'fall')).toBe(1.5);
+    expect(autoSpriteScale(texas, sheets({ fall: measure(.2, .2, .2, .4) }), 'fall')).toBeCloseTo(LYING_LENGTH * .6 / .4, 2);
+    expect(autoSpriteScale(texas, sheets({ fall: measure(.5, .5, .2, .5) }), 'fall')).toBe(1.5);
   });
   it('ignora efeitos e folhas inexistentes', () => {
     const noisy = sheets({ 'effect-dust-light': measure(.1, .2, .1) });
-    for (const name of ['effect-dust-light', 'inexistente']) expect(autoSpriteScale(cowboy, noisy, name)).toBe(1);
+    for (const name of ['effect-dust-light', 'inexistente']) expect(autoSpriteScale(texas, noisy, name)).toBe(1);
   });
 });

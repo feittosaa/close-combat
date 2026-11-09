@@ -10,10 +10,10 @@ vi.mock('phaser', () => ({ default: {} }));
 
 const project = (key: string) => key.replace(/^\.\.\//, 'src/');
 const sheets = Object.keys(import.meta.glob('../assets/sprites/**/*.png')).map(project).sort();
-const characterArt = Object.keys(import.meta.glob(['../assets/art/characters/*/fullbody*.png', '../assets/art/characters/*/selection-icon.png'])).map(project).sort();
+const characterArt = Object.keys(import.meta.glob(['../assets/art/characters/*/fullbody*.png', '../assets/art/characters/*/selection-icon.png', '../assets/art/characters/*/{victory-poses,selection-icons}/*.png'])).map(project).sort();
 
 describe('sprite intake', () => {
-  it('registers every sprite and every victory pose and icon as prepared (background cleanup), and nothing else', () => {
+  it('registers every sprite and every victory pose and icon (main and alternative) as prepared (background cleanup), and nothing else', () => {
     expect(Object.keys(registry.files).sort(), 'rode npm run sprites:prepare').toEqual(sheets);
     expect(Object.keys(registry.art).sort(), 'rode npm run sprites:prepare').toEqual(characterArt);
     for (const kept of registry.keep) expect([...sheets, ...characterArt]).toContain(kept);

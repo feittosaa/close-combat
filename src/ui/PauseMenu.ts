@@ -134,10 +134,10 @@ export class PauseMenu {
     if (entry.move) {
       const move = entry.move;
       if (move.category === 'throw') {
-        const cowboy = this.fighters[this.fighterIndex].id === 'cowboy';
-        if (cowboy && move.id === 'throw-24') this.details.append(el('p', t('pause.lowLasso')));
+        const texas = this.fighters[this.fighterIndex].id === 'texas';
+        if (texas && move.id === 'throw-24') this.details.append(el('p', t('pause.lowLasso')));
         else this.details.append(el('p', t('pause.throwDirection')));
-        if (cowboy) this.details.append(el('p', t('pause.throwEscape', { buttons: move.input.buttons.join(t('pause.or')) })));
+        if (texas) this.details.append(el('p', t('pause.throwEscape', { buttons: move.input.buttons.join(t('pause.or')) })));
       }
       if (move.rageCost) this.details.append(el('p', t('pause.rageCost', { cost: move.rageCost })));
       if (move.invulnerability) this.details.append(el('p', t(move.invulnerability.kind === 'all' ? 'pause.invulnerableAttacks' : 'pause.invulnerableProjectiles', { frames: move.invulnerability.until })));
