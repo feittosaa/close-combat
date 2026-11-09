@@ -277,3 +277,18 @@ it.each([['shoto', 'd,df,f,d,df,f,1', ['d,df,f,d,df,f,1', 'b,f,b,f,1+2', '1', 'd
       expect(firstCombo([{ wait: 8, command: ultimate }, { wait, command }]).hits, `${command} após ${wait}`).toBe(alone.hits);
     }
   });
+
+it('apertar 1+2 no fim da cinemática não troca o Redemoinho pelo soco potente nem gasta a rage à toa', () => {
+  // The activation freezes the ultimate's own frame count, so its end used to fall inside the chord grace window.
+  for (let wait = ULTIMATE_ACTIVATION_FRAMES - 10; wait <= ULTIMATE_ACTIVATION_FRAMES + 12; wait++) {
+    const sim = new Simulation(tutorialGameConfig(), [shoto, shoto], { training: true, initialDistance: TUTORIAL_DISTANCE });
+    sim.fillTrainingRage();
+    let powerPunch = false;
+    for (const input of routeInputs([{ wait: 8, command: 'd,df,f,d,df,f,1' }, { wait, command: '1+2' }], 300)) {
+      sim.stepFrame([input, N]);
+      powerPunch ||= sim.snapshot().characters[0].attack?.moveId === 'power-punch';
+    }
+    expect(powerPunch, `1+2 após ${wait}`).toBe(false);
+    expect(sim.snapshot().comboHistory.find(combo => combo.attackerId === 'player-1')?.usedUltimate, `1+2 após ${wait}`).toBe(true);
+  }
+});

@@ -1,8 +1,14 @@
 # Close Combat — Pipeline
 
+## Novos personagens e correções — 2026-11-08
+
+Branch `novos-personagens-e-correcoes` (a partir da `development` em `6533fcb`). Commit e push pedidos pelo usuário (2026-11-08) após a correção abaixo; validação: `npm ci`, `tsc`, suíte completa, build e `git diff --check`. Escopo pedido pelo usuário: incluir novos personagens e corrigir bugs; personagens ainda não definidos.
+
+- Corrigido: ultimate trocada pelo golpe potente. A tolerância de «botão completado» (até 3 quadros, golpe sem acerto) trocava o golpe em andamento por um comando com mais botões; como a cinemática congela o tempo do golpe, `1+2` apertado no fim da ativação do Redemoinho do Bob (botão `1`) trocava a ultimate pelo soco potente, com a rage já gasta. A tolerância não vale mais para golpes que gastam rage (`canStart`). Teste em `UltimateSequence.test.ts` falha sem a correção. Validação local: `tsc` e suíte completa.
+
 ## Tutorial livre e rotas de combo — 2026-11-08
 
-Branch `tutorial-improvement` (a partir da `development` em `49771ba`). A pedido do usuário (2026-11-08): commit e push da branch, merge na `development` e encerramento da branch. Validação antes do commit: `npm ci`, `tsc`, suíte completa, build e `git diff --check`. Aprovação dos combos avançados no jogo, teste com controle físico e decisão sobre o bug da ultimate trocada pelo golpe potente continuam pendentes. Pedido do usuário: script que identifique os golpes e combos de cada personagem e encontre, testando a máquina, combos para o tutorial; tutorial mais livre, sem ENTER entre etapas, separado em seções (Básico: movimentação, bloqueio e golpes básicos; Combos: todos os combos, especiais e ultimate; Avançado: combos que unem combos fechados, golpes e especiais, do mais fácil e menos danoso ao mais difícil e mais danoso), diferente para cada personagem, com uma tecla de exemplo que mostra o personagem executando o combo.
+Branch `tutorial-improvement` (a partir da `development` em `49771ba`). A pedido do usuário (2026-11-08): commit e push da branch, merge na `development` e encerramento da branch. Validação antes do commit: `npm ci`, `tsc`, suíte completa, build e `git diff --check`. Aprovação dos combos avançados no jogo e teste com controle físico continuam pendentes; o bug da ultimate trocada pelo golpe potente foi corrigido na branch seguinte. Pedido do usuário: script que identifique os golpes e combos de cada personagem e encontre, testando a máquina, combos para o tutorial; tutorial mais livre, sem ENTER entre etapas, separado em seções (Básico: movimentação, bloqueio e golpes básicos; Combos: todos os combos, especiais e ultimate; Avançado: combos que unem combos fechados, golpes e especiais, do mais fácil e menos danoso ao mais difícil e mais danoso), diferente para cada personagem, com uma tecla de exemplo que mostra o personagem executando o combo.
 
 `base.md` foi ajustado com autorização implícita do pedido: receitas continuam autorais; rotas de treino que só unem golpes, receitas e especiais existentes podem ser encontradas por ferramenta que testa entradas legais na simulação real.
 
