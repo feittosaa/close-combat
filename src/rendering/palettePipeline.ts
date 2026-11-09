@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
-import { CHARACTER_COLOR_PIPELINE, type CharacterColorData } from './characterColor';
+import { CHARACTER_COLOR_PIPELINE, IDENTITY_CORRECTION, sheetCorrection, type CharacterColorData, type SheetCorrection } from './characterColor';
 
 /**
- * Phaser's multi-texture sprite shader with the palette and stage light applied to each sampled texel. One program
- * serves every coloured sprite: no sprite compiles a shader or allocates a framebuffer when it first appears.
+ * Phaser's multi-texture sprite shader with the sheet correction, the palette and the stage light applied to each
+ * sampled texel, in that order. One program serves every coloured sprite: no sprite compiles a shader or allocates a
+ * framebuffer when it first appears.
  */
 const fragment = `
 #define SHADER_NAME CLOSE_COMBAT_CHARACTER_COLOR_FS
@@ -19,6 +20,9 @@ uniform float uExposure;
 uniform vec3 uShadow;
 uniform float uOcclusion;
 uniform float uWarmth;
+uniform float uCorrected;
+uniform mat3 uCorrection;
+uniform vec3 uOffset;
 varying vec2 outTexCoord;
 varying float outTexId;
 varying float outTintEffect;
@@ -86,9 +90,10 @@ void main() {
   vec4 color = texture * texel;
   if (outTintEffect == 1.0) color.rgb = mix(texture.rgb, outTint.bgr * outTint.a, texture.a);
   else if (outTintEffect == 2.0) color = texel;
-  if (uPalette > 0.5 || uLit > 0.5) {
-    // Same steps as the drawn sprite going through the palette and then the light: each reads the stored pixel.
+  if (uCorrected > 0.5 || uPalette > 0.5 || uLit > 0.5) {
+    // Same steps as the drawn sprite going through the correction, the palette and then the light: each reads the stored pixel.
     color = stored(color);
+    if (uCorrected > 0.5 && color.a >= 0.001) color = stored(vec4(clamp(uCorrection * (color.rgb / color.a) + uOffset, 0.0, 1.0) * color.a, color.a));
     if (uPalette > 0.5 && color.a >= 0.001) color = stored(vec4(palette(color.rgb / color.a) * color.a, color.a));
     if (uLit > 0.5 && color.a >= 0.001) color = vec4(light(color.rgb / color.a) * color.a, color.a);
   }
@@ -108,9 +113,11 @@ export function registerCharacterColor(scene: Phaser.Scene): void {
   class CharacterColorPipeline extends Phaser.Renderer.WebGL.Pipelines.MultiPipeline {
     private current?: CharacterColorData;
     constructor(game: Phaser.Game) { super({ game, fragShader: fragment }); }
+    private correction?: SheetCorrection;
     override batchSprite(sprite: Phaser.GameObjects.Image, camera: Phaser.Cameras.Scene2D.Camera, parent?: Phaser.GameObjects.Components.TransformMatrix): void {
       const data = { ...neutral, ...sprite.pipelineData } as CharacterColorData;
-      if (!this.current || !sameColor(this.current, data)) {
+      const correction = sheetCorrection(sprite.texture?.key) ?? IDENTITY_CORRECTION;
+      if (!this.current || !sameColor(this.current, data) || correction !== this.correction) {
         // Sprites already batched keep the colour they were queued with.
         this.flush();
         this.set1f('uPalette', data.palette);
@@ -119,11 +126,16 @@ export function registerCharacterColor(scene: Phaser.Scene): void {
         this.set3f('uShadow', data.shadow[0], data.shadow[1], data.shadow[2]);
         this.set1f('uOcclusion', data.occlusion);
         this.set1f('uWarmth', data.warmth);
+        this.set1f('uCorrected', correction === IDENTITY_CORRECTION ? 0 : 1);
+        // GLSL matrices are column-major; the correction is stored by rows, each followed by its offset.
+        this.setMatrix3fv('uCorrection', false, new Float32Array([0, 1, 2].flatMap(column => [0, 1, 2].map(row => correction[row * 4 + column]))));
+        this.set3f('uOffset', correction[3], correction[7], correction[11]);
         this.current = data;
+        this.correction = correction;
       }
       super.batchSprite(sprite, camera, parent);
     }
-    override onBind(): void { this.current = undefined; }
+    override onBind(): void { this.current = undefined; this.correction = undefined; }
   }
   pipelines.add(CHARACTER_COLOR_PIPELINE, new CharacterColorPipeline(scene.game));
 }
