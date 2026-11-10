@@ -364,7 +364,7 @@ export class MenuScene extends Phaser.Scene {
     this.page = this.page === 'stage' ? 'fighter' : this.page === 'fighter' && this.mode === 'arcade' ? 'difficulty' : 'home'; this.render();
   }
   private confirmFighter(player = this.selection.activePlayer): void {
-    if (!this.selection.confirm(player, selectsOpponent(this.mode), this.mode !== 'arcade')) { this.render(); return; }
+    if (!this.selection.confirm(player, selectsOpponent(this.mode))) { this.render(); return; }
     if (isTrainingMode(this.mode) || this.mode === 'arcade') this.startFight();
     else { this.picker = undefined; this.page = 'stage'; this.render(); }
   }

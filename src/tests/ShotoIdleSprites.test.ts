@@ -16,6 +16,14 @@ describe('animação de espera do Shoto', () => {
     expect(combatantDepth({ ...state, ipponReceivedFrame: 100 }, 124)).toBe(10);
   });
 
+  it('desenha o personagem caído, ou que perdeu o round, atrás do que está em pé', () => {
+    const state = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
+    expect(combatantDepth({ ...state, mode: 'knockdown' }, 100)).toBe(9);
+    expect(combatantDepth({ ...state, mode: 'knockdown', grounded: false }, 100)).toBe(9);
+    expect(combatantDepth(state, 100, true)).toBe(9);
+    expect(combatantDepth({ ...state, mode: 'hitstun' }, 100)).toBe(10);
+  });
+
   it('percorre os seis quadros no relógio da simulação e reinicia', () => {
     expect([0, 11, 12, 60, 71, 72].map(frame => getShotoIdleFrame(frame, 0))).toEqual([0, 0, 1, 5, 5, 0]);
     expect(getShotoIdleFrame(115, 100)).toBe(1);

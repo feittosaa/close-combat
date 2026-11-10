@@ -59,10 +59,8 @@ export class FighterSelection {
     this.ready[other] = false;
   }
 
-  /** Without `chooseColor` (Arcade) the fighter is ready at once, in its default colour. */
-  confirm(player: SelectionPlayer, versus: boolean, chooseColor = true): boolean {
+  confirm(player: SelectionPlayer, versus: boolean): boolean {
     this.activePlayer = player;
-    if (!chooseColor) { this.palettes[player] = 0; this.ready[player] = true; return this.finish(versus); }
     // The random pick is ready at once, with no colour step: fighter and colour are drawn when the fight starts.
     if (this.random[player]) { this.choosingColor[player] = false; this.ready[player] = true; return this.finish(versus); }
     if (!this.choosingColor[player]) {
