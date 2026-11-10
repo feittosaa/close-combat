@@ -121,6 +121,8 @@ export class Simulation {
   private tapFrame = [-Infinity, -Infinity];
   private dashFrames = [0, 0];
   private dashAxis = [0, 0];
+  /** Direction already held against a dash when it started (back held while dashing forward): it does not cancel it. */
+  private dashAgainst = [0, 0];
 
   constructor(private readonly config: GameConfig,
     private readonly definitions: readonly [CharacterDefinition, CharacterDefinition] = [defaultCharacter, defaultCharacter],
@@ -147,7 +149,7 @@ export class Simulation {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
     this.jumpHeld.fill(false); this.rageActionHeld.fill(false); this.rushChordHeld.fill(false); this.ultimateHeld.fill(false); this.tauntHeld.fill(false); this.previousAxis.fill(0); this.tapAxis.fill(0); this.tapFrame.fill(-Infinity);
     this.guardHeld.fill(false); this.guardStarted.fill(-Infinity);
-    this.dashFrames.fill(0); this.dashAxis.fill(0); this.pendingCommands.fill(undefined);
+    this.dashFrames.fill(0); this.dashAxis.fill(0); this.dashAgainst.fill(0); this.pendingCommands.fill(undefined);
   }
   isMatchOver(): boolean { return this.phase === 'match-over'; }
   /** Starts the match over; in training, `keepRage` only repositions the fighters and leaves their rage as it is. */
@@ -1048,20 +1050,20 @@ export class Simulation {
     const canDash = grounded || Boolean(movement.airDash && (!character.airDashUsed || this.dashFrames[index] > 0));
     if (canDash && !character.crouching && horizontal && horizontal !== this.previousAxis[index]) {
       if (this.dashFrames[index] === 0 && this.tapAxis[index] === horizontal && this.frame - this.tapFrame[index] <= this.config.movement.doubleTapWindowFrames) {
-        this.dashFrames[index] = movement.dashDurationFrames ?? this.config.movement.dashDurationFrames; this.dashAxis[index] = horizontal;
+        this.dashFrames[index] = movement.dashDurationFrames ?? this.config.movement.dashDurationFrames; this.dashAxis[index] = horizontal; this.dashAgainst[index] = 0;
         if (!grounded) character.airDashUsed = true;
       }
       this.tapAxis[index] = horizontal; this.tapFrame[index] = this.frame;
     }
     if(canDash && !character.crouching && this.dashFrames[index]===0 && input.dash){
-      this.dashAxis[index]=input.dash==='F'?1:-1;this.dashFrames[index]=movement.dashDurationFrames ?? this.config.movement.dashDurationFrames;
+      this.dashAxis[index]=input.dash==='F'?1:-1;this.dashAgainst[index]=this.previousAxis[index]===-this.dashAxis[index]?this.previousAxis[index]:0;this.dashFrames[index]=movement.dashDurationFrames ?? this.config.movement.dashDurationFrames;
       if (!grounded) character.airDashUsed = true;
     }
     this.previousAxis[index] = horizontal;
     if (character.crouching) {
       this.dashFrames[index] = 0; this.dashAxis[index] = 0; character.mode = 'crouching'; return;
     }
-    if (!canDash || (horizontal !== 0 && this.dashFrames[index] > 0 && horizontal !== this.dashAxis[index])) {
+    if (!canDash || (horizontal !== 0 && this.dashFrames[index] > 0 && horizontal !== this.dashAxis[index] && horizontal !== this.dashAgainst[index])) {
       this.dashFrames[index] = 0; this.dashAxis[index] = 0;
     }
     let speed = horizontal > 0 ? movement.walkSpeed : movement.backwardWalkSpeed;

@@ -25,6 +25,22 @@ it.each(['F','B'] as const)('segundo toque %s inicia imediatamente e completa 18
     expect(sim.snapshot().characters[index]).toMatchObject({mode:'neutral',x:end});
   }
 });
+it.each([0,1])('segurar para trás não cancela nem inverte o dash para frente do jogador %i',index=>{
+  const sim=practice();const side=(direction:Direction)=>{const pair=[N,N];pair[index]=input(direction);return pair;};
+  for(let frame=0;frame<30;frame++)sim.stepFrame(side('B'));
+  const before=sim.snapshot().characters[index].x;
+  // Dash para frente com a tecla de trás ainda mantida: o pedido chega sem direção e depois só resta «trás».
+  const request=[N,N];request[index]={...N,dash:'F'};sim.stepFrame(request);
+  expect(sim.snapshot().characters[index].mode).toBe('dashing');
+  for(let frame=1;frame<18;frame++){sim.stepFrame(side('B'));expect(sim.snapshot().characters[index].mode,`${frame}`).toBe('dashing');}
+  expect((sim.snapshot().characters[index].x-before)*(index===0?1:-1)).toBeCloseTo(shoto.movement.dashSpeed*18);
+});
+it('um «trás» novo ainda cancela o dash para frente quando não estava mantido',()=>{
+  const sim=practice();sim.stepFrame([{...N,dash:'F'},N]);sim.stepFrame([N,N]);
+  expect(sim.snapshot().characters[0].mode).toBe('dashing');
+  sim.stepFrame([input('B'),N]);
+  expect(sim.snapshot().characters[0].mode).toBe('moving');
+});
 it('não transforma toques lentos ou repetição de tecla mantida em dash',()=>{
   const sim=practice();sim.stepFrame([input('F'),N]);
   for(let i=0;i<13;i++)sim.stepFrame([N,N]);

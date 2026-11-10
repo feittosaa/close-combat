@@ -38,9 +38,8 @@ export function stageForMatch(mode:MatchMode,requestedId?:string){
   return isTrainingMode(mode)?trainingStage:(getStageById(requestedId??'')??defaultStage);
 }
 
-/** Arcade always uses the default colours; only the mirror match gives the opponent the second one. */
+/** The player's chosen colour; an opponent not picked by the player (Arcade, tutorial) takes the other colour only in a mirror match. */
 export function matchPalettes(setup: FightSetup, sameFighter: boolean): [boolean, boolean] {
-  if (setup.mode === 'arcade') return [false, sameFighter];
   const player = setup.fighterPalette === 1;
   return [player, setup.opponentPalette === undefined ? sameFighter && !player : setup.opponentPalette === 1];
 }

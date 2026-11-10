@@ -38,17 +38,13 @@ export function preloadTexasSprites(scene: Phaser.Scene): void {
 }
 export const texasSheetScale = (name: string, frame = 0): number => autoSpriteScale(texas, texasMeasurements, name, frame, texasCalibration);
 const pose = (name: string, frame: number, state: CharacterState) => {
-  const horizontal: Record<string, readonly number[]> = {
-    'enter-taunt': [-4, -5, -5, -11, -16, -30],
-    taunt: [-1, -8, -11, 9, 29, 42],
-  };
   const direction = state.facing === 'left' ? -1 : 1, scale = texasSheetScale(name, frame);
   // A lying drawing on the floor rests on its lowest row instead of the feet line.
   const floor = state.grounded ? lyingFloorAnchor(texas, texasMeasurements, name, frame) : undefined;
   return {
     texture: `texas-${name}`, frame, scale, alpha: 1,
     flipX: direction === -1,
-    offsetX: ((horizontal[name]?.[frame] ?? 0) / 640 + bodyCenterShift(texas, texasMeasurements, name, frame) * scale) * texasDisplayHeight * direction,
+    offsetX: bodyCenterShift(texas, texasMeasurements, name, frame) * scale * texasDisplayHeight * direction,
     offsetY: floor === undefined ? 0 : (texasFootAnchor - floor) * texasDisplayHeight * scale,
   };
 };

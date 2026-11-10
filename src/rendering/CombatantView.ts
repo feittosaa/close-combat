@@ -7,9 +7,10 @@ import { getCharacterById } from '../engine/data/characters';
 import { TEXAS_GRAB_SHOTS } from '../engine/combat/texasGrab';
 import { CharacterColorEffect, type CharacterColor } from './characterColor';
 
-export function combatantDepth(state: CharacterState, frame: number): number {
+/** A fighter on the way down, lying or losing the round is drawn behind the one still standing; so is the victim of an ippon while thrown. */
+export function combatantDepth(state: CharacterState, frame: number, lost = false): number {
   const ipponAge = frame - (state.ipponReceivedFrame ?? -Infinity);
-  return ipponAge >= 0 && ipponAge < 24 ? 9 : 10;
+  return lost || state.mode === 'knockdown' || (ipponAge >= 0 && ipponAge < 24) ? 9 : 10;
 }
 
 /** Fighters without body artwork retain diagnostic geometry. */
@@ -26,7 +27,7 @@ export class CombatantView {
     this.graphics = scene.add.graphics().setDepth(11);
   }
   sync(state: CharacterState, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number}, color: CharacterColor = {}): void {
-    const depth = combatantDepth(state, frame);
+    const depth = combatantDepth(state, frame, result !== undefined && !result.winner);
     this.graphics.setDepth(depth);
     const grabAge = state.attack?.moveId === 'throw-24' && state.attack.throwConfirmedFrame !== undefined
       ? frame - state.attack.throwConfirmedFrame : -1;

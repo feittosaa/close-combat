@@ -28,17 +28,8 @@ const manual: Record<string, Record<string, number | readonly number[]>> = {
     'crouch-guard': 1.08, hurt: .97 * 1.02, 'hurt-high': .97 * 1.02, 'hurt-low': .97 * 1.02, 'air-hurt': 1.05 * .97,
     defeat: 1.1 * .8, fall: [1.3 * .92 * 1.1, 1.3 * .92 * 1.1, 1.3 * .92 * 1.1, 1.08 * 1.1, 1.08 * 1.1, 1.08 * 1.1],
   },
-  texas: {
-    backward: 1.02 * .99, 'enter-backward': .99, walk: .99, 'enter-walk': .99, throw: 1.05 * .98, 'throw-active': .98, 'throw-miss': .98,
-    'throw-low': 1.01 * 1.05, 'throw-close-anticipation': 1.01,
-    'ultimate-body': .99, taunt: 1.08, guard: .96 * .98 * 1.01 * 1.02 * 1.02 * 1.05 * 1.01 * 1.01, 'crouch-guard': 1.02 * 1.02 * .99, 'perfect-block': 1.02 * .98 * 1.02,
-    hurt: .94 * .96 * .96 * 1.02 * 1.02, 'hurt-low': .97 * 1.01 * 1.01 * 1.02, 'hurt-high': .97 * .98 * .98 * 1.02,
-    'dash-forward': .97 * .97, 'dash-backward': .97 * .97, 'air-dash-forward': .97, 'air-dash-backward': .97 * .98,
-    'heavy-punch': .98, 'charge-heavy-punch': .98, 'combo-left-shot': .98 * .98, 'combo-right-shot': .98 * .98,
-    'double-shot': 1.02, 'launch-hit': 1.1 * 1.12 * 1.02 * 1.02 * .94 * 1.03, 'air-hurt': .94 * 1.04,
-    'crouch-combo-shot': .9, 'crouch-light-kick': 1.04, 'heavy-kick': 1.04, 'push-away': .98,
-    'fall-landing': [1.51 * .95, 1.65 * .95, 1.7 * .95, 1, 1, 2.4 * .8 * .92],
-  },
+  // A arte nova da Texas ainda não tem refinamento manual: o modelo é medido contra a escala 1.
+  texas: {},
 };
 const manualScale = (id: string, name: string, frame: number) => {
   const value = manual[id][name] ?? 1;
@@ -99,7 +90,7 @@ describe.each(fighters)('escala automática das animações de $definition.name'
 
 describe('uso das escalas no jogo', () => {
   it('a Texas e o Bob desenham cada folha com a escala validada', () => {
-    expect(texasSheetScale('fall-landing', 5)).toBeCloseTo(2.4 * .8 * .92, 9);
+    expect(texasSheetScale('fall-landing', 5)).toBeCloseTo(.99, 9);
     const state = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
     expect(getShotoSpritePose({ ...state, mode: 'blocking', crouching: true, stateStartedFrame: 0 }, 4)?.scale).toBeCloseTo(1.08, 9);
     expect(getShotoSpritePose({ ...state, mode: 'knockdown', grounded: false, stateStartedFrame: 0 }, 4)?.scale).toBe(1);
