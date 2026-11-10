@@ -40,7 +40,7 @@ MIN_PIXELS = 300
 # Pull of the correction toward the identity: keeps colors without a material (effects, line work) nearly unchanged.
 STIFFNESS = .005
 # Fits refined on the already corrected colors (a material's membership shifts as its color moves).
-PASSES = 3
+PASSES = 5
 # Turnaround paper: lightness and chroma of the background behind the drawing.
 PAPER_L, PAPER_CHROMA = 88, 12
 SWATCH, LABEL_WIDTH = 24, 190

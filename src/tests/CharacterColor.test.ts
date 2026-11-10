@@ -123,3 +123,12 @@ it('draws a fighter with corrected sheets through the colour pipeline even witho
   new CharacterColorEffect().apply(sprite as never, { alternate: false }, 'bob');
   expect(sprite.setPipeline).toHaveBeenCalled();
 });
+
+it('recolours the alternate palette by the drawn colour, so a corrected sheet keeps the same red areas', () => {
+  // A drawn shirt tone, and a correction that dulls it below the saturation the palette selects.
+  const drawn = [136, 104, 48] as const;
+  const corrected = correctedPixel(...drawn, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, .15]);
+  expect(palettePixel(...corrected, 'bob')).toEqual(corrected);
+  const recolored = palettePixel(...corrected, 'bob', drawn);
+  expect(recolored[0]).toBeGreaterThan(recolored[1] * 2);
+});

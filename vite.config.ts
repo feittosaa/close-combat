@@ -11,6 +11,8 @@ import { defineConfig, type HotPayload, type Plugin, type ViteDevServer } from '
  * `scripts/prepare-sprites.py` (upscale of art in very low resolution, background cleanup, measurement for the automatic
  * animation size, the trimmed layout of character sheets and the trimmed victory pose). The same step runs once before `npm run dev` and `npm run build`.
  */
+/** Developer-mode saves in progress: they prepare the sprites they write themselves, so the intake waits for them. */
+let developerSaves = 0;
 const PREPARED = /src\/assets\/(sprites\/.*|art\/characters\/[\w-]+\/(fullbody[\w-]*|selection-(icon|background)|(victory-poses|selection-icons|selection-backgrounds)\/[\w-]+))\.png$/;
 function spriteIntake(): Plugin {
   let timer: ReturnType<typeof setTimeout> | undefined, running = false, again = false;
@@ -23,7 +25,7 @@ function spriteIntake(): Plugin {
     });
   };
   const queue = (file: string): void => {
-    if (!PREPARED.test(file.replaceAll('\\', '/'))) return;
+    if (developerSaves || !PREPARED.test(file.replaceAll('\\', '/'))) return;
     clearTimeout(timer); timer = setTimeout(run, 500);
   };
   return {
@@ -41,6 +43,7 @@ const IMAGE_PATH = /^(src\/assets|assets\/art)\/[\w./-]+\.(png|jpe?g|webp)$/;
 /**
  * Lets the developer mode save its tuning into the sources: animation sizes into each fighter's `calibration.json`
  * (`scripts/apply-sprite-scales.ts`), moves, recipes and colours into the authored data (`scripts/apply-dev-overrides.ts`),
+ * outline widths into each fighter's `outline.json`, redrawing its atlases (`scripts/apply-outlines.ts`),
  * replaced images over the existing files, and alternative art added or removed (all through `/__dev/everything`).
  */
 function developerSaving(): Plugin {
@@ -141,7 +144,7 @@ function developerSaving(): Plugin {
       return ok;
     };
     if (typeof tuning === 'string') {
-      for (const path of ['scripts/apply-sprite-scales.ts', 'scripts/apply-dev-overrides.ts']) if (!step(await applyTuning(path, tuning))) return;
+      for (const path of ['scripts/apply-sprite-scales.ts', 'scripts/apply-dev-overrides.ts', 'scripts/apply-outlines.ts']) if (!step(await applyTuning(path, tuning))) return;
     }
     await writeAlternatives(added, removed);
     await writeImages(files);
@@ -151,6 +154,7 @@ function developerSaving(): Plugin {
   const routes: Record<string, (request: IncomingMessage, response: ServerResponse) => Promise<void>> = {
     '/__dev/sprite-scales': script('scripts/apply-sprite-scales.ts'),
     '/__dev/overrides': script('scripts/apply-dev-overrides.ts'),
+    '/__dev/outlines': script('scripts/apply-outlines.ts'),
     '/__dev/everything': everything,
   };
   return {
@@ -169,22 +173,23 @@ function developerSaving(): Plugin {
 }
 
 /**
- * A save writes many files, each of which would reload the page: while one runs (and until its last written files have
- * reached the watcher), Vite's updates and reloads are held back, and the page then reloads once.
+ * A save writes many files, each of which would reload the page and prepare the sprites again: while one runs (and
+ * until its last written files have reached the watcher), Vite's updates and reloads and the sprite intake are held
+ * back, and the page then reloads once.
  */
 function holdReloads(server: ViteDevServer): (save: () => Promise<void>) => Promise<void> {
   const QUIET_MS = 500, hot = server.ws, send = hot.send.bind(hot) as (payload: HotPayload) => void;
-  let saves = 0, held = false, lastChange = 0;
-  server.watcher.on('all', () => { if (saves) lastChange = Date.now(); });
+  let held = false, lastChange = 0;
+  server.watcher.on('all', () => { if (developerSaves) lastChange = Date.now(); });
   hot.send = ((payload: HotPayload | string, ...rest: unknown[]) => {
-    if (saves && typeof payload === 'object' && (payload.type === 'update' || payload.type === 'full-reload')) { held = true; return; }
+    if (developerSaves && typeof payload === 'object' && (payload.type === 'update' || payload.type === 'full-reload')) { held = true; return; }
     (send as (...args: unknown[]) => void)(payload, ...rest);
   }) as typeof hot.send;
   return async save => {
-    saves++;
+    developerSaves++;
     try { await save(); } finally {
       while (Date.now() - lastChange < QUIET_MS) await new Promise(resolve => setTimeout(resolve, QUIET_MS));
-      if (--saves === 0 && held) { held = false; send({ type: 'full-reload', path: '*' }); }
+      if (--developerSaves === 0 && held) { held = false; send({ type: 'full-reload', path: '*' }); }
     }
   };
 }

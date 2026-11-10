@@ -60,8 +60,20 @@ describe('developer tuning', () => {
     expect(scale('walk')).toBe(before);
   });
 
+  it('trims or grows every frame\'s outline toward the width tried, and back to the saved one when cleared', async () => {
+    const { outlineTargets, outlineTrim } = await import('../rendering/characterColor');
+    const tuning = new DevTuning(fresh()), saved = outlineTargets.get('shoto')!;
+    const trim = () => outlineTrim('shoto-walk', 0, 1024, .35);
+    const before = trim();
+    tuning.setOutline('shoto', saved + .35);
+    expect(trim()).toBeCloseTo(before - 1);
+    tuning.setOutline('shoto', undefined);
+    expect(trim()).toBeCloseTo(before);
+    expect(tuning.overrides.outlines).toEqual({});
+  });
+
   it('ignores unreadable stored tuning', () => {
-    expect(loadOverrides({ getItem: () => '{broken' })).toEqual({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
+    expect(loadOverrides({ getItem: () => '{broken' })).toEqual({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, outlines: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
   });
 
   it('reframes the selection art over the authored values and restores them', () => {

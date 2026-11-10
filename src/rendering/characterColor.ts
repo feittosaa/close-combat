@@ -18,6 +18,24 @@ const corrections = new Map<string, SheetCorrection>(Object.entries(correctionFi
 const correctedFighters = new Set([...corrections.keys()].map(texture => texture.split('-')[0]));
 /** The correction of the sheet behind a texture key, if it has one. */
 export const sheetCorrection = (texture: string | undefined): SheetCorrection | undefined => texture === undefined ? undefined : corrections.get(texture);
+const fighterFiles = <T>(files: Record<string, T>) => new Map(Object.entries(files).map(([path, file]) => [path.split('/').slice(-2)[0], file] as const));
+/** On-screen outline width, in world pixels, of each fighter with uniform outlines (`outline.json`). */
+export const outlineTargets = new Map([...fighterFiles(import.meta.glob<{ width: number }>('../assets/sprites/characters/*/outline.json', { eager: true, import: 'default' }))]
+  .map(([fighter, file]) => [fighter, file.width] as const));
+/** Outline width of every frame, as a fraction of its height (`scripts/measure-outlines.py`), keyed by texture. */
+const measuredOutlines = new Map<string, readonly (number | null)[]>([...fighterFiles(import.meta.glob<Record<string, readonly (number | null)[]>>('../assets/sprites/characters/*/outline-widths.json', { eager: true, import: 'default' }))]
+  .flatMap(([fighter, sheets]) => Object.entries(sheets).map(([sheet, widths]) => [`${fighter}-${sheet}`, widths] as const)));
+/** Outline widths tried in the developer mode, per fighter, over `outlineTargets`. */
+export const outlineWidths = new Map<string, number>();
+/**
+ * Texels to trim from the outside of a frame's outline (negative: to grow outward) so it shows at the fighter's target
+ * width: `frameHeight` is the frame's height in texels and `worldPerTexel` the scale it is drawn with.
+ */
+export function outlineTrim(texture: string, frame: string | number, frameHeight: number, worldPerTexel: number): number {
+  const fighter = texture.split('-')[0], target = outlineWidths.get(fighter) ?? outlineTargets.get(fighter);
+  const measured = measuredOutlines.get(texture)?.[Number(frame)];
+  return target === undefined || measured === undefined || measured === null || !worldPerTexel ? 0 : measured * frameHeight - target / worldPerTexel;
+}
 /**
  * Colour of one sprite, read by the shared pipeline (`palettePipeline.ts`) while it draws that sprite: the selective
  * alternate palette (`palette`: 0 none, 1 bob, 2 texas, 3 magic, 4 magic highlight) and, when `lit`, the stage light.
@@ -68,29 +86,42 @@ export function correctedPixel(r: number, g: number, b: number, correction: Shee
     correction[row * 4] * rgb[0] + correction[row * 4 + 1] * rgb[1] + correction[row * 4 + 2] * rgb[2] + correction[row * 4 + 3])) * 255)) as [number, number, number];
 }
 
-/** Change selected chromatic ranges only, retaining shading and transparency. */
-export function palettePixel(r: number, g: number, b: number, palette: Palette): [number, number, number] {
+/** Hue (degrees), saturation and value (0–255) of a pixel. */
+function hsv(r: number, g: number, b: number): [number, number, number] {
+  const max = Math.max(r, g, b), delta = max - Math.min(r, g, b);
+  if (!delta || !max) return [0, 0, max];
+  const hue = (max === r ? (g - b) / delta + (g < b ? 6 : 0) : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4) * 60;
+  return [hue, delta / max, max];
+}
+
+/**
+ * Change selected chromatic ranges only, retaining shading and transparency. Which pixels change is read from `drawn`,
+ * the colour before the sheet correction (the ranges were tuned on it); the colour they take comes from the pixel given.
+ */
+export function palettePixel(r: number, g: number, b: number, palette: Palette, drawn: readonly [number, number, number] = [r, g, b]): [number, number, number] {
   if (palette === 'magic-highlight') return [Math.round(r * .72), Math.round(g * .5), b];
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
-  if (!delta || !max) return [r, g, b];
-  const saturation = delta / max;
-  let h = (max === r ? (g - b) / delta + (g < b ? 6 : 0) : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4) * 60;
-  if (palette === 'bob' && h >= 27 && h <= 56 && saturation >= .38 && max < 190 && max > 20) {
-    // Saturated orange at the low hue edge is blond hair or straw, not shirt: fade it out instead of cutting.
-    const shirt = Math.max(smoothstep(30, 35, h), 1 - smoothstep(.6, .72, saturation));
+  const [h, saturation, max] = hsv(r, g, b);
+  const [dh, ds, dv] = hsv(...drawn);
+  if (!ds) return [r, g, b];
+  // The olive shirt, its shadows and the tie reach greener, duller tones in some sheets than in the idle.
+  if (palette === 'bob' && dh >= 27 && dh <= 90 && ds >= (dh > 56 ? .3 : .38) && dv < 190 && dv > 20) {
+    // Saturated orange at the low hue edge is blond hair or straw, not shirt: fade it out instead of cutting; the
+    // green edge fades out too.
+    const shirt = Math.max(smoothstep(30, 35, dh), 1 - smoothstep(.6, .72, ds)) * (1 - smoothstep(80, 90, dh));
     const red = hsvToRgb(355 + (h - 40) * .35, Math.min(255, max * 1.15), Math.max(saturation, .9));
     return red.map((value, index) => Math.round([r, g, b][index] + (value - [r, g, b][index]) * shirt)) as [number, number, number];
   }
-  else if (palette === 'texas' && !(h >= 160 && h <= 255 && saturation >= .1)) {
-    const warm = Math.max(1 - smoothstep(34, 44, h), smoothstep(292, 307, h));
-    const red = Math.max(1 - smoothstep(8, 24, h), smoothstep(292, 307, h));
-    const dark = warm * smoothstep(.18, .35, saturation) * (1 - smoothstep(.69, .82, max / 255));
-    const vividRed = red * smoothstep(.35, .6, saturation);
+  const blue = dh >= 160 && dh <= 255 && ds >= .1;
+  if (palette === 'texas' && !blue) {
+    const warm = Math.max(1 - smoothstep(34, 44, dh), smoothstep(292, 307, dh));
+    const red = Math.max(1 - smoothstep(8, 24, dh), smoothstep(292, 307, dh));
+    const dark = warm * smoothstep(.18, .35, ds) * (1 - smoothstep(.69, .82, dv / 255));
+    const vividRed = red * smoothstep(.35, .6, ds);
     const weight = Math.max(dark, vividRed);
     const shade = max * .3;
     return [r, g, b].map(value => Math.round(value + (shade - value) * weight)) as [number, number, number];
   }
-  else if ((palette === 'magic' || palette === 'texas') && h >= 160 && h <= 255 && saturation >= .1) return hsvToRgb(h + 55, max, saturation).map(Math.round) as [number, number, number];
+  if ((palette === 'magic' || palette === 'texas') && blue) return hsvToRgb(h + 55, max, saturation).map(Math.round) as [number, number, number];
   return [r, g, b];
 }
 
@@ -138,9 +169,8 @@ export class CharacterColorEffect {
                 const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < pixels.data.length; i += 4) {
                   if (!pixels.data[i + 3]) continue;
-                  let [r, g, b] = [pixels.data[i], pixels.data[i + 1], pixels.data[i + 2]];
-                  if (correction) [r, g, b] = correctedPixel(r, g, b, correction);
-                  [r, g, b] = palettePixel(r, g, b, selected);
+                  const drawn = [pixels.data[i], pixels.data[i + 1], pixels.data[i + 2]] as const;
+                  const [r, g, b] = palettePixel(...(correction ? correctedPixel(...drawn, correction) : drawn), selected, drawn);
                   pixels.data[i] = r; pixels.data[i + 1] = g; pixels.data[i + 2] = b;
                 }
                 ctx.putImageData(pixels, 0, 0); previousFrame = frame; previousPalette = selected;
@@ -157,8 +187,9 @@ export class CharacterColorEffect {
     // Every coloured sprite draws through one shared pipeline that reads its colour from `pipelineData`.
     const lit = isLit(color);
     if (sprite.pipeline?.name !== CHARACTER_COLOR_PIPELINE) {
-      // A fighter with corrected sheets always draws through the pipeline, which picks each sheet's correction.
-      if (palette === 'none' && !lit && !correctedFighters.has(sprite.texture?.key.split('-')[0] ?? '')) return;
+      // A fighter with corrected sheets or uniform outlines always draws through the pipeline, which reads both from the texture.
+      const fighter = sprite.texture?.key.split('-')[0] ?? '';
+      if (palette === 'none' && !lit && !correctedFighters.has(fighter) && !outlineTargets.has(fighter)) return;
       sprite.setPipeline(CHARACTER_COLOR_PIPELINE);
     }
     const data: CharacterColorData = { palette: PALETTE_CODES[palette], lit, exposure: color.exposure ?? 1, shadow: color.shadow ?? [1, 1, 1],
