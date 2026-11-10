@@ -10,6 +10,7 @@ import { texasDisplayHeight, texasFootAnchor, getTexasFrameSize } from '../rende
 import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shotoSpriteScale } from '../rendering/animations/shotoSprites';
 import { ALTERNATIVE_KINDS, alternativeArt, arcadeFrame, fighterArt, frameStyle, heroFrame, tileFrame, withAlternative, type AlternativeArtKind, type AlternativeFraming, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
+import { outlineTargets } from '../rendering/characterColor';
 import { VictoryScreen } from '../ui/VictoryScreen';
 import { applyContactFrames, contactFrameCut, contactFrameMargin, contactFrameSize, isContactSheet, type FrameCut } from '../rendering/contactEffects';
 import { addAlternatives, discardAddition, gameImages, markRemoval, pendingAdditions, pendingRemovals, replaceImage, replacedImages, restoreImage, takePendingAlternatives } from './assetOverrides';
@@ -260,9 +261,12 @@ export class DeveloperPanel {
     controls.append(button('◀ Quadro', () => step(-1)), play, button('Quadro ▶', () => step(1)), labelled('Quadros/s', fps), flip);
     viewer.append(canvas, info, controls);
     if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment));
+    const outline = sheet && outlineTargets.get(sheet.fighter);
+    if (sheet && outline !== undefined) viewer.append(this.outlineControls(sheet.fighter, outline));
     const actions = el('div', 'developer-row');
     if (cuts) { viewer.append(cuts.element); actions.append(this.saveToCode('cortes', ['frameCuts', 'frameSizes'], '/__dev/overrides')); }
     if (sheet) actions.append(this.saveToCode('tamanhos', ['spriteScales'], '/__dev/sprite-scales'));
+    if (sheet && outline !== undefined) actions.append(this.saveToCode('contorno', ['outlines'], '/__dev/outlines'));
     viewer.append(actions); actions.append(this.spriteReset());
     const layout = el('div', 'developer-split'); layout.append(list, viewer);
     page.append(layout);
@@ -364,6 +368,25 @@ export class DeveloperPanel {
       button('+1%', () => { devTuning.setSpriteScale(key, adjustment + .01); this.changed(); this.render(); }),
       button('Automático', () => { devTuning.setSpriteScale(key, undefined); this.changed(); this.render(); }),
       el('p', 'developer-hint', 'Contorno claro: idle no tamanho automático, na mesma proporção do jogo. O ajuste vale na hora em qualquer luta; «Salvar tamanhos no código» grava na calibração.'));
+    return row;
+  }
+  /**
+   * On-screen width of a fighter's black outline, in world pixels, over every animation: the game trims or grows each
+   * frame's outline to it at once (WebGL only; the preview above shows the atlas as drawn); saving writes `outline.json`.
+   */
+  private outlineControls(fighter: string, baked: number): HTMLElement {
+    const width = devTuning.overrides.outlines[fighter] ?? baked;
+    const set = (value: number | undefined) => {
+      devTuning.setOutline(fighter, value === undefined || Math.abs(value - baked) < .005 ? undefined : Math.round(Math.max(.1, value) * 100) / 100);
+      this.changed(); this.render();
+    };
+    const field = input('number', String(width)); field.step = '0.05'; field.min = '0.1';
+    field.setAttribute('aria-label', 'Espessura do contorno em pixels do mundo');
+    field.onchange = () => set(field.value === '' ? undefined : Number(field.value));
+    const row = el('div', 'developer-row'); row.classList.toggle('developer-changed', width !== baked);
+    row.append(labelled('Contorno (px na tela)', field),
+      button('−0,1', () => set(width - .1)), button('+0,1', () => set(width + .1)), button(`Gravado (${baked})`, () => set(undefined)),
+      el('p', 'developer-hint', 'Vale para todas as animações do personagem, na hora, em qualquer luta (só no WebGL): o contorno de cada quadro é aparado por fora ou engrossado para fora até essa espessura, sem alterar as imagens. «Salvar contorno no código» grava o valor.'));
     return row;
   }
   /** Clears every animation size adjustment and the playback rate, after a confirmation so work is not lost by accident. */

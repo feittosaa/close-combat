@@ -3,6 +3,7 @@ import type { MoveDefinition } from '../engine/data/moves';
 import { HUD } from '../ui/hudTheme';
 import { DEFAULT_ARCADE_FRAME, DEFAULT_HERO_FRAME, DEFAULT_TILE_FRAME, fighterArt, type AlternativeFramings, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { sheetScaleAdjustments } from '../rendering/animations/spriteScale';
+import { outlineWidths } from '../rendering/characterColor';
 import { frameCutAdjustments, frameSizeAdjustments, type FrameCut, type FrameSize } from '../rendering/contactEffects';
 
 /** Move fields the developer mode may retune; everything else stays as authored in the fighter data. */
@@ -32,6 +33,8 @@ export interface DevOverrides {
   colors: Record<string, string>;
   /** Animation size multipliers per `<fighter>:<sheet>`, over the automatic or validated scale. */
   spriteScales: Record<string, number>;
+  /** On-screen outline width per fighter, in world pixels, over the one its atlases were drawn with (`outline.json`). */
+  outlines: Record<string, number>;
   /** Frame cuts of contact sheets per texture and frame index (`frames.json` beside the sheets). */
   frameCuts: Record<string, Record<string, FrameCut>>;
   /** Frame sizes of contact sheets per texture (`frames.json` beside the sheets). */
@@ -43,7 +46,7 @@ export interface DevOverrides {
 }
 
 const STORAGE_KEY = 'close-combat.dev-overrides';
-const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
+const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, outlines: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
 
 /** Fighter ids renamed in the code (2026-11-08); tuning saved under the old ids follows them. */
 const RENAMED_FIGHTERS: Readonly<Record<string, string>> = { cowboy: 'texas', puppet: 'mrapple' };
@@ -131,6 +134,8 @@ export class DevTuning {
     }
     sheetScaleAdjustments.clear();
     for (const [sheet, scale] of Object.entries(this.overrides.spriteScales)) sheetScaleAdjustments.set(sheet, scale);
+    outlineWidths.clear();
+    for (const [fighter, width] of Object.entries(this.overrides.outlines)) outlineWidths.set(fighter, width);
     frameCutAdjustments.clear();
     for (const [texture, frames] of Object.entries(this.overrides.frameCuts)) frameCutAdjustments.set(texture, frames);
     frameSizeAdjustments.clear();
@@ -175,6 +180,11 @@ export class DevTuning {
   }
   setSpriteScale(sheet: string, scale: number | undefined): void {
     if (scale === undefined || scale === 1) delete this.overrides.spriteScales[sheet]; else this.overrides.spriteScales[sheet] = scale;
+    this.commit();
+  }
+  /** Sets a fighter's on-screen outline width; `undefined` returns to the one its atlases were drawn with. */
+  setOutline(fighter: string, width: number | undefined): void {
+    if (width === undefined) delete this.overrides.outlines[fighter]; else this.overrides.outlines[fighter] = width;
     this.commit();
   }
   /** Sets one framing of a fighter's selection art; `undefined` returns it to the authored value. */
