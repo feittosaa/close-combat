@@ -1,0 +1,10 @@
+{
+ "cell": 640,
+ "foot": 465,
+ "scale": 0.75,
+ "reference": "idle",
+ "sheets": {
+  "perfect-block": {"frames": 4},
+  "wall-bounce": {"frames": 4}
+ }
+}

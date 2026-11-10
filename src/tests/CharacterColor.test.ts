@@ -17,17 +17,23 @@ it('changes clothing and magic colors while preserving skin and unrelated colors
   const magic = palettePixel(60, 180, 230, 'magic');
   expect(shirt[0]).toBeGreaterThan(shirt[1] * 2);
   expect(shirt[0]).toBeGreaterThan(136);
-  expect(poncho).toEqual([53, 53, 53]);
-  expect(palettePixel(255, 145, 125, 'texas')[0]).toBeLessThan(200);
-  expect(palettePixel(240, 70, 190, 'texas')).toEqual([72, 72, 72]);
-  expect(palettePixel(230, 60, 230, 'texas')[0]).toBeLessThan(170);
-  const leather = palettePixel(112, 64, 48, 'texas');
-  expect(leather[0]).toBeLessThan(45);
-  expect(leather[0] - leather[2]).toBeLessThan(6);
-  expect(palettePixel(155, 75, 60, 'texas')[0]).toBeLessThan(155);
-  expect(magic[2]).toBeGreaterThan(magic[1]);
-  expect(palettePixel(60, 180, 230, 'texas')).toEqual(magic);
+  expect(poncho[2]).toBeGreaterThan(poncho[0] * 2);
+  expect(Math.max(...poncho)).toBe(176);
+  expect(palettePixel(255, 145, 125, 'texas')).toEqual([255, 145, 125]);
+  for (const [r, g, b] of [[240, 70, 190], [230, 60, 230]]) expect(palettePixel(r, g, b, 'texas')[2]).toBeGreaterThan(palettePixel(r, g, b, 'texas')[0]);
+  expect(palettePixel(112, 64, 48, 'texas')).toEqual([112, 64, 48]);
+  expect(palettePixel(241, 191, 146, 'texas')).toEqual([241, 191, 146]);
+  expect(magic[0]).toBeGreaterThan(magic[2] * 2);
+  expect(magic[0]).toBeGreaterThan(magic[1]);
+  expect(palettePixel(60, 180, 230, 'texas')).toEqual([60, 180, 230]);
   expect(palettePixel(200, 220, 240, 'magic')).not.toEqual([200, 220, 240]);
+  for (const [r, g, b] of [[150, 110, 235], [235, 120, 200], [180, 140, 240]]) {
+    const speck = palettePixel(r, g, b, 'magic');
+    expect(speck[0], `${r},${g},${b}`).toBeGreaterThan(speck[2] * 1.5);
+  }
+  // Shaded red that drifts toward orange still turns blue; leather of similar hue and lower saturation stays.
+  for (const [r, g, b] of [[165, 52, 20], [140, 40, 18], [120, 44, 30]]) { const [red, , blue] = palettePixel(r, g, b, 'texas'); expect(blue, `${r},${g},${b}`).toBeGreaterThan(red * 2); }
+  for (const leather of [[158, 99, 73], [100, 64, 50], [150, 100, 60]] as const) expect(palettePixel(leather[0], leather[1], leather[2], 'texas')).toEqual(leather);
   for (const palette of ['bob', 'texas', 'magic'] as const) {
     expect(palettePixel(240, 144, 80, palette)).toEqual([240, 144, 80]);
     expect(palettePixel(240, 224, 208, palette)).toEqual([240, 224, 208]);

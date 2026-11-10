@@ -3,7 +3,7 @@ export interface Accent { label: string; from: number; to: number }
 
 export const accents: Readonly<Record<string, Accent>> = {
   shoto: { label: 'verde/oliva da camisa', from: 27, to: 56 },
-  texas: { label: 'vermelho/marrom', from: 300, to: 40 },
+  texas: { label: 'vermelho', from: 300, to: 12 },
 };
 
 const wrap = (degrees: number): number => ((degrees % 360) + 360) % 360;

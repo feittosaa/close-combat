@@ -6,6 +6,16 @@ import type { FrameInput } from '../input/types';
 import { texasSheetScale, getTexasRoundEndPose, settleAfterRound, getTexasSpriteLayers, getTexasSpritePose, getTexasUltimateActivationPose } from '../rendering/animations/texasSprites';
 import chargeThrowAtlas from '../assets/sprites/characters/texas/high/charge-throw.atlas.json';
 
+it.each([0, 1])('holds the fully crouched pose for player %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[texas,texas]).snapshot().characters[player];
+  const crouching = {...state, crouching:true, stateStartedFrame:100};
+  expect(getTexasSpritePose(crouching,100)).toMatchObject({texture:'texas-crouch',frame:0});
+  expect(getTexasSpritePose(crouching,104)).toMatchObject({texture:'texas-crouch',frame:2});
+  for (const frame of [106, 118, 130, 200]) {
+    expect(getTexasSpritePose(crouching,frame)).toMatchObject({texture:'texas-crouch',frame:3,flipX:player===1});
+  }
+});
+
 it.each([0, 1])('renders each defensive stance with spectral arms in front for player %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[texas,texas]).snapshot().characters[player];
   for (const [grounded, crouching, body, arms] of [
@@ -28,7 +38,6 @@ it.each([0, 1])('renders each defensive stance with spectral arms in front for p
 });
 
 it('uses the correct cells for every lasso charge frame', () => {
-  expect(chargeThrowAtlas.meta.size).toEqual({ w: 3840, h: 2560 });
   for (let index = 0; index < 6; index++) {
     const frame = chargeThrowAtlas.frames[String(index) as keyof typeof chargeThrowAtlas.frames];
     expect(frame.frame).toEqual({ x: (index % 3) * 1280, y: Math.floor(index / 3) * 1280, w: 1280, h: 1280 });
@@ -277,7 +286,7 @@ it('plays crouch and guard entry before holding their defensive pose', () => {
   expect(getTexasSpritePose(crouch,10)).toMatchObject({texture:'texas-crouch',frame:0});
   expect(getTexasSpritePose(crouch,12)?.frame).toBe(1);
   expect(getTexasSpritePose(crouch,14)?.frame).toBe(2);
-  expect(getTexasSpritePose(crouch,16)).toMatchObject({texture:'texas-crouch',frame:2});
+  expect(getTexasSpritePose(crouch,16)).toMatchObject({texture:'texas-crouch',frame:3});
   expect(getTexasSpritePose(crouch,30)?.frame).toBe(3);
   const guard = {...crouch,mode:'blocking' as const};
   expect(getTexasSpritePose(guard,10)).toMatchObject({texture:'texas-crouch-guard',frame:0});

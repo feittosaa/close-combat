@@ -1,6 +1,6 @@
 """Confere e corrige, em execução, as cores de um personagem para que sejam as mesmas em todas as folhas de sprites.
 
-Uso: python3 scripts/verify-character-colors.py <personagem> [--relatorio saida.png] [folha...]
+Uso: python3 scripts/verify-character-colors.py <personagem> [--alternativa] [--relatorio saida.png] [folha...]
 A referência são as folhas de espera (`idle*.png`) e o turnaround (`assets/art/characters/<id>/turnaround.png`). Suas
 cores sólidas (sem contorno, sem bordas semitransparentes, sem o papel do turnaround) são agrupadas em materiais — pele,
 camisa, calça, palha, botas etc. Cada pixel sólido de cada folha vai para o material mais próximo, e a cor mediana do
@@ -14,18 +14,26 @@ luminosidade da folha, e grava em `src/assets/sprites/characters/<id>/colors.jso
 cores já corrigidas, como aparecem no jogo; para cada problema restante, lista os quadros em que ele aparece.
 O turnaround é só comparado. Com `--relatorio`, grava uma imagem com uma linha por folha e, por material, as amostras
 da espera, da folha original e da folha corrigida (moldura vermelha onde resta desvio).
+Com `--alternativa`, em vez da correção, confere a segunda paleta do personagem (`ALTERNATE_PALETTES`): aplica a paleta do jogo
+(`scripts/palette-pixels.ts`, com `colors.json`) a todas as folhas e compara, por material de proximidade, a cor mediana
+de cada folha com a da espera já recolorida, com as mesmas tolerâncias. Rodar sempre que as folhas do personagem mudarem.
 Efeitos e projéteis (`EFFECTS`) ficam de fora. Sai com código 1 se restar algum desvio.
 """
 from pathlib import Path
 import json
+import subprocess
 import sys
+import tempfile
 
 import numpy as np
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-EFFECTS = {'tomato', 'crow', 'effect-ultimate-wind'}
+EFFECTS = {'tomato', 'crow'}
+EFFECT_PREFIXES = ('effect-', 'magic-')
 MATERIALS = 10
+# Palette of each fighter's second model (`Palette` in `characterColor.ts`).
+ALTERNATE_PALETTES = {'shoto': 'bob', 'texas': 'texas'}
 # Pixels darker than this lightness are outline and line work, not material color.
 OUTLINE_L = 22
 # Distance (ΔE) beyond which a pixel matches no material of the reference.
@@ -127,10 +135,11 @@ def assign(colors: np.ndarray, centers: np.ndarray) -> tuple[np.ndarray, np.ndar
     return distance.argmin(axis=1), distance.min(axis=1)
 
 
-def materials(colors: Colors, centers: np.ndarray, frames: int = 1) -> tuple[dict[int, tuple[np.ndarray, np.ndarray, int]], float]:
-    """Median Lab and RGB, and pixel count, of each material with enough pixels per frame; and the off-palette share."""
+def materials(colors: Colors, centers: np.ndarray, frames: int = 1, drawn: Colors | None = None) -> tuple[dict[int, tuple[np.ndarray, np.ndarray, int]], float]:
+    """Median Lab and RGB, and pixel count, of each material with enough pixels per frame; and the off-palette share.
+    With `drawn` (the same pixels before a palette), the material of each pixel is chosen by its drawn color."""
     if not len(colors.lab): return {}, 0.
-    nearest, distance = assign(colors.lab, centers)
+    nearest, distance = assign((drawn or colors).lab, centers)
     near = distance <= OFF_PALETTE
     found = {}
     for k in range(len(centers)):
@@ -209,8 +218,43 @@ def report(path: Path, reference: dict, rows: list[tuple[str, dict, dict, set[in
     image.save(path)
 
 
+def check_alternate(character: str, sheets: list[Path], selected: set[str]) -> None:
+    """Applies the alternate palette to every sheet and compares the materials of each with the recolored idle."""
+    sprites = ROOT / 'src/assets/sprites/characters' / character
+    drawn_sheets = {sheet.stem: Colors.of(np.asarray(Image.open(sheet).convert('RGBA'))) for sheet in sheets}
+    corrections = json.loads((sprites / 'colors.json').read_text())
+    # Materials are told apart on the colors the game shows before the palette, so the sheet corrections count.
+    originals = {name: colors.corrected(np.array(corrections[name]).reshape(3, 4)) if name in corrections else colors for name, colors in drawn_sheets.items()}
+    with tempfile.TemporaryDirectory() as folder:
+        source, result = Path(folder) / 'in.json', Path(folder) / 'out.json'
+        source.write_text(json.dumps({name: colors.rgb.astype(int).tolist() for name, colors in drawn_sheets.items()}))
+        subprocess.run(['npx', 'vite-node', str(Path(__file__).with_name('palette-pixels.ts')), ALTERNATE_PALETTES[character],
+                        str(source), str(result), str(sprites / 'colors.json')], check=True, cwd=ROOT)
+        recolored = {name: Colors(np.array(rgb, float)) for name, rgb in json.loads(result.read_text()).items()}
+    art = turnaround(ROOT / 'assets/art/characters' / character / 'turnaround.png')
+    idle_drawn = Colors.join([colors for name, colors in originals.items() if name.startswith('idle')])
+    idle = Colors.join([colors for name, colors in recolored.items() if name.startswith('idle')])
+    pool = np.concatenate([idle_drawn.lab, art.lab])
+    centers = kmeans(pool[np.random.default_rng(0).choice(len(pool), min(len(pool), 60000), replace=False)], MATERIALS)
+    reference, _ = materials(idle, centers, 6, idle_drawn)
+    print('Materiais da espera na segunda paleta: ' + ', '.join(f'{k} {hex_color(reference[k][1])}' for k in sorted(reference)))
+    problems = []
+    for name, colors in recolored.items():
+        if selected and name not in selected: continue
+        found, off = materials(colors, centers, 6, originals[name])
+        strayed = [f'material {k} {hex_color(reference[k][1])} → {hex_color(rgb)} (tom Δ{np.hypot(*(lab_[1:] - reference[k][0][1:])):.1f}, luz {lab_[0] - reference[k][0][0]:+.1f})'
+                   for k, (lab_, rgb, _) in found.items() if k in reference and
+                   (np.hypot(*(lab_[1:] - reference[k][0][1:])) > TONE or abs(lab_[0] - reference[k][0][0]) > LIGHTNESS)]
+        if strayed: problems.append(f'{name}: ' + '; '.join(strayed))
+        if off > OFF_SHARE: problems.append(f'{name}: {off:.0%} dos pixels sólidos fora da paleta')
+    print('\n'.join(problems) if problems else 'Segunda paleta coerente em todas as folhas.')
+    if problems: sys.exit(1)
+
+
 def main() -> None:
     arguments = sys.argv[1:]
+    alternate = '--alternativa' in arguments
+    if alternate: arguments.remove('--alternativa')
     output = None
     if '--relatorio' in arguments:
         index = arguments.index('--relatorio')
@@ -219,8 +263,9 @@ def main() -> None:
     if not arguments: raise SystemExit(__doc__)
     character, selected = arguments[0], set(arguments[1:])
     sprites = ROOT / 'src/assets/sprites/characters' / character
-    sheets = sorted(path for path in sprites.glob('*.png') if path.stem not in EFFECTS and path.with_suffix('.atlas.json').exists())
+    sheets = sorted(path for path in sprites.glob('*.png') if path.stem not in EFFECTS and not path.stem.startswith(EFFECT_PREFIXES) and path.with_suffix('.atlas.json').exists())
     if not sheets: raise SystemExit(f'Nenhuma folha com atlas em {sprites.relative_to(ROOT)}.')
+    if alternate: return check_alternate(character, sheets, selected)
     idle_parts = [frame for sheet in sheets if sheet.stem.startswith('idle') for frame in frames(sheet)]
     idle = Colors.join(idle_parts)
     art_path = ROOT / 'assets/art/characters' / character / 'turnaround.png'
