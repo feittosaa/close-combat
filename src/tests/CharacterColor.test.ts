@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { characterColor, CharacterColorEffect, palettePixel } from '../rendering/characterColor';
+import { characterColor, CharacterColorEffect, correctedPixel, IDENTITY_CORRECTION, palettePixel, sheetCorrection } from '../rendering/characterColor';
 import { getStageById } from '../rendering/stages/stageCatalog';
 import { createStageLayout } from '../rendering/stages/stageLayout';
 
@@ -104,4 +104,31 @@ it('keeps the Texas poncho red on every stage: lighting only multiplies and deep
     const gap = Math.abs(hueOf(lighted) - hueOf(poncho));
     expect(Math.min(gap, 360 - gap), id).toBeLessThan(12);
   }
+});
+
+it('corrects a sheet by its own matrix and offset, leaving uncorrected sheets and the idle reference alone', () => {
+  expect(correctedPixel(120, 80, 40, IDENTITY_CORRECTION)).toEqual([120, 80, 40]);
+  // Rows: red takes the green, green gains a quarter, blue is cleared; the result stays within 0–255.
+  expect(correctedPixel(120, 80, 40, [0, 1, 0, 0, 0, 1, 0, .25, 0, 0, 0, 0])).toEqual([80, 144, 0]);
+  expect(correctedPixel(250, 250, 250, [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1])).toEqual([255, 250, 0]);
+  expect(sheetCorrection('shoto-idle')).toBeUndefined();
+  expect(sheetCorrection('shoto-idle-normal')).toBeUndefined();
+  expect(sheetCorrection(undefined)).toBeUndefined();
+  expect(sheetCorrection('shoto-defeat')).toHaveLength(12);
+});
+
+it('draws a fighter with corrected sheets through the colour pipeline even without palette or light', () => {
+  const { sprite } = webglSprite();
+  Object.assign(sprite, { texture: { key: 'shoto-defeat' } });
+  new CharacterColorEffect().apply(sprite as never, { alternate: false }, 'bob');
+  expect(sprite.setPipeline).toHaveBeenCalled();
+});
+
+it('recolours the alternate palette by the drawn colour, so a corrected sheet keeps the same red areas', () => {
+  // A drawn shirt tone, and a correction that dulls it below the saturation the palette selects.
+  const drawn = [136, 104, 48] as const;
+  const corrected = correctedPixel(...drawn, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, .15]);
+  expect(palettePixel(...corrected, 'bob')).toEqual(corrected);
+  const recolored = palettePixel(...corrected, 'bob', drawn);
+  expect(recolored[0]).toBeGreaterThan(recolored[1] * 2);
 });

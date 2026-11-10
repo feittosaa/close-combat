@@ -8,7 +8,8 @@ adicionado ou trocado em `src/assets/sprites` ou nas artes de personagem (plugin
    o matiz do fundo saem; a transparência existente é preservada), e só é regravado se algo mudou. Vermelhos, carmins e
    vinhos (a partir de 320°) ficam intactos.
 2. Se uma folha de personagem entrou, mudou ou saiu, `measure-sprites.py` mede tudo de novo; o motor deriva dessas medidas o tamanho
-   automático de cada animação (`spriteScale.ts`).
+   automático de cada animação (`spriteScale.ts`). `measure-outlines.py` mede o contorno de cada quadro, que o jogo
+   uniformiza na tela.
 3. `pack-sprites.py` recorta de novo o layout (`.packed.json`) de toda folha de personagem nova ou alterada, nas duas
    qualidades; o jogo guarda na memória só a parte desenhada de cada quadro.
 
@@ -34,6 +35,7 @@ from hashlib import sha256
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 import json
+import os
 import re
 import subprocess
 import sys
@@ -152,7 +154,8 @@ def main() -> None:
     cleanable = [path for path in pending if path.relative_to(ROOT).as_posix() not in keep]
     before = {fighter: measurements(fighter) for fighter in CHARACTERS.iterdir() if fighter.is_dir()}
     adopted = []
-    with ProcessPoolExecutor() as pool:
+    # Half the cores at most, so the machine (and the development server) stays usable while many sheets are cleaned.
+    with ProcessPoolExecutor(max(1, (os.cpu_count() or 2) // 2)) as pool:
         for path, (key, removed, stored) in zip(cleanable, pool.map(prepare, cleanable)):
             # Only the cleanup changed this drawing (not new art): its validated size must not move.
             if removed and files.get(key, current[path]) == current[path] and path.parent.parent == CHARACTERS: adopted.append(path)
@@ -169,6 +172,7 @@ def main() -> None:
     if measure:
         subprocess.run([sys.executable, str(Path(__file__).with_name('measure-sprites.py'))], check=True)
         keep_validated_sizes(adopted, before)
+        subprocess.run([sys.executable, str(Path(__file__).with_name('measure-outlines.py'))], check=True)
     subprocess.run([sys.executable, str(Path(__file__).with_name('pack-sprites.py'))], check=True)
     print(f'Sprites preparados: {len(pending)} novos ou alterados de {len(sheets)}.')
 
