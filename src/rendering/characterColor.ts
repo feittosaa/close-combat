@@ -111,17 +111,21 @@ export function palettePixel(r: number, g: number, b: number, palette: Palette, 
     const red = hsvToRgb(355 + (h - 40) * .35, Math.min(255, max * 1.15), Math.max(saturation, .9));
     return red.map((value, index) => Math.round([r, g, b][index] + (value - [r, g, b][index]) * shirt)) as [number, number, number];
   }
-  const blue = dh >= 160 && dh <= 255 && ds >= .1;
-  if (palette === 'texas' && !blue) {
-    const warm = Math.max(1 - smoothstep(34, 44, dh), smoothstep(292, 307, dh));
-    const red = Math.max(1 - smoothstep(8, 24, dh), smoothstep(292, 307, dh));
-    const dark = warm * smoothstep(.18, .35, ds) * (1 - smoothstep(.69, .82, dv / 255));
-    const vividRed = red * smoothstep(.35, .6, ds);
-    const weight = Math.max(dark, vividRed);
-    const shade = max * .3;
-    return [r, g, b].map(value => Math.round(value + (shade - value) * weight)) as [number, number, number];
+  if (palette === 'magic') {
+    // The spectral blue turns gold; the violet and pink specks that mixed into it turn orange.
+    if (dh < 160 || dh > 345 || ds < .1) return [r, g, b];
+    return hsvToRgb(45 + (h - 200) * .3 + smoothstep(240, 270, dh) * (25 - (45 + (h - 200) * .3)), max, saturation).map(Math.round) as [number, number, number];
   }
-  if ((palette === 'magic' || palette === 'texas') && blue) return hsvToRgb(h + 55, max, saturation).map(Math.round) as [number, number, number];
+  if (palette === 'texas') {
+    // Only the red (poncho, hat band, fringe) turns blue, keeping its light and shade; leather, skin and gold stay. Read
+    // from the corrected color, which the sheet correction aligns with the idle's materials. Red and leather overlap in
+    // hue, so the boundary is a line in hue and saturation fitted to the sheets: the redder the hue, the less saturation it takes.
+    const hue = h > 180 ? h - 360 : h;
+    const weight = smoothstep(-.05, .05, saturation - (.48 + .0115 * hue)) * smoothstep(.3, .45, saturation) *
+      smoothstep(-90, -70, hue) * (1 - smoothstep(35, 60, hue));
+    const blue = hsvToRgb(215 + hue * .5, max, saturation);
+    return [r, g, b].map((value, index) => Math.round(value + (blue[index] - value) * weight)) as [number, number, number];
+  }
   return [r, g, b];
 }
 

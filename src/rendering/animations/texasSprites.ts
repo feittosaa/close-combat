@@ -59,7 +59,7 @@ export const texasAnimationClips: Readonly<Record<string, AnimationClip>> = {
   idle: {key:'idle',start:0,end:5,frameRate:4,frameDurations:[15,12,12,15,12,12],repeat:-1},
   walk: {key:'walk',start:0,end:5,frameRate:10,frameDurations:[7,5,6,7,5,6],repeat:-1},
   backward: {key:'backward',start:0,end:5,frameRate:8,frameDurations:[8,7,8,8,7,8],repeat:-1},
-  crouchIdle: {key:'crouch-idle',start:2,end:3,frameRate:5,frameDurations:[12,12],repeat:-1},
+  crouchIdle: {key:'crouch-idle',start:3,end:3,frameRate:5,repeat:-1},
   dashForward: {key:'dash-forward',start:0,end:5,frameRate:15,frameDurations:[3,4,3,5,5,4],repeat:0},
   dashBackward: {key:'dash-backward',start:0,end:5,frameRate:15,frameDurations:[3,3,4,5,5,4],repeat:0},
   crouchEnter: {key:'crouch-enter',start:0,end:2,frameRate:30,repeat:0},

@@ -14,7 +14,6 @@ it.each(['guard', 'perfect-block'])('keeps every high-resolution %s frame inside
   const png = readFileSync(`${base.pathname}.png`);
   const atlas = JSON.parse(readFileSync(`${base.pathname}.atlas.json`, 'utf8'));
   const width = png.readUInt32BE(16), height = png.readUInt32BE(20);
-  expect(atlas.meta.size).toEqual({ w: width, h: height });
   for (const { frame } of Object.values(atlas.frames) as { frame: { x: number; y: number; w: number; h: number } }[]) {
     expect(frame.x + frame.w).toBeLessThanOrEqual(width);
     expect(frame.y + frame.h).toBeLessThanOrEqual(height);

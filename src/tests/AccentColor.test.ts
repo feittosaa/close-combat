@@ -34,10 +34,11 @@ describe('cor de destaque', () => {
     }
   });
 
-  it('Texas: o vermelho/marrom escurece até o preto, mantendo a pele', () => {
-    expect(palettePixel(176, 32, 32, 'texas')).toEqual([53, 53, 53]);
-    const leather = palettePixel(112, 64, 48, 'texas');
-    expect(Math.max(...leather)).toBeLessThan(45);
+  it('Texas: o vermelho vira azul, mantendo o couro e a pele', () => {
+    const poncho = palettePixel(176, 32, 32, 'texas');
+    expect(poncho[2]).toBeGreaterThan(poncho[0] * 2);
+    expect(palettePixel(112, 64, 48, 'texas')).toEqual([112, 64, 48]);
+    expect(palettePixel(241, 191, 146, 'texas')).toEqual([241, 191, 146]);
   });
 
   it('só os pixels da faixa de destaque mudam; pele, neutros e azuis ficam iguais', () => {

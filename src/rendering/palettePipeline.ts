@@ -69,13 +69,19 @@ vec3 palette(vec3 color, vec3 drawn) {
     }
     return color;
   }
-  if (d.x >= 160.0 && d.x <= 255.0 && d.y >= 0.1) { v.x += 55.0; return rgb(v); }
-  if (uPalette > 2.5) return color;
-  float warm = max(1.0 - smoothstep(34.0, 44.0, d.x), smoothstep(292.0, 307.0, d.x));
-  float red = max(1.0 - smoothstep(8.0, 24.0, d.x), smoothstep(292.0, 307.0, d.x));
-  float dark = warm * smoothstep(0.18, 0.35, d.y) * (1.0 - smoothstep(0.69, 0.82, d.z));
-  float weight = max(dark, red * smoothstep(0.35, 0.6, d.y));
-  return mix(color, vec3(v.z * 0.3), weight);
+  if (uPalette > 2.5) {
+    // The spectral blue turns gold; the violet and pink specks that mixed into it turn orange.
+    if (d.x < 160.0 || d.x > 345.0 || d.y < 0.1) return color;
+    float gold = 45.0 + (v.x - 200.0) * 0.3;
+    return rgb(vec3(mix(gold, 25.0, smoothstep(240.0, 270.0, d.x)), v.y, v.z));
+  }
+  // Only the red (poncho, hat band, fringe) turns blue, keeping its light and shade; leather, skin and gold stay. Read
+  // from the corrected color, which the sheet correction aligns with the idle's materials. Red and leather overlap in
+  // hue, so the boundary is a line in hue and saturation fitted to the sheets: the redder the hue, the less saturation it takes.
+  float hue = v.x > 180.0 ? v.x - 360.0 : v.x;
+  float weight = smoothstep(-0.05, 0.05, v.y - (0.48 + 0.0115 * hue)) * smoothstep(0.3, 0.45, v.y) *
+    smoothstep(-90.0, -70.0, hue) * (1.0 - smoothstep(35.0, 60.0, hue));
+  return mix(color, rgb(vec3(215.0 + hue * 0.5, v.y, v.z)), weight);
 }
 vec3 light(vec3 c) {
   float lum = dot(c, vec3(0.299, 0.587, 0.114));

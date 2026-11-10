@@ -120,13 +120,5 @@
         "h": 1280
       }
     }
-  },
-  "meta": {
-    "image": "crouch-hurt-low.png",
-    "size": {
-      "w": 3840,
-      "h": 2560
-    },
-    "scale": "1"
   }
 }
