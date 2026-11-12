@@ -302,6 +302,7 @@ export const ja: Locale = {
     'move.grappler.grab-throw': '遠距離投げ',
     'move.grappler.grab-launcher': '打ち上げ投げ',
     'move.grappler.ultimate-grab': 'アルティメット — 回転投げ',
+    'move.grappler.ultimate-soco': 'アルティメット — 高速パンチ',
     'move.grappler.double-punch': '両手パンチ',
     'move.grappler.hammer-punch': 'ハンマーパンチ',
     'move.grappler.grab-headbutt': '頭突き投げ',

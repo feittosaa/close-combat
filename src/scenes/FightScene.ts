@@ -30,7 +30,7 @@ import { registerCharacterColor } from '../rendering/palettePipeline';
 import { preloadContactEffects } from '../rendering/contactEffects';
 import { StagePresentation } from '../rendering/StagePresentation';
 import { CombatantView } from '../rendering/CombatantView';
-import { grapplerCapturePose } from '../rendering/grapplerCapture';
+import { grapplerCapturePose, hiddenByGrapplerUltimate } from '../rendering/grapplerCapture';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
@@ -449,6 +449,7 @@ export class FightScene extends Phaser.Scene {
       if (character.rush && !this.rushActive[index]) this.rushEffect?.play(character.x, character.y);
       this.rushActive[index] = Boolean(character.rush);
     });
+    if (snapshot.hitEvents.some(event => event.moveId === 'ultimate-soco' && event.outcome === 'hit' && !event.armored)) this.cameras.main.shake(140, 0.003);
     this.pendingVisualHits.push(...snapshot.hitEvents);
   }
 
@@ -547,10 +548,10 @@ export class FightScene extends Phaser.Scene {
       const color = characterColor(this.selectedStage, layout, character.x, this.cameras.main.scrollX,
         this.alternatePalettes[index]);
       const presented = grapplerCapturePose(character, shown[1 - index]);
-      this.combatants[index]?.sync(presented, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color);
+      this.combatants[index]?.sync(presented, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color, hiddenByGrapplerUltimate(character, shown[1 - index]), snapshot.hitstopFramesRemaining > 0);
     });
     const alternateOwnerIds = new Set(snapshot.characters.filter((_, index) => this.alternatePalettes[index]).map(character => character.characterId));
-    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds);
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds,snapshot.hitstopFramesRemaining > 0);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
     if (this.training) {

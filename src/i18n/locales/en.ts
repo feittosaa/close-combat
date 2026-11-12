@@ -302,6 +302,7 @@ export const en: Locale = {
     'move.grappler.grab-throw': 'Long throw',
     'move.grappler.grab-launcher': 'Launcher grab',
     'move.grappler.ultimate-grab': 'Ultimate — Spinning grab',
+    'move.grappler.ultimate-soco': 'Ultimate — Speed punch',
     'move.grappler.double-punch': 'Double punch',
     'move.grappler.hammer-punch': 'Hammer punch',
     'move.grappler.grab-headbutt': 'Headbutt grab',

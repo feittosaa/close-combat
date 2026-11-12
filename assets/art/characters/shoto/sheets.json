@@ -4,6 +4,8 @@
  "scale": 0.8,
  "ignore": ["tomate-projetil.png","corvo.png","espera.png"],
  "sheets": {
+  "combo-breaker": {"scale":1.11},
+  "combo-breaker-air": {"scale":1.11},
   "ippon": {"source":"ippon.png","scale":1.04,"floor":675,"anchors":[170,510,850,1190,1570,1960]},
   "idle-normal": {"source":"espera-normal.png","scale":1.0,"floor":680,"anchors":[190,547,899,1251,1605,1960]},
   "rake-enter": {"source":"pegar-ancinho.png","scale":1.0,"floor":675,"anchors":[190,560,920,1270,1610,1970]},

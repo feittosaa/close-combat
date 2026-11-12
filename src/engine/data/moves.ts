@@ -8,6 +8,8 @@ export interface MoveDefinition {
   name: string;
   input: { buttons: readonly AttackButton[]; sequence?: readonly Direction[] };
   notation?: string;
+  /** Maximum duration in simulation frames of this directional sequence. */
+  sequenceWindowFrames?: number;
   /** Available only as an explicitly authored combo finisher. */
   comboOnly?: boolean;
   shortcutOnly?: boolean;
@@ -28,7 +30,7 @@ export interface MoveDefinition {
   airborne?: boolean;
   /** Existing artwork only; this is a temporary pose alias, never new animation. */
   pose?: 'light-punch' | 'heavy-punch' | 'light-kick' | 'heavy-kick';
-  movement?: { speed: number; until: number; launch?: number; gravityScale?: number };
+  movement?: { speed: number; until: number; from?: number; arenaFraction?: number; launch?: number; gravityScale?: number };
   invulnerability?: { kind: 'all' | 'projectile'; until: number };
   /** Immunity to projectiles throughout this move, independently of other invulnerability. */
   projectileInvulnerable?: boolean;

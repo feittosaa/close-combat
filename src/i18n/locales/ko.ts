@@ -302,6 +302,7 @@ export const ko: Locale = {
     'move.grappler.grab-throw': '멀리 던지기',
     'move.grappler.grab-launcher': '띄우기 잡기',
     'move.grappler.ultimate-grab': '궁극기 — 회전 잡기',
+    'move.grappler.ultimate-soco': '궁극기 — 고속 펀치',
     'move.grappler.double-punch': '양손 펀치',
     'move.grappler.hammer-punch': '해머 펀치',
     'move.grappler.grab-headbutt': '박치기 잡기',

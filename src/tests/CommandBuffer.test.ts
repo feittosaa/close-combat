@@ -148,6 +148,19 @@ describe('command buffer and priority', () => {
     expect(parser.update({ direction: 'N', buttons: new Set(['2']) }, 16, candidates, context)?.id).toBe('simple');
   });
 
+  it('preserves the normal window when another command has a longer directional window', () => {
+    const parser = new CommandParser();
+    const candidates = [
+      { id: 'normal', input: { sequence: ['D','DF','F'] as const, buttons: ['1'] as const } },
+      { id: 'long', input: { sequence: ['F','DF','D','DB','B','DB','D','DF','F'] as const, buttons: ['1','2'] as const }, sequenceWindowFrames: 24 },
+    ];
+    parser.update({direction:'D',buttons:new Set()},0,candidates,context);
+    parser.update({direction:'DF',buttons:new Set()},1,candidates,context);
+    parser.update({direction:'F',buttons:new Set()},2,candidates,context);
+    expect(parser.update({direction:'F',buttons:new Set(['1'])},16,candidates,context)).toBeUndefined();
+    expect(parser.update({direction:'F',buttons:new Set()},20,candidates,context)).toBeUndefined();
+  });
+
   it('selects the precise variant at both inclusive edges of its one-frame window', () => {
     const candidates = [
       { id: 'normal', input: { sequence: ['F', 'N', 'DF'] as const, buttons: ['2'] as const } },

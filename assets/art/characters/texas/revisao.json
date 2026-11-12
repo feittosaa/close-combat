@@ -1,7 +1,5 @@
 {
  "propostas": [
-  "propostas-em-revisao/combo-breaker-air.png",
-  "propostas-em-revisao/combo-breaker.png",
   "revisao/air-dash-backward.png",
   "revisao/air-dash-forward.png",
   "revisao/air-guard.png",
@@ -14,6 +12,8 @@
   "revisao/backward.png",
   "revisao/charge-heavy-punch.png",
   "revisao/charge-throw.png",
+  "revisao/combo-breaker-air.png",
+  "revisao/combo-breaker.png",
   "revisao/combo-left-shot.png",
   "revisao/combo-right-shot.png",
   "revisao/crouch-combo-shot.png",

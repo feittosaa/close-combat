@@ -7,8 +7,8 @@ import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry'
 import { getCharacterById } from '../engine/data/characters';
 import { TEXAS_GRAB_SHOTS } from '../engine/combat/texasGrab';
 import { CharacterColorEffect, type CharacterColor } from './characterColor';
-import { grapplerEffects } from './grapplerEffects';
-import { grapplerHand } from './grapplerHands';
+import { grapplerEffects, type GrapplerEffect } from './grapplerEffects';
+import { grapplerHeadbuttImpact } from './grapplerHands';
 import { grapplerSpinPhase } from './grapplerCapture';
 import { contactFrameGrowth, contactFrameMargin, contactFrameSize } from './contactEffects';
 import { grapplerReaction } from './grapplerReaction';
@@ -30,6 +30,7 @@ export class CombatantView {
   private readonly volleyArms: Phaser.GameObjects.Image[] = [];
   private readonly grabShots: Phaser.GameObjects.Image[] = [];
   private readonly grapplerEffectSprites: Phaser.GameObjects.Image[] = [];
+  private ultimatePunchTail?: { frame: number; effect: GrapplerEffect };
   private headbuttHit?: Phaser.GameObjects.Image;
   private dust?: Phaser.GameObjects.Image;
   private ultimateWind?: Phaser.GameObjects.Image;
@@ -37,7 +38,13 @@ export class CombatantView {
   constructor(private readonly scene: Phaser.Scene, private readonly color: number) {
     this.graphics = scene.add.graphics().setDepth(11);
   }
-  sync(state: CharacterState & { captureSpin?: { phase: number; depth: number } }, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number}, color: CharacterColor = {}): void {
+  sync(state: CharacterState & { captureSpin?: { phase: number; depth: number } }, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number}, color: CharacterColor = {}, hidden = false, contactPaused = false): void {
+    if (hidden) {
+      this.graphics.clear();
+      for (const image of [...this.sprites, ...this.volleyArms, ...this.grabShots, ...this.grapplerEffectSprites]) image.setVisible(false);
+      this.headbuttHit?.setVisible(false); this.dust?.setVisible(false); this.ultimateWind?.setVisible(false); this.lasso?.setVisible(false);
+      return;
+    }
     const depth = state.captureSpin?.depth ?? combatantDepth(state, frame, result !== undefined && !result.winner);
     const spinning = !state.grounded && (state.spinStartedFrame !== undefined || state.captureSpin !== undefined);
     const authoredGrab = Boolean(grapplerReaction(state, frame));
@@ -90,15 +97,21 @@ export class CombatantView {
       const textureName = between === undefined ? pose.name : `${pose.name}-between`;
       const texture = `grappler-${textureName}`;
       const headbutt = state.attack && move?.id === 'grab-headbutt' && state.attack.hasHit ? state.attack.elapsedFrames - (state.attack.startupFrames ?? move.startup) - HEADBUTT_IMPACT : -1;
-      const fists = grapplerHand(state, pose.name, pose.drawing);
+      const forehead = grapplerHeadbuttImpact(state);
       // The blow lands between the two heads when the head moves forward.
-      if (headbutt >= 0 && headbutt < 12 && fists && this.scene.textures.exists('contact-hit-heavy')) {
+      if (headbutt >= 0 && headbutt < 12 && this.scene.textures.exists('contact-hit-heavy')) {
         const growth = contactFrameGrowth('contact-hit-heavy'), sign = state.facing === 'right' ? 1 : -1;
         const hit = this.headbuttHit ??= this.scene.add.image(0,0,'contact-hit-heavy','0');
         hit.setDepth(12).setTexture('contact-hit-heavy',String(Math.min(5,Math.floor(headbutt / 2)))).setDisplaySize(90 * growth.x, 90 * growth.y)
-          .setPosition(state.x + fists.x + sign * 30, state.y + fists.y - 55).setFlipX(sign < 0).setVisible(true);
+          .setPosition(state.x + forehead.x, state.y + forehead.y).setFlipX(sign < 0).setVisible(true);
       } else this.headbuttHit?.setVisible(false);
-      const effects = grapplerEffects(state, activationFrame);
+      const effects = grapplerEffects(state, activationFrame, contactPaused);
+      const punchSmoke = effects.find(effect => effect.name === 'ultimate-soco');
+      if (punchSmoke && move && state.attack && state.attack.elapsedFrames >= (state.attack.startupFrames ?? move.startup) + move.activeFrames + (state.attack.recoveryFrames ?? move.recovery) - 1) {
+        this.ultimatePunchTail = { frame, effect: punchSmoke };
+      } else if (!state.attack && this.ultimatePunchTail && frame === this.ultimatePunchTail.frame + 1) {
+        effects.push({ ...this.ultimatePunchTail.effect, frame: 5 });
+      } else if (!punchSmoke) this.ultimatePunchTail = undefined;
       effects.forEach((effect, index) => {
         const key = `contact-grappler-${effect.name}`;
         if (!this.scene.textures.exists(key)) return;

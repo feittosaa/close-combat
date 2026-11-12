@@ -302,6 +302,7 @@ export const zh: Locale = {
     'move.grappler.grab-throw': '远距离投掷',
     'move.grappler.grab-launcher': '浮空抓投',
     'move.grappler.ultimate-grab': '终极技 — 旋转抓投',
+    'move.grappler.ultimate-soco': '终极技 — 极速重拳',
     'move.grappler.double-punch': '双拳攻击',
     'move.grappler.hammer-punch': '锤击',
     'move.grappler.grab-headbutt': '头槌抓投',

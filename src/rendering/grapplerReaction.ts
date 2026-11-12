@@ -4,6 +4,7 @@ import { GRAPPLER_ULTIMATE_SPIN_POSE_FRAMES } from '../engine/combat/ultimateAct
 /** Select the victim's authored reaction without changing combat state or collision. */
 export function grapplerReaction(state: CharacterState, frame: number): { name: string; drawing: number } | undefined {
   const reaction = state.grapplerGrabReaction;
+  if (reaction && state.fighterId === 'grappler' && reaction.moveId !== 'ultimate-grab') frame = reaction.startedFrame + Math.max(0, frame - reaction.startedFrame) * 1.5;
   if (!reaction || (!state.commandGrabbed && !['hitstun', 'knockdown'].includes(state.mode))) return undefined;
   if (state.fighterId === 'shoto' && reaction.moveId === 'ultimate-grab') return undefined;
   if (state.fighterId === 'grappler' && reaction.moveId === 'grab-low' && !reaction.startedLying) return {name:'grappler-reaction-grab-low-standing', drawing:Math.min(5, Math.floor(Math.max(0, frame - reaction.startedFrame) / 6))};

@@ -8,7 +8,7 @@ import type { FrameInput } from '../input/types';
 import { palettePixel } from '../rendering/characterColor';
 import measurements from '../assets/sprites/characters/grappler/measurements.json';
 import { getGrapplerPose, getGrapplerInbetween, grapplerAdjustment } from '../rendering/animations/grapplerSprites';
-import { grapplerCapturePose, grapplerSpinPhase } from '../rendering/grapplerCapture';
+import { grapplerCapturePose, grapplerSpinPhase, hiddenByGrapplerUltimate } from '../rendering/grapplerCapture';
 import { grapplerEffects } from '../rendering/grapplerEffects';
 
 /** Damage authored for a Grappler move, so the tests follow the numbers tuned in the developer mode. */
@@ -22,7 +22,7 @@ const sheets = import.meta.glob('../assets/sprites/characters/grappler/*.png');
 
 describe('Grappler provisório', () => {
   it('tem os dez básicos e os golpes aprovados, e é mais lento e maior que Bob', () => {
-    expect(grappler.moves).toHaveLength(20);
+    expect(grappler.moves).toHaveLength(21);
     expect(grappler.combos?.[0].moveIds).toEqual(['grab-headbutt', 'grab-slam', 'grab-low']);
     expect(grappler.movement.walkSpeed).toBeLessThan(shoto.movement.walkSpeed);
     expect(grappler.collision.hurtboxes.standing.height).toBeGreaterThan(shoto.collision.hurtboxes.standing.height);
@@ -70,9 +70,9 @@ describe('Grappler provisório', () => {
     expect(grapplerEffects({ ...state, attack:{ ...attack, buttons:[...attack.buttons] } })[0]?.name).toBe('grab-slam');
     expect(grapplerEffects({ ...state, attack:{ ...attack, buttons:[...attack.buttons], hasHit:false } })).toEqual([]);
     const ultimate = { ...state, attack:{ moveId:'ultimate-grab', buttons:[], elapsedFrames:32, hasHit:true } };
-    expect(grapplerEffects(ultimate).map(effect => effect.name)).toEqual(['ultimate-grab', 'grab-motion', 'ultimate-rotation']);
+    expect(grapplerEffects(ultimate).map(effect => effect.name)).toEqual(['ultimate-grab', 'ultimate-rotation']);
     expect(grapplerEffects(ultimate, 40).map(effect => effect.name)).toEqual(['ultimate-start']);
-    expect(grapplerEffects({ ...ultimate, attack:{ ...ultimate.attack, elapsedFrames:84 } })).toEqual([]);
+    expect(grapplerEffects({ ...ultimate, attack:{ ...ultimate.attack, elapsedFrames:100 } })).toEqual([]);
   });
   it('avança a fumaça em quatro quadros e acompanha o cotovelo espelhado', () => {
     const state = new Simulation(createGameConfig(1024, 576), [grappler, shoto]).snapshot().characters[0];
@@ -401,6 +401,7 @@ it('ativa a ultimate pelo atalho universal, agarra mesmo com guarda e lança par
   while(sim.snapshot().hitstopFramesRemaining) sim.stepFrame([n,guard]);
   for (let i=0;i<GRAPPLER_ULTIMATE_HOLD_FRAMES - 1;i++) {
     expect(sim.snapshot().characters[1].commandGrabbed).toBe(true);
+    expect(hiddenByGrapplerUltimate(sim.snapshot().characters[1], sim.snapshot().characters[0])).toBe(true);
     const attacker = sim.snapshot().characters[0];
     const age = attacker.attack!.elapsedFrames - (attacker.attack!.startupFrames ?? 20);
     expect(getGrapplerPose(attacker, sim.snapshot().frame).drawing).toBe(age < GRAPPLER_ULTIMATE_SPIN_FRAMES ? 2 + Math.floor(age / 4) % 3 : 5);
@@ -409,6 +410,7 @@ it('ativa a ultimate pelo atalho universal, agarra mesmo com guarda e lança par
   sim.stepFrame([n,guard]);
   expect(sim.snapshot().characters[1].verticalVelocity).toBeLessThan(0);
   expect(sim.snapshot().characters[1].spinStartedFrame).toBeDefined();
+  expect(hiddenByGrapplerUltimate(sim.snapshot().characters[1], sim.snapshot().characters[0])).toBe(false);
   let highestY = sim.snapshot().characters[1].y;
   let flightFrames = 0;
   while (sim.snapshot().characters[1].ultimateImpactFrame === undefined && flightFrames < 210) {
@@ -517,10 +519,9 @@ it.each(['left','right'] as const)('mantém o agarrado nas mãos e a fumaça no 
   const move = grappler.moves.find(candidate => candidate.id === 'grab-headbutt')!;
   for (const age of [4, 9]) {
     const attacker = { ...grapplerState, facing, attack: { moveId:move.id, buttons:['1'] as const, elapsedFrames:move.startup + age, hasHit:true } };
-    const pose = getGrapplerPose(attacker, 0), hand = grapplerHand(attacker, pose.name, pose.drawing)!;
     const target = { ...victim, commandGrabbed:true, grapplerGrabReaction:{ moveId:move.id, startedFrame:0, startedLying:false } };
     const held = grapplerCapturePose(target, attacker);
-    expect(held.x, `x ${age}`).toBeCloseTo(attacker.x + hand.x);
+    expect(held.x, `x ${age}`).toBe(target.x);
     expect(held.y, `y ${age}`).toBe(target.y);
     expect(held.grounded, `chão ${age}`).toBe(target.grounded);
   }
@@ -888,4 +889,48 @@ it.each([0,1])('agarrão normal 1+3 do Grappler derruba e arremessa para frente,
   for (let i=0;i<30 && !sim.snapshot().characters[1-player].throwFlight;i++) step();
   expect(sim.snapshot().characters[1-player].throwFlight).toBe(true);
   expect(sim.snapshot().characters[1-player].mode).toBe('knockdown');
+});
+
+it('não repete soco forte mantido após o quique do arremesso distante', () => {
+  const sim = new Simulation(createGameConfig(1024, 576), [grappler, shoto], { training:true, wall:true, initialDistance:65 });
+  const n: FrameInput = { direction:'N', buttons:new Set() };
+  const step = (direction:FrameInput['direction'], held = false) => sim.stepFrame([{ direction, buttons:new Set(held ? ['2'] : []) }, n]);
+  for (const direction of ['B','DB','D','DF'] as const) step(direction);
+  step('F', true);
+  let bounced = false, extraPunch = false;
+  for (let i = 0; i < 240; i++) {
+    step('N', true);
+    const snapshot = sim.snapshot();
+    bounced ||= Boolean(snapshot.characters[1].wallBounceEffect);
+    extraPunch ||= snapshot.characters[0].attack?.moveId === 'heavy-punch';
+  }
+  expect(bounced).toBe(true);
+  expect(extraPunch).toBe(false);
+  step('N');
+  for (let i = 0; i < 5; i++) step('N', true);
+  expect(sim.snapshot().characters[0].attack?.moveId).toBe('heavy-punch');
+});
+
+it('o vapor do agarrão baixo só começa depois da pausa de contato', () => {
+  const state = new Simulation(createGameConfig(1024,576), [grappler, shoto]).snapshot().characters[0];
+  const move = grappler.moves.find(candidate => candidate.id === 'grab-low')!;
+  const attack = {moveId:move.id, buttons:['3' as const], elapsedFrames:move.startup, hasHit:true};
+  expect(grapplerEffects({...state, attack}, undefined, true)).toEqual([]);
+  expect(grapplerEffects({...state, attack}, undefined, false).map(effect=>effect.name)).toEqual(['grab-low']);
+  const launcher = grappler.moves.find(candidate => candidate.id === 'grab-launcher')!;
+  expect(grapplerEffects({...state, attack:{...attack, moveId:launcher.id, elapsedFrames:launcher.startup + 4}})).toEqual([]);
+  const throwMove = grappler.moves.find(candidate => candidate.id === 'grab-throw')!;
+  expect(grapplerEffects({...state, attack:{...attack, moveId:throwMove.id, elapsedFrames:throwMove.startup + 8}}).map(effect=>effect.name)).toEqual(['grab-throw']);
+});
+
+it.each(['right', 'left'] as const)('posiciona a mão do novo agarrão baixo no chão e a eleva para %s', facing => {
+  const [actor, victim] = new Simulation(createGameConfig(1024, 576), [grappler, shoto]).snapshot().characters;
+  const move = grappler.moves.find(candidate => candidate.id === 'grab-low')!;
+  const at = (age:number) => ({...actor, facing, attack:{moveId:move.id, buttons:['3' as const], elapsedFrames:move.startup + age, hasHit:true}});
+  const low = grapplerHand(at(0), 'grab-low', 2)!;
+  const raised = grapplerHand(at(2), 'grab-low', 3)!;
+  expect(Math.abs(low.y)).toBeLessThan(10);
+  expect(raised.y).toBeLessThan(low.y - 100);
+  const target = {...victim, grapplerGrabReaction:{moveId:move.id,startedFrame:0,startedLying:true}};
+  expect(grapplerCapturePose(target, at(2)).y).toBeLessThan(target.y);
 });
