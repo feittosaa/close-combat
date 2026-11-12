@@ -11,6 +11,7 @@ export type GrapplerEffect = { name: string; frame: number; x: number; y: number
 /** Where the smoke leaves the arm in each sheet's regular grid frame (362 × 724), and how large it is drawn. */
 const ARM_SMOKE_SCALE = .5;
 const SMOKE_ORIGINS: Readonly<Record<string, { x: number; y: number }>> = {
+  'grab-motion': { x: 181, y: 362 },
   'air-grab': { x: 35, y: 248 }, 'grab-launcher': { x: 36, y: 510 }, 'grab-low': { x: 21, y: 337 }, 'grab-slam': { x: 95, y: 398 },
   'grab-throw': { x: 59, y: 380 }, 'hammer-punch': { x: 47, y: 382 }, 'ultimate-grab': { x: 94, y: 364 }, 'ultimate-start': { x: 180, y: 460 },
 };
@@ -36,10 +37,11 @@ export function grapplerEffects(state: CharacterState, activationFrame?: number)
       scale: ARM_SMOKE_SCALE, origin: SMOKE_ORIGINS['ultimate-start'] }];
   }
   const move = grappler.moves.find(candidate => candidate.id === attack.moveId);
-  if (!move || !SMOKE_ORIGINS[move.id] || (move.commandGrab && !attack.hasHit)) return [];
+  if (!move || (!SMOKE_ORIGINS[move.id] && move.category !== 'throw') || ((move.commandGrab || move.category === 'throw') && !attack.hasHit)) return [];
   const delay = move.id === 'grab-slam' ? 10 : move.id === 'grab-throw' ? 8 : move.id === 'hammer-punch' ? -6 : 0;
   const age = attack.elapsedFrames - (attack.startupFrames ?? move.startup) - delay;
-  const result: GrapplerEffect[] = age >= 0 && age < 24 ? [smoke(move.id, Math.floor(age / 4))] : [];
+  const result: GrapplerEffect[] = SMOKE_ORIGINS[move.id] && age >= 0 && age < 24 ? [smoke(move.id, Math.floor(age / 4))] : [];
+  if ((move.commandGrab || move.category === 'throw') && age >= 0 && age < 24) result.push({...smoke('grab-motion', Math.min(5, Math.floor(age / 4))), scale:.4});
   if (move.id === 'ultimate-grab' && age >= 0 && age < GRAPPLER_ULTIMATE_SPIN_FRAMES) {
     result.push({ name: 'ultimate-rotation', frame: Math.floor(age / 3) % 6, x: 0, y: WHIRL.y, scale: WHIRL.scale, origin: WHIRL.origin });
   }

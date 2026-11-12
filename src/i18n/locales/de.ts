@@ -297,6 +297,7 @@ export const de: Locale = {
     'result.mainMenu': 'HAUPTMENÜ',
   },
   names: {
+    'move.grappler.throw-13': 'Normaler Wurf',
     'move.grappler.air-grab': 'Luftgriff',
     'move.grappler.grab-throw': 'Weiter Wurf',
     'move.grappler.grab-launcher': 'Aufwärtswurf',

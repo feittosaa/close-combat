@@ -297,6 +297,7 @@ export const zh: Locale = {
     'result.mainMenu': '主菜单',
   },
   names: {
+    'move.grappler.throw-13': '普通投技',
     'move.grappler.air-grab': '空中抓投',
     'move.grappler.grab-throw': '远距离投掷',
     'move.grappler.grab-launcher': '浮空抓投',

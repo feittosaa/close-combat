@@ -267,4 +267,12 @@ describe('animação de espera do Shoto', () => {
     expect(getShotoSpritePose(landed, 549)).toMatchObject({ texture: 'shoto-fall', frame: 5 });
     expect(settleAfterRound(airborne, 200, base.y, .55, false).mode).toBe('neutral');
   });
+  it('começa a levantar já em movimento, sem repetir o desenho deitado', () => {
+    const state = new Simulation(createGameConfig(1024,576), [shoto, shoto], {training:true}).snapshot().characters[0];
+    const frames = Array.from({length:12}, (_, i) => getShotoSpritePose({...state, grounded:true, mode:'knockdown', remainingStateFrames:12-i}, 100)?.frame);
+    expect(frames[0]).toBe(1);
+    expect(frames[11]).toBe(5);
+    expect(new Set(frames).size).toBe(5);
+  });
+
 });

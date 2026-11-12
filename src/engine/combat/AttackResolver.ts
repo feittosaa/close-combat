@@ -62,8 +62,8 @@ export class AttackResolver {
       if (!attack || !move || (attack.hasHit && !move.multiHit) || (!projectile && (attacker.mode !== 'active' || move.projectile))) return [];
       if (move.multiHit && (volleyStep === undefined || volleyStep >= move.multiHit.hits)) return [];
       if (target.knockdownBy?.moveId === 'ultimate-grab') return [];
-      const groundCapture = Boolean(move.commandGrab?.groundAfter && target.mode === 'knockdown' && target.grounded &&
-        target.knockdownBy?.attackerId === attacker.characterId && target.knockdownBy.moveId === move.commandGrab.groundAfter);
+      const groundCapture = Boolean(move.commandGrab?.groundOnly && target.mode === 'knockdown' && target.grounded);
+      if (move.commandGrab?.groundOnly && !groundCapture) return [];
       // Which grabs reach an airborne target is authored (`airTarget`); the air grab needs one in the air.
       if (move.commandGrab && (move.commandGrab.airTarget === 'only' ? target.grounded : !target.grounded && move.commandGrab.airTarget !== 'also')) return [];
       const airCapture = Boolean(move.commandGrab && !target.grounded);

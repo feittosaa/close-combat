@@ -297,6 +297,7 @@ export const ja: Locale = {
     'result.mainMenu': 'メインメニュー',
   },
   names: {
+    'move.grappler.throw-13': '通常投げ',
     'move.grappler.air-grab': '空中投げ',
     'move.grappler.grab-throw': '遠距離投げ',
     'move.grappler.grab-launcher': '打ち上げ投げ',
