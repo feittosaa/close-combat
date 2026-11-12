@@ -8,7 +8,8 @@ export interface RouteStep { wait: number; command: string }
 /** Inputs found by `scripts/find-combo-routes.ts` and checked in the real simulation. */
 export interface ComboRoute { steps: readonly RouteStep[]; hits: number; damage: number; moveIds: readonly string[] }
 export interface AdvancedRoute extends ComboRoute { notation: string; difficulty: number }
-export interface FighterRoutes { lessons: Readonly<Record<string, ComboRoute>>; advanced: readonly AdvancedRoute[] }
+/** `wall`: a combo that bounces the opponent off the wall and keeps hitting; it is played starting near the wall. */
+export interface FighterRoutes { lessons: Readonly<Record<string, ComboRoute>>; advanced: readonly AdvancedRoute[]; wall?: AdvancedRoute }
 
 const DIRECTIONS: Readonly<Record<string, Direction>> = { f: 'F', b: 'B', u: 'U', d: 'D', df: 'DF', fd: 'DF', db: 'DB', bd: 'DB', uf: 'UF', ub: 'UB' };
 const isButton = (value: string): value is AttackButton => ['1', '2', '3', '4'].includes(value);

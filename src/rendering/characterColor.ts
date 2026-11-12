@@ -38,13 +38,13 @@ export function outlineTrim(texture: string, frame: string | number, frameHeight
 }
 /**
  * Colour of one sprite, read by the shared pipeline (`palettePipeline.ts`) while it draws that sprite: the selective
- * alternate palette (`palette`: 0 none, 1 bob, 2 texas, 3 magic, 4 magic highlight) and, when `lit`, the stage light.
+ * alternate palette (`palette`: 0 none, 1 bob, 2 texas, 3 magic, 4 magic highlight, 5 grappler) and, when `lit`, the stage light.
  * The sheet correction is read by the pipeline from the texture being drawn.
  */
 export interface CharacterColorData {
   palette: number; lit: boolean; exposure: number; shadow: readonly [number, number, number]; occlusion: number; warmth: number;
 }
-export type Palette = 'none' | 'bob' | 'texas' | 'magic' | 'magic-highlight';
+export type Palette = 'none' | 'bob' | 'texas' | 'magic' | 'magic-highlight' | 'grappler';
 /**
  * Stage lighting for a fighter: `exposure` scales the whole figure, `shadow` is the ambient colour taken by its dark tones,
  * `occlusion` deepens them and `warmth` is the flame light on the lit surfaces. Nothing rotates hue, so clothing keeps its colour.
@@ -104,6 +104,12 @@ export function palettePixel(r: number, g: number, b: number, palette: Palette, 
   const [dh, ds, dv] = hsv(...drawn);
   if (!ds) return [r, g, b];
   // The olive shirt, its shadows and the tie reach greener, duller tones in some sheets than in the idle.
+  if (palette === 'grappler') {
+    // Only the neon orange and amber of the suit (fully saturated, unlike leather and skin) turn cyan, keeping light and shade.
+    const weight = smoothstep(.8, .86, ds) * smoothstep(8, 14, dh) * (1 - smoothstep(48, 58, dh));
+    const cyan = hsvToRgb(190 + (h - 30) * .5, max, saturation);
+    return [r, g, b].map((value, index) => Math.round(value + (cyan[index] - value) * weight)) as [number, number, number];
+  }
   if (palette === 'bob' && dh >= 27 && dh <= 90 && ds >= (dh > 56 ? .3 : .38) && dv < 190 && dv > 20) {
     // Saturated orange at the low hue edge is blond hair or straw, not shirt: fade it out instead of cutting; the
     // green edge fades out too.
@@ -202,6 +208,6 @@ export class CharacterColorEffect {
   }
 }
 
-const PALETTE_CODES: Readonly<Record<Palette, number>> = { none: 0, bob: 1, texas: 2, magic: 3, 'magic-highlight': 4 };
+const PALETTE_CODES: Readonly<Record<Palette, number>> = { none: 0, bob: 1, texas: 2, magic: 3, 'magic-highlight': 4, grappler: 5 };
 const isLit = (color: CharacterColor): boolean =>
   (color.exposure ?? 1) !== 1 || (color.occlusion ?? 0) > 0 || (color.warmth ?? 0) > 0 || (color.shadow ?? [1, 1, 1]).some(channel => channel !== 1);

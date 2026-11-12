@@ -44,6 +44,7 @@
 .developer-viewer { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 0; overflow: auto; }
 /* The preview takes whatever height the controls leave, so the viewer fits without scrolling. */
 .developer-preview { flex: 1 1 0; min-height: 120px; max-height: 360px; width: auto; aspect-ratio: 1; }
+.developer-viewer .developer-actual { max-height: 440px; }
 .developer-viewer > :not(.developer-preview) { flex: none; }
 .developer-cuts { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: none; }
 .developer-cuts canvas { cursor: crosshair; touch-action: none; }
@@ -88,3 +89,8 @@
 .developer-tuning { display: flex; align-items: flex-start; gap: 12px; padding: 10px; border: 1px solid #efe4cc44; }
 .developer-tuning > .developer-row { flex: 1; min-width: 0; }
 .developer-selection h2 { margin: 0; flex: 1 0 100%; font: 700 15px var(--font); }
+
+/* Placeholder of an item still loading (thumbnails of the image galleries). */
+.developer-panel img.developer-skeleton { min-height: 48px; min-width: 48px; background: linear-gradient(100deg, #241d18 30%, #3a3029 50%, #241d18 70%) 0 0 / 200% 100%; animation: developer-shimmer 1.2s linear infinite; }
+@keyframes developer-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .developer-panel img.developer-skeleton { animation: none; } }

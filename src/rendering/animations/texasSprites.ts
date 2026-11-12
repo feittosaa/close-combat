@@ -9,6 +9,7 @@ import { loadGraphicsQuality } from '../../ui/graphicsSettings';
 import { autoSpriteScale, bodyCenterShift, lyingFloorAnchor } from './spriteScale';
 import texasCalibration from '../../assets/sprites/characters/texas/calibration.json';
 import texasMeasurements from '../../assets/sprites/characters/texas/measurements.json';
+import { grapplerReaction } from '../grapplerReaction';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/texas/*.png', { eager: true, query: '?url', import: 'default' });
 const layouts = import.meta.glob<string>('../../assets/sprites/characters/texas/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
@@ -125,6 +126,8 @@ export function getTexasRoundEndPose(state: CharacterState, winner: boolean, ela
 
 
 export function getTexasSpritePose(state: CharacterState, frame: number) {
+  const grab = grapplerReaction(state, frame);
+  if (grab) return pose(grab.name, grab.drawing, state);
   if (state.fighterId !== 'texas') return undefined;
   if (state.attack) {
     const move = texas.moves.find(candidate => candidate.id === state.attack!.moveId);
@@ -187,6 +190,7 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
     const texture = combo ? state.chain!.length % 2 === 0 ? 'combo-left-shot' : 'combo-right-shot' : move.category === 'throw' ? 'throw' : move.id;
     return pose(texture, after, state);
   }
+  if (state.commandGrabbed && state.grabbedStartedFrame !== undefined) return pose('grabbed', 0, state);
   if (state.mode === 'knockdown') {
     if (state.grounded && state.pushbackMotion && !state.throwFlight) {
       return pose('push-fall', Math.min(5, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 2)), state);
@@ -205,7 +209,7 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
     if (!state.grounded && bounce && bounceAge >= 0 && bounceAge < 24 && (state.hitReaction?.startedFrame ?? -1) <= bounce.frame) {
       return pose('wall-bounce', Math.min(3, Math.floor(bounceAge / 6)), state);
     }
-    if (state.grounded && state.grabbedStartedFrame !== undefined && frame - state.grabbedStartedFrame < 16) {
+    if ((state.grounded || state.commandGrabbed) && state.grabbedStartedFrame !== undefined && (state.commandGrabbed || frame - state.grabbedStartedFrame < 16)) {
       return pose('grabbed', 0, state);
     }
     const reaction = state.hitReaction;
@@ -272,6 +276,7 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
 export function getTexasSpriteLayers(state: CharacterState, frame: number) {
   const character = getTexasSpritePose(state, frame);
   if (!character) return [];
+  if (grapplerReaction(state, frame)) return [character];
   if (!state.attack) {
     const defending = state.mode === 'blocking' || state.mode === 'blockstun';
     const transition = state.animationTransition;

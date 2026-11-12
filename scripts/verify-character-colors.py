@@ -47,6 +47,9 @@ OFF_SHARE = .08
 MIN_PIXELS = 300
 # Pull of the correction toward the identity: keeps colors without a material (effects, line work) nearly unchanged.
 STIFFNESS = .005
+# A corrected sheet whose mean brightness strays from the idle's by more than this share (a drawing paler overall, whatever
+# its materials) is fitted again taking each material to the reference's lightness too, not only its tone.
+MEAN_BAND = .08
 # Fits refined on the already corrected colors (a material's membership shifts as its color moves).
 PASSES = 5
 # Turnaround paper: lightness and chroma of the background behind the drawing.
@@ -167,12 +170,12 @@ def deviations(colors: Colors, centers: np.ndarray, reference: dict, frames: int
     return strayed, off, found
 
 
-def fit(found: dict, reference: dict) -> np.ndarray:
-    """Least-squares color correction taking each material's median to the reference tone at its own lightness,
+def fit(found: dict, reference: dict, lightness: bool = False) -> np.ndarray:
+    """Least-squares color correction taking each material's median to the reference tone at its own lightness (or the reference's, with `lightness`),
     weighted by pixel count and pulled toward the identity."""
     shared = [k for k in found if k in reference]
     sources = np.array([found[k][1] / 255 for k in shared])
-    targets = np.array([srgb(np.array([found[k][0][0], *reference[k][0][1:]])) / 255 for k in shared])
+    targets = np.array([srgb(np.array([reference[k][0][0] if lightness else found[k][0][0], *reference[k][0][1:]])) / 255 for k in shared])
     # Square root of each material's share, so a small one (the skin of a covered pose) still pulls on the fit.
     weights = (np.array([found[k][2] for k in shared], float) / sum(found[k][2] for k in shared)) ** .25
     rows = np.vstack([np.hstack([sources, np.ones((len(shared), 1))]) * weights[:, None], np.sqrt(STIFFNESS) * np.eye(4)])
@@ -287,12 +290,15 @@ def main() -> None:
         corrections.pop(sheet.stem, None)
         original, before, strayed = check(sheet.stem, parts, centers, reference)
         if original and not sheet.stem.startswith('idle'):
-            correction, corrected, after = IDENTITY, parts, before
-            for _ in range(PASSES):
-                step = fit(after, reference)
-                correction = np.hstack([step[:, :3] @ correction[:, :3], step[:, :3] @ correction[:, 3:] + step[:, 3:]])
-                corrected = [part.corrected(correction) for part in parts]
-                remaining, after, strayed = check(sheet.stem, corrected, centers, reference, set(before))
+            for lightness in (False, True):
+                correction, corrected, after = IDENTITY, parts, before
+                for _ in range(PASSES):
+                    step = fit(after, reference, lightness)
+                    correction = np.hstack([step[:, :3] @ correction[:, :3], step[:, :3] @ correction[:, 3:] + step[:, 3:]])
+                    corrected = [part.corrected(correction) for part in parts]
+                    remaining, after, strayed = check(sheet.stem, corrected, centers, reference, set(before))
+                pale = abs(np.concatenate([part.rgb for part in corrected]).mean() / idle.rgb.mean() - 1) > MEAN_BAND
+                if not pale: break
             if len(remaining) < len(original):
                 corrections[sheet.stem] = [round(float(value), 5) for value in correction.ravel()]
                 fixed.append(f'{sheet.stem} ({len(original)} → {len(remaining)})')

@@ -1,7 +1,8 @@
 import { t } from '../i18n/i18n';
 import { createWallpaperShuffle } from './wallpaperShuffle';
+import { wallpapers as menuWallpapers } from './wallpapers';
 
-const wallpapers = Object.values(import.meta.glob<string>('../../assets/art/wallpapers/*.{png,jpg,jpeg,webp}', { eager: true, query: '?url', import: 'default' }));
+const wallpapers = menuWallpapers.map(wallpaper => wallpaper.url);
 /** Matches the fade of `.loading-screen.leaving` in style.css. */
 const LEAVE_MS = 600;
 const nextWallpaperIndex = createWallpaperShuffle(wallpapers.length);

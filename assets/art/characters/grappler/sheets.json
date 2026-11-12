@@ -1,0 +1,32 @@
+{
+ "cell": 640,
+ "foot": 465,
+ "scale": 0.6,
+ "reference": "idle",
+ "sheets": {
+  "double-punch": {
+   "released": [[1172, 343, 1300, 366], [1268, 333, 1362, 350]]
+  },
+  "grab-headbutt-between": {
+   "frames": 5
+  },
+  "grab-slam-between": {
+   "frames": 5
+  },
+  "grab-low-between": {
+   "frames": 5
+  },
+  "grab-launcher-between": {
+   "frames": 5
+  },
+  "grab-throw-between": {
+   "frames": 5
+  },
+  "air-grab-between": {
+   "frames": 5
+  },
+  "ultimate-grab-between": {
+   "frames": 5
+  }
+ }
+}

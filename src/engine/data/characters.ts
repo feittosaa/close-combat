@@ -1,6 +1,7 @@
 import type { MoveDefinition } from './moves';
 import { shoto } from './fighters/shoto';
 import { texas } from './fighters/texas';
+import { grappler } from './fighters/grappler';
 
 export interface CharacterHurtbox {
   offsetX: number;
@@ -41,7 +42,7 @@ export interface CharacterDefinition {
   id: string;
   name: string;
   maxHealth: number;
-  movement: { walkSpeed: number; backwardWalkSpeed: number; jumpVelocity: number; dashSpeed: number; backdashSpeed: number; dashDurationFrames?: number; airDash?: boolean };
+  movement: { walkSpeed: number; backwardWalkSpeed: number; jumpVelocity: number; dashSpeed: number; backdashSpeed: number; backdash?: boolean; dash?: boolean; dashDurationFrames?: number; airDash?: boolean };
   moves: readonly MoveDefinition[];
   /** Ultimate selected by the universal shortcut when a fighter has several. */
   defaultUltimateId?: string;
@@ -57,7 +58,7 @@ export interface CharacterDefinition {
   collision: CharacterCollisionProfile;
 }
 export const DEFAULT_CHARACTER_ID = 'shoto';
-export const characters: readonly CharacterDefinition[] = [shoto, texas];
+export const characters: readonly CharacterDefinition[] = [shoto, texas, grappler];
 export const playableCharacters = characters;
 export const defaultCharacter = shoto;
 export function getCharacterById(id: string): CharacterDefinition | undefined {

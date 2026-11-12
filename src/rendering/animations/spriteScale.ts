@@ -34,7 +34,7 @@ export const CROUCH_EXIT = 1.4;
 const REFERENCE_SHEETS = ['idle-normal', 'idle'] as const;
 const CROUCH_REFERENCE = 'crouch';
 /** Falls, knockdowns, defeat and getups: the fighter lying or on the way to the floor. */
-const LYING = /^(fall|fall-landing|knockdown|push-fall|defeat|getup|ippon-victim)$/;
+const LYING = /^(fall|fall-landing|knockdown|push-fall|defeat|getup|ippon-victim|grappler-reaction-.*)$/;
 const AIRBORNE = /^(jump|air-|enter-jump|turn-air|launch-hit|wall-bounce|flying-kick)/;
 /** Effects and projectiles drawn apart from the body, and `idle` (Texas's reference, Bob's legacy idle on its own frame grid). */
 const NOT_A_BODY = /^(effect-|magic-|crow$|tomato$|dynamite$|idle$)/;
@@ -76,6 +76,8 @@ const settle = (scale: number) => Math.round(scale * 100) / 100;
  * `calibration.json` (`npm run sprites:apply-scales`); always empty in normal play.
  */
 export const sheetScaleAdjustments = new Map<string, number>();
+/** Multipliers per drawing (`<fighter>:<sheet>:<frame>`), tried the same way, on top of the sheet's. */
+export const frameScaleAdjustments = new Map<string, number>();
 
 /**
  * Multiplier that shows a drawing at the fighter's validated proportions.
@@ -87,7 +89,8 @@ export const sheetScaleAdjustments = new Map<string, number>();
  * `LYING_LENGTH` times the standing height end to end.
  */
 export function autoSpriteScale(definition: CharacterDefinition, measurements: SheetMeasurements, name: string, frame = 0, calibration: SpriteCalibration = {}): number {
-  return measuredSpriteScale(definition, measurements, name, frame, calibration) * (sheetScaleAdjustments.get(`${definition.id}:${name}`) ?? 1);
+  return measuredSpriteScale(definition, measurements, name, frame, calibration) * (sheetScaleAdjustments.get(`${definition.id}:${name}`) ?? 1)
+    * (frameScaleAdjustments.get(`${definition.id}:${name}:${frame}`) ?? 1);
 }
 
 function measuredSpriteScale(definition: CharacterDefinition, measurements: SheetMeasurements, name: string, frame: number, calibration: SpriteCalibration): number {

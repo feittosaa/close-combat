@@ -16,6 +16,14 @@ export interface MoveDefinition {
   /** Hold the button to charge; thresholds use simulation frames. */
   charge?: { framesPerStep: number; maxSteps: number; damagePerStep: number; maxRangeBonus?: number };
   category?: 'basic' | 'crouching' | 'power' | 'throw' | 'special' | 'ultimate';
+  /** Command grabs can connect against airborne and stunned opponents. */
+  commandGrab?: { groundAfter?: string; downwardVelocity?: number; launch?: { velocity: number; forward: number; recovery: number };
+    /** Against an airborne target: `only` connects solely with one in the air, `also` with either; absent, only with one on the floor. */
+    airTarget?: 'only' | 'also' };
+  /** Once it connects, nothing else can start in that combo. */
+  comboFinisher?: boolean;
+  /** Connects at most once per combo; moves with the same group name share that one use. */
+  oncePerCombo?: boolean | string;
   crouching?: boolean;
   airborne?: boolean;
   /** Existing artwork only; this is a temporary pose alias, never new animation. */

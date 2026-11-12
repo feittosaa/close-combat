@@ -6,7 +6,8 @@ ou adicionada pelo modo desenvolvedor ou na pasta passa por aqui.
 
 As artes do jogo foram ampliadas 2× no Upscayl; a referência é a altura delas: cerca de 1984 px na arte de seleção
 (`selection-background.png`, `selection-backgrounds/*.png`) e 2170 px na pose de vitória (`fullbody*.png`,
-`victory-poses/*.png`). Uma arte com menos de 3/4 dessa altura (caso de uma pose em meia resolução, sem o 2×) é
+`victory-poses/*.png`). Os wallpapers do menu e do carregamento (`assets/art/wallpapers/*.png`) seguem a regra com
+referência de 1984 px de altura (os mais recentes têm 3170 × 1984). Uma arte com menos de 3/4 dessa altura (caso de uma pose em meia resolução, sem o 2×) é
 ampliada pelo menor fator do Upscayl (2, 3 ou 4) que a tira dessa faixa, e o arquivo é regravado no lugar. Os ícones
 ficam de fora: a janela do HUD é medida em pixels.
 """
@@ -19,24 +20,26 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / 'src/assets/art/characters'
+WALLPAPERS = ROOT / 'assets/art/wallpapers'
 UPSCAYL = Path('/opt/Upscayl/resources/bin/upscayl-bin')
 MODEL = 'digital-art-4x'
 SCALES = (2, 3, 4)
 # Fração da altura de referência abaixo da qual a arte é ampliada.
 LIMIT = 3 / 4
-# Altura de referência e arquivos de cada tipo de arte.
+# Altura de referência, pasta e arquivos de cada tipo de arte.
 REFERENCES = (
-    (1984, ('*/selection-background.png', '*/selection-backgrounds/*.png')),
-    (2170, ('*/fullbody*.png', '*/victory-poses/*.png')),
+    (1984, ART, ('*/selection-background.png', '*/selection-backgrounds/*.png')),
+    (2170, ART, ('*/fullbody*.png', '*/victory-poses/*.png')),
+    (1984, WALLPAPERS, ('*.png',)),
 )
 
 
 def low_resolution() -> list[tuple[Path, int]]:
     """As artes abaixo do limite, com o menor fator que as leva acima dele."""
     found = []
-    for reference, patterns in REFERENCES:
+    for reference, folder, patterns in REFERENCES:
         minimum = reference * LIMIT
-        for path in sorted(path for pattern in patterns for path in ART.glob(pattern)):
+        for path in sorted(path for pattern in patterns for path in folder.glob(pattern)):
             with Image.open(path) as image: height = image.height
             if height < minimum:
                 found.append((path, next((scale for scale in SCALES if height * scale >= minimum), SCALES[-1])))

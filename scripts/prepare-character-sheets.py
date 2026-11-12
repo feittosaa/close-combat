@@ -4,7 +4,7 @@ Uso: python3 scripts/prepare-character-sheets.py <personagem> [folha...] [--said
 Padrão global de limpeza, recorte e posicionamento de todos os personagens. As fontes (seis poses lado a lado, fundo
 magenta) ficam em `assets/art/characters/<personagem>/revisao/`; `sheets.json` na mesma pasta do personagem define
 a grade (`cell`, `foot`, `scale` do desenho) e, por folha, só o que foge do automático (`source`, `frames`, `scale`,
-`anchors`, `floor`, `released`). Toda folha PNG da pasta sem entrada usa o nome do arquivo e o padrão. `ignore`
+`anchors`, `floor`, `released`, `cuts`). Toda folha PNG da pasta sem entrada usa o nome do arquivo e o padrão. `ignore`
 lista as fontes tratadas por outro preparador (efeitos, projéteis). Sem nomes de folha, prepara todas; cada folha sai nas
 qualidades normal e alta (`high/`, células e escala dobradas), a partir da mesma fonte, num atlas de 3 colunas.
 O fundo sai por desmistura de cor antes da redução: cada pixel que o fundo alcança vira a cor desenhada com a cobertura
@@ -81,12 +81,14 @@ FIT_MARGIN = 4
 
 @cache
 def poses(source: Path, centers: tuple[int, ...] | None = None,
-          released: tuple[tuple[int, int, int, int], ...] = (), count: int = FRAMES) -> list[tuple[np.ndarray, int, int]]:
+          released: tuple[tuple[int, int, int, int], ...] = (), count: int = FRAMES,
+          reassign: tuple[tuple[int, int, int, int, int], ...] = (), cuts: tuple[int, ...] = ()) -> list[tuple[np.ndarray, int, int]]:
     """The `count` poses of a source, left to right: each crop with its source top row and left column. The sheet is cut
     at the emptiest column between consecutive pose centers (evenly spaced when not given). A solid piece goes whole to
     the slot holding most of it (a kick reaching past the cut stays with its pose); only a piece that really spans
     slots (effects touching between poses) is split at the cut. Soft pixels (blur, smears, antialiasing) follow the
-    nearest solid pixel, so blurred edges touching between poses do not join them."""
+    nearest solid pixel, so blurred edges touching between poses do not join them. `cuts` gives the `count - 1` cut columns
+    when the poses are too uneven or overlap too much for the emptiest column to find them."""
     pixels = np.asarray(Image.open(source).convert('RGBA')).copy()
     unmix(pixels)
     for left, top, right, bottom in released:
@@ -95,12 +97,14 @@ def poses(source: Path, centers: tuple[int, ...] | None = None,
     width = drawn.shape[1]
     centers = centers or tuple(round((pose + .5) * width / count) for pose in range(count))
     coverage = pixels[..., 3].sum(axis=0)
-    cuts = [0]
-    for left, right in zip(centers, centers[1:]):
-        start, stop = left + (right - left) // 4, right - (right - left) // 4
-        cuts.append(start + int(np.argmin(coverage[start:stop])))
-    cuts.append(width)
-    slot = np.broadcast_to(np.searchsorted(cuts, np.arange(width), side='right') - 1, drawn.shape)
+    if cuts: edges = [0, *cuts, width]
+    else:
+        edges = [0]
+        for left, right in zip(centers, centers[1:]):
+            start, stop = left + (right - left) // 4, right - (right - left) // 4
+            edges.append(start + int(np.argmin(coverage[start:stop])))
+        edges.append(width)
+    slot = np.broadcast_to(np.searchsorted(edges, np.arange(width), side='right') - 1, drawn.shape)
     pieces, pieces_count = label(solid, structure=np.ones((3, 3)))
     shares = np.bincount(pieces[solid] * count + slot[solid], minlength=(pieces_count + 1) * count).reshape(-1, count)
     sizes = shares.sum(axis=1)
@@ -112,6 +116,9 @@ def poses(source: Path, centers: tuple[int, ...] | None = None,
     attached = np.isin(regions, np.unique(regions[owner >= 0])) & drawn
     rows, cols = distance_transform_edt(~solid, return_distances=False, return_indices=True)
     owner = np.where(attached, owner[rows, cols], -1)
+    for left, top, right, bottom, pose_index in reassign:
+        selection = drawn[top:bottom, left:right]
+        owner[top:bottom, left:right] = np.where(selection, pose_index, owner[top:bottom, left:right])
     result = []
     for pose in range(count):
         mine = owner == pose
@@ -131,11 +138,11 @@ def solid_extent(data: np.ndarray, top: int, left: int) -> tuple[int, int]:
 
 
 @cache
-def automatic(source: Path, released: tuple, count: int) -> tuple[list[int], list[int]]:
+def automatic(source: Path, released: tuple, count: int, cuts: tuple[int, ...] = ()) -> tuple[list[int], list[int]]:
     """Centers and support rows measured from the source; the poses are cut again around the first centers."""
-    first = poses(source, None, released, count)
+    first = poses(source, None, released, count, (), cuts)
     centers = tuple(solid_extent(*pose)[0] for pose in first)
-    final = poses(source, centers, released, count)
+    final = poses(source, centers, released, count, (), cuts)
     measured = [solid_extent(*pose) for pose in final]
     floors = [floor for _, floor in measured]
     report(source.stem, floors)
@@ -203,13 +210,15 @@ class Character:
         entry = self.sheets[name]
         source, count = self.folder / 'revisao' / entry.get('source', f'{name}.png'), entry.get('frames', FRAMES)
         released = tuple(tuple(box) for box in entry.get('released', ()))
+        reassign = tuple(tuple(box) for box in entry.get('reassign', ()))
+        cuts = tuple(entry.get('cuts', ()))
         if 'anchors' in entry and 'floor' in entry:
             anchors, floor = entry['anchors'], entry['floor']
-            drawings = poses(source, tuple(anchors), released, count)
+            drawings = poses(source, tuple(anchors), released, count, reassign, cuts)
         else:
-            anchors, floors = automatic(source, released, count)
+            anchors, floors = automatic(source, released, count, cuts)
             floor = entry.get('floor', floors)
-            drawings = poses(source, tuple(anchors), released, count)
+            drawings = poses(source, tuple(anchors), released, count, reassign, cuts)
         scale = self.sheet_scale(name, entry, drawings, anchors, floor) * quality
         frames = []
         for index, (data, top, left) in enumerate(drawings):

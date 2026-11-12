@@ -16,6 +16,8 @@ export interface TutorialLesson {
   check?: TutorialCheck;
   /** Inputs shown by the example key. */
   demo?: readonly FrameInput[];
+  /** The lesson starts with the opponent near the wall, so a throw can bounce him off it. */
+  wall?: boolean;
 }
 export interface TutorialSection { id: 'basic' | 'combos' | 'advanced'; title: string; lessons: readonly TutorialLesson[] }
 
@@ -59,6 +61,13 @@ export class TutorialSession {
     const check = (key: TutorialCheck, notation: string): TutorialLesson =>
       ({ key, title: t(`tutorial.${key}`), instruction: t(`tutorial.${key}Hint`), notation, check: key, demo: CHECK_DEMOS[key] });
     const comboHint = t('tutorial.comboHint');
+    const advanced: TutorialLesson[] = [...(routes?.advanced ?? []).map((route, index) => ({
+        key: `advanced:${index}`, title: t('tutorial.advancedTitle', { number: index + 1 }), instruction: t('tutorial.advancedHint'),
+        notation: route.notation, moves: route.moveIds, steps: route.moveIds.map(stepOf), demo: demoOf(fighter, route),
+      })),
+      // The bounce combo closes the section: it starts near the wall.
+      ...(routes?.wall ? [{ key: 'wall', title: t('tutorial.wallTitle'), instruction: t('tutorial.wallHint'), wall: true,
+        notation: routes.wall.notation, moves: routes.wall.moveIds, steps: routes.wall.moveIds.map(stepOf), demo: demoOf(fighter, routes.wall) }] : [])];
     this.sections = [
       { id: 'basic', title: t('tutorial.sectionBasic'), lessons: [
         check('walk', 'f / b'), check('jump', 'u'), check('crouch', 'd'), check('guard', 'b'),
@@ -70,10 +79,7 @@ export class TutorialSession {
           chain.recipeIds.map(id => fighter.combos!.find(recipe => recipe.id === id)!.notation).join(','), chain.recipeIds.flatMap(recipeMoves), comboHint)),
         ...fighter.moves.filter(isComboLessonMove).map(lessonOfMove(t('tutorial.specialHint'))),
       ] },
-      { id: 'advanced', title: t('tutorial.sectionAdvanced'), lessons: (routes?.advanced ?? []).map((route, index) => ({
-        key: `advanced:${index}`, title: t('tutorial.advancedTitle', { number: index + 1 }), instruction: t('tutorial.advancedHint'),
-        notation: route.notation, moves: route.moveIds, steps: route.moveIds.map(stepOf), demo: demoOf(fighter, route),
-      })) },
+      { id: 'advanced', title: t('tutorial.sectionAdvanced'), lessons: advanced },
     ];
   }
   /**
@@ -83,8 +89,10 @@ export class TutorialSession {
   stats(lesson: TutorialLesson): { hits: number; damage: number } | undefined {
     if (!lesson.moves || !lesson.demo) return undefined;
     if (!this.measured.has(lesson)) {
-      const combo = playExample(this.fighter, lesson.demo, TUTORIAL_START_DISTANCE).sort((a, b) => b.hits - a.hits)[0];
-      this.measured.set(lesson, combo && { hits: combo.hits, damage: combo.damage });
+      const combos = playExample(this.fighter, lesson.demo, TUTORIAL_START_DISTANCE, lesson.wall);
+      // The wall bounce closes a combo and the sequence goes on in another: the lesson adds them up.
+      const counted = lesson.wall ? combos : combos.sort((a, b) => b.hits - a.hits).slice(0, 1);
+      this.measured.set(lesson, counted.length ? { hits: counted.reduce((total, combo) => total + combo.hits, 0), damage: counted.reduce((total, combo) => total + combo.damage, 0) } : undefined);
     }
     return this.measured.get(lesson);
   }

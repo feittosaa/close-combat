@@ -20,14 +20,14 @@ it.each(['training', 'tutorial', 'versus', 'arcade'] as MatchMode[])(
     handle(press('KeyR'));
     expect(resetFight).not.toHaveBeenCalled();
     const configured = press('KeyZ'); handle(configured);
-    expect(resetFight).toHaveBeenCalledTimes(mode === 'training' ? 1 : 0);
-    expect(configured.preventDefault).toHaveBeenCalledTimes(mode === 'training' ? 1 : 0);
+    expect(resetFight).toHaveBeenCalledTimes(mode === 'training' || mode === 'tutorial' ? 1 : 0);
+    expect(configured.preventDefault).toHaveBeenCalledTimes(mode === 'training' || mode === 'tutorial' ? 1 : 0);
   },
 );
 
 it('free training reset asks the simulation to keep rage', () => {
   const scene = new FightScene(); scene.init({ mode: 'training' });
-  const simulation = { resetMatch: vi.fn() };
+  const simulation = { resetMatch: vi.fn(), setTrainingWall: vi.fn() };
   Object.assign(scene, { simulation, syncViewsAndHud: vi.fn() });
   (Reflect.get(scene, 'resetFight') as (reposition: boolean) => void).call(scene, true);
   expect(simulation.resetMatch).toHaveBeenCalledWith(expect.anything(), true);

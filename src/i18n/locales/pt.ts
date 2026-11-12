@@ -286,6 +286,8 @@ const messages = {
   'tutorial.specialHint': 'Faça o comando e acerte o adversário.',
   'tutorial.advancedTitle': 'Combo avançado {number}',
   'tutorial.advancedHint': 'Una combos, golpes e especiais sem deixar o adversário se recuperar.',
+  'tutorial.wallTitle': 'Combo de quique na parede',
+  'tutorial.wallHint': 'Comece perto da parede: o arremesso lança o adversário contra ela, e o combo continua depois do quique.',
   'victory.label': 'Tela de vitória de {name}',
   'result.label': 'Opções após a partida',
   'result.continue': 'CONTINUAR',

@@ -2,7 +2,8 @@ import type { CharacterDefinition, ComboRecipe } from '../engine/data/characters
 import type { MoveDefinition } from '../engine/data/moves';
 import { HUD } from '../ui/hudTheme';
 import { DEFAULT_ARCADE_FRAME, DEFAULT_HERO_FRAME, DEFAULT_TILE_FRAME, fighterArt, type AlternativeFramings, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
-import { sheetScaleAdjustments } from '../rendering/animations/spriteScale';
+import { nameOverrides } from '../i18n/i18n';
+import { frameScaleAdjustments, sheetScaleAdjustments } from '../rendering/animations/spriteScale';
 import { outlineWidths } from '../rendering/characterColor';
 import { frameCutAdjustments, frameSizeAdjustments, type FrameCut, type FrameSize } from '../rendering/contactEffects';
 
@@ -28,11 +29,15 @@ export const SELECTION_FIELDS = ['hero', 'arcade', 'tile', 'iconWindow', 'victor
 
 export interface DevOverrides {
   moves: Record<string, Record<string, MoveTuning>>;
+  /** New names of authored moves per fighter (the move's `name` and its translations). */
+  moveNames: Record<string, Record<string, string>>;
   recipes: Record<string, Record<string, RecipeTuning>>;
   combos: Record<string, ComboRecipe[]>;
   colors: Record<string, string>;
   /** Animation size multipliers per `<fighter>:<sheet>`, over the automatic or validated scale. */
   spriteScales: Record<string, number>;
+  /** Size multipliers per drawing, `<fighter>:<sheet>:<frame>`, over the sheet's own. */
+  frameScales: Record<string, number>;
   /** On-screen outline width per fighter, in world pixels, over the one its atlases were drawn with (`outline.json`). */
   outlines: Record<string, number>;
   /** Frame cuts of contact sheets per texture and frame index (`frames.json` beside the sheets). */
@@ -46,7 +51,7 @@ export interface DevOverrides {
 }
 
 const STORAGE_KEY = 'close-combat.dev-overrides';
-const empty = (): DevOverrides => ({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, outlines: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
+const empty = (): DevOverrides => ({ moves: {}, moveNames: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameScales: {}, outlines: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
 
 /** Fighter ids renamed in the code (2026-11-08); tuning saved under the old ids follows them. */
 const RENAMED_FIGHTERS: Readonly<Record<string, string>> = { cowboy: 'texas', puppet: 'mrapple' };
@@ -115,7 +120,12 @@ export class DevTuning {
       const target = recipe as Mutable<ComboRecipe>;
       for (const field of RECIPE_FIELDS) (target as Record<string, unknown>)[field] = original[field];
     }
+    nameOverrides.clear();
     for (const fighter of this.fighters) {
+      for (const [moveId, name] of Object.entries(this.overrides.moveNames[fighter.id] ?? {})) {
+        nameOverrides.set(`move.${fighter.id}.${moveId}`, name);
+        const target = fighter.moves.find(move => move.id === moveId) as Mutable<MoveDefinition> | undefined; if (target) target.name = name;
+      }
       const tuning = this.overrides.moves[fighter.id] ?? {};
       for (const move of fighter.moves) {
         const values = tuning[move.id]; if (!values) continue;
@@ -134,6 +144,8 @@ export class DevTuning {
     }
     sheetScaleAdjustments.clear();
     for (const [sheet, scale] of Object.entries(this.overrides.spriteScales)) sheetScaleAdjustments.set(sheet, scale);
+    frameScaleAdjustments.clear();
+    for (const [frame, scale] of Object.entries(this.overrides.frameScales)) frameScaleAdjustments.set(frame, scale);
     outlineWidths.clear();
     for (const [fighter, width] of Object.entries(this.overrides.outlines)) outlineWidths.set(fighter, width);
     frameCutAdjustments.clear();
@@ -178,8 +190,24 @@ export class DevTuning {
     if (value) this.overrides.colors[key] = value; else delete this.overrides.colors[key];
     this.commit();
   }
+  /** Renames an authored move (its `name` and its translations); returning to the authored name drops the edit. */
+  renameMove(fighterId: string, moveId: string, name: string): void {
+    if (name === this.authoredName(fighterId, moveId)) {
+      delete this.overrides.moveNames[fighterId]?.[moveId];
+      if (!Object.keys(this.overrides.moveNames[fighterId] ?? {}).length) delete this.overrides.moveNames[fighterId];
+    } else this.overrides.moveNames[fighterId] = { ...(this.overrides.moveNames[fighterId] ?? {}), [moveId]: name };
+    this.commit();
+  }
+  authoredName(fighterId: string, moveId: string): string | undefined {
+    const move = this.fighters.find(entry => entry.id === fighterId)?.moves.find(entry => entry.id === moveId);
+    return move && this.baseline.moves.get(move)?.name;
+  }
   setSpriteScale(sheet: string, scale: number | undefined): void {
     if (scale === undefined || scale === 1) delete this.overrides.spriteScales[sheet]; else this.overrides.spriteScales[sheet] = scale;
+    this.commit();
+  }
+  setFrameScale(frame: string, scale: number | undefined): void {
+    if (scale === undefined || scale === 1) delete this.overrides.frameScales[frame]; else this.overrides.frameScales[frame] = scale;
     this.commit();
   }
   /** Sets a fighter's on-screen outline width; `undefined` returns to the one its atlases were drawn with. */
@@ -202,7 +230,7 @@ export class DevTuning {
     this.commit();
   }
   /** Drops the move tuning of one fighter; its combos stay as they are. */
-  resetMoves(fighterId: string): void { delete this.overrides.moves[fighterId]; this.commit(); }
+  resetMoves(fighterId: string): void { delete this.overrides.moves[fighterId]; delete this.overrides.moveNames[fighterId]; this.commit(); }
   /** Drops the recipe edits and the panel-created combos of one fighter; its move tuning stays as it is. */
   resetCombos(fighterId: string): void { delete this.overrides.recipes[fighterId]; delete this.overrides.combos[fighterId]; this.commit(); }
   setFrameCut(texture: string, frame: number, cut: FrameCut | undefined): void {

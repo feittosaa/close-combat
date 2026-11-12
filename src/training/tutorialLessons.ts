@@ -27,10 +27,10 @@ export function tutorialGameConfig(): GameConfig {
 
 /**
  * Plays an example from the given separation with full rage, then waits until the ultimate cinematic, every projectile,
- * the attack and the opponent's reaction are over. Returns player one's combos.
+ * the attack and the opponent's reaction are over. Returns player one's combos. With `wall`, the opponent starts near the wall.
  */
-export function playExample(fighter: CharacterDefinition, inputs: readonly FrameInput[], distance: number): ComboRecord[] {
-  const sim = new Simulation(tutorialGameConfig(), [fighter, fighter], { training: true, initialDistance: distance });
+export function playExample(fighter: CharacterDefinition, inputs: readonly FrameInput[], distance: number, wall = false): ComboRecord[] {
+  const sim = new Simulation(tutorialGameConfig(), [fighter, fighter], { training: true, initialDistance: distance, wall });
   const idle: FrameInput = { direction: 'N', buttons: new Set() };
   sim.fillTrainingRage();
   for (const input of inputs) sim.stepFrame([input, idle]);
@@ -49,7 +49,7 @@ export function moveCommand(move: MoveDefinition): string {
 }
 
 /** One step of a lesson as the player reads it: air moves keep their «no ar» prefix. */
-export const moveStep = (move: MoveDefinition): string => move.airborne ? `no ar + ${move.input.buttons.join('+')}` : moveCommand(move);
+export const moveStep = (move: MoveDefinition): string => move.airborne ? `no ar + ${moveCommand(move)}` : moveCommand(move);
 
 /**
  * Notation of a found route by the moves it performs: two quarter circles pressed in a row can start an ultimate,
@@ -59,20 +59,22 @@ export const routeNotation = (fighter: CharacterDefinition, moveIds: readonly st
   moveIds.map(id => moveStep(fighter.moves.find(move => move.id === id)!)).join(',');
 
 export const isBasicLessonMove = (move: MoveDefinition): boolean =>
-  !move.comboOnly && !move.shortcutOnly && ['basic', 'crouching', 'power', 'throw', undefined].includes(move.category);
+  !move.comboOnly && !move.shortcutOnly && !move.commandGrab && ['basic', 'crouching', 'power', 'throw', undefined].includes(move.category);
 export const isComboLessonMove = (move: MoveDefinition): boolean =>
-  !move.comboOnly && !move.shortcutOnly && (move.category === 'special' || move.category === 'ultimate');
+  !move.comboOnly && !move.shortcutOnly && (Boolean(move.commandGrab) || move.category === 'special' || move.category === 'ultimate');
 
 /** Moves pressed by each lesson with a demonstration, keyed as in `comboRoutes.json`. */
 export function lessonCommands(fighter: CharacterDefinition): Record<string, readonly string[]> {
   const byId = (id: string) => fighter.moves.find(move => move.id === id)!;
-  const pressed = (moveIds: readonly string[]) => {
-    const moves = moveIds.map(byId);
-    return [...(moves[0].airborne ? ['uf'] : []), ...moves.map(moveCommand)];
-  };
+  // A jump precedes each air move that follows a ground one.
+  const pressed = (moveIds: readonly string[]) => moveIds.map(byId).flatMap((move, index, moves) =>
+    [...(move.airborne && !moves[index - 1]?.airborne ? ['uf'] : []), moveCommand(move)]);
+  // A move that only connects with an airborne target is shown after the launcher that puts it there.
+  const launcher = fighter.moves.find(move => move.commandGrab?.launch && !move.shortcutOnly);
   const recipe = (id: string) => fighter.combos!.find(combo => combo.id === id)!.moveIds;
   return Object.fromEntries([
-    ...fighter.moves.filter(move => isBasicLessonMove(move) || isComboLessonMove(move)).map(move => [`move:${move.id}`, pressed([move.id])]),
+    ...fighter.moves.filter(move => isBasicLessonMove(move) || isComboLessonMove(move)).map(move => [`move:${move.id}`,
+      pressed(move.commandGrab?.airTarget === 'only' && launcher ? [launcher.id, move.id] : [move.id])]),
     ...(fighter.combos ?? []).map(combo => [`combo:${combo.id}`, pressed(combo.moveIds)]),
     ...(fighter.comboChains ?? []).map((chain, index) => [`chain:${index}`, pressed(chain.recipeIds.flatMap(recipe))]),
   ]);

@@ -1,8 +1,6 @@
 import Phaser from 'phaser';
+import { wallpapers } from '../ui/wallpapers';
 import { loadInterfaceFonts } from '../ui/hudTheme';
-import menuBackground from '../../assets/art/wallpapers/texas-menu.png';
-import bobMenuBackground from '../../assets/art/wallpapers/bob-menu.png';
-import grapplerMenuBackground from '../../assets/art/wallpapers/grappler-menu.png';
 import { configureUiCamera } from '../rendering/presentation';
 import { preloadFighterIcons } from '../ui/fighterArt';
 import { preloadFightSounds } from '../audio/FightSounds';
@@ -16,9 +14,7 @@ export class BootScene extends Phaser.Scene {
   preload(): void {
     configureUiCamera(this.cameras.main, this.scale);
     this.closeLoadingScreen = showLoadingScreen();
-    this.load.image('menu-solar', menuBackground);
-    this.load.image('menu-bob', bobMenuBackground);
-    this.load.image('menu-grappler', grapplerMenuBackground);
+    for (const wallpaper of wallpapers) this.load.image(wallpaper.key, wallpaper.url);
     preloadContactEffects(this);
     preloadFightSounds(this);
     preloadFighterIcons(this);

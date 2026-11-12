@@ -7,12 +7,14 @@ import { attackDurationFrames } from '../engine/combat/frameData';
 import { stages } from '../rendering/stages/stageCatalog';
 import { autoSpriteScale, type SheetMeasurements, type SpriteCalibration } from '../rendering/animations/spriteScale';
 import { texasDisplayHeight, texasFootAnchor, getTexasFrameSize } from '../rendering/animations/texasSprites';
+import { GRAPPLER_DISPLAY, grapplerFrameSize } from '../rendering/animations/grapplerSprites';
 import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shotoSpriteScale } from '../rendering/animations/shotoSprites';
 import { ALTERNATIVE_KINDS, alternativeArt, arcadeFrame, fighterArt, frameStyle, heroFrame, tileFrame, withAlternative, type AlternativeArtKind, type AlternativeFraming, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { outlineTargets } from '../rendering/characterColor';
 import { VictoryScreen } from '../ui/VictoryScreen';
 import { applyContactFrames, contactFrameCut, contactFrameMargin, contactFrameSize, isContactSheet, type FrameCut } from '../rendering/contactEffects';
+import { wallpapers } from '../ui/wallpapers';
 import { addAlternatives, discardAddition, gameImages, markRemoval, pendingAdditions, pendingRemovals, replaceImage, replacedImages, restoreImage, takePendingAlternatives } from './assetOverrides';
 import { CSS_COLORS, HUD_COLORS, MOVE_FIELDS, RECIPE_FIELDS, SELECTION_FIELDS, type DevOverrides, type MoveTuning, type RecipeTuning, type SelectionTuning } from './devOverrides';
 import { IMAGE_SECTIONS, imageFolder, textureFolder } from './imageCatalog';
@@ -20,7 +22,7 @@ import { devTuning } from './devTools';
 import { gamepads } from '../input/GamepadHub';
 import './developer.css';
 
-const TABS = [['endings', 'Finais'], ['sprites', 'Sprites'], ['moves', 'Golpes'], ['combos', 'Combos'], ['colors', 'Cores'], ['selection', 'Seleção'], ['alternatives', 'Alternativas'], ['images', 'Imagens']] as const;
+const TABS = [['endings', 'Finais'], ['sprites', 'Sprites'], ['moves', 'Golpes'], ['combos', 'Combos'], ['colors', 'Cores'], ['selection', 'Seleção'], ['alternatives', 'Alternativas'], ['wallpapers', 'Wallpapers'], ['images', 'Imagens']] as const;
 /** Areas of the panel that scroll, kept in place when an edit re-renders the same tab. */
 const SCROLLED = '.developer-page, .developer-list, .developer-viewer, .developer-scroll';
 type Tab = typeof TABS[number][0];
@@ -54,9 +56,12 @@ const SIZING: Readonly<Record<string, Sizing>> = {
   texas: fighterSizing('texas', key => texasDisplayHeight / getTexasFrameSize(key), () => texasFootAnchor),
   shoto: fighterSizing('shoto', key => (key === shotoIdleTexture ? shotoIdleScale : shotoSpriteScale) / getShotoResolution(key),
     key => key === shotoIdleTexture ? 670 / 724 : 900 / SHOTO_FRAME),
+  grappler: fighterSizing('grappler', key => GRAPPLER_DISPLAY / grapplerFrameSize(key.slice('grappler-'.length)), () => 465 / 640),
 };
 const REFERENCE_SHEETS = ['idle-normal', 'idle'];
 const SPRITE_FPS = 12;
+/** The upscale rule of the art (`scripts/upscale-art.py`): below 3/4 of the reference height, the smallest factor that clears it. */
+const WALLPAPER_REFERENCE = 1984, WALLPAPER_LIMIT = 3 / 4, UPSCALE_FACTORS = [2, 3, 4];
 
 /**
  * Developer tools, loaded only in development builds: endings, sprite playback, move and combo tuning, colours and
@@ -123,7 +128,7 @@ export class DeveloperPanel {
     const header = el('header', 'developer-header'); header.append(el('h1', '', 'Modo desenvolvedor'), tabs);
     const page = el('div', 'developer-page');
     ({ endings: () => this.endings(page), sprites: () => this.sprites(page), moves: () => this.moves(page),
-      combos: () => this.combos(page), colors: () => this.colors(page), selection: () => this.selection(page), alternatives: () => this.alternatives(page), images: () => this.images(page) })[this.tab]();
+      combos: () => this.combos(page), colors: () => this.colors(page), selection: () => this.selection(page), alternatives: () => this.alternatives(page), wallpapers: () => this.wallpaperGallery(page), images: () => this.images(page) })[this.tab]();
     const footer = el('footer', 'developer-footer');
     footer.append(this.saveAll(), button('Exportar ajustes (JSON)', () => this.export()), button('Fechar', () => this.destroy()));
     panel.append(header, page, this.status, footer);
@@ -146,7 +151,7 @@ export class DeveloperPanel {
     const grid = el('div', 'developer-endings');
     for (const [id, art] of Object.entries(fighterArt)) {
       const card = el('article', 'developer-ending');
-      const image = el('img'); image.src = art.icon; image.alt = '';
+      const image = thumbnail(art.icon);
       const actions = el('div', 'developer-row');
       actions.append(button('Tela de vencedor', () => this.showEnding(id, art.name)));
       if (characters.some(fighter => fighter.id === id)) actions.append(button('Poses de resultado', () => {
@@ -215,10 +220,11 @@ export class DeveloperPanel {
       entry.setAttribute('aria-pressed', String(texture.id === this.spriteKey)); list.append(entry);
     }
     const viewer = el('div', 'developer-viewer');
-    const canvas = el('canvas', 'developer-preview'); canvas.width = 360; canvas.height = 360;
+    const sheet = this.spriteKey ? this.characterSheet(this.spriteKey) : undefined;
+    // Character sheets fill the canvas, which shrinks to the height the controls leave so the page needs no scroll.
+    const canvas = el('canvas', sheet ? 'developer-preview developer-actual' : 'developer-preview'); canvas.width = sheet ? 480 : 360; canvas.height = sheet ? 480 : 360;
     const info = el('p', 'developer-hint');
     const frames = this.spriteKey ? this.frameNames(this.spriteKey) : [];
-    const sheet = this.spriteKey ? this.characterSheet(this.spriteKey) : undefined;
     const cuts = this.spriteKey && isContactSheet(this.spriteKey) ? this.frameCutControls(this.spriteKey, () => draw()) : undefined;
     const draw = () => {
       const context = canvas.getContext('2d');
@@ -243,29 +249,39 @@ export class DeveloperPanel {
         }
         info.textContent = label; return;
       }
-      // Game proportions: the idle's first drawing at its automatic size as a faint outline behind, on the same feet line.
-      // Frames are sized in game pixels, so sheets drawn on different frame grids (Bob's legacy idle) compare as in the game.
+      // Game proportions: frames are sized in game pixels, the idle filling most of the canvas, so sheets drawn
+      // on different frame grids (Bob's legacy idle) compare as in the game. Behind them, the idle's first drawing as a
+      // faint red shadow and the previous drawing as a tinted shadow, all on the same floor line.
       const scale = sheet.scale(sheet.name, this.spriteFrame), reference = this.scene.textures.getFrame(sheet.referenceKey, this.frameNames(sheet.referenceKey)[0]);
       const referenceScale = sheet.scale(sheet.reference, 0) / (sheet.reference === sheet.name ? sheet.adjustment : 1);
       const referenceBox = reference.realHeight * sheet.pixelScale(sheet.referenceKey) * referenceScale;
-      const unit = canvas.height * .7 / (sheet.referenceHeight * referenceBox), feet = canvas.height * .95;
-      this.drawFrame(context, reference, unit * referenceBox, feet, .28, sheet.footAnchor(sheet.referenceKey));
-      this.drawFrame(context, frame, unit * frame.realHeight * sheet.pixelScale(this.spriteKey) * scale, feet, 1, sheet.footAnchor(this.spriteKey));
-      info.textContent = `${label} · escala ×${scale.toFixed(3)} (automática ×${(scale / sheet.adjustment).toFixed(3)})`;
+      const unit = canvas.height * .8 / (sheet.referenceHeight * referenceBox), feet = canvas.height * .93;
+      const box = (shown: Phaser.Textures.Frame, factor: number) => unit * shown.realHeight * sheet.pixelScale(this.spriteKey!) * factor;
+      this.drawFrame(context, reference, unit * referenceBox, feet, .28, sheet.footAnchor(sheet.referenceKey), 'sepia(1) saturate(8) hue-rotate(-35deg)');
+      if (frames.length > 1) {
+        const before = (this.spriteFrame + frames.length - 1) % frames.length;
+        this.drawFrame(context, this.scene.textures.getFrame(this.spriteKey, frames[before]), box(this.scene.textures.getFrame(this.spriteKey, frames[before]), sheet.scale(sheet.name, before)),
+          feet, .4, sheet.footAnchor(this.spriteKey), 'sepia(1) saturate(5) hue-rotate(170deg)');
+      }
+      this.drawFrame(context, frame, box(frame, scale), feet, 1, sheet.footAnchor(this.spriteKey));
+      context.strokeStyle = '#e8c547'; context.lineWidth = 1; context.setLineDash([8, 4]);
+      context.beginPath(); context.moveTo(0, feet + .5); context.lineTo(canvas.width, feet + .5); context.moveTo(canvas.width / 2 + .5, 0); context.lineTo(canvas.width / 2 + .5, canvas.height); context.stroke();
+      context.setLineDash([]);
+      info.textContent = `${label} · escala ×${scale.toFixed(3)} (automática ×${(scale / sheet.adjustment / sheet.frameAdjustment(this.spriteFrame)).toFixed(3)}) · chão e centro em amarelo, idle em vermelho, quadro anterior em azul`;
     };
-    const step = (delta: number) => { this.spritePlaying = false; play.textContent = 'Executar'; this.spriteFrame += delta; draw(); };
+    const step = (delta: number) => { this.spritePlaying = false; this.spriteFrame += delta; this.render(); };
     const play = button(this.spritePlaying ? 'Pausar' : 'Executar', () => { this.spritePlaying = !this.spritePlaying; this.render(); });
     const fps = number(this.spriteFps, value => { this.spriteFps = Math.max(1, Math.min(60, value ?? SPRITE_FPS)); this.render(); });
     const flip = button(this.spriteFlip ? 'Virado ←' : 'Virado →', () => { this.spriteFlip = !this.spriteFlip; draw(); flip.textContent = this.spriteFlip ? 'Virado ←' : 'Virado →'; });
     const controls = el('div', 'developer-row');
     controls.append(button('◀ Quadro', () => step(-1)), play, button('Quadro ▶', () => step(1)), labelled('Quadros/s', fps), flip);
     viewer.append(canvas, info, controls);
-    if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment));
+    if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment), this.frameSizeControls(sheet.fighter, sheet.name, sheet.frameAdjustment(this.spriteFrame)));
     const outline = sheet && outlineTargets.get(sheet.fighter);
     if (sheet && outline !== undefined) viewer.append(this.outlineControls(sheet.fighter, outline));
     const actions = el('div', 'developer-row');
     if (cuts) { viewer.append(cuts.element); actions.append(this.saveToCode('cortes', ['frameCuts', 'frameSizes'], '/__dev/overrides')); }
-    if (sheet) actions.append(this.saveToCode('tamanhos', ['spriteScales'], '/__dev/sprite-scales'));
+    if (sheet) actions.append(this.saveToCode('tamanhos', ['spriteScales', 'frameScales'], '/__dev/sprite-scales'));
     if (sheet && outline !== undefined) actions.append(this.saveToCode('contorno', ['outlines'], '/__dev/outlines'));
     viewer.append(actions); actions.append(this.spriteReset());
     const layout = el('div', 'developer-split'); layout.append(list, viewer);
@@ -283,6 +299,7 @@ export class DeveloperPanel {
       fighter, name, reference, referenceKey: `${fighter}-${reference}`, pixelScale: sizing.pixelScale, footAnchor: sizing.footAnchor,
       referenceHeight: sizing.measurements[reference].maxHeight,
       adjustment: devTuning.overrides.spriteScales[`${fighter}:${name}`] ?? 1,
+      frameAdjustment: (frame: number) => devTuning.overrides.frameScales[`${fighter}:${name}:${frame}`] ?? 1,
       scale: (sheet: string, frame: number) => autoSpriteScale(definition, sizing.measurements, sheet, frame, sizing.calibration),
     };
   }
@@ -367,7 +384,19 @@ export class DeveloperPanel {
       button('−1%', () => { devTuning.setSpriteScale(key, Math.max(.1, adjustment - .01)); this.changed(); this.render(); }),
       button('+1%', () => { devTuning.setSpriteScale(key, adjustment + .01); this.changed(); this.render(); }),
       button('Automático', () => { devTuning.setSpriteScale(key, undefined); this.changed(); this.render(); }),
-      el('p', 'developer-hint', 'Contorno claro: idle no tamanho automático, na mesma proporção do jogo. O ajuste vale na hora em qualquer luta; «Salvar tamanhos no código» grava na calibração.'));
+      el('p', 'developer-hint', 'Sombra vermelha: idle no tamanho automático, na mesma proporção do jogo. O ajuste vale na hora em qualquer luta; «Salvar tamanhos no código» grava na calibração.'));
+    return row;
+  }
+  /** Size of the shown drawing alone, over the animation's: the other drawings keep theirs. */
+  private frameSizeControls(fighter: string, name: string, adjustment: number): HTMLElement {
+    const key = `${fighter}:${name}:${this.spriteFrame}`;
+    const set = (value: number | undefined) => { this.spritePlaying = false; devTuning.setFrameScale(key, value); this.changed(); this.render(); };
+    const percent = number(Math.round(adjustment * 100), value => set(value ? value / 100 : undefined));
+    percent.min = '10'; percent.setAttribute('aria-label', 'Tamanho do quadro em porcentagem');
+    const row = el('div', 'developer-row'); row.classList.toggle('developer-changed', adjustment !== 1);
+    row.append(labelled(`Tamanho do quadro ${this.spriteFrame + 1} (%)`, percent),
+      button('−1%', () => set(Math.max(.1, adjustment - .01))), button('+1%', () => set(adjustment + .01)), button('Restaurar quadro', () => set(undefined)),
+      el('p', 'developer-hint', 'Só este desenho, sobre o tamanho da animação; vale na hora em qualquer luta e «Salvar tamanhos no código» grava na calibração.'));
     return row;
   }
   /**
@@ -392,9 +421,9 @@ export class DeveloperPanel {
   /** Clears every animation size adjustment and the playback rate, after a confirmation so work is not lost by accident. */
   private spriteReset(): HTMLElement {
     return confirmRow('Resetar tamanhos e quadros/s', 'Sim, resetar',
-      () => `Tem certeza? Isso remove ${Object.keys(devTuning.overrides.spriteScales).length} ajuste(s) de tamanho de animação e volta para ${SPRITE_FPS} quadros/s.`,
+      () => `Tem certeza? Isso remove ${Object.keys(devTuning.overrides.spriteScales).length + Object.keys(devTuning.overrides.frameScales).length} ajuste(s) de tamanho de animação e volta para ${SPRITE_FPS} quadros/s.`,
       () => {
-        devTuning.assign({ spriteScales: {} }); this.spriteFps = SPRITE_FPS; this.changed();
+        devTuning.assign({ spriteScales: {}, frameScales: {} }); this.spriteFps = SPRITE_FPS; this.changed();
         this.status.textContent = 'Ajustes de tamanho e quadros/s restaurados.'; this.render();
       });
   }
@@ -478,9 +507,9 @@ export class DeveloperPanel {
       `Falha ao salvar; tudo mantido no navegador. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
     this.changed(); this.render();
   }
-  private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1): void {
+  private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1, filter = 'none'): void {
     const scale = box / frame.realHeight, center = context.canvas.width / 2, top = feet - footAnchor * box;
-    context.save(); context.globalAlpha = alpha;
+    context.save(); context.globalAlpha = alpha; context.filter = filter;
     context.translate(center, 0); if (this.spriteFlip) context.scale(-1, 1);
     context.drawImage(frame.source.image as CanvasImageSource, frame.cutX, frame.cutY, frame.cutWidth, frame.cutHeight,
       (frame.x - frame.realWidth / 2) * scale, top + frame.y * scale, frame.cutWidth * scale, frame.cutHeight * scale);
@@ -502,7 +531,11 @@ export class DeveloperPanel {
       const original = devTuning.original(move), line = el('tr');
       const value = (field: typeof fields[number]) => field === 'pushbackHit' ? move.pushback.hit : field === 'pushbackBlock' ? move.pushback.block : move[field];
       const authored = (field: typeof fields[number]) => field === 'pushbackHit' ? original.pushback.hit : field === 'pushbackBlock' ? original.pushback.block : original[field];
-      const name = el('td'); name.append(el('strong', '', move.name), el('small', '', ` ${move.id}`));
+      // The name is editable; saving writes it into the data and the translations.
+      const name = el('td'), rename = input('text', move.name, `Nome de ${move.id}`);
+      rename.onchange = () => { const next = rename.value.trim(); if (next && next !== move.name) { devTuning.renameMove(fighter.id, move.id, next); this.changed(); } this.render(); };
+      rename.classList.toggle('developer-changed', move.name !== original.name);
+      name.append(rename, el('small', '', ` ${move.id}`));
       line.append(name, ...fields.map(field => {
         const cell = el('td'), editor = number(value(field), next => {
           devTuning.setMove(fighter.id, move.id, field, next === undefined || next === authored(field) ? undefined : next); this.changed(); this.render();
@@ -517,7 +550,7 @@ export class DeveloperPanel {
       confirmRow('Restaurar golpes deste personagem', 'Restaurar golpes',
         () => `Descartar ${Object.keys(devTuning.overrides.moves[fighter.id] ?? {}).length} golpe(s) ajustado(s) de ${fighter.name} que ainda não foram salvos no código? Os combos não mudam.`,
         () => { devTuning.resetMoves(fighter.id); this.changed(); this.status.textContent = `Ajustes de golpes de ${fighter.name} descartados.`; this.render(); }),
-      this.saveToCode('golpes', ['moves'], '/__dev/overrides'));
+      this.saveToCode('golpes', ['moves', 'moveNames'], '/__dev/overrides'));
   }
 
   /** Authored and manually created recipes, each editable in place; every step is an existing move and still needs its own input. */
@@ -620,7 +653,7 @@ export class DeveloperPanel {
   /** A shipped image with its thumbnail and the buttons that replace or restore it. */
   private imageLine(url: string, path: string, label: string): HTMLElement {
     const line = el('div', 'developer-image'); line.classList.toggle('developer-changed', replacedImages().has(url));
-    const thumb = el('img'); thumb.loading = 'lazy'; thumb.alt = ''; thumb.src = url;
+    const thumb = thumbnail(url);
     const file = input('file', ''); file.accept = 'image/*'; file.hidden = true;
     file.onchange = () => { if (file.files?.[0]) void this.replace(url, path, file.files[0]); };
     const actions = el('div', 'developer-row'); actions.append(button('Substituir', () => file.click()));
@@ -719,10 +752,10 @@ export class DeveloperPanel {
     const gallery = el('div', 'developer-alternative-gallery');
     const chosen = images.find(image => image.file === this.alternativeFile) ?? images[0];
     const item = (url: string, caption: string, changed: boolean, action: HTMLElement, pick?: () => void) => {
-      const figure = el('figure', 'developer-alternative'), thumb = el('button', 'developer-alternative-pick'), picture = el('img');
+      const figure = el('figure', 'developer-alternative'), thumb = el('button', 'developer-alternative-pick'), picture = thumbnail(url);
       thumb.type = 'button'; thumb.setAttribute('aria-label', caption); thumb.disabled = !pick;
       if (pick) thumb.onclick = pick;
-      picture.loading = 'lazy'; picture.alt = ''; picture.src = url; thumb.append(picture);
+      thumb.append(picture);
       figure.classList.toggle('developer-changed', changed); figure.append(thumb, el('figcaption', '', caption), action);
       gallery.append(figure); return thumb;
     };
@@ -749,6 +782,39 @@ export class DeveloperPanel {
     page.append(el('p', 'developer-hint', 'Adições, remoções e enquadramentos ficam pendentes até salvar (PNG; poses e ícones passam pela limpeza do fundo rosa). Uma imagem nova pode ser enquadrada depois de salva. Sem enquadramento próprio, a arte usa o da principal; entre parênteses, o valor gravado no código.'),
       confirmRow('Salvar alternativas no código', 'Salvar e aplicar', () => `Gravar ${pendingSummary(['alternatives'], false, true)} nos arquivos do jogo? O jogo recarrega com tudo aplicado.`,
         () => void this.writeEverything(['alternatives'], { images: false })));
+  }
+  /**
+   * Wallpapers of the menu and the loading screen: the gallery of `assets/art/wallpapers`, where PNGs are added and
+   * removed (pending until saved). Saving writes them and the preparation upscales those below 3/4 of the 1984 px
+   * reference height, like the other art (`upscale-art.py`).
+   */
+  private wallpaperGallery(page: HTMLElement): void {
+    const added = pendingAdditions().filter(entry => entry.fighter === 'wallpapers');
+    const gallery = el('div', 'developer-alternative-gallery');
+    const item = (url: string, caption: string, changed: boolean, action: HTMLElement): HTMLElement => {
+      const figure = el('figure', 'developer-alternative'), picture = thumbnail(url), text = el('figcaption', '', caption);
+      figure.classList.toggle('developer-changed', changed); figure.append(picture, text, action);
+      gallery.append(figure); return text;
+    };
+    for (const wallpaper of wallpapers) {
+      const removing = pendingRemovals().has(wallpaper.path);
+      item(wallpaper.url, removing ? `${wallpaper.file} · será removido` : wallpaper.file, removing,
+        button(removing ? 'Desfazer remoção' : 'Remover', () => void markRemoval(wallpaper.path, !removing).then(() => this.render())));
+    }
+    for (const entry of added) {
+      const caption = item(entry.url, 'novo · não salvo', true, button('Descartar', () => void discardAddition(entry.key).then(() => this.render())));
+      void imageSize(entry.url).then(({ width, height }) => {
+        const factor = height < WALLPAPER_REFERENCE * WALLPAPER_LIMIT ? UPSCALE_FACTORS.find(scale => height * scale >= WALLPAPER_REFERENCE * WALLPAPER_LIMIT) ?? 4 : 1;
+        caption.textContent = `novo · ${width}×${height}${factor > 1 ? ` · será ampliado ${factor}× ao salvar` : ''}`;
+      });
+    }
+    const file = input('file', ''); file.accept = 'image/png'; file.multiple = true; file.hidden = true;
+    file.onchange = () => { if (file.files?.length) void addAlternatives('wallpapers', 'menu', [...file.files]).then(() => this.render()); };
+    page.append(el('p', 'developer-hint', `${wallpapers.length - wallpapers.filter(wallpaper => pendingRemovals().has(wallpaper.path)).length + added.length} wallpaper(s) no menu e na tela de carregamento, em rotação aleatória.`),
+      gallery, file, button('Adicionar', () => file.click()),
+      el('p', 'developer-hint', `PNG, de preferência na proporção dos atuais (cerca de 3170 × 1984). Abaixo de ${Math.round(WALLPAPER_REFERENCE * WALLPAPER_LIMIT)} px de altura (3/4 da referência de ${WALLPAPER_REFERENCE} px) o wallpaper é ampliado pelo Upscayl ao salvar; adições e remoções ficam pendentes até salvar.`),
+      confirmRow('Salvar wallpapers no código', 'Salvar e aplicar', () => `Gravar ${added.length} adição(ões) e ${wallpapers.filter(wallpaper => pendingRemovals().has(wallpaper.path)).length} remoção(ões) de wallpapers? O jogo recarrega com tudo aplicado.`,
+        () => void this.writeEverything([], { images: false })));
   }
   private async replace(url: string, path: string, file: File): Promise<void> {
     const preview = URL.createObjectURL(file);
@@ -820,6 +886,15 @@ function confirmRow(label: string, confirmLabel: string, question: () => string,
 }
 function button(text: string, action: () => void): HTMLButtonElement {
   const node = el('button', '', text); node.type = 'button'; node.onclick = action; return node;
+}
+/** A thumbnail that shows a shimmering skeleton while its image loads, and drops it once the image arrives (or fails). */
+function thumbnail(url: string): HTMLImageElement {
+  const image = el('img', 'developer-skeleton');
+  image.loading = 'lazy'; image.alt = '';
+  const ready = () => image.classList.remove('developer-skeleton');
+  image.onload = ready; image.onerror = ready;
+  image.src = url;
+  return image;
 }
 function input(type: string, value: string, placeholder = ''): HTMLInputElement {
   const node = el('input'); node.type = type; node.value = value; if (placeholder) { node.placeholder = placeholder; node.setAttribute('aria-label', placeholder); } return node;

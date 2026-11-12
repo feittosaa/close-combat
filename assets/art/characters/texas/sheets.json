@@ -5,6 +5,13 @@
  "reference": "idle",
  "sheets": {
   "perfect-block": {"frames": 4},
-  "wall-bounce": {"frames": 4}
+  "wall-bounce": {"frames": 4},
+  "grappler-reaction-air-grab": {"cuts":[299,608,933,1290,1683]},
+  "grappler-reaction-grab-headbutt": {"cuts":[304,583,912,1280,1677]},
+  "grappler-reaction-grab-launcher": {"cuts":[324,628,933,1287,1693]},
+  "grappler-reaction-grab-low": {"cuts":[380,722,1059,1389,1736]},
+  "grappler-reaction-grab-slam": {"cuts":[329,628,938,1277,1670]},
+  "grappler-reaction-grab-throw": {"cuts":[299,570,887,1262,1685]},
+  "grappler-reaction-ultimate-grab": {"cuts":[307,588,882,1204,1609]}
  }
 }

@@ -133,7 +133,7 @@ export class PauseMenu {
     this.details.replaceChildren(el('p', this.fighters[this.fighterIndex].name, 'pause-eyebrow'), el('h2', formatMoveTitle(entry.title,layout)), commandLine);
     if (entry.move) {
       const move = entry.move;
-      if (move.category === 'throw') {
+      if (move.category === 'throw' && !move.commandGrab) {
         const texas = this.fighters[this.fighterIndex].id === 'texas';
         if (texas && move.id === 'throw-24') this.details.append(el('p', t('pause.lowLasso')));
         else this.details.append(el('p', t('pause.throwDirection')));
