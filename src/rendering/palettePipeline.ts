@@ -55,9 +55,14 @@ vec3 rgb(vec3 h) {
 // were tuned on it; the colour they take comes from the corrected one, so every sheet recolours the same areas.
 vec3 palette(vec3 color, vec3 drawn) {
   if (uPalette < 0.5) return color;
-  if (uPalette > 3.5) return color * vec3(0.72, 0.5, 1.0);
+  if (uPalette > 3.5 && uPalette < 4.5) return color * vec3(0.72, 0.5, 1.0);
   vec3 v = hsv(color);
   vec3 d = hsv(drawn);
+  if (uPalette > 4.5) {
+    // Only the neon orange and amber of the suit (fully saturated, unlike leather and skin) turn cyan, keeping light and shade.
+    float weight = smoothstep(0.8, 0.86, d.y) * smoothstep(8.0, 14.0, d.x) * (1.0 - smoothstep(48.0, 58.0, d.x));
+    return mix(color, rgb(vec3(190.0 + (v.x - 30.0) * 0.5, v.y, v.z)), weight);
+  }
   if (uPalette < 1.5) {
     // The olive shirt, its shadows and the tie reach greener, duller tones in some sheets than in the idle.
     if (d.x >= 27.0 && d.x <= 90.0 && d.y >= (d.x > 56.0 ? 0.3 : 0.38) && d.z < 0.745 && d.z > 0.078) {

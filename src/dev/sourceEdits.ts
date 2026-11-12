@@ -84,7 +84,26 @@ export function literal(value: unknown): string {
 }
 
 /** One fighter's data file with its move timings, edited recipes and new recipes written in. */
-export function editFighter(source: string, fighterId: string, overrides: Pick<DevOverrides, 'moves' | 'recipes' | 'combos'>): string {
+/** Items written after the last one of the list opened at `open`, one per line with its indentation and a trailing comma, like the authored ones. */
+function appendItems(source: string, open: number, items: readonly string[], what: string): string {
+  const { parts: found, close } = parts(source, open), last = found[found.length - 1];
+  if (!last) throw new Error(`Lista de ${what} vazia.`);
+  const indent = /([ \t]*)$/.exec(source.slice(0, last.start))![1], trailing = source.slice(last.end, close).trimStart().startsWith(',');
+  const at = trailing ? source.indexOf(',', last.end) + 1 : last.end;
+  return splice(source, { start: at, end: at }, `${trailing ? '' : ','}${items.map(text => `\n${indent}${text},`).join('')}`);
+}
+
+/** Translations of the renamed moves: every language shows the new name until it is translated again. */
+export function editNames(source: string, fighterId: string, names: Record<string, string>): string {
+  for (const [moveId, name] of Object.entries(names)) {
+    const pattern = new RegExp(`('move\\.${fighterId}\\.${moveId}':\\s*)'(?:[^'\\\\]|\\\\.)*'`);
+    source = source.replace(pattern, (_, key: string) => `${key}${literal(name)}`);
+  }
+  return source;
+}
+
+export function editFighter(source: string, fighterId: string, overrides: Pick<DevOverrides, 'moves' | 'recipes' | 'combos'> & Partial<Pick<DevOverrides, 'moveNames'>>): string {
+  for (const [moveId, name] of Object.entries(overrides.moveNames?.[fighterId] ?? {})) source = setEntry(source, item(source, 'moves', moveId), 'name', literal(name));
   for (const [moveId, tuning] of Object.entries(overrides.moves[fighterId] ?? {})) {
     for (const field of MOVE_FIELDS) if (tuning[field] !== undefined) source = setEntry(source, item(source, 'moves', moveId), field, String(tuning[field]));
     for (const [field, key] of [['pushbackHit', 'hit'], ['pushbackBlock', 'block']] as const) {
@@ -112,11 +131,7 @@ export function editFighter(source: string, fighterId: string, overrides: Pick<D
   }
   if (added.length) {
     // New recipes go after the last one, one per line with its indentation and a trailing comma, like the authored ones.
-    const array = opening(source, 'combos'), { parts: found, close } = parts(source, array), last = found[found.length - 1];
-    if (!last) throw new Error(`Lista de combos de “${fighterId}” vazia.`);
-    const indent = /([ \t]*)$/.exec(source.slice(0, last.start))![1], trailing = source.slice(last.end, close).trimStart().startsWith(',');
-    const at = trailing ? source.indexOf(',', last.end) + 1 : last.end;
-    source = splice(source, { start: at, end: at }, `${trailing ? '' : ','}${added.map(recipe => `\n${indent}${literal(recipe)},`).join('')}`);
+    source = appendItems(source, opening(source, 'combos'), added.map(recipe => literal(recipe)), `combos de “${fighterId}”`);
   }
   return source;
 }

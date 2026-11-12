@@ -1,11 +1,17 @@
 import type Phaser from 'phaser';
 import { texasDisplayHeight, texasFootAnchor, getTexasFrameSize, getTexasRoundEndPose, getTexasSpriteLayers, getTexasUltimateActivationPose } from './animations/texasSprites';
 import { getShotoSpritePose, getShotoUltimatePose, getShotoResolution, shotoIdleScale, shotoSpriteScale, getShotoRoundEndPose } from './animations/shotoSprites';
+import { getGrapplerPose, getGrapplerInbetween, grapplerFrameSize, grapplerAdjustment, GRAPPLER_DISPLAY } from './animations/grapplerSprites';
 import type { CharacterState } from '../engine/characters/CharacterState';
 import { createHitbox, createHurtbox } from '../engine/collision/combatGeometry';
 import { getCharacterById } from '../engine/data/characters';
 import { TEXAS_GRAB_SHOTS } from '../engine/combat/texasGrab';
 import { CharacterColorEffect, type CharacterColor } from './characterColor';
+import { grapplerEffects } from './grapplerEffects';
+import { grapplerHand } from './grapplerHands';
+import { grapplerSpinPhase } from './grapplerCapture';
+import { contactFrameGrowth, contactFrameMargin, contactFrameSize } from './contactEffects';
+import { grapplerReaction } from './grapplerReaction';
 
 /** A fighter on the way down, lying or losing the round is drawn behind the one still standing; so is the victim of an ippon while thrown. */
 export function combatantDepth(state: CharacterState, frame: number, lost = false): number {
@@ -14,20 +20,30 @@ export function combatantDepth(state: CharacterState, frame: number, lost = fals
 }
 
 /** Fighters without body artwork retain diagnostic geometry. */
+/** Frames after the headbutt grab connects until the head thrusts forward (the drawing after the two held ones). */
+const HEADBUTT_IMPACT = 10;
+
 export class CombatantView {
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly colorEffect = new CharacterColorEffect();
   private readonly sprites: Phaser.GameObjects.Image[] = [];
   private readonly volleyArms: Phaser.GameObjects.Image[] = [];
   private readonly grabShots: Phaser.GameObjects.Image[] = [];
+  private readonly grapplerEffectSprites: Phaser.GameObjects.Image[] = [];
+  private headbuttHit?: Phaser.GameObjects.Image;
   private dust?: Phaser.GameObjects.Image;
   private ultimateWind?: Phaser.GameObjects.Image;
   private lasso?: Phaser.GameObjects.Image;
   constructor(private readonly scene: Phaser.Scene, private readonly color: number) {
     this.graphics = scene.add.graphics().setDepth(11);
   }
-  sync(state: CharacterState, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number}, color: CharacterColor = {}): void {
-    const depth = combatantDepth(state, frame, result !== undefined && !result.winner);
+  sync(state: CharacterState & { captureSpin?: { phase: number; depth: number } }, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number}, color: CharacterColor = {}): void {
+    const depth = state.captureSpin?.depth ?? combatantDepth(state, frame, result !== undefined && !result.winner);
+    const spinning = !state.grounded && (state.spinStartedFrame !== undefined || state.captureSpin !== undefined);
+    const authoredGrab = ['shoto', 'texas'].includes(state.fighterId) && Boolean(grapplerReaction(state, frame));
+    // Spinning is flat 2D: the drawing alternates between mirrored and normal as the turn passes, never narrowing.
+    const mirror = (phase: number): number => Math.cos(phase) < 0 ? -1 : 1;
+    const spinWidth = state.captureSpin ? authoredGrab ? 1 : mirror(state.captureSpin.phase) : spinning ? mirror((frame - state.spinStartedFrame!) * Math.PI / 4) : 1;
     this.graphics.setDepth(depth);
     const grabAge = state.attack?.moveId === 'throw-24' && state.attack.throwConfirmedFrame !== undefined
       ? frame - state.attack.throwConfirmedFrame : -1;
@@ -68,6 +84,47 @@ export class CombatantView {
         .setOrigin(.5, 1).setDisplaySize(285, 280).setPosition(state.x, state.y + 5)
         .setFlipX(state.facing === 'left').setVisible(true);
     } else this.ultimateWind?.setVisible(false);
+    if (state.fighterId === 'grappler') {
+      const move = state.attack && getCharacterById('grappler')?.moves.find(candidate => candidate.id === state.attack!.moveId);
+      const pose = getGrapplerPose(state, frame, activationFrame), between = getGrapplerInbetween(state, frame, activationFrame);
+      const textureName = between === undefined ? pose.name : `${pose.name}-between`;
+      const texture = `grappler-${textureName}`;
+      const headbutt = state.attack && move?.id === 'grab-headbutt' && state.attack.hasHit ? state.attack.elapsedFrames - (state.attack.startupFrames ?? move.startup) - HEADBUTT_IMPACT : -1;
+      const fists = grapplerHand(state, pose.name, pose.drawing);
+      // The blow lands between the two heads when the head moves forward.
+      if (headbutt >= 0 && headbutt < 12 && fists && this.scene.textures.exists('contact-hit-heavy')) {
+        const growth = contactFrameGrowth('contact-hit-heavy'), sign = state.facing === 'right' ? 1 : -1;
+        const hit = this.headbuttHit ??= this.scene.add.image(0,0,'contact-hit-heavy','0');
+        hit.setDepth(12).setTexture('contact-hit-heavy',String(Math.min(5,Math.floor(headbutt / 2)))).setDisplaySize(90 * growth.x, 90 * growth.y)
+          .setPosition(state.x + fists.x + sign * 30, state.y + fists.y - 55).setFlipX(sign < 0).setVisible(true);
+      } else this.headbuttHit?.setVisible(false);
+      const effects = grapplerEffects(state, activationFrame);
+      effects.forEach((effect, index) => {
+        const key = `contact-grappler-${effect.name}`;
+        if (!this.scene.textures.exists(key)) return;
+        const image = this.grapplerEffectSprites[index] ??= this.scene.add.image(0, 0, key, '0');
+        const size = contactFrameSize(key), margin = contactFrameMargin(key);
+        image.setDepth(depth + 1).setTexture(key, String(effect.frame))
+          .setOrigin((effect.origin.x + margin.x) / size.width, (effect.origin.y + margin.y) / size.height).setScale(effect.scale)
+          .setPosition(state.x + effect.x, state.y + effect.y)
+          .setFlipX(effect.name === 'ultimate-start' ? state.facing === 'right' : state.facing === 'left').setVisible(true);
+      });
+      this.grapplerEffectSprites.slice(effects.length).forEach(image => image.setVisible(false));
+      const adjustment = grapplerAdjustment(pose.name, pose.drawing);
+      if (this.scene.textures?.exists(texture)) {
+        const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, texture, String(pose.drawing));
+        // Spinning with the victim, he turns his face from side to side: the drawing is mirrored and normal in turn.
+        const turn = grapplerSpinPhase(state), turnWidth = turn === undefined ? 1 : mirror(turn);
+        this.colorEffect.apply(sprite, color, 'grappler');
+        sprite.setDepth(depth).setTexture(texture, String(between ?? pose.drawing)).setOrigin(.5, spinning ? .5 : 465 / 640)
+          .setScale(GRAPPLER_DISPLAY * adjustment.scale / grapplerFrameSize(textureName) * spinWidth * turnWidth, GRAPPLER_DISPLAY * adjustment.scale / grapplerFrameSize(textureName))
+          .setPosition(state.x + adjustment.center * GRAPPLER_DISPLAY * adjustment.scale * (state.facing === 'left' ? -1 : 1), state.y - (spinning ? 105 : 0))
+          .setFlipX(state.facing === 'left').setAngle(0).setAlpha(1).setVisible(true);
+        this.sprites.slice(1).forEach(other => other.setVisible(false));
+        this.graphics.clear(); this.lasso?.setVisible(false); this.dust?.setVisible(false);
+        return;
+      }
+    }
     const shotoPose = state.fighterId === 'shoto' && (!result || !result.winner || !state.grounded)
       ? activationFrame === undefined ? getShotoSpritePose(state, frame) : getShotoUltimatePose(state, activationFrame, true) : undefined;
     const shotoResult = state.fighterId === 'shoto' && result && state.grounded && (result.winner || state.mode !== 'knockdown')
@@ -76,8 +133,8 @@ export class CombatantView {
     if (shotoDrawing && this.scene.textures?.exists(shotoDrawing.texture)) {
       const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, shotoDrawing.texture, String(shotoDrawing.frame)).setDepth(10);
       this.colorEffect.apply(sprite, color, 'bob');
-      sprite.setDepth(depth).setTexture(shotoDrawing.texture, String(shotoDrawing.frame)).setOrigin(.5, shotoDrawing.footAnchor)
-        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * ('scale' in shotoDrawing ? shotoDrawing.scale ?? 1 : 1) / getShotoResolution(shotoDrawing.texture)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y)
+      sprite.setDepth(depth).setTexture(shotoDrawing.texture, String(shotoDrawing.frame)).setOrigin(.5, spinning ? .5 : shotoDrawing.footAnchor)
+        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * ('scale' in shotoDrawing ? shotoDrawing.scale ?? 1 : 1) / getShotoResolution(shotoDrawing.texture) * spinWidth, (shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * ('scale' in shotoDrawing ? shotoDrawing.scale ?? 1 : 1) / getShotoResolution(shotoDrawing.texture)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y - (spinning ? 90 : 0))
         .setFlipX(shotoDrawing.flipX).setAlpha(1).setVisible(true);
       this.sprites.slice(1).forEach(other => other.setVisible(false));
       this.graphics.clear();
@@ -93,10 +150,10 @@ export class CombatantView {
         const magic = pose.texture.startsWith('texas-magic-');
         this.colorEffect.apply(sprite, magic ? { alternate: color.alternate } : color, magic ? 'magic' : 'texas');
         sprite.setDepth(depth).setTexture(pose.texture,String(pose.frame))
-          .setOrigin(.5,texasFootAnchor)
-          .setScale(texasDisplayHeight / getTexasFrameSize(pose.texture) * pose.scale)
+          .setOrigin(.5,spinning ? .5 : texasFootAnchor)
+          .setScale(texasDisplayHeight / getTexasFrameSize(pose.texture) * pose.scale * spinWidth, texasDisplayHeight / getTexasFrameSize(pose.texture) * pose.scale)
           .setAngle(0)
-          .setPosition(state.x+pose.offsetX,state.y+pose.offsetY).setFlipX(pose.flipX).setAlpha(pose.alpha).setVisible(true);
+          .setPosition(state.x+pose.offsetX,state.y+pose.offsetY-(spinning ? 85 : 0)).setFlipX(pose.flipX).setAlpha(pose.alpha).setVisible(true);
       });
       this.sprites.slice(layers.length).forEach(sprite=>sprite.setVisible(false));
       this.graphics.clear();
@@ -152,5 +209,5 @@ export class CombatantView {
       g.lineStyle(4, 0xa6e6ff).lineBetween(state.x + sign * 28, box.y + 12, state.x + sign * 28, box.y + box.height - 12);
     }
   }
-  destroy(): void { this.sprites.forEach(sprite=>sprite.destroy()); this.volleyArms.forEach(sprite=>sprite.destroy()); this.grabShots.forEach(sprite=>sprite.destroy()); this.dust?.destroy(); this.ultimateWind?.destroy(); this.lasso?.destroy(); this.graphics.destroy(); }
+  destroy(): void { this.sprites.forEach(sprite=>sprite.destroy()); this.volleyArms.forEach(sprite=>sprite.destroy()); this.grabShots.forEach(sprite=>sprite.destroy()); this.grapplerEffectSprites.forEach(sprite=>sprite.destroy()); this.headbuttHit?.destroy(); this.dust?.destroy(); this.ultimateWind?.destroy(); this.lasso?.destroy(); this.graphics.destroy(); }
 }

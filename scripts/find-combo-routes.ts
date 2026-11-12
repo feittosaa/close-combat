@@ -4,6 +4,8 @@
  * Também audita as regras (sem combo infinito, nada depois da ultimate) e lista violações sem corrigi-las.
  * Uso: npm run combos:find  (grava src/training/comboRoutes.json); `-- --only shoto` refaz só esse personagem e preserva os demais;
  * com personagem e comandos, testa uma rota (ver testRoute).
+ * Quem tem golpe que quica o adversário na parede também ganha um combo de quique, procurado com o adversário
+ * perto da parede (`wall` em comboRoutes.json) e tocado assim no tutorial.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { Simulation } from '../src/engine/simulation/Simulation';
@@ -65,6 +67,10 @@ interface SearchNode {
   sim: Simulation; steps: RouteStep[]; moveIds: string[];
   /** Frames simulated since the last press; the command's hold direction was kept meanwhile. */
   fed: number; hold: FrameInput['direction']; hits: number; ultimates: number;
+  /** Hits the combo had when the opponent bounced off the wall; absent while he has not. */
+  bounceHits?: number;
+  /** Combos started so far and the hits of the last one: the wall bounce closes a combo, and the sequence goes on in a new one. */
+  segments: number; segmentHits: number;
   /** Damage of the whole combo if the route stopped here, including hits still to land. */
   damage: number;
 }
@@ -74,12 +80,12 @@ const playerCombos = (sim: Simulation) => internals(sim).comboHistory.filter(com
 class RouteSearch {
   private readonly shared: ReadonlySet<unknown>;
   private readonly root: SearchNode;
-  constructor(readonly fighter: CharacterDefinition) {
-    const sim = new Simulation(config, [fighter, fighter], { training: true, initialDistance: TUTORIAL_DISTANCE });
+  constructor(readonly fighter: CharacterDefinition, readonly wall = false) {
+    const sim = new Simulation(config, [fighter, fighter], { training: true, initialDistance: TUTORIAL_DISTANCE, wall });
     sim.fillTrainingRage();
     const raw = sim as unknown as Record<string, unknown>;
     this.shared = new Set([fighter, config, raw.definitions, raw.resolver, raw.options]);
-    this.root = { sim, steps: [], moveIds: [], fed: 0, hold: 'N', hits: 0, damage: 0, ultimates: 0 };
+    this.root = { sim, steps: [], moveIds: [], fed: 0, hold: 'N', hits: 0, damage: 0, ultimates: 0, segments: 0, segmentHits: 0 };
   }
   get start(): SearchNode { return this.root; }
   private ultimate(moveId: string): boolean { return this.fighter.moves.find(move => move.id === moveId)?.category === 'ultimate'; }
@@ -99,19 +105,22 @@ class RouteSearch {
     for (let fed = 1; fed <= LOOKAHEAD; fed++) {
       const self = state.characters[0];
       if (!parsed.buttons.length) {
-        if (!self.grounded) return { sim, steps: [...node.steps, { wait, command }], moveIds: node.moveIds, fed, hold: parsed.hold, hits: node.hits, damage: node.damage, ultimates: node.ultimates };
+        if (!self.grounded) return { sim, steps: [...node.steps, { wait, command }], moveIds: node.moveIds, fed, hold: parsed.hold, hits: node.hits, damage: node.damage, ultimates: node.ultimates, bounceHits: node.bounceHits, segments: node.segments, segmentHits: node.segmentHits };
       } else {
         if (!started && self.attack && self.attack !== before) started = self.attack.moveId;
         // A press the fighter cannot take expires from the command buffer within a few frames.
         if (!started && fed > START_WINDOW) return undefined;
-        const combos = playerCombos(sim);
-        if (combos.length > 1 || (node.hits > 0 && !combos[0]?.active)) return undefined;
+        const combos = playerCombos(sim), bounced = this.wall && (node.bounceHits !== undefined || Boolean(state.characters[1].wallBounceEffect));
+        // The bounce closes the combo on purpose; near the wall a combo started after it continues the sequence.
+        if (combos.length > (bounced ? 2 : 1) || (node.hits > 0 && !bounced && !combos[0]?.active)) return undefined;
         if (started && !self.attack && !state.projectiles.some(projectile => projectile.ownerId === 'player-1')) return undefined;
         if (started && state.lastHitEvents.some(event => event.attackerId === 'player-1' && event.outcome === 'hit' && event.moveId === started)) {
-          const combo = combos[0];
-          if (!combo || combo.hits <= node.hits) return undefined;
+          const last = combos[combos.length - 1], sameCombo = combos.length === node.segments;
+          const gained = last ? last.hits - (sameCombo ? node.segmentHits : 0) : 0;
+          if (gained <= 0 || (!sameCombo && node.segments > 0 && !bounced)) return undefined;
           return { sim, steps: [...node.steps, { wait, command }], moveIds: [...node.moveIds, started], fed, hold: parsed.hold,
-            hits: combo.hits, damage: this.projectedDamage(sim, held), ultimates: node.ultimates + Number(this.ultimate(started)) };
+            hits: node.hits + gained, damage: this.projectedDamage(sim, held), ultimates: node.ultimates + Number(this.ultimate(started)),
+            bounceHits: node.bounceHits ?? (state.characters[1].wallBounceEffect ? node.hits : undefined), segments: combos.length, segmentHits: last.hits };
         }
       }
       sim.stepFrame([held, N]);
@@ -120,8 +129,8 @@ class RouteSearch {
   }
   private projectedDamage(from: Simulation, held: FrameInput): number {
     const sim = cloneSimulation(from, this.shared);
-    for (let frame = 0; frame < LOOKAHEAD && playerCombos(sim)[0]?.active; frame++) sim.stepFrame([held, N]);
-    return playerCombos(sim)[0]?.damage ?? 0;
+    for (let frame = 0; frame < LOOKAHEAD && playerCombos(sim).some(combo => combo.active); frame++) sim.stepFrame([held, N]);
+    return playerCombos(sim).reduce((total, combo) => total + combo.damage, 0);
   }
   earliest(node: SearchNode, command: string): SearchNode | undefined {
     const from = Math.max(minimumWait(command, node.steps.length === 0), node.fed + parseCommand(command).motion.length + 1);
@@ -133,8 +142,10 @@ class RouteSearch {
   }
   /** Full replay from a fresh simulation: the route counts only as one uninterrupted combo. */
   verify(steps: readonly RouteStep[]): { hits: number; damage: number } | undefined {
-    const combos = playExample(this.fighter, routeInputs(steps), TUTORIAL_DISTANCE);
-    return combos.length === 1 ? { hits: combos[0].hits, damage: combos[0].damage } : undefined;
+    const combos = playExample(this.fighter, routeInputs(steps), TUTORIAL_DISTANCE, this.wall);
+    // A wall bounce splits the sequence in two combos; the route counts as one sequence.
+    return combos.length === 1 || (this.wall && combos.length === 2)
+      ? { hits: combos.reduce((total, combo) => total + combo.hits, 0), damage: combos.reduce((total, combo) => total + combo.damage, 0) } : undefined;
   }
 }
 
@@ -168,10 +179,14 @@ function overused(fighter: CharacterDefinition, moveIds: readonly string[]): boo
 function exploreRoutes(search: RouteSearch): SearchNode[] {
   const moves = search.fighter.moves.filter(move => !move.comboOnly && !move.airborne && !move.shortcutOnly);
   const vocabulary = moves.filter(move => move.category !== 'ultimate').map(moveCommand);
-  const finishers = moves.filter(move => move.category === 'ultimate').map(moveCommand);
+  // Near the wall the search looks for bounce combos, which an ultimate does not belong to.
+  const finishers = search.wall ? [] : moves.filter(move => move.category === 'ultimate').map(moveCommand);
   // Closed recipes join as whole blocks too: a launcher such as 1,1,2 only pays off in the juggle after it.
   const byId = (id: string) => search.fighter.moves.find(move => move.id === id)!;
-  const blocks = [...vocabulary.map(command => [command]),
+  // A combo may continue in the air, after a launcher or a bounce: a jump (straight or forward) and then each air move.
+  const air = search.fighter.moves.filter(move => move.airborne && !move.comboOnly && !move.shortcutOnly)
+    .flatMap(move => ['u', 'uf'].map(jump => [jump, moveCommand(move)]));
+  const blocks = [...vocabulary.map(command => [command]), ...air,
     ...(search.fighter.combos ?? []).filter(recipe => recipe.moveIds.length > 1 && !recipe.moveIds.some(id => byId(id).airborne))
       .map(recipe => recipe.moveIds.map(id => moveCommand(byId(id))))];
   const found: SearchNode[] = [];
@@ -192,9 +207,24 @@ function exploreRoutes(search: RouteSearch): SearchNode[] {
     }
     level = [...next.values()].sort((a, b) => b.damage - a.damage).slice(0, BEAM);
     found.push(...level);
-    console.log(`  ${search.fighter.id}: rodada ${depth}, ${next.size} rotas, melhor ${level[0]?.damage ?? 0}`);
+    console.log(`  ${search.fighter.id}${search.wall ? ' (parede)' : ''}: rodada ${depth}, ${next.size} rotas, melhor ${level[0]?.damage ?? 0}`);
   }
   return found;
+}
+
+/** Strongest routes checked in full when choosing the bounce combo. */
+const WALL_CANDIDATES = 8;
+/**
+ * The combo that bounces the opponent off the wall and keeps hitting him: the strongest route found from the start near
+ * the wall in which a hit lands after the bounce, replayed in full before it is kept.
+ */
+function wallRoute(search: RouteSearch, nodes: readonly SearchNode[]): AdvancedRoute | undefined {
+  const bounced = nodes.filter(node => node.bounceHits !== undefined && node.hits > node.bounceHits && !node.ultimates);
+  const checked = [...bounced].sort((a, b) => b.damage - a.damage).slice(0, WALL_CANDIDATES)
+    .flatMap(node => { const result = search.verify(node.steps); return result ? [{ node, result }] : []; });
+  const best = checked.sort((a, b) => b.result.damage - a.result.damage)[0];
+  return best && { steps: best.node.steps, moveIds: best.node.moveIds, hits: best.result.hits, damage: best.result.damage,
+    notation: routeNotation(search.fighter, best.node.moveIds), difficulty: Math.round(difficulty(search, best.node.steps, best.result.hits) * 10) / 10 };
 }
 
 /** How many frames each press tolerates; tight windows and long motions make a route harder. */
@@ -327,7 +357,14 @@ else {
     const warnings = auditRules(search, explored);
     console.log(warnings.length ? `  ALERTAS DE REGRA (${fighter.name}):` : `  Regras ok (${fighter.name}): sem laço infinito nem golpe após a ultimate.`);
     warnings.forEach(warning => console.log(`   - ${warning}`));
-    output[fighter.id] = { lessons, advanced };
+    // Fighters with a move that bounces the opponent off the wall also get a combo played from near the wall.
+    let wall: AdvancedRoute | undefined;
+    if (fighter.moves.some(move => move.wallBounce)) {
+      const wallSearch = new RouteSearch(fighter, true);
+      wall = wallRoute(wallSearch, exploreRoutes(wallSearch));
+      console.log(wall ? `  quique na parede: ${wall.notation} · ${wall.hits} hits · ${wall.damage} · dificuldade ${wall.difficulty}` : '  quique na parede: nenhum combo encontrado');
+    }
+    output[fighter.id] = { lessons, advanced, ...(wall ? { wall } : {}) };
   }
   writeFileSync(OUTPUT, `${JSON.stringify(output, null, 1)}\n`);
   console.log(`Gravado ${OUTPUT.pathname}`);

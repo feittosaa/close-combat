@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { characters, type CharacterDefinition } from '../engine/data/characters';
 import { texas } from '../engine/data/fighters/texas';
 import { parseCommand, routeInputs, type FighterRoutes, type RouteStep } from '../training/comboRoute';
-import { TUTORIAL_START_DISTANCE, approachInputs, lessonCommands, playExample, routeNotation } from '../training/tutorialLessons';
+import { Simulation } from '../engine/simulation/Simulation';
+import { TUTORIAL_START_DISTANCE, approachInputs, lessonCommands, playExample, routeNotation, tutorialGameConfig } from '../training/tutorialLessons';
 import { TutorialSession } from '../training/TutorialSession';
 import comboRoutes from '../training/comboRoutes.json';
 
@@ -44,7 +45,7 @@ it('o combo de exemplo da Texas (3,3,3,1, agacha 1,1, levanta 4,4,2 e dinamite a
   expect(combos[0]).toMatchObject({ hits: 10, damage: 336 });
 });
 
-describe.each(characters.map(fighter => [fighter.id, fighter] as const))('rotas do tutorial de %s', (id, fighter) => {
+describe.each(characters.filter(fighter => routes[fighter.id]).map(fighter => [fighter.id, fighter] as const))('rotas do tutorial de %s', (id, fighter) => {
   const data = routes[id];
   it('cobrem exatamente as lições atuais; rode npm run combos:find após mudar golpes ou receitas', () => {
     const expected = lessonCommands(fighter);
@@ -62,6 +63,28 @@ describe.each(characters.map(fighter => [fighter.id, fighter] as const))('rotas 
       expect(combos[0].hits, key).toBeGreaterThanOrEqual(route.moveIds.length);
     }
   });
+  it.skipIf(!data.wall)('o combo de quique na parede começa perto da parede, quica o adversário e continua batendo', () => {
+    const wall = data.wall!, config = tutorialGameConfig();
+    const sim = new Simulation(config, [fighter, fighter], { training: true, initialDistance: TUTORIAL_START_DISTANCE, wall: true });
+    const [self, opponent] = sim.snapshot().characters;
+    expect(config.arena.right - opponent.x).toBeLessThan(opponent.collision.bodyWidth + 60);
+    expect(opponent.x - self.x).toBeCloseTo(TUTORIAL_START_DISTANCE);
+    sim.fillTrainingRage();
+    let hitsAtBounce: number | undefined;
+    const total = (combos: readonly { hits: number; damage: number }[], field: 'hits' | 'damage') => combos.reduce((sum, combo) => sum + combo[field], 0);
+    for (const input of [...approachInputs(fighter), ...routeInputs(wall.steps, 90)]) {
+      sim.stepFrame([input, { direction: 'N', buttons: new Set() }]);
+      const now = sim.snapshot();
+      if (hitsAtBounce === undefined && now.characters[1].wallBounceEffect) hitsAtBounce = total(now.comboHistory.filter(combo => combo.attackerId === 'player-1'), 'hits');
+    }
+    const combos = sim.snapshot().comboHistory.filter(entry => entry.attackerId === 'player-1');
+    expect(hitsAtBounce).toBeDefined();
+    expect(total(combos, 'hits')).toBeGreaterThan(hitsAtBounce!);
+    expect({ hits: total(combos, 'hits'), damage: total(combos, 'damage') }).toEqual({ hits: wall.hits, damage: wall.damage });
+    const tutorial = new TutorialSession(fighter), lessons = tutorial.sections.find(section => section.id === 'advanced')!.lessons;
+    expect(lessons[lessons.length - 1]).toMatchObject({ key: 'wall', wall: true });
+    expect(tutorial.stats(lessons[lessons.length - 1])).toEqual({ hits: wall.hits, damage: wall.damage });
+  });
   it('o tutorial mostra hits e dano medidos com os dados atuais, iguais aos do exemplo', () => {
     const tutorial = new TutorialSession(fighter);
     for (const lesson of tutorial.sections.flatMap(section => section.lessons).filter(entry => entry.moves)) {
@@ -74,7 +97,8 @@ describe.each(characters.map(fighter => [fighter.id, fighter] as const))('rotas 
     const ultimate = (route: (typeof data.advanced)[number]) => route.moveIds.some(id => fighter.moves.find(move => move.id === id)?.category === 'ultimate');
     const plain = data.advanced.filter(route => !ultimate(route));
     expect(plain.length).toBeGreaterThan(1);
-    expect(ultimate(data.advanced[data.advanced.length - 1])).toBe(true);
+    // An ultimate only on a shortcut key (the Grappler's) cannot end a pressed route.
+    if (fighter.moves.some(move => move.category === 'ultimate' && !move.shortcutOnly)) expect(ultimate(data.advanced[data.advanced.length - 1])).toBe(true);
     expect(data.advanced.slice(0, plain.length)).toEqual(plain);
     const pairs = plain.slice(1).map((route, index) => [plain[index], route]);
     expect(pairs.every(([easier, harder]) => easier.difficulty <= harder.difficulty)).toBe(true);

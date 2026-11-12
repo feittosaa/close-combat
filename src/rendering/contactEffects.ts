@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { HitEvent } from '../engine/combat/AttackResolver';
 import type { MoveDefinition } from '../engine/data/moves';
+import ultimateGroundImpact from '../assets/sprites/effects/contact/ultimate-ground-impact.png';
 import hitLight from '../assets/sprites/effects/contact/hit-light.png';
 import hitHeavy from '../assets/sprites/effects/contact/hit-heavy.png';
 import hitSweep from '../assets/sprites/effects/contact/hit-sweep.png';
@@ -14,8 +15,10 @@ import hitWine from '../assets/sprites/effects/contact/hit-wine.png';
 import blockWine from '../assets/sprites/effects/contact/block-wine.png';
 import wallBounce from '../assets/sprites/effects/contact/wall-bounce.png';
 import authoredCuts from '../assets/sprites/effects/contact/frames.json';
+const grapplerEffects = import.meta.glob<string>('../assets/sprites/effects/contact/grappler-*.png', { eager: true, query: '?url', import: 'default' });
 
 const sheets = {
+  'ultimate-ground-impact': ultimateGroundImpact,
   'hit-light': hitLight, 'hit-heavy': hitHeavy, 'hit-sweep': hitSweep,
   'block-light': blockLight, 'block-heavy': blockHeavy, 'block-sweep': blockSweep,
   'block-perfect': blockPerfect,
@@ -60,7 +63,8 @@ export function contactFrameCut(key: string, frame: number): FrameCut {
     { x: frame * width, y: 0, width, height, left: 0, top: 0 };
 }
 /** Whether a texture is a contact sheet whose frames can be recut. */
-export const isContactSheet = (key: string): boolean => key.startsWith('contact-') && key.slice('contact-'.length) in sheets;
+export const isContactSheet = (key: string): boolean => key.startsWith('contact-') &&
+  (key.slice('contact-'.length) in sheets || Object.keys(grapplerEffects).some(path => path.endsWith(`/${key.slice('contact-'.length)}.png`)));
 
 /** Recuts every frame of a loaded contact sheet inside the sheet's frame size. */
 export function applyContactFrames(textures: Phaser.Textures.TextureManager, key: string): void {
@@ -79,6 +83,12 @@ export function preloadContactEffects(scene: Phaser.Scene): void {
     const key = `contact-${name}`;
     if (scene.textures.exists(key)) continue;
     scene.load.spritesheet(key, url, { frameWidth: frameWidth(name), frameHeight: FRAME_HEIGHT });
+    scene.load.once(`filecomplete-spritesheet-${key}`, () => applyContactFrames(scene.textures, key));
+  }
+  for (const [path, url] of Object.entries(grapplerEffects)) {
+    const key = `contact-${path.split('/').pop()!.replace('.png', '')}`;
+    if (scene.textures.exists(key)) continue;
+    scene.load.spritesheet(key, url, { frameWidth: 362, frameHeight: FRAME_HEIGHT });
     scene.load.once(`filecomplete-spritesheet-${key}`, () => applyContactFrames(scene.textures, key));
   }
 }

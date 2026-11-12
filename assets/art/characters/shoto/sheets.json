@@ -55,6 +55,12 @@
   "power-kick": {"source":"chute-potente.png","scale":1.34,"floor":619,"anchors":[170,500,830,1160,1580,1960]},
   "rake-transition": {"source":"transicao-ancinho.png","scale":1.0,"floor":657,"anchors":[235,540,880,1210,1570,1960]},
   "grabbed": {"source":"reacao-agarrado.png","scale":0.94,"floor":702,"anchors":[190,560,900,1260,1600,1980]},
-  "defeat": {"source":"derrota.png","scale":1.34,"floor":610,"anchors":[150,400,680,1040,1430,1910]}
+  "defeat": {"source":"derrota.png","scale":1.34,"floor":610,"anchors":[150,400,680,1040,1430,1910]},
+  "grappler-reaction-air-grab": {"cuts":[308,641,977,1303,1683]},
+  "grappler-reaction-grab-headbutt": {"cuts":[282,565,873,1216,1633]},
+  "grappler-reaction-grab-launcher": {"cuts":[287,597,938,1282,1666]},
+  "grappler-reaction-grab-low": {"cuts":[374,706,1047,1394,1759]},
+  "grappler-reaction-grab-slam": {"cuts":[282,576,895,1238,1651]},
+  "grappler-reaction-grab-throw": {"cuts":[287,597,945,1297,1677]}
  }
 }

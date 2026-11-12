@@ -17,6 +17,7 @@ import { drawVersusStage, groupsFor, STAGE_GROUPS } from '../rendering/stages/st
 import { ARCADE_DIFFICULTIES, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
 import { createArcadeRun, opponentFor, isTrainingMode, selectsOpponent, type MatchMode } from './matchSetup';
 import { createWallpaperShuffle } from '../ui/wallpaperShuffle';
+import { wallpapers } from '../ui/wallpapers';
 
 /** The developer entry, below the settings, exists only on the development server (see `src/dev`). */
 const DEVELOPER_ENTRY = import.meta.env.MODE === 'development'
@@ -47,8 +48,8 @@ export class MenuScene extends Phaser.Scene {
   private set fighterIndex(index: number) { this.selection.select(0, index); }
   private background?: Phaser.GameObjects.Image;
   private wallpapersShown = 0;
-  private readonly nextWallpaperIndex = createWallpaperShuffle(3);
-  private readonly wallpapers = ['menu-solar', 'menu-bob', 'menu-grappler'];
+  private readonly nextWallpaperIndex = createWallpaperShuffle(wallpapers.length);
+  private readonly wallpapers = wallpapers.map(wallpaper => wallpaper.key);
   private readonly wallpaperMotion = { progress: 0 };
   private menuElement?: HTMLElement;
   private resizeObserver?: ResizeObserver;

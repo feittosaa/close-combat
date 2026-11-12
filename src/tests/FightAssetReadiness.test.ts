@@ -8,6 +8,7 @@ import { FightScene } from '../scenes/FightScene';
 import { stages, stageTextureKey } from '../rendering/stages/stageCatalog';
 import { Simulation, type SimulationSnapshot } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
+import { wallpapers } from '../ui/wallpapers';
 import { shoto } from '../engine/data/fighters/shoto';
 
 it('keeps the available wallpaper on the loading screen and removes it afterwards', () => {
@@ -24,11 +25,14 @@ it('keeps the available wallpaper on the loading screen and removes it afterward
     Object.assign(boot,{cameras:{main:camera},scale:{width:1920,height:1080},load,
       textures:{exists:()=>false},cache:{audio:{exists:()=>false}},scene:{start:vi.fn()}});
     boot.preload();
-    const first = screen.style.setProperty.mock.calls[0][1];
-    expect(screen.className).toBe('loading-screen wallpaper-left');
-    vi.advanceTimersByTime(20000);
-    expect(screen.style.setProperty.mock.calls[1][1]).not.toBe(first);
-    expect(screen.className).toBe('loading-screen wallpaper-right');
+    // The wallpapers are whatever the folder holds (the developer mode adds and removes them): the rotation is checked as far as it applies.
+    if (wallpapers.length) {
+      const first = screen.style.setProperty.mock.calls[0][1];
+      expect(screen.className).toBe('loading-screen wallpaper-left');
+      vi.advanceTimersByTime(20000);
+      if (wallpapers.length > 1) expect(screen.style.setProperty.mock.calls[1][1]).not.toBe(first);
+      expect(screen.className).toBe('loading-screen wallpaper-right');
+    }
     boot.create();
     expect(screen.classList.add).toHaveBeenCalledWith('leaving');
     expect(screen.remove).not.toHaveBeenCalled();
@@ -163,7 +167,7 @@ it('boots with shared assets only; each match loads its own fighters, stage and 
   const boot=new BootScene();
   Object.assign(boot,shared,{cameras:{main:camera},scale:{width:1920,height:1080},scene:{start:vi.fn()}});
   boot.preload();
-  for (const key of ['menu-solar','sfx-perfect_block_1','contact-hit-light','wall-bounce']) expect(queued.has(key),key).toBe(true);
+  for (const key of [...wallpapers.map(wallpaper => wallpaper.key),'sfx-perfect_block_1','contact-hit-light','wall-bounce']) expect(queued.has(key),key).toBe(true);
   for (const fighter of ['shoto','texas','grappler','mrapple']) expect(queued.has(`fighter-icon-${fighter}`)).toBe(true);
   expect([...queued].filter(key=>matchKeys.test(key))).toEqual([]);
   finishLoading();

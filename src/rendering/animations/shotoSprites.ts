@@ -7,6 +7,7 @@ import { loadGraphicsQuality } from '../../ui/graphicsSettings';
 import { autoSpriteScale, bodyCenterShift, lyingFloorAnchor } from './spriteScale';
 import shotoCalibration from '../../assets/sprites/characters/shoto/calibration.json';
 import shotoMeasurements from '../../assets/sprites/characters/shoto/measurements.json';
+import { grapplerReaction } from '../grapplerReaction';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/shoto/*.png', { eager: true, query: '?url', import: 'default' });
 const layouts = import.meta.glob<string>('../../assets/sprites/characters/shoto/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
@@ -69,6 +70,8 @@ export function getShotoUltimatePose(state: CharacterState, elapsed: number, act
 }
 export function getShotoSpritePose(state: CharacterState, frame: number): ShotoPose | undefined {
   const pose = (name: string, drawing: number, facesLeft = false) => shotoPose(state, name, drawing, facesLeft);
+  const grab = grapplerReaction(state, frame);
+  if (grab) return pose(grab.name, grab.drawing);
   const transition = state.animationTransition;
   const transitionAge = frame - (transition?.startedFrame ?? -Infinity);
   if (state.grounded && transition && transitionAge >= 0 && transitionAge < 3) {
@@ -119,6 +122,7 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
     if (name === 'launcher-punch' && (state.chain?.length ?? 1) === 1) return { ...result, scale: 1.01 };
     return name === 'light-kick' && elapsed >= end ? { ...result, scale: drawing === 5 ? 0.97 * 0.97 * 0.98 : 0.97 } : result;
   }
+  if (state.commandGrabbed && state.grabbedStartedFrame !== undefined) return pose('grabbed', Math.min(5, 2 + Math.floor(Math.max(0, frame - state.grabbedStartedFrame) / 5)));
   if (state.mode === 'knockdown') {
     const ipponAge = frame - (state.ipponReceivedFrame ?? -Infinity);
     if (ipponAge >= 0 && ipponAge < 24) return pose('ippon-victim', Math.min(5, Math.floor(ipponAge / 4)));
@@ -127,7 +131,7 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
     return state.grounded ? fall : { ...fall, scale: 1 };
   }
   if (state.mode === 'hitstun') {
-    if (state.grounded && state.grabbedStartedFrame !== undefined && frame - state.grabbedStartedFrame < 16) {
+    if ((state.grounded || state.commandGrabbed) && state.grabbedStartedFrame !== undefined && (state.commandGrabbed || frame - state.grabbedStartedFrame < 16)) {
       return pose('grabbed', Math.min(5, 2 + Math.floor(Math.max(0, frame - state.grabbedStartedFrame) / 5)));
     }
     const reaction = state.grounded ? state.hitReaction?.level === 'low' ? 'hurt-low' : state.hitReaction?.level === 'high' ? 'hurt-high' : 'hurt' : 'air-hurt';

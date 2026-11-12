@@ -15,6 +15,9 @@ const effectClips: Readonly<Record<string, AnimationClip>> = {
 };
 
 /** Texas effects follow the existing projectile geometry and simulation clock. */
+/** Size of the grab impacts against the ultimate's, and the frames after the grab connects when each throw hits the floor. */
+const GRAB_IMPACT_SCALE = .5;
+const GRAB_IMPACT_DELAYS: Readonly<Record<string, number>> = { 'grab-slam': 10, 'grab-low': 9, 'air-grab': 0 };
 export class ProjectileView {
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly colorEffect = new CharacterColorEffect();
@@ -22,14 +25,31 @@ export class ProjectileView {
   private readonly dynamiteExplosions = new Map<number, Phaser.GameObjects.Image>();
   private impacts: { sprite: Phaser.GameObjects.Image; started: number }[] = [];
   private wallEffects = new Map<string, { sprite: Phaser.GameObjects.Image; started: number }>();
+  private groundEffects = new Map<string, { sprite: Phaser.GameObjects.Image; started: number }>();
   private lastFrame = -1;
+  /** Throws seen landing, and the grab impacts already shown, so each one is drawn once. */
+  private thrownInFlight = new Set<string>();
+  private impactsShown = new Set<string>();
+  /** Called once for each grab impact, so the scene can shake the camera (half the ultimate's shake). */
+  onGrabImpact?: () => void;
   constructor(private readonly scene: Phaser.Scene) { this.graphics = scene.add.graphics().setDepth(12); }
   sync(projectiles: readonly ProjectileState[], explosions: readonly ExplosionState[] = [], frame = 0, hits: readonly HitEvent[] = [], characters: readonly CharacterState[] = [], alternateOwnerIds: ReadonlySet<string> = new Set()): void {
     const g = this.graphics.clear();
     if (frame < this.lastFrame) { this.impacts.forEach(impact => impact.sprite.destroy()); this.impacts = []; }
     if (frame < this.lastFrame) { this.wallEffects.forEach(effect => effect.sprite.destroy()); this.wallEffects.clear(); }
+    if (frame < this.lastFrame) { this.groundEffects.forEach(effect => effect.sprite.destroy()); this.groundEffects.clear(); this.impactsShown.clear(); this.thrownInFlight.clear(); }
     this.lastFrame = frame;
+    this.showGrabImpacts(frame, characters);
     for (const character of characters) {
+      const groundFrame = character.ultimateImpactFrame;
+      const groundPosition = character.ultimateImpactPosition;
+      const ground = this.groundEffects.get(character.characterId);
+      if (groundFrame !== undefined && groundPosition && groundFrame <= frame && frame - groundFrame < 18 && ground?.started !== groundFrame && this.scene.textures.exists('contact-ultimate-ground-impact')) {
+        ground?.sprite.destroy();
+        const sprite = this.scene.add.image(groundPosition.x, groundPosition.y, 'contact-ultimate-ground-impact', '0')
+          .setDepth(12).setOrigin(.5, 484 / 724).setDisplaySize(250, 362);
+        this.groundEffects.set(character.characterId, { sprite, started: groundFrame });
+      }
       const effect = character.wallBounceEffect;
       const existing = this.wallEffects.get(character.characterId);
       if (effect && effect.frame <= frame && frame - effect.frame < 12 && existing?.started !== effect.frame) {
@@ -38,6 +58,11 @@ export class ProjectileView {
           .setDepth(12).setDisplaySize(90, 180).setFlipX(effect.direction < 0);
         this.wallEffects.set(character.characterId, { sprite, started: effect.frame });
       }
+    }
+    for (const [id, effect] of this.groundEffects) {
+      const age = frame - effect.started;
+      if (age >= 18 || age < 0) { effect.sprite.destroy(); this.groundEffects.delete(id); }
+      else effect.sprite.setFrame(Math.min(5, Math.floor(age / 3)));
     }
     for (const [id, effect] of this.wallEffects) {
       const age = frame - effect.started;
@@ -120,6 +145,8 @@ export class ProjectileView {
       const defender = characters.find(character => character.characterId === contact.targetId);
       if (!attacker || !defender) continue;
       const move = getCharacterById(attacker.fighterId)?.moves.find(candidate => candidate.id === contact.moveId);
+      // Launcher uses its own arm-attached steam instead of the generic contact flash.
+      if (attacker.fighterId === 'grappler' && ['grab-launcher', 'grab-headbutt'].includes(contact.moveId) && contact.outcome === 'hit') continue;
       const purpleContact = alternateOwnerIds.has(attacker.characterId) && attacker.fighterId === 'texas';
       const purpleBlock = contact.outcome === 'block' && purpleContact &&
         (move?.projectile?.visual === 'bullet' || move?.projectile?.visual === 'dynamite');
@@ -163,5 +190,35 @@ export class ProjectileView {
       g.lineStyle(2,0xffdda0,explosion.remainingFrames/10).strokeCircle(explosion.x,explosion.y,radius+5);
     }
   }
-  destroy(): void { this.sprites.forEach(sprite => sprite.destroy()); this.dynamiteExplosions.forEach(sprite => sprite.destroy()); this.impacts.forEach(impact => impact.sprite.destroy()); this.wallEffects.forEach(effect => effect.sprite.destroy()); this.graphics.destroy(); }
+  /**
+   * Every time the Grappler throws the opponent to the floor, a ground impact like the ultimate's, 50% subtler (half the
+   * size): the slam and the foot grab when the hands hit the floor, the air grab when it drives the victim down, and the
+   * far throw when the victim lands.
+   */
+  private showGrabImpacts(frame: number, characters: readonly CharacterState[]): void {
+    const impact = (key: string, x: number, y: number) => {
+      if (this.impactsShown.has(key) || !this.scene.textures.exists('contact-ultimate-ground-impact')) return;
+      this.impactsShown.add(key);
+      const sprite = this.scene.add.image(x, y, 'contact-ultimate-ground-impact', '0').setDepth(12)
+        .setOrigin(.5, 484 / 724).setDisplaySize(250 * GRAB_IMPACT_SCALE, 362 * GRAB_IMPACT_SCALE).setAlpha(.75);
+      this.groundEffects.set(key, { sprite, started: frame });
+      this.onGrabImpact?.();
+    };
+    for (const attacker of characters) {
+      const attack = attacker.attack;
+      const move = attacker.fighterId === 'grappler' && attack?.hasHit ? getCharacterById('grappler')?.moves.find(candidate => candidate.id === attack.moveId) : undefined;
+      const delay = move && GRAB_IMPACT_DELAYS[move.id];
+      const victim = move && characters.find(character => character.grapplerGrabReaction?.moveId === move.id && character.characterId !== attacker.characterId);
+      if (!move || !attack || delay === undefined || !victim) continue;
+      // The air grab waits for the victim to reach the floor; the others follow the attack's own timing.
+      if (move.id === 'air-grab' && !victim.grounded) continue;
+      if (attack.elapsedFrames - (attack.startupFrames ?? move.startup) >= delay) impact(`${attacker.characterId}:${move.id}:${victim.grapplerGrabReaction!.startedFrame}`, victim.x, move.id === 'air-grab' ? victim.y : attacker.y);
+    }
+    for (const character of characters) {
+      const thrown = character.knockdownBy?.moveId === 'grab-throw' && !character.grounded;
+      if (this.thrownInFlight.has(character.characterId) && !thrown && character.grounded) impact(`${character.characterId}:landing:${frame}`, character.x, character.y);
+      if (thrown) this.thrownInFlight.add(character.characterId); else this.thrownInFlight.delete(character.characterId);
+    }
+  }
+  destroy(): void { this.sprites.forEach(sprite => sprite.destroy()); this.dynamiteExplosions.forEach(sprite => sprite.destroy()); this.impacts.forEach(impact => impact.sprite.destroy()); this.wallEffects.forEach(effect => effect.sprite.destroy()); this.groundEffects.forEach(effect => effect.sprite.destroy()); this.graphics.destroy(); }
 }

@@ -50,6 +50,8 @@ export function t(key: MessageKey, values: Readonly<Record<string, string | numb
  * Name of authored content (move, combo, stage), keyed as `move.<fighter>.<id>`, `combo.<fighter>.<id>`,
  * `chain.<fighter>.<index>` or `stage.<id>`. Portuguese is the authored source, kept in the data itself.
  */
+/** Names set in the developer mode, ahead of the translations, until they are saved into the sources. */
+export const nameOverrides = new Map<string, string>();
 export function nameOf(key: string, authored: string): string {
-  return localeOf(current).names[key] ?? authored;
+  return nameOverrides.get(key) ?? localeOf(current).names[key] ?? authored;
 }

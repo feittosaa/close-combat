@@ -29,7 +29,9 @@ it('preloads every image as a six-frame sheet', () => {
   preloadContactEffects({textures:{exists:()=>false},load:{spritesheet,image,once}} as never);
   expect(once).toHaveBeenCalledWith('filecomplete-spritesheet-contact-hit-blue', expect.any(Function));
   expect(image).toHaveBeenCalledWith('wall-bounce', expect.any(String));
-  expect(spritesheet).toHaveBeenCalledTimes(11);
+  expect(spritesheet).toHaveBeenCalledTimes(21);
+  expect(spritesheet).toHaveBeenCalledWith('contact-grappler-ultimate-rotation', expect.any(String), { frameWidth:362, frameHeight:724 });
+  expect(spritesheet).toHaveBeenCalledWith('contact-ultimate-ground-impact', expect.any(String), { frameWidth:362, frameHeight:724 });
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-light',expect.any(String),{frameWidth:362,frameHeight:724});
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-heavy',expect.any(String),{frameWidth:464,frameHeight:724});
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-wine',expect.any(String),{frameWidth:512,frameHeight:724});
@@ -52,6 +54,26 @@ it('renders simultaneous contacts using sprites, advances frames and clears them
   expect(first.setFrame).toHaveBeenLastCalledWith(2);
   view.sync([],[],0,[],characters);
   expect(first.destroy).toHaveBeenCalledOnce(); expect(second.destroy).toHaveBeenCalledOnce();
+  view.destroy();
+});
+
+it('fixa o impacto da ultimate no ponto de aterrissagem e encerra o efeito', () => {
+  const graphics = { clear:vi.fn(), setDepth:vi.fn(), destroy:vi.fn() };
+  Object.values(graphics).forEach(fn => fn.mockReturnValue(graphics));
+  const sprite = { setDepth:vi.fn(), setOrigin:vi.fn(), setDisplaySize:vi.fn(), setFrame:vi.fn(), destroy:vi.fn() };
+  Object.values(sprite).forEach(fn => fn.mockReturnValue(sprite));
+  const image = vi.fn().mockReturnValue(sprite);
+  const view = new ProjectileView({add:{graphics:()=>graphics,image},textures:{exists:()=>true}} as never);
+  const [state] = new Simulation(createGameConfig(1024,576),[shoto,texas]).snapshot().characters;
+  const victim = {...state, y:440, ultimateImpactFrame:100, ultimateImpactPosition:{x:420,y:488}};
+  view.sync([],[],101,[],[victim]);
+  expect(image).toHaveBeenCalledWith(420,488,'contact-ultimate-ground-impact','0');
+  expect(sprite.setOrigin).toHaveBeenCalledWith(.5,484/724);
+  view.sync([],[],109,[],[victim]);
+  expect(image).toHaveBeenCalledOnce();
+  expect(sprite.setFrame).toHaveBeenLastCalledWith(3);
+  view.sync([],[],118,[],[victim]);
+  expect(sprite.destroy).toHaveBeenCalledOnce();
   view.destroy();
 });
 

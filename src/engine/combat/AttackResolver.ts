@@ -61,24 +61,32 @@ export class AttackResolver {
       const target = characters[1 - index];
       if (!attack || !move || (attack.hasHit && !move.multiHit) || (!projectile && (attacker.mode !== 'active' || move.projectile))) return [];
       if (move.multiHit && (volleyStep === undefined || volleyStep >= move.multiHit.hits)) return [];
-      if (target.mode === 'knockdown' || (target.wakeupInvulnerabilityFrames ?? 0) > 0) return [];
+      if (target.knockdownBy?.moveId === 'ultimate-grab') return [];
+      const groundCapture = Boolean(move.commandGrab?.groundAfter && target.mode === 'knockdown' && target.grounded &&
+        target.knockdownBy?.attackerId === attacker.characterId && target.knockdownBy.moveId === move.commandGrab.groundAfter);
+      // Which grabs reach an airborne target is authored (`airTarget`); the air grab needs one in the air.
+      if (move.commandGrab && (move.commandGrab.airTarget === 'only' ? target.grounded : !target.grounded && move.commandGrab.airTarget !== 'also')) return [];
+      const airCapture = Boolean(move.commandGrab && !target.grounded);
+      if ((target.mode === 'knockdown' || (target.wakeupInvulnerabilityFrames ?? 0) > 0) && !groundCapture && !airCapture) return [];
       const defenseMove = target.attack ? this.resolveMove(target.fighterId, target.attack.moveId) : undefined;
+      if (target.fighterId === 'grappler' && defenseMove?.id === 'ultimate-grab') return [];
       const armored = defenseMove?.category === 'ultimate';
       if (projectile && !armored && defenseMove?.projectileInvulnerable) return [];
       const defense = armored ? undefined : defenseMove?.invulnerability;
       if (defense && target.attack!.elapsedFrames < defense.until && (defense.kind === 'all' || projectile)) return [];
-      if (move.category === 'throw' && (!target.grounded || !attacker.grounded || target.mode === 'hitstun' || target.mode === 'blockstun')) return [];
+      if (move.category === 'throw' && !move.commandGrab && (!target.grounded || !attacker.grounded || target.mode === 'hitstun' || target.mode === 'blockstun')) return [];
       const hitLevel = volleyStep === 0 ? move.screenVolley?.firstHitLevel ?? move.hitLevel : move.hitLevel;
       if (hitLevel === 'high' && target.crouching) return [];
       const box = projectile ? createProjectileHitbox({ownerId:attacker.characterId,x:attacker.x,y:attacker.y,facing:attacker.facing},move) : createHitbox(attacker,move);
+      const isGrab = move.category === 'throw' || Boolean(move.commandGrab);
       const zonedTarget = target.fighterId === 'texas' || target.fighterId === 'shoto';
-      const hurtboxes = zonedTarget && move.category !== 'throw'
+      const hurtboxes = zonedTarget && !isGrab
         ? Object.values(createHurtZones(target)) : [createHurtbox(target)];
       const contacted = hurtboxes.find(hurtbox => intersects(box, hurtbox));
       if (!contacted) return [];
       const targetBody = createHurtbox(target);
       const guard = inputs[1 - index]?.direction;
-      const blocked = move.category !== 'throw' && ['blocking', 'blockstun'].includes(target.mode) &&
+      const blocked = !isGrab && ['blocking', 'blockstun'].includes(target.mode) &&
         (hitLevel === 'low' ? target.grounded && guard === 'DB' :
           move.overhead ? guard === 'B' : guard === 'B' || guard === 'DB');
       const owner = characters[index];
@@ -114,7 +122,7 @@ export class AttackResolver {
           y: (Math.max(box.y, contacted.y) + Math.min(box.y + box.height, contacted.y + contacted.height)) / 2,
         },
         contactBody: { centerY: targetBody.y + targetBody.height / 2, height: targetBody.height },
-        ...(zonedTarget && move.category !== 'throw' ? { contactHeight: contactHeight(target, box) } : {}) };
+        ...(zonedTarget && !isGrab ? { contactHeight: contactHeight(target, box) } : {}) };
       return [{ attack, target, event }];
     });
     const resolved: HitEvent[] = [];
@@ -126,6 +134,8 @@ export class AttackResolver {
       if (event.armored) { target.hitFlashFrames = 5; continue; }
       target.mode = event.outcome === 'block' ? 'blockstun' : 'hitstun';
       target.remainingStateFrames = event.defenderStunFrames;
+      target.knockdownBy = undefined;
+      target.wakeupInvulnerabilityFrames = undefined;
       target.attack = undefined;
       target.hitFlashFrames = event.outcome === 'hit' ? 5 : 0;
     }

@@ -6,7 +6,7 @@ import { createArcadeRun, opponentFor } from '../scenes/matchSetup';
 
 describe('elenco reiniciado', () => {
   it('registra Texas e Shoto, preservando os quatro básicos e o catálogo manual', () => {
-    expect(characters.map(fighter => fighter.id)).toEqual(['shoto', 'texas']);
+    expect(characters.map(fighter => fighter.id)).toEqual(['shoto', 'texas', 'grappler']);
     expect(playableCharacters).toEqual(characters);
     expect(defaultCharacter.name).toBe('Bob');
     expect(getCharacterById('texas')?.name).toBe('Texas');

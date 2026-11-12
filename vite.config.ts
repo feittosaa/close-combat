@@ -36,8 +36,11 @@ function spriteIntake(): Plugin {
 }
 
 /** Field naming where an added alternative image goes, and a saved alternative image (fighter, kind, file). */
-const ALTERNATIVE_TARGET = /^alternative:[\w-]+\/(victory-poses|selection-backgrounds|selection-icons)$/;
+const ALTERNATIVE_TARGET = /^alternative:(wallpapers\/menu|[\w-]+\/(victory-poses|selection-backgrounds|selection-icons))$/;
 const ALTERNATIVE_IMAGE = /^src\/assets\/art\/characters\/([\w-]+)\/(victory-poses|selection-backgrounds|selection-icons)\/([\w-]+\.png)$/;
+/** Menu and loading wallpapers: added as `wallpaper-<n>.png` (upscaled by `upscale-art.py` when too small) and removed by path. */
+const WALLPAPER_FOLDER = 'assets/art/wallpapers', WALLPAPER_TARGET = 'alternative:wallpapers/menu';
+const WALLPAPER_IMAGE = /^assets\/art\/wallpapers\/[\w-]+\.png$/;
 const IMAGE_PATH = /^(src\/assets|assets\/art)\/[\w./-]+\.(png|jpe?g|webp)$/;
 
 /**
@@ -75,12 +78,12 @@ function developerSaving(): Plugin {
     for (const [path, file] of files) writeFileSync(path, Buffer.from(await (file as Blob).arrayBuffer()));
   };
   /** Where an added alternative image goes: `alternative:<fighter>/<kind>` → `src/assets/art/characters/<fighter>/<kind>`. */
-  const alternativeFolder = (name: string) => `src/assets/art/characters/${name.slice('alternative:'.length)}`;
+  const alternativeFolder = (name: string) => name === WALLPAPER_TARGET ? WALLPAPER_FOLDER : `src/assets/art/characters/${name.slice('alternative:'.length)}`;
   /** Alternative art to add that is not a PNG for an existing fighter and kind, and alternative images to remove that do not exist. */
   const invalidAlternatives = (added: [string, FormDataEntryValue][], removed: string[]) => [
     ...added.filter(([name, file]) => !ALTERNATIVE_TARGET.test(name) || !existsSync(alternativeFolder(name).replace(/\/[\w-]+$/, '')) || (file as Blob).type !== 'image/png')
       .map(([name]) => `${name} (só PNG, de personagem existente)`),
-    ...removed.filter(path => !ALTERNATIVE_IMAGE.test(path) || !existsSync(path)),
+    ...removed.filter(path => !(ALTERNATIVE_IMAGE.test(path) || WALLPAPER_IMAGE.test(path)) || !existsSync(path)),
   ];
   /** Reads, changes and writes a fighter's `alternatives.json` (framings by kind and file), deleting it once empty. */
   const editFramings = (fighter: string, change: (file: Record<string, Record<string, unknown>>) => void) => {
@@ -112,6 +115,7 @@ function developerSaving(): Plugin {
     const emptied = new Set<string>();
     for (const path of removed) {
       rmSync(path);
+      if (WALLPAPER_IMAGE.test(path)) continue;
       const [, fighter, kind, image] = ALTERNATIVE_IMAGE.exec(path)!;
       editFramings(fighter, file => { delete file[kind]?.[image]; });
       emptied.add(`${fighter}/${kind}`);
@@ -120,8 +124,9 @@ function developerSaving(): Plugin {
     for (const [name, file] of added) {
       const folder = alternativeFolder(name);
       mkdirSync(folder, { recursive: true });
-      const next = Math.max(0, ...readdirSync(folder).map(image => Number(/^(\d+)\.png$/.exec(image)?.[1] ?? 0))) + 1;
-      writeFileSync(`${folder}/${next}.png`, Buffer.from(await (file as Blob).arrayBuffer()));
+      const wallpaper = name === WALLPAPER_TARGET, numbered = wallpaper ? /^wallpaper-(\d+)\.png$/ : /^(\d+)\.png$/;
+      const next = Math.max(0, ...readdirSync(folder).map(image => Number(numbered.exec(image)?.[1] ?? 0))) + 1;
+      writeFileSync(`${folder}/${wallpaper ? `wallpaper-${next}` : next}.png`, Buffer.from(await (file as Blob).arrayBuffer()));
     }
   };
   /**

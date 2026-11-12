@@ -50,6 +50,8 @@ export function renderFighterSelection(root: HTMLElement, options: SelectionView
     if ((player === 0 || selectOpponent) && selection.choosingColor[player]) {
       const colors = entry.id === 'texas'
         ? [['#b72b36', '#f5bd35', '#328bde'], ['#2c5eac', '#f5bd35', '#f2a53a']]
+        : entry.id === 'grappler'
+        ? [['#7c402c', '#f85d03', '#f89a04'], ['#7c402c', '#03bff8', '#04d9f8']]
         : [['#50683b', '#e4b34e', '#714a2d'], ['#d22529', '#e4b34e', '#714a2d']];
       const palette = node('div', 'arena-palettes');
       palette.setAttribute('role', 'group');

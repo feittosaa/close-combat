@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 // @ts-expect-error Node's built-in module is available to the test runner.
 import { readFileSync } from 'node:fs';
 import { texas } from '../engine/data/fighters/texas';
-import { editCss, editFighter, editFighterArt, editHud, literal } from '../dev/sourceEdits';
+import { editCss, editFighter, editFighterArt, editHud, editNames, literal } from '../dev/sourceEdits';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const shotoSource = read('../engine/data/fighters/shoto.ts'), texasSource = read('../engine/data/fighters/texas.ts');
+const grapplerSource = read('../engine/data/fighters/grappler.ts'), enLocale = read('../i18n/locales/en.ts');
 const artSource = read('../ui/fighterArt.ts'), cssSource = read('../style.css'), hudSource = read('../ui/hudTheme.ts');
 const none = { moves: {}, recipes: {}, combos: {} };
 const line = (source: string, id: string) => source.split('\n').findIndex(text => text.includes(`{ id: '${id}'`));
@@ -74,5 +75,19 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
     expect(after[at]).toContain('victory:{ height: 1.4, top: 0.02 }');
     expect(after.filter((text, index) => text !== before[index])).toHaveLength(1);
     expect(() => editFighterArt(artSource, { nobody: { hero: { zoom: 1, x: 0, y: 0 } } })).toThrow('nobody');
+  });
+
+  it('grava ajustes em qualquer golpe do Grappler, todos escritos na própria lista de golpes dele', () => {
+    const edited = editFighter(grapplerSource, 'grappler', { ...none, moves: { grappler: { 'ultimate-grab': { damage: 777 }, 'hammer-punch': { recovery: 31 }, 'light-punch': { damage: 999 } } } });
+    expect(edited).toMatch(/id:'ultimate-grab'.*damage:777/);
+    expect(edited.split('\n').filter((text, index) => text !== grapplerSource.split('\n')[index])).toHaveLength(3);
+    expect(() => editFighter(grapplerSource, 'grappler', { ...none, moves: { grappler: { 'inexistente': { damage: 1 } } } })).toThrow(/não encontrado/);
+    expect(grapplerSource).not.toMatch(/shoto\.moves/);
+  });
+
+  it('renomeia golpes no código e nas traduções', () => {
+    const renamed = editFighter(grapplerSource, 'grappler', { ...none, moveNames: { grappler: { 'hammer-punch': 'Marreta' } } });
+    expect(renamed).toMatch(/id:'hammer-punch', name:'Marreta'/);
+    expect(editNames(enLocale, 'grappler', { 'hammer-punch': 'Marreta' })).toContain("'move.grappler.hammer-punch': 'Marreta'");
   });
 });

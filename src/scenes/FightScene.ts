@@ -30,6 +30,7 @@ import { registerCharacterColor } from '../rendering/palettePipeline';
 import { preloadContactEffects } from '../rendering/contactEffects';
 import { StagePresentation } from '../rendering/StagePresentation';
 import { CombatantView } from '../rendering/CombatantView';
+import { grapplerCapturePose } from '../rendering/grapplerCapture';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
@@ -237,11 +238,11 @@ export class FightScene extends Phaser.Scene {
       arcadeIndex: this.arcadeIndex + 1, arcadeRun: this.arcadeRun, difficulty: this.difficulty });
   };
   private readonly handleRestart = (event: KeyboardEvent): void => {
-    if (this.mode !== 'training' || event.code !== getSystemControls().reset || !this.simulation) return;
+    if ((this.mode !== 'training' && this.mode !== 'tutorial') || event.code !== getSystemControls().reset || !this.simulation) return;
     if (ControlSettings.active || event.repeat) return;
     event.preventDefault();
     this.handledTrainingEvents.add(event);
-    this.resetFight(true);
+    this.resetFight(this.mode === 'training');
   };
 
   constructor() {
@@ -371,6 +372,7 @@ export class FightScene extends Phaser.Scene {
     this.commandBuffers = [new CommandBuffer(), new CommandBuffer()];
 
     this.projectileView = new ProjectileView(this);
+    this.projectileView.onGrabImpact = () => this.cameras.main.shake(110, 0.0015);
     this.rushEffect = new RushEffect(this);
     this.combatants = [
       new CombatantView(this, 0xe45b5b),
@@ -443,6 +445,7 @@ export class FightScene extends Phaser.Scene {
     if (snapshot.knockoutStartedAt === undefined) this.knockoutAt = undefined;
     this.fightSounds?.observe(snapshot);
     snapshot.characters.forEach((character, index) => {
+      if (character.ultimateImpactFrame === snapshot.frame - 1) this.cameras.main.shake(110, 0.003);
       if (character.rush && !this.rushActive[index]) this.rushEffect?.play(character.x, character.y);
       this.rushActive[index] = Boolean(character.rush);
     });
@@ -479,6 +482,7 @@ export class FightScene extends Phaser.Scene {
 
   /** `reposition` is free training's reset: fighters go back to the centre and keep their rage. */
   private resetFight(reposition = false): void {
+    this.simulation?.setTrainingWall(Boolean(this.tutorial?.lesson?.wall));
     this.simulation?.resetMatch(this.training?.initialDistance, reposition);
     this.stagePresentation?.reset();
     this.knockoutAt = undefined; this.knockoutSlowRemaining = 0; this.introBlocked = false;
@@ -542,7 +546,8 @@ export class FightScene extends Phaser.Scene {
         ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed} : undefined;
       const color = characterColor(this.selectedStage, layout, character.x, this.cameras.main.scrollX,
         this.alternatePalettes[index]);
-      this.combatants[index]?.sync(character, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color);
+      const presented = grapplerCapturePose(character, shown[1 - index]);
+      this.combatants[index]?.sync(presented, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color);
     });
     const alternateOwnerIds = new Set(snapshot.characters.filter((_, index) => this.alternatePalettes[index]).map(character => character.characterId));
     this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds);

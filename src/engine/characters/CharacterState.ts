@@ -52,12 +52,18 @@ export interface CharacterState {
   idleStartedFrame?: number;
   attack?: CharacterAttack;
   hitFlashFrames: number;
+  /** Presentation of the last Grappler grab while the victim is held or recovering from it. */
+  grapplerGrabReaction?: { moveId: string; startedFrame: number; startedLying: boolean };
   perfectBlockStartedFrame?: number;
   hitReaction?: { level: 'low' | 'mid' | 'high'; startedFrame: number };
   grabbedStartedFrame?: number;
   /** Start of the Shoto ippon victim reaction. */
   ipponReceivedFrame?: number;
   grabbedHold?: boolean;
+  commandGrabbed?: boolean;
+  spinStartedFrame?: number;
+  ultimateImpactFrame?: number;
+  ultimateImpactPosition?: { x: number; y: number };
   chain?: string[];
   /** Consecutive confirmed hits in an authored projectile sequence. */
   projectileComboHits?: number;
@@ -65,8 +71,10 @@ export interface CharacterState {
   /** Confirmed pressure keeps its strength floor until the defender regains control. */
   hitSequence?: { targetId: string; heavy: boolean; heavyButton?: '2' | '4' };
   /** Contacted normal attacks in the current uninterrupted string, including guards. */
-  contactSequence?: { heavy: boolean; heavyButton?: '2' | '4'; weakFamily?: '1' | '3' };
+  contactSequence?: { heavy: boolean; heavyButton?: '2' | '4'; weakFamily?: '1' | '3'; usedPunch?: boolean };
   knockdown?: { velocityX: number };
+  /** Move that caused the current grounded knockdown. */
+  knockdownBy?: { attackerId: string; moveId: string };
   pushbackMotion?: { distancePerFrame: number; remainingFrames: number };
   /** A bounce blocks the next received combo until its reaction ends. */
   wallBounceProtection?: 'waiting' | 'receiving';

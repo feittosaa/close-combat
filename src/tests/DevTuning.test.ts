@@ -60,6 +60,29 @@ describe('developer tuning', () => {
     expect(scale('walk')).toBe(before);
   });
 
+  it('renomeia golpes, também nas traduções, e volta ao nome original sem deixar ajuste', async () => {
+    const { nameOf } = await import('../i18n/i18n');
+    const fighters = fresh(), texas = fighters.find(fighter => fighter.id === 'texas')!, tuning = new DevTuning(fighters);
+    const base = texas.moves.find(move => move.id === 'light-punch')!, authored = base.name;
+    tuning.renameMove('texas', 'light-punch', 'Murro');
+    expect(texas.moves.find(move => move.id === 'light-punch')!.name).toBe('Murro');
+    expect(nameOf('move.texas.light-punch', authored)).toBe('Murro');
+    tuning.renameMove('texas', 'light-punch', authored);
+    expect(tuning.overrides.moveNames).toEqual({});
+    expect(nameOf('move.texas.light-punch', authored)).toBe(authored);
+  });
+
+  it('resizes one drawing of an animation without touching the others', () => {
+    const fighters = fresh(), texas = fighters.find(fighter => fighter.id === 'texas')!, tuning = new DevTuning(fighters);
+    const scale = (frame: number) => autoSpriteScale(texas, texasMeasurements as SheetMeasurements, 'walk', frame, texasCalibration);
+    const first = scale(0), second = scale(1);
+    tuning.setFrameScale('texas:walk:1', 1.2);
+    expect(scale(1)).toBeCloseTo(second * 1.2);
+    expect(scale(0)).toBe(first);
+    tuning.setFrameScale('texas:walk:1', undefined);
+    expect(scale(1)).toBe(second);
+  });
+
   it('trims or grows every frame\'s outline toward the width tried, and back to the saved one when cleared', async () => {
     const { outlineTargets, outlineTrim } = await import('../rendering/characterColor');
     const tuning = new DevTuning(fresh()), saved = outlineTargets.get('shoto')!;
@@ -73,7 +96,7 @@ describe('developer tuning', () => {
   });
 
   it('ignores unreadable stored tuning', () => {
-    expect(loadOverrides({ getItem: () => '{broken' })).toEqual({ moves: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, outlines: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
+    expect(loadOverrides({ getItem: () => '{broken' })).toEqual({ moves: {}, moveNames: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameScales: {}, outlines: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
   });
 
   it('reframes the selection art over the authored values and restores them', () => {
