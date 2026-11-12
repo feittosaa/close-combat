@@ -12,6 +12,7 @@ export interface CommandCandidate {
     sequence?: readonly Direction[];
   };
   precisionWindowFrames?: number;
+  sequenceWindowFrames?: number;
   airborne?: boolean;
   crouching?: boolean;
 }
@@ -65,7 +66,8 @@ export class CommandParser {
       this.directionPresses.push({ direction: input.direction, frame });
     }
     this.previousDirection = input.direction;
-    while (this.directionPresses[0] && frame - this.directionPresses[0].frame > this.sequenceWindow) {
+    const historyWindow = Math.max(this.sequenceWindow, ...candidates.map(candidate => candidate.sequenceWindowFrames ?? 0));
+    while (this.directionPresses[0] && frame - this.directionPresses[0].frame > historyWindow) {
       this.directionPresses.shift();
     }
 
@@ -113,8 +115,8 @@ export class CommandParser {
     return command;
   }
 
-  clear(): void {
-    this.previousButtons.clear();
+  clear(preserveHeldButtons = false): void {
+    if (!preserveHeldButtons) this.previousButtons.clear();
     this.buttonPresses.clear();
     this.previousDirection = 'N';
     this.directionPresses.length = 0;
@@ -131,7 +133,7 @@ export class CommandParser {
         !candidate.input.buttons.every((button) => buttonSet.has(button))) return false;
       if (candidate.input.direction !== undefined && candidate.input.direction !== press.direction) return false;
       if (!candidate.input.sequence) return candidate.precisionWindowFrames === undefined;
-      const sequenceFrame = this.matchingSequenceFrame(candidate.input.sequence, press.frame);
+      const sequenceFrame = this.matchingSequenceFrame(candidate.input.sequence, press.frame, candidate.sequenceWindowFrames ?? this.sequenceWindow);
       if (sequenceFrame === undefined) return false;
       return candidate.precisionWindowFrames === undefined ||
         press.frame - sequenceFrame <= candidate.precisionWindowFrames;
@@ -146,7 +148,7 @@ export class CommandParser {
     return matching[0];
   }
 
-  private matchingSequenceFrame(sequence: readonly Direction[], commandFrame: number): number | undefined {
+  private matchingSequenceFrame(sequence: readonly Direction[], commandFrame: number, sequenceWindow: number): number | undefined {
     if (sequence.length === 0) return undefined;
     let matched = sequence.length - 1;
     let finalDirectionFrame: number | undefined;
@@ -157,8 +159,8 @@ export class CommandParser {
         if (matched === sequence.length - 1) finalDirectionFrame = press.frame;
         matched -= 1;
         if (matched < 0) {
-          return finalDirectionFrame !== undefined &&
-            commandFrame - finalDirectionFrame <= this.sequenceWindow
+          return finalDirectionFrame !== undefined && commandFrame - press.frame <= sequenceWindow &&
+            commandFrame - finalDirectionFrame <= sequenceWindow
             ? finalDirectionFrame
             : undefined;
         }

@@ -29,8 +29,7 @@ it('preloads every image as a six-frame sheet', () => {
   preloadContactEffects({textures:{exists:()=>false},load:{spritesheet,image,once}} as never);
   expect(once).toHaveBeenCalledWith('filecomplete-spritesheet-contact-hit-blue', expect.any(Function));
   expect(image).toHaveBeenCalledWith('wall-bounce', expect.any(String));
-  expect(spritesheet).toHaveBeenCalledTimes(22);
-  expect(spritesheet).toHaveBeenCalledWith('contact-grappler-grab-motion', expect.any(String), {frameWidth:362,frameHeight:724});
+  expect(spritesheet).toHaveBeenCalledTimes(24);
   expect(spritesheet).toHaveBeenCalledWith('contact-grappler-ultimate-rotation', expect.any(String), { frameWidth:362, frameHeight:724 });
   expect(spritesheet).toHaveBeenCalledWith('contact-ultimate-ground-impact', expect.any(String), { frameWidth:362, frameHeight:724 });
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-light',expect.any(String),{frameWidth:362,frameHeight:724});

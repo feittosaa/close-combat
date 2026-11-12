@@ -302,6 +302,7 @@ export const de: Locale = {
     'move.grappler.grab-throw': 'Weiter Wurf',
     'move.grappler.grab-launcher': 'Aufwärtswurf',
     'move.grappler.ultimate-grab': 'Ultimate — Drehgriff',
+    'move.grappler.ultimate-soco': 'Ultimate — Geschwindigkeitsschlag',
     'move.grappler.double-punch': 'Doppelschlag',
     'move.grappler.hammer-punch': 'Hammerschlag',
     'move.grappler.grab-headbutt': 'Kopfstoßgriff',

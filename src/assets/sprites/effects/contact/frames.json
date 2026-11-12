@@ -319,62 +319,6 @@
    }
   }
  },
- "grappler-grab-launcher": {
-  "size": {
-   "width": 370,
-   "height": 724
-  },
-  "frames": {
-   "0": {
-    "x": 36,
-    "y": 446,
-    "width": 286,
-    "height": 128,
-    "left": 36,
-    "top": 446
-   },
-   "1": {
-    "x": 405,
-    "y": 365,
-    "width": 265,
-    "height": 209,
-    "left": 43,
-    "top": 365
-   },
-   "2": {
-    "x": 760,
-    "y": 300,
-    "width": 273,
-    "height": 274,
-    "left": 36,
-    "top": 300
-   },
-   "3": {
-    "x": 1121,
-    "y": 197,
-    "width": 279,
-    "height": 375,
-    "left": 35,
-    "top": 197
-   },
-   "4": {
-    "x": 1487,
-    "y": 107,
-    "width": 283,
-    "height": 462,
-    "left": 39,
-    "top": 107
-   },
-   "5": {
-    "x": 1839,
-    "y": 93,
-    "width": 297,
-    "height": 475,
-    "left": 29,
-    "top": 93
-   }
-  }
- },
  "grappler-grab-low": {
   "size": {
    "width": 406,

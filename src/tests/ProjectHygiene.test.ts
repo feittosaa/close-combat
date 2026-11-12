@@ -54,9 +54,12 @@ describe('Project asset and documentation hygiene', () => {
     for (const key of Object.keys(wallpaperArt)) used.add(projectPath(key));
     const grapplerEffects = import.meta.glob('../assets/sprites/effects/contact/grappler-*.png', { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(grapplerEffects)) used.add(projectPath(key));
-    // Preserve the approved source for the separately prepared grab-motion overlay.
-    expect(used.has('src/assets/sprites/effects/contact/grappler-grab-motion.png')).toBe(true);
-    used.add('assets/art/effects/contact/grappler-grab-motion.png');
+    for (const name of ['throw', 'slam', 'launcher']) {
+      expect(used.has(`src/assets/sprites/effects/contact/grappler-trail-${name}.png`)).toBe(true);
+      used.add(`assets/art/effects/contact/grappler-trail-${name}.png`);
+    }
+    expect(used.has('src/assets/sprites/effects/contact/grappler-ultimate-soco.png')).toBe(true);
+    used.add('assets/art/effects/contact/grappler-ultimate-soco.png');
     const alternatives = import.meta.glob('../assets/art/characters/*/{victory-poses,selection-backgrounds,selection-icons}/*.png', { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(alternatives)) used.add(projectPath(key));
     const reviews = import.meta.glob<string>('../../assets/art/characters/*/revisao.json', { eager: true, query: '?raw', import: 'default' });

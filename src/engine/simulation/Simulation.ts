@@ -10,7 +10,7 @@ import type { AttackButton, FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
 import type { ProjectileState } from '../combat/ProjectileState';
-import { GRAPPLER_ULTIMATE_ACTIVATION_FRAMES, GRAPPLER_ULTIMATE_HOLD_FRAMES, ULTIMATE_ACTIVATION_FRAMES, type UltimateActivation, type ExplosionState } from '../combat/ultimateActivation';
+import { GRAPPLER_ULTIMATE_ACTIVATION_FRAMES, GRAPPLER_ULTIMATE_GROUND_RECOVERY_FRAMES, GRAPPLER_ULTIMATE_HOLD_FRAMES, ULTIMATE_ACTIVATION_FRAMES, type UltimateActivation, type ExplosionState } from '../combat/ultimateActivation';
 import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { flightFramesRemaining } from '../combat/airPhysics';
 import { attackDurationFrames } from '../combat/frameData';
@@ -218,7 +218,7 @@ export class Simulation {
   setPreFight(locked: boolean): void { this.preFight = locked; }
   private step(rawInputs: readonly FrameInput[]): void {
     // The Grappler's ultimate victim acts on nothing from the grab until he has fallen, risen and recovered.
-    for (const character of this.characters) if (character.knockdownBy?.moveId === 'ultimate-grab' && !character.commandGrabbed && character.grounded && !['hitstun', 'knockdown'].includes(character.mode)) character.knockdownBy = undefined;
+    for (const character of this.characters) if (['ultimate-grab', 'ultimate-soco'].includes(character.knockdownBy?.moveId ?? '') && !character.commandGrabbed && character.grounded && !['hitstun', 'knockdown'].includes(character.mode)) character.knockdownBy = undefined;
     const held = (index: number) => this.characters[index]?.knockdownBy?.moveId === 'ultimate-grab';
     const unlocked = rawInputs.map((input, index) => held(index) ? neutral() : input);
     const inputs = this.preFight ? unlocked.map(input => ({ ...input, buttons: new Set<AttackButton>(), ultimate: false, taunt: false, rageAction: false })) : unlocked;
@@ -309,6 +309,8 @@ export class Simulation {
         target.hitFlashFrames = 5;
         // The headbutt stuns again from its impact, long enough for the combo to go on.
         if (this.pendingHeadbutt.moveId === 'grab-headbutt') {
+          target.commandGrabbed = undefined; target.grabbedStartedFrame = undefined; target.grapplerGrabReaction = undefined;
+          target.hitReaction = { level: 'high', startedFrame: this.frame };
           target.mode = 'hitstun'; target.remainingStateFrames = Math.max(target.remainingStateFrames, this.move(this.characters.indexOf(attacker), 'grab-headbutt')!.hitstun);
         }
         if (!this.options.training && target.health === 0 && this.knockoutStartedAt === undefined) this.knockoutStartedAt = this.elapsedFrames;
@@ -446,7 +448,11 @@ export class Simulation {
         if (!character.grounded && !move.movement && character.characterId !== this.airGrabHold?.attackerId) this.moveInDirection(character, axis(input), index);
         // A special's own travel ends at contact: once it connects the attacker does not fly over and past the target.
         const stopped = move.category === 'special' && character.attack.hasHit;
-        if (move.movement && elapsed < move.movement.until && !stopped) character.x += move.movement.speed * (character.facing === 'right' ? 1 : -1);
+        if (move.movement && elapsed >= (move.movement.from ?? 0) && elapsed < move.movement.until && !stopped) {
+          const motion = move.movement;
+          const speed = motion.arenaFraction === undefined ? motion.speed : (this.config.arena.right - this.config.arena.left) * motion.arenaFraction / (motion.until - (motion.from ?? 0));
+          character.x += speed * (character.facing === 'right' ? 1 : -1);
+        }
         const volley = move.screenVolley;
         const volleyElapsed = elapsed - (character.attack.startupFrames ?? move.startup);
         const volleyShots = volley?.pattern
@@ -550,8 +556,11 @@ export class Simulation {
               character.mode = 'knockdown'; character.knockdown = { velocityX: 0 };
               character.remainingStateFrames = 100;
             } else {
-              character.remainingStateFrames = 72;
+              character.remainingStateFrames = GRAPPLER_ULTIMATE_GROUND_RECOVERY_FRAMES;
             }
+          }
+          if (character.mode === 'knockdown' && character.knockdownBy?.moveId === 'ultimate-soco') {
+            character.remainingStateFrames = GRAPPLER_ULTIMATE_GROUND_RECOVERY_FRAMES;
           }
           if (character.mode === 'knockdown' && juggleRules) {
             character.wakeupInvulnerabilityFrames = character.remainingStateFrames + juggleRules.wakeupInvulnerabilityFrames;
@@ -606,6 +615,10 @@ export class Simulation {
       const attempt = this.breaker[targetIndex];
       if (attempt?.failed && attempt.combo.active) event.damage = Math.round(event.damage * 1.2);
       // The Grappler's ultimate loses 80 damage for each hit that came before it in the combo, down to 160.
+      if (event.moveId === 'ultimate-soco') {
+        const hits = this.comboHistory.find(combo => combo.active && combo.attackerId === event.attackerId && combo.targetId === event.targetId)?.hits ?? 0;
+        event.damage = Math.max(180, event.damage - 60 * hits);
+      }
       if (event.moveId === 'ultimate-grab') {
         const hits = this.comboHistory.find(combo => combo.active && combo.attackerId === event.attackerId && combo.targetId === event.targetId)?.hits ?? 0;
         event.damage = Math.max(Math.min(ULTIMATE_MINIMUM_DAMAGE, event.damage), event.damage - ULTIMATE_DAMAGE_LOSS_PER_HIT * hits);
@@ -836,8 +849,9 @@ export class Simulation {
       }
 
       // Multi-hit moves keep the target standing until their last hit, which alone knocks down and pushes.
-      if (sourceMove.knockdown && event.outcome === 'hit' && target.grounded && (!sourceMove.multiHit || event.volleyStep === sourceMove.multiHit.hits - 1)) {
+      if (sourceMove.knockdown && event.outcome === 'hit' && (target.grounded || sourceMove.id === 'ultimate-soco') && (!sourceMove.multiHit || event.volleyStep === sourceMove.multiHit.hits - 1)) {
         target.mode = 'knockdown'; target.attack = undefined; target.crouching = false;
+        if (sourceMove.id === 'ultimate-soco') target.juggle = undefined;
         target.knockdown = { velocityX: 0 };
         target.knockdownBy = { attackerId: attacker.characterId, moveId: sourceMove.id };
         target.remainingStateFrames = Math.max(juggleRules?.getupFrames ?? 36, event.attackerRecoveryFrames, sourceMove.id === 'grab-slam' && sourceMove.commandGrab ? 70 : 0);
@@ -880,7 +894,7 @@ export class Simulation {
       if (sourceMove.throwFlight && event.outcome === 'hit') {
         const destination = contactPositions[attackerIndex] + pushSign * (Math.abs(contactPositions[targetIndex] - contactPositions[attackerIndex]) + event.pushback);
         target.throwFlight = true;
-        if (attacker.attack?.throwDirection !== 'backward' && !(attacker.fighterId === 'texas' && sourceMove.id === 'throw-24')) {
+        if (sourceMove.id !== 'ultimate-soco' && attacker.attack?.throwDirection !== 'backward' && !(attacker.fighterId === 'texas' && sourceMove.id === 'throw-24')) {
           const pullTo = attacker.x + pushSign * ((attacker.collision.bodyWidth + target.collision.bodyWidth) / 2 + 5);
           target.throwPull = { distancePerFrame: (pullTo - target.x) / 8, remainingFrames: 8,
             launchDistance: destination - pullTo, launchFrames: sourceMove.throwFlight.frames, liftSpeed: sourceMove.throwFlight.liftSpeed };
@@ -896,6 +910,11 @@ export class Simulation {
       } else target.x += event.pushback * pushSign;
       if (heldMotion) {
         const motion = structuredClone(captureMotion(target));
+        if (sourceMove.id === 'grab-headbutt' && attacker.fighterId === 'grappler') {
+          const minimum = (attacker.collision.bodyWidth + target.collision.bodyWidth) / 2;
+          const distance = Math.max(0, Math.min(35, Math.abs(target.x - attacker.x) - minimum));
+          if (distance) motion.pushbackMotion = { distancePerFrame: -pushSign * distance / 4, remainingFrames: 4 };
+        }
         this.pendingCommandGrab.push({ targetId: target.characterId, motion });
         if (sourceMove.id === 'grab-slam' && this.pendingHeadbutt?.targetId === target.characterId) this.pendingHeadbutt.motion = motion;
         if (sourceMove.id === 'ultimate-grab') this.ultimateGrabHold = { attackerId: attacker.characterId, targetId: target.characterId, motion, remaining: GRAPPLER_ULTIMATE_HOLD_FRAMES };
@@ -1370,7 +1389,7 @@ export class Simulation {
           attacker.chain = undefined;
           attacker.hitSequence = undefined;
           const attackerIndex = this.characters.indexOf(attacker);
-          this.parsers[attackerIndex].clear();
+          this.parsers[attackerIndex].clear(true);
           this.pendingCommands[attackerIndex] = undefined;
           for (const combo of this.comboHistory) {
             if (combo.active && combo.attackerId === attacker.characterId && combo.targetId === character.characterId) combo.active = false;
@@ -1416,7 +1435,9 @@ export class Simulation {
   private updateFacing(): void {
     const [first, second] = this.characters;
     if (first.x === second.x) return;
-    first.facing = first.x < second.x ? 'right' : 'left'; second.facing = first.facing === 'right' ? 'left' : 'right';
+    const firstFacing = first.x < second.x ? 'right' : 'left';
+    if (first.attack?.moveId !== 'ultimate-soco' || first.fighterId !== 'grappler') first.facing = firstFacing;
+    if (second.attack?.moveId !== 'ultimate-soco' || second.fighterId !== 'grappler') second.facing = firstFacing === 'right' ? 'left' : 'right';
   }
   private ultimateInProgress(): boolean {
     return Boolean(this.ultimateActivation || this.characters.some((character, index) =>

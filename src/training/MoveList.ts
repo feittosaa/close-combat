@@ -8,7 +8,7 @@ export interface MoveListEntry {
   move?: MoveDefinition; combo?: ComboRecipe;
 }
 export function fighterMoveList(fighter: CharacterDefinition): readonly MoveListEntry[] {
-  return [...fighter.moves.filter(move=>!move.comboOnly).map(move => ({ id: move.id, title: nameOf(`move.${fighter.id}.${move.id}`, move.name), notation: moveInputLabel(move), categories: [move.commandGrab ? 'special' : move.category === 'basic' || !move.category ? 'basics' : move.category] as readonly MoveListCategory[], move })),
+  return [...fighter.moves.filter(move=>!move.comboOnly).map(move => ({ id: move.id, title: nameOf(`move.${fighter.id}.${move.id}`, move.name), notation: moveInputLabel(move), categories: [move.category === 'ultimate' ? 'ultimate' : move.commandGrab ? 'special' : move.category === 'basic' || !move.category ? 'basics' : move.category] as readonly MoveListCategory[], move })),
     ...(fighter.combos ?? []).map(combo => ({ id: combo.id, title: nameOf(`combo.${fighter.id}.${combo.id}`, combo.name), notation: combo.notation, categories: ['combos'] as const, combo }))];
 }
 export function filterMoveList(entries: readonly MoveListEntry[], category: MoveListCategory, query: string): readonly MoveListEntry[] {

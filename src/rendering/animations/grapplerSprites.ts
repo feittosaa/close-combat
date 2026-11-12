@@ -40,7 +40,7 @@ export function getGrapplerPose(state: CharacterState, frame: number, activation
   const age = Math.max(0, frame - (state.animationTransition?.startedFrame ?? state.stateStartedFrame));
   const step = (n: number) => Math.min(5, Math.floor(age / n));
   if (state.attack) {
-    if (state.attack.moveId === 'ultimate-grab' && activationFrame !== undefined) return {name:'ultimate-start',drawing:Math.min(5, Math.floor(activationFrame * 6 / GRAPPLER_ULTIMATE_ACTIVATION_FRAMES))};
+    if (['ultimate-grab', 'ultimate-soco'].includes(state.attack.moveId) && activationFrame !== undefined) return {name:'ultimate-start',drawing:Math.min(5, Math.floor(activationFrame * 6 / GRAPPLER_ULTIMATE_ACTIVATION_FRAMES))};
     const move = grappler.moves.find(m => m.id === state.attack!.moveId)!;
     const t = state.attack.elapsedFrames, start = state.attack.startupFrames ?? move.startup;
     // The grab connects on the preceding drawing, which is held through contact hitstop.
@@ -49,6 +49,10 @@ export function getGrapplerPose(state: CharacterState, frame: number, activation
       const age = t - start;
       if (age >= GRAPPLER_ULTIMATE_SPIN_FRAMES + GRAPPLER_ULTIMATE_LAST_FRAMES) return {name:'idle', drawing:Math.floor(frame / 12) % 6};
       return {name:move.id, drawing:age < GRAPPLER_ULTIMATE_SPIN_FRAMES ? 2 + Math.floor(age / GRAPPLER_ULTIMATE_SPIN_POSE_FRAMES) % 3 : 5};
+    }
+    if (move.id === 'ultimate-soco') {
+      const drawing = t < start ? Math.min(2, Math.floor(t * 3 / start)) : t < start + move.activeFrames ? (t < start + 6 ? 3 : 4) : 5;
+      return {name:move.id, drawing};
     }
     // The hammer's slam blur (fifth drawing) is brief; the guard that follows takes the rest of the recovery.
     if (move.id === 'hammer-punch' && t >= start + move.activeFrames) return {name:move.id, drawing:t < start + move.activeFrames + 6 ? 4 : 5};
@@ -80,7 +84,7 @@ export function getGrapplerPose(state: CharacterState, frame: number, activation
     // so the reaction reads as one fluid motion; a knockdown plays the same drawings at two frames each.
     if (state.mode === 'hitstun') {
       const progress = Math.min(1, age / Math.max(1, age + state.remainingStateFrames));
-      return {name, drawing:Math.min(5, Math.floor((1 - (1 - progress) ** 2) * 6))};
+      return {name, drawing:Math.min(5, Math.floor((1 - (1 - Math.min(1, progress * 1.5)) ** 2) * 6))};
     }
     return {name, drawing:step(2)};
   }

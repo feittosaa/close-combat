@@ -1,7 +1,5 @@
 {
  "propostas": [
-  "propostas-em-revisao/combo-breaker-air.png",
-  "propostas-em-revisao/combo-breaker.png",
   "revisao/agachar.png",
   "revisao/antiaereo.png",
   "revisao/arremesso-tomate.png",
@@ -12,6 +10,8 @@
   "revisao/chute-fraco-aereo.png",
   "revisao/chute-fraco-agachado.png",
   "revisao/chute-potente.png",
+  "revisao/combo-breaker-air.png",
+  "revisao/combo-breaker.png",
   "revisao/combo-chute-fraco.png",
   "revisao/corvo.png",
   "revisao/dash-frente.png",

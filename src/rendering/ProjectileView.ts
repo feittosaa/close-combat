@@ -9,6 +9,8 @@ import type { ProjectileState } from '../engine/combat/ProjectileState';
 import { getTimedAnimationFrame, type AnimationClip } from './animations/AnimationPlayback';
 import { contactEffectKey, contactFrameGrowth } from './contactEffects';
 import { CharacterColorEffect } from './characterColor';
+import { grapplerTrail, grapplerTrailPosition } from './grapplerTrails';
+import { grapplerCapturePose } from './grapplerCapture';
 
 const effectClips: Readonly<Record<string, AnimationClip>> = {
   shot:{key:'shot',start:0,end:5,frameRate:20,frameDurations:[2,3,3,3,3,3],repeat:-1},
@@ -26,6 +28,8 @@ export class ProjectileView {
   private impacts: { sprite: Phaser.GameObjects.Image; started: number }[] = [];
   private wallEffects = new Map<string, { sprite: Phaser.GameObjects.Image; started: number }>();
   private groundEffects = new Map<string, { sprite: Phaser.GameObjects.Image; started: number }>();
+  private readonly grabTrails = new Map<string, { sprite: Phaser.GameObjects.Image; started: number; victimId: string; name: string; facing: CharacterState['facing'] }>();
+  private readonly shownTrails = new Set<string>();
   private lastFrame = -1;
   /** Throws seen landing, and the grab impacts already shown, so each one is drawn once. */
   private thrownInFlight = new Set<string>();
@@ -33,13 +37,35 @@ export class ProjectileView {
   /** Called once for each grab impact, so the scene can shake the camera (half the ultimate's shake). */
   onGrabImpact?: () => void;
   constructor(private readonly scene: Phaser.Scene) { this.graphics = scene.add.graphics().setDepth(12); }
-  sync(projectiles: readonly ProjectileState[], explosions: readonly ExplosionState[] = [], frame = 0, hits: readonly HitEvent[] = [], characters: readonly CharacterState[] = [], alternateOwnerIds: ReadonlySet<string> = new Set()): void {
+  sync(projectiles: readonly ProjectileState[], explosions: readonly ExplosionState[] = [], frame = 0, hits: readonly HitEvent[] = [], characters: readonly CharacterState[] = [], alternateOwnerIds: ReadonlySet<string> = new Set(), contactPaused = false): void {
     const g = this.graphics.clear();
     if (frame < this.lastFrame) { this.impacts.forEach(impact => impact.sprite.destroy()); this.impacts = []; }
     if (frame < this.lastFrame) { this.wallEffects.forEach(effect => effect.sprite.destroy()); this.wallEffects.clear(); }
     if (frame < this.lastFrame) { this.groundEffects.forEach(effect => effect.sprite.destroy()); this.groundEffects.clear(); this.impactsShown.clear(); this.thrownInFlight.clear(); }
+    const reset = frame < this.lastFrame;
     this.lastFrame = frame;
     this.showGrabImpacts(frame, characters);
+    if (reset) this.shownTrails.clear();
+    for (const attacker of characters) {
+      const victim = characters.find(character => character.characterId !== attacker.characterId);
+      const trail = victim && grapplerTrail(attacker, victim);
+      if (!trail || !victim || contactPaused) continue;
+      const token = `${attacker.characterId}:${victim.characterId}:${victim.grapplerGrabReaction!.moveId}:${victim.grapplerGrabReaction!.startedFrame}`;
+      const key = `contact-grappler-trail-${trail.name}`;
+      if (this.shownTrails.has(token) || !this.scene.textures.exists(key)) continue;
+      this.shownTrails.add(token);
+      this.grabTrails.get(attacker.characterId)?.sprite.destroy();
+      const sprite = this.scene.add.image(trail.x, trail.y, key, '0').setDepth(8).setDisplaySize(200, 400).setFlipX(trail.flipX);
+      this.grabTrails.set(attacker.characterId, { sprite, started: frame, victimId: victim.characterId, name: trail.name, facing: attacker.facing });
+    }
+    for (const [id, effect] of this.grabTrails) {
+      const age = frame - effect.started, attacker = characters.find(character => character.characterId === id);
+      const victim = characters.find(character => character.characterId === effect.victimId);
+      if (age < 0 || age >= 36 || !attacker || !victim) { effect.sprite.destroy(); this.grabTrails.delete(id); continue; }
+      const shown = grapplerCapturePose(victim, attacker);
+      const position = grapplerTrailPosition(shown, effect.name, effect.facing);
+      effect.sprite.setFrame(Math.floor(age / 6)).setPosition(position.x, position.y);
+    }
     for (const character of characters) {
       const groundFrame = character.ultimateImpactFrame;
       const groundPosition = character.ultimateImpactPosition;
@@ -160,8 +186,9 @@ export class ProjectileView {
       const bodyY = contact.contactBody?.centerY ?? box.y + box.height / 2;
       const bodyHeight = contact.contactBody?.height ?? box.height;
       const growth = contactFrameGrowth(key);
+      const hitSize = contact.moveId === 'ultimate-soco' && contact.outcome === 'hit' ? 100 : 66;
       const sprite = this.scene.add.image(x, isBlock ? bodyY : y, key, 0).setDepth(12)
-        .setDisplaySize((isBlock ? 84 : 66) * growth.x, (isBlock ? bodyHeight * 1.2 : 66) * growth.y)
+        .setDisplaySize((isBlock ? 84 : hitSize) * growth.x, (isBlock ? bodyHeight * 1.2 : hitSize) * growth.y)
         .setFlipX((contact.pushbackDirection ?? attacker.facing) === 'left');
       if (purpleContact) this.colorEffect.apply(sprite, { alternate: true }, purpleBlock && contact.perfectBlock ? 'magic-highlight' : 'magic');
       this.impacts.push({ sprite, started: frame });
@@ -220,5 +247,5 @@ export class ProjectileView {
       if (thrown) this.thrownInFlight.add(character.characterId); else this.thrownInFlight.delete(character.characterId);
     }
   }
-  destroy(): void { this.sprites.forEach(sprite => sprite.destroy()); this.dynamiteExplosions.forEach(sprite => sprite.destroy()); this.impacts.forEach(impact => impact.sprite.destroy()); this.wallEffects.forEach(effect => effect.sprite.destroy()); this.groundEffects.forEach(effect => effect.sprite.destroy()); this.graphics.destroy(); }
+  destroy(): void { this.grabTrails.forEach(effect => effect.sprite.destroy()); this.sprites.forEach(sprite => sprite.destroy()); this.dynamiteExplosions.forEach(sprite => sprite.destroy()); this.impacts.forEach(impact => impact.sprite.destroy()); this.wallEffects.forEach(effect => effect.sprite.destroy()); this.groundEffects.forEach(effect => effect.sprite.destroy()); this.graphics.destroy(); }
 }
