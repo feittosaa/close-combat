@@ -297,6 +297,7 @@ export const ko: Locale = {
     'result.mainMenu': '메인 메뉴',
   },
   names: {
+    'move.grappler.throw-13': '일반 잡기',
     'move.grappler.air-grab': '공중 잡기',
     'move.grappler.grab-throw': '멀리 던지기',
     'move.grappler.grab-launcher': '띄우기 잡기',

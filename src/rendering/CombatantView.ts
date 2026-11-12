@@ -40,7 +40,7 @@ export class CombatantView {
   sync(state: CharacterState & { captureSpin?: { phase: number; depth: number } }, frame: number, activationFrame?: number, result?: {winner: boolean; elapsed: number}, color: CharacterColor = {}): void {
     const depth = state.captureSpin?.depth ?? combatantDepth(state, frame, result !== undefined && !result.winner);
     const spinning = !state.grounded && (state.spinStartedFrame !== undefined || state.captureSpin !== undefined);
-    const authoredGrab = ['shoto', 'texas'].includes(state.fighterId) && Boolean(grapplerReaction(state, frame));
+    const authoredGrab = Boolean(grapplerReaction(state, frame));
     // Spinning is flat 2D: the drawing alternates between mirrored and normal as the turn passes, never narrowing.
     const mirror = (phase: number): number => Math.cos(phase) < 0 ? -1 : 1;
     const spinWidth = state.captureSpin ? authoredGrab ? 1 : mirror(state.captureSpin.phase) : spinning ? mirror((frame - state.spinStartedFrame!) * Math.PI / 4) : 1;
@@ -86,7 +86,7 @@ export class CombatantView {
     } else this.ultimateWind?.setVisible(false);
     if (state.fighterId === 'grappler') {
       const move = state.attack && getCharacterById('grappler')?.moves.find(candidate => candidate.id === state.attack!.moveId);
-      const pose = getGrapplerPose(state, frame, activationFrame), between = getGrapplerInbetween(state, frame, activationFrame);
+      const pose = result && state.grounded ? {name:result.winner ? 'victory' : 'defeat', drawing:Math.min(5, Math.floor(result.elapsed / 10))} : getGrapplerPose(state, frame, activationFrame), between = result ? undefined : getGrapplerInbetween(state, frame, activationFrame);
       const textureName = between === undefined ? pose.name : `${pose.name}-between`;
       const texture = `grappler-${textureName}`;
       const headbutt = state.attack && move?.id === 'grab-headbutt' && state.attack.hasHit ? state.attack.elapsedFrames - (state.attack.startupFrames ?? move.startup) - HEADBUTT_IMPACT : -1;

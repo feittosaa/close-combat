@@ -721,7 +721,7 @@ export class Simulation {
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);
       const sourceMove = this.move(attackerIndex,event.moveId)!;
       const heldMotion = event.outcome === 'hit' && !event.armored && sourceMove.commandGrab ? structuredClone(captureMotion(target)) : undefined;
-      if (heldMotion && sourceMove.commandGrab?.groundAfter && beforeContacts[targetIndex].mode === 'knockdown') {
+      if (heldMotion && sourceMove.commandGrab?.groundOnly && beforeContacts[targetIndex].mode === 'knockdown') {
         heldMotion.mode = 'knockdown';
         heldMotion.knockdown = beforeContacts[targetIndex].knockdown;
       }
@@ -1066,6 +1066,7 @@ export class Simulation {
         this.parsers[index].clear(); this.pendingCommands[index] = undefined;
       } else if (!button && !character.grounded && (character.mode === 'hitstun' || character.mode === 'knockdown')) {
         character.rage -= RAGE_SEGMENT; this.rageActionHeld[index] = true;
+        character.rageAnimation = {kind:'air-recovery', startedFrame:this.frame, airborne:true};
         character.mode = 'airborne'; character.remainingStateFrames = 0;
         character.juggle = undefined; character.knockdown = undefined; character.throwFlight = false;
         character.wallBouncePending = undefined; character.throwPull = undefined; character.pushbackMotion = undefined;
@@ -1124,6 +1125,7 @@ export class Simulation {
     const attacker = this.characters.find(character => character.characterId === attackerId);
     if (!attacker) return;
     this.breaker[targetIndex] = undefined;
+    target.rageAnimation = {kind:'breaker', startedFrame:this.frame, airborne:!target.grounded};
     for (const entry of this.comboHistory) if (entry.targetId === target.characterId) entry.active = false;
     for (const character of [target, attacker]) {
       character.attack = undefined; character.chain = undefined; character.hitSequence = undefined; character.contactSequence = undefined;

@@ -297,6 +297,7 @@ export const en: Locale = {
     'result.mainMenu': 'MAIN MENU',
   },
   names: {
+    'move.grappler.throw-13': 'Normal throw',
     'move.grappler.air-grab': 'Air grab',
     'move.grappler.grab-throw': 'Long throw',
     'move.grappler.grab-launcher': 'Launcher grab',

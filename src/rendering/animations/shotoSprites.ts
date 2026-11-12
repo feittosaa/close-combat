@@ -126,7 +126,7 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
   if (state.mode === 'knockdown') {
     const ipponAge = frame - (state.ipponReceivedFrame ?? -Infinity);
     if (ipponAge >= 0 && ipponAge < 24) return pose('ippon-victim', Math.min(5, Math.floor(ipponAge / 4)));
-    if (state.grounded && state.remainingStateFrames <= 12) return pose('getup', Math.min(5, Math.floor((12 - state.remainingStateFrames) / 2)));
+    if (state.grounded && state.remainingStateFrames <= 12) return pose('getup', Math.min(5, 1 + Math.floor((12 - state.remainingStateFrames) * 5 / 12)));
     const fall = pose('fall', state.grounded ? Math.min(5, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 3)) : 3);
     return state.grounded ? fall : { ...fall, scale: 1 };
   }

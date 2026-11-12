@@ -71,10 +71,15 @@ export function lessonCommands(fighter: CharacterDefinition): Record<string, rea
     [...(move.airborne && !moves[index - 1]?.airborne ? ['uf'] : []), moveCommand(move)]);
   // A move that only connects with an airborne target is shown after the launcher that puts it there.
   const launcher = fighter.moves.find(move => move.commandGrab?.launch && !move.shortcutOnly);
+  const groundSetup = (move: MoveDefinition) => {
+    const combo = fighter.combos?.find(candidate => candidate.moveIds.indexOf(move.id) > 0 && fighter.moves.some(previous => previous.id === candidate.moveIds[candidate.moveIds.indexOf(move.id) - 1] && previous.knockdown));
+    const index = combo?.moveIds.indexOf(move.id) ?? -1;
+    return combo && index > 0 ? [combo.moveIds[index - 1], move.id] : [move.id];
+  };
   const recipe = (id: string) => fighter.combos!.find(combo => combo.id === id)!.moveIds;
   return Object.fromEntries([
     ...fighter.moves.filter(move => isBasicLessonMove(move) || isComboLessonMove(move)).map(move => [`move:${move.id}`,
-      pressed(move.commandGrab?.airTarget === 'only' && launcher ? [launcher.id, move.id] : [move.id])]),
+      pressed(move.commandGrab?.airTarget === 'only' && launcher ? [launcher.id, move.id] : move.commandGrab?.groundOnly ? groundSetup(move) : [move.id])]),
     ...(fighter.combos ?? []).map(combo => [`combo:${combo.id}`, pressed(combo.moveIds)]),
     ...(fighter.comboChains ?? []).map((chain, index) => [`chain:${index}`, pressed(chain.recipeIds.flatMap(recipe))]),
   ]);

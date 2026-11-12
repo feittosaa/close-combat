@@ -297,6 +297,7 @@ export const es: Locale = {
     'result.mainMenu': 'MENÚ PRINCIPAL',
   },
   names: {
+    'move.grappler.throw-13': 'Agarre normal',
     'move.grappler.air-grab': 'Agarre aéreo',
     'move.grappler.grab-throw': 'Lanzamiento lejano',
     'move.grappler.grab-launcher': 'Agarre lanzador',

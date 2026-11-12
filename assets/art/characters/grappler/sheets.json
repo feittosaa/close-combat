@@ -5,7 +5,20 @@
  "reference": "idle",
  "sheets": {
   "double-punch": {
-   "released": [[1172, 343, 1300, 366], [1268, 333, 1362, 350]]
+   "released": [
+    [
+     1172,
+     343,
+     1300,
+     366
+    ],
+    [
+     1268,
+     333,
+     1362,
+     350
+    ]
+   ]
   },
   "grab-headbutt-between": {
    "frames": 5
@@ -25,8 +38,32 @@
   "air-grab-between": {
    "frames": 5
   },
-  "ultimate-grab-between": {
-   "frames": 5
+  "fall": {
+   "cuts": [
+    285,
+    570,
+    905,
+    1280,
+    1700
+   ]
+  },
+  "grappler-reaction-grab-throw": {
+   "cuts": [
+    270,
+    555,
+    875,
+    1260,
+    1690
+   ]
+  },
+  "grappler-reaction-grab-low-standing": {
+   "cuts": [
+    270,
+    555,
+    900,
+    1290,
+    1690
+   ]
   }
  }
 }

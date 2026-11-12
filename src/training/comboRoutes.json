@@ -2007,12 +2007,17 @@
     "steps": [
      {
       "wait": 4,
+      "command": "d,df,f,2"
+     },
+     {
+      "wait": 41,
       "command": "d,db,b,3"
      }
     ],
-    "hits": 1,
-    "damage": 120,
+    "hits": 2,
+    "damage": 240,
     "moveIds": [
+     "grab-slam",
      "grab-low"
     ]
    },
@@ -2078,6 +2083,19 @@
      "light-punch",
      "heavy-punch",
      "double-punch"
+    ]
+   },
+   "move:throw-13": {
+    "steps": [
+     {
+      "wait": 1,
+      "command": "1+3"
+     }
+    ],
+    "hits": 1,
+    "damage": 75,
+    "moveIds": [
+     "throw-13"
     ]
    }
   },

@@ -54,6 +54,7 @@ export interface CharacterState {
   hitFlashFrames: number;
   /** Presentation of the last Grappler grab while the victim is held or recovering from it. */
   grapplerGrabReaction?: { moveId: string; startedFrame: number; startedLying: boolean };
+  rageAnimation?: { kind: 'breaker' | 'air-recovery'; startedFrame: number; airborne: boolean };
   perfectBlockStartedFrame?: number;
   hitReaction?: { level: 'low' | 'mid' | 'high'; startedFrame: number };
   grabbedStartedFrame?: number;
