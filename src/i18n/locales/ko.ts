@@ -229,7 +229,6 @@ export const ko: Locale = {
     'hud.round': '라운드 {round}',
     'hud.pauseHint': '{key} / ESC · 일시정지',
     'hud.breakerSuccess': '콤보 브레이커!',
-    'hud.breakerFail': '브레이커 실패',
     'hud.comboHits': 'HIT',
     'hud.comboDamage': '대미지 {damage}',
     'training.status': '트레이닝  /  {state} · {speed}% · {opponent} · 체력 자동 {auto}',

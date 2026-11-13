@@ -138,7 +138,7 @@ describe('animação de espera do Shoto', () => {
     expect(getShotoSpritePose(walking, 13)?.texture).toBe('shoto-enter-walk');
     expect(getShotoSpritePose(walking, 22)?.texture).toBe('shoto-walk');
     expect(getShotoSpritePose({ ...state, mode: 'hitstun', grabbedStartedFrame: 10 }, 12)?.texture).toBe('shoto-grabbed');
-    expect(getShotoSpritePose({ ...state, mode: 'hitstun', grabbedStartedFrame: 10 }, 26)?.texture).toBe('shoto-hurt');
+    expect(getShotoSpritePose({ ...state, mode: 'hitstun', grabbedStartedFrame: 10 }, 26)?.texture).toBe('shoto-hurt-recovery');
   });
 
   it('usa transições de entrada na caminhada e saída da guarda e do agachamento', () => {
@@ -150,9 +150,10 @@ describe('animação de espera do Shoto', () => {
       expect(getShotoSpritePose(moving, 20)).toMatchObject({ texture: 'shoto-enter-walk', frame: 5 });
       expect(getShotoSpritePose(moving, 22)?.texture).toBe('shoto-walk');
       const rising = { ...state, facing, mode: 'neutral' as const, animationTransition: { from: { ...from, mode: 'crouching' as const, crouching: true }, startedFrame: 10 } };
-      expect([10, 12, 15].map(frame => getShotoSpritePose(rising, frame)?.frame)).toEqual([5, 3, 0]);
+      expect([10, 12, 15].map(frame => getShotoSpritePose(rising, frame)?.frame)).toEqual([0, 1, 2]);
+      expect(getShotoSpritePose(rising, 10)?.texture).toBe('shoto-crouch-exit');
       const guardExit = { ...rising, animationTransition: { from: { ...from, mode: 'blocking' as const }, startedFrame: 10 } };
-      expect(getShotoSpritePose(guardExit, 10)).toMatchObject({ texture: 'shoto-guard', frame: 3 });
+      expect(getShotoSpritePose(guardExit, 10)).toMatchObject({ texture: 'shoto-guard-recovery', frame: 0 });
       expect(getShotoSpritePose(guardExit, 16)?.texture).toBe('shoto-idle-normal');
     }
   });
@@ -269,9 +270,9 @@ describe('animação de espera do Shoto', () => {
   });
   it('começa a levantar já em movimento, sem repetir o desenho deitado', () => {
     const state = new Simulation(createGameConfig(1024,576), [shoto, shoto], {training:true}).snapshot().characters[0];
-    const frames = Array.from({length:12}, (_, i) => getShotoSpritePose({...state, grounded:true, mode:'knockdown', remainingStateFrames:12-i}, 100)?.frame);
+    const frames = Array.from({length:9}, (_, i) => getShotoSpritePose({...state, grounded:true, mode:'knockdown', remainingStateFrames:9-i}, 100)?.frame);
     expect(frames[0]).toBe(1);
-    expect(frames[11]).toBe(5);
+    expect(frames[8]).toBe(5);
     expect(new Set(frames).size).toBe(5);
   });
 

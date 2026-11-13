@@ -2,7 +2,7 @@ import { LOGICAL_VIEW, configureUiCamera, getRightAlignedCover } from '../render
 import { t } from '../i18n/i18n';
 
 import { FighterSelection } from '../ui/FighterSelection';
-import { renderFighterSelection } from '../ui/FighterSelectionView';
+import { renderFighterSelection, selectionRoster } from '../ui/FighterSelectionView';
 import { releaseSelectionArt } from '../ui/fighterArt';
 import { gamepads, type PadPress } from '../input/GamepadHub';
 import { renderStageDraw, renderStageSelection } from '../ui/StageSelectionView';
@@ -44,6 +44,20 @@ export class MenuScene extends Phaser.Scene {
   private chosenStageId?: string;
   private drawing = false;
   private readonly selection = new FighterSelection(playableCharacters.length);
+  private readonly selectionPreview: [string | undefined, string | undefined] = [undefined, undefined];
+  private pointFighter(player: 0 | 1, id: string): void {
+    this.selection.activePlayer = player; this.selectionPreview[player] = id;
+    const index = this.fighters.findIndex(fighter => fighter.id === id);
+    if (index >= 0) this.selection.select(player, index);
+    this.render();
+  }
+  private moveFighter(player: 0 | 1, step: -1 | 1): void {
+    if (this.selection.choosingColor[player]) { this.selection.move(player, step); this.render(); return; }
+    const current = this.selection.random[player] ? -1 : selectionRoster.indexOf(this.selectionPreview[player] ?? this.fighters[this.selection.indices[player]].id);
+    const next = (current + step + selectionRoster.length + 1) % (selectionRoster.length + 1);
+    if (next === selectionRoster.length) { this.selectionPreview[player] = undefined; this.selection.selectRandom(player); this.render(); }
+    else this.pointFighter(player, selectionRoster[next]);
+  }
   private get fighterIndex(): number { return this.selection.indices[0]; }
   private set fighterIndex(index: number) { this.selection.select(0, index); }
   private background?: Phaser.GameObjects.Image;
@@ -89,10 +103,10 @@ export class MenuScene extends Phaser.Scene {
       const p1Direction = key.toLowerCase() === 'a' ? -1 : key.toLowerCase() === 'd' ? 1 : 0;
       const arrowDirection = ['ArrowLeft', 'ArrowUp'].includes(key) ? -1 : ['ArrowRight', 'ArrowDown'].includes(key) ? 1 : 0;
       if (versus && p1Direction) {
-        this.selection.move(0, p1Direction as -1 | 1); this.render();
+        this.moveFighter(0, p1Direction as -1 | 1);
       } else if (arrowDirection) {
         const player = versus ? 1 : this.selection.activePlayer;
-        this.selection.move(player, arrowDirection as -1 | 1); this.render();
+        this.moveFighter(player, arrowDirection as -1 | 1);
       } else if (versus && key.toLowerCase() === 'j') this.confirmFighter(0);
       else if (versus && event.code === 'Numpad1') this.confirmFighter(1);
       else if (key === 'Enter') this.confirmFighter();
@@ -115,7 +129,7 @@ export class MenuScene extends Phaser.Scene {
       else if (action === 'confirm') this.page === 'difficulty' ? this.chooseDifficulty(this.difficultyIndex) : this.chooseMode(this.modeIndex);
     } else if (this.page === 'fighter') {
       const player = this.mode === 'versus' ? press.player : this.selection.activePlayer;
-      if (step) { this.selection.move(player, step); this.render(); } else this.confirmFighter(player);
+      if (step) { this.moveFighter(player, step); } else this.confirmFighter(player);
     } else if (this.page === 'stage' && !this.drawing) {
       const picker = this.stagePicker, player = picker.active.length === 1 ? picker.active[0] : press.player;
       if (!picker.active.includes(player)) return;
@@ -131,7 +145,7 @@ export class MenuScene extends Phaser.Scene {
 
   constructor() { super('MenuScene'); }
   init(data: { fighterId?: string; selectVersus?: boolean; stageChooser?: 0 | 1 } = {}): void {
-    this.page = data.selectVersus ? 'fighter' : 'home'; this.mode = data.selectVersus ? 'versus' : 'arcade'; this.transitioning = false; this.selection.reopen();
+    this.page = data.selectVersus ? 'fighter' : 'home'; this.mode = data.selectVersus ? 'versus' : 'arcade'; this.transitioning = false; this.selection.reopen(); this.selectionPreview.fill(undefined);
     this.wallpapersShown = 0;
     this.picker = undefined; this.drawing = false; this.chosenStageId = undefined; this.stageWinner = data.stageChooser;
     const index = this.fighters.findIndex(f => f.id === data.fighterId);
@@ -264,12 +278,14 @@ export class MenuScene extends Phaser.Scene {
       renderFighterSelection(root, {
         fighters: this.fighters,
         selection: this.selection,
+        preview: this.selectionPreview, point: (player, id) => this.pointFighter(player, id),
         opponent: this.mode === 'arcade' ? getCharacterById(this.arcadeRun.opponents[0]) ?? opponentFor(this.fighters[this.fighterIndex].id) : opponentFor(this.fighters[this.fighterIndex].id),
         versus: this.mode === 'versus',
         selectOpponent: selectsOpponent(this.mode),
         solo: this.mode === 'arcade',
         modeTitle: modeEntry(this.mode).title,
         refresh: () => this.render(),
+        random: player => { this.selectionPreview[player] = undefined; this.selection.selectRandom(player); this.render(); },
         confirm: () => this.confirmFighter(),
         back: () => this.back(),
       });
@@ -365,6 +381,7 @@ export class MenuScene extends Phaser.Scene {
     this.page = this.page === 'stage' ? 'fighter' : this.page === 'fighter' && this.mode === 'arcade' ? 'difficulty' : 'home'; this.render();
   }
   private confirmFighter(player = this.selection.activePlayer): void {
+    if (this.selectionPreview[player] && !this.fighters.some(fighter => fighter.id === this.selectionPreview[player])) return;
     if (!this.selection.confirm(player, selectsOpponent(this.mode))) { this.render(); return; }
     if (isTrainingMode(this.mode) || this.mode === 'arcade') this.startFight();
     else { this.picker = undefined; this.page = 'stage'; this.render(); }
@@ -372,7 +389,7 @@ export class MenuScene extends Phaser.Scene {
   private startFight(): void {
     if (this.transitioning) return; this.transitioning = true;
     // Random picks are drawn only now, so nobody sees them before the fight starts.
-    this.selection.resolveRandoms();
+    this.selection.resolveRandoms(Math.random, selectsOpponent(this.mode));
     const fighter = this.fighters[this.fighterIndex];
     this.scene.start('FightScene', { fighterId: fighter.id, opponentId: selectsOpponent(this.mode) ? this.fighters[this.selection.indices[1]].id : opponentFor(fighter.id).id, stageId: this.chosenStageId, mode: this.mode, arcadeIndex: 0, arcadeRun: this.arcadeRun, difficulty: ARCADE_DIFFICULTIES[this.difficultyIndex].id satisfies ArcadeDifficulty, fighterPalette: this.selection.palettes[0], opponentPalette: selectsOpponent(this.mode) ? this.selection.palettes[1] : undefined });
   }

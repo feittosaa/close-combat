@@ -229,7 +229,6 @@ const messages = {
   'hud.round': 'ROUND {round}',
   'hud.pauseHint': '{key} / ESC · PAUSA',
   'hud.breakerSuccess': 'COMBO BREAKER!',
-  'hud.breakerFail': 'BREAKER FALHOU',
   'hud.comboHits': 'HITS',
   'hud.comboDamage': '{damage} DE DANO',
   'training.status': 'TREINO  /  {state} · {speed}% · {opponent} · VIDA AUTO {auto}',

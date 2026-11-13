@@ -16,6 +16,7 @@ const dmg = (id: string): number => grappler.moves.find(move => move.id === id)!
 import { grapplerHand } from '../rendering/grapplerHands';
 import { grapplerReaction } from '../rendering/grapplerReaction';
 import { texas } from '../engine/data/fighters/texas';
+import { getTexasSpritePose } from '../rendering/animations/texasSprites';
 import { GRAPPLER_ULTIMATE_HOLD_FRAMES, GRAPPLER_ULTIMATE_LAST_FRAMES, GRAPPLER_ULTIMATE_SPIN_FRAMES } from '../engine/combat/ultimateActivation';
 
 const sheets = import.meta.glob('../assets/sprites/characters/grappler/*.png');
@@ -32,12 +33,14 @@ describe('Grappler provisório', () => {
   it('a reação ao golpe passa pelos seis desenhos dentro do atordoamento, rápida no início e mais lenta no fim', () => {
     const state = new Simulation(createGameConfig(1024, 576), [grappler, shoto]).snapshot().characters[0];
     const stun = 24, start = 100;
-    const drawings = Array.from({ length: stun }, (_, age) => getGrapplerPose({ ...state, mode:'hitstun', stateStartedFrame:start, remainingStateFrames:stun - age }, start + age).drawing);
-    expect([...new Set(drawings)]).toEqual([0, 1, 2, 3, 4, 5]);
-    expect(drawings).toEqual([...drawings].sort((a, b) => a - b));
-    const length = (drawing:number) => drawings.filter(value => value === drawing).length;
-    expect(length(1)).toBeLessThanOrEqual(length(4));
-    expect(drawings[stun - 1]).toBe(5);
+    const poses = Array.from({ length: stun }, (_, age) => getGrapplerPose({ ...state, mode:'hitstun', stateStartedFrame:start, remainingStateFrames:stun - age }, start + age));
+    // The recoil peaks on the fourth drawing of the hurt sheet, then the recovery sheet straightens up from that pose.
+    const order = poses.map(pose => (pose.name === 'hurt-recovery' ? 4 : 0) + pose.drawing);
+    expect([...new Set(poses.map(pose => pose.name))]).toEqual(['hurt', 'hurt-recovery']);
+    expect([...new Set(order)]).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(value => order.includes(value)));
+    expect(order).toEqual([...order].sort((x, y) => x - y));
+    expect(poses[0].drawing).toBe(0);
+    expect(poses[stun - 1]).toEqual({ name:'hurt-recovery', drawing:5 });
   });
   it('seleciona animações distintas para movimentos, ataques e reações', () => {
     const state = new Simulation(createGameConfig(1024, 576), [grappler, shoto]).snapshot().characters[0];
@@ -62,7 +65,7 @@ describe('Grappler provisório', () => {
     for (let i=0; i<12; i++) sim.stepFrame([down, neutral]);
     expect(getGrapplerPose(sim.snapshot().characters[0], sim.snapshot().frame)).toEqual({name:'crouch', drawing:3});
     sim.stepFrame([neutral, neutral]);
-    expect(getGrapplerPose(sim.snapshot().characters[0], sim.snapshot().frame).name).toBe('crouch-enter');
+    expect(getGrapplerPose(sim.snapshot().characters[0], sim.snapshot().frame).name).toBe('crouch-exit');
   });
   it('sincroniza efeitos próprios, captura e giro sem alterar as poses', () => {
     const state = new Simulation(createGameConfig(1024, 576), [grappler, shoto]).snapshot().characters[0];
@@ -95,9 +98,16 @@ describe('Grappler provisório', () => {
   it('tem uma folha preparada, com o nome do golpe, para cada golpe', () => {
     for (const move of grappler.moves) expect(sheets[`../assets/sprites/characters/grappler/${move.id}.png`], move.id).toBeDefined();
   });
+  it('na paleta alternativa a jaqueta oliva e o cabelo só escurecem; pele clara fica', () => {
+    for (const [r, g, b] of [[96, 76, 47], [98, 61, 35]] as const) {
+      const [red, green, blue] = palettePixel(r, g, b, 'grappler');
+      expect(red).toBeLessThan(r); expect(green).toBeLessThan(g); expect(blue).toBeLessThan(b); expect(red).toBeGreaterThan(r * .6);
+    }
+    for (const [r, g, b] of [[227, 186, 161], [190, 128, 83]] as const) expect(palettePixel(r, g, b, 'grappler')).toEqual([r, g, b]);
+  });
   it('na paleta alternativa só o laranja e o âmbar neon viram ciano; pele e couro ficam', () => {
     for (const [r, g, b] of [[248, 93, 3], [248, 154, 4]] as const) { const [red, , blue] = palettePixel(r, g, b, 'grappler'); expect(blue).toBeGreaterThan(red * 3); }
-    for (const [r, g, b] of [[227, 186, 161], [124, 64, 44], [190, 128, 83], [91, 64, 45]] as const) expect(palettePixel(r, g, b, 'grappler')).toEqual([r, g, b]);
+    for (const [r, g, b] of [[227, 186, 161], [190, 128, 83]] as const) expect(palettePixel(r, g, b, 'grappler')).toEqual([r, g, b]);
   });
   it.each([0, 1])('impede dash para trás por duplo toque e comando direto no jogador %i, e também impede para frente', index => {
     const neutral: FrameInput = { direction:'N', buttons:new Set() };
@@ -157,7 +167,12 @@ it('encadeia cabeçada, queda e agarrão baixo com entradas reais', () => {
   while (sim.snapshot().hitstopFramesRemaining) step();
   for(let i=0;i<10;i++) step();
   command(['D','DB','B'],'3'); waitHit('grab-low');
+  // The low grab's damage lands, health and combo together, only when it slams the victim on the floor.
+  expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth - dmg('grab-headbutt') - dmg('grab-slam'));
+  const comboDamage = () => { const history = sim.snapshot().comboHistory; return history[history.length - 1]?.damage; };
+  for(let i=0;i<30;i++) step();
   expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth - dmg('grab-headbutt') - dmg('grab-slam') - dmg('grab-low'));
+  expect(comboDamage()).toBe(dmg('grab-headbutt') + dmg('grab-slam') + dmg('grab-low'));
 });
 
 it.each([0, 1])('só o agarrão aéreo e a ultimate acertam alvo no ar, no jogador %i', player => {
@@ -224,8 +239,11 @@ it('limita a hitbox da ultimate ao alcance das mãos nos dois lados', () => {
   const move = grappler.moves.find(candidate => candidate.id === 'ultimate-grab')!;
   const right = createHitbox({...state,x:500,facing:'right'},move);
   const left = createHitbox({...state,x:500,facing:'left'},move);
-  expect(right.width).toBe(90);
-  expect(left.width).toBe(90);
+  const light = grappler.moves.find(candidate => candidate.id === 'light-punch')!;
+  const lightRight = createHitbox({...state,x:500,facing:'right'},light);
+  expect(right.width).toBe(lightRight.width);
+  expect(right.x).toBe(lightRight.x);
+  expect(left.width).toBe(lightRight.width);
   expect(right.x - 500).toBeCloseTo(500 - (left.x + left.width));
 });
 
@@ -378,7 +396,7 @@ it('provoca mais devagar usando todos os quadros', () => {
     const state=sim.snapshot().characters[0];
     if (state.tauntStartedFrame!==undefined) {
       const pose=getGrapplerPose(state,sim.snapshot().frame);
-      expect(pose.name).toBe('taunt');expect(pose.drawing).toBeGreaterThanOrEqual(0);expect(pose.drawing).toBeLessThanOrEqual(5);
+      expect(['taunt-enter','taunt','taunt-exit']).toContain(pose.name);expect(pose.drawing).toBeGreaterThanOrEqual(0);expect(pose.drawing).toBeLessThanOrEqual(5);
     }
     sim.stepFrame([n,n]);
   }
@@ -738,10 +756,10 @@ it.each([
   for (let i=0;i<100 && !sim.snapshot().hitEvents.some(event => event.moveId === moveId);i++) sim.stepFrame([n,n]);
   const contact = sim.snapshot();
   expect(contact.hitEvents.some(event => event.moveId === moveId)).toBe(true);
-  expect(contact.hitstopFramesRemaining).toBe(12);
+  expect(contact.hitstopFramesRemaining).toBe(10);
   const pose = getGrapplerPose(contact.characters[0], contact.frame);
   const reaction = grapplerReaction(contact.characters[1], contact.frame);
-  for (let i=0;i<11;i++) {
+  for (let i=0;i<9;i++) {
     sim.stepFrame([n,n]);
     const paused = sim.snapshot();
     expect(paused.frame).toBe(contact.frame);
@@ -833,6 +851,14 @@ it.each([shoto, texas])('$name usa as reações normais após o impacto no chão
   expect(grapplerReaction({...down, remainingStateFrames:12}, 30)).toBeUndefined();
 });
 
+it.each(['air-grab', 'ultimate-grab', 'grab-launcher'])('Texas usa a queda corrigida após a soltura de %s', moveId => {
+  const target = new Simulation(createGameConfig(1024,576), [grappler, texas]).snapshot().characters[1];
+  const down = {...target, grounded:true, mode:'knockdown' as const, remainingStateFrames:36, commandGrabbed:undefined,
+    grapplerGrabReaction:{moveId, startedFrame:0, startedLying:false}};
+  expect(grapplerReaction(down, 30)).toEqual({name:'fall-landing', drawing:5});
+  expect(getTexasSpritePose(down, 30)).toMatchObject({texture:'texas-fall-landing', frame:5});
+});
+
 it.each([shoto, texas])('$name mostra captura, reação aérea e queda na sequência do arremesso distante', fighter => {
   const sim = new Simulation(createGameConfig(1024,576), [grappler, fighter], {training:true, initialDistance:65});
   const n:FrameInput = {direction:'N',buttons:new Set()};
@@ -876,6 +902,30 @@ it('seleciona perfect block, combo breakers e recuperação aérea do Grappler',
   expect(getGrapplerPose({...state, grounded:false, mode:'airborne', rageAnimation:{kind:'breaker', startedFrame:10, airborne:true}}, 14).name).toBe('combo-breaker-air');
   expect(getGrapplerPose({...state, grounded:false, mode:'airborne', rageAnimation:{kind:'air-recovery', startedFrame:10, airborne:true}}, 14).name).toBe('air-recovery');
   expect(getGrapplerPose({...state, mode:'knockdown', remainingStateFrames:30}, 14)).toEqual({name:'fall',drawing:5});
+});
+
+it('mostra a reação de captura no agarrão normal antes de voltar à queda', () => {
+  const state = new Simulation(createGameConfig(1024,576), [grappler, shoto]).snapshot().characters[0];
+  const captured = {...state, mode:'knockdown' as const, grounded:true, remainingStateFrames:30, grabbedStartedFrame:10};
+  expect(getGrapplerPose(captured, 10).name).toBe('grabbed');
+  expect(getGrapplerPose(captured, 25).name).toBe('grabbed');
+  expect(getGrapplerPose(captured, 26).name).toBe('fall');
+});
+
+it.each([shoto, texas])('mostra a captura do Grappler no agarrão normal de $id', fighter => {
+  const sim = new Simulation(createGameConfig(1024, 576), [fighter, grappler], {training:true, initialDistance:65});
+  const neutral: FrameInput = {direction:'N', buttons:new Set()};
+  sim.stepFrame([{direction:'N', buttons:new Set(['1','3'])}, neutral]);
+  let captured = false;
+  for (let i = 0; i < 100; i++) {
+    sim.stepFrame([neutral, neutral]);
+    const snapshot = sim.snapshot(), target = snapshot.characters[1];
+    if (target.grabbedStartedFrame !== undefined && snapshot.frame - target.grabbedStartedFrame < 16) {
+      captured = true;
+      expect(getGrapplerPose(target, snapshot.frame).name).toBe('grabbed');
+    }
+  }
+  expect(captured).toBe(true);
 });
 
 it.each([0,1])('agarrão normal 1+3 do Grappler derruba e arremessa para frente, jogador %i', player => {
@@ -933,4 +983,38 @@ it.each(['right', 'left'] as const)('posiciona a mão do novo agarrão baixo no 
   expect(raised.y).toBeLessThan(low.y - 100);
   const target = {...victim, grapplerGrabReaction:{moveId:move.id,startedFrame:0,startedLying:true}};
   expect(grapplerCapturePose(target, at(2)).y).toBeLessThan(target.y);
+});
+
+
+it.each([shoto,texas,grappler])('impede ataques e defesa da vítima $name durante toda a ultimate', fighter => {
+  const sim = new Simulation(createGameConfig(1024,576),[grappler,fighter],{training:true,initialDistance:65});
+  const n:FrameInput={direction:'N',buttons:new Set()};
+  sim.fillTrainingRage(); sim.stepFrame([{...n,ultimate:true},n]);
+  for(let i=0;i<250 && !sim.snapshot().characters[0].attack?.hasHit;i++) sim.stepFrame([n,n]);
+  expect(sim.snapshot().characters[0].attack?.hasHit).toBe(true);
+  let frames=0;
+  for(let i=0;i<400;i++) {
+    const target=sim.snapshot().characters[1];
+    if (!target.knockdownBy && !target.commandGrabbed) break;
+    sim.stepFrame([n,{direction:i%2?'B':'N',buttons:new Set(i%3?['1']:['2'])}]);
+    const after=sim.snapshot().characters[1];
+    if(after.knockdownBy?.moveId==='ultimate-grab' || after.commandGrabbed) {
+      expect(after.attack, `frame ${i}`).toBeUndefined();
+      expect(['blocking','blockstun']).not.toContain(after.mode);
+      frames++;
+    }
+  }
+  expect(frames).toBeGreaterThan(80);
+});
+
+it('quem anda contra o outro para, sem empurrá-lo', () => {
+  const sim = new Simulation(createGameConfig(1024,576),[grappler,shoto],{training:true});
+  const n:FrameInput={direction:'N',buttons:new Set()}, forward:FrameInput={direction:'F',buttons:new Set()};
+  for (let i = 0; i < 400; i++) sim.stepFrame([forward, n]);
+  const [first, second] = sim.snapshot().characters;
+  const start = second.x;
+  for (let i = 0; i < 60; i++) sim.stepFrame([forward, n]);
+  expect(sim.snapshot().characters[1].x).toBe(start);
+  expect(sim.snapshot().characters[0].x).toBeLessThan(start);
+  expect(first.x).toBeLessThan(second.x);
 });

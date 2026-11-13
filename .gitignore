@@ -29,3 +29,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Fontes de revisão das folhas de personagem (pesadas): ficam fora do Git; `revisao.json`, `sheets.json` e as referências canônicas continuam versionados
+assets/art/characters/*/revisao/
+__pycache__/

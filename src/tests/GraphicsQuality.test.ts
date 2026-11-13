@@ -27,7 +27,7 @@ it.each([['low', 640], ['high', 1280]] as const)('loads only the %s texture set 
   const packedAtlas = vi.fn();
   preloadTexasSprites({ textures: { exists: () => false }, load: { packedAtlas } } as never);
   expect(texasFrameSize).toBe(size);
-  expect(packedAtlas).toHaveBeenCalledTimes(89);
+  expect(packedAtlas).toHaveBeenCalledTimes(98);
   for (const name of ['double-shot', 'fall-landing', 'launch-hit']) {
     const art = packedAtlas.mock.calls.find(([key]) => key === `texas-${name}`)!;
     expect(layoutOf(art[2]).frames['0'].sourceSize.w).toBe(size);
@@ -44,7 +44,7 @@ it.each(['low', 'high'] as const)('loads every Bob atlas at %s quality without c
   const { preloadShotoSprites, getShotoResolution, shotoSpriteScale, shotoIdleScale } = await import('../rendering/animations/shotoSprites');
   const packedAtlas = vi.fn();
   preloadShotoSprites({ textures: { exists: () => false }, load: { packedAtlas } } as never);
-  expect(packedAtlas).toHaveBeenCalledTimes(64);
+  expect(packedAtlas).toHaveBeenCalledTimes(78);
   const ratio = quality === 'high' ? 2 : 1;
   const originals = import.meta.glob<{ frames: Record<string, { frame: Record<string, number> }> }>(
     '../assets/sprites/characters/shoto/*.atlas.json', { eager: true, import: 'default' });

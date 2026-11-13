@@ -53,24 +53,24 @@ describe('buffs de rage', () => {
   it('reforça o especial com E durante o golpe', () => {
     const sim = create(fixture('special'));
     expect(strike(sim, { rageAction: true })).toBe(110);
-    expect(sim.snapshot().characters[0].rage).toBe(510);
+    expect(sim.snapshot().characters[0].rage).toBe(460);
   });
   it('soma Rush e reforço de especial', () => {
     const sim = create(fixture('special'));
     step(sim, input({ rageAction: true, taunt: true }));
     for (let i = 0; i < RUSH_FREEZE_FRAMES; i++) step(sim);
     expect(strike(sim, { rageAction: true })).toBe(121);
-    expect(sim.snapshot().characters[0].rage).toBe(210);
+    expect(sim.snapshot().characters[0].rage).toBe(160);
   });
-  it('reforça o agarrão com E gastando só 100 de rage', () => {
+  it('reforça o agarrão com E gastando 150 de rage', () => {
     const sim = create(fixture('throw'));
     expect(strike(sim, { rageAction: true })).toBe(110);
-    expect(sim.snapshot().characters[0].rage).toBe(510);
+    expect(sim.snapshot().characters[0].rage).toBe(460);
   });
-  it('o reforço de especial gasta só um segmento de 100 e o rage acumula até 900', () => {
-    expect(RAGE_BUFF_COST).toBe(100);
+  it('o reforço de especial gasta só um segmento de 150 e o rage acumula até 900', () => {
+    expect(RAGE_BUFF_COST).toBe(150);
     expect(shoto.rage?.maximum).toBe(900);
-    const sim = create(fixture('special'), 100);
+    const sim = create(fixture('special'), 150);
     expect(strike(sim, { rageAction: true })).toBe(110);
     expect(sim.snapshot().characters[0].rage).toBe(10);
   });

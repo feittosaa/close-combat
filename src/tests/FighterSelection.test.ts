@@ -73,16 +73,16 @@ describe('fighter selection', () => {
     expect(selection.random[0]).toBe(true);           // still hidden: nothing is drawn yet
   });
 
-  it('draws fighter and colour only when the fight starts', () => {
+  it('draws a fighter with original colour only when the fight starts', () => {
     const selection = new FighterSelection(3);
     selection.move(0, -1); selection.confirm(0, false);
     selection.resolveRandoms(() => .8);
     expect(selection.random[0]).toBe(false);
     expect(selection.indices[0]).toBe(2);
-    expect(selection.palettes[0]).toBe(1);
+    expect(selection.palettes[0]).toBe(0);
   });
 
-  it('versus: random and hand-picked players become ready independently, and a drawn colour never repeats a picked one', () => {
+  it('versus: random and hand-picked players become ready independently, and the random pick uses original colour', () => {
     const selection = new FighterSelection(3);
     selection.select(0, 1); selection.confirm(0, true); selection.confirm(0, true);   // P1: fighter 1, colour 0
     expect(selection.ready).toEqual([true, false]);
@@ -92,16 +92,23 @@ describe('fighter selection', () => {
     selection.resolveRandoms(() => .4);                                                 // draws fighter 1, colour 0: the same as P1
     expect(selection.indices).toEqual([1, 1]);
     expect(selection.palettes[0]).toBe(0);
-    expect(selection.palettes[1]).toBe(1);
+    expect(selection.palettes[1]).toBe(0);
   });
 
-  it('two random players draw independently and still end with different colours on the same fighter', () => {
+  it('no arcade sorteia a cor do jogador sem considerar um adversário não selecionado', () => {
+    const selection = new FighterSelection(1);
+    selection.selectRandom(0); selection.confirm(0, false);
+    selection.resolveRandoms(() => .2, false);
+    expect(selection.palettes[0]).toBe(0);
+  });
+
+  it('two random players draw independently with original colour', () => {
     const selection = new FighterSelection(1);
     selection.move(0, -1); selection.confirm(0, true);
     selection.move(1, -1); selection.confirm(1, true);
     selection.resolveRandoms(() => .2);
     expect(selection.indices).toEqual([0, 0]);
-    expect(selection.palettes[0]).not.toBe(selection.palettes[1]);
+    expect(selection.palettes).toEqual([0, 0]);
   });
 });
 
@@ -114,6 +121,9 @@ it('passes chosen palettes to either side and defaults solo mirrors to opposite 
   expect(matchPalettes({ mode: 'arcade', fighterPalette: 1 }, false)).toEqual([true, false]);
   expect(matchPalettes({ mode: 'arcade', fighterPalette: 1 }, true)).toEqual([true, false]);
   expect(matchPalettes({ mode: 'arcade', fighterPalette: 0 }, true)).toEqual([false, true]);
+  expect(matchPalettes({ mode: 'arcade', fighterPalette: 0, opponentPalette: 1 }, false)).toEqual([false, false]);
+  expect(matchPalettes({ mode: 'arcade', fighterPalette: 0, opponentPalette: 0 }, true)).toEqual([false, true]);
+  expect(matchPalettes({ mode: 'arcade', fighterPalette: 1, opponentPalette: 1 }, true)).toEqual([true, false]);
 });
 
 it('lets training select and confirm a different opponent and palette', () => {

@@ -229,7 +229,6 @@ export const ja: Locale = {
     'hud.round': 'ラウンド{round}',
     'hud.pauseHint': '{key} / ESC · ポーズ',
     'hud.breakerSuccess': 'コンボブレイカー！',
-    'hud.breakerFail': 'ブレイカー失敗',
     'hud.comboHits': 'HIT',
     'hud.comboDamage': '{damage} ダメージ',
     'training.status': 'トレーニング  /  {state} · {speed}% · {opponent} · 体力自動回復 {auto}',

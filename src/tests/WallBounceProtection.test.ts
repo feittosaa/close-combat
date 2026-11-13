@@ -78,7 +78,7 @@ it.each([0, 1])('allows the victim to recover from a real wall bounce: victim %i
   sim.fillTrainingRage();
   step(neutral, { ...neutral, rageAction: true });
   const recovered = sim.snapshot().characters[victim];
-  expect(recovered).toMatchObject({ rage: 800, remainingStateFrames: 0 });
+  expect(recovered).toMatchObject({ rage: 750, remainingStateFrames: 0 });
   expect(['airborne', 'neutral']).toContain(recovered.mode);
   expect(recovered.juggle).toBeUndefined();
 });

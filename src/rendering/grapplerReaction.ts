@@ -31,6 +31,8 @@ export function grapplerReaction(state: CharacterState, frame: number): { name: 
   else if (state.grounded && state.mode === 'knockdown' && age >= 6) drawing = 5;
   else if (reaction.moveId === 'ultimate-grab' && !state.grounded) drawing = 4;
   else drawing = Math.min(4, Math.floor(age / 6));
+  // Texas's grab sheets contain their own older lying drawing; use her current, corrected fall once released.
+  if (state.fighterId === 'texas' && drawing === 5 && !state.commandGrabbed) return {name:'fall-landing', drawing:5};
   // The contact frame is frozen by hitstop; the next drawing begins only on the first resumed frame.
   if (reaction.moveId === 'grab-low' && !reaction.startedLying && frame - reaction.startedFrame <= 1) drawing = Math.max(0, drawing - 1);
   return { name:`grappler-reaction-${reaction.moveId}`, drawing };

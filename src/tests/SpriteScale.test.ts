@@ -25,7 +25,7 @@ const NOT_A_BODY = /^(effect-|magic-|crow$|tomato$|dynamite$|idle$)/;
 /** Escalas do refinamento manual validado antes da análise automática: medem a precisão do modelo, não a calibração vigente. */
 const manual: Record<string, Record<string, number | readonly number[]>> = {
   shoto: {
-    'crouch-guard': 1.08, hurt: .97 * 1.02, 'hurt-high': .97 * 1.02, 'hurt-low': .97 * 1.02, 'air-hurt': 1.05 * .97,
+    'crouch-guard': 1.08, 'turn-air': 1.1, hurt: .97 * 1.02, 'hurt-high': .97 * 1.02, 'hurt-low': .97 * 1.02, 'air-hurt': 1.05 * .97,
     defeat: 1.1 * .8, fall: [1.3 * .92 * 1.1, 1.3 * .92 * 1.1, 1.3 * .92 * 1.1, 1.08 * 1.1, 1.08 * 1.1, 1.08 * 1.1],
   },
   // A arte nova da Texas ainda não tem refinamento manual: o modelo é medido contra a escala 1.
@@ -94,7 +94,7 @@ describe('uso das escalas no jogo', () => {
   it('a Texas e o Bob desenham cada folha com a escala validada', () => {
     expect(texasSheetScale('fall-landing', 5)).toBeCloseTo(.975, 3);
     const state = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
-    expect(getShotoSpritePose({ ...state, mode: 'blocking', crouching: true, stateStartedFrame: 0 }, 4)?.scale).toBeCloseTo(1.08, 9);
+    expect(getShotoSpritePose({ ...state, mode: 'blocking', crouching: true, stateStartedFrame: 0 }, 14)?.scale).toBeCloseTo(1.08, 9);
     expect(getShotoSpritePose({ ...state, mode: 'knockdown', grounded: false, stateStartedFrame: 0 }, 4)?.scale).toBe(1);
   });
 });

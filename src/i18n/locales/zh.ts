@@ -229,7 +229,6 @@ export const zh: Locale = {
     'hud.round': '第 {round} 回合',
     'hud.pauseHint': '{key} / ESC · 暂停',
     'hud.breakerSuccess': '连招破解！',
-    'hud.breakerFail': '破解失败',
     'hud.comboHits': '连击',
     'hud.comboDamage': '伤害 {damage}',
     'training.status': '训练  /  {state} · {speed}% · {opponent} · 自动回血 {auto}',

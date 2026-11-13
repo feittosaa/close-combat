@@ -229,7 +229,6 @@ export const es: Locale = {
     'hud.round': 'ASALTO {round}',
     'hud.pauseHint': '{key} / ESC · PAUSA',
     'hud.breakerSuccess': '¡COMBO BREAKER!',
-    'hud.breakerFail': 'BREAKER FALLIDO',
     'hud.comboHits': 'GOLPES',
     'hud.comboDamage': '{damage} DE DAÑO',
     'training.status': 'ENTRENAMIENTO  /  {state} · {speed}% · {opponent} · VIDA AUTO {auto}',

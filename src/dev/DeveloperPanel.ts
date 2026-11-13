@@ -13,6 +13,7 @@ import { ALTERNATIVE_KINDS, alternativeArt, arcadeFrame, fighterArt, frameStyle,
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { outlineTargets } from '../rendering/characterColor';
 import { VictoryScreen } from '../ui/VictoryScreen';
+import { applyFrameCrops, frameAdjustment, framePlacement, type FrameAdjustment, type FrameCrop } from '../rendering/animations/frameAdjustments';
 import { applyContactFrames, contactFrameCut, contactFrameMargin, contactFrameSize, isContactSheet, type FrameCut } from '../rendering/contactEffects';
 import { wallpapers } from '../ui/wallpapers';
 import { addAlternatives, discardAddition, gameImages, markRemoval, pendingAdditions, pendingRemovals, replaceImage, replacedImages, restoreImage, takePendingAlternatives } from './assetOverrides';
@@ -80,6 +81,8 @@ export class DeveloperPanel {
   private spriteFps = SPRITE_FPS;
   private spritePlaying = true;
   private spriteFlip = false;
+  /** Size on the preview canvas of the frame shown, to turn a drag into a placement. */
+  private shownBox = 1;
   private spriteTimer?: number;
   private renderedTab?: Tab;
   private artId = Object.keys(fighterArt)[0];
@@ -261,14 +264,16 @@ export class DeveloperPanel {
       if (frames.length > 1) {
         const before = (this.spriteFrame + frames.length - 1) % frames.length;
         this.drawFrame(context, this.scene.textures.getFrame(this.spriteKey, frames[before]), box(this.scene.textures.getFrame(this.spriteKey, frames[before]), sheet.scale(sheet.name, before)),
-          feet, .4, sheet.footAnchor(this.spriteKey), 'sepia(1) saturate(5) hue-rotate(170deg)');
+          feet, .4, sheet.footAnchor(this.spriteKey), 'sepia(1) saturate(5) hue-rotate(170deg)', framePlacement(sheet.fighter, sheet.name, before));
       }
-      this.drawFrame(context, frame, box(frame, scale), feet, 1, sheet.footAnchor(this.spriteKey));
+      this.shownBox = box(frame, scale);
+      this.drawFrame(context, frame, this.shownBox, feet, 1, sheet.footAnchor(this.spriteKey), 'none', framePlacement(sheet.fighter, sheet.name, this.spriteFrame));
       context.strokeStyle = '#e8c547'; context.lineWidth = 1; context.setLineDash([8, 4]);
       context.beginPath(); context.moveTo(0, feet + .5); context.lineTo(canvas.width, feet + .5); context.moveTo(canvas.width / 2 + .5, 0); context.lineTo(canvas.width / 2 + .5, canvas.height); context.stroke();
       context.setLineDash([]);
       info.textContent = `${label} · escala ×${scale.toFixed(3)} (automática ×${(scale / sheet.adjustment / sheet.frameAdjustment(this.spriteFrame)).toFixed(3)}) · chão e centro em amarelo, idle em vermelho, quadro anterior em azul`;
     };
+    if (sheet) canvas.onpointerdown = down => this.dragDrawing(canvas, down, sheet.fighter, sheet.name, draw);
     const step = (delta: number) => { this.spritePlaying = false; this.spriteFrame += delta; this.render(); };
     const play = button(this.spritePlaying ? 'Pausar' : 'Executar', () => { this.spritePlaying = !this.spritePlaying; this.render(); });
     const fps = number(this.spriteFps, value => { this.spriteFps = Math.max(1, Math.min(60, value ?? SPRITE_FPS)); this.render(); });
@@ -276,12 +281,13 @@ export class DeveloperPanel {
     const controls = el('div', 'developer-row');
     controls.append(button('◀ Quadro', () => step(-1)), play, button('Quadro ▶', () => step(1)), labelled('Quadros/s', fps), flip);
     viewer.append(canvas, info, controls);
-    if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment), this.frameSizeControls(sheet.fighter, sheet.name, sheet.frameAdjustment(this.spriteFrame)));
+    if (sheet) viewer.append(this.sizeControls(sheet.fighter, sheet.name, sheet.adjustment), this.frameSizeControls(sheet.fighter, sheet.name, sheet.frameAdjustment(this.spriteFrame)),
+      this.frameAdjustControls(sheet.fighter, sheet.name, frames.length));
     const outline = sheet && outlineTargets.get(sheet.fighter);
     if (sheet && outline !== undefined) viewer.append(this.outlineControls(sheet.fighter, outline));
     const actions = el('div', 'developer-row');
     if (cuts) { viewer.append(cuts.element); actions.append(this.saveToCode('cortes', ['frameCuts', 'frameSizes'], '/__dev/overrides')); }
-    if (sheet) actions.append(this.saveToCode('tamanhos', ['spriteScales', 'frameScales'], '/__dev/sprite-scales'));
+    if (sheet) actions.append(this.saveToCode('tamanhos', ['spriteScales', 'frameScales'], '/__dev/sprite-scales'), this.saveToCode('posições e cortes', ['frameAdjustments'], '/__dev/overrides'));
     if (sheet && outline !== undefined) actions.append(this.saveToCode('contorno', ['outlines'], '/__dev/outlines'));
     viewer.append(actions); actions.append(this.spriteReset());
     const layout = el('div', 'developer-split'); layout.append(list, viewer);
@@ -371,6 +377,45 @@ export class DeveloperPanel {
       context.strokeStyle = '#e23a1c'; context.lineWidth = 2; context.strokeRect(cut.x * scale, cut.y * scale, cut.width * scale, cut.height * scale);
     };
     return { element, show };
+  }
+  /** Dragging the preview moves the shown drawing: its placement follows the pointer and applies at once in the game. */
+  private dragDrawing(canvas: HTMLCanvasElement, down: PointerEvent, fighter: string, name: string, redraw: () => void): void {
+    const key = `${fighter}:${name}:${this.spriteFrame}`, start = frameAdjustment(fighter, name, this.spriteFrame);
+    const pixels = canvas.width / canvas.getBoundingClientRect().width, mirrored = this.spriteFlip ? -1 : 1;
+    window.clearInterval(this.spriteTimer); this.spritePlaying = false; canvas.setPointerCapture(down.pointerId);
+    canvas.onpointermove = event => {
+      const round = (value: number) => Math.round(value * 10000) / 10000;
+      devTuning.setFrameAdjustment(key, { ...start,
+        x: round((start.x ?? 0) + (event.clientX - down.clientX) * pixels / this.shownBox * mirrored),
+        y: round((start.y ?? 0) + (event.clientY - down.clientY) * pixels / this.shownBox) });
+      redraw();
+    };
+    canvas.onpointerup = () => { canvas.onpointermove = canvas.onpointerup = null; this.changed(); this.render(); };
+  }
+  /**
+   * Placement and crop of the shown drawing, in pixels of its frame, for a fighter facing right (dragging the preview
+   * moves it too). Frames hold only their drawn pixels, so a crop trims drawing and cannot add to it. It applies at
+   * once in the game, and «Salvar posições e cortes no código» writes `frames.json` beside the fighter's sheets.
+   */
+  private frameAdjustControls(fighter: string, name: string, frameCount: number): HTMLElement {
+    const key = `${fighter}:${name}:${this.spriteFrame}`, texture = `${fighter}-${name}`, current = frameAdjustment(fighter, name, this.spriteFrame);
+    const size = this.scene.textures.getFrame(texture, String(this.spriteFrame)).realWidth, round = (value: number) => Math.round(value * 10000) / 10000;
+    const edit = (adjustment: FrameAdjustment | undefined) => {
+      this.spritePlaying = false; devTuning.setFrameAdjustment(key, adjustment); applyFrameCrops(this.scene.textures, texture); this.changed(); this.render();
+    };
+    const move = (field: 'x' | 'y', pixels: number) => edit({ ...current, [field]: round((current[field] ?? 0) + pixels / size) });
+    const crop = (side: keyof FrameCrop, pixels: number) => edit({ ...current, crop: { left: 0, top: 0, right: 0, bottom: 0, ...current.crop, [side]: round(Math.max(0, pixels) / size) } });
+    const field = (label: string, value: number, change: (pixels: number) => void) => {
+      const editor = number(Math.round(value * size), pixels => change(pixels ?? 0)); editor.step = '1'; return labelled(label, editor);
+    };
+    const row = el('div', 'developer-row'); row.classList.toggle('developer-changed', devTuning.overrides.frameAdjustments[key] !== undefined);
+    row.append(field('Posição X', current.x ?? 0, pixels => edit({ ...current, x: round(pixels / size) })), field('Posição Y', current.y ?? 0, pixels => edit({ ...current, y: round(pixels / size) })),
+      button('◀', () => move('x', -1)), button('▶', () => move('x', 1)), button('▲', () => move('y', -1)), button('▼', () => move('y', 1)),
+      field('Corte esquerdo', current.crop?.left ?? 0, pixels => crop('left', pixels)), field('Corte superior', current.crop?.top ?? 0, pixels => crop('top', pixels)),
+      field('Corte direito', current.crop?.right ?? 0, pixels => crop('right', pixels)), field('Corte inferior', current.crop?.bottom ?? 0, pixels => crop('bottom', pixels)),
+      button('Restaurar quadro', () => edit(undefined)),
+      el('p', 'developer-hint', `Quadro ${this.spriteFrame + 1}/${frameCount} em pixels do quadro (${size}). Arraste o desenho no preview para movê-lo; vale na hora em qualquer luta.`));
+    return row;
   }
   /** Animation size over the automatic (or validated) scale; it applies at once in the game. */
   private sizeControls(fighter: string, name: string, adjustment: number): HTMLElement {
@@ -507,12 +552,12 @@ export class DeveloperPanel {
       `Falha ao salvar; tudo mantido no navegador. ${await response?.text() ?? 'Servidor de desenvolvimento indisponível.'}`;
     this.changed(); this.render();
   }
-  private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1, filter = 'none'): void {
+  private drawFrame(context: CanvasRenderingContext2D, frame: Phaser.Textures.Frame, box: number, feet: number, alpha: number, footAnchor = 1, filter = 'none', placement = { x: 0, y: 0 }): void {
     const scale = box / frame.realHeight, center = context.canvas.width / 2, top = feet - footAnchor * box;
     context.save(); context.globalAlpha = alpha; context.filter = filter;
     context.translate(center, 0); if (this.spriteFlip) context.scale(-1, 1);
     context.drawImage(frame.source.image as CanvasImageSource, frame.cutX, frame.cutY, frame.cutWidth, frame.cutHeight,
-      (frame.x - frame.realWidth / 2) * scale, top + frame.y * scale, frame.cutWidth * scale, frame.cutHeight * scale);
+      (frame.x - frame.realWidth / 2) * scale + placement.x * box, top + frame.y * scale + placement.y * box, frame.cutWidth * scale, frame.cutHeight * scale);
     context.restore();
   }
   private frameNames(key: string): string[] {
@@ -867,9 +912,8 @@ function selectionScreen(id: string, solo: boolean): HTMLElement {
   selection.select(0, index);
   const idle = () => undefined;
   renderFighterSelection(screen, { fighters: playableCharacters, selection, opponent: playableCharacters[index], versus: !solo, selectOpponent: !solo, solo,
-    modeTitle: t(solo ? 'mode.arcade.title' : 'mode.versus.title'), refresh: idle, confirm: idle, back: idle });
+    modeTitle: t(solo ? 'mode.arcade.title' : 'mode.versus.title'), preview: [id, id], point: idle, refresh: idle, random: idle, confirm: idle, back: idle });
   screen.append(el('footer', 'arena-footer', t(solo ? 'menu.fighterControls' : 'menu.versusControls')));
-  screen.querySelector('.arena-fighter-name.left h1')!.textContent = fighterArt[id].name;
   screen.inert = true;
   return screen;
 }

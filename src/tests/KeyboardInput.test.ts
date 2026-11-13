@@ -85,3 +85,14 @@ it('maps rage action independently for both players', () => {
   dispatchKey(target, 'keydown', 'Numpad7'); expect(two.read().rageAction).toBe(true);
   one.destroy(); two.destroy();
 });
+
+it('mantém a direção ao terminar a introdução, mas exige soltar ataques', () => {
+  const target = new EventTarget() as Window, input = new KeyboardInput(PLAYER_ONE_KEYS, target);
+  dispatchKey(target,'keydown','KeyD'); dispatchKey(target,'keydown','KeyJ');
+  input.clearActions();
+  expect(input.read('right').direction).toBe('F');
+  expect(input.read('right').buttons.size).toBe(0);
+  dispatchKey(target,'keyup','KeyJ'); dispatchKey(target,'keydown','KeyJ');
+  expect(input.read('right').buttons.has('1')).toBe(true);
+  input.destroy();
+});

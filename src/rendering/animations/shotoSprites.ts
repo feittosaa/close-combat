@@ -5,6 +5,7 @@ import { recoveryFrames } from '../../engine/combat/frameData';
 import { getPhaseAnimationFrame } from './AnimationPlayback';
 import { loadGraphicsQuality } from '../../ui/graphicsSettings';
 import { autoSpriteScale, bodyCenterShift, lyingFloorAnchor } from './spriteScale';
+import { framePlacement } from './frameAdjustments';
 import shotoCalibration from '../../assets/sprites/characters/shoto/calibration.json';
 import shotoMeasurements from '../../assets/sprites/characters/shoto/measurements.json';
 import { grapplerReaction } from '../grapplerReaction';
@@ -43,16 +44,17 @@ export function getShotoIdleFrame(frame: number, startedFrame: number): number {
   return Math.floor(Math.max(0, frame - startedFrame) / 12) % 6;
 }
 
-type ShotoPose = { texture: string; frame: number; footAnchor: number; offsetX: number; flipX: boolean; scale?: number };
+type ShotoPose = { texture: string; frame: number; footAnchor: number; offsetX: number; offsetY: number; flipX: boolean; scale?: number };
 
 /** One Bob drawing, sized by the automatic sprite analysis; a lying drawing on the floor rests on its lowest row. */
 function shotoPose(state: CharacterState, name: string, drawing: number, facesLeft = false): ShotoPose {
   const floor = state.grounded ? lyingFloorAnchor(shoto, shotoMeasurements, name, drawing) : undefined;
   const flipX = (state.facing === 'left') !== facesLeft, scale = autoSpriteScale(shoto, shotoMeasurements, name, drawing, shotoCalibration);
-  const shift = bodyCenterShift(shoto, shotoMeasurements, name, drawing) * SHOTO_FRAME * shotoSpriteScale * scale;
+  const unit = (name === 'idle' ? 724 * shotoIdleScale : SHOTO_FRAME * shotoSpriteScale) * scale, placement = framePlacement('shoto', name, drawing);
+  const shift = bodyCenterShift(shoto, shotoMeasurements, name, drawing) * SHOTO_FRAME * shotoSpriteScale * scale + placement.x * unit;
   return {
     texture: `shoto-${name}`, frame: drawing, footAnchor: floor ?? (name === 'idle' ? 670 / 724 : 900 / SHOTO_FRAME),
-    offsetX: flipX ? -shift : shift, flipX, scale,
+    offsetX: flipX ? -shift : shift, offsetY: placement.y * unit, flipX, scale,
   };
 }
 
@@ -78,6 +80,13 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
     const fromIdle = transition.from.mode === 'neutral' && transition.from.grounded && transition.startedFrame - (transition.from.idleStartedFrame ?? transition.from.stateStartedFrame) >= 630;
     const leavingIdle = ['moving', 'dashing', 'crouching', 'blocking', 'startup'].includes(state.mode);
     if (fromIdle && leavingIdle) return pose('rake-transition', transitionAge);
+  }
+  const turn = state.facingTransition, turning = turn ? frame - turn.startedFrame : Infinity;
+  if (turn && turning >= 0 && turning < 12 && !state.attack && ['neutral', 'moving', 'crouching', 'airborne'].includes(state.mode)) {
+    const idleAge = frame - (state.idleStartedFrame ?? state.stateStartedFrame);
+    // The idle turn is drawn with the rake, so only the rake idle uses it.
+    const name = !state.grounded ? 'turn-air' : state.mode === 'crouching' ? 'turn-crouch' : state.mode === 'moving' ? 'turn-walk' : idleAge >= 630 ? 'turn-idle' : undefined;
+    if (name) return pose(name, Math.floor(turning / 2), true);
   }
   const attackClips = ['light-punch', 'heavy-punch', 'light-kick', 'heavy-kick', 'power-punch', 'power-kick', 'crouch-punch', 'crouch-uppercut', 'crouch-light-kick', 'crouch-heavy-kick', 'air-light-punch', 'air-heavy-punch', 'air-light-kick', 'air-heavy-kick', 'tomato-light', 'tomato-heavy', 'reversal-kick', 'reversal-light', 'flying-kick-light', 'flying-kick-heavy', 'flying-kick-followup'];
   if (state.attack?.moveId === 'crow-ultimate' || state.attack?.moveId === 'rake-ultimate') return getShotoUltimatePose(state, state.attack.elapsedFrames, false);
@@ -126,7 +135,7 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
   if (state.mode === 'knockdown') {
     const ipponAge = frame - (state.ipponReceivedFrame ?? -Infinity);
     if (ipponAge >= 0 && ipponAge < 24) return pose('ippon-victim', Math.min(5, Math.floor(ipponAge / 4)));
-    if (state.grounded && state.remainingStateFrames <= 12) return pose('getup', Math.min(5, 1 + Math.floor((12 - state.remainingStateFrames) * 5 / 12)));
+    if (state.grounded && state.remainingStateFrames <= 9) return pose('getup', Math.min(5, 1 + Math.floor((9 - state.remainingStateFrames) * 5 / 9)));
     const fall = pose('fall', state.grounded ? Math.min(5, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 3)) : 3);
     return state.grounded ? fall : { ...fall, scale: 1 };
   }
@@ -135,7 +144,9 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
       return pose('grabbed', Math.min(5, 2 + Math.floor(Math.max(0, frame - state.grabbedStartedFrame) / 5)));
     }
     const reaction = state.grounded ? state.hitReaction?.level === 'low' ? 'hurt-low' : state.hitReaction?.level === 'high' ? 'hurt-high' : 'hurt' : 'air-hurt';
-    return pose(reaction, Math.min(5, Math.floor(Math.max(0, frame - (state.hitReaction?.startedFrame ?? state.stateStartedFrame)) / 3) + 1));
+    const index = Math.min(5, Math.floor(Math.max(0, frame - (state.hitReaction?.startedFrame ?? state.stateStartedFrame)) / 3) + 1);
+    // The standing recoil straightens up in the recovery sheet, which starts from the hand on the chest.
+    return reaction === 'hurt' && index >= 3 ? pose('hurt-recovery', [1, 3, 5][index - 3]) : pose(reaction, index);
   }
   if (!state.grounded && (state.mode === 'blocking' || state.mode === 'blockstun')) {
     return pose('air-guard', state.mode === 'blockstun' ? 3 : Math.min(2, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 2)));
@@ -146,15 +157,16 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
       return pose('air-guard', Math.max(0, 2 - Math.floor(transitionAge / 2)));
     }
     const age = state.airborneElapsedFrames ?? 0;
-    return pose('jump', age < 6 ? 1 : state.verticalVelocity < -2 ? 2 : state.verticalVelocity <= 2 ? 3 : 4);
+    if (age < 6) return pose('jump-takeoff', 2 + Math.floor(age / 2));
+    return pose('jump', state.verticalVelocity < -2 ? 2 : state.verticalVelocity <= 2 ? 3 : 4);
   }
   if (state.mode === 'dashing') {
     return pose(state.movementDirection === 'backward' ? 'dash-backward' : 'dash-forward', Math.min(5, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 3)));
   }
   if (state.mode === 'moving') {
     const name = state.movementDirection === 'backward' ? 'backward' : 'walk';
-    if (name === 'walk' && transition?.from.mode === 'neutral' && transitionAge >= 0 && transitionAge < 12) {
-      return pose('enter-walk', Math.floor(transitionAge / 2));
+    if (transition?.from.mode === 'neutral' && transitionAge >= 0 && transitionAge < 12) {
+      return pose(name === 'walk' ? 'enter-walk' : 'enter-backward', Math.floor(transitionAge / 2));
     }
     return pose(name, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 8) % 6);
   }
@@ -163,14 +175,22 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
     if (!state.crouching && state.mode === 'blockstun' && perfectAge >= 0 && perfectAge < 12) {
       return pose('perfect-block', perfectAge < 3 ? 1 : perfectAge < 9 ? 3 : 4);
     }
-    return pose(state.crouching ? 'crouch-guard' : 'guard', Math.min(3, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 2)));
+    const guardAge = Math.max(0, frame - state.stateStartedFrame);
+    if (state.mode === 'blocking' && guardAge < 12 && (!state.crouching || !transition?.from.crouching)) return pose(state.crouching ? 'crouch-guard-enter' : 'guard-enter', Math.floor(guardAge / 2));
+    return pose(state.crouching ? 'crouch-guard' : 'guard', Math.min(3, Math.floor(guardAge / 2)));
   }
-  if (state.mode === 'crouching') return pose('crouch', transition?.from.crouching ? 5 : Math.min(5, Math.floor(Math.max(0, frame - state.stateStartedFrame) / 2)));
-  if (state.mode === 'neutral' && !state.attack && transition && transitionAge >= 0 && transitionAge < 6) {
-    if (['blocking', 'blockstun'].includes(transition.from.mode)) {
-      return pose(transition.from.crouching ? 'crouch-guard' : 'guard', Math.max(0, 3 - Math.floor(transitionAge / 2)));
+  if (state.mode === 'crouching') {
+    const crouchAge = Math.max(0, frame - state.stateStartedFrame);
+    return transition?.from.crouching || crouchAge >= 12 ? pose('crouch', 5) : pose('crouch-enter', Math.floor(crouchAge / 2));
+  }
+  if (state.mode === 'neutral' && !state.attack && transition && transitionAge >= 0 && transitionAge < 12) {
+    if (['blocking', 'blockstun'].includes(transition.from.mode) && transitionAge < 6) {
+      return transition.from.crouching ? pose('crouch-guard', Math.max(0, 3 - Math.floor(transitionAge / 2))) : pose('guard-recovery', transitionAge);
     }
-    if (transition.from.grounded && transition.from.crouching) return pose('crouch', Math.max(0, 5 - transitionAge));
+    if (transition.from.grounded && transition.from.crouching) return pose('crouch-exit', Math.floor(transitionAge / 2));
+    if (!transition.from.grounded) return pose('jump-landing', 2 + Math.floor(transitionAge / 3));
+    // After a blow the sheet's second half takes the last drawing back to the idle stance.
+    if (['startup', 'active', 'recovery'].includes(transition.from.mode) && transitionAge < 6) return pose('recovery-idle', 3 + Math.floor(transitionAge / 2));
   }
   if (state.mode === 'neutral' && !state.attack && state.tauntStartedFrame !== undefined) {
     const age = Math.max(0, frame - state.tauntStartedFrame);
