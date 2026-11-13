@@ -66,6 +66,13 @@ export class KeyboardInput {
 
   isSystemPressed(action: 'pause' | 'reset'): boolean { return this.pressed.has(getSystemControls()[action]); }
 
+  /** Keep movement held through the fight intro, but require attack buttons to be released. */
+  clearActions(): void {
+    const directions = new Set(Object.values(this.layout.directions));
+    for (const code of this.pressed) if (!directions.has(code)) { this.waitingForRelease.add(code); this.pressed.delete(code); }
+    this.lastHorizontalTap = undefined; this.pendingDashCode = undefined;
+  }
+
   /** Reset must not carry a held attack/direction into a new exercise. */
   clear(): void {
     this.pressed.forEach((code) => this.waitingForRelease.add(code));

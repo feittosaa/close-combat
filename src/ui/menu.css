@@ -119,3 +119,38 @@
   .arena-menu::after, .arena-home .arena-mode.selected strong { animation: none; }
   .arena-home .arena-mode { transition: none; }
 }
+
+/* Character select: independent, overlapping pieces allow each fighter to be highlighted. */
+.fighter-selection { background: var(--roster-left); }
+.fighter-selection:not(.arcade-selection)::before, .fighter-selection .arena-header { display:none; }
+.selection-background { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.selection-gradient { position:absolute; inset:0; background:linear-gradient(var(--roster-left-angle), var(--roster-left), var(--roster-left-accent)); }
+.selection-gradient.right { background:linear-gradient(var(--roster-right-angle), var(--roster-right), var(--roster-right-accent)); mask-image:linear-gradient(90deg, transparent 35%, #000 65%); }
+.selection-ink-filter { position:absolute; width:0; height:0; }
+.selection-ink { position:absolute; width:100%; height:100%; object-fit:cover; object-position:center; filter:url(#selection-ink-filter); }
+.selection-collage { position:absolute; inset:0; overflow:hidden; }
+.selection-character { position:absolute; border:0; padding:0; background:none; width:var(--w); height:var(--h); left:var(--x); top:var(--y); transform-origin:50% 0; pointer-events:none; transition:transform .14s ease, filter .14s ease; }
+.selection-character img { width:100%; height:100%; object-fit:contain; object-position:center top; pointer-events:none; }
+.selection-character.unavailable img { filter:grayscale(1); }
+.selection-character.selected { transform:scale(1.025); filter:drop-shadow(.05cqw 0 white) drop-shadow(-.05cqw 0 white) drop-shadow(0 .05cqw white) drop-shadow(0 -.05cqw white); }
+.character-shoto.selected.shared { transform:scale(1.05); }
+.selection-character.selected.player-one { filter:drop-shadow(.06cqw 0 #ff2525) drop-shadow(-.06cqw 0 #ff2525) drop-shadow(0 .06cqw #ff2525) drop-shadow(0 -.06cqw #ff2525); }
+.selection-character.selected.player-two { filter:drop-shadow(.06cqw 0 #2584ff) drop-shadow(-.06cqw 0 #2584ff) drop-shadow(0 .06cqw #2584ff) drop-shadow(0 -.06cqw #2584ff); }
+.selection-character.selected.player-one.player-two { filter:drop-shadow(.06cqw 0 #ff2525) drop-shadow(-.06cqw 0 #ff2525) drop-shadow(0 .06cqw #ff2525) drop-shadow(0 -.06cqw #ff2525) drop-shadow(.06cqw 0 #2584ff) drop-shadow(-.06cqw 0 #2584ff) drop-shadow(0 .06cqw #2584ff) drop-shadow(0 -.06cqw #2584ff); }
+.selection-player-label { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); color:white; background:#111d; padding:.15cqw .4cqw; font:700 1cqw var(--font); pointer-events:none; }
+.character-setplay { --x:0%; --y:16%; --w:31%; --h:105%; z-index:1; }
+.character-shoto { --x:10%; --y:1%; --w:35%; --h:111%; z-index:2; }
+.character-rushdown { --x:51%; --y:1%; --w:42%; --h:122%; z-index:2; }
+.character-gimmick { --x:7%; --y:30%; --w:45%; --h:132%; z-index:5; }
+.character-grappler { --x:27%; --y:-9%; --w:46%; --h:112%; z-index:4; }
+.character-texas { --x:67%; --y:30%; --w:36%; --h:120%; z-index:5; }
+.character-mixup { --x:48%; --y:34%; --w:44%; --h:141%; z-index:6; }
+.character-stance { --x:0%; --y:42%; --w:37%; --h:110%; z-index:7; }
+.character-mrapple { --x:29%; --y:37%; --w:41%; --h:114%; z-index:8; }
+.selection-controls { position:absolute; z-index:15; bottom:4%; left:50%; transform:translateX(-50%); display:flex; align-items:center; justify-content:center; gap:.65cqw; padding:.5cqw .8cqw; background:#100d0be8; border:.08cqw solid #ffffff88; white-space:nowrap; }
+.selection-player { display:flex; align-items:center; gap:.35cqw; font:700 1cqw var(--font); }
+.selection-controls .arena-random { width:2.2cqw; height:2.2cqw; }
+.selection-controls .arena-palettes { margin:0; }
+@media (prefers-reduced-motion: reduce) { .selection-character { transition:none; } }
+
+.developer-overlay .selection-collage { visibility:hidden; }

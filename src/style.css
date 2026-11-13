@@ -179,3 +179,16 @@ canvas.menu-film { filter: sepia(.1) saturate(.95); }
   .combat-pause::after, .control-settings::after, .combat-pause.match-pause .pause-actions button, .match-result-menu button { animation: none !important; }
   .combat-pause button, .controls-panel button, .controls-panel select { transition: none; }
 }
+
+/* The existing versus portraits now accompany match loading. */
+.loading-screen.match-loading { padding:0; align-items:stretch; justify-content:stretch; }
+.match-loading::before { inset:0; background:#0b0a0a; animation:none; }
+.match-loading .loading-fighter { position:absolute; top:0; bottom:0; width:50%; overflow:hidden; }
+.match-loading .loading-fighter.left { left:0; }
+.match-loading .loading-fighter.right { right:0; }
+.match-loading .loading-fighter img { position:absolute; width:calc(var(--zoom,1) * 100%); height:calc(var(--zoom,1) * 100%); left:calc((1 - var(--zoom,1)) * var(--x,0%)); top:calc((1 - var(--zoom,1)) * var(--y,50%)); object-fit:cover; object-position:var(--x,0%) var(--y,50%); }
+.match-loading .loading-fighter.right img { transform:scaleX(-1); }
+.match-loading .loading-fighter strong { position:absolute; bottom:10%; left:6%; z-index:2; color:white; font:800 clamp(24px,4vw,64px)/1 var(--font); text-transform:uppercase; text-shadow:0 3px 8px #000; }
+.match-loading .loading-fighter.right strong { left:auto; right:6%; }
+.match-loading .loading-caption { position:absolute; z-index:4; right:4%; bottom:3%; }
+.match-loading::after { z-index:3; inset:0 43%; background:#000; clip-path:polygon(0 0,100% 0,64% 45%,100% 100%,0 100%,36% 45%); opacity:1; mix-blend-mode:normal; box-shadow:none; }

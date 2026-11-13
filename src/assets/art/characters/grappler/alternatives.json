@@ -2,7 +2,13 @@
  "victory-poses": {
   "1.png": {
    "victory": {
-    "height": 1.82,
+    "height": 2,
+    "top": 0
+   }
+  },
+  "2.png": {
+   "victory": {
+    "height": 1.8,
     "top": 0
    }
   }

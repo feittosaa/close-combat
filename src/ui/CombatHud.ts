@@ -79,8 +79,8 @@ export class CombatHud {
     snapshot.characters.forEach((character,index) => {
       const notice = snapshot.breakerNotices.find(entry => entry.characterId === character.characterId && snapshot.frame - entry.frame <= BREAKER_NOTICE_FRAMES);
       const breaker = this.breakerLabels[index]!;
-      setTextColor(breaker.setText(notice ? t(notice.outcome === 'broken' ? 'hud.breakerSuccess' : 'hud.breakerFail') : ''),
-        notice?.outcome === 'broken' ? HUD.ivory : '#ff4b36');
+      setTextColor(breaker.setText(notice ? t('hud.breakerSuccess') : ''),
+        HUD.ivory);
       const combo = snapshot.comboHistory.filter(record => record.attackerId === character.characterId).pop();
       const shown = !notice && combo && combo.hits > 1 && (combo.active || snapshot.frame - combo.lastFrame <= 120) ? combo : undefined;
       const count = this.comboCounts[index]!, word = this.comboWords[index]!;

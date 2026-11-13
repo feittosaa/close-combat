@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { applyFrameCrops } from './animations/frameAdjustments';
 
 type Rect = { x: number; y: number; w: number; h: number };
 /** One frame of a layout written by `scripts/pack-sprites.py`: a trimmed Phaser frame plus where its pixels sit in the original sheet. */
@@ -76,6 +77,7 @@ export function registerPackedAtlasLoader(): void {
       const canvas = replaced ? copyImage(bitmap) : packSheet(bitmap, data);
       bitmap.close();
       this.loader.textureManager.addAtlas(sheet.key, canvas as unknown as HTMLImageElement, replaced ? fullFrames(data) : data);
+      applyFrameCrops(this.loader.textureManager, sheet.key);
       this.complete = true;
     }
   }

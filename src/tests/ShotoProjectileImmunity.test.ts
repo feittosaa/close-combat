@@ -26,13 +26,16 @@ it.each([0, 1])('protege os especiais contra projéteis do início ao fim, lado 
   }
 });
 
-it('as voadoras e o chute invencível ignoram golpes físicos durante o movimento', () => {
+it('as voadoras e o chute invencível recebem golpes físicos e são interrompidos', () => {
   for (const id of ['flying-kick-light', 'flying-kick-heavy', 'flying-kick-followup', 'reversal-kick']) {
     const characters = [...new Simulation(createGameConfig(1024, 576), [shoto, shoto], { initialDistance: 56 }).snapshot().characters];
     const [attacker, target] = characters;
     attacker.mode = 'active'; attacker.attack = { moveId: 'light-punch', buttons: ['1'], elapsedFrames: 8, hasHit: false };
+    target.grounded = false; target.y -= 10;
     target.mode = 'startup'; target.attack = { moveId: id, buttons: ['3'], elapsedFrames: 1, hasHit: false };
-    expect(resolver.resolve(characters, neutral), id).toHaveLength(0);
+    expect(resolver.resolve(characters, neutral), id).toHaveLength(1);
+    expect(target.attack, id).toBeUndefined();
+    expect(target.mode, id).toBe('hitstun');
   }
 });
 

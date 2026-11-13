@@ -31,9 +31,6 @@ function untilContact(sim: Simulation, player = 0, guard = N, continuous = false
   }
   throw new Error(`No contact: ${JSON.stringify(sim.snapshot().characters.map(c => ({x:c.x,y:c.y,attack:c.attack,mode:c.mode})))}`);
 }
-function untilContactOrIdle(sim: Simulation): void {
-  for (let i = 0; i < 20; i++) step(sim);
-}
 const move = (id: string) => shoto.moves.find(m => m.id === id)!;
 
 describe('manual Shoto catalogue', () => {
@@ -197,12 +194,12 @@ describe('manual Shoto catalogue', () => {
     const sim=create(56,bare);command(sim,move('light-punch'));untilContact(sim);
     expect(sim.snapshot().characters.map(c=>[c.rage,c.maxRage])).toEqual([[0,0],[0,0]]);
   });
-  it('reversal ignores a real incoming melee attack while ordinary aerial kick remains vulnerable', () => {
+  it('both reversal kicks receive a real incoming melee attack', () => {
     for(const id of ['reversal-kick','reversal-light']) {
       const sim=create(56);step(sim,input('N',['1']),1);
       command(sim,move(id));
       for(let i=0;i<10;i++)step(sim);
-      expect(sim.snapshot().characters[0].health).toBe(id==='reversal-kick'?1000:980);
+      expect(sim.snapshot().characters[0].health).toBe(980);
     }
   });
 
@@ -331,12 +328,10 @@ describe('manual Shoto catalogue', () => {
     expect(target.x-knockedX).toBeLessThan(60);
   });
 
-  it.each(['flying-kick-light','flying-kick-heavy'])('%s leaves Bob invulnerable until the kick ends', id => {
+  it.each(['flying-kick-light','flying-kick-heavy'])('%s protects Bob only against projectiles', id => {
     const kick=move(id);
-    expect(kick.invulnerability).toEqual({kind:'all',until:kick.movement!.until});
-    const sim=create(120);command(sim,kick);wait(sim,kick.startup+2);
-    command(sim,move('light-punch'),1);untilContactOrIdle(sim);
-    expect(sim.snapshot().characters[0].mode).not.toBe('hitstun');
+    expect(kick.invulnerability).toBeUndefined();
+    expect(kick.projectileInvulnerable).toBe(true);
   });
 
   it.each([0,1])('gates ultimate and respects guard on either side for player %i', player => {

@@ -2,6 +2,9 @@ import { expect, it, vi } from 'vitest';
 import type Phaser from 'phaser';
 import { StagePresentation } from '../rendering/StagePresentation';
 import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
+import { grappler } from '../engine/data/fighters/grappler';
+import { shoto } from '../engine/data/fighters/shoto';
+import { settleAfterRound } from '../rendering/animations/texasSprites';
 import { getTexasRoundEndPose } from '../rendering/animations/texasSprites';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
@@ -55,4 +58,16 @@ it('o READY bloqueia tudo, o FIGHT libera só o movimento e os golpes esperam 8 
   expect(presentation.moveOnly).toBe(true);
   tick(5);                                         // luta liberada
   expect(presentation.moveOnly).toBe(false);
+});
+
+
+it.each([grappler,shoto,texas])('faz $name cair após vitória aérea e mantém perdedor deitado', fighter => {
+  const sim = new Simulation(createGameConfig(1024,576),[fighter,shoto]);
+  const standing=sim.snapshot().characters[0], floor=standing.y;
+  const airborne={...standing,grounded:false,y:floor-100,verticalVelocity:-3,mode:'airborne' as const};
+  expect(settleAfterRound(airborne,1,floor,.5,false).grounded).toBe(false);
+  expect(settleAfterRound(airborne,200,floor,.5,false)).toMatchObject({grounded:true,y:floor,mode:'neutral'});
+  expect(settleAfterRound(airborne,200,floor,.5,true)).toMatchObject({grounded:true,y:floor,mode:'knockdown'});
+  const alreadyDown={...standing,mode:'knockdown' as const,remainingStateFrames:1};
+  expect(settleAfterRound(alreadyDown,200,floor,.5,true)).toMatchObject({mode:'knockdown',remainingStateFrames:999});
 });

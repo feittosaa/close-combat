@@ -17,6 +17,9 @@ it('changes clothing and magic colors while preserving skin and unrelated colors
   const magic = palettePixel(60, 180, 230, 'magic');
   expect(shirt[0]).toBeGreaterThan(shirt[1] * 2);
   expect(shirt[0]).toBeGreaterThan(136);
+  // A dark shirt shadow the sheet correction turned purple still takes the red.
+  const shadow = palettePixel(43, 30, 41, 'bob', [41, 28, 15]);
+  expect(shadow[0]).toBeGreaterThan(shadow[1] * 1.5);
   expect(poncho[2]).toBeGreaterThan(poncho[0] * 2);
   expect(Math.max(...poncho)).toBe(176);
   expect(palettePixel(255, 145, 125, 'texas')).toEqual([255, 145, 125]);

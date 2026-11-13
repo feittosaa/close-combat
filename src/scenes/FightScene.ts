@@ -318,7 +318,7 @@ export class FightScene extends Phaser.Scene {
     this.victoryArt = new Map(victoryIds.map(id => { const image = new Image(); image.src = fighterArt[id].fullbody; return [id, image]; }));
     this.victoryArtReady = Promise.all([...this.victoryArt.values()].map(image => image.decode().catch(() => undefined))).then(() => undefined);
     // Fighters and stages that the previous match did not use are loaded here, between selection and the fight.
-    if (this.load.list.size) this.closeLoadingScreen = showLoadingScreen();
+    if (this.load.list.size) this.closeLoadingScreen = showLoadingScreen([this.selectedFighter.id, this.opponentFighter.id]);
   }
 
   /** Queues whatever the match draws or plays and is not in memory yet: icons, contact effects, sounds, both fighters and the stage. */
@@ -337,7 +337,7 @@ export class FightScene extends Phaser.Scene {
     this.queueMatchAssets();
     if (this.load.list.size && this.loadAttempts < MAX_LOAD_ATTEMPTS) {
       this.loadAttempts += 1;
-      this.closeLoadingScreen ??= showLoadingScreen();
+      this.closeLoadingScreen ??= showLoadingScreen([this.selectedFighter.id, this.opponentFighter.id]);
       this.load.once(Phaser.Loader.Events.COMPLETE, () => this.create());
       this.load.start();
       return;
@@ -419,7 +419,8 @@ export class FightScene extends Phaser.Scene {
     this.fightSounds?.prepareRound(current);
     const intro = this.stagePresentation?.update(current, this.paused ? 0 : delta, getHudLogicalWidth(this.scale));
     if (this.introBlocked && !intro) {
-      this.clearHeldInputs();
+      this.keyboardInputs.forEach(input => input.clearActions());
+      this.gamepadInputs.forEach(input => input.clear());
       this.commandBuffers.forEach(buffer => buffer.clear());
     }
     this.introBlocked = Boolean(intro);

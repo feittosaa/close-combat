@@ -105,16 +105,26 @@ export function palettePixel(r: number, g: number, b: number, palette: Palette, 
   if (!ds) return [r, g, b];
   // The olive shirt, its shadows and the tie reach greener, duller tones in some sheets than in the idle.
   if (palette === 'grappler') {
-    // Only the neon orange and amber of the suit (fully saturated, unlike leather and skin) turn cyan, keeping light and shade.
-    const weight = smoothstep(.8, .86, ds) * smoothstep(8, 14, dh) * (1 - smoothstep(48, 58, dh));
-    const cyan = hsvToRgb(190 + (h - 30) * .5, max, saturation);
-    return [r, g, b].map((value, index) => Math.round(value + (cyan[index] - value) * weight)) as [number, number, number];
+    // The suit's neon orange and amber (saturated and bright, unlike leather, hair and skin) turn cyan, keeping light and shade;
+    // the olive jacket and the dark hair (read from the corrected colour, which aligns the sheets) only darken, to set this model apart.
+    const orange = smoothstep(.74, .82, ds) * smoothstep(8, 14, dh) * (1 - smoothstep(26, 30, dh));
+    const amber = smoothstep(.66, .76, ds) * smoothstep(.45, .6, dv / 255) * smoothstep(26, 30, dh) * (1 - smoothstep(58, 66, dh));
+    const neon = Math.max(orange, amber);
+    const olive = smoothstep(28, 33, h) * (1 - smoothstep(75, 95, h)) * smoothstep(.12, .22, saturation) * (1 - smoothstep(.72, .82, saturation)) * (1 - smoothstep(.5, .6, max / 255));
+    const hair = smoothstep(4, 8, h) * (1 - smoothstep(28, 32, h)) * smoothstep(.4, .5, saturation) * (1 - smoothstep(.5, .6, max / 255));
+    const cyan = hsvToRgb(190 + (h - 30) * .5, max, saturation), shade = 1 - .3 * olive - .2 * Math.max(0, hair - olive);
+    return [r, g, b].map((value, index) => Math.round((value + (cyan[index] - value) * neon) * shade)) as [number, number, number];
   }
-  if (palette === 'bob' && dh >= 27 && dh <= 90 && ds >= (dh > 56 ? .3 : .38) && dv < 190 && dv > 20) {
+  if (palette === 'bob' && dv < 190 && dv > 20) {
     // Saturated orange at the low hue edge is blond hair or straw, not shirt: fade it out instead of cutting; the
-    // green edge fades out too.
-    const shirt = Math.max(smoothstep(30, 35, dh), 1 - smoothstep(.6, .72, ds)) * (1 - smoothstep(80, 90, dh));
-    const red = hsvToRgb(355 + (h - 40) * .35, Math.min(255, max * 1.15), Math.max(saturation, .9));
+    // green edge fades out too. Shirt shadows drawn olive-brown (some sheets) that the sheet correction turns green are shirt as well.
+    const drawnShirt = dh >= 27 && dh <= 90 && ds >= (dh > 56 ? .3 : .38)
+      ? Math.max(smoothstep(30, 35, dh), 1 - smoothstep(.6, .72, ds)) * (1 - smoothstep(80, 90, dh)) : 0;
+    const correctedShirt = smoothstep(.35, .45, saturation) * smoothstep(60, 70, h) * (1 - smoothstep(125, 140, h));
+    const shirt = Math.max(drawnShirt, correctedShirt);
+    if (!shirt) return [r, g, b];
+    // Dark shadows the correction pushed past red (purple) take the shirt's base red.
+    const red = hsvToRgb(355 + ((h > 180 ? 40 : h) - 40) * .35, Math.min(255, max * 1.15), Math.max(saturation, .9));
     return red.map((value, index) => Math.round([r, g, b][index] + (value - [r, g, b][index]) * shirt)) as [number, number, number];
   }
   if (palette === 'magic') {

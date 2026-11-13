@@ -65,7 +65,7 @@ export class FighterSelection {
     if (this.random[player]) { this.choosingColor[player] = false; this.ready[player] = true; return this.finish(versus); }
     if (!this.choosingColor[player]) {
       const other = player === 0 ? 1 : 0;
-      if (versus && (this.choosingColor[other] || this.ready[other]) && this.indices[player] === this.indices[other])
+      if (versus && !this.random[other] && (this.choosingColor[other] || this.ready[other]) && this.indices[player] === this.indices[other])
         this.palettes[player] = this.palettes[other] === 0 ? 1 : 0;
       this.choosingColor[player] = true;
       this.ready[player] = false;
@@ -81,20 +81,13 @@ export class FighterSelection {
     return this.ready.every(Boolean);
   }
 
-  /** Draws fighter and colour for every player still on the random tile; the same fighter never repeats a colour. */
-  resolveRandoms(random: () => number = Math.random): void {
-    const drawn: SelectionPlayer[] = [];
-    for (const player of [0, 1] as const) {
+  /** Draws a fighter for each random selection; random always uses the original color. */
+  resolveRandoms(random: () => number = Math.random, selectOpponent = true): void {
+    for (const player of (selectOpponent ? [0, 1] : [0]) as readonly SelectionPlayer[]) {
       if (!this.random[player]) continue;
       this.indices[player] = Math.min(this.rosterSize - 1, Math.floor(random() * this.rosterSize));
-      this.palettes[player] = random() < .5 ? 0 : 1;
+      this.palettes[player] = 0;
       this.random[player] = false;
-      drawn.push(player);
-    }
-    // A drawn colour yields to a hand-picked one on the same fighter.
-    if (drawn.length && this.indices[0] === this.indices[1] && this.palettes[0] === this.palettes[1]) {
-      const flipped = drawn[drawn.length - 1];
-      this.palettes[flipped] = this.palettes[flipped] === 0 ? 1 : 0;
     }
   }
 

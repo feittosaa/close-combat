@@ -59,17 +59,27 @@ vec3 palette(vec3 color, vec3 drawn) {
   vec3 v = hsv(color);
   vec3 d = hsv(drawn);
   if (uPalette > 4.5) {
-    // Only the neon orange and amber of the suit (fully saturated, unlike leather and skin) turn cyan, keeping light and shade.
-    float weight = smoothstep(0.8, 0.86, d.y) * smoothstep(8.0, 14.0, d.x) * (1.0 - smoothstep(48.0, 58.0, d.x));
-    return mix(color, rgb(vec3(190.0 + (v.x - 30.0) * 0.5, v.y, v.z)), weight);
+    // The suit's neon orange and amber (saturated and bright, unlike leather, hair and skin) turn cyan, keeping light and shade;
+    // the olive jacket and the dark hair (read from the corrected colour, which aligns the sheets) only darken, to set this model apart.
+    float orange = smoothstep(0.74, 0.82, d.y) * smoothstep(8.0, 14.0, d.x) * (1.0 - smoothstep(26.0, 30.0, d.x));
+    float amber = smoothstep(0.66, 0.76, d.y) * smoothstep(0.45, 0.6, d.z) * smoothstep(26.0, 30.0, d.x) * (1.0 - smoothstep(58.0, 66.0, d.x));
+    float neon = max(orange, amber);
+    float olive = smoothstep(28.0, 33.0, v.x) * (1.0 - smoothstep(75.0, 95.0, v.x)) * smoothstep(0.12, 0.22, v.y) * (1.0 - smoothstep(0.72, 0.82, v.y)) * (1.0 - smoothstep(0.5, 0.6, v.z));
+    float hair = smoothstep(4.0, 8.0, v.x) * (1.0 - smoothstep(28.0, 32.0, v.x)) * smoothstep(0.4, 0.5, v.y) * (1.0 - smoothstep(0.5, 0.6, v.z));
+    vec3 lit = mix(color, rgb(vec3(190.0 + (v.x - 30.0) * 0.5, v.y, v.z)), neon);
+    return lit * (1.0 - 0.3 * olive - 0.2 * max(0.0, hair - olive));
   }
   if (uPalette < 1.5) {
     // The olive shirt, its shadows and the tie reach greener, duller tones in some sheets than in the idle.
-    if (d.x >= 27.0 && d.x <= 90.0 && d.y >= (d.x > 56.0 ? 0.3 : 0.38) && d.z < 0.745 && d.z > 0.078) {
+    if (d.z < 0.745 && d.z > 0.078) {
       // Saturated orange at the low hue edge is blond hair or straw, not shirt: fade it out instead of cutting; the
-      // green edge fades out too.
-      float shirt = max(smoothstep(30.0, 35.0, d.x), 1.0 - smoothstep(0.6, 0.72, d.y)) * (1.0 - smoothstep(80.0, 90.0, d.x));
-      vec3 red = rgb(vec3(mod(355.0 + (v.x - 40.0) * 0.35, 360.0), max(v.y, 0.9), min(v.z * 1.15, 1.0)));
+      // green edge fades out too. Shirt shadows drawn olive-brown that the sheet correction turns green are shirt as well.
+      float drawnShirt = d.x >= 27.0 && d.x <= 90.0 && d.y >= (d.x > 56.0 ? 0.3 : 0.38)
+        ? max(smoothstep(30.0, 35.0, d.x), 1.0 - smoothstep(0.6, 0.72, d.y)) * (1.0 - smoothstep(80.0, 90.0, d.x)) : 0.0;
+      float correctedShirt = smoothstep(0.35, 0.45, v.y) * smoothstep(60.0, 70.0, v.x) * (1.0 - smoothstep(125.0, 140.0, v.x));
+      float shirt = max(drawnShirt, correctedShirt);
+      // Dark shadows the correction pushed past red (purple) take the shirt's base red.
+      vec3 red = rgb(vec3(mod(355.0 + ((v.x > 180.0 ? 40.0 : v.x) - 40.0) * 0.35, 360.0), max(v.y, 0.9), min(v.z * 1.15, 1.0)));
       return mix(color, red, shirt);
     }
     return color;

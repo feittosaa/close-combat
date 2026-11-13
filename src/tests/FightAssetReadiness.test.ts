@@ -139,17 +139,18 @@ it('runs two real seconds of slow motion after a fatal hit before continuing the
   expect(simulation.snapshot().phase).toBe('round-over');
 });
 
-it('discards held keys and buffered commands when the intro ends, so only presses after Fight count', () => {
+it('keeps held movement but clears actions and buffered commands when the intro ends', () => {
   const simulation = new Simulation(createGameConfig(1024,576),[shoto,shoto],{initialDistance:64});
   const fight = new FightScene();
-  const keyboard = {clear:vi.fn(),read:()=>({direction:'N' as const,buttons:new Set<'1'>()})}, buffer = {clear:vi.fn(),push:vi.fn()};
+  const keyboard = {clear:vi.fn(),clearActions:vi.fn(),read:()=>({direction:'N' as const,buttons:new Set<'1'>()})}, buffer = {clear:vi.fn(),push:vi.fn()};
   let intro = true;
   Object.assign(fight,{simulation,scale:{width:1024,height:576},stagePresentation:{update:()=>intro},syncViewsAndHud:()=>{},fightSounds:undefined,
     keyboardInputs:[keyboard,keyboard],commandBuffers:[buffer,buffer]});
   fight.update(0,16); fight.update(0,16);
   expect(keyboard.clear).not.toHaveBeenCalled();
   intro = false; fight.update(0,16); fight.update(0,16);
-  expect(keyboard.clear).toHaveBeenCalledTimes(2);
+  expect(keyboard.clear).not.toHaveBeenCalled();
+  expect(keyboard.clearActions).toHaveBeenCalledTimes(2);
   expect(buffer.clear).toHaveBeenCalledTimes(2);
 });
 
@@ -242,4 +243,23 @@ it('draws every loaded texture once, through both sprite shaders, and waits for 
   expect(finish).toHaveBeenCalledOnce();
   expect(removed).toEqual(['__match-prime']);
   expect(addDynamicTexture).toHaveBeenCalledWith('__match-prime', 3, 3);
+});
+
+it('mostra os dois lutadores escolhidos durante o carregamento de combate', async () => {
+  vi.useFakeTimers();
+  type Element = { className:string; textContent:string; src:string; alt:string; style:{cssText:string}; children:Element[]; classList:{add:ReturnType<typeof vi.fn>}; setAttribute:ReturnType<typeof vi.fn>; appendChild:(child:Element)=>void; append:(...children:Element[])=>void; remove:ReturnType<typeof vi.fn> };
+  const elements:Element[]=[];
+  const create=():Element=>{ const el:Element={className:'',textContent:'',src:'',alt:'',style:{cssText:''},children:[],classList:{add:vi.fn()},setAttribute:vi.fn(),appendChild(child){this.children.push(child);},append(...children){this.children.push(...children);},remove:vi.fn()};elements.push(el);return el; };
+  vi.stubGlobal('document',{createElement:create,body:{appendChild:vi.fn()}});
+  vi.stubGlobal('window',{setTimeout,clearInterval,setInterval});
+  try {
+    const {showLoadingScreen}=await import('../ui/loadingScreen');
+    const close=showLoadingScreen(['shoto','texas']);
+    const screen=elements[0];
+    expect(screen.classList.add).toHaveBeenCalledWith('match-loading');
+    expect(screen.children.map(child=>child.className)).toEqual(['loading-caption','loading-fighter left','loading-fighter right']);
+    expect(screen.children.slice(1).map(side=>side.children[1].textContent)).toEqual(['Bob','Texas']);
+    expect(screen.children.slice(1).every(side=>side.children[0].src)).toBe(true);
+    close(); vi.advanceTimersByTime(600); expect(screen.remove).toHaveBeenCalledOnce();
+  } finally { vi.unstubAllGlobals(); vi.useRealTimers(); }
 });

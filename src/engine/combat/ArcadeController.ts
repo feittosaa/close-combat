@@ -111,7 +111,7 @@ export class ArcadeController {
     const ready = this.profile.breaker && self.rage >= RAGE_SEGMENT && self.stateStartedFrame !== this.breakerTriedAt && frame - self.stateStartedFrame >= this.profile.reaction;
     if (!ready) return neutral();
     this.breakerTriedAt = self.stateStartedFrame;
-    return this.random() < .6 ? { direction: 'N', rageAction: true, buttons: new Set(this.grounded[0].input.buttons.slice(0, 1)) } : neutral();
+    return this.random() < .6 ? { direction: 'N', rageAction: true, buttons: new Set() } : neutral();
   }
 
   private followUp(frame: number, self: CharacterState, opponent: CharacterState): FrameInput {

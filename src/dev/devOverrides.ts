@@ -5,6 +5,7 @@ import { DEFAULT_ARCADE_FRAME, DEFAULT_HERO_FRAME, DEFAULT_TILE_FRAME, fighterAr
 import { nameOverrides } from '../i18n/i18n';
 import { frameScaleAdjustments, sheetScaleAdjustments } from '../rendering/animations/spriteScale';
 import { outlineWidths } from '../rendering/characterColor';
+import { frameAdjustments, type FrameAdjustment } from '../rendering/animations/frameAdjustments';
 import { frameCutAdjustments, frameSizeAdjustments, type FrameCut, type FrameSize } from '../rendering/contactEffects';
 
 /** Move fields the developer mode may retune; everything else stays as authored in the fighter data. */
@@ -40,6 +41,8 @@ export interface DevOverrides {
   frameScales: Record<string, number>;
   /** On-screen outline width per fighter, in world pixels, over the one its atlases were drawn with (`outline.json`). */
   outlines: Record<string, number>;
+  /** Placement and crop per character drawing, `<fighter>:<sheet>:<frame>` (`frames.json` beside the fighter's sheets). */
+  frameAdjustments: Record<string, FrameAdjustment>;
   /** Frame cuts of contact sheets per texture and frame index (`frames.json` beside the sheets). */
   frameCuts: Record<string, Record<string, FrameCut>>;
   /** Frame sizes of contact sheets per texture (`frames.json` beside the sheets). */
@@ -51,7 +54,7 @@ export interface DevOverrides {
 }
 
 const STORAGE_KEY = 'close-combat.dev-overrides';
-const empty = (): DevOverrides => ({ moves: {}, moveNames: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameScales: {}, outlines: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
+const empty = (): DevOverrides => ({ moves: {}, moveNames: {}, recipes: {}, combos: {}, colors: {}, spriteScales: {}, frameScales: {}, outlines: {}, frameAdjustments: {}, frameCuts: {}, frameSizes: {}, selection: {}, alternatives: {} });
 
 /** Fighter ids renamed in the code (2026-11-08); tuning saved under the old ids follows them. */
 const RENAMED_FIGHTERS: Readonly<Record<string, string>> = { cowboy: 'texas', puppet: 'mrapple' };
@@ -148,6 +151,8 @@ export class DevTuning {
     for (const [frame, scale] of Object.entries(this.overrides.frameScales)) frameScaleAdjustments.set(frame, scale);
     outlineWidths.clear();
     for (const [fighter, width] of Object.entries(this.overrides.outlines)) outlineWidths.set(fighter, width);
+    frameAdjustments.clear();
+    for (const [frame, adjustment] of Object.entries(this.overrides.frameAdjustments)) frameAdjustments.set(frame, adjustment);
     frameCutAdjustments.clear();
     for (const [texture, frames] of Object.entries(this.overrides.frameCuts)) frameCutAdjustments.set(texture, frames);
     frameSizeAdjustments.clear();
@@ -233,6 +238,11 @@ export class DevTuning {
   resetMoves(fighterId: string): void { delete this.overrides.moves[fighterId]; delete this.overrides.moveNames[fighterId]; this.commit(); }
   /** Drops the recipe edits and the panel-created combos of one fighter; its move tuning stays as it is. */
   resetCombos(fighterId: string): void { delete this.overrides.recipes[fighterId]; delete this.overrides.combos[fighterId]; this.commit(); }
+  /** Sets the placement and crop of one character drawing; `undefined` returns it to the validated one. */
+  setFrameAdjustment(frame: string, adjustment: FrameAdjustment | undefined): void {
+    if (adjustment) this.overrides.frameAdjustments[frame] = adjustment; else delete this.overrides.frameAdjustments[frame];
+    this.commit();
+  }
   setFrameCut(texture: string, frame: number, cut: FrameCut | undefined): void {
     const frames = { ...(this.overrides.frameCuts[texture] ?? {}) };
     if (cut) frames[frame] = cut; else delete frames[frame];

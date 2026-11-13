@@ -7,6 +7,7 @@ import { ULTIMATE_ACTIVATION_FRAMES } from '../../engine/combat/ultimateActivati
 import { flightFramesRemaining } from '../../engine/combat/airPhysics';
 import { loadGraphicsQuality } from '../../ui/graphicsSettings';
 import { autoSpriteScale, bodyCenterShift, lyingFloorAnchor } from './spriteScale';
+import { framePlacement } from './frameAdjustments';
 import texasCalibration from '../../assets/sprites/characters/texas/calibration.json';
 import texasMeasurements from '../../assets/sprites/characters/texas/measurements.json';
 import { grapplerReaction } from '../grapplerReaction';
@@ -41,12 +42,12 @@ export const texasSheetScale = (name: string, frame = 0): number => autoSpriteSc
 const pose = (name: string, frame: number, state: CharacterState) => {
   const direction = state.facing === 'left' ? -1 : 1, scale = texasSheetScale(name, frame);
   // A lying drawing on the floor rests on its lowest row instead of the feet line.
-  const floor = state.grounded ? lyingFloorAnchor(texas, texasMeasurements, name, frame) : undefined;
+  const floor = state.grounded ? lyingFloorAnchor(texas, texasMeasurements, name, frame) : undefined, placement = framePlacement('texas', name, frame);
   return {
     texture: `texas-${name}`, frame, scale, alpha: 1,
     flipX: direction === -1,
-    offsetX: bodyCenterShift(texas, texasMeasurements, name, frame) * scale * texasDisplayHeight * direction,
-    offsetY: floor === undefined ? 0 : (texasFootAnchor - floor) * texasDisplayHeight * scale,
+    offsetX: (bodyCenterShift(texas, texasMeasurements, name, frame) + placement.x) * scale * texasDisplayHeight * direction,
+    offsetY: ((floor === undefined ? 0 : texasFootAnchor - floor) + placement.y) * texasDisplayHeight * scale,
   };
 };
 const isShotCombo = (state: CharacterState) => state.attack?.moveId === 'heavy-punch' &&
@@ -59,7 +60,6 @@ export const texasAnimationClips: Readonly<Record<string, AnimationClip>> = {
   crouchIdle: {key:'crouch-idle',start:3,end:3,frameRate:5,repeat:-1},
   dashForward: {key:'dash-forward',start:0,end:5,frameRate:15,frameDurations:[3,4,3,5,5,4],repeat:0},
   dashBackward: {key:'dash-backward',start:0,end:5,frameRate:15,frameDurations:[3,3,4,5,5,4],repeat:0},
-  crouchEnter: {key:'crouch-enter',start:0,end:2,frameRate:30,repeat:0},
   guardEnter: {key:'guard-enter',start:0,end:2,frameRate:30,repeat:0},
   exit: {key:'exit',start:3,end:5,frameRate:30,repeat:0},
   magic: {key:'magic',start:0,end:2,frameRate:30,repeat:0},
@@ -100,12 +100,19 @@ export function getTexasUltimateActivationPose(state: CharacterState, elapsed: n
 
 /** Round-end drawings are presentation only and never change combat geometry. */
 const LYING_HOLD_FRAMES = 999;
+/** A defeated Texas on the floor must show her normal lying pose, not an interrupted capture or push. */
+function settledTexas(state: CharacterState): CharacterState {
+  return state.fighterId === 'texas' ? { ...state, attack: undefined, commandGrabbed: undefined,
+    grapplerGrabReaction: undefined, grabbedStartedFrame: undefined, grabbedHold: undefined,
+    pushbackMotion: undefined, throwPull: undefined } : state;
+}
 /**
  * A fighter still in the air when the round ends keeps falling from that moment, whatever the title on screen:
  * it lands as soon as physics says so, the loser already lying down and the winner back on its feet.
  */
 export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number, floorY: number, gravity: number, lost: boolean): CharacterState {
-  if (!['texas', 'shoto'].includes(state.fighterId) || state.grounded) return state;
+  if (state.grounded) return lost && state.mode === 'knockdown'
+    ? { ...settledTexas(state), remainingStateFrames: LYING_HOLD_FRAMES, stateStartedFrame: Number.NEGATIVE_INFINITY } : state;
   const landing = flightFramesRemaining(state.y, state.verticalVelocity, floorY, gravity);
   const ticks = Math.min(Math.max(0, ageSinceRoundEnd), landing);
   if (ticks < landing) {
@@ -114,7 +121,7 @@ export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number
   }
   // A loser lands already lying: plenty of knockdown time left, so neither fighter's pose reads as getting up.
   const lying = lost ? { mode: 'knockdown' as const, remainingStateFrames: LYING_HOLD_FRAMES, stateStartedFrame: Number.NEGATIVE_INFINITY } : { mode: 'neutral' as const };
-  return { ...state, y: floorY, grounded: true, verticalVelocity: 0, attack: undefined, juggle: undefined, ...lying };
+  return { ...(lost ? settledTexas(state) : state), y: floorY, grounded: true, verticalVelocity: 0, attack: undefined, juggle: undefined, ...lying };
 }
 
 export function getTexasRoundEndPose(state: CharacterState, winner: boolean, elapsed: number) {
@@ -201,7 +208,7 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
       return pose('fall-landing', drawing, state);
     }
     const remaining = state.remainingStateFrames;
-    return remaining > 12 ? pose('fall-landing', 5, state) : pose('knockdown', remaining > 8 ? 3 : remaining > 4 ? 4 : 5, state);
+    return remaining > 9 ? pose('fall-landing', 5, state) : pose('getup', Math.min(5, Math.floor((9 - remaining) * 6 / 9)), state);
   }
   if (state.mode === 'hitstun') {
     const bounce = state.wallBounceEffect;
@@ -217,7 +224,9 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
     const name = reaction?.level === 'high' ? 'hurt-high' : !state.grounded ? 'air-hurt' : state.crouching ? (reaction?.level === 'low' ? 'crouch-hurt-low' : 'crouch-hurt') : reaction?.level === 'low' ? 'hurt-low' : 'hurt';
     const age = frame - (reaction?.startedFrame ?? state.stateStartedFrame);
     const index = sample('hurt', Math.max(0, age));
-    const reactionPose = pose(name, name === 'hurt-low' ? Math.min(5, index + 1) : name === 'hurt-high' ? Math.min(5, index + 2) : index, state);
+    // The standing recoil straightens up in the recovery sheet, which starts from the hunched drawing.
+    const reactionPose = name === 'hurt' && index >= 2 ? pose('hurt-recovery', [0, 2, 4, 5][index - 2], state)
+      : pose(name, name === 'hurt-low' ? Math.min(5, index + 1) : name === 'hurt-high' ? Math.min(5, index + 2) : index, state);
     return state.grabbedHold ? {...reactionPose, scale: reactionPose.scale * 1.05} : reactionPose;
   }
   const transition = state.animationTransition;
@@ -233,6 +242,10 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
       return pose('perfect-block', perfectAge < 3 ? 1 : perfectAge < 9 ? 2 : 3, state);
     }
     const name = !state.grounded ? 'air-guard' : state.crouching ? 'crouch-guard' : 'guard';
+    if (state.mode === 'blocking' && state.grounded && elapsed < 6) {
+      if (!state.crouching) return pose('guard-enter', elapsed, state);
+      if (!transition?.from.crouching) return pose('crouch-guard-enter', elapsed, state);
+    }
     return pose(name, state.mode === 'blockstun' ? 2 : sample('guardEnter', elapsed), state);
   }
   if (!state.grounded) {
@@ -248,13 +261,16 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
     return pose('jump', state.verticalVelocity < -2 ? 2 : state.verticalVelocity < 2 ? 3 : 4, state);
   }
   if (state.crouching) {
-    if ((!transition || !transition.from.crouching) && elapsed < 6) return pose('crouch', sample('crouchEnter', elapsed), state);
+    if ((!transition || !transition.from.crouching) && elapsed < 6) return pose('crouch-enter', elapsed, state);
     return pose('crouch', sample('crouchIdle', elapsed - 6), state);
   }
-  if (transition?.from.crouching && transition.from.grounded && elapsed < 6) return pose('crouch', sample('exit', elapsed), state);
+  if (transition?.from.crouching && transition.from.grounded && elapsed < 6) return pose('crouch-exit', elapsed, state);
   if ((transition?.from.mode === 'blocking' || transition?.from.mode === 'blockstun') && elapsed < 6) {
-    return pose(transition.from.crouching ? 'crouch-guard' : 'guard', sample('exit', elapsed), state);
+    return transition.from.crouching ? pose('crouch-guard', sample('exit', elapsed), state) : pose('guard-recovery', elapsed, state);
   }
+  if (state.mode === 'neutral' && transition && !transition.from.grounded && elapsed < 12) return pose('jump-landing', Math.min(5, 2 + Math.floor(elapsed / 3)), state);
+  // After a blow the sheet's second half takes the last drawing back to the idle stance.
+  if (state.mode === 'neutral' && transition && ['startup', 'active', 'recovery'].includes(transition.from.mode) && elapsed < 8) return pose('recovery-idle', 2 + Math.floor(elapsed / 2), state);
   if (state.mode === 'dashing') return pose(state.movementDirection === 'backward' ? 'dash-backward' : 'dash-forward', sample(state.movementDirection === 'backward' ? 'dashBackward' : 'dashForward', elapsed), state);
   if (state.mode === 'moving') {
     const backward = state.movementDirection === 'backward';

@@ -93,7 +93,11 @@ export class CombatantView {
     } else this.ultimateWind?.setVisible(false);
     if (state.fighterId === 'grappler') {
       const move = state.attack && getCharacterById('grappler')?.moves.find(candidate => candidate.id === state.attack!.moveId);
-      const pose = result && state.grounded ? {name:result.winner ? 'victory' : 'defeat', drawing:Math.min(5, Math.floor(result.elapsed / 10))} : getGrapplerPose(state, frame, activationFrame), between = result ? undefined : getGrapplerInbetween(state, frame, activationFrame);
+      const resultFrame = Math.floor((result?.elapsed ?? 0) / 10);
+      const pose = result && state.grounded && (result.winner || state.mode !== 'knockdown')
+        ? result.winner && resultFrame >= 5 ? {name:'victory-hair-loop', drawing:[0, 1, 5, 1][(resultFrame - 5) % 4]}
+          : {name:result.winner ? 'victory' : 'defeat', drawing:Math.min(5, resultFrame)}
+        : getGrapplerPose(state, frame, activationFrame), between = result ? undefined : getGrapplerInbetween(state, frame, activationFrame);
       const textureName = between === undefined ? pose.name : `${pose.name}-between`;
       const texture = `grappler-${textureName}`;
       const headbutt = state.attack && move?.id === 'grab-headbutt' && state.attack.hasHit ? state.attack.elapsedFrames - (state.attack.startupFrames ?? move.startup) - HEADBUTT_IMPACT : -1;
@@ -124,6 +128,7 @@ export class CombatantView {
       });
       this.grapplerEffectSprites.slice(effects.length).forEach(image => image.setVisible(false));
       const adjustment = grapplerAdjustment(pose.name, pose.drawing);
+      const facing = 'facing' in pose && pose.facing ? pose.facing : state.facing;
       if (this.scene.textures?.exists(texture)) {
         const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, texture, String(pose.drawing));
         // Spinning with the victim, he turns his face from side to side: the drawing is mirrored and normal in turn.
@@ -131,8 +136,8 @@ export class CombatantView {
         this.colorEffect.apply(sprite, color, 'grappler');
         sprite.setDepth(depth).setTexture(texture, String(between ?? pose.drawing)).setOrigin(.5, spinning ? .5 : 465 / 640)
           .setScale(GRAPPLER_DISPLAY * adjustment.scale / grapplerFrameSize(textureName) * spinWidth * turnWidth, GRAPPLER_DISPLAY * adjustment.scale / grapplerFrameSize(textureName))
-          .setPosition(state.x + adjustment.center * GRAPPLER_DISPLAY * adjustment.scale * (state.facing === 'left' ? -1 : 1), state.y - (spinning ? 105 : 0))
-          .setFlipX(state.facing === 'left').setAngle(0).setAlpha(1).setVisible(true);
+          .setPosition(state.x + adjustment.center * GRAPPLER_DISPLAY * adjustment.scale * (facing === 'left' ? -1 : 1), state.y + adjustment.lift * GRAPPLER_DISPLAY * adjustment.scale - (spinning ? 105 : 0))
+          .setFlipX(facing === 'left').setAngle(spinning && state.knockdownBy?.moveId === 'ultimate-grab' ? 180 : 0).setAlpha(1).setVisible(true);
         this.sprites.slice(1).forEach(other => other.setVisible(false));
         this.graphics.clear(); this.lasso?.setVisible(false); this.dust?.setVisible(false);
         return;
@@ -147,7 +152,7 @@ export class CombatantView {
       const sprite = this.sprites[0] ??= this.scene.add.image(0, 0, shotoDrawing.texture, String(shotoDrawing.frame)).setDepth(10);
       this.colorEffect.apply(sprite, color, 'bob');
       sprite.setDepth(depth).setTexture(shotoDrawing.texture, String(shotoDrawing.frame)).setOrigin(.5, spinning ? .5 : shotoDrawing.footAnchor)
-        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * ('scale' in shotoDrawing ? shotoDrawing.scale ?? 1 : 1) / getShotoResolution(shotoDrawing.texture) * spinWidth, (shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * ('scale' in shotoDrawing ? shotoDrawing.scale ?? 1 : 1) / getShotoResolution(shotoDrawing.texture)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y - (spinning ? 90 : 0))
+        .setScale((shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * ('scale' in shotoDrawing ? shotoDrawing.scale ?? 1 : 1) / getShotoResolution(shotoDrawing.texture) * spinWidth, (shotoDrawing.texture === 'shoto-idle' ? shotoIdleScale : shotoSpriteScale) * ('scale' in shotoDrawing ? shotoDrawing.scale ?? 1 : 1) / getShotoResolution(shotoDrawing.texture)).setAngle(0).setPosition(state.x + shotoDrawing.offsetX, state.y + shotoDrawing.offsetY - (spinning ? 90 : 0))
         .setFlipX(shotoDrawing.flipX).setAlpha(1).setVisible(true);
       this.sprites.slice(1).forEach(other => other.setVisible(false));
       this.graphics.clear();
@@ -173,17 +178,24 @@ export class CombatantView {
       const move = state.fighterId === 'texas' && state.attack
         ? getCharacterById(state.fighterId)?.moves.find(candidate => candidate.id === state.attack!.moveId) : undefined;
       const lassoTexture = 'texas-effect-lasso';
-      if (move?.id === 'throw-13' && state.mode === 'active' && this.scene.textures.exists(lassoTexture)) {
-        const box = createHitbox(state, move);
-        const sign = state.facing === 'right' ? 1 : -1;
-        const hand = state.x + sign * 58;
-        const tip = state.facing === 'right' ? box.x + box.width : box.x;
-        const width = Math.max(1, Math.abs(tip - hand)) * 640 / 491 * 1.15;
-        const left = state.facing === 'right' ? hand - width * 64 / 640 : tip - width * 85 / 640;
-        const lasso = this.lasso ??= this.scene.add.image(0,0,lassoTexture,'2').setDepth(11);
-        this.colorEffect.apply(lasso, { alternate: color.alternate }, 'magic');
-        lasso.setTexture(lassoTexture, '2').setOrigin(0,.5).setDisplaySize(width,120)
-          .setPosition(left,state.y - 109).setFlipX(state.facing === 'left').setVisible(true);
+      if (move?.id === 'throw-13' && state.mode === 'active' && state.attack && this.scene.textures.exists(lassoTexture)) {
+        const body = layers.find(pose => pose.texture === 'texas-throw-active');
+        if (body) {
+          const box = createHitbox(state, move);
+          const sign = state.facing === 'right' ? 1 : -1;
+          const unit = texasDisplayHeight * body.scale / 640;
+          // The rope begins at the extended hand in the active drawing; follow its calibrated position and scale.
+          const handX = state.x + body.offsetX + sign * (490 - 320) * unit;
+          const handY = state.y + body.offsetY + (234 - 465) * unit;
+          const tip = state.facing === 'right' ? box.x + box.width : box.x;
+          const frame = Math.min(2, Math.max(0, state.attack.elapsedFrames - (state.attack.startupFrames ?? move.startup)));
+          const startX = [64, 66, 64][frame], endX = [536, 576, 560][frame];
+          const width = Math.max(1, Math.abs(tip - handX)) * 640 / (endX - startX);
+          const lasso = this.lasso ??= this.scene.add.image(0,0,lassoTexture,'0').setDepth(11);
+          this.colorEffect.apply(lasso, { alternate: color.alternate }, 'magic');
+          lasso.setTexture(lassoTexture, String(frame)).setOrigin(sign > 0 ? startX / 640 : 1 - startX / 640, 339 / 640)
+            .setDisplaySize(width,120).setPosition(handX,handY).setFlipX(sign < 0).setVisible(true);
+        } else this.lasso?.setVisible(false);
       } else this.lasso?.setVisible(false);
       const dustKind = move?.id === 'power-kick' ? 'power' :
         move && (move.id === 'light-kick' || move.id === 'crouch-light-kick') ? 'light' : undefined;

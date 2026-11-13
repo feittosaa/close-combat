@@ -41,6 +41,7 @@ export function stageForMatch(mode:MatchMode,requestedId?:string){
 /** The player's chosen colour; an opponent not picked by the player (Arcade, tutorial) takes the other colour only in a mirror match. */
 export function matchPalettes(setup: FightSetup, sameFighter: boolean): [boolean, boolean] {
   const player = setup.fighterPalette === 1;
+  if (setup.mode === 'arcade') return [player, sameFighter && !player];
   return [player, setup.opponentPalette === undefined ? sameFighter && !player : setup.opponentPalette === 1];
 }
 

@@ -98,6 +98,6 @@ it.each([0,1])('recovers immediately from a real launcher for 50 rage: victim %i
   expect(sim.snapshot().characters[victim]).toMatchObject({ grounded: false, mode: 'hitstun' });
   step(sim, victim, { ...N, rageAction: true });
   const recovered = sim.snapshot().characters[victim];
-  expect(recovered).toMatchObject({ rage: 800, mode: 'airborne', remainingStateFrames: 0 });
+  expect(recovered).toMatchObject({ rage: 750, mode: 'airborne', remainingStateFrames: 0 });
   expect(recovered.juggle).toBeUndefined();
 });

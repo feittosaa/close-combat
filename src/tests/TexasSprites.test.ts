@@ -9,8 +9,8 @@ import chargeThrowAtlas from '../assets/sprites/characters/texas/high/charge-thr
 it.each([0, 1])('holds the fully crouched pose for player %i', player => {
   const state = new Simulation(createGameConfig(1024,576),[texas,texas]).snapshot().characters[player];
   const crouching = {...state, crouching:true, stateStartedFrame:100};
-  expect(getTexasSpritePose(crouching,100)).toMatchObject({texture:'texas-crouch',frame:0});
-  expect(getTexasSpritePose(crouching,104)).toMatchObject({texture:'texas-crouch',frame:2});
+  expect(getTexasSpritePose(crouching,100)).toMatchObject({texture:'texas-crouch-enter',frame:0});
+  expect(getTexasSpritePose(crouching,104)).toMatchObject({texture:'texas-crouch-enter',frame:4});
   for (const frame of [106, 118, 130, 200]) {
     expect(getTexasSpritePose(crouching,frame)).toMatchObject({texture:'texas-crouch',frame:3,flipX:player===1});
   }
@@ -92,6 +92,20 @@ it.each([0,1])('an airborne fighter keeps falling after the round ends and lands
   expect(getTexasRoundEndPose(won,true,0)?.texture).toBe('texas-victory');
   expect(settleAfterRound(airborne, 0, state.y, .55, true).y).toBe(airborne.y);   // it falls from where it was, with no jump
   expect(airborne.grounded).toBe(false);
+});
+
+it.each([0,1])('uses the current lying frame when Texas is defeated while already down, player %i', player => {
+  const state = new Simulation(createGameConfig(1024,576),[texas,texas]).snapshot().characters[player];
+  const down = {...state, mode:'knockdown' as const, grounded:true, remainingStateFrames:30,
+    pushbackMotion:{distancePerFrame:5,remainingFrames:3},
+    throwPull:{distancePerFrame:1,remainingFrames:5,launchDistance:100,launchFrames:20,liftSpeed:-5},
+    commandGrabbed:true, grabbedStartedFrame:10,
+    grapplerGrabReaction:{moveId:'grab-low',startedFrame:10,startedLying:true}};
+  const presented = settleAfterRound(down, 0, state.y, .55, true);
+  expect(getTexasSpriteLayers(presented, 20)).toHaveLength(1);
+  expect(getTexasSpritePose(presented, 20)).toMatchObject({texture:'texas-fall-landing',frame:5,flipX:player===1});
+  expect(down.commandGrabbed).toBe(true);
+  expect(down.pushbackMotion.remainingFrames).toBe(3);
 });
 
 it('keeps the round-end animation clock stable through the result and clears it on reset', () => {
@@ -224,7 +238,7 @@ it('holds the initial grab pose throughout the escape window, then falls', () =>
   const normal = getTexasSpritePose({...captured, grabbedStartedFrame:undefined},60)!;
   const held = getTexasSpritePose({...captured, grabbedHold:true},60)!;
   expect(held.scale).toBeCloseTo(normal.scale * 1.05, 9);
-  expect(getTexasSpritePose({...captured, mode:'knockdown'},55)?.texture).toBe('texas-knockdown');
+  expect(getTexasSpritePose({...captured, mode:'knockdown'},55)?.texture).toBe('texas-getup');
 });
 
 it.each([['low','hurt-low'],['mid','hurt'],['high','hurt-high']] as const)('selects %s damage artwork and restarts it at each hit', (level, texture) => {
@@ -283,14 +297,14 @@ it('selects the prepared texture for every authored attack through its active ph
 it('plays crouch and guard entry before holding their defensive pose', () => {
   const state = new Simulation(createGameConfig(1024,576),[texas,texas]).snapshot().characters[0];
   const crouch = {...state,mode:'crouching' as const,crouching:true,stateStartedFrame:10};
-  expect(getTexasSpritePose(crouch,10)).toMatchObject({texture:'texas-crouch',frame:0});
-  expect(getTexasSpritePose(crouch,12)?.frame).toBe(1);
-  expect(getTexasSpritePose(crouch,14)?.frame).toBe(2);
+  expect(getTexasSpritePose(crouch,10)).toMatchObject({texture:'texas-crouch-enter',frame:0});
+  expect(getTexasSpritePose(crouch,12)?.frame).toBe(2);
+  expect(getTexasSpritePose(crouch,14)?.frame).toBe(4);
   expect(getTexasSpritePose(crouch,16)).toMatchObject({texture:'texas-crouch',frame:3});
   expect(getTexasSpritePose(crouch,30)?.frame).toBe(3);
   const guard = {...crouch,mode:'blocking' as const};
-  expect(getTexasSpritePose(guard,10)).toMatchObject({texture:'texas-crouch-guard',frame:0});
-  expect(getTexasSpritePose(guard,14)?.frame).toBe(2);
+  expect(getTexasSpritePose(guard,10)).toMatchObject({texture:'texas-crouch-guard-enter',frame:0});
+  expect(getTexasSpritePose(guard,14)?.frame).toBe(4);
 });
 
 it.each([0, 1])('stays crouched when a crouching attack recovers for player %i', player => {
@@ -440,7 +454,7 @@ it.each([0,1])('mostra a queda progressiva enquanto o empurrão desloca a Texas 
   const state=new Simulation(createGameConfig(1024,576),[texas,texas]).snapshot().characters[player];
   const pushed={...state,mode:'knockdown' as const,grounded:true,stateStartedFrame:100,pushbackMotion:{distancePerFrame:5,remainingFrames:12}};
   for(let age=0;age<12;age++) expect(getTexasSpritePose(pushed,100+age)).toMatchObject({texture:'texas-push-fall',frame:Math.floor(age/2),flipX:player===1});
-  expect(getTexasSpritePose({...pushed,pushbackMotion:undefined},112)?.texture).toBe('texas-knockdown');
+  expect(getTexasSpritePose({...pushed,pushbackMotion:undefined},112)?.texture).toBe('texas-getup');
 });
 
 

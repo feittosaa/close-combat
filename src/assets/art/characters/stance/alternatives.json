@@ -33,19 +33,13 @@
   "6.png": {
    "victory": {
     "height": 1.2616,
-    "top": -0.25
+    "top": -0.15
    }
   },
   "7.png": {
    "victory": {
-    "height": 1.2616,
-    "top": -0.15
-   }
-  },
-  "8.png": {
-   "victory": {
     "height": 1,
-    "top": 0
+    "top": -0.02
    }
   }
  }

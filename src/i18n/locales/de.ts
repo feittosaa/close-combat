@@ -229,7 +229,6 @@ export const de: Locale = {
     'hud.round': 'RUNDE {round}',
     'hud.pauseHint': '{key} / ESC · PAUSE',
     'hud.breakerSuccess': 'COMBO BREAKER!',
-    'hud.breakerFail': 'BREAKER VERFEHLT',
     'hud.comboHits': 'TREFFER',
     'hud.comboDamage': '{damage} SCHADEN',
     'training.status': 'TRAINING  /  {state} · {speed}% · {opponent} · AUTO-ENERGIE {auto}',
