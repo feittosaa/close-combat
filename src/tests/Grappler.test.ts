@@ -1,3 +1,4 @@
+import { createHurtbox, createHurtZones, hasHurtZones } from '../engine/collision/combatGeometry';
 import { describe, expect, it } from 'vitest';
 import { grappler } from '../engine/data/fighters/grappler';
 import { shoto } from '../engine/data/fighters/shoto';
@@ -30,17 +31,39 @@ describe('Grappler provisório', () => {
     expect(grappler.moves.find(move => move.id === 'light-kick')?.hitLevel).toBe('low');
     for (const move of grappler.moves.filter(move => shoto.moves.some(base => base.id === move.id))) expect(move.startup).toBeGreaterThan(shoto.moves.find(base => base.id === move.id)!.startup);
   });
-  it('a reação ao golpe passa pelos seis desenhos dentro do atordoamento, rápida no início e mais lenta no fim', () => {
+  it('a reação ao golpe começa no impacto, o ponto alto, e recupera até o fim do atordoamento, rápida no início e mais lenta no fim', () => {
     const state = new Simulation(createGameConfig(1024, 576), [grappler, shoto]).snapshot().characters[0];
     const stun = 24, start = 100;
-    const poses = Array.from({ length: stun }, (_, age) => getGrapplerPose({ ...state, mode:'hitstun', stateStartedFrame:start, remainingStateFrames:stun - age }, start + age));
-    // The recoil peaks on the fourth drawing of the hurt sheet, then the recovery sheet straightens up from that pose.
-    const order = poses.map(pose => (pose.name === 'hurt-recovery' ? 4 : 0) + pose.drawing);
-    expect([...new Set(poses.map(pose => pose.name))]).toEqual(['hurt', 'hurt-recovery']);
-    expect([...new Set(order)]).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(value => order.includes(value)));
-    expect(order).toEqual([...order].sort((x, y) => x - y));
-    expect(poses[0].drawing).toBe(0);
-    expect(poses[stun - 1]).toEqual({ name:'hurt-recovery', drawing:5 });
+    for (const hitReaction of [undefined, { level:'high' as const, startedFrame:start }, { level:'low' as const, startedFrame:start }]) {
+      const poses = Array.from({ length: stun }, (_, age) => getGrapplerPose({ ...state, mode:'hitstun', hitReaction, stateStartedFrame:start, remainingStateFrames:stun - age }, start + age));
+      expect(poses[0].drawing).toBe(2);
+      expect(poses.map(pose => pose.drawing)).toEqual([...poses.map(pose => pose.drawing)].sort((x, y) => x - y));
+      expect(poses[stun - 1].drawing).toBe(5);
+      expect(new Set(poses.map(pose => pose.name)).size).toBe(1);
+    }
+    const air = getGrapplerPose({ ...state, grounded:false, mode:'hitstun', stateStartedFrame:start, remainingStateFrames:stun }, start);
+    expect(air).toEqual({ name:'air-hurt', drawing:2 });
+  });
+  it('é atingido por zonas (alta, média e baixa) como Texas e Shoto, e a zona baixa é mais larga que o corpo', () => {
+    const state = new Simulation(createGameConfig(1024, 576), [shoto, grappler]).snapshot().characters[1];
+    expect(hasHurtZones(state.fighterId)).toBe(true);
+    const { high, mid, low } = createHurtZones(state), body = createHurtbox(state);
+    expect(high.height + mid.height + low.height).toBeCloseTo(body.height);
+    expect(low.width).toBeGreaterThan(body.width);
+  });
+  it('quem pula não atravessa a Grappler por dentro: só passa com os pés acima da cabeça dela', () => {
+    for (const [other, label] of [[grappler, 'Grappler'], [shoto, 'Shoto']] as const) {
+      const sim = new Simulation(createGameConfig(1024, 576), [texas, other], { training: true, initialDistance: 80 });
+      const forward: FrameInput = { direction:'UF', buttons:new Set() }, neutral: FrameInput = { direction:'N', buttons:new Set() };
+      let highest = 0;
+      for (let i = 0; i < 90; i++) {
+        sim.stepFrame([i < 60 ? forward : neutral, neutral]);
+        const [jumper, target] = sim.snapshot().characters;
+        highest = Math.max(highest, target.y - jumper.y);
+        expect(jumper.x, `${label} no quadro ${i}`).toBeLessThan(target.x);
+      }
+      expect(highest, label).toBeGreaterThan(60);
+    }
   });
   it('seleciona animações distintas para movimentos, ataques e reações', () => {
     const state = new Simulation(createGameConfig(1024, 576), [grappler, shoto]).snapshot().characters[0];

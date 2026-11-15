@@ -7,6 +7,7 @@ import { FIGHT_SIDE_MARGIN, FIGHT_WORLD_SCALE } from '../data/fightFraming';
 import type { MoveDefinition } from '../data/moves';
 import { CommandParser } from '../../input/CommandBuffer';
 import type { AttackButton, FrameInput } from '../../input/types';
+import { createHurtbox } from '../collision/combatGeometry';
 import type { Hitbox } from '../collision/types';
 import { FixedStepClock } from './FixedStepClock';
 import type { ProjectileState } from '../combat/ProjectileState';
@@ -1405,7 +1406,9 @@ export class Simulation {
     const [a, b] = this.characters;
     if (a.throwFlight || b.throwFlight) return;
     const minimum = (a.collision.bodyWidth + b.collision.bodyWidth) / 2;
-    if ((!a.grounded || !b.grounded) && Math.abs(a.y - b.y) >= minimum) return;
+    // A fighter in the air crosses the other only with the feet above the other's head (the top of its hurtbox).
+    const [higher, lower] = a.y < b.y ? [a, b] : [b, a];
+    if ((!a.grounded || !b.grounded) && higher.y <= createHurtbox(lower).y) return;
     const aWasLeft = previousX[0] <= previousX[1];
     if ((aWasLeft ? b.x - a.x : a.x - b.x) >= minimum) return;
     const anchored = (character: CharacterState) => character.grounded &&

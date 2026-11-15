@@ -3,7 +3,7 @@ import type { CharacterState } from '../characters/CharacterState';
 import type { MoveDefinition } from '../data/moves';
 import type { FrameInput } from '../../input/types';
 import type { Hitbox } from '../collision/types';
-import { contactHeight, createHitbox, createHurtbox, createHurtZones } from '../collision/combatGeometry';
+import { contactHeight, createHitbox, createHurtbox, createHurtZones, hasHurtZones } from '../collision/combatGeometry';
 import { createProjectileHitbox } from '../collision/projectileGeometry';
 import { intersects } from '../collision/intersects';
 import { RAGE_BUFF_DAMAGE } from './rage';
@@ -79,7 +79,7 @@ export class AttackResolver {
       if (hitLevel === 'high' && target.crouching) return [];
       const box = projectile ? createProjectileHitbox({ownerId:attacker.characterId,x:attacker.x,y:attacker.y,facing:attacker.facing},move) : createHitbox(attacker,move);
       const isGrab = move.category === 'throw' || Boolean(move.commandGrab);
-      const zonedTarget = target.fighterId === 'texas' || target.fighterId === 'shoto';
+      const zonedTarget = hasHurtZones(target.fighterId);
       const hurtboxes = zonedTarget && !isGrab
         ? Object.values(createHurtZones(target)) : [createHurtbox(target)];
       const contacted = hurtboxes.find(hurtbox => intersects(box, hurtbox));
