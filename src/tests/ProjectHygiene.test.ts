@@ -61,11 +61,6 @@ describe('Project asset and documentation hygiene', () => {
     }
     expect(used.has('src/assets/sprites/effects/contact/grappler-ultimate-soco.png')).toBe(true);
     used.add('assets/art/effects/contact/grappler-ultimate-soco.png');
-    // The selection montage consumes independent keyed layers and preserves their original references.
-    for (const id of ['shoto','grappler','rushdown','setplay','gimmick','stance','mrapple','mixup','texas']) {
-      used.add(`src/assets/art/selection/selection_${id}.png`);
-      used.add(`assets/art/selection/selection_${id}.png`);
-    }
     const alternatives = import.meta.glob('../assets/art/characters/*/{victory-poses,selection-backgrounds,selection-icons}/*.png', { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(alternatives)) used.add(projectPath(key));
     const reviews = import.meta.glob<string>('../../assets/art/characters/*/revisao.json', { eager: true, query: '?raw', import: 'default' });

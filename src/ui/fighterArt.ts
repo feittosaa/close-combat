@@ -55,7 +55,7 @@ export const fighterArt: Readonly<Record<string, FighterArt>> = {
   rushdown: {background:rushdownBackground,icon:rushdownIcon,iconWindow:{x:0,y:0,size:1254},fullbody:rushdownFullbody,victory:{height:1.3624,top:.0504},name:'Rushdown', hero: { zoom: 1, x: 16, y: 50 }, arcade: { zoom: 1.15, x: 70, y: 0 }},
   stance: {background:stanceBackground,icon:stanceIcon,iconWindow:{x:0,y:0,size:1254},fullbody:stanceFullbody,victory:{ height: 1.2616, top: .0739 },name:'Stance', hero: { zoom: 1, x: 3, y: 50 }, arcade: { zoom: 1, x: 50, y: 0 }},
   mixup: {background:mixupBackground,icon:mixupIcon,iconWindow:{x:0,y:0,size:1254},fullbody:mixupFullbody,victory:{ height: 1, top: 0 },name:'Mixup', hero: { zoom: 1, x: 4, y: 50 }},
-  setplay: {background:setplayBackground,icon:setplayIcon,iconWindow:{x:0,y:0,size:1254},fullbody:setplayFullbody,victory:{height:1.3767,top:.05},name:'Setplay', hero: { zoom: 1, x: 23, y: 50 }},
+  setplay: {background:setplayBackground,icon:setplayIcon,iconWindow:{x:0,y:0,size:1254},fullbody:setplayFullbody,victory:{height:1.3767,top:.05},name:'Setplay', hero: { zoom: 1.3, x: 45, y: 50 }, arcade: { zoom: 1.5, x: 64, y: 50 }},
 };
 
 /** Folders of alternative art beside each fighter's main images: victory poses (`fullbody`), selection art (`background`) and icons (`icon`). */

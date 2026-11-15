@@ -55,7 +55,7 @@ export class StagePresentation {
     if (name) {
       this.title.setTexture(presentationKey(this.theme, name));
       const [left, top, right, bottom] = presentationBounds[`${this.theme}:${name}`];
-      const height = LOGICAL_VIEW.height * .25 / (bottom - top);
+      const height = LOGICAL_VIEW.height * .30 / (bottom - top);
       this.title.setOrigin((left + right) / 2, (top + bottom) / 2).setPosition(width / 2, LOGICAL_VIEW.height / 2).setVisible(true);
       this.title.setDisplaySize(height * this.title.width / this.title.height, height);
       const alpha = showingKnockout ? 1 : wasIntro ? Math.min(1, (this.introTotal - this.intro) / 180, (this.intro - ATTACK_GRACE_MS) / 150) : Math.min(1, endAge / 8, (RESULT_TITLE_END_FRAME - endAge) / 10);
