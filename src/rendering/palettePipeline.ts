@@ -19,6 +19,8 @@ uniform float uLit;
 uniform float uExposure;
 uniform vec3 uShadow;
 uniform float uOcclusion;
+uniform float uVolume;
+uniform float uSide;
 uniform float uWarmth;
 uniform float uCorrected;
 uniform mat3 uCorrection;
@@ -100,6 +102,10 @@ vec3 palette(vec3 color, vec3 drawn) {
 }
 vec3 light(vec3 c) {
   float lum = dot(c, vec3(0.299, 0.587, 0.114));
+  // Volume: the figure is lit from above and to one side, so each frame goes from lighter at the top to darker at the feet,
+  // with a darker contact with the floor, and from the lit side to the other, whatever its tones.
+  vec2 place = (outTexCoord - uFrame.xy) / max(uFrame.zw - uFrame.xy, vec2(0.0001));
+  c *= 1.0 + uVolume * (0.5 - place.y - 0.6 * smoothstep(0.8, 1.0, place.y)) + uSide * (place.x - 0.5);
   // Deep tones receive the ambient occlusion: they take the stage's shadow colour and are deepened, so no hue is rotated.
   float shade = 1.0 - smoothstep(0.05, 0.7, lum);
   c *= mix(vec3(1.0), uShadow, shade);
@@ -185,20 +191,20 @@ void main() {
 }`;
 
 const sameColor = (a: CharacterColorData, b: CharacterColorData): boolean => a.palette === b.palette && a.lit === b.lit &&
-  a.exposure === b.exposure && a.occlusion === b.occlusion && a.warmth === b.warmth && a.shadow.every((channel, index) => channel === b.shadow[index]);
-const neutral: CharacterColorData = { palette: 0, lit: false, exposure: 1, shadow: [1, 1, 1], occlusion: 0, warmth: 0 };
+  a.exposure === b.exposure && a.occlusion === b.occlusion && a.volume === b.volume && a.side === b.side && a.warmth === b.warmth && a.shadow.every((channel, index) => channel === b.shadow[index]);
+const neutral: CharacterColorData = { palette: 0, lit: false, exposure: 1, shadow: [1, 1, 1], occlusion: 0, volume: 0, side: 0, warmth: 0 };
 
 /** Below this many texels the outline is left as drawn. */
 const MIN_TRIM = .15;
 /**
- * Outline uniforms of a sprite: the texels to trim from its frame's outline (the sprite's scale is world pixels per
- * texel), the frame's uv rectangle and the texel size; all zero when the frame needs no change.
+ * Frame uniforms of a sprite: the texels to trim from its outline (the sprite's scale is world pixels per texel; zero
+ * when the frame needs no change), the frame's uv rectangle and the texel size.
  */
 function outlineUniforms(sprite: Phaser.GameObjects.Image): number[] {
-  const frame = sprite.frame, trim = frame ? outlineTrim(sprite.texture.key, frame.name, frame.realHeight, Math.abs(sprite.scaleX)) : 0;
-  if (Math.abs(trim) < MIN_TRIM) return [0, 0, 0, 0, 0, 0, 0];
-  const source = frame.source;
-  return [trim, Math.min(frame.u0, frame.u1), Math.min(frame.v0, frame.v1), Math.max(frame.u0, frame.u1), Math.max(frame.v0, frame.v1),
+  const frame = sprite.frame;
+  if (!frame) return [0, 0, 0, 1, 1, 0, 0];
+  const trim = outlineTrim(sprite.texture.key, frame.name, frame.realHeight, Math.abs(sprite.scaleX)), source = frame.source;
+  return [Math.abs(trim) < MIN_TRIM ? 0 : trim, Math.min(frame.u0, frame.u1), Math.min(frame.v0, frame.v1), Math.max(frame.u0, frame.u1), Math.max(frame.v0, frame.v1),
     1 / source.width, 1 / source.height];
 }
 
@@ -219,7 +225,9 @@ export function registerCharacterColor(scene: Phaser.Scene): void {
       super({ game, fragShader: fragment.replace('%sample%', [...choose, 'return vec4(0.0);'].join('\n  ')) });
     }
     override batchSprite(sprite: Phaser.GameObjects.Image, camera: Phaser.Cameras.Scene2D.Camera, parent?: Phaser.GameObjects.Components.TransformMatrix): void {
-      const data = { ...neutral, ...sprite.pipelineData } as CharacterColorData;
+      const drawn = { ...neutral, ...sprite.pipelineData } as CharacterColorData;
+      // The lighter side is on the screen, so a mirrored drawing has it on the other side of its texture.
+      const data = { ...drawn, side: drawn.side * (sprite.flipX !== sprite.scaleX < 0 ? -1 : 1) };
       const correction = sheetCorrection(sprite.texture?.key) ?? IDENTITY_CORRECTION;
       const outline = outlineUniforms(sprite);
       if (!this.current || !sameColor(this.current, data) || correction !== this.correction || outline.join() !== this.outline) {
@@ -230,6 +238,8 @@ export function registerCharacterColor(scene: Phaser.Scene): void {
         this.set1f('uExposure', data.exposure);
         this.set3f('uShadow', data.shadow[0], data.shadow[1], data.shadow[2]);
         this.set1f('uOcclusion', data.occlusion);
+        this.set1f('uVolume', data.volume);
+        this.set1f('uSide', data.side);
         this.set1f('uWarmth', data.warmth);
         this.set1f('uCorrected', correction === IDENTITY_CORRECTION ? 0 : 1);
         // GLSL matrices are column-major; the correction is stored by rows, each followed by its offset.

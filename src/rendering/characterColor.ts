@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { StageDefinition } from './stages/StageDefinition';
 import type { StageLayout } from './stages/stageLayout';
+import { stageLight } from './stageLight';
 
 export const CHARACTER_COLOR_PIPELINE = 'character-color';
 /** Colour correction of one sheet: a 3×3 matrix by rows, each followed by its offset, over RGB from 0 to 1. */
@@ -42,14 +43,14 @@ export function outlineTrim(texture: string, frame: string | number, frameHeight
  * The sheet correction is read by the pipeline from the texture being drawn.
  */
 export interface CharacterColorData {
-  palette: number; lit: boolean; exposure: number; shadow: readonly [number, number, number]; occlusion: number; warmth: number;
+  palette: number; lit: boolean; exposure: number; shadow: readonly [number, number, number]; occlusion: number; volume: number; side: number; warmth: number;
 }
 export type Palette = 'none' | 'bob' | 'texas' | 'magic' | 'magic-highlight' | 'grappler';
 /**
  * Stage lighting for a fighter: `exposure` scales the whole figure, `shadow` is the ambient colour taken by its dark tones,
- * `occlusion` deepens them and `warmth` is the flame light on the lit surfaces. Nothing rotates hue, so clothing keeps its colour.
+ * `occlusion` deepens them, `volume` lightens each frame's top and darkens its feet, `side` lightens the side facing the brighter part of the stage and `warmth` is the flame light on the lit surfaces. Nothing rotates hue, so clothing keeps its colour.
  */
-export interface CharacterColor { exposure?: number; shadow?: readonly [number, number, number]; occlusion?: number; warmth?: number; alternate?: boolean }
+export interface CharacterColor { exposure?: number; shadow?: readonly [number, number, number]; occlusion?: number; volume?: number; side?: number; warmth?: number; alternate?: boolean }
 type CanvasImage = Phaser.GameObjects.Image & { renderCanvas: (...args: [Phaser.Renderer.Canvas.CanvasRenderer, ...unknown[]]) => void };
 const smoothstep = (a: number, b: number, value: number): number => {
   const t = Math.max(0, Math.min(1, (value - a) / (b - a)));
@@ -58,12 +59,12 @@ const smoothstep = (a: number, b: number, value: number): number => {
 
 /** Provisional scene lighting; lights follow their scenery layer's parallax. */
 export function characterColor(stage: StageDefinition, layout: StageLayout, x: number, cameraScrollX: number, alternate: boolean): CharacterColor {
-  const ambient: Record<string, Required<Omit<CharacterColor, 'alternate' | 'warmth'>>> = {
-    'sala-treino': { exposure: 1, shadow: [1, 1, 1], occlusion: 0 },
-    'fazenda': { exposure: 1.03, shadow: [.9, .94, 1], occlusion: .12 },
-    'saloon-dia': { exposure: 1.03, shadow: [.96, .91, .86], occlusion: .14 },
-    'saloon-noite': { exposure: .91, shadow: [.8, .82, 1], occlusion: .26 },
-    'saloon': { exposure: .95, shadow: [.92, .84, .8], occlusion: .2 },
+  const ambient: Record<string, Required<Omit<CharacterColor, 'alternate' | 'warmth' | 'side'>>> = {
+    'sala-treino': { exposure: 1, shadow: [1, 1, 1], occlusion: 0, volume: .12 },
+    'fazenda': { exposure: 1.03, shadow: [.9, .94, 1], occlusion: .12, volume: .2 },
+    'saloon-dia': { exposure: 1.03, shadow: [.96, .91, .86], occlusion: .14, volume: .2 },
+    'saloon-noite': { exposure: .91, shadow: [.8, .82, 1], occlusion: .26, volume: .26 },
+    'saloon': { exposure: .95, shadow: [.92, .84, .8], occlusion: .2, volume: .22 },
   };
   const base = ambient[stage.id] ?? ambient['sala-treino'];
   let light = 0;
@@ -76,7 +77,9 @@ export function characterColor(stage: StageDefinition, layout: StageLayout, x: n
       light = Math.max(light, Math.max(0, 1 - Math.abs(x - position) / (200 * layout.scale)));
     }
   }
-  return { ...base, warmth: light, alternate };
+  // Standing in a brighter part of the stage lights the fighter more, and the lighter side shows on the figure.
+  const place = stageLight(stage.id, x / layout.worldWidth);
+  return { ...base, exposure: base.exposure * place.exposure, side: place.side, warmth: light, alternate };
 }
 
 /** Applies a sheet correction to one pixel (0–255), as the pipeline does before the palette. */
@@ -213,11 +216,11 @@ export class CharacterColorEffect {
       sprite.setPipeline(CHARACTER_COLOR_PIPELINE);
     }
     const data: CharacterColorData = { palette: PALETTE_CODES[palette], lit, exposure: color.exposure ?? 1, shadow: color.shadow ?? [1, 1, 1],
-      occlusion: color.occlusion ?? 0, warmth: color.warmth ?? 0 };
+      occlusion: color.occlusion ?? 0, volume: color.volume ?? 0, side: color.side ?? 0, warmth: color.warmth ?? 0 };
     Object.assign(sprite.pipelineData, data);
   }
 }
 
 const PALETTE_CODES: Readonly<Record<Palette, number>> = { none: 0, bob: 1, texas: 2, magic: 3, 'magic-highlight': 4, grappler: 5 };
 const isLit = (color: CharacterColor): boolean =>
-  (color.exposure ?? 1) !== 1 || (color.occlusion ?? 0) > 0 || (color.warmth ?? 0) > 0 || (color.shadow ?? [1, 1, 1]).some(channel => channel !== 1);
+  (color.exposure ?? 1) !== 1 || (color.occlusion ?? 0) > 0 || (color.volume ?? 0) > 0 || (color.side ?? 0) !== 0 || (color.warmth ?? 0) > 0 || (color.shadow ?? [1, 1, 1]).some(channel => channel !== 1);

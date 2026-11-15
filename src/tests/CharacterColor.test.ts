@@ -1,3 +1,4 @@
+import { stageLight } from '../rendering/stageLight';
 import { expect, it, vi } from 'vitest';
 import { characterColor, CharacterColorEffect, correctedPixel, IDENTITY_CORRECTION, palettePixel, sheetCorrection } from '../rendering/characterColor';
 import { getStageById } from '../rendering/stages/stageCatalog';
@@ -6,9 +7,10 @@ import { createStageLayout } from '../rendering/stages/stageLayout';
 it('keeps ordinary training colors while differentiating the second mirrored fighter', () => {
   const stage = getStageById('sala-treino')!;
   const layout = createStageLayout(stage, 1024, 576, 488);
-  const neutral = { exposure: 1, shadow: [1, 1, 1], occlusion: 0, warmth: 0 };
-  expect(characterColor(stage, layout, 500, 0, false)).toEqual({ ...neutral, alternate: false });
-  expect(characterColor(stage, layout, 500, 0, true)).toEqual({ ...neutral, alternate: true });
+  const neutral = { shadow: [1, 1, 1], occlusion: 0, volume: .12, warmth: 0 };
+  expect(characterColor(stage, layout, 500, 0, false)).toMatchObject({ ...neutral, alternate: false });
+  expect(characterColor(stage, layout, 500, 0, true)).toMatchObject({ ...neutral, alternate: true });
+  expect(characterColor(stage, layout, 500, 0, false).exposure).toBeCloseTo(1, 1);
 });
 
 it('changes clothing and magic colors while preserving skin and unrelated colors', () => {
@@ -140,4 +142,17 @@ it('recolours the alternate palette by the drawn colour, so a corrected sheet ke
   expect(palettePixel(...corrected, 'bob')).toEqual(corrected);
   const recolored = palettePixel(...corrected, 'bob', drawn);
   expect(recolored[0]).toBeGreaterThan(recolored[1] * 2);
+});
+
+it('lights a fighter more where the stage is brighter and lets the lighter side show on the figure', () => {
+  const noite = getStageById('saloon-noite')!, layout = createStageLayout(noite, 1024, 576, 488);
+  const samples = Array.from({ length: 9 }, (_, index) => (index + .5) / 9).map(fraction => ({ fraction, ...stageLight(noite.id, fraction) }));
+  const brightest = samples.reduce((a, b) => b.exposure > a.exposure ? b : a), darkest = samples.reduce((a, b) => b.exposure < a.exposure ? b : a);
+  expect(brightest.exposure).toBeGreaterThan(darkest.exposure);
+  expect(brightest.exposure - darkest.exposure).toBeLessThanOrEqual(.16 + 1e-9);
+  // Beside the dark spot, the light is on the side of the bright one.
+  const towardBright = Math.sign(brightest.fraction - darkest.fraction);
+  expect(Math.sign(stageLight(noite.id, darkest.fraction + .04 * towardBright).side)).toBe(towardBright);
+  expect((characterColor(noite, layout, darkest.fraction * layout.worldWidth, 0, false).exposure ?? 1)).toBeLessThan(characterColor(noite, layout, brightest.fraction * layout.worldWidth, 0, false).exposure ?? 1);
+  expect(stageLight('inexistente', .5)).toEqual({ exposure: 1, side: 0 });
 });

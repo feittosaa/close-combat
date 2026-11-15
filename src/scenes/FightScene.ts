@@ -30,6 +30,7 @@ import { registerCharacterColor } from '../rendering/palettePipeline';
 import { preloadContactEffects } from '../rendering/contactEffects';
 import { StagePresentation } from '../rendering/StagePresentation';
 import { CombatantView } from '../rendering/CombatantView';
+import { ContactShadows } from '../rendering/ContactShadows';
 import { grapplerCapturePose, hiddenByGrapplerUltimate } from '../rendering/grapplerCapture';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
@@ -115,6 +116,7 @@ export class FightScene extends Phaser.Scene {
   private currentInputs: [FrameInput, FrameInput] = [neutralInput(), neutralInput()];
   private projectileView?: ProjectileView;
   private rushEffect?: RushEffect;
+  private contactShadows?: ContactShadows;
   private rushActive = [false, false];
   private combatants: CombatantView[] = [];
   private inputDisplays: PlayerInputDisplay[] = [];
@@ -374,6 +376,7 @@ export class FightScene extends Phaser.Scene {
     this.projectileView = new ProjectileView(this);
     this.projectileView.onGrabImpact = () => this.cameras.main.shake(110, 0.0015);
     this.rushEffect = new RushEffect(this);
+    this.contactShadows = new ContactShadows(this);
     this.combatants = [
       new CombatantView(this, 0xe45b5b),
       new CombatantView(this, 0x5b8de4),
@@ -551,6 +554,7 @@ export class FightScene extends Phaser.Scene {
       const presented = grapplerCapturePose(character, shown[1 - index]);
       this.combatants[index]?.sync(presented, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color, hiddenByGrapplerUltimate(character, shown[1 - index]), snapshot.hitstopFramesRemaining > 0);
     });
+    this.contactShadows?.update(shown, this.resultFloorY, shown.map((character, index) => hiddenByGrapplerUltimate(character, shown[1 - index])));
     const alternateOwnerIds = new Set(snapshot.characters.filter((_, index) => this.alternatePalettes[index]).map(character => character.characterId));
     this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds,snapshot.hitstopFramesRemaining > 0);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
@@ -589,7 +593,7 @@ export class FightScene extends Phaser.Scene {
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());
     this.combatants = []; this.projectileView?.destroy(); this.projectileView = undefined;
-    this.rushEffect?.destroy(); this.rushEffect = undefined; this.rushActive = [false, false];
+    this.rushEffect?.destroy(); this.rushEffect = undefined; this.contactShadows?.destroy(); this.contactShadows = undefined; this.rushActive = [false, false];
     this.bot = undefined;
     this.inputDisplays.forEach((display) => display.destroy());
     this.inputDisplays = [];
