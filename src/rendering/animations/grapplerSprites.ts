@@ -36,6 +36,13 @@ export type GrapplerPose = { name: string; drawing: number; facing?: 'left' | 'r
 /** Ticks each walk drawing is held, and the ticks of the entry into the walk. */
 const WALK_STEP = 7, ENTER_WALK_FRAMES = 12;
 const attacking = (mode: string) => ['startup', 'active', 'recovery'].includes(mode);
+/** These reaction sheets wind up in their first two drawings and recover in the last three, so they play from the impact (the third): the blow lands on the peak. */
+const IMPACT_SHEETS = new Set(['hurt', 'hurt-low', 'hurt-high', 'air-hurt']);
+const IMPACT_DRAWING = 2;
+const firstDrawing = (name: string): number => IMPACT_SHEETS.has(name) ? IMPACT_DRAWING : 0;
+/** Drawing of a reaction after `drawings` drawings of the sheet have passed since the hit. */
+const hurtDrawing = (name: string, drawings: number): number => Math.min(5, firstDrawing(name) + Math.floor(drawings));
+
 export function getGrapplerPose(state: CharacterState, frame: number, activationFrame?: number): GrapplerPose {
   const reaction = grapplerReaction(state, frame);
   if (reaction) return reaction;
@@ -88,23 +95,20 @@ export function getGrapplerPose(state: CharacterState, frame: number, activation
   }
   const hitAge = Math.max(0, frame - (state.hitReaction?.startedFrame ?? state.stateStartedFrame));
   if (state.mode === 'knockdown' && state.grounded) {
-    if (state.hitReaction?.level === 'low' && hitAge < 12) return {name:'hurt-low', drawing:Math.min(5, Math.floor(hitAge / 2))};
+    if (state.hitReaction?.level === 'low' && hitAge < 12) return {name:'hurt-low', drawing:hurtDrawing('hurt-low', hitAge / 2)};
     if (state.remainingStateFrames <= 9) return {name:'getup', drawing:Math.min(5, Math.floor((9 - state.remainingStateFrames) * 6 / 9))};
     const landed = state.animationTransition && !state.animationTransition.from.grounded ? frame - state.animationTransition.startedFrame : Infinity;
     return landed < 12 ? {name:'fall-landing', drawing:Math.min(5, Math.floor(landed / 2))} : {name:'fall', drawing:5};
   }
   if (state.mode === 'hitstun' || state.mode === 'knockdown') {
     const name = !state.grounded ? 'air-hurt' : state.hitReaction?.level === 'low' ? 'hurt-low' : state.crouching ? 'crouch-hurt' : state.hitReaction?.level === 'high' ? 'hurt-high' : 'hurt';
-    // All six drawings play within the stun, eased: the recoil flies by at the start and the return settles slowly at the end,
-    // so the reaction reads as one fluid motion; a knockdown plays the same drawings at two frames each.
+    // The reaction plays within the stun, eased: the recoil flies by at the start and the return settles slowly at the end,
+    // so it reads as one fluid motion; a knockdown plays the same drawings at two frames each.
     if (state.mode === 'hitstun') {
       const progress = Math.min(1, hitAge / Math.max(1, hitAge + state.remainingStateFrames));
-      const eased = (1 - (1 - Math.min(1, progress * 1.5)) ** 2) * 6;
-      // The standing recoil peaks on the fourth drawing and straightens up in the recovery sheet, which starts from that pose.
-      if (name === 'hurt' && eased >= 3) return {name:'hurt-recovery', drawing:Math.min(5, Math.floor((eased - 3) * 2))};
-      return {name, drawing:Math.min(5, Math.floor(eased))};
+      return {name, drawing:hurtDrawing(name, (1 - (1 - Math.min(1, progress * 1.5)) ** 2) * (6 - firstDrawing(name)))};
     }
-    return {name, drawing:Math.min(5, Math.floor(hitAge / 2))};
+    return {name, drawing:hurtDrawing(name, hitAge / 2)};
   }
   const turn = state.facingTransition, turning = turn ? frame - turn.startedFrame : Infinity;
   if (turn && turning >= 0 && turning < 12 && state.grounded && (state.mode === 'neutral' || state.mode === 'crouching')) {

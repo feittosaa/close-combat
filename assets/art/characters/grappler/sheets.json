@@ -63,13 +63,8 @@
    ]
   },
   "air-hurt": {
-   "cuts": [
-    340,
-    660,
-    1125,
-    1495,
-    1850
-   ]
+   "scale": 1.413,
+   "floor": 588
   },
   "victory-hair-loop": {
    "anchors": [
@@ -81,6 +76,15 @@
     1992
    ],
    "floor": 698
+  },
+  "hurt-low": {
+   "scale": 1.313
+  },
+  "hurt": {
+   "scale": 1.306
+  },
+  "hurt-high": {
+   "scale": 1.287
   }
  }
 }
