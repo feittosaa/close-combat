@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 // Vitest runs this file in Node; the project does not otherwise depend on Node typings.
-// @ts-expect-error Node's built-in module is available to the test runner.
 import { readFileSync } from 'node:fs';
-// @ts-expect-error Node's built-in module is available to the test runner.
 import { createHash } from 'node:crypto';
 import registry from '../assets/sprites/prepared.json';
 import { fullFrames, type PackedLayout } from '../rendering/packedAtlas';

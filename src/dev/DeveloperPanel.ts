@@ -912,7 +912,7 @@ function selectionScreen(id: string, solo: boolean): HTMLElement {
   selection.select(0, index);
   const idle = () => undefined;
   renderFighterSelection(screen, { fighters: playableCharacters, selection, opponent: playableCharacters[index], versus: !solo, selectOpponent: !solo, solo,
-    modeTitle: t(solo ? 'mode.arcade.title' : 'mode.versus.title'), preview: [id, id], point: idle, refresh: idle, random: idle, confirm: idle, back: idle });
+    modeTitle: t(solo ? 'mode.arcade.title' : 'mode.versus.title'), refresh: idle, confirm: idle, back: idle });
   screen.append(el('footer', 'arena-footer', t(solo ? 'menu.fighterControls' : 'menu.versusControls')));
   screen.inert = true;
   return screen;

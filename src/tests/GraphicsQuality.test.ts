@@ -1,6 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
 // Vitest runs this file in Node; the project does not otherwise depend on Node typings.
-// @ts-expect-error Node's built-in module is available to the test runner.
 import { readFileSync } from 'node:fs';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.resetModules(); });

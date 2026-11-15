@@ -4,6 +4,7 @@ import { CombatHud } from '../ui/CombatHud';
 import { TrainingHud } from '../ui/TrainingHud';
 import { TrainingSession } from '../training/TrainingSession';
 import { HUD, healthBarFill } from '../ui/hudTheme';
+import { RAGE_LEVEL, RAGE_SEGMENT } from '../engine/combat/rage';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { resetControls, saveSystemControls } from '../input/controlSettings';
@@ -102,15 +103,15 @@ it('anchors health and larger bottom rage rails to both sides of a wide HUD',()=
   const width=1365;
   const hud=new CombatHud(scene,width);
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
-  snapshot.characters[0].rage=100;snapshot.characters[1].rage=100;
+  snapshot.characters[0].rage=RAGE_SEGMENT;snapshot.characters[1].rage=RAGE_SEGMENT;
   hud.update(snapshot,width);
   expect(commands).toContainEqual(['fillRect',82,10,510.5,17]);
   expect(commands).toContainEqual(['fillRect',width-592.5,10,510.5,17]);
-  // Three separate rage cells per bar, filled from each player's outer edge: 100 rage fills one of them.
-  const cell=(260-10-4*2)/3, step=cell+4;
-  // 6 empty cell rails plus the 2 full cells (one per player).
-  expect(commands.filter(c=>c[0]==='fillRoundedRect'&&c[2]===537&&c[4]===10&&c[3]===cell)).toHaveLength(8);
-  for (const x of [50,width-300+2*step]) expect(commands).toContainEqual(['fillRoundedRect',x,537,cell,10,3]);
+  // One separate rage cell per segment of each bar, filled from each player's outer edge: one segment fills one of them.
+  const sections=RAGE_LEVEL/RAGE_SEGMENT, cell=(260-10-4*(sections-1))/sections, step=cell+4;
+  // The empty cell rails of both players plus the full cell of each.
+  expect(commands.filter(c=>c[0]==='fillRoundedRect'&&c[2]===537&&c[4]===10&&c[3]===cell)).toHaveLength(2*sections+2);
+  for (const x of [50,width-300+(sections-1)*step]) expect(commands).toContainEqual(['fillRoundedRect',x,537,cell,10,3]);
   hud.destroy();
 });
 
@@ -126,7 +127,7 @@ it('layers white, yellow and red rage fills and shows completed levels', () => {
   expect(commands).toContainEqual(['fillStyle', HUD.rage[2]]);
   // Fill order: white first, then yellow, then red.
   expect(HUD.rage).toEqual([0xf4efe2, 0xe8b53a, 0xc41f3f]);
-  expect(commands).toContainEqual(['fillRoundedRect', 50, 537, (260 - 10 - 4 * 2) / 3, 10, 3]);
+  expect(commands).toContainEqual(['fillRoundedRect', 50, 537, (260 - 10 - 4 * (RAGE_LEVEL / RAGE_SEGMENT - 1)) / (RAGE_LEVEL / RAGE_SEGMENT), 10, 3]);
   expect(texts.some(text => text.value === '1')).toBe(true);
   expect(texts.some(text => text.value === '2')).toBe(true);
   // No rage value or total is written: only the level (0 to 3) in the seal.

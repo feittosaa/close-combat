@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error Node's built-in module is available to the test runner.
 import { readFileSync } from 'node:fs';
 import { texas } from '../engine/data/fighters/texas';
 import { editCss, editFighter, editFighterArt, editHud, editNames, literal } from '../dev/sourceEdits';

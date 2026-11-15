@@ -31,7 +31,7 @@ describe('rage actions', () => {
     const state = sim.snapshot();
     expect(state.characters[defender].rage).toBe(750);
     expect(state.breakerNotices).toMatchObject([{ characterId: state.characters[defender].characterId, outcome: 'broken' }]);
-    expect(state.comboHistory.at(-1)?.active).toBe(false);
+    expect(state.comboHistory[state.comboHistory.length - 1]?.active).toBe(false);
     expect(state.characters[1 - defender].attack).toBeUndefined();
   });
   it('ignora E mantido antes do primeiro acerto e exige soltar e apertar durante o combo', () => {
@@ -51,7 +51,7 @@ describe('rage actions', () => {
     const target = (sim as unknown as { characters: { rage: number }[] }).characters[1]; target.rage = 149;
     step(sim, input(), input([], true));
     expect(sim.snapshot().characters[1].rage).toBe(149);
-    expect(sim.snapshot().comboHistory.at(-1)?.active).toBe(true);
+    expect(sim.snapshot().comboHistory[sim.snapshot().comboHistory.length - 1]?.active).toBe(true);
   });
   it.each(['hitstun', 'knockdown'] as const)('recovers an airborne character from %s for 150 rage', mode => {
     const sim = setup();
