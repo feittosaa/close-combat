@@ -33,6 +33,8 @@ export interface ComboRecipe {
   continueOnHit?: boolean;
   /** Recovery after the final confirmed hit of this recipe. */
   recoveryFrames?: number;
+  /** Hitstun of the final confirmed hit of this recipe, when longer than the attacker's recovery: the combo can go on. */
+  hitstunFrames?: number;
   /** End ordinary strike chaining after this confirmed recipe; specials remain cancellable. */
   endsBasicChain?: boolean;
   /** Launch and shortened recovery applied only by the confirmed final hit of this exact recipe. */

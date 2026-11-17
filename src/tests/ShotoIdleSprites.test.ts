@@ -65,7 +65,7 @@ describe('animação de espera do Shoto', () => {
     expect(getShotoSpritePose({ ...state, grounded: false, mode: 'blocking' }, 4)?.frame).toBe(2);
     expect(getShotoSpritePose({ ...state, grounded: false, mode: 'blockstun' }, 0)).toMatchObject({ texture: 'shoto-air-guard', frame: 3 });
     expect(getShotoSpritePose({ ...state, grounded: false, mode: 'hitstun' }, 0)?.texture).toBe('shoto-air-hurt');
-    const attack = { moveId: 'throw-24', buttons: ['2' as const, '4' as const], elapsedFrames: 0, hasHit: false };
+    const attack = { moveId: 'throw-13', buttons: ['1' as const, '3' as const], elapsedFrames: 0, hasHit: false };
     expect(getShotoSpritePose({ ...state, mode: 'startup', attack }, 0)?.texture).toBe('shoto-ippon');
   });
 
@@ -80,7 +80,7 @@ describe('animação de espera do Shoto', () => {
 
   it('seleciona um sprite para cada golpe do catálogo durante a fase ativa', () => {
     const state = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
-    for (const move of shoto.moves.filter(move => !['throw-13', 'throw-24'].includes(move.id))) {
+    for (const move of shoto.moves.filter(move => !['throw-13'].includes(move.id))) {
       const attack = { moveId: move.id, buttons: move.input.buttons, elapsedFrames: move.startup, hasHit: false };
       expect(getShotoSpritePose({ ...state, mode: 'active', attack }, move.startup)?.texture, move.id).toMatch(/^shoto-/);
     }

@@ -6,6 +6,7 @@ import measurements from '../../assets/sprites/characters/grappler/measurements.
 import calibration from '../../assets/sprites/characters/grappler/calibration.json';
 import { grappler } from '../../engine/data/fighters/grappler';
 import { grapplerReaction } from '../grapplerReaction';
+import { rageDrawing } from './rageAnimation';
 import { loadGraphicsQuality } from '../../ui/graphicsSettings';
 import { GRAPPLER_ULTIMATE_ACTIVATION_FRAMES, GRAPPLER_ULTIMATE_LAST_FRAMES, GRAPPLER_ULTIMATE_SPIN_FRAMES, GRAPPLER_ULTIMATE_SPIN_POSE_FRAMES } from '../../engine/combat/ultimateActivation';
 
@@ -39,17 +40,20 @@ const attacking = (mode: string) => ['startup', 'active', 'recovery'].includes(m
 /** These reaction sheets wind up in their first two drawings and recover in the last three, so they play from the impact (the third): the blow lands on the peak. */
 const IMPACT_SHEETS = new Set(['hurt', 'hurt-low', 'hurt-high', 'air-hurt']);
 const IMPACT_DRAWING = 2;
+/** Sheet of the second and third light punches of a chain; the smear (drawing 3) bridges the two blows. */
+const COMBO_JAB_SHEET = 'combo-111', COMBO_JAB_SMEAR_FRAMES = 4;
 const firstDrawing = (name: string): number => IMPACT_SHEETS.has(name) ? IMPACT_DRAWING : 0;
 /** Drawing of a reaction after `drawings` drawings of the sheet have passed since the hit. */
 const hurtDrawing = (name: string, drawings: number): number => Math.min(5, firstDrawing(name) + Math.floor(drawings));
 
+/** The taunt sheet's first two drawings are a neutral stance; the loop runs from the pose the entry ends in to the laugh the exit begins from. */
+const TAUNT_LOOP = [2, 3, 4, 5, 4, 3];
+
 export function getGrapplerPose(state: CharacterState, frame: number, activationFrame?: number): GrapplerPose {
   const reaction = grapplerReaction(state, frame);
   if (reaction) return reaction;
-  const rage = state.rageAnimation, rageAge = frame - (rage?.startedFrame ?? -Infinity);
-  if (rage && rageAge >= 0 && rageAge < 24 && !state.attack && !['hitstun','knockdown'].includes(state.mode)) {
-    return {name:rage.kind === 'air-recovery' ? 'air-recovery' : rage.airborne ? 'combo-breaker-air' : 'combo-breaker', drawing:Math.min(5, Math.floor(rageAge / 4))};
-  }
+  const rage = rageDrawing(state, frame);
+  if (rage) return rage;
   const age = Math.max(0, frame - (state.animationTransition?.startedFrame ?? state.stateStartedFrame));
   const step = (n: number) => Math.min(5, Math.floor(age / n));
   if (state.attack) {
@@ -71,7 +75,18 @@ export function getGrapplerPose(state: CharacterState, frame: number, activation
     if (move.id === 'hammer-punch' && t >= start + move.activeFrames) return {name:move.id, drawing:t < start + move.activeFrames + 6 ? 4 : 5};
     // A missed ultimate shows only the opening grab, then a long recovery: the spin belongs to a catch.
     if (move.id === 'ultimate-grab' && !state.attack.hasHit) return {name:move.id, drawing:t < start + move.activeFrames ? 0 : 1};
-    const contact = move.id === 'crouch-heavy-kick' ? 2 : move.id === 'grab-low' ? 4 : 3;
+    // From the second light punch of a chain the arm stays out: the combo sheet's sharp drawings (2 and 4) are the blows,
+    // its first continues the opening punch and its last returns to the guard.
+    const jabs = state.chain?.length ?? 0;
+    if (move.id === 'light-punch' && jabs >= 2 && state.chain!.every(id => id === 'light-punch')) {
+      const second = jabs === 2;
+      if (t < start) return {name:COMBO_JAB_SHEET, drawing:second ? Math.min(1, Math.floor(t * 2 / Math.max(1, start))) : 3};
+      if (t < start + move.activeFrames) return {name:COMBO_JAB_SHEET, drawing:second ? 2 : 4};
+      return {name:COMBO_JAB_SHEET, drawing:second && t < start + move.activeFrames + COMBO_JAB_SMEAR_FRAMES ? 3 : 5};
+    }
+    // The lunge's extended arm is held only briefly; the guard drawing takes the rest of the recovery.
+    if (move.id === 'far-arc-punch' && t >= start + move.activeFrames) return {name:move.id, drawing:t < start + move.activeFrames + 3 ? 4 : 5};
+    const contact = move.id === 'crouch-heavy-kick' ? 2 : move.id === 'grab-low' ? 4 : move.id === 'far-arc-punch' ? 4 : 3;
     if (move.commandGrab && t < start && !['grab-headbutt', 'grab-slam', 'ultimate-grab'].includes(move.id)) {
       const drawing = t < start * .15 ? 0 : t < start * .3 ? 1 : t < start * .65 ? 2 : 3;
       return {name:move.id, drawing:move.id === 'grab-low' ? Math.min(2, drawing) : move.id === 'grab-throw' ? Math.min(1, drawing) : drawing};
@@ -98,7 +113,7 @@ export function getGrapplerPose(state: CharacterState, frame: number, activation
     if (state.hitReaction?.level === 'low' && hitAge < 12) return {name:'hurt-low', drawing:hurtDrawing('hurt-low', hitAge / 2)};
     if (state.remainingStateFrames <= 9) return {name:'getup', drawing:Math.min(5, Math.floor((9 - state.remainingStateFrames) * 6 / 9))};
     const landed = state.animationTransition && !state.animationTransition.from.grounded ? frame - state.animationTransition.startedFrame : Infinity;
-    return landed < 12 ? {name:'fall-landing', drawing:Math.min(5, Math.floor(landed / 2))} : {name:'fall', drawing:5};
+    return landed >= 0 && landed < 12 ? {name:'fall-landing', drawing:Math.min(5, Math.floor(landed / 2))} : {name:'fall', drawing:5};
   }
   if (state.mode === 'hitstun' || state.mode === 'knockdown') {
     const name = !state.grounded ? 'air-hurt' : state.hitReaction?.level === 'low' ? 'hurt-low' : state.crouching ? 'crouch-hurt' : state.hitReaction?.level === 'high' ? 'hurt-high' : 'hurt';
@@ -130,7 +145,7 @@ export function getGrapplerPose(state: CharacterState, frame: number, activation
   if (state.mode === 'neutral' && state.tauntStartedFrame !== undefined) {
     const tauntAge = Math.max(0, frame - state.tauntStartedFrame);
     if (tauntAge < 18) return {name:'taunt-enter', drawing:Math.floor(tauntAge / 3)};
-    return tauntAge >= 42 ? {name:'taunt-exit', drawing:Math.min(5, Math.floor((tauntAge - 42) / 3))} : {name:'taunt', drawing:Math.floor(tauntAge / 6) % 6};
+    return tauntAge >= 42 ? {name:'taunt-exit', drawing:Math.min(5, Math.floor((tauntAge - 42) / 3))} : {name:'taunt', drawing:TAUNT_LOOP[Math.floor((tauntAge - 18) / 4) % TAUNT_LOOP.length]};
   }
   if (state.mode === 'moving') {
     if (state.movementDirection === 'backward') return {name:'backward', drawing:Math.floor(age / 7) % 6};
@@ -152,6 +167,7 @@ export function getGrapplerInbetween(state: CharacterState, frame: number, activ
   if (attack && move && ['grab-low', 'grab-slam', 'grab-throw'].includes(move.id) && attack.elapsedFrames >= (attack.startupFrames ?? move.startup) - 2 && attack.elapsedFrames <= (attack.startupFrames ?? move.startup)) return undefined;
   if (!attack || activationFrame !== undefined || !images[`../../assets/sprites/characters/grappler/${attack.moveId}-between.png`]) return undefined;
   const current = getGrapplerPose(state, frame);
+  if (current.name !== attack.moveId) return undefined;
   for (const ahead of [1, 2]) {
     const next = getGrapplerPose({ ...state, attack: { ...attack, elapsedFrames: attack.elapsedFrames + ahead } }, frame + ahead);
     if (next.name === current.name && next.drawing === current.drawing + 1 && current.drawing < 5) return current.drawing;

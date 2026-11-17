@@ -35,6 +35,8 @@ export interface StageDefinition {
   /** Extra source pixels above the original composition; do not magnify the scenery. */
   topExtension?: number;
   minimumScale: number;
+  /** Faint lapping line where the water meets the sand, drawn by code (reference-image row, depth, sway in pixels, period in frames). */
+  shoreline?: { y: number; depth: number; amplitude: number; period: number };
   layers: readonly StageLayer[];
 }
 
@@ -45,6 +47,10 @@ export function validateStage(stage: StageDefinition): void {
       stage.groundY <= 0 || stage.groundY >= height || !Number.isFinite(stage.minimumScale) ||
       stage.minimumScale <= 0 || !stage.layers.length ||
       (stage.topExtension !== undefined && (!Number.isFinite(stage.topExtension) || stage.topExtension < 0 || stage.topExtension >= stage.groundY))) {
+    throw new Error(`Cenário inválido: ${stage.id}`);
+  }
+  const { shoreline } = stage;
+  if (shoreline && (![shoreline.y, shoreline.depth, shoreline.amplitude, shoreline.period].every(Number.isFinite) || shoreline.y <= 0 || shoreline.y >= height || shoreline.period <= 0)) {
     throw new Error(`Cenário inválido: ${stage.id}`);
   }
   const ids = new Set<string>();

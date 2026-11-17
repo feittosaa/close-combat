@@ -31,12 +31,12 @@ const openLesson = (tutorial: TutorialSession, find: (lesson: TutorialLesson) =>
   tutorial.lessonIndex = tutorial.section.lessons.findIndex(find); tutorial.resetAttempt();
   return tutorial.lesson!;
 };
-it('tutorial livre tem básico, combos e avançado, em ordem contínua e sem exigir conclusão', () => {
+it('tutorial livre tem básico, combos, avançado e rage, em ordem contínua e sem exigir conclusão', () => {
   const tutorial = new TutorialSession(shoto);
-  expect(tutorial.sections.map(section => section.id)).toEqual(['basic', 'combos', 'advanced']);
+  expect(tutorial.sections.map(section => section.id)).toEqual(['basic', 'combos', 'advanced', 'rage']);
   expect(tutorial.sections[0].lessons.slice(0, 8).map(lesson => lesson.notation)).toEqual(['f / b', 'u', 'd', 'b', '1', '2', '3', '4']);
   // Next lesson reads straight through: the end of a section leads into the next one, the very end back to the start.
-  tutorial.changeLesson(-1); expect(tutorial.section.id).toBe('advanced'); expect(tutorial.lessonIndex).toBe(tutorial.section.lessons.length - 1);
+  tutorial.changeLesson(-1); expect(tutorial.section.id).toBe('rage'); expect(tutorial.lessonIndex).toBe(tutorial.section.lessons.length - 1);
   expect(tutorial.upcoming?.section.id).toBe('basic');
   tutorial.changeLesson(1); expect([tutorial.section.id, tutorial.lessonIndex]).toEqual(['basic', 0]);
   tutorial.lessonIndex = tutorial.section.lessons.length - 1;
@@ -96,4 +96,24 @@ it('tutorial de combo agachado reconhece as duas coronhadas e o projétil', () =
     while(sim.snapshot().hitstopFramesRemaining)step(down);
   }
   expect(tutorial.passed).toBe(true);
+});
+it('a lição de rage do combo breaker faz o adversário combar o jogador e só conclui com o E depois do segundo golpe', () => {
+  const tutorial = new TutorialSession(shoto), lesson = openLesson(tutorial, entry => entry.check === 'breaker'), sim = create();
+  sim.fillTrainingRage();
+  let early = false;
+  for (let f = 0; f < 600 && !tutorial.passed; f++) {
+    const hits = sim.snapshot().comboHistory.find(combo => combo.targetId === 'player-1' && combo.active)?.hits ?? 0;
+    tutorial.observe(sim.snapshot(), N);
+    if (hits < 2 && tutorial.passed) early = true;
+    sim.stepFrame([hits >= 2 ? { ...N, rageAction: true } : N, tutorial.dummyInput() ?? N]);
+    tutorial.observe(sim.snapshot(), N);
+  }
+  expect(lesson.dummy?.length).toBeGreaterThan(0); expect(early).toBe(false); expect(tutorial.passed).toBe(true);
+});
+it('as lições de rage concluem ao reforçar um especial e ao ativar o Rush', () => {
+  const tutorial = new TutorialSession(shoto), rush = openLesson(tutorial, entry => entry.check === 'rush'), sim = create();
+  sim.fillTrainingRage();
+  for (let f = 0; f < 5; f++) { sim.stepFrame([{ ...N, rageAction: true, taunt: true }, N]); tutorial.observe(sim.snapshot(), N); }
+  expect(rush.demo?.length).toBeGreaterThan(0); expect(tutorial.passed).toBe(true);
+  expect(openLesson(tutorial, entry => entry.check === 'buff').steps).toBeUndefined();
 });

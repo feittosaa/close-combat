@@ -4,7 +4,7 @@ import { HUD_FONT } from '../ui/hudTheme';
 import { t } from '../i18n/i18n';
 import { TutorialSession } from '../training/TutorialSession';
 import { TutorialHud } from '../ui/TutorialHud';
-import { TUTORIAL_START_DISTANCE } from '../training/tutorialLessons';
+import { TUTORIAL_OPPONENT_ID, TUTORIAL_START_DISTANCE } from '../training/tutorialLessons';
 import { ControlSettings } from '../ui/ControlSettings';
 import { getPlayerLayout, getSystemControls, getTrainingControls } from '../input/controlSettings';
 import { InputHistory } from '../training/InputHistory';
@@ -24,6 +24,7 @@ import type { FrameInput } from '../input/types';
 import { settleAfterRound } from '../rendering/animations/texasSprites';
 import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
 import { ProjectileView } from '../rendering/ProjectileView';
+import { RageEffects } from '../rendering/RageEffects';
 import { RushEffect } from '../rendering/RushEffect';
 import { characterColor } from '../rendering/characterColor';
 import { registerCharacterColor } from '../rendering/palettePipeline';
@@ -118,6 +119,8 @@ export class FightScene extends Phaser.Scene {
   private rushEffect?: RushEffect;
   private contactShadows?: ContactShadows;
   private rushActive = [false, false];
+  private rageEffects?: RageEffects;
+  private lastEffectNotice = -1;
   private combatants: CombatantView[] = [];
   private inputDisplays: PlayerInputDisplay[] = [];
   private hitboxView?: HitboxView;
@@ -257,7 +260,7 @@ export class FightScene extends Phaser.Scene {
     this.paused = false;
     this.arcadeIndex = Math.max(0, Math.trunc(data.arcadeIndex ?? 0));
     this.arcadeRun = this.mode === 'arcade' ? data.arcadeRun ?? createArcadeRun() : undefined;
-    this.opponentFighter = getCharacterById(this.arcadeRun?.opponents[this.arcadeIndex] ?? data.opponentId ?? '') ?? opponentFor(this.selectedFighter.id);
+    this.opponentFighter = getCharacterById(this.mode === 'tutorial' ? TUTORIAL_OPPONENT_ID : this.arcadeRun?.opponents[this.arcadeIndex] ?? data.opponentId ?? '') ?? opponentFor(this.selectedFighter.id);
     this.alternatePalettes = matchPalettes(data, this.selectedFighter.id === this.opponentFighter.id);
     this.selectedStage = stageForMatch(this.mode,this.arcadeRun?.stages[this.arcadeIndex] ?? data.stageId);
     this.tutorial = this.mode === 'tutorial' ? new TutorialSession(this.selectedFighter) : undefined;
@@ -376,6 +379,7 @@ export class FightScene extends Phaser.Scene {
     this.projectileView = new ProjectileView(this);
     this.projectileView.onGrabImpact = () => this.cameras.main.shake(110, 0.0015);
     this.rushEffect = new RushEffect(this);
+    this.rageEffects = new RageEffects(this); this.lastEffectNotice = -1;
     this.contactShadows = new ContactShadows(this);
     this.combatants = [
       new CombatantView(this, 0xe45b5b),
@@ -455,6 +459,13 @@ export class FightScene extends Phaser.Scene {
     });
     if (snapshot.hitEvents.some(event => event.moveId === 'ultimate-soco' && event.outcome === 'hit' && !event.armored)) this.cameras.main.shake(140, 0.003);
     this.pendingVisualHits.push(...snapshot.hitEvents);
+    for (const notice of snapshot.effectNotices) {
+      if (notice.id <= this.lastEffectNotice) continue;
+      this.lastEffectNotice = notice.id;
+      const index = snapshot.characters.findIndex(character => character.characterId === notice.characterId);
+      if (notice.kind === 'ultimate-spend') this.hud?.playRageSpend(index, this.hudWidth);
+      else this.rageEffects?.play(notice, snapshot.characters[index]);
+    }
   }
 
   private readInputs(characters: readonly CharacterState[], frame: number): readonly FrameInput[] {
@@ -469,7 +480,7 @@ export class FightScene extends Phaser.Scene {
       this.tutorial.observe(snapshot, this.currentInputs[0]);
       const demo = this.tutorial.demoInput();
       if (demo) inputs[0] = demo; else if (this.tutorialBrowsing || this.tutorial.demoFinished) inputs[0] = neutralInput();
-      inputs[1] = this.tutorial.lesson?.check === 'guard' && frame % 90 === 0 ? { direction: 'N', buttons: new Set(['1']) } : neutralInput();
+      inputs[1] = this.tutorial.lesson?.check === 'guard' && frame % 90 === 0 ? { direction: 'N', buttons: new Set(['1']) } : this.tutorial.dummyInput() ?? neutralInput();
     }
     if (this.bot && snapshot) {
       if (this.botRound !== snapshot.round) { this.bot.reset(); this.botRound = snapshot.round; }
@@ -543,7 +554,7 @@ export class FightScene extends Phaser.Scene {
     const shown = sinceRoundEnd === undefined ? snapshot.characters : snapshot.characters.map(character =>
       settleAfterRound(character, sinceRoundEnd, this.resultFloorY, this.resultGravity, Boolean(snapshot.roundWinnerId) && snapshot.roundWinnerId !== character.characterId));
     const cameraCharacters = shown;
-    this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), visualFrame);
+    this.stageView?.sync(cameraCharacters.map(character => character.x), cameraCharacters.map(character => character.y), snapshot.frame);
     this.ultimateOverlay?.update(Boolean(snapshot.ultimateActivation), this.game.loop.delta);
     const layout = createStageLayout(this.selectedStage, LOGICAL_VIEW.width, LOGICAL_VIEW.height, this.resultFloorY);
     shown.forEach((character, index) => {
@@ -552,7 +563,7 @@ export class FightScene extends Phaser.Scene {
       const color = characterColor(this.selectedStage, layout, character.x, this.cameras.main.scrollX,
         this.alternatePalettes[index]);
       const presented = grapplerCapturePose(character, shown[1 - index]);
-      this.combatants[index]?.sync(presented, visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color, hiddenByGrapplerUltimate(character, shown[1 - index]), snapshot.hitstopFramesRemaining > 0);
+      this.combatants[index]?.sync(presented, snapshot.roundWinnerId === character.characterId ? snapshot.frame : visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color, hiddenByGrapplerUltimate(character, shown[1 - index]), snapshot.hitstopFramesRemaining > 0);
     });
     this.contactShadows?.update(shown, this.resultFloorY, shown.map((character, index) => hiddenByGrapplerUltimate(character, shown[1 - index])));
     const alternateOwnerIds = new Set(snapshot.characters.filter((_, index) => this.alternatePalettes[index]).map(character => character.characterId));
@@ -593,7 +604,7 @@ export class FightScene extends Phaser.Scene {
     this.keyboardInputs = [];
     this.combatants.forEach((combatant) => combatant.destroy());
     this.combatants = []; this.projectileView?.destroy(); this.projectileView = undefined;
-    this.rushEffect?.destroy(); this.rushEffect = undefined; this.contactShadows?.destroy(); this.contactShadows = undefined; this.rushActive = [false, false];
+    this.rushEffect?.destroy(); this.rushEffect = undefined; this.rageEffects?.destroy(); this.rageEffects = undefined; this.contactShadows?.destroy(); this.contactShadows = undefined; this.rushActive = [false, false];
     this.bot = undefined;
     this.inputDisplays.forEach((display) => display.destroy());
     this.inputDisplays = [];

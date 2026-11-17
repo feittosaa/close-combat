@@ -278,17 +278,25 @@ it.each([['shoto', 'd,df,f,d,df,f,1', ['d,df,f,d,df,f,1', 'b,f,b,f,1+2', '1', 'd
     }
   });
 
-it('apertar 1+2 no fim da cinemática não troca o Redemoinho pelo soco potente nem gasta a rage à toa', () => {
+it('apertar 2+4 no fim da cinemática não troca o Redemoinho pelo soco potente nem gasta a rage à toa', () => {
   // The activation freezes the ultimate's own frame count, so its end used to fall inside the chord grace window.
   for (let wait = ULTIMATE_ACTIVATION_FRAMES - 10; wait <= ULTIMATE_ACTIVATION_FRAMES + 12; wait++) {
     const sim = new Simulation(tutorialGameConfig(), [shoto, shoto], { training: true, initialDistance: TUTORIAL_DISTANCE });
     sim.fillTrainingRage();
     let powerPunch = false;
-    for (const input of routeInputs([{ wait: 8, command: 'd,df,f,d,df,f,1' }, { wait, command: '1+2' }], 300)) {
+    for (const input of routeInputs([{ wait: 8, command: 'd,df,f,d,df,f,1' }, { wait, command: '2+4' }], 300)) {
       sim.stepFrame([input, N]);
       powerPunch ||= sim.snapshot().characters[0].attack?.moveId === 'power-punch';
     }
-    expect(powerPunch, `1+2 após ${wait}`).toBe(false);
-    expect(sim.snapshot().comboHistory.find(combo => combo.attackerId === 'player-1')?.usedUltimate, `1+2 após ${wait}`).toBe(true);
+    expect(powerPunch, `2+4 após ${wait}`).toBe(false);
+    expect(sim.snapshot().comboHistory.find(combo => combo.attackerId === 'player-1')?.usedUltimate, `2+4 após ${wait}`).toBe(true);
   }
+});
+
+it('avisa o efeito do gasto de rage quando a ultimate é ativada, uma vez', () => {
+  const sim=create(96); sim.fillTrainingRage();
+  command(sim,'crow-ultimate',0);
+  for (let tick=0; tick<30 && !sim.snapshot().ultimateActivation; tick++) step(sim,N,0);
+  for (let tick=0; tick<5; tick++) step(sim,N,0);
+  expect(sim.snapshot().effectNotices).toMatchObject([{kind:'ultimate-spend',characterId:'player-1'}]);
 });

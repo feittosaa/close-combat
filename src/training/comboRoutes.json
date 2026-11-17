@@ -121,19 +121,6 @@
      "air-heavy-kick"
     ]
    },
-   "move:power-punch": {
-    "steps": [
-     {
-      "wait": 1,
-      "command": "1+2"
-     }
-    ],
-    "hits": 1,
-    "damage": 20,
-    "moveIds": [
-     "power-punch"
-    ]
-   },
    "move:power-kick": {
     "steps": [
      {
@@ -158,19 +145,6 @@
     "damage": 75,
     "moveIds": [
      "throw-13"
-    ]
-   },
-   "move:throw-24": {
-    "steps": [
-     {
-      "wait": 1,
-      "command": "2+4"
-     }
-    ],
-    "hits": 1,
-    "damage": 75,
-    "moveIds": [
-     "throw-24"
     ]
    },
    "move:crouch-punch": {
@@ -398,29 +372,6 @@
      "heavy-punch"
     ]
    },
-   "combo:power-1112": {
-    "steps": [
-     {
-      "wait": 1,
-      "command": "1"
-     },
-     {
-      "wait": 10,
-      "command": "1"
-     },
-     {
-      "wait": 16,
-      "command": "1+2"
-     }
-    ],
-    "hits": 3,
-    "damage": 60,
-    "moveIds": [
-     "light-punch",
-     "light-punch",
-     "power-punch"
-    ]
-   },
    "combo:windmill-334": {
     "steps": [
      {
@@ -461,6 +412,19 @@
      "light-kick",
      "heavy-kick"
     ]
+   },
+   "move:power-punch": {
+    "steps": [
+     {
+      "wait": 1,
+      "command": "2+4"
+     }
+    ],
+    "hits": 1,
+    "damage": 20,
+    "moveIds": [
+     "power-punch"
+    ]
    }
   },
   "advanced": [
@@ -497,54 +461,15 @@
    {
     "steps": [
      {
-      "wait": 1,
-      "command": "d+2"
-     },
-     {
-      "wait": 13,
-      "command": "2"
-     },
-     {
-      "wait": 21,
-      "command": "2"
-     },
-     {
-      "wait": 18,
-      "command": "2"
-     },
-     {
-      "wait": 21,
-      "command": "f,d,df,4"
-     }
-    ],
-    "moveIds": [
-     "crouch-uppercut",
-     "heavy-punch",
-     "heavy-punch",
-     "heavy-punch",
-     "reversal-kick"
-    ],
-    "hits": 5,
-    "damage": 212,
-    "notation": "d+2,2,2,2,f,d,df,4",
-    "difficulty": 8.1
-   },
-   {
-    "steps": [
-     {
       "wait": 6,
       "command": "b,db,d,df,f,4"
      },
      {
       "wait": 43,
-      "command": "d+2"
-     },
-     {
-      "wait": 13,
       "command": "2"
      },
      {
-      "wait": 21,
+      "wait": 15,
       "command": "2"
      },
      {
@@ -558,16 +483,15 @@
     ],
     "moveIds": [
      "flying-kick-heavy",
-     "crouch-uppercut",
      "heavy-punch",
      "heavy-punch",
      "heavy-punch",
      "reversal-kick"
     ],
-    "hits": 6,
-    "damage": 267,
-    "notation": "b,db,d,df,f,4,d+2,2,2,2,f,d,df,4",
-    "difficulty": 12.3
+    "hits": 5,
+    "damage": 225,
+    "notation": "b,db,d,df,f,4,2,2,2,f,d,df,4",
+    "difficulty": 11
    },
    {
     "steps": [
@@ -585,22 +509,22 @@
      },
      {
       "wait": 16,
+      "command": "1"
+     },
+     {
+      "wait": 16,
       "command": "2"
      },
      {
       "wait": 21,
-      "command": "3"
+      "command": "2"
      },
      {
       "wait": 18,
-      "command": "3"
+      "command": "2"
      },
      {
-      "wait": 18,
-      "command": "4"
-     },
-     {
-      "wait": 27,
+      "wait": 21,
       "command": "f,d,df,4"
      }
     ],
@@ -608,16 +532,71 @@
      "flying-kick-heavy",
      "light-punch",
      "light-punch",
+     "light-punch",
      "heavy-punch",
-     "light-kick",
-     "light-kick",
-     "heavy-kick",
+     "heavy-punch",
+     "heavy-punch",
      "reversal-kick"
     ],
     "hits": 8,
-    "damage": 290,
-    "notation": "b,db,d,df,f,4,1,1,2,3,3,4,f,d,df,4",
-    "difficulty": 15.7
+    "damage": 285,
+    "notation": "b,db,d,df,f,4,1,1,1,2,2,2,f,d,df,4",
+    "difficulty": 14.9
+   },
+   {
+    "steps": [
+     {
+      "wait": 6,
+      "command": "b,db,d,df,f,4"
+     },
+     {
+      "wait": 43,
+      "command": "1"
+     },
+     {
+      "wait": 10,
+      "command": "1"
+     },
+     {
+      "wait": 16,
+      "command": "1"
+     },
+     {
+      "wait": 16,
+      "command": "d+2"
+     },
+     {
+      "wait": 19,
+      "command": "2"
+     },
+     {
+      "wait": 21,
+      "command": "2"
+     },
+     {
+      "wait": 18,
+      "command": "2"
+     },
+     {
+      "wait": 21,
+      "command": "f,d,df,4"
+     }
+    ],
+    "moveIds": [
+     "flying-kick-heavy",
+     "light-punch",
+     "light-punch",
+     "light-punch",
+     "crouch-uppercut",
+     "heavy-punch",
+     "heavy-punch",
+     "heavy-punch",
+     "reversal-kick"
+    ],
+    "hits": 9,
+    "damage": 327,
+    "notation": "b,db,d,df,f,4,1,1,1,d+2,2,2,2,f,d,df,4",
+    "difficulty": 16.1
    },
    {
     "steps": [
@@ -757,10 +736,22 @@
      },
      {
       "wait": 43,
+      "command": "1"
+     },
+     {
+      "wait": 10,
+      "command": "1"
+     },
+     {
+      "wait": 16,
+      "command": "1"
+     },
+     {
+      "wait": 16,
       "command": "d+2"
      },
      {
-      "wait": 18,
+      "wait": 24,
       "command": "b,db,d,df,f,4"
      },
      {
@@ -768,36 +759,135 @@
       "command": "2"
      },
      {
+      "wait": 20,
+      "command": "b,db,d,df,f,3"
+     },
+     {
       "wait": 15,
+      "command": "u"
+     },
+     {
+      "wait": 26,
+      "command": "2"
+     },
+     {
+      "wait": 20,
+      "command": "b,db,d,df,f,3"
+     },
+     {
+      "wait": 15,
+      "command": "u"
+     },
+     {
+      "wait": 26,
       "command": "2"
      },
      {
       "wait": 18,
-      "command": "2"
-     },
-     {
-      "wait": 21,
-      "command": "d,df,f,2"
-     },
-     {
-      "wait": 31,
-      "command": "d,df,f,1"
+      "command": "f,d,df,4"
      }
     ],
     "moveIds": [
      "flying-kick-heavy",
+     "light-punch",
+     "light-punch",
+     "light-punch",
      "crouch-uppercut",
      "flying-kick-heavy",
      "heavy-punch",
+     "flying-kick-light",
      "heavy-punch",
+     "flying-kick-light",
+     "heavy-punch",
+     "reversal-kick"
+    ],
+    "hits": 12,
+    "damage": 452,
+    "notation": "b,db,d,df,f,4,1,1,1,d+2,b,db,d,df,f,4,2,b,db,d,df,f,3,2,b,db,d,df,f,3,2,f,d,df,4",
+    "difficulty": 34.5
+   },
+   {
+    "steps": [
+     {
+      "wait": 6,
+      "command": "b,db,d,df,f,4"
+     },
+     {
+      "wait": 43,
+      "command": "1"
+     },
+     {
+      "wait": 10,
+      "command": "1"
+     },
+     {
+      "wait": 16,
+      "command": "1"
+     },
+     {
+      "wait": 16,
+      "command": "d+2"
+     },
+     {
+      "wait": 24,
+      "command": "b,db,d,df,f,4"
+     },
+     {
+      "wait": 45,
+      "command": "2"
+     },
+     {
+      "wait": 20,
+      "command": "b,db,d,df,f,3"
+     },
+     {
+      "wait": 15,
+      "command": "u"
+     },
+     {
+      "wait": 26,
+      "command": "2"
+     },
+     {
+      "wait": 20,
+      "command": "b,db,d,df,f,3"
+     },
+     {
+      "wait": 15,
+      "command": "u"
+     },
+     {
+      "wait": 26,
+      "command": "2"
+     },
+     {
+      "wait": 18,
+      "command": "d,df,f,2"
+     },
+     {
+      "wait": 34,
+      "command": "d,df,f,d,df,f,1"
+     }
+    ],
+    "moveIds": [
+     "flying-kick-heavy",
+     "light-punch",
+     "light-punch",
+     "light-punch",
+     "crouch-uppercut",
+     "flying-kick-heavy",
+     "heavy-punch",
+     "flying-kick-light",
+     "heavy-punch",
+     "flying-kick-light",
      "heavy-punch",
      "tomato-heavy",
      "rake-ultimate"
     ],
-    "hits": 17,
-    "damage": 572,
-    "notation": "b,db,d,df,f,4,d+2,b,db,d,df,f,4,2,2,2,d,df,f,2,d,df,f,d,df,f,1",
-    "difficulty": 19.4
+    "hits": 22,
+    "damage": 602,
+    "notation": "b,db,d,df,f,4,1,1,1,d+2,b,db,d,df,f,4,2,b,db,d,df,f,3,2,b,db,d,df,f,3,2,d,df,f,2,d,df,f,d,df,f,1",
+    "difficulty": 38.7
    }
   ]
  },
@@ -1950,9 +2040,22 @@
      }
     ],
     "hits": 1,
-    "damage": 100,
+    "damage": 50,
     "moveIds": [
      "double-punch"
+    ]
+   },
+   "move:far-arc-punch": {
+    "steps": [
+     {
+      "wait": 3,
+      "command": "f,f,2"
+     }
+    ],
+    "hits": 1,
+    "damage": 35,
+    "moveIds": [
+     "heavy-punch"
     ]
    },
    "move:hammer-punch": {
@@ -2048,7 +2151,7 @@
       "command": "d,df,f,2"
      },
      {
-      "wait": 41,
+      "wait": 39,
       "command": "d,db,b,3"
      }
     ],
@@ -2066,7 +2169,7 @@
       "command": "d,df,f,1"
      },
      {
-      "wait": 40,
+      "wait": 38,
       "command": "d,df,f,2"
      },
      {
@@ -2088,7 +2191,7 @@
       "command": "d,df,f,2"
      },
      {
-      "wait": 41,
+      "wait": 39,
       "command": "d,db,b,3"
      }
     ],
@@ -2115,11 +2218,34 @@
      }
     ],
     "hits": 3,
-    "damage": 155,
+    "damage": 105,
     "moveIds": [
      "light-punch",
      "heavy-punch",
      "double-punch"
+    ]
+   },
+   "combo:dev-mwiizx4f": {
+    "steps": [
+     {
+      "wait": 1,
+      "command": "1"
+     },
+     {
+      "wait": 12,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1"
+     }
+    ],
+    "hits": 3,
+    "damage": 60,
+    "moveIds": [
+     "light-punch",
+     "light-punch",
+     "light-punch"
     ]
    }
   },
@@ -2132,26 +2258,27 @@
      },
      {
       "wait": 20,
+      "command": "d,df,f,1"
+     },
+     {
+      "wait": 40,
+      "command": "f,f,2"
+     },
+     {
+      "wait": 25,
       "command": "d,db,b,2"
-     },
-     {
-      "wait": 49,
-      "command": "u"
-     },
-     {
-      "wait": 2,
-      "command": "1+2"
      }
     ],
     "moveIds": [
      "double-punch",
-     "grab-launcher",
-     "air-grab"
+     "grab-headbutt",
+     "far-arc-punch",
+     "grab-launcher"
     ],
-    "hits": 3,
-    "damage": 445,
-    "notation": "1+2,d,db,b,2,no ar + 1+2",
-    "difficulty": 7.2
+    "hits": 4,
+    "damage": 435,
+    "notation": "1+2,d,df,f,1,f,f,2,d,db,b,2",
+    "difficulty": 9.7
    },
    {
     "steps": [
@@ -2160,15 +2287,15 @@
       "command": "d,df,f,1"
      },
      {
-      "wait": 39,
-      "command": "4"
+      "wait": 37,
+      "command": "f,f,2"
      },
      {
-      "wait": 31,
+      "wait": 25,
       "command": "d,db,b,2"
      },
      {
-      "wait": 49,
+      "wait": 47,
       "command": "u"
      },
      {
@@ -2178,126 +2305,35 @@
     ],
     "moveIds": [
      "grab-headbutt",
-     "heavy-kick",
+     "far-arc-punch",
      "grab-launcher",
      "air-grab"
     ],
     "hits": 4,
-    "damage": 490,
-    "notation": "d,df,f,1,4,d,db,b,2,no ar + 1+2",
-    "difficulty": 10.1
-   },
-   {
-    "steps": [
-     {
-      "wait": 4,
-      "command": "d,df,f,1"
-     },
-     {
-      "wait": 39,
-      "command": "3"
-     },
-     {
-      "wait": 20,
-      "command": "1+2"
-     },
-     {
-      "wait": 26,
-      "command": "d,db,b,2"
-     },
-     {
-      "wait": 49,
-      "command": "u"
-     },
-     {
-      "wait": 2,
-      "command": "1+2"
-     }
-    ],
-    "moveIds": [
-     "grab-headbutt",
-     "light-kick",
-     "double-punch",
-     "grab-launcher",
-     "air-grab"
-    ],
-    "hits": 5,
-    "damage": 570,
-    "notation": "d,df,f,1,3,1+2,d,db,b,2,no ar + 1+2",
-    "difficulty": 11.4
-   },
-   {
-    "steps": [
-     {
-      "wait": 4,
-      "command": "d,df,f,1"
-     },
-     {
-      "wait": 39,
-      "command": "3"
-     },
-     {
-      "wait": 20,
-      "command": "1"
-     },
-     {
-      "wait": 18,
-      "command": "1+2"
-     },
-     {
-      "wait": 26,
-      "command": "d,db,b,2"
-     },
-     {
-      "wait": 49,
-      "command": "u"
-     },
-     {
-      "wait": 2,
-      "command": "1+2"
-     }
-    ],
-    "moveIds": [
-     "grab-headbutt",
-     "light-kick",
-     "light-punch",
-     "double-punch",
-     "grab-launcher",
-     "air-grab"
-    ],
-    "hits": 6,
-    "damage": 590,
-    "notation": "d,df,f,1,3,1,1+2,d,db,b,2,no ar + 1+2",
-    "difficulty": 12.7
+    "damage": 565,
+    "notation": "d,df,f,1,f,f,2,d,db,b,2,no ar + 1+2",
+    "difficulty": 11.1
    },
    {
     "steps": [
      {
       "wait": 1,
-      "command": "3"
-     },
-     {
-      "wait": 17,
-      "command": "d,df,f,1"
-     },
-     {
-      "wait": 42,
-      "command": "3"
-     },
-     {
-      "wait": 20,
-      "command": "1"
-     },
-     {
-      "wait": 18,
       "command": "1+2"
      },
      {
-      "wait": 26,
+      "wait": 20,
+      "command": "d,df,f,1"
+     },
+     {
+      "wait": 40,
+      "command": "f,f,2"
+     },
+     {
+      "wait": 25,
       "command": "d,db,b,2"
      },
      {
-      "wait": 49,
+      "wait": 47,
       "command": "u"
      },
      {
@@ -2306,18 +2342,16 @@
      }
     ],
     "moveIds": [
-     "light-kick",
-     "grab-headbutt",
-     "light-kick",
-     "light-punch",
      "double-punch",
+     "grab-headbutt",
+     "far-arc-punch",
      "grab-launcher",
      "air-grab"
     ],
-    "hits": 7,
+    "hits": 5,
     "damage": 615,
-    "notation": "3,d,df,f,1,3,1,1+2,d,db,b,2,no ar + 1+2",
-    "difficulty": 14.4
+    "notation": "1+2,d,df,f,1,f,f,2,d,db,b,2,no ar + 1+2",
+    "difficulty": 12.6
    },
    {
     "steps": [
@@ -2330,27 +2364,23 @@
       "command": "3"
      },
      {
-      "wait": 23,
+      "wait": 20,
+      "command": "2"
+     },
+     {
+      "wait": 27,
       "command": "d,df,f,1"
      },
      {
-      "wait": 42,
-      "command": "3"
+      "wait": 40,
+      "command": "f,f,2"
      },
      {
-      "wait": 20,
-      "command": "1"
-     },
-     {
-      "wait": 18,
-      "command": "1+2"
-     },
-     {
-      "wait": 26,
+      "wait": 25,
       "command": "d,db,b,2"
      },
      {
-      "wait": 49,
+      "wait": 47,
       "command": "u"
      },
      {
@@ -2361,67 +2391,253 @@
     "moveIds": [
      "crouch-light-kick",
      "light-kick",
+     "heavy-punch",
      "grab-headbutt",
-     "light-kick",
-     "light-punch",
-     "double-punch",
+     "far-arc-punch",
      "grab-launcher",
      "air-grab"
     ],
-    "hits": 8,
-    "damage": 637,
-    "notation": "d+3,3,d,df,f,1,3,1,1+2,d,db,b,2,no ar + 1+2",
-    "difficulty": 16.1
+    "hits": 7,
+    "damage": 647,
+    "notation": "d+3,3,2,d,df,f,1,f,f,2,d,db,b,2,no ar + 1+2",
+    "difficulty": 15.1
    },
    {
     "steps": [
      {
-      "wait": 4,
+      "wait": 1,
+      "command": "1"
+     },
+     {
+      "wait": 12,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1+2"
+     },
+     {
+      "wait": 26,
       "command": "d,df,f,1"
      },
      {
       "wait": 40,
+      "command": "f,f,2"
+     },
+     {
+      "wait": 25,
+      "command": "d,db,b,2"
+     },
+     {
+      "wait": 47,
+      "command": "u"
+     },
+     {
+      "wait": 2,
+      "command": "1+2"
+     }
+    ],
+    "moveIds": [
+     "light-punch",
+     "light-punch",
+     "light-punch",
+     "double-punch",
+     "grab-headbutt",
+     "far-arc-punch",
+     "grab-launcher",
+     "air-grab"
+    ],
+    "hits": 8,
+    "damage": 675,
+    "notation": "1,1,1,1+2,d,df,f,1,f,f,2,d,db,b,2,no ar + 1+2",
+    "difficulty": 16.5
+   },
+   {
+    "steps": [
+     {
+      "wait": 1,
+      "command": "3"
+     },
+     {
+      "wait": 14,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1+2"
+     },
+     {
+      "wait": 26,
+      "command": "d,df,f,1"
+     },
+     {
+      "wait": 40,
+      "command": "f,f,2"
+     },
+     {
+      "wait": 25,
+      "command": "d,db,b,2"
+     },
+     {
+      "wait": 47,
+      "command": "u"
+     },
+     {
+      "wait": 2,
+      "command": "1+2"
+     }
+    ],
+    "moveIds": [
+     "light-kick",
+     "light-punch",
+     "light-punch",
+     "light-punch",
+     "double-punch",
+     "grab-headbutt",
+     "far-arc-punch",
+     "grab-launcher",
+     "air-grab"
+    ],
+    "hits": 9,
+    "damage": 700,
+    "notation": "3,1,1,1,1+2,d,df,f,1,f,f,2,d,db,b,2,no ar + 1+2",
+    "difficulty": 17.8
+   },
+   {
+    "steps": [
+     {
+      "wait": 1,
+      "command": "d+3"
+     },
+     {
+      "wait": 13,
+      "command": "3"
+     },
+     {
+      "wait": 20,
+      "command": "1+2"
+     },
+     {
+      "wait": 26,
+      "command": "d,df,f,1"
+     },
+     {
+      "wait": 40,
+      "command": "f,f,2"
+     },
+     {
+      "wait": 25,
+      "command": "d,db,b,2"
+     },
+     {
+      "wait": 67,
+      "command": "d,df,f,1+2"
+     },
+     {
+      "wait": 31,
+      "command": "d,df,f,2"
+     }
+    ],
+    "moveIds": [
+     "crouch-light-kick",
+     "light-kick",
+     "double-punch",
+     "grab-headbutt",
+     "far-arc-punch",
+     "grab-launcher",
+     "hammer-punch",
+     "ultimate-grab"
+    ],
+    "hits": 8,
+    "damage": 782,
+    "notation": "d+3,3,1+2,d,df,f,1,f,f,2,d,db,b,2,d,df,f,1+2,d,df,f,d,df,f,2",
+    "difficulty": 18.3
+   },
+   {
+    "steps": [
+     {
+      "wait": 1,
+      "command": "3"
+     },
+     {
+      "wait": 14,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1"
+     },
+     {
+      "wait": 18,
+      "command": "1+2"
+     },
+     {
+      "wait": 26,
+      "command": "d,df,f,1"
+     },
+     {
+      "wait": 40,
+      "command": "f,f,2"
+     },
+     {
+      "wait": 25,
+      "command": "d,db,b,2"
+     },
+     {
+      "wait": 67,
+      "command": "d,df,f,1+2"
+     },
+     {
+      "wait": 35,
       "command": "d,db,b,db,d,df,f,1+2"
      }
     ],
     "moveIds": [
+     "light-kick",
+     "light-punch",
+     "light-punch",
+     "light-punch",
+     "double-punch",
      "grab-headbutt",
+     "far-arc-punch",
+     "grab-launcher",
+     "hammer-punch",
      "ultimate-soco"
     ],
-    "hits": 2,
-    "damage": 400,
-    "notation": "d,df,f,1,d,db,b,db,d,df,f,1+2",
-    "difficulty": 7.9
+    "hits": 10,
+    "damage": 840,
+    "notation": "3,1,1,1,1+2,d,df,f,1,f,f,2,d,db,b,2,d,df,f,1+2,d,db,b,db,d,df,f,1+2",
+    "difficulty": 23
    }
   ],
   "wall": {
    "steps": [
     {
      "wait": 1,
-     "command": "d+3"
-    },
-    {
-     "wait": 13,
-     "command": "3"
-    },
-    {
-     "wait": 23,
-     "command": "d,df,f,1"
-    },
-    {
-     "wait": 53,
-     "command": "1+2"
-    },
-    {
-     "wait": 22,
-     "command": "b,db,d,df,f,2"
-    },
-    {
-     "wait": 43,
      "command": "1"
     },
     {
-     "wait": 36,
+     "wait": 12,
+     "command": "1"
+    },
+    {
+     "wait": 18,
      "command": "1"
     },
     {
@@ -2430,24 +2646,44 @@
     },
     {
      "wait": 26,
-     "command": "d,df,f,1+2"
+     "command": "d,df,f,1"
+    },
+    {
+     "wait": 40,
+     "command": "f,f,2"
+    },
+    {
+     "wait": 27,
+     "command": "b,db,d,df,f,2"
+    },
+    {
+     "wait": 44,
+     "command": "u"
+    },
+    {
+     "wait": 2,
+     "command": "2"
+    },
+    {
+     "wait": 18,
+     "command": "1+2"
     }
    ],
    "moveIds": [
-    "crouch-light-kick",
-    "light-kick",
+    "light-punch",
+    "light-punch",
+    "light-punch",
+    "double-punch",
     "grab-headbutt",
-    "double-punch",
+    "far-arc-punch",
     "grab-throw",
-    "light-punch",
-    "light-punch",
-    "double-punch",
-    "hammer-punch"
+    "air-heavy-punch",
+    "air-grab"
    ],
-   "hits": 8,
-   "damage": 577,
-   "notation": "d+3,3,d,df,f,1,1+2,b,db,d,df,f,2,1,1,1+2,d,df,f,1+2",
-   "difficulty": 18.5
+   "hits": 9,
+   "damage": 735,
+   "notation": "1,1,1,1+2,d,df,f,1,f,f,2,b,db,d,df,f,2,no ar + 2,no ar + 1+2",
+   "difficulty": 19.7
   }
  }
 }

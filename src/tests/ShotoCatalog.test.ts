@@ -36,7 +36,7 @@ const move = (id: string) => shoto.moves.find(m => m.id === id)!;
 describe('manual Shoto catalogue', () => {
   it('registers the authored punch and kick strings', () => {
     expect(shoto.combos?.map(c => c.notation)).toEqual([
-      '1,1,1','2,2,2','1,1,2','1,1,1+2','3,3,4','3,4',
+      '1,1,1','2,2,2','1,1,2','3,3,4','3,4',
     ]);
     expect(formatCommand('b,bd,d,df,f,1+2')).toContain('←,↙,↓,↘,→,');
     expect(formatCommand('f,d,fd,4')).toContain('→,↓,↘,');
@@ -144,8 +144,8 @@ describe('manual Shoto catalogue', () => {
     }
   });
 
-  it('merges a chord within three frames without committing its first single attack', () => {
-    const sim=create();step(sim,input('N',['1']));step(sim,input('N',['1','2']));
+  it('merges a chord within three frames into the 2+4 punch without committing its first single attack', () => {
+    const sim=create();step(sim,input('N',['2']));step(sim,input('N',['2','4']));
     expect(sim.snapshot().characters[0].attack?.moveId).toBe('power-punch');
     untilContact(sim);expect(sim.snapshot().recentContacts.map(c=>c.event.moveId)).toEqual(['power-punch']);
   });

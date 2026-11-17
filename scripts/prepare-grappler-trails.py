@@ -1,4 +1,4 @@
-"""Prepara efeitos aprovados: recorta seis quadros, ajusta à grade 362×724 e remove magenta.
+"""Prepara efeitos (de personagem e gerais de rage e defesa): recorta seis quadros, ajusta à grade 362×724 e remove magenta.
 Uso: python3 scripts/prepare-grappler-trails.py [nome ...] (sem argumentos prepara todos)."""
 from hashlib import sha256
 from importlib.util import module_from_spec, spec_from_file_location
@@ -12,6 +12,10 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 
+# Effects drawn from the floor up: their cuts keep the height they have in the source.
+GROUND_ANCHORED = {'rush'}
+
+
 def sibling(name):
     spec = spec_from_file_location(name.replace('-', '_'), ROOT / 'scripts' / f'{name}.py')
     module = module_from_spec(spec)
@@ -23,7 +27,8 @@ def main():
     cut, key = sibling('prepare-character-sheets'), sibling('key-magenta')
     registry_path = ROOT / 'src/assets/sprites/prepared.json'
     registry = json.loads(registry_path.read_text())
-    names = ('grappler-trail-throw', 'grappler-trail-slam', 'grappler-trail-launcher', 'grappler-ultimate-soco')
+    names = ('grappler-trail-throw', 'grappler-trail-slam', 'grappler-trail-launcher', 'grappler-ultimate-soco', 'grappler-combo-111-vapor',
+             'shield', 'ultimate-spend', 'breaker', 'breaker-fail', 'buff', 'rush')
     selected = sys.argv[1:] or names
     if unknown := set(selected) - set(names): raise SystemExit(f'Efeitos desconhecidos: {sorted(unknown)}')
     for name in selected:
@@ -36,7 +41,9 @@ def main():
         for index, (data, top, left) in enumerate(frames):
             data[:, :, :3] = original[top:top + data.shape[0], left:left + data.shape[1], :3]
             image = Image.fromarray(data).resize((round(data.shape[1] * scale), round(data.shape[0] * scale)), Image.Resampling.LANCZOS)
-            sheet.alpha_composite(image, (index * 362 + (362 - image.width) // 2, (724 - image.height) // 2))
+            # Effects drawn from the floor keep the authored height of each cut, scaled about the middle of the frame.
+            y = round(362 + (top - 362) * scale) if name in GROUND_ANCHORED else (724 - image.height) // 2
+            sheet.alpha_composite(image, (index * 362 + (362 - image.width) // 2, y))
         pixels = np.array(sheet)
         key.clean(pixels, key.SPRITE_HUE_TOLERANCE)
         Image.fromarray(pixels).save(target, optimize=True)

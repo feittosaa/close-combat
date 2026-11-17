@@ -22,7 +22,7 @@ it('excludes effects created after the presentation update from the dimmer camer
   presentation.destroy();
 });
 
-it.each(['saloon', 'fazenda', 'sala-treino'])('uses the %s presentations for intros and results', theme => {
+it.each(['saloon', 'fazenda', 'praia', 'sala-treino'])('uses the %s presentations for intros and results', theme => {
   const makeObject = () => {
     const object = { width:1000, height:400, setName:vi.fn(), setOrigin:vi.fn(), setScrollFactor:vi.fn(), setDepth:vi.fn(), setVisible:vi.fn(),
       setTexture:vi.fn(), setPosition:vi.fn(), setDisplaySize:vi.fn(), setAlpha:vi.fn(), setSize:vi.fn(), destroy:vi.fn() };
@@ -50,15 +50,15 @@ it.each(['saloon', 'fazenda', 'sala-treino'])('uses the %s presentations for int
   presentation.update(snapshot, 400, 1024); presentation.update(snapshot, 16, 1024);
   snapshot.phase = 'round-over'; snapshot.roundWinnerId = snapshot.characters[0].characterId; snapshot.roundEndedFrame = 1; snapshot.frame = 20;
   presentation.update(snapshot, 16, 1024);
-  expectTitle('round-win');
+  expect(title.setVisible).toHaveBeenLastCalledWith(false);
   snapshot.roundWinnerId = snapshot.characters[1].characterId;
   presentation.update(snapshot, 16, 1024);
-  expectTitle('round-lose');
+  expectTitle('lose');
   snapshot.roundEndReason = 'time';
   presentation.update(snapshot, 16, 1024);
   expectTitle('timeout');
   snapshot.frame = 80; presentation.update(snapshot, 16, 1024);
-  expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:round-lose`);
+  expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:lose`);
   snapshot.roundWins = [0, 2]; snapshot.roundEndReason = 'knockout';
   presentation.update(snapshot, 16, 1024);
   expectTitle('lose');
@@ -68,7 +68,7 @@ it.each(['saloon', 'fazenda', 'sala-treino'])('uses the %s presentations for int
   presentation.destroy();
 });
 
-it.each(['saloon', 'fazenda', 'sala-treino'])('shows K.O. immediately in %s before the result', theme => {
+it.each(['saloon', 'fazenda', 'praia', 'sala-treino'])('shows K.O. immediately in %s before the result', theme => {
   const object = () => {
     const value = {width:1000,height:400,setName:vi.fn(),setOrigin:vi.fn(),setScrollFactor:vi.fn(),setDepth:vi.fn(),setVisible:vi.fn(),
       setTexture:vi.fn(),setPosition:vi.fn(),setDisplaySize:vi.fn(),setAlpha:vi.fn(),setSize:vi.fn(),destroy:vi.fn()};
@@ -91,8 +91,33 @@ it.each(['saloon', 'fazenda', 'sala-treino'])('shows K.O. immediately in %s befo
   snapshot.phase = 'round-over'; snapshot.roundEndedFrame = 100; snapshot.frame = 120;
   snapshot.roundWinnerId = snapshot.characters[0].characterId;
   presentation.update(snapshot, 16, 1024);
-  expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:round-win`);
+  expect(title.setVisible).toHaveBeenLastCalledWith(false);
   presentation.destroy();
+});
+
+it.each(['saloon', 'fazenda', 'praia', 'sala-treino'])('mostra PERFECT no lugar de K.O. quando quem vence não perdeu vida (%s)', theme => {
+  const makeObject = () => {
+    const object = {width:1000,height:400,setName:vi.fn(),setOrigin:vi.fn(),setScrollFactor:vi.fn(),setDepth:vi.fn(),setVisible:vi.fn(),
+      setTexture:vi.fn(),setPosition:vi.fn(),setDisplaySize:vi.fn(),setAlpha:vi.fn(),setSize:vi.fn(),destroy:vi.fn()};
+    Object.values(object).forEach(method => { if (typeof method === 'function') method.mockReturnValue(object); });
+    return object;
+  };
+  const title = makeObject(), dimmer = makeObject();
+  const scene = {add:{image:()=>title,rectangle:()=>dimmer},cameras:{add:()=>({setViewport:vi.fn(),ignore:vi.fn()}),remove:vi.fn()},
+    scale:{width:1920,height:1080},children:{list:[title,dimmer]}};
+  const knockout = (damage: number) => {
+    const presentation = new StagePresentation(scene as never, theme);
+    const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
+    presentation.update(snapshot, 1600, 1024);
+    snapshot.characters[1].health = 0; snapshot.characters[0].health = snapshot.characters[0].maxHealth - damage;
+    snapshot.knockoutStartedAt = 100;
+    presentation.update(snapshot, 16, 1024);
+    presentation.destroy();
+  };
+  knockout(0);
+  expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:perfect`);
+  knockout(1);
+  expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:ko`);
 });
 
 it('shows the final result at full opacity over a 20% dimmer before the victory pose begins', () => {
@@ -144,7 +169,7 @@ it('holds ready longer in the first round and for one second in the next, then e
   presentation.destroy();
 });
 
-it.each(['saloon', 'fazenda', 'sala-treino'])('follows real timeout results through both rounds in %s', theme => {
+it.each(['saloon', 'fazenda', 'praia', 'sala-treino'])('follows real timeout results through both rounds in %s', theme => {
   const object = () => {
     const value = { width: 1000, height: 400, setName: vi.fn(), setOrigin: vi.fn(), setScrollFactor: vi.fn(), setDepth: vi.fn(),
       setVisible: vi.fn(), setTexture: vi.fn(), setPosition: vi.fn(), setDisplaySize: vi.fn(), setAlpha: vi.fn(), setSize: vi.fn(), destroy: vi.fn() };
@@ -167,7 +192,8 @@ it.each(['saloon', 'fazenda', 'sala-treino'])('follows real timeout results thro
       simulation.stepFrame([neutral, neutral]);
       presentation.update(simulation.snapshot(), 1000 / 60, 1024);
       if (age === 20) expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:timeout`);
-      if (age === 80) expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:${round === 1 ? 'round-win' : 'victory'}`);
+      if (age === 80 && round === 1) expect(title.setVisible).toHaveBeenLastCalledWith(false);
+      if (age === 80 && round === 2) expect(title.setTexture).toHaveBeenLastCalledWith(`presentation:${theme}:victory`);
     }
     while (simulation.snapshot().phase === 'round-over') simulation.stepFrame([neutral, neutral]);
   }

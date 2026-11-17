@@ -5,7 +5,7 @@ export const HUD = {
   ink: 0x0e0c0b, inset: 0x1a1512, rail: 0x221b16, gold: 0xefe4cc, lightGold: 0xfff4dc,
   ivory: '#efe4cc', muted: '#b8aa90', goldText: '#efe4cc',
   players: [0xc8463a, 0x3b8a84], playerText: ['#f0a493', '#9fd8d1'],
-  rage: [0xf4efe2, 0xe8b53a, 0xc41f3f], phases: [0xe8b56d, 0xe88a8f, 0x9ec4d8],
+  rushGlow: 0xff7a2a, rage: [0xf4efe2, 0xe8b53a, 0xc41f3f], phases: [0xe8b56d, 0xe88a8f, 0x9ec4d8],
 } as const;
 
 /** The menus' print face (declared in style.css); canvas text needs it loaded first, see `loadInterfaceFonts`. */

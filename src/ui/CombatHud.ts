@@ -8,8 +8,18 @@ import { getSystemControls, keyLabel } from '../input/controlSettings';
 import { placeFighterIcon } from './fighterArt';
 import { HUD, hudText, drawRoundMarker, healthBarFill, setTextColor } from './hudTheme';
 
+/** The Rush wave on the health bar: width of each slice, length of one wave and time it takes to travel one length. */
+const RUSH_WAVE_STEP = 3;
+const RUSH_WAVE_LENGTH = 90;
+const RUSH_WAVE_MS = 900;
+
 /** How long a combo breaker notice stays up after the freeze, in frames. */
 const BREAKER_NOTICE_FRAMES = 90;
+
+/** Position and length of each fighter's rage bar, measured from the screen's outer edge. */
+const RAGE_BAR_X = 45, RAGE_BAR_WIDTH = 260, SPEND_EFFECT_WIDTH = 110, SPEND_EFFECT_MS = 300;
+/** The bar's frame ends 12 px below the top of its cells. */
+const RAGE_BAR_LOWER_EDGE = 12;
 
 /** Minimal HUD; all values and round markers reflect the same simulation snapshot. */
 export class CombatHud {
@@ -31,7 +41,7 @@ export class CombatHud {
   private readonly barWidth: number;
   private readonly sidePadding = 82;
 
-  constructor(scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = [t('hud.player', { player: 1 }),t('hud.player', { player: 2 })], private readonly training = false, private readonly practiceLabel = t('hud.freeTraining'), fighterIds?: readonly [string,string],
+  constructor(private readonly scene: Phaser.Scene, width: number, fighterNames: readonly [string,string] = [t('hud.player', { player: 1 }),t('hud.player', { player: 2 })], private readonly training = false, private readonly practiceLabel = t('hud.freeTraining'), fighterIds?: readonly [string,string],
     /** Free training lifts the rage bars above its footer panel; matches and the tutorial keep them at the bottom. */
     private readonly rageRaised = training) {
     this.barWidth = Math.max(360, width / 2 - this.sidePadding - 90);
@@ -68,6 +78,36 @@ export class CombatHud {
       this.timer,this.roundLabel,this.hitLabel,...this.comboCounts,...this.comboWords,...this.comboDetails,...this.breakerLabels,this.pauseHint]).setScrollFactor(0).setDepth(100);
   }
 
+  /** The ultimate's cost: a burst of energy runs along the fighter's rage bar on its lower line, from the outer end inwards for P1 and mirrored for P2. */
+  playRageSpend(index: number, width: number): void {
+    const scene = this.root.scene, key = 'contact-ultimate-spend';
+    if (!scene.textures.exists(key)) return;
+    const mirrored = index === 1, left = mirrored ? width - RAGE_BAR_X - RAGE_BAR_WIDTH : RAGE_BAR_X;
+    const start = mirrored ? left + RAGE_BAR_WIDTH : left, travel = mirrored ? -RAGE_BAR_WIDTH : RAGE_BAR_WIDTH;
+    // The sheet's regular frame is twice as tall as wide and the arrow runs along its middle, so the frame is centred on the bar's lower edge.
+    const sprite = scene.add.image(start, heightForRage(this.rageRaised) + RAGE_BAR_LOWER_EDGE, key, 0)
+      .setDisplaySize(SPEND_EFFECT_WIDTH, SPEND_EFFECT_WIDTH * 2).setFlipX(mirrored);
+    this.root.add(sprite);
+    const progress = { value: 0 };
+    scene.tweens.add({ targets: progress, value: 1, duration: SPEND_EFFECT_MS,
+      onUpdate: () => sprite.setPosition(start + travel * progress.value, sprite.y).setFrame(Math.min(5, Math.floor(progress.value * 6))),
+      onComplete: () => sprite.destroy() });
+  }
+
+  /** A fighter in Rush has a wave of light running along all of his health, over a warm fill and a pulsing rim. */
+  private drawRushGlow(g: Phaser.GameObjects.Graphics, fill: { x: number; width: number }, mirrored: boolean): void {
+    const time = this.scene.time.now, direction = mirrored ? 1 : -1;
+    g.fillStyle(HUD.rushGlow, .3).fillRect(fill.x, 12, fill.width, 13);
+    for (let offset = 0; offset < fill.width; offset += RUSH_WAVE_STEP) {
+      const phase = (offset / RUSH_WAVE_LENGTH + direction * time / RUSH_WAVE_MS) * Math.PI * 2;
+      const crest = (Math.sin(phase) + 1) / 2;
+      g.fillStyle(0xfff3c4, .05 + .6 * crest * crest).fillRect(fill.x + offset, 12, Math.min(RUSH_WAVE_STEP, fill.width - offset), 13);
+      // The crest line undulates up and down the bar like a wave.
+      g.fillStyle(0xffffff, .55 * crest).fillRect(fill.x + offset, 12 + 5 + Math.sin(phase) * 4, Math.min(RUSH_WAVE_STEP, fill.width - offset), 2);
+    }
+    g.lineStyle(2, HUD.rushGlow, .65 + .35 * Math.sin(time / 120)).strokeRect(fill.x, 12, fill.width, 13);
+  }
+
   update(snapshot: SimulationSnapshot, width: number): void {
     this.timer.setText(this.training?'∞':String(Math.ceil(snapshot.roundFramesRemaining/60)).padStart(2,'0'));
     this.roundLabel.setText(this.training?this.practiceLabel:t('hud.round', { round: snapshot.round })).setFontSize(this.training?9:10);
@@ -98,10 +138,11 @@ export class CombatHud {
       g.fillStyle(HUD.rail).fillRect(x,10,this.barWidth,17);
       const fill=healthBarFill(character.health,character.maxHealth,x+3,this.barWidth-6,index===1);
       if(fill.width>0) g.fillStyle(HUD.players[index]).fillRect(fill.x,12,fill.width,13);
+      if(character.rush&&fill.width>0) this.drawRushGlow(g,fill,index===1);
       g.lineStyle(2,HUD.gold,.95).strokeRect(x-4,6,this.barWidth+8,25);
       for(let round=0;round<2;round++)drawRoundMarker(g,index===0?width/2-52-round*14:width/2+52+round*14,40,4,HUD.players[index],snapshot.roundWins[index]>round);
       if(character.maxRage>0){
-        const rageWidth=260, rageX=index===0?45:width-45-rageWidth, rageY=heightForRage(this.rageRaised);
+        const rageWidth=RAGE_BAR_WIDTH, rageX=index===0?RAGE_BAR_X:width-RAGE_BAR_X-rageWidth, rageY=heightForRage(this.rageRaised);
         // Rage: one separate cell per meter section; each bar fills white, then yellow, then red, from the outer edge inwards.
         const sections = RAGE_LEVEL / RAGE_SEGMENT, gap = 4, cell = (rageWidth - 10 - gap * (sections - 1)) / sections;
         for (let section = 0; section < sections; section++) {

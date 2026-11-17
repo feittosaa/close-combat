@@ -2,7 +2,7 @@ import { expect, it, vi } from 'vitest';
 import type Phaser from 'phaser';
 import { UltimateOverlay } from '../ui/UltimateOverlay';
 
-it.each(['saloon', 'saloon-dia', 'saloon-noite', 'fazenda', 'sala-treino'])('renders the %s ultimate above the stage and below fighters', stage => {
+it.each(['saloon', 'saloon-dia', 'saloon-noite', 'fazenda', 'praia', 'sala-treino'])('renders the %s ultimate above the stage and below fighters', stage => {
   const image = { width:1600, height:900, setScrollFactor:vi.fn(), setDepth:vi.fn(), setVisible:vi.fn(),
     setPosition:vi.fn(), setOrigin:vi.fn(), setSize:vi.fn(), setScale:vi.fn(), setDisplaySize:vi.fn(), setRotation:vi.fn(), setAlpha:vi.fn(), destroy:vi.fn() };
   for (const value of Object.values(image)) if (typeof value === 'function') value.mockReturnValue(image);

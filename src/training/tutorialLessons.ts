@@ -1,4 +1,4 @@
-import type { CharacterDefinition } from '../engine/data/characters';
+import { getCharacterById, type CharacterDefinition } from '../engine/data/characters';
 import type { MoveDefinition } from '../engine/data/moves';
 import type { FrameInput } from '../input/types';
 import { Simulation, type ComboRecord } from '../engine/simulation/Simulation';
@@ -6,6 +6,10 @@ import { createGameConfig, type GameConfig } from '../engine/data/gameConfig';
 import { trainingStage } from '../rendering/stages/stageCatalog';
 import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
 import { LOGICAL_VIEW } from '../rendering/presentation';
+
+/** The tutorial opponent is always Bob, whoever the player chooses. */
+export const TUTORIAL_OPPONENT_ID = 'shoto';
+export const tutorialOpponent = (): CharacterDefinition => getCharacterById(TUTORIAL_OPPONENT_ID)!;
 
 /** Separation from which the combo routes were found and are replayed. */
 export const TUTORIAL_DISTANCE = 64;
@@ -30,7 +34,7 @@ export function tutorialGameConfig(): GameConfig {
  * the attack and the opponent's reaction are over. Returns player one's combos. With `wall`, the opponent starts near the wall.
  */
 export function playExample(fighter: CharacterDefinition, inputs: readonly FrameInput[], distance: number, wall = false): ComboRecord[] {
-  const sim = new Simulation(tutorialGameConfig(), [fighter, fighter], { training: true, initialDistance: distance, wall });
+  const sim = new Simulation(tutorialGameConfig(), [fighter, tutorialOpponent()], { training: true, initialDistance: distance, wall });
   const idle: FrameInput = { direction: 'N', buttons: new Set() };
   sim.fillTrainingRage();
   for (const input of inputs) sim.stepFrame([input, idle]);

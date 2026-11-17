@@ -28,7 +28,7 @@ it('announces the round, dashes, full rage, and final result only once per event
   expect(play.mock.calls.filter(call => call[0] === 'sfx-victory')).toHaveLength(1);
 });
 
-it('uses heavy footsteps only for Grappler and plays each step once per interval', () => {
+it('uses heavy footsteps only for Grappler and plays each Grappler step when a foot lands', () => {
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
@@ -37,10 +37,12 @@ it('uses heavy footsteps only for Grappler and plays each step once per interval
   snapshot.characters[0].mode = 'moving'; snapshot.characters[1].mode = 'moving';
   sounds.observe(snapshot); sounds.observe(snapshot);
   expect(play.mock.calls.map(call => call[0])).toEqual(['sfx-heavy_step_1', 'sfx-steps_1']);
-  expect(play).toHaveBeenCalledWith('sfx-heavy_step_1', {volume:.2, seek:.205});
+  expect(play).toHaveBeenCalledWith('sfx-heavy_step_1', {volume:.6, seek:.205});
   expect(play).toHaveBeenCalledWith('sfx-steps_1', {volume:.2,seek:.045});
   snapshot.frame += 20; sounds.observe(snapshot);
-  expect(play.mock.calls.map(call => call[0])).toEqual(['sfx-heavy_step_1', 'sfx-steps_1', 'sfx-heavy_step_1', 'sfx-steps_1']);
+  expect(play.mock.calls.map(call => call[0])).toEqual(['sfx-heavy_step_1', 'sfx-steps_1', 'sfx-steps_1']);
+  snapshot.frame += 1; sounds.observe(snapshot);
+  expect(play.mock.calls.filter(call => call[0] === 'sfx-heavy_step_1')).toHaveLength(2);
 });
 
 it('plays one explosion sound when dynamite expires without a hit', () => {

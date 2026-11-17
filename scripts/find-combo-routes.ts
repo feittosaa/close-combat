@@ -16,7 +16,7 @@ import type { ProjectileState } from '../src/engine/combat/ProjectileState';
 import type { ComboRecord } from '../src/engine/simulation/Simulation';
 import type { FrameInput } from '../src/input/types';
 import { minimumWait, parseCommand, routeInputs, type AdvancedRoute, type ComboRoute, type FighterRoutes, type RouteStep } from '../src/training/comboRoute';
-import { TUTORIAL_DISTANCE, lessonCommands, moveCommand, playExample, routeNotation, tutorialGameConfig } from '../src/training/tutorialLessons';
+import { TUTORIAL_DISTANCE, lessonCommands, moveCommand, playExample, routeNotation, tutorialGameConfig, tutorialOpponent } from '../src/training/tutorialLessons';
 
 const OUTPUT = new URL('../src/training/comboRoutes.json', import.meta.url);
 const WAIT_RANGE = 40;
@@ -81,10 +81,10 @@ class RouteSearch {
   private readonly shared: ReadonlySet<unknown>;
   private readonly root: SearchNode;
   constructor(readonly fighter: CharacterDefinition, readonly wall = false) {
-    const sim = new Simulation(config, [fighter, fighter], { training: true, initialDistance: TUTORIAL_DISTANCE, wall });
+    const sim = new Simulation(config, [fighter, tutorialOpponent()], { training: true, initialDistance: TUTORIAL_DISTANCE, wall });
     sim.fillTrainingRage();
     const raw = sim as unknown as Record<string, unknown>;
-    this.shared = new Set([fighter, config, raw.definitions, raw.resolver, raw.options]);
+    this.shared = new Set([fighter, tutorialOpponent(), config, raw.definitions, raw.resolver, raw.options]);
     this.root = { sim, steps: [], moveIds: [], fed: 0, hold: 'N', hits: 0, damage: 0, ultimates: 0, segments: 0, segmentHits: 0 };
   }
   get start(): SearchNode { return this.root; }

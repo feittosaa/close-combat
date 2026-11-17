@@ -4,6 +4,7 @@ export interface StageGroup { id: string; variants: readonly string[]; practice?
 export const STAGE_GROUPS: readonly StageGroup[] = [
   { id: 'fazenda', variants: ['fazenda'] },
   { id: 'saloon', variants: ['saloon-dia', 'saloon-noite', 'saloon'] },
+  { id: 'praia', variants: ['praia'] },
   { id: 'sala-treino', variants: ['sala-treino'], practice: true },
 ];
 export type StageMode = 'versus' | 'arcade';

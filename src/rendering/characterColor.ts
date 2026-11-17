@@ -61,6 +61,7 @@ const smoothstep = (a: number, b: number, value: number): number => {
 export function characterColor(stage: StageDefinition, layout: StageLayout, x: number, cameraScrollX: number, alternate: boolean): CharacterColor {
   const ambient: Record<string, Required<Omit<CharacterColor, 'alternate' | 'warmth' | 'side'>>> = {
     'sala-treino': { exposure: 1, shadow: [1, 1, 1], occlusion: 0, volume: .12 },
+    'praia': { exposure: 1.05, shadow: [.93, .92, .97], occlusion: .1, volume: .18 },
     'fazenda': { exposure: 1.03, shadow: [.9, .94, 1], occlusion: .12, volume: .2 },
     'saloon-dia': { exposure: 1.03, shadow: [.96, .91, .86], occlusion: .14, volume: .2 },
     'saloon-noite': { exposure: .91, shadow: [.8, .82, 1], occlusion: .26, volume: .26 },

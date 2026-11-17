@@ -6,15 +6,15 @@ import { stages } from '../rendering/stages/stageCatalog';
 const sequence = (values: number[]) => { let index = 0; return () => values[index++ % values.length]; };
 
 it('agrupa os três saloons num cenário só e deixa a sala de treino por último', () => {
-  expect(STAGE_GROUPS.map(group => group.id)).toEqual(['fazenda', 'saloon', 'sala-treino']);
+  expect(STAGE_GROUPS.map(group => group.id)).toEqual(['fazenda', 'saloon', 'praia', 'sala-treino']);
   expect(STAGE_GROUPS[1].variants).toEqual(['saloon-dia', 'saloon-noite', 'saloon']);
   expect(STAGE_GROUPS.flatMap(group => group.variants).sort()).toEqual(stages.map(stage => stage.id).sort());
   expect(groupOfStage('saloon-noite')?.id).toBe('saloon');
 });
 
 it('bloqueia a sala de treino no Arcade e a oferece no PvP', () => {
-  expect(groupsFor('arcade').map(group => group.id)).toEqual(['fazenda', 'saloon']);
-  expect(groupsFor('versus')[2]?.id).toBe('sala-treino');
+  expect(groupsFor('arcade').map(group => group.id)).toEqual(['fazenda', 'saloon', 'praia']);
+  expect(groupsFor('versus')[3]?.id).toBe('sala-treino');
 });
 
 it('o Arcade aleatório nunca usa a sala de treino nem repete o Saloon em sequência, em dia, noite ou retrô', () => {
@@ -30,8 +30,8 @@ it('o aleatório sorteia um cenário e só depois a variação, então o Saloon 
   const counts: Record<string, number> = {};
   for (let i = 0; i < 3000; i++) { let n = i * 7919 + 13; const random = () => (n = (n * 48271) % 2147483647) / 2147483647; const id = resolveChoice(RANDOM_STAGE, groupsFor('versus'), random); counts[id] = (counts[id] ?? 0) + 1; }
   const saloon = (counts['saloon-dia'] ?? 0) + (counts['saloon-noite'] ?? 0) + (counts['saloon'] ?? 0);
-  expect(saloon / 3000).toBeGreaterThan(.28); expect(saloon / 3000).toBeLessThan(.38);
-  expect(counts['fazenda'] / 3000).toBeGreaterThan(.28);
+  expect(saloon / 3000).toBeGreaterThan(.2); expect(saloon / 3000).toBeLessThan(.3);
+  expect(counts['fazenda'] / 3000).toBeGreaterThan(.2); expect(counts['praia'] / 3000).toBeGreaterThan(.2);
 });
 
 it('sorteia 50% para cada cenário quando os dois escolhem diferente, e não sorteia quando escolhem o mesmo', () => {

@@ -1,0 +1,15 @@
+{
+  "id": "praia",
+  "name": "Praia",
+  "referenceSize": { "width": 2661, "height": 887 },
+  "groundY": 760,
+  "topExtension": 150,
+  "shoreline": {"y": 687, "depth": -301.5, "amplitude": 3, "period": 1500},
+  "minimumScale": 0.01,
+  "layers": [
+    {"id": "praia", "file": "layers/praia.png", "highFile": "layers/praia-high.png", "depth": -304, "parallax": 1, "x": 0, "y": 0},
+    {"id": "nuvens", "file": "layers/nuvens.png", "highFile": "layers/nuvens-high.png", "depth": -303, "parallax": 1, "x": 0, "y": 0, "motion": {"axis": "x", "amplitude": 70, "period": 3600, "mode": "oscillate"}},
+    {"id": "mar", "file": "layers/mar.png", "depth": -302, "parallax": 1, "x": 0, "y": 520, "size": {"width": 2661, "height": 166}, "motion": {"axis": "y", "amplitude": 6, "period": 900, "mode": "oscillate"}},
+    {"id": "sombra", "file": "layers/sombra.png", "highFile": "layers/sombra-high.png", "depth": -301, "parallax": 1, "x": 0, "y": 0, "motion": {"axis": "x", "amplitude": 8, "period": 420, "mode": "oscillate"}}
+  ]
+}

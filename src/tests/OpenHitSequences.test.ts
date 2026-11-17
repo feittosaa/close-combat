@@ -25,14 +25,12 @@ function hit(sim: Simulation, player:number, buttons:AttackButton[], continuous=
   throw new Error('Missing connected hit');
 }
 
-it.each([0,1])('keeps confirmed attacks available after the target reaches zero health, player %i', player => {
+it.each([0,1])('drops the target at once when the last blow takes his health to zero, player %i', player => {
   const fragile = {...shoto, maxHealth:20};
   const fighters = player === 0 ? [shoto, fragile] as const : [fragile, shoto] as const;
   const sim = new Simulation(config, fighters, {initialDistance:56});
-  for (const button of ['1','1','1'] as const) hit(sim, player, [button]);
-  expect(sim.snapshot().characters[1-player].health).toBe(0);
-  expect(sim.snapshot().phase).toBe('fight');
-  expect(sim.snapshot().comboHistory.slice(-1)[0]?.hits).toBe(3);
+  for (const button of ['1','1','1'] as const) if (sim.snapshot().characters[1-player].health > 0) hit(sim, player, [button]);
+  expect(sim.snapshot().characters[1-player]).toMatchObject({health:0, mode:'knockdown'});
   for (let tick=0; tick<100 && sim.snapshot().phase==='fight'; tick++) step(sim);
   expect(sim.snapshot().roundWinnerId).toBe(`player-${player+1}`);
 });

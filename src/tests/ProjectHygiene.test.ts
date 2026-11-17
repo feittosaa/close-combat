@@ -39,8 +39,8 @@ describe('Project asset and documentation hygiene', () => {
         used.add(layer.sourceStage ? `src/assets/scenes/${layer.sourceStage}/${file}` : relativeTo(projectPath(key), file));
       }
     }
-    for (const stage of ['saloon', 'fazenda', 'sala-treino']) {
-      for (const name of ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'round-win', 'round-lose', 'ko', ...(stage === 'saloon' ? ['tumbleweed'] : [])]) {
+    for (const stage of ['saloon', 'fazenda', 'praia', 'sala-treino']) {
+      for (const name of ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'ko', 'perfect', ...(stage === 'saloon' ? ['tumbleweed'] : [])]) {
         used.add(`src/assets/scenes/${stage}/presentation/${name}.png`);
       }
     }
@@ -61,9 +61,15 @@ describe('Project asset and documentation hygiene', () => {
     }
     expect(used.has('src/assets/sprites/effects/contact/grappler-ultimate-soco.png')).toBe(true);
     used.add('assets/art/effects/contact/grappler-ultimate-soco.png');
+    expect(used.has('src/assets/sprites/effects/contact/grappler-combo-111-vapor.png')).toBe(true);
+    used.add('assets/art/effects/contact/grappler-combo-111-vapor.png');
+    for (const name of ['shield', 'ultimate-spend', 'breaker', 'breaker-fail', 'buff', 'rush']) {
+      expect(used.has(`src/assets/sprites/effects/contact/${name}.png`)).toBe(true);
+      used.add(`assets/art/effects/contact/${name}.png`);
+    }
     const alternatives = import.meta.glob('../assets/art/characters/*/{victory-poses,selection-backgrounds,selection-icons}/*.png', { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(alternatives)) used.add(projectPath(key));
-    const reviews = import.meta.glob<string>('../../assets/art/characters/*/revisao.json', { eager: true, query: '?raw', import: 'default' });
+    const reviews = import.meta.glob<string>('../../assets/art/{characters,scenes}/*/revisao.json', { eager: true, query: '?raw', import: 'default' });
     for (const [key, source] of Object.entries(reviews)) {
       const manifest = projectPath(key);
       expect(markdown['../../pipeline.md']).toContain(manifest);

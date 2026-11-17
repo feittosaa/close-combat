@@ -13,6 +13,12 @@ import hitBlue from '../assets/sprites/effects/contact/hit-blue.png';
 import blockBlue from '../assets/sprites/effects/contact/block-blue.png';
 import hitWine from '../assets/sprites/effects/contact/hit-wine.png';
 import blockWine from '../assets/sprites/effects/contact/block-wine.png';
+import shield from '../assets/sprites/effects/contact/shield.png';
+import ultimateSpend from '../assets/sprites/effects/contact/ultimate-spend.png';
+import breaker from '../assets/sprites/effects/contact/breaker.png';
+import breakerFail from '../assets/sprites/effects/contact/breaker-fail.png';
+import buff from '../assets/sprites/effects/contact/buff.png';
+import rush from '../assets/sprites/effects/contact/rush.png';
 import wallBounce from '../assets/sprites/effects/contact/wall-bounce.png';
 import authoredCuts from '../assets/sprites/effects/contact/frames.json';
 const grapplerEffects = import.meta.glob<string>('../assets/sprites/effects/contact/grappler-*.png', { eager: true, query: '?url', import: 'default' });
@@ -23,6 +29,8 @@ const sheets = {
   'block-light': blockLight, 'block-heavy': blockHeavy, 'block-sweep': blockSweep,
   'block-perfect': blockPerfect,
   'hit-blue': hitBlue, 'block-blue': blockBlue, 'hit-wine': hitWine, 'block-wine': blockWine,
+  // Effects of every fighter: armour absorbing a hit, the ultimate's cost, the combo breaker and its failure, a buffed special or grab, the Rush activation.
+  'shield': shield, 'ultimate-spend': ultimateSpend, 'breaker': breaker, 'breaker-fail': breakerFail, 'buff': buff, 'rush': rush,
 } as const;
 
 type Sheet = keyof typeof sheets;
@@ -99,6 +107,7 @@ export function contactEffectKey(event: HitEvent, move?: MoveDefinition): Sheet 
   const heavy = move?.category === 'power' || move?.category === 'ultimate' ||
     move?.input.buttons.some(button => button === '2' || button === '4');
   if (event.perfectBlock) return 'block-perfect';
+  if (event.armored) return 'shield';
   let color: 'blue' | 'wine' | undefined;
   if (move?.category === 'special' || move?.category === 'ultimate') {
     if (move.projectile?.visual === 'bullet' || move.projectile?.visual === 'dynamite') color = 'blue';

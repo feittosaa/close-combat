@@ -9,6 +9,7 @@ import { framePlacement } from './frameAdjustments';
 import shotoCalibration from '../../assets/sprites/characters/shoto/calibration.json';
 import shotoMeasurements from '../../assets/sprites/characters/shoto/measurements.json';
 import { grapplerReaction } from '../grapplerReaction';
+import { breakerDrawing } from './rageAnimation';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/shoto/*.png', { eager: true, query: '?url', import: 'default' });
 const layouts = import.meta.glob<string>('../../assets/sprites/characters/shoto/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
@@ -74,6 +75,8 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
   const pose = (name: string, drawing: number, facesLeft = false) => shotoPose(state, name, drawing, facesLeft);
   const grab = grapplerReaction(state, frame);
   if (grab) return pose(grab.name, grab.drawing);
+  const breaker = breakerDrawing(state, frame);
+  if (breaker) return pose(breaker.name, breaker.drawing);
   const transition = state.animationTransition;
   const transitionAge = frame - (transition?.startedFrame ?? -Infinity);
   if (state.grounded && transition && transitionAge >= 0 && transitionAge < 3) {
@@ -90,7 +93,7 @@ export function getShotoSpritePose(state: CharacterState, frame: number): ShotoP
   }
   const attackClips = ['light-punch', 'heavy-punch', 'light-kick', 'heavy-kick', 'power-punch', 'power-kick', 'crouch-punch', 'crouch-uppercut', 'crouch-light-kick', 'crouch-heavy-kick', 'air-light-punch', 'air-heavy-punch', 'air-light-kick', 'air-heavy-kick', 'tomato-light', 'tomato-heavy', 'reversal-kick', 'reversal-light', 'flying-kick-light', 'flying-kick-heavy', 'flying-kick-followup'];
   if (state.attack?.moveId === 'crow-ultimate' || state.attack?.moveId === 'rake-ultimate') return getShotoUltimatePose(state, state.attack.elapsedFrames, false);
-  if (state.attack?.moveId === 'throw-13' || state.attack?.moveId === 'throw-24') {
+  if (state.attack?.moveId === 'throw-13') {
     const move = shoto.moves.find(candidate => candidate.id === state.attack!.moveId)!;
     const elapsed = state.attack.elapsedFrames;
     const startup = state.attack.startupFrames ?? move.startup;

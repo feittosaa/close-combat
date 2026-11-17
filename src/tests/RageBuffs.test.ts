@@ -116,4 +116,14 @@ describe('buffs de rage', () => {
       expect(sim.snapshot().characters[0].tauntStartedFrame).toBeDefined();
     });
   });
+  it.each(['special', 'throw'] as const)('avisa o efeito do reforço de %s, uma vez por E', category => {
+    const sim = create(fixture(category));
+    strike(sim, { rageAction: true });
+    expect(sim.snapshot().effectNotices.map(notice => notice.kind)).toEqual(['buff']);
+  });
+  it('não avisa reforço em golpe básico', () => {
+    const sim = create(fixture('basic'));
+    strike(sim, { rageAction: true });
+    expect(sim.snapshot().effectNotices).toHaveLength(0);
+  });
 });

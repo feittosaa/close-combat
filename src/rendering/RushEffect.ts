@@ -1,36 +1,26 @@
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 
 /** Matches the Rush freeze (RUSH_FREEZE_FRAMES at 60 fps). */
 const DURATION_MS = 800;
-const RING_COLORS = [0xff4b3a, 0xffc24a] as const;
+const FRAMES = 6;
+/** The sheet's frame is twice as tall as wide, with the ground ring 67% of the way down. */
+const WIDTH = 190;
+const GROUND_ORIGIN_Y = .67;
 
-/** Onda de choque e chamas da ativação do Rage Rush; usa o relógio da cena, que segue durante a pausa de quadros. */
+/** Flames of the Rage Rush activation, drawn from the floor under the fighter; they use the scene clock, which keeps running through the freeze. */
 export class RushEffect {
-  private readonly graphics: Phaser.GameObjects.Graphics;
-  private readonly active = new Set<{ x: number; y: number; progress: number }>();
-  constructor(private readonly scene: Phaser.Scene) { this.graphics = scene.add.graphics().setDepth(13); }
+  private readonly active = new Set<Phaser.GameObjects.Image>();
+  constructor(private readonly scene: Phaser.Scene) {}
 
   play(x: number, groundY: number): void {
-    const effect = { x, y: groundY, progress: 0 };
-    this.active.add(effect);
-    this.scene.tweens.add({ targets: effect, progress: 1, duration: DURATION_MS, ease: 'Cubic.out',
-      onUpdate: () => this.draw(), onComplete: () => { this.active.delete(effect); this.draw(); } });
+    if (!this.scene.textures.exists('contact-rush')) return;
+    const sprite = this.scene.add.image(x, groundY, 'contact-rush', 0).setOrigin(.5, GROUND_ORIGIN_Y).setDepth(13).setDisplaySize(WIDTH, WIDTH * 2);
+    this.active.add(sprite);
+    const progress = { value: 0 };
+    this.scene.tweens.add({ targets: progress, value: 1, duration: DURATION_MS, ease: 'Linear',
+      onUpdate: () => sprite.setFrame(Math.min(FRAMES - 1, Math.floor(progress.value * FRAMES))),
+      onComplete: () => { this.active.delete(sprite); sprite.destroy(); } });
   }
 
-  private draw(): void {
-    const g = this.graphics.clear();
-    for (const { x, y, progress } of this.active) {
-      const fade = 1 - progress;
-      RING_COLORS.forEach((color, index) => {
-        const radius = 40 + progress * (150 + index * 60);
-        g.lineStyle(7 - index * 3, color, fade).strokeEllipse(x, y - 8, radius * 2, radius * .38);
-      });
-      for (let i = -3; i <= 3; i++) {
-        const base = x + i * 16, height = (90 + (i % 2 ? 40 : 0)) * (.4 + progress);
-        g.fillStyle(i % 2 ? 0xffc24a : 0xff4b3a, fade * .75).fillTriangle(base - 7, y, base + 7, y, base, y - height);
-      }
-    }
-  }
-
-  destroy(): void { this.active.clear(); this.graphics.destroy(); }
+  destroy(): void { this.active.forEach(sprite => sprite.destroy()); this.active.clear(); }
 }

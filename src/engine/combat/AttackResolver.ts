@@ -69,7 +69,6 @@ export class AttackResolver {
       const airCapture = Boolean(move.commandGrab && !target.grounded);
       if ((target.mode === 'knockdown' || (target.wakeupInvulnerabilityFrames ?? 0) > 0) && !groundCapture && !airCapture) return [];
       const defenseMove = target.attack ? this.resolveMove(target.fighterId, target.attack.moveId) : undefined;
-      if (target.fighterId === 'grappler' && defenseMove?.id === 'ultimate-grab') return [];
       const armored = defenseMove?.category === 'ultimate';
       if (projectile && !armored && defenseMove?.projectileInvulnerable) return [];
       const defense = armored ? undefined : defenseMove?.invulnerability;

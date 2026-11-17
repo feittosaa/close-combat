@@ -74,7 +74,8 @@ it('resolves simultaneous back throws symmetrically from the contact positions',
 
 
 it.each([0,1])('delays both throws until frame fifteen and captures at expanded range: player %i',player=>{
-  for(const move of shoto.moves.filter(m=>m.category==='throw')) {
+  // Bob's 2+4 grab is a one-inch punch with its own timing and reach.
+  for(const move of shoto.moves.filter(m=>m.category==='throw'&&m.id!=='power-punch')) {
     const sim=new Simulation(config,undefined,{training:true,initialDistance:88});
     step(sim,player,input('N',move.input.buttons));
     for(let elapsed=0;elapsed<15;elapsed++) {

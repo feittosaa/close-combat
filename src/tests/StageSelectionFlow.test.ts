@@ -32,7 +32,7 @@ it('cada jogador move só o seu cursor: P1 com A/D e P2 com as setas', async () 
   const menu = await stageMenu();
   menu.handleKey(p1.right); menu.handleKey(p1.right);
   menu.handleKey(p2.left);                          // volta ao «?»
-  expect(menu.picker?.cursors).toEqual([2, 3]);
+  expect(menu.picker?.cursors).toEqual([2, 4]);
 });
 
 it('escolhas diferentes vão ao sorteio e a luta começa num dos dois cenários', async () => {
@@ -61,7 +61,7 @@ it('na revanche só o vencedor escolhe o cenário, sem sorteio, e o aleatório v
   expect(menu.picker?.active ?? [1]).toEqual([1]);
   menu.handleKey(p2.left);                          // «?» aleatório
   menu.handleKey(p2.confirm);
-  expect(['fazenda', 'saloon-dia', 'saloon-noite', 'saloon', 'sala-treino']).toContain(started(menu).stageId);
+  expect(['fazenda', 'saloon-dia', 'saloon-noite', 'saloon', 'praia', 'sala-treino']).toContain(started(menu).stageId);
 });
 
 it('Esc fecha a variação, depois desfaz as escolhas e só então volta aos personagens', async () => {

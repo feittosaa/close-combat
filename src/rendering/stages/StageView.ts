@@ -25,6 +25,8 @@ export class StageView {
   private readonly animated: { images: Phaser.GameObjects.Image[]; key: string; duration: number; count: number; current: number }[] = [];
   private readonly moving: { images: Phaser.GameObjects.Image[]; origins: {x:number; y:number}[]; axis:'x'|'y'; amplitude:number; period:number; mode?:'linear'|'oscillate' }[] = [];
 
+  private readonly shore?: { graphics: Phaser.GameObjects.Graphics; spec: NonNullable<StageDefinition['shoreline']>; width: number };
+
   constructor(private readonly scene: Phaser.Scene, stage: StageDefinition, private readonly layout: StageLayout) {
     this.images = [...stage.layers].sort((a, b) => a.depth - b.depth).flatMap((layer) => {
       const key = stageTextureKey(stage, layer);
@@ -54,6 +56,9 @@ export class StageView {
         amplitude:layer.motion.amplitude * layout.scale, period:layer.motion.period, mode:layer.motion.mode });
       return images;
     });
+    if (stage.shoreline) {
+      this.shore = { graphics: scene.add.graphics().setDepth(stage.shoreline.depth), spec: stage.shoreline, width: stage.referenceSize.width * layout.scale };
+    }
     const backLayer = [...stage.layers].sort((a, b) => a.depth - b.depth)[0];
     this.backdropKey = stageTextureKey(stage, backLayer);
     this.backdrop = scene.add.image(0, 0, stageTextureKey(stage, backLayer))
@@ -70,6 +75,7 @@ export class StageView {
         Math.sin(animationFrame * Math.PI * 2 / motion.period) * motion.amplitude;
       motion.images.forEach((image,index) => image.setPosition(motion.origins[index].x + (motion.axis === 'x' ? shift : 0), motion.origins[index].y + (motion.axis === 'y' ? shift : 0)));
     });
+    this.drawShore(animationFrame);
     this.animated.forEach(animation => {
       const index = Math.floor(animationFrame / animation.duration) % animation.count;
       if (index === animation.current) return;
@@ -89,6 +95,23 @@ export class StageView {
     this.scene.cameras.main.setScroll(frame.scrollX, frame.scrollY);
   }
 
+
+  /** A very faint, slowly swaying foam line along the water's edge on the sand, repeated across the whole panorama. */
+  private drawShore(frame: number): void {
+    if (!this.shore) return;
+    const { graphics, spec, width } = this.shore, g = graphics.clear(), scale = this.layout.scale;
+    const baseY = this.layout.originY + spec.y * scale, phase = frame * Math.PI * 2 / spec.period;
+    const sway = Math.sin(phase) * spec.amplitude * scale;
+    // Three strokes, wide and faint to narrow and brighter, soften the line without any image.
+    for (const [thickness, alpha] of [[10, .04], [5, .07], [2, .16]] as const) {
+      g.lineStyle(thickness * scale, 0xffffff, alpha).beginPath();
+      for (let x = -width; x <= width * 2; x += 8 * scale) {
+        const y = baseY + sway + Math.sin(x / (140 * scale) + phase * 2) * 1.5 * scale;
+        if (x === -width) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      g.strokePath();
+    }
+  }
 
   /** A separate unzoomed camera keeps controls/HUD readable while the whole combat world grows together. */
   syncHudCamera(): void {

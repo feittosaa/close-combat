@@ -41,6 +41,8 @@ export interface SimulationSnapshot {
   comboHistory: readonly ComboRecord[];
   /** Latest combo breaker attempt per defender, for the HUD notice. */
   breakerNotices: readonly BreakerNotice[];
+  /** Latest rage and defence effects, oldest first; each `id` is new, so a view draws every one once. */
+  effectNotices: readonly EffectNotice[];
 }
 /** `wall`: training starts with the opponent a few steps from the right wall, so a throw can bounce him off it. */
 export interface SimulationOptions { training?: boolean; initialDistance?: number; wall?: boolean }
@@ -88,6 +90,9 @@ const PERFECT_BLOCK_WINDOW = 3;
 const SHOTO_HEAVY_KICKS = new Set(['heavy-kick', 'crouch-heavy-kick']);
 const grapplerPunch = (moveId: string): boolean => moveId.includes('punch') || moveId === 'crouch-uppercut';
 
+/** A moment the screen marks with an effect: the ultimate's cost, a right or failed combo breaker, a buffed special or grab. */
+export interface EffectNotice { id: number; kind: 'ultimate-spend' | 'breaker' | 'breaker-fail' | 'buff'; characterId: string; frame: number }
+const EFFECT_NOTICES_KEPT = 16;
 export interface BreakerNotice { characterId: string; outcome: 'broken'; frame: number }
 /** Deterministic combat. Commands, resources and allowed routes belong to each fighter's data. */
 /** Remaining-frame value just above the getup poses, so the lying pose is held. */
@@ -139,6 +144,8 @@ export class Simulation {
   private clockFrozen = false;
   private preFight = false;
   private breakerNotices: BreakerNotice[] = [];
+  private effectNotices: EffectNotice[] = [];
+  private nextEffectNoticeId = 0;
   private previousAxis = [0, 0];
   private guardHeld = [false, false];
   private guardStarted = [-Infinity, -Infinity];
@@ -169,7 +176,7 @@ export class Simulation {
       roundEndReason: this.roundEndReason, matchWinnerId: this.matchWinnerId,
       characters: structuredClone(this.characters), activeHitboxes: this.phase === 'fight' ? this.resolver.activeHitboxes(this.characters, this.projectiles) : [],
       projectiles: structuredClone(this.projectiles),
-      hitEvents: this.lastHitEvents.map(event => ({ ...event })), recentContacts: this.recentContacts.map(entry => ({ frame: entry.frame, event: { ...entry.event } })), comboHistory: structuredClone(this.comboHistory), breakerNotices: structuredClone(this.breakerNotices) };
+      hitEvents: this.lastHitEvents.map(event => ({ ...event })), recentContacts: this.recentContacts.map(entry => ({ frame: entry.frame, event: { ...entry.event } })), comboHistory: structuredClone(this.comboHistory), breakerNotices: structuredClone(this.breakerNotices), effectNotices: structuredClone(this.effectNotices) };
   }
   clearInputHistory(): void {
     this.clock.reset(); this.parsers.forEach(parser => parser.clear());
@@ -214,7 +221,7 @@ export class Simulation {
     this.characters.forEach((character, index) => { character.rage = rage[index]; }); this.roundFramesRemaining = this.config.match.roundDurationFrames;
     this.roundWinnerId = undefined; this.roundEndedFrame = undefined; this.knockoutStartedAt = undefined; this.roundEndReason = undefined; this.transitionFrames = 0;
     this.lastHitEvents = []; this.recentContacts = []; this.comboHistory = []; this.volleyPriorHits.clear(); this.pendingThrow = undefined; this.pendingHeadbutt = undefined; this.airGrabHold = undefined; this.ultimateGrabHold = undefined; this.pendingGroundDamage.clear(); this.pendingCommandGrab = []; this.quietFrames = 0;
-    this.hitstopFramesRemaining = 0; this.clockFrozen = false; this.breakerNotices = []; this.ultimateActivation = undefined; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
+    this.hitstopFramesRemaining = 0; this.clockFrozen = false; this.breakerNotices = []; this.effectNotices = []; this.ultimateActivation = undefined; this.explosions = []; this.projectiles = []; this.nextProjectileId = 0;
   }
   /** While true fighters can move but no attack or rage input is read, and the round clock waits (the FIGHT title and the grace after it). */
   setPreFight(locked: boolean): void { this.preFight = locked; }
@@ -259,6 +266,7 @@ export class Simulation {
           this.startMove(character,index,move);
           character.mode = 'startup'; character.stateStartedFrame = this.frame;
           owners.push(character.characterId);
+          this.noteEffect('ultimate-spend', character);
         }
       });
       if (owners.length) {
@@ -271,7 +279,11 @@ export class Simulation {
     // The clock pauses until the complete ultimate sequence has finished.
     if (!this.options.training && !this.ultimateInProgress() && !this.clockFrozen && !this.preFight) this.roundFramesRemaining = Math.max(0, this.roundFramesRemaining - 1);
     if (this.hitstopFramesRemaining > 0) {
-      this.characters.forEach((character, index) => this.readCommand(character, index, inputs[index] ?? neutral()));
+      this.characters.forEach((character, index) => {
+        this.readCommand(character, index, inputs[index] ?? neutral());
+        // Nothing pressed during a rage action's pause counts afterwards; buttons still held do not become new presses.
+        if (this.clockFrozen) { this.pendingCommands[index] = undefined; this.parsers[index].clear(true); }
+      });
       this.hitstopFramesRemaining -= 1;
       if (!this.hitstopFramesRemaining) {
         this.clockFrozen = false;
@@ -457,10 +469,10 @@ export class Simulation {
         const elapsed = character.attack.elapsedFrames;
         if (!character.grounded && !move.movement && character.characterId !== this.airGrabHold?.attackerId) this.moveInDirection(character, axis(input), index);
         // A special's own travel ends at contact: once it connects the attacker does not fly over and past the target.
-        const stopped = move.category === 'special' && character.attack.hasHit;
+        const stopped = (move.category === 'special' || move.stopOnContact) && character.attack.hasHit;
         if (move.movement && elapsed >= (move.movement.from ?? 0) && elapsed < move.movement.until && !stopped) {
           const motion = move.movement;
-          const speed = motion.arenaFraction === undefined ? motion.speed : (this.config.arena.right - this.config.arena.left) * motion.arenaFraction / (motion.until - (motion.from ?? 0));
+          const speed = motion.distance === undefined ? motion.speed : motion.distance / (motion.until - (motion.from ?? 0));
           character.x += speed * (character.facing === 'right' ? 1 : -1);
         }
         const volley = move.screenVolley;
@@ -655,6 +667,7 @@ export class Simulation {
     if (!this.options.training && this.knockoutStartedAt === undefined && this.characters.some(character => character.health === 0)) {
       this.knockoutStartedAt = this.elapsedFrames;
     }
+    if (!this.options.training) this.dropDefeated();
     for (const event of this.lastHitEvents) {
       const index = this.characters.findIndex(character => character.characterId === event.targetId);
       if (event.outcome === 'block' && !lockedAtInput[index] && this.frame - this.guardStarted[index] < PERFECT_BLOCK_WINDOW) {
@@ -750,8 +763,8 @@ export class Simulation {
         const previous = attacker.contactSequence;
         const button = sourceMove.input.buttons.length === 1 ? sourceMove.input.buttons[0] : undefined;
         attacker.contactSequence = {
-          heavy: Boolean(previous?.heavy || heavyStrike(sourceMove)),
-          heavyButton: previous?.heavyButton ?? heavyButton(sourceMove),
+          heavy: Boolean(previous?.heavy || (!sourceMove.opener && heavyStrike(sourceMove))),
+          heavyButton: previous?.heavyButton ?? (sourceMove.opener ? undefined : heavyButton(sourceMove)),
           weakFamily: previous?.weakFamily ?? (button === '1' || button === '3' ? button : undefined),
           usedPunch: previous?.usedPunch || (attacker.fighterId === 'grappler' && grapplerPunch(sourceMove.id)),
         };
@@ -874,14 +887,15 @@ export class Simulation {
         event.frameAdvantage = event.defenderStunFrames - event.attackerRecoveryFrames;
       }
       if (event.outcome === 'hit' && chainStrike(sourceMove) && attacker.attack?.moveId === event.moveId) {
-        attacker.hitSequence = { targetId: target.characterId, heavy: !launcher && Boolean(attacker.hitSequence?.heavy || heavyStrike(sourceMove)),
-          ...(!launcher && (attacker.hitSequence?.heavyButton ?? heavyButton(sourceMove)) ? { heavyButton: attacker.hitSequence?.heavyButton ?? heavyButton(sourceMove) } : {}) };
+        attacker.hitSequence = { targetId: target.characterId, heavy: !launcher && Boolean(attacker.hitSequence?.heavy || (!sourceMove.opener && heavyStrike(sourceMove))),
+          ...(!launcher && (attacker.hitSequence?.heavyButton ?? (sourceMove.opener ? undefined : heavyButton(sourceMove))) ? { heavyButton: attacker.hitSequence?.heavyButton ?? heavyButton(sourceMove) } : {}) };
         if (target.grounded && !target.juggle && target.mode !== 'knockdown') {
           const remaining = attackDurationFrames(sourceMove, attacker.attack) - attacker.attack.elapsedFrames;
-          target.remainingStateFrames = remaining;
+          const stun = Math.max(remaining, completedCombo?.hitstunFrames ?? 0);
+          target.remainingStateFrames = stun;
           event.attackerRecoveryFrames = remaining;
-          event.defenderStunFrames = remaining;
-          event.frameAdvantage = 0;
+          event.defenderStunFrames = stun;
+          event.frameAdvantage = stun - remaining;
         }
       }
       if (event.outcome === 'hit' && sourceMove.id.startsWith('flying-kick-') && attacker.fighterId === 'shoto' && attacker.attack?.moveId === event.moveId) {
@@ -1087,8 +1101,11 @@ export class Simulation {
       if (chord) { if (chordStarted) this.startRush(character); return; }
       if (wasHeld) return;
       if (character.rage >= RAGE_BUFF_COST && this.empowerSpecial(character, index)) return;
-      if (character.rage < RAGE_SEGMENT) return;
-      const combo = this.comboHistory.find(entry => entry.active && entry.targetId === character.characterId);
+      const combo = this.comboHistory.find(entry => entry.active && entry.hits >= 2 && entry.targetId === character.characterId);
+      if (character.rage < RAGE_SEGMENT) {
+        if (combo && (character.mode === 'hitstun' || character.mode === 'knockdown')) this.noteEffect('breaker-fail', character);
+        return;
+      }
       if (combo && (character.mode === 'hitstun' || character.mode === 'knockdown')) {
         character.rage -= RAGE_SEGMENT;
         this.breakCombo(index, combo.attackerId);
@@ -1120,12 +1137,16 @@ export class Simulation {
     attack.empowered = true;
     this.projectiles.forEach(projectile => { if (projectile.ownerId === character.characterId && projectile.attack.moveId === attack.moveId) projectile.attack.empowered = true; });
     character.rage -= RAGE_BUFF_COST; this.rageActionHeld[index] = true;
+    this.noteEffect('buff', character);
     return true;
   }
 
   /** Freezes both fighters, projectiles and the round clock, as rage actions do. */
   private freeze(frames: number): void {
     this.hitstopFramesRemaining = Math.max(this.hitstopFramesRemaining, frames); this.clockFrozen = true;
+  }
+  private noteEffect(kind: EffectNotice['kind'], character: CharacterState): void {
+    this.effectNotices = [...this.effectNotices, { id: this.nextEffectNoticeId++, kind, characterId: character.characterId, frame: this.frame }].slice(-EFFECT_NOTICES_KEPT);
   }
   private noteBreaker(targetIndex: number, outcome: BreakerNotice['outcome']): void {
     const characterId = this.characters[targetIndex].characterId;
@@ -1158,7 +1179,22 @@ export class Simulation {
     attacker.pushbackMotion = { distancePerFrame: away * BREAKER_PUSH_DISTANCE / BREAKER_PUSH_FRAMES, remainingFrames: BREAKER_PUSH_FRAMES };
     // The defender who broke the combo cannot be hit again until both fighters have repositioned.
     target.wakeupInvulnerabilityFrames = BREAKER_INVULNERABLE_FRAMES;
-    this.noteBreaker(targetIndex, 'broken'); this.freeze(BREAKER_FREEZE_FRAMES);
+    this.noteBreaker(targetIndex, 'broken'); this.noteEffect('breaker', target); this.freeze(BREAKER_FREEZE_FRAMES);
+  }
+
+  /** A fighter who takes the last blow while standing falls at once instead of waiting out the hit stun. */
+  private dropDefeated(): void {
+    for (const event of this.lastHitEvents) {
+      const target = this.characters.find(character => character.characterId === event.targetId);
+      const attackerIndex = this.characters.findIndex(character => character.characterId === event.attackerId);
+      const move = this.move(attackerIndex, event.moveId);
+      // Ultimates and volleys keep the target where he is until their last blow.
+      if (!move || move.category === 'ultimate' || (move.multiHit && event.volleyStep !== move.multiHit.hits - 1)) continue;
+      if (!target || event.outcome !== 'hit' || target.health > 0 || target.mode !== 'hitstun' || !target.grounded || target.juggle || target.commandGrabbed ||
+        target.wallBouncePending || target.throwPull || target.throwFlight) continue;
+      target.mode = 'knockdown'; target.stateStartedFrame = this.frame; target.attack = undefined; target.crouching = false;
+      target.knockdown = { velocityX: 0 }; target.remainingStateFrames = DEFEATED_LYING_FRAMES;
+    }
   }
 
   private clearFinishedHitSequences(): void {

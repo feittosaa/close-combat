@@ -48,7 +48,7 @@ describe.each(stages)('camera and ground contract: $id', stage => {
     let index = 0;
     const scene = {
       textures: { get: () => ({ getSourceImage: () => stage.referenceSize }) },
-      add: { image: () => layers[index++] ?? backdrop }, cameras: { main: camera },
+      add: { image: () => layers[index++] ?? backdrop, graphics: () => ({ setDepth() { return this; }, clear() { return this; }, lineStyle() { return this; }, beginPath() { return this; }, moveTo() { return this; }, lineTo() { return this; }, strokePath() { return this; } }) }, cameras: { main: camera },
     } as unknown as Phaser.Scene;
     const layout = createStageLayout(stage, 1024, 576, 488);
     const view = new StageView(scene, stage, layout);

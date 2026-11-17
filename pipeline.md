@@ -1,3 +1,109 @@
+## Ajustes gerais de luta, tutorial, rush e praia — 2026-11-16
+
+Integrado por pedido do usuário, sem aprovação artística nem conferência no jogo. Validação local: `tsc`, 1119 testes e build.
+
+- Fim de round: a pose de vitória/derrota volta a valer em todo round com vencedor; quem não perdeu volta ao idle e a animação do cenário continua após KO ou vitória. O perdedor em pé cai assim que recebe o golpe que zera a vida (exceto ultimates e golpes de várias batidas, que derrubam na última).
+- Combo breaker: só a partir do segundo golpe do combo; comandos apertados durante a pausa de uma ação de rage são descartados; Texas e Bob passaram a usar suas folhas de breaker (quadro alto de índice 3 durante a pausa). Taunt da Grappler com o loop 2, 3, 4, 5, 4, 3. O avanço (`far-arc-punch`) segura o braço esticado por 3 quadros.
+- Blindagem das ultimates é padrão (a Grappler deixou de ser invulnerável no agarrão giratório); o efeito da blindagem ficou menor (70×140) e o do reforço de especial caiu para metade (65 px, 240 ms).
+- Rush: efeito `rush.png` integrado (preparado sem centralizar os quadros, 190 px de largura), onda contínua na barra de vida enquanto durar.
+- Tutorial: seção «RAGE» (reforço de especial, Rage Rush e combo breaker); o adversário é sempre o Bob (rotas e exemplos medidos contra ele). `comboRoutes.json` do Bob ajustado à mão para o novo golpe; a busca completa (`npm run combos:find -- --only shoto`) não terminou e deve ser refeita.
+- Bob: o soco 1+2 deixou de existir e o comando 2+4 passou a ser um agarrão (`power-punch`, categoria `throw`) com os dados do antigo soco de uma polegada, que joga o oponente em arco (`throwFlight`) e quica na parede; o combo 1,1,1+2 saiu. Foi apagada por engano a imagem em revisão `power-punch-between.png` (fora do Git).
+- Praia: mar passou a ser `mar-parado.png` ampliado por `scripts/prepare-praia-sea.py` (2172 px para 2661, menor que a resolução do cenário; considerar Upscayl), com vai e vem de 6 px em 900 quadros e uma linha leve desenhada por código na beira (`shoreline`); fontes de revisão de cenários e efeitos ficam fora do Git.
+- Pendente decidido: renomear `shoto` para `bob` e `grappler` para `sm0g` (nome exibido SM0G-000) em commit próprio, após este.
+
+## Mar parado da praia — 2026-11-16
+
+Gerada proposta separada `assets/art/scenes/praia/revisao/mar-parado.png`, uma faixa estática de mar com transparência ao redor, baseada na composição da praia. Aguarda aprovação artística, avaliação das bordas e conferência na composição; não foi integrada.
+
+## Efeito de ativação do Rush — 2026-11-16
+
+Gerada proposta de spritesheet com seis quadros em `assets/art/effects/revisao/rush.png`: energia vermelha e dourada surge, envolve o lutador e se dissipa. A folha aguarda aprovação artística, preparo e conferência de recorte e continuidade em movimento; não foi integrada. O efeito procedural anterior permanece no jogo.
+
+## Apresentação da praia — 2026-11-16
+
+Integrada a pedido do usuário, sem aprovação artística nem conferência no jogo: o tema de apresentação `praia` (`stagePresentationAssets.ts`, antes a praia usava o da sala de treino) com READY, FIGHT, K.O., TIME OUT, VICTORY, LOSE, PERFECT e a moldura da ultimate, copiados de `assets/art/scenes/praia/revisao/apresentacao/` para `src/assets/scenes/praia/presentation/` e com os limites visíveis em `presentationBounds.ts` (alfa ≥ 16). Resíduos de magenta nas bordas são de 4 a 21 pixels por imagem e ficaram como estão.
+
+A onda da ultimate da praia (`ultimate-onda`, seis quadros desenhados pelo usuário) foi integrada, ampliada e corrigida de direção, mas o usuário pediu para removê-la: não está mais no jogo (`UltimateOverlay` volta a desenhar só a moldura, igual aos outros temas); a fonte continua em `revisao/apresentacao/ultimate-onda.png`, listada em `revisao.json`, sem uso. A moldura `ultimate.png` da praia foi ampliada 2× (1672×941 para 3344×1882); as dos outros temas continuam em 1672×941.
+
+## Quadros de ondas — 2026-11-16
+
+Gerados 12 arquivos para cada camada em `assets/art/scenes/praia/revisao/`: `ondas-{fundo,medias,espuma}-01.png` copia a referência e os demais são gerados. Os quadros 03–12 foram classificados por semelhança visual com cada camada e numerados pela ordem de gravação, pois a ferramenta não retornou a correspondência dos pedidos; a ordem é aproximada. As amostras quase não alteram a água e adicionam resíduos nas bordas; continuidade, fechamento e revisão em movimento pendentes. Não estão prontas nem integradas.
+
+## Apresentações da praia — 2026-11-16
+
+Geradas propostas em `assets/art/scenes/praia/revisao/apresentacao/`: READY, FIGHT, K.O., TIME OUT, VICTORY, LOSE e PERFECT, além de moldura de ultimate e folha separada com seis quadros de onda para a parte inferior. A onda apresenta divisões e resíduos de transparência; precisa de preparo e conferência de continuidade. Todas aguardam aprovação artística e integração; a praia continua usando os títulos da sala de treino.
+
+## Praia (cenário novo) — 2026-11-16
+
+Cenário `praia` integrado por pedido do usuário, sem aprovação artística nem conferência no jogo. Fontes (2172×724, fora do Git, listadas em `assets/art/scenes/praia/revisao.json`): `base.png` (céu, mar e areia), `nuvens.png`, `ondas.png`, `sombras.png` (sombras de folhas na areia, vindas de uma árvore) e `composicao.png` (referência da montagem). Cada camada foi ampliada 4× no Upscayl (`digital-art-4x`; as camadas com alfa, em RGB e alfa separados, com a cor das áreas transparentes vinda das vizinhas) e reduzida para 2661×887 (normal) e 5322×1774 (alta), mesma altura de referência dos demais cenários e proporção 3:1; o cenário passa a ser o mais largo e a arena, que acompanha o panorama, também. Não há script de upscale de cenário no repositório: o procedimento acima foi executado à mão.
+
+- `stage.json`: `groundY` 760 e `topExtension` 150 (valores meus: pés na areia, abaixo da linha d'água), camadas `praia` (-304), `nuvens` (-303, vai e volta de 70 px em 3600 quadros; sem `repeatWithoutFlip`, então as cópias das bordas são espelhadas e a nuvem cortada na borda se completa em vez de ser clipada), sete blocos `onda-1` a `onda-7` (-302) e `sombra` (-301, balança 8 px em 420 quadros); o id `sombra` mantém a camada fora da medição de luz.
+- Mar: o usuário reprovou, em sequência, as ondas deslizantes, as três camadas em quadros (36 imagens, peso demais para um cenário) e a espuma estática que só sobe e desce (lisa demais); pediu algumas imagens de onda, 12 no total, sem ondas grandes. Ficou uma única camada `mar` de 12 quadros (`mar-01.png` a `mar-12.png`, 2661×196, y 516, 20 ticks por quadro, ciclo de 4 s), feita juntando por quadro a ondulação fina (`fundo`) e a espuma da beira (`espuma`) desenhadas pelo usuário, sem as cristas grandes (`medias`). Para isso usei os 11 quadros desenhados de cada uma (o 01, cópia da camada estática antiga, ficou de fora) na ordem de menor diferença do ciclo e um 12º quadro interpolado entre os dois mais distantes; os quadros do fundo e da espuma foram pareados pela posição na sequência. Recorte (fundo 298–456, espuma 338–397), esmaecimento de 10 linhas e Upscayl 4× só na cor; os quadros têm uma única resolução (2661 px). O usuário notou depois uma faixa escura no topo do mar, sem degradê até a água clara, e que as ondas variavam sem sair do lugar. O topo dos quadros passou a ter um esmaecimento de 100 px (suave), para o azul-marinho do horizonte da base descer até a água clara, e a camada ganhou um balanço lateral (`oscillate` no eixo x, 60 px em 600 quadros, bordas espelhadas) junto com a troca de quadros. Os 36 quadros desenhados continuam na pasta de revisão, listados em `revisao.json`, 24 deles aproveitados e 12 sem uso (`medias`); o usuário decide se os apaga.
+- `lightmap.json` medido por `measure-stage-light.py` (0,51 a 0,56); luz ambiente dos lutadores em `characterColor.ts` (`praia`: exposição 1,05, sombra levemente azulada), valores provisórios.
+- Menu: grupo `praia` entre o Saloon e a sala de treino; nome em todos os idiomas (`stage.praia`).
+- Os títulos de apresentação (READY, FIGHT, K.O. etc.) ainda não têm versão da praia e usam os da sala de treino; é preciso decidir se criam artes próprias ou reaproveitam as da fazenda.
+- Os títulos de resultado passaram a usar a mesma arte `lose` para derrota de round e de partida (o `round-lose` saiu).
+
+## Títulos de resultado, queda do Grappler e 1,1,1 — 2026-11-15
+
+- Títulos de resultado: o título Round Win saiu do jogo (arte e código); sobram K.O. e Victory, e uma vitória de round que não encerra a partida não mostra título além do K.O. (ou do Time Out). `round-lose` passou a usar as novas artes escritas só «LOSE» (as de `lose`, derrota da partida, não mudaram). Nova arte `perfect` (três temas) aparece no lugar de K.O. quando o round termina em K.O. com um único lutador de pé e com a vida cheia, medido no instante do K.O. Limites visíveis em `presentationBounds.ts` recalculados (alfa ≥ 16). O som `round_win` continua tocando no resultado: a remoção pedida foi do título. Sem conferência no jogo nem aprovação artística.
+- Queda do Grappler derrotado no ar: com o relógio visual parado no fim do round, as poses da queda não avançavam; agora a idade da reação cresce com os quadros de voo (`settleAfterRound`). Não reproduzido por completo no jogo; a causa foi inferida pelo código e coberta por teste.
+- 1,1,1: o último soco deixa o alvo em hitstun de 24 quadros (`hitstunFrames` da receita, novo campo), contra recuperação de 13, para o combo continuar; os dois primeiros golpes seguem sem vantagem.
+- Gasto da ultimate: o efeito percorre a barra da esquerda para a direita, menor (110 px de largura de quadro).
+
+## Ondas de fundo da praia — 2026-11-16
+
+Geradas as camadas `assets/art/scenes/praia/revisao/ondas-fundo.png`, `ondas-medias.png` e `ondas-espuma.png` a partir das três referências solicitadas. As propostas têm transparência, mas apresentam contornos horizontais e resíduos nas bordas; limpeza e posicionamento ficam para o usuário. A espuma inclui uma faixa de água além da espuma solicitada. Aguardam aprovação e composição.
+
+## Faixa de ondas da praia — 2026-11-16
+
+Gerada `assets/art/scenes/praia/revisao/faixa-ondas.png`, faixa única 3:1 com transparência, baseada na composição e na base da praia. As bordas laterais não coincidem exatamente e os limites superior e inferior ainda aparecem retos; requer correção para repetição e fusão com o mar, além de aprovação e revisão no jogo.
+
+## Praia em revisão — 2026-11-15
+
+Criada proposta panorâmica 3:1 em `assets/art/scenes/praia/revisao/composicao.png` a partir da referência de praia enviada, com navio distante. Também foram geradas propostas separadas `base.png`, `sombras.png`, `nuvens.png` e `ondas.png` (seis quadros). As camadas geradas precisam de correção e composição: sombras não preservam bem folhas, nuvens e ondas têm artefatos de transparência, e o ciclo não foi verificado em movimento. Aguardam revisão artística, preparo, integração e conferência no jogo; cenário ainda não jogável.
+
+## Letreiros PERFECT e LOSE — 2026-11-15
+
+Geradas propostas `perfect.png` e `lose.png` em `assets/art/effects/revisao/{saloon,fazenda,sala-treino}/`, seguindo os letreiros existentes de cada tema; as três variantes do Saloon compartilham o tema. O novo LOSE foi solicitado para substituir visualmente ROUND LOSE. As seis artes aguardam aprovação e conferência no jogo; não foram integradas nem substituem os letreiros atuais.
+
+## Efeitos gerais de rage e defesa — 2026-11-15
+
+Os cinco efeitos de seis quadros (`shield`, `ultimate-spend`, `breaker`, `breaker-fail` e `buff`, fontes em `assets/art/effects/contact/`, preparados por `prepare-grappler-trails.py` na grade 362×724 e carregados com as demais folhas de contato) valem para todos os lutadores, inclusive os futuros, porque nascem de eventos do motor e não de dados de personagem. Integrados por pedido do usuário, sem aprovação artística e sem conferência no jogo.
+
+- Blindagem (`shield`): todo acerto com `armored` (golpe absorvido por uma ultimate) troca o flash de acerto por este efeito, no ponto de contato.
+- Gasto da ultimate (`ultimate-spend`): ao ativar qualquer ultimate, a seta percorre a barra de rage do jogador, alinhada com a linha inferior da barra (o eixo da seta é o centro do quadro, que fica em 12 px abaixo do topo das células), em 0,3 s e com 110 px de largura de quadro. Jogador 1: da ponta externa da barra (esquerda) para dentro; jogador 2: espelhado, da direita para a esquerda, com a imagem invertida. Só ultimates (decisão do usuário); Rush, breaker e reforço não disparam.
+- Combo breaker (`breaker`): no lutador que interrompe o combo; falha (`breaker-fail`): E durante hitstun ou knockdown dentro de um combo, com menos de 150 de rage (decisão do usuário; nenhuma regra muda); reforço (`buff`): E que reforça um especial ou agarrão.
+- O motor expõe esses momentos em `effectNotices` no snapshot (`ultimate-spend`, `breaker`, `breaker-fail`, `buff`, cada um com `id` novo); `RageEffects` (lutador) e `CombatHud.playRageSpend` (barra) os desenham pelo relógio da cena, que segue durante a pausa das ações de rage. Tamanhos (blindagem 110 px de largura; breaker 190; falha 150; reforço 130; barra 110, em movimento), durações (0,48 a 0,6 s) e posições (centro do corpo) foram escolhidos por mim e dependem de conferência.
+- Sem som novo. O ar-recovery (E no ar) não tem efeito próprio.
+
+## Soco forte mais rápido — 2026-11-15
+
+Geradas propostas `assets/art/characters/grappler/revisao/heavy-punch-rapido.png` e `heavy-punch-rapido-between.png`, com preparação mais marcada e borrão na extensão do braço de trás. A folha intermediária ficou semelhante à principal e precisa de conferência de continuidade. Aguardam aprovação artística, preparo e conferência da transição e do ritmo em movimento; as folhas atuais continuam em uso.
+
+## Reações do Grappler no novo estilo — 2026-11-15
+
+Geradas em `assets/art/characters/grappler/revisao/` as propostas `hurt-low-nova.png`, `hurt-nova.png`, `hurt-high-nova.png` e `air-hurt-nova.png`, usando as respectivas poses atuais e a folha de estilo enviada pelo usuário. Aguardam aprovação artística, conferência da continuidade em movimento, preparo e integração; as fontes em uso foram preservadas.
+
+## Soco forte, combo 1,1,1 e soco em arco refeitos — 2026-11-15
+
+As duas folhas do soco forte refeitas (`heavy-punch` e `heavy-punch-between`, desenho 3 de borrão e desenho 4 de extensão total, contato no quarto desenho; escalas 1,304 e 1,331, cores sem desvio) substituíram as anteriores; a folha `heavy-punch-between` passa a ser usada pelo motor como intermediária, e as versões refeitas de `combo-111` e `far-arc-punch` entraram no lugar das primeiras. Fontes em `revisao/` (fora do Git); `sheets.json` com `scale` explícita (1,304; 1,331; 1,365; 1,569), calculada para que o corpo tenha o tamanho do `idle` preparado. Conferido nas duas resoluções: seis poses, apoio no chão alinhado (465 e 930 px), nada tocando as bordas da célula, sem resto de magenta. Cores: `heavy-punch` e `heavy-punch-between` sem desvio (segunda paleta: material 6, Δ50–55, e material 4, Δ6, como nas demais); `combo-111` corrigida em execução (`colors.json`), restando só o material 1 (listras amarelas, tom Δ7,5 contra tolerância 6) nos desenhos de borrão 2 e 4; `far-arc-punch` sem desvio. Segunda paleta: mesmo desvio já conhecido do material 6 nas folhas novas, a revisar. A última pose do `combo-111` é um borrão com o braço estendido (não uma volta à guarda); o jogo a mostra na recuperação, a conferir em movimento. Aguardam aprovação artística e conferência no jogo.
+
+Nitidez medida (gradiente de borda nas folhas em alta): `combo-111` 550, `heavy-punch` 564 e `heavy-punch-between` 568, no nível de `idle` (598) e `walk` (547); `far-arc-punch` 502 é a mais macia das novas (corpo desenhado menor na fonte, ampliado 1,88× em alta), ainda acima de `fall-landing` (425) e `fall` (475).
+
+As quatro reações refeitas (`hurt-low-nova`, `hurt-nova`, `hurt-high-nova`, `air-hurt-nova`) foram só conferidas, sem preparo nem integração: seis poses, apoio alinhado, tamanhos compatíveis (escalas de entrada estimadas 1,294; 1,285; 1,258 e 1,396); no `air-hurt-nova` a pose de joelhos recolhidos (desenho 3) tem apoio mais alto e exigirá `floor` explícito como a atual.
+
+## Combo 1,1,1 e soco em arco distante do Grappler — 2026-11-15
+
+Refeitas propostas visuais a partir da folha enviada pelo usuário, preservando o tremor do braço e o avanço do soco em arco: `revisao/combo-111-nova.png` e `revisao/far-arc-punch-nova.png`. Aguardam aprovação artística e conferência em movimento; as fontes atualmente integradas permanecem em uso.
+
+Integrados por pedido do usuário, ainda sem aprovação artística (o combo e o vapor seguem em revisão) e sem conferência em movimento. Folhas `combo-111` e `far-arc-punch` (fonte `revisao/far-arc-punch.png`, antes `soco-arco-distante`) preparadas em `sheets.json` com `scale` explícita (1,543 e 1,577, calculada pelo tamanho de corpo da folha `hurt`, pois o `idle` de referência não está no checkout) e o vapor `grappler-combo-111-vapor` preparado por `prepare-grappler-trails.py` (fonte movida de `revisao/` para `assets/art/effects/contact/`).
+
+- `1,1,1`: do segundo soco fraco da cadeia em diante (só socos fracos) usa a folha `combo-111`: desenho 1 continua o soco fraco, 3 e 5 são os acertos, 2 e 4 são o borrão entre eles e 6 volta ao idle; o vapor sai do cotovelo (`grapplerElbow`) enquanto os golpes acertam e a recuperação após o último soco é de 10 quadros (`recoveryFrames` da receita). Posição do cotovelo e origem do vapor estimadas pela arte, a conferir no jogo.
+- Soco em arco distante (`far-arc-punch`): comando `f,f+2`, categoria potente, uma vez por combo como o `1+2`. Valores iniciais escolhidos por mim e ajustáveis: preparação 14, ativo 5, recuperação 30 (o braço estendido fica 8 quadros e a guarda ocupa o resto), dano 120, avanço de 43 px (1 passo de caminhada do Grappler: 21 quadros × 2,04 px) entre os quadros 2 e 10 (para ao acertar, novo campo `stopOnContact`). Deslocamentos de golpe nunca usam porcentagem da arena: `movement.arenaFraction` virou `movement.distance` em pixels e a ultimate de soco, antes 60% da arena (≈586 px), passou a 586 px fixos (~14 passos) e caixa de acerto à frente 70, largura 110, altura 80. Desenho 5 é o contato. É um abridor de combo (`opener` em `moves.ts`): seu acerto não restringe a força dos golpes seguintes, então o soco fraco continua o combo (acerta cerca de 17 quadros após o contato); o soco forte e os chutes seguem bloqueados pelas regras já existentes (potente não é seguido de forte; sem chute depois de soco).
+- Corrigido: o borrão entre desenhos (`*-between`) só vale se a pose atual é a do próprio golpe.
+- Pendências: rotas do tutorial do Grappler (`npm run combos:find -- --only grappler`); teste `ComboRoutes` de quique na parede (dano 477 contra 577 esperado) falha pela redução do `double-punch` para 50 já existente no checkout.
+
 ## Reação baixa do Grappler — 2026-11-15
 
 A proposta `hurt-low` foi revisada usando o idle em jogo como referência de estilo e proporções; depois, o usuário preferiu a versão anterior com o pé recolhido, que foi restaurada em `propostas-em-revisao/hurt-low.png`. A preferência não foi acompanhada de pedido de integração; falta conferência em movimento.

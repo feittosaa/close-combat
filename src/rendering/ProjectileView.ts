@@ -19,6 +19,8 @@ const effectClips: Readonly<Record<string, AnimationClip>> = {
 /** Texas effects follow the existing projectile geometry and simulation clock. */
 /** Size of the grab impacts against the ultimate's, and the frames after the grab connects when each throw hits the floor. */
 const GRAB_IMPACT_SCALE = .5;
+/** The armour's flash is drawn in the regular sheet frame (1:2), not squeezed like the contact flashes. */
+const ARMOR_FLASH_SIZE = { width: 70, height: 140 };
 const GRAB_IMPACT_DELAYS: Readonly<Record<string, number>> = { 'grab-slam': 10, 'grab-low': 9, 'air-grab': 0 };
 export class ProjectileView {
   private readonly graphics: Phaser.GameObjects.Graphics;
@@ -188,7 +190,7 @@ export class ProjectileView {
       const growth = contactFrameGrowth(key);
       const hitSize = contact.moveId === 'ultimate-soco' && contact.outcome === 'hit' ? 100 : 66;
       const sprite = this.scene.add.image(x, isBlock ? bodyY : y, key, 0).setDepth(12)
-        .setDisplaySize((isBlock ? 84 : hitSize) * growth.x, (isBlock ? bodyHeight * 1.2 : hitSize) * growth.y)
+        .setDisplaySize(contact.armored ? ARMOR_FLASH_SIZE.width : (isBlock ? 84 : hitSize) * growth.x, contact.armored ? ARMOR_FLASH_SIZE.height : (isBlock ? bodyHeight * 1.2 : hitSize) * growth.y)
         .setFlipX((contact.pushbackDirection ?? attacker.facing) === 'left');
       if (purpleContact) this.colorEffect.apply(sprite, { alternate: true }, purpleBlock && contact.perfectBlock ? 'magic-highlight' : 'magic');
       this.impacts.push({ sprite, started: frame });

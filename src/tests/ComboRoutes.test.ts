@@ -3,7 +3,7 @@ import { characters, type CharacterDefinition } from '../engine/data/characters'
 import { texas } from '../engine/data/fighters/texas';
 import { parseCommand, routeInputs, type FighterRoutes, type RouteStep } from '../training/comboRoute';
 import { Simulation } from '../engine/simulation/Simulation';
-import { TUTORIAL_START_DISTANCE, approachInputs, lessonCommands, playExample, routeNotation, tutorialGameConfig } from '../training/tutorialLessons';
+import { TUTORIAL_START_DISTANCE, approachInputs, lessonCommands, playExample, routeNotation, tutorialGameConfig, tutorialOpponent } from '../training/tutorialLessons';
 import { TutorialSession } from '../training/TutorialSession';
 import comboRoutes from '../training/comboRoutes.json';
 
@@ -52,7 +52,8 @@ describe.each(characters.filter(fighter => routes[fighter.id]).map(fighter => [f
     expect(Object.keys(data.lessons).sort()).toEqual(Object.keys(expected).sort());
     for (const [key, route] of Object.entries(data.lessons)) expect(route.steps.map(step => step.command), key).toEqual(expected[key]);
     const tutorial = new TutorialSession(fighter);
-    for (const section of tutorial.sections) for (const lesson of section.lessons) expect(lesson.demo?.length, lesson.key).toBeGreaterThan(0);
+    // The rage lessons depend on a defender's or a timed reaction and have no example, except the Rush.
+    for (const section of tutorial.sections.filter(section => section.id !== 'rage')) for (const lesson of section.lessons) expect(lesson.demo?.length, lesson.key).toBeGreaterThan(0);
   });
   it('cada rota ainda sai inteira num único combo; se falhar, rode npm run combos:find', () => {
     for (const [key, route] of [...Object.entries(data.lessons), ...data.advanced.map((route, index) => [`advanced:${index}`, route] as const)]) {
@@ -65,7 +66,7 @@ describe.each(characters.filter(fighter => routes[fighter.id]).map(fighter => [f
   });
   it.skipIf(!data.wall)('o combo de quique na parede começa perto da parede, quica o adversário e continua batendo', () => {
     const wall = data.wall!, config = tutorialGameConfig();
-    const sim = new Simulation(config, [fighter, fighter], { training: true, initialDistance: TUTORIAL_START_DISTANCE, wall: true });
+    const sim = new Simulation(config, [fighter, tutorialOpponent()], { training: true, initialDistance: TUTORIAL_START_DISTANCE, wall: true });
     const [self, opponent] = sim.snapshot().characters;
     expect(config.arena.right - opponent.x).toBeLessThan(opponent.collision.bodyWidth + 60);
     expect(opponent.x - self.x).toBeCloseTo(TUTORIAL_START_DISTANCE);

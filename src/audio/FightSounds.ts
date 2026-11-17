@@ -5,6 +5,7 @@ import { getCharacterById } from '../engine/data/characters';
 import { getTexasSpriteLayers } from '../rendering/animations/texasSprites';
 import { TEXAS_GRAB_SHOTS } from '../engine/combat/texasGrab';
 import { effectGain } from './audioSettings';
+import { getGrapplerPose } from '../rendering/animations/grapplerSprites';
 
 const files = import.meta.glob<string>('../assets/audio/effects/*.wav', { eager: true, query: '?url', import: 'default' });
 const variants = {
@@ -15,6 +16,7 @@ const variants = {
   landing: ['landing_1', 'landing_2', 'landing_3', 'landing_4', 'landing_5'], counter_hit: ['counter_hit_1', 'counter_hit_2', 'counter_hit_3'],
   steps: ['steps_1', 'steps_2', 'steps_3', 'steps_4', 'steps_5'],
   heavy_step: ['heavy_step_1', 'heavy_step_2', 'heavy_step_3', 'heavy_step_4'],
+  grappler_step: ['heavy_step_1', 'heavy_step_2', 'heavy_step_3', 'heavy_step_4'],
   magic_explosion: ['magic_explosion_1', 'magic_explosion_2'], start_fight: ['start_fight_1', 'start_fight_2', 'start_fight_3'],
   push_hit: ['push_hit_1', 'push_hit_2'], combo_breaker: ['combo_breaker_1', 'combo_breaker_2'],
   grab: ['grab_1', 'grab_2'], throw: ['throw_1', 'throw_2'],
@@ -28,7 +30,7 @@ const variants = {
 } as const;
 type Effect = keyof typeof variants;
 const volumes: Partial<Record<Effect, number>> = {
-  dash: .2, air_dash: .2, magical_shot: .392, magical_arms: .8, steps: .2, heavy_step: .2, hit: 1.15, heavy_hit: 1.15, block: 1.15, perfect_block: 1.15,
+  dash: .2, air_dash: .2, magical_shot: .392, magical_arms: .8, steps: .2, heavy_step: .2, grappler_step: .6, hit: 1.15, heavy_hit: 1.15, block: 1.15, perfect_block: 1.15,
 };
 // Keep 25 ms before each measured waveform peak to retain the impact's attack.
 const impactSeek: Readonly<Record<string, number>> = {
@@ -69,6 +71,7 @@ export class FightSounds {
   private grabShots = new Set<string>();
   private grounded = new Map<string, boolean>();
   private lastSteps = new Map<string, number>();
+  private grapplerFootDrawing = new Map<string, number>();
   private lassoActive = new Set<string>();
   private lassoCaptures = new Map<string, number>();
   private grabCaptures = new Map<string, number>();
@@ -89,9 +92,17 @@ export class FightSounds {
   private arcadeLossPlayed = false;
   constructor(private readonly scene: Phaser.Scene, private readonly training = false, private readonly arcade = false, private readonly winsToFinish = 2) {}
   reset(): void {
-    this.arms.clear(); this.projectiles.clear(); this.explosions.clear(); this.grabShots.clear(); this.grounded.clear(); this.lastSteps.clear();
+    this.arms.clear(); this.projectiles.clear(); this.explosions.clear(); this.grabShots.clear(); this.grounded.clear(); this.lastSteps.clear(); this.grapplerFootDrawing.clear();
     this.lassoActive.clear(); this.lassoCaptures.clear(); this.grabCaptures.clear(); this.lassoHits.clear(); this.lassoMisses.clear(); this.kickFrames.clear(); this.dashing.clear(); this.ultimateReady.clear(); this.taunts.clear(); this.pendingDraws.clear();
     this.ultimateOwners.clear(); this.warned = false; this.resultPlayed = false; this.victoryAt = undefined; this.matchResultAt = undefined; this.round = 0; this.announcedRound = 0; this.arcadeLossPlayed = false;
+  }
+  /** The Grappler's feet land on two drawings of each walk cycle; the step sounds when one of them appears. */
+  private grapplerStep(character: SimulationSnapshot['characters'][number], frame: number): void {
+    const pose = getGrapplerPose(character, frame);
+    const landing = pose.name === 'walk' ? pose.drawing % 3 === 0 : pose.name === 'backward' && pose.drawing % 3 === 2;
+    if (!landing) { this.grapplerFootDrawing.delete(character.characterId); return; }
+    if (this.grapplerFootDrawing.get(character.characterId) !== pose.drawing) this.play('grappler_step');
+    this.grapplerFootDrawing.set(character.characterId, pose.drawing);
   }
   private play(effect: Effect): void {
     const choices: readonly string[] = variants[effect];
@@ -163,12 +174,15 @@ export class FightSounds {
       if (this.grounded.get(character.characterId) === false && character.grounded) this.play('landing');
       this.grounded.set(character.characterId, character.grounded);
       if (snapshot.phase === 'fight' && character.grounded && character.mode === 'moving') {
-        const last = this.lastSteps.get(character.characterId);
-        if (last === undefined || snapshot.frame - last >= 20 || snapshot.frame < last) {
-          this.play(character.fighterId === 'grappler' ? 'heavy_step' : 'steps');
-          this.lastSteps.set(character.characterId, snapshot.frame);
+        if (character.fighterId === 'grappler') this.grapplerStep(character, snapshot.frame);
+        else {
+          const last = this.lastSteps.get(character.characterId);
+          if (last === undefined || snapshot.frame - last >= 20 || snapshot.frame < last) {
+            this.play('steps');
+            this.lastSteps.set(character.characterId, snapshot.frame);
+          }
         }
-      } else this.lastSteps.delete(character.characterId);
+      } else { this.lastSteps.delete(character.characterId); this.grapplerFootDrawing.delete(character.characterId); }
       if (character.fighterId !== 'texas') continue;
       const attack = character.attack;
       if (attack?.moveId === 'light-kick') {

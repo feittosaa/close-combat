@@ -22,6 +22,7 @@ const HANDS: Readonly<Record<string, readonly (readonly [number, number])[]>> = 
 /** The elbows, in the same frame, of the moves whose smoke comes off the arms rather than the fists. */
 const ELBOWS: Readonly<Record<string, readonly (readonly [number, number])[]>> = {
   'hammer-punch': [[30, -190], [-15, -260], [-50, -325], [-10, -135], [-30, -125], [30, -190]],
+  'combo-111': [[67, -287], [67, -287], [67, -287], [67, -287], [67, -287], [67, -287]],
 };
 
 /** A point of the drawing shown, in world pixels from the fighter's position, mirrored with its facing. */

@@ -3,7 +3,7 @@ import { stages, defaultStage, trainingStage, getStageById, selectableStages } f
 import { isTrainingMode, stageForMatch, type MatchMode } from '../scenes/matchSetup';
 import { createStageLayout, getFightCameraFrame } from '../rendering/stages/stageLayout';
 it('disponibiliza a sala de treino, as variantes do Saloon e a fazenda',()=>{
-  expect(stages.map(s=>s.id).sort()).toEqual(['fazenda','sala-treino','saloon','saloon-dia','saloon-noite']);
+  expect(stages.map(s=>s.id).sort()).toEqual(['fazenda','praia','sala-treino','saloon','saloon-dia','saloon-noite']);
   expect(selectableStages).toEqual(stages);
   expect(defaultStage).toBe(trainingStage);
   expect(getStageById('bar-anoitecer')).toBeUndefined();
@@ -51,4 +51,25 @@ it('alinha o chão e preserva a câmera fixa',()=>{
   const project=(y:number)=>288+(layout.originY+y*layout.scale-frame.scrollY-288)*frame.zoom;
   expect(project(defaultStage.groundY)).toBeCloseTo(488);
   expect(frame.zoom).toBe(1.6);
+});
+
+it('a praia é mais larga que os demais cenários e tem mar quase parado com uma linha leve na beira da areia', () => {
+  const beach = getStageById('praia')!;
+  expect(beach.referenceSize.width / beach.referenceSize.height).toBeCloseTo(3, 1);
+  for (const other of stages.filter(stage => stage.id !== 'praia')) expect(beach.referenceSize.width).toBeGreaterThan(other.referenceSize.width);
+  expect(beach.layers.filter(layer => layer.highFile).map(layer => layer.id)).toEqual(['praia', 'nuvens', 'sombra']);
+  expect(beach.layers.filter(layer => layer.motion).map(layer => layer.id)).toEqual(['nuvens', 'mar', 'sombra']);
+  // As nuvens vão e voltam com as bordas espelhadas, sem cortar a imagem.
+  expect(beach.layers.find(layer => layer.id === 'nuvens')).toMatchObject({ motion: { mode: 'oscillate' } });
+  expect(beach.layers.find(layer => layer.id === 'nuvens')?.repeatWithoutFlip).toBeUndefined();
+  // O mar é uma imagem única do tamanho do cenário, sem ondas em sprites, que sobe e desce de verdade, mas devagar (ciclos de 10 a 60 s).
+  const sea = beach.layers.find(layer => layer.id === 'mar')!;
+  expect(sea.frames).toBeUndefined();
+  expect(sea.motion).toMatchObject({ axis: 'y', mode: 'oscillate' });
+  expect(sea.motion!.amplitude).toBeLessThanOrEqual(8); expect(sea.motion!.period).toBeGreaterThanOrEqual(600); expect(sea.motion!.period).toBeLessThanOrEqual(3600);
+  expect(sea.size!.width).toBe(beach.referenceSize.width);
+  expect(beach.layers.map(layer => layer.id)).toEqual(['praia', 'nuvens', 'mar', 'sombra']);
+  // Só a linha desenhada por código no encontro da água com a areia se mexe, bem devagar e por pouco.
+  expect(beach.shoreline!.amplitude).toBeLessThanOrEqual(4);
+  expect(beach.shoreline!.period).toBeGreaterThanOrEqual(1200);
 });

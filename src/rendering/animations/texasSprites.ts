@@ -11,6 +11,7 @@ import { framePlacement } from './frameAdjustments';
 import texasCalibration from '../../assets/sprites/characters/texas/calibration.json';
 import texasMeasurements from '../../assets/sprites/characters/texas/measurements.json';
 import { grapplerReaction } from '../grapplerReaction';
+import { breakerDrawing } from './rageAnimation';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/texas/*.png', { eager: true, query: '?url', import: 'default' });
 const layouts = import.meta.glob<string>('../../assets/sprites/characters/texas/*.packed.json', { eager: true, query: '?url&no-inline', import: 'default' });
@@ -106,22 +107,31 @@ function settledTexas(state: CharacterState): CharacterState {
     grapplerGrabReaction: undefined, grabbedStartedFrame: undefined, grabbedHold: undefined,
     pushbackMotion: undefined, throwPull: undefined } : state;
 }
+/** A fighter who did not lose the round goes back to the idle stance, whatever he was doing when it ended. */
+const standingIdle = (state: CharacterState): CharacterState => ({ ...state, mode: 'neutral', attack: undefined, crouching: false, tauntStartedFrame: undefined,
+  rageAnimation: undefined, animationTransition: undefined, facingTransition: undefined });
+
 /**
  * A fighter still in the air when the round ends keeps falling from that moment, whatever the title on screen:
  * it lands as soon as physics says so, the loser already lying down and the winner back on its feet.
  */
 export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number, floorY: number, gravity: number, lost: boolean): CharacterState {
-  if (state.grounded) return lost && state.mode === 'knockdown'
-    ? { ...settledTexas(state), remainingStateFrames: LYING_HOLD_FRAMES, stateStartedFrame: Number.NEGATIVE_INFINITY } : state;
+  if (state.grounded) {
+    if (lost) return state.mode === 'knockdown' ? { ...settledTexas(state), remainingStateFrames: LYING_HOLD_FRAMES, stateStartedFrame: Number.NEGATIVE_INFINITY } : state;
+    return standingIdle(state);
+  }
   const landing = flightFramesRemaining(state.y, state.verticalVelocity, floorY, gravity);
   const ticks = Math.min(Math.max(0, ageSinceRoundEnd), landing);
   if (ticks < landing) {
     // The loser falls in the knocked-down drawing, not the jump one.
-    return { ...state, ...(lost ? { mode: 'knockdown' as const } : {}), y: Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2), verticalVelocity: state.verticalVelocity + gravity * ticks };
+    // The visual clock stops at the round's end, so the loser's fall ages by the frames of flight: its drawings keep advancing.
+    const aged = lost ? { mode: 'knockdown' as const, stateStartedFrame: state.stateStartedFrame - ticks,
+      ...(state.hitReaction ? { hitReaction: { ...state.hitReaction, startedFrame: state.hitReaction.startedFrame - ticks } } : {}) } : {};
+    return { ...state, ...aged, y: Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2), verticalVelocity: state.verticalVelocity + gravity * ticks };
   }
   // A loser lands already lying: plenty of knockdown time left, so neither fighter's pose reads as getting up.
   const lying = lost ? { mode: 'knockdown' as const, remainingStateFrames: LYING_HOLD_FRAMES, stateStartedFrame: Number.NEGATIVE_INFINITY } : { mode: 'neutral' as const };
-  return { ...(lost ? settledTexas(state) : state), y: floorY, grounded: true, verticalVelocity: 0, attack: undefined, juggle: undefined, ...lying };
+  return { ...(lost ? settledTexas(state) : standingIdle(state)), y: floorY, grounded: true, verticalVelocity: 0, attack: undefined, juggle: undefined, ...lying };
 }
 
 export function getTexasRoundEndPose(state: CharacterState, winner: boolean, elapsed: number) {
@@ -136,6 +146,8 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
   const grab = grapplerReaction(state, frame);
   if (grab) return pose(grab.name, grab.drawing, state);
   if (state.fighterId !== 'texas') return undefined;
+  const breaker = breakerDrawing(state, frame);
+  if (breaker) return pose(breaker.name, breaker.drawing, state);
   if (state.attack) {
     const move = texas.moves.find(candidate => candidate.id === state.attack!.moveId);
     if (!move) return undefined;

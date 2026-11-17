@@ -7,9 +7,9 @@ import { Simulation } from '../engine/simulation/Simulation';
 import type { FrameInput } from '../input/types';
 
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
-const attack: FrameInput = { direction: 'N', buttons: new Set(['1', '2']) };
+const attack: FrameInput = { direction: 'N', buttons: new Set(['2', '4']) };
 const fighter = (base: CharacterDefinition): CharacterDefinition => ({
-  ...base, id: `${base.id}-bounce-test`, combos: [{ id: 'test', name: 'test', notation: '1+2,1+2', moveIds: ['power-punch', 'power-punch'] }], moves: [{ ...shoto.moves.find(move => move.id === 'power-punch')!,
+  ...base, id: `${base.id}-bounce-test`, combos: [{ id: 'test', name: 'test', notation: '2+4,2+4', moveIds: ['power-punch', 'power-punch'] }], moves: [{ ...shoto.moves.find(move => move.id === 'power-punch')!, category: 'power',
     startup: 2, activeFrames: 2, recovery: 3, damage: 1, hitstun: 18, knockdown: false,
     hitbox: { forward: 0, yOffset: -600, width: 300, height: 600 },
     pushback: { hit: 250, block: 0 }, hitPushbackFrames: 12 }],

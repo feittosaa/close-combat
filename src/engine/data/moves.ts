@@ -30,7 +30,11 @@ export interface MoveDefinition {
   airborne?: boolean;
   /** Existing artwork only; this is a temporary pose alias, never new animation. */
   pose?: 'light-punch' | 'heavy-punch' | 'light-kick' | 'heavy-kick';
-  movement?: { speed: number; until: number; from?: number; arenaFraction?: number; launch?: number; gravityScale?: number };
+  /** Opens a combo: its hit does not restrict the strength of the strikes that follow. */
+  opener?: boolean;
+  /** The advance of `movement` ends when the move connects, as it does for specials. */
+  stopOnContact?: boolean;
+  movement?: { speed: number; until: number; from?: number; distance?: number; launch?: number; gravityScale?: number };
   invulnerability?: { kind: 'all' | 'projectile'; until: number };
   /** Immunity to projectiles throughout this move, independently of other invulnerability. */
   projectileInvulnerable?: boolean;

@@ -21,12 +21,13 @@ const hit = (sim: Simulation, button: AttackButton) => {
   }
   throw new Error('Expected attack to hit');
 };
+const combo = (sim: Simulation) => { hit(sim, '1'); hit(sim, '1'); };
 
 describe('rage actions', () => {
   it.each([0, 1])('interrompe o combo com um novo E para o jogador %i', defender => {
     const sim = setup();
-    if (defender === 1) hit(sim, '1');
-    else { step(sim, input(), input(['1'])); for (let i = 0; i < 30 && !sim.snapshot().hitEvents.length; i++) step(sim); }
+    if (defender === 1) combo(sim);
+    else for (let n = 0; n < 2; n++) { step(sim, input(), input(['1'])); for (let i = 0; i < 30 && !sim.snapshot().hitEvents.some(event => event.outcome === 'hit'); i++) step(sim); }
     step(sim, ...(defender === 0 ? [input([], true), input()] : [input(), input([], true)]) as [FrameInput, FrameInput]);
     const state = sim.snapshot();
     expect(state.characters[defender].rage).toBe(750);
@@ -39,6 +40,8 @@ describe('rage actions', () => {
     step(sim, input(), input([], true));
     step(sim, input(['1']), input([], true));
     for (let i = 0; i < 40 && !sim.snapshot().hitEvents.length; i++) step(sim, input(), input([], true));
+    step(sim, input(['1']), input([], true));
+    for (let i = 0; i < 40 && !sim.snapshot().hitEvents.some(event => event.outcome === 'hit' && sim.snapshot().comboHistory.at(-1)?.hits === 2); i++) step(sim, input(), input([], true));
     step(sim, input(), input([], true));
     expect(sim.snapshot().characters[1].rage).toBe(900);
     expect(sim.snapshot().breakerNotices).toHaveLength(0);
@@ -46,8 +49,26 @@ describe('rage actions', () => {
     expect(sim.snapshot().characters[1].rage).toBe(750);
     expect(sim.snapshot().breakerNotices[0]?.outcome).toBe('broken');
   });
+  it('avisa o efeito do combo breaker certo e o da falha, sem alterar o combate', () => {
+    const right = setup(); combo(right);
+    step(right, input(), input([], true));
+    expect(right.snapshot().effectNotices).toMatchObject([{ kind: 'breaker', characterId: right.snapshot().characters[1].characterId }]);
+    const failed = setup(); combo(failed);
+    (failed as unknown as { characters: { rage: number }[] }).characters[1].rage = 149;
+    step(failed, input(), input([], true));
+    expect(failed.snapshot().effectNotices).toMatchObject([{ kind: 'breaker-fail', characterId: failed.snapshot().characters[1].characterId }]);
+    expect(failed.snapshot().characters[1].rage).toBe(149);
+    step(failed, input(), input([], true));
+    expect(failed.snapshot().effectNotices).toHaveLength(1);
+  });
+  it('não avisa falha de breaker fora de um combo', () => {
+    const sim = setup();
+    (sim as unknown as { characters: { rage: number }[] }).characters[1].rage = 0;
+    step(sim, input(), input([], true));
+    expect(sim.snapshot().effectNotices).toHaveLength(0);
+  });
   it('não interrompe o combo sem 150 de rage', () => {
-    const sim = setup(); hit(sim, '1');
+    const sim = setup(); combo(sim);
     const target = (sim as unknown as { characters: { rage: number }[] }).characters[1]; target.rage = 149;
     step(sim, input(), input([], true));
     expect(sim.snapshot().characters[1].rage).toBe(149);
@@ -88,7 +109,7 @@ describe('rage actions', () => {
   });
 
   it('congela a luta e afasta o atacante após o breaker', () => {
-    const sim = setup(); hit(sim, '1');
+    const sim = setup(); combo(sim);
     const before = sim.snapshot().characters[0].x;
     step(sim, input(), input([], true));
     const frozen = sim.snapshot();
@@ -97,5 +118,31 @@ describe('rage actions', () => {
     expect(sim.snapshot().frame).toBe(frozen.frame);
     for (let i = 0; i < 20; i++) step(sim);
     expect(before - sim.snapshot().characters[0].x).toBeGreaterThanOrEqual(80);
+  });
+
+  it('não permite breaker no primeiro golpe do combo', () => {
+    const sim = setup(); hit(sim, '1');
+    step(sim, input(), input([], true));
+    expect(sim.snapshot().breakerNotices).toHaveLength(0);
+    expect(sim.snapshot().characters[1].rage).toBe(900);
+  });
+  it('descarta os comandos apertados durante a pausa do breaker', () => {
+    const sim = setup(); combo(sim);
+    step(sim, input(), input([], true));
+    for (let i = 0; i < BREAKER_FREEZE_FRAMES + 2; i++) step(sim, input(['1']));
+    expect(sim.snapshot().characters[0].attack).toBeUndefined();
+  });
+});
+
+import { rageDrawing } from '../rendering/animations/rageAnimation';
+describe('animação do combo breaker', () => {
+  it('mostra o quadro alto durante a pausa e termina o gesto depois dela', () => {
+    const sim = setup(); combo(sim);
+    step(sim, input(), input([], true));
+    const paused = sim.snapshot();
+    expect(rageDrawing(paused.characters[1], paused.frame)).toMatchObject({ name: 'combo-breaker', drawing: 3 });
+    for (let i = 0; i < BREAKER_FREEZE_FRAMES + 12; i++) step(sim);
+    const after = sim.snapshot();
+    expect(rageDrawing(after.characters[1], after.frame)?.drawing).toBeGreaterThan(3);
   });
 });

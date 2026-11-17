@@ -12,6 +12,10 @@ const event: HitEvent = { attackerId:'player-1',targetId:'player-2',moveId:'ligh
   pushback:0,attackerRecoveryFrames:0,defenderStunFrames:0,frameAdvantage:0 };
 const move = (fighter: typeof texas, id: string) => fighter.moves.find(item => item.id === id)!;
 
+it('usa a imagem de blindagem para qualquer golpe absorvido, de qualquer lutador', () => {
+  for (const fighter of [texas, shoto]) expect(contactEffectKey({...event,armored:true},fighter.moves[0])).toBe('shield');
+});
+
 it.each(['hit','block'] as const)('selects separate images for %s variants', outcome => {
   const contact = {...event,outcome};
   expect(contactEffectKey(contact,move(texas,'light-kick'))).toBe(`${outcome}-light`);
@@ -29,7 +33,7 @@ it('preloads every image as a six-frame sheet', () => {
   preloadContactEffects({textures:{exists:()=>false},load:{spritesheet,image,once}} as never);
   expect(once).toHaveBeenCalledWith('filecomplete-spritesheet-contact-hit-blue', expect.any(Function));
   expect(image).toHaveBeenCalledWith('wall-bounce', expect.any(String));
-  expect(spritesheet).toHaveBeenCalledTimes(24);
+  expect(spritesheet).toHaveBeenCalledTimes(31);
   expect(spritesheet).toHaveBeenCalledWith('contact-grappler-ultimate-rotation', expect.any(String), { frameWidth:362, frameHeight:724 });
   expect(spritesheet).toHaveBeenCalledWith('contact-ultimate-ground-impact', expect.any(String), { frameWidth:362, frameHeight:724 });
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-light',expect.any(String),{frameWidth:362,frameHeight:724});

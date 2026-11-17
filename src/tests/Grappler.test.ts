@@ -17,14 +17,14 @@ const dmg = (id: string): number => grappler.moves.find(move => move.id === id)!
 import { grapplerHand } from '../rendering/grapplerHands';
 import { grapplerReaction } from '../rendering/grapplerReaction';
 import { texas } from '../engine/data/fighters/texas';
-import { getTexasSpritePose } from '../rendering/animations/texasSprites';
+import { getTexasSpritePose, settleAfterRound } from '../rendering/animations/texasSprites';
 import { GRAPPLER_ULTIMATE_HOLD_FRAMES, GRAPPLER_ULTIMATE_LAST_FRAMES, GRAPPLER_ULTIMATE_SPIN_FRAMES } from '../engine/combat/ultimateActivation';
 
 const sheets = import.meta.glob('../assets/sprites/characters/grappler/*.png');
 
 describe('Grappler provisório', () => {
   it('tem os dez básicos e os golpes aprovados, e é mais lento e maior que Bob', () => {
-    expect(grappler.moves).toHaveLength(21);
+    expect(grappler.moves).toHaveLength(22);
     expect(grappler.combos?.[0].moveIds).toEqual(['grab-headbutt', 'grab-slam', 'grab-low']);
     expect(grappler.movement.walkSpeed).toBeLessThan(shoto.movement.walkSpeed);
     expect(grappler.collision.hurtboxes.standing.height).toBeGreaterThan(shoto.collision.hurtboxes.standing.height);
@@ -1040,4 +1040,55 @@ it('quem anda contra o outro para, sem empurrá-lo', () => {
   expect(sim.snapshot().characters[1].x).toBe(start);
   expect(sim.snapshot().characters[0].x).toBeLessThan(start);
   expect(first.x).toBeLessThan(second.x);
+});
+
+it('mostra o Grappler derrotado deitado ao fim do round, com o quadro visual congelado antes do pouso', () => {
+  const sim = new Simulation(createGameConfig(1024,576), [shoto, grappler], {initialDistance:56});
+  const target = sim.snapshot().characters[1];
+  const landed = { ...target, mode:'knockdown' as const, grounded:true, remainingStateFrames:999, stateStartedFrame:Number.NEGATIVE_INFINITY,
+    animationTransition:{ from:{ ...target, grounded:false }, startedFrame:60 } } as typeof target;
+  expect(getGrapplerPose(landed, 40)).toEqual({ name:'fall', drawing:5 });
+});
+
+it('abre combos: o soco em arco distante é seguido por um soco fraco que acerta, sem permitir soco forte (regra do 1+2)', () => {
+  const run = (follow: '1' | '2') => {
+    const sim = new Simulation(createGameConfig(1024,576), [grappler, shoto], {training:true, initialDistance:120});
+    const n:FrameInput = {direction:'N',buttons:new Set()}, f:FrameInput = {direction:'F',buttons:new Set()};
+    for (const input of [f, n, f, {direction:'F',buttons:new Set(['2'])} as FrameInput]) sim.stepFrame([input, n]);
+    let contact = -1; const hits:string[] = [];
+    for (let i = 0; i < 100; i++) {
+      sim.stepFrame([contact >= 0 && i >= contact + 6 && i < contact + 8 ? {direction:'N',buttons:new Set([follow])} : n, n]);
+      const snap = sim.snapshot();
+      if (contact < 0 && snap.hitEvents.some(hit => hit.moveId === 'far-arc-punch')) contact = i;
+      hits.push(...snap.hitEvents.map(hit => hit.moveId));
+    }
+    return hits;
+  };
+  expect(run('1')).toEqual(['far-arc-punch', 'light-punch']);
+  expect(run('2')).toEqual(['far-arc-punch']);
+});
+
+it('o Grappler derrotado no ar continua animando a queda depois do fim do round, com o relógio visual parado', () => {
+  const sim = new Simulation(createGameConfig(1024,576), [shoto, grappler], {initialDistance:56});
+  const target = sim.snapshot().characters[1];
+  const falling = { ...target, mode:'airborne' as const, grounded:false, y:target.y - 200, verticalVelocity:-2, health:0,
+    stateStartedFrame:0, hitReaction:{ level:'high', startedFrame:0 } as never };
+  const drawings = [0, 4, 8, 12].map(ticks => getGrapplerPose(settleAfterRound(falling, ticks, target.y, .8, true), 0).drawing);
+  expect(drawings[3]).toBeGreaterThan(drawings[0]);
+  expect(drawings).toEqual([...drawings].sort((a, b) => a - b));
+});
+
+it('o último soco do 1,1,1 deixa o alvo em hitstun mais longo que a recuperação, para o combo continuar', () => {
+  const sim = new Simulation(createGameConfig(1024,576), [grappler, shoto], {training:true, initialDistance:50});
+  const press:FrameInput = {direction:'N',buttons:new Set(['1'])}, n:FrameInput = {direction:'N',buttons:new Set()};
+  const hits:{stun:number; advantage:number}[] = [];
+  sim.stepFrame([press, n]);
+  for (let i = 0; i < 120 && hits.length < 3; i++) {
+    const a = sim.snapshot().characters[0];
+    sim.stepFrame([!a.attack || (a.attack.hasHit && a.attack.elapsedFrames >= 2 && i % 6 === 0) ? press : n, n]);
+    for (const hit of sim.snapshot().hitEvents) if (hit.outcome === 'hit') hits.push({stun:hit.defenderStunFrames, advantage:hit.frameAdvantage});
+  }
+  expect(hits).toHaveLength(3);
+  expect(hits[2]).toEqual({stun:24, advantage:24 - 13});
+  expect(hits[1].advantage).toBe(0);
 });

@@ -1,15 +1,15 @@
 import type Phaser from 'phaser';
 
-export type PresentationTheme = 'saloon' | 'fazenda' | 'sala-treino';
-export type PresentationImage = 'ready' | 'fight' | 'victory' | 'lose' | 'timeout' | 'ultimate' | 'round-win' | 'round-lose' | 'ko';
+export type PresentationTheme = 'saloon' | 'fazenda' | 'praia' | 'sala-treino';
+export type PresentationImage = 'ready' | 'fight' | 'victory' | 'lose' | 'timeout' | 'ultimate' | 'ko' | 'perfect';
 
 const images = import.meta.glob<string>('../../assets/scenes/*/presentation/*.png', { eager: true, import: 'default', query: '?url' });
-const themes: PresentationTheme[] = ['saloon', 'fazenda', 'sala-treino'];
-const names: PresentationImage[] = ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'round-win', 'round-lose', 'ko'];
+const themes: PresentationTheme[] = ['saloon', 'fazenda', 'praia', 'sala-treino'];
+const names: PresentationImage[] = ['ready', 'fight', 'victory', 'lose', 'timeout', 'ultimate', 'ko', 'perfect'];
 
 export function presentationTheme(stageId: string): PresentationTheme {
   if (stageId.startsWith('saloon')) return 'saloon';
-  return stageId === 'fazenda' ? 'fazenda' : 'sala-treino';
+  return stageId === 'fazenda' || stageId === 'praia' ? stageId : 'sala-treino';
 }
 
 export function presentationKey(theme: PresentationTheme, name: PresentationImage | 'tumbleweed'): string {

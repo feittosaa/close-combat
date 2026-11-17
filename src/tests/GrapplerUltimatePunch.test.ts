@@ -31,7 +31,7 @@ it('executa o comando da nova ultimate e consome a mesma barra de rage', () => {
   expect(sim.snapshot().characters[0].rage).toBe(before-RAGE_LEVEL);
 });
 
-it.each(['right','left'] as const)('avança 60%% da arena livre para %s', facing => {
+it.each(['right','left'] as const)('avança a mesma distância em pixels, qualquer que seja a arena, para %s', facing => {
   const base=createGameConfig(1024,576);
   const config={...base,arena:{...base.arena,left:0,right:2000,maxSeparation:undefined}};
   const sim=new Simulation(config,[grappler,shoto],{training:true,initialDistance:100});
@@ -42,7 +42,7 @@ it.each(['right','left'] as const)('avança 60%% da arena livre para %s', facing
   expect(sim.snapshot().characters[0].attack?.moveId).toBe('ultimate-soco');
   const start=sim.snapshot().characters[0].x;
   for(let i=0;i<200 && sim.snapshot().characters[0].attack;i++)sim.stepFrame([neutral,neutral]);
-  expect(Math.abs(sim.snapshot().characters[0].x-start)).toBeCloseTo(1200,4);
+  expect(Math.abs(sim.snapshot().characters[0].x-start)).toBeCloseTo(586,4);
 });
 
 it.each([[0,360],[1,300],[3,180],[5,180]] as const)('aplica dano %i golpes anteriores → %i', (hits, expected) => {
@@ -115,10 +115,10 @@ it('a cabeçada aproxima e mantém a vítima no lugar após o impacto', () => {
 });
 
 
-it('percorre a mesma distância em 15 quadros, com 80% da velocidade anterior', () => {
+it('percorre uma distância fixa em pixels em 15 quadros', () => {
   const move = grappler.moves.find(candidate => candidate.id === 'ultimate-soco')!;
   expect(move.movement!.until - move.movement!.from!).toBe(15);
-  expect(move.movement!.arenaFraction! / 15).toBeCloseTo((.6 / 12) * .8);
+  expect(move.movement!.distance).toBe(586);
   expect(move.activeFrames).toBe(15);
 });
 

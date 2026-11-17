@@ -7,7 +7,7 @@ import type { FrameInput } from '../input/types';
 
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
 const forward: FrameInput = { direction: 'F', buttons: new Set() };
-const punch: FrameInput = { direction: 'N', buttons: new Set(['1', '2']) };
+const punch: FrameInput = { direction: 'N', buttons: new Set(['2', '4']) };
 
 it.each([0, 1])('empurra no acerto e quica na parede para o jogador %i', player => {
   const base = createGameConfig(1024, 576);

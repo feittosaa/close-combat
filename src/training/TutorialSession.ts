@@ -1,12 +1,13 @@
 import type { SimulationSnapshot } from '../engine/simulation/Simulation';
-import type { Direction, FrameInput } from '../input/types';
+import type { AttackButton, Direction, FrameInput } from '../input/types';
 import type { CharacterDefinition } from '../engine/data/characters';
 import { nameOf, t } from '../i18n/i18n';
 import { routeInputs, type ComboRoute, type FighterRoutes } from './comboRoute';
-import { TUTORIAL_START_DISTANCE, approachInputs, isBasicLessonMove, isComboLessonMove, moveCommand, moveStep, playExample } from './tutorialLessons';
+import { TUTORIAL_START_DISTANCE, approachInputs, isBasicLessonMove, isComboLessonMove, moveCommand, moveStep, playExample, tutorialOpponent } from './tutorialLessons';
 import comboRoutes from './comboRoutes.json';
+import { getPlayerLayout, keyLabel } from '../input/controlSettings';
 
-export type TutorialCheck = 'walk' | 'jump' | 'crouch' | 'guard';
+export type TutorialCheck = 'walk' | 'jump' | 'crouch' | 'guard' | 'buff' | 'rush' | 'breaker';
 export interface TutorialLesson {
   key: string; title: string; instruction: string; notation: string;
   /** Moves that must connect in this order within one combo. */
@@ -16,13 +17,15 @@ export interface TutorialLesson {
   check?: TutorialCheck;
   /** Inputs shown by the example key. */
   demo?: readonly FrameInput[];
+  /** Inputs of the opponent, who attacks the player in a lesson that defends. */
+  dummy?: readonly FrameInput[];
   /** The lesson starts with the opponent near the wall, so a throw can bounce him off it. */
   wall?: boolean;
 }
-export interface TutorialSection { id: 'basic' | 'combos' | 'advanced'; title: string; lessons: readonly TutorialLesson[] }
+export interface TutorialSection { id: 'basic' | 'combos' | 'advanced' | 'rage'; title: string; lessons: readonly TutorialLesson[] }
 
 const held = (direction: Direction, frames: number): FrameInput[] => Array.from({ length: frames }, () => ({ direction, buttons: new Set() }));
-const CHECK_DEMOS: Readonly<Record<TutorialCheck, readonly FrameInput[]>> = {
+const CHECK_DEMOS: Readonly<Partial<Record<TutorialCheck, readonly FrameInput[]>>> = {
   walk: [...held('F', 40), ...held('N', 15), ...held('B', 40), ...held('N', 15)],
   jump: [...held('U', 1), ...held('N', 50), ...held('UF', 1), ...held('N', 60)],
   crouch: [...held('D', 60), ...held('N', 20)],
@@ -33,7 +36,10 @@ const demoOf = (fighter: CharacterDefinition, route?: ComboRoute) => route && [.
 /** Frames a walk or crouch must be held to count. */
 const HOLD_FRAMES = 20;
 
-/** Free tutorial: three sections whose lessons can be chosen in any order and replayed by an example. */
+/** Times the opponent repeats his combo in the breaker lesson, so the player has more than one chance. */
+const DUMMY_COMBOS = 5;
+
+/** Free tutorial: four sections whose lessons can be chosen in any order and replayed by an example. */
 export class TutorialSession {
   readonly sections: readonly TutorialSection[];
   sectionIndex = 0; lessonIndex = 0; passed = false;
@@ -42,6 +48,8 @@ export class TutorialSession {
   private checkFrames = 0;
   private connected: string[] = [];
   private demo?: { frames: readonly FrameInput[]; index: number };
+  private dummyIndex = 0;
+  private seenNotice = -1;
 
   private readonly measured = new Map<TutorialLesson, { hits: number; damage: number } | undefined>();
 
@@ -61,6 +69,14 @@ export class TutorialSession {
     const check = (key: TutorialCheck, notation: string): TutorialLesson =>
       ({ key, title: t(`tutorial.${key}`), instruction: t(`tutorial.${key}Hint`), notation, check: key, demo: CHECK_DEMOS[key] });
     const comboHint = t('tutorial.comboHint');
+    const rageKey = keyLabel(getPlayerLayout(0).rageAction), tauntKey = keyLabel(getPlayerLayout(0).taunt);
+    // The opponent is Bob, so he attacks with Bob's own first combo.
+    const dummyFighter = tutorialOpponent(), attackRoute = dummyFighter.combos?.[0] && routesOf(dummyFighter.id)?.lessons[`combo:${dummyFighter.combos[0].id}`];
+    const rage: TutorialLesson[] = [
+      { ...check('buff', rageKey), notation: `${t('tutorial.buffNotation')} + ${rageKey}` },
+      { ...check('rush', `${rageKey} + ${tauntKey}`), demo: Array.from({ length: 30 }, () => ({ direction: 'N' as const, buttons: new Set<AttackButton>(), rageAction: true, taunt: true })) },
+      ...(attackRoute ? [{ ...check('breaker', rageKey), dummy: [...approachInputs(dummyFighter), ...Array.from({ length: DUMMY_COMBOS }, () => routeInputs(attackRoute.steps, 90)).flat()] }] : []),
+    ];
     const advanced: TutorialLesson[] = [...(routes?.advanced ?? []).map((route, index) => ({
         key: `advanced:${index}`, title: t('tutorial.advancedTitle', { number: index + 1 }), instruction: t('tutorial.advancedHint'),
         notation: route.notation, moves: route.moveIds, steps: route.moveIds.map(stepOf), demo: demoOf(fighter, route),
@@ -80,6 +96,7 @@ export class TutorialSession {
         ...fighter.moves.filter(isComboLessonMove).map(lessonOfMove(t('tutorial.specialHint'))),
       ] },
       { id: 'advanced', title: t('tutorial.sectionAdvanced'), lessons: advanced },
+      { id: 'rage', title: t('tutorial.sectionRage'), lessons: rage },
     ];
   }
   /**
@@ -138,12 +155,15 @@ export class TutorialSession {
   }
   /** The example played its last input; the scene then resets the attempt for the player. */
   get demoFinished(): boolean { return Boolean(this.demo && this.demo.index >= this.demo.frames.length); }
-  resetAttempt(): void { this.observedFrame = -1; this.checkFrames = 0; this.connected = []; this.passed = false; this.demo = undefined; }
+  /** Next input of the opponent in a lesson where he attacks; undefined once his script ends. */
+  dummyInput(): FrameInput | undefined { return this.lesson?.dummy?.[this.dummyIndex++]; }
+  resetAttempt(): void { this.dummyIndex = 0; this.observedFrame = -1; this.checkFrames = 0; this.connected = []; this.passed = false; this.demo = undefined; }
 
   observe(snapshot: SimulationSnapshot, input: FrameInput): void {
     const lesson = this.lesson;
     // During an example the steps light up as well, but only the player can complete the lesson.
     if (!lesson || this.passed || snapshot.frame === this.observedFrame) return;
+    if (this.observedFrame === -1) this.seenNotice = Math.max(-1, ...snapshot.effectNotices.map(notice => notice.id));
     this.observedFrame = snapshot.frame;
     const [self, target] = snapshot.characters;
     if (lesson.check === 'walk' || lesson.check === 'crouch') {
@@ -151,6 +171,9 @@ export class TutorialSession {
       if (doing) this.checkFrames += 1;
       this.finish(this.checkFrames >= HOLD_FRAMES);
     } else if (lesson.check === 'jump') this.finish(!self.grounded);
+    else if (lesson.check === 'rush') this.finish(Boolean(self.rush));
+    else if (lesson.check === 'buff' || lesson.check === 'breaker')
+      this.finish(snapshot.effectNotices.some(notice => notice.id > this.seenNotice && notice.characterId === self.characterId && notice.kind === lesson.check));
     else if (lesson.check === 'guard') this.finish(snapshot.hitEvents.some(event => event.targetId === self.characterId && event.outcome === 'block'));
     else if (lesson.moves) {
       // A free defender ends the attempt: independent attacks never add up to a combo.

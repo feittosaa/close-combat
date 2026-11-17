@@ -145,3 +145,23 @@ it('only restyles HUD text when its colour changes, so identical frames redraw n
   expect(texts.map(text=>(text.style as {color?:string}).color)).toEqual(colours);
   hud.destroy();
 });
+
+it.each([[0, 45, 1, false], [1, 979, -1, true]] as const)('o efeito do gasto da ultimate corre pela linha inferior da barra do jogador %i, espelhado no segundo, em 300 ms', (index, startX, direction, flipped) => {
+  const {scene}=mockScene();
+  const hud=new CombatHud(scene,1024,['Texas','Shoto'],false,'TREINO LIVRE',['texas','shoto']);
+  const sprite:Record<string,any>={x:0,y:0,flip:false,destroy:vi.fn()};
+  sprite.setDisplaySize=vi.fn(()=>sprite); sprite.setFlipX=vi.fn((value:boolean)=>{sprite.flip=value;return sprite;});
+  sprite.setPosition=vi.fn((x:number,y:number)=>{sprite.x=x;sprite.y=y;return sprite;}); sprite.setFrame=vi.fn(()=>sprite);
+  let tween:{duration:number;onUpdate:()=>void;onComplete:()=>void;targets:{value:number}}|undefined;
+  const fake={textures:{exists:()=>true},add:{image:vi.fn((x:number,y:number)=>{sprite.x=x;sprite.y=y;return sprite;})},tweens:{add:vi.fn((config:typeof tween)=>{tween=config;})}};
+  (hud as unknown as {root:unknown}).root={scene:fake,add:vi.fn()};
+  hud.playRageSpend(index,1024);
+  const barTop=(fake.add.image.mock.calls[0] as number[])[1]-12;
+  expect(fake.add.image.mock.calls[0][0]).toBe(startX);
+  expect(sprite.flip).toBe(flipped);
+  expect(tween!.duration).toBe(300);
+  tween!.targets.value=1; tween!.onUpdate();
+  expect(sprite.x).toBe(startX+direction*260);
+  expect(sprite.y).toBe(barTop+12);
+  tween!.onComplete(); expect(sprite.destroy).toHaveBeenCalled();
+});

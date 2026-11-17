@@ -12,7 +12,7 @@ export type GrapplerEffect = { name: string; frame: number; x: number; y: number
 const ARM_SMOKE_SCALE = .5;
 const SMOKE_ORIGINS: Readonly<Record<string, { x: number; y: number }>> = {
   'air-grab': { x: 35, y: 248 }, 'grab-low': { x: 21, y: 337 }, 'grab-slam': { x: 95, y: 398 },
-  'grab-throw': { x: 59, y: 380 }, 'ultimate-soco': { x: 300, y: 362 }, 'hammer-punch': { x: 47, y: 382 }, 'ultimate-grab': { x: 94, y: 364 }, 'ultimate-start': { x: 180, y: 460 },
+  'grab-throw': { x: 59, y: 380 }, 'ultimate-soco': { x: 300, y: 362 }, 'hammer-punch': { x: 47, y: 382 }, 'ultimate-grab': { x: 94, y: 364 }, 'ultimate-start': { x: 180, y: 460 }, 'combo-111-vapor': { x: 215, y: 362 },
 };
 const WHIRL = { scale: .6, origin: { x: 181, y: 362 }, y: -115 };
 
@@ -22,8 +22,8 @@ export function grapplerEffects(state: CharacterState, activationFrame?: number,
   if (!attack) return [];
   const sign = state.facing === 'right' ? 1 : -1, pose = getGrapplerPose(state, 0, activationFrame);
   const smoke = (name: string, frame: number): GrapplerEffect => {
-    // The hammer's smoke comes off his elbows as the arms swing down, not from where the fists land.
-    const hand = (name === 'hammer-punch' ? grapplerElbow : grapplerHand)(state, pose.name, pose.drawing) ?? { x: sign * 60, y: -150 };
+    // The hammer's and the combo's smoke come off the elbow, not from where the fists land.
+    const hand = (name === 'hammer-punch' || name === 'combo-111-vapor' ? grapplerElbow : grapplerHand)(state, pose.name, pose.drawing) ?? { x: sign * 60, y: -150 };
     return { name, frame, x: hand.x - (name === 'hammer-punch' ? sign * 30 : 0), y: hand.y, scale: ARM_SMOKE_SCALE, origin: SMOKE_ORIGINS[name] };
   };
   if (['ultimate-grab', 'ultimate-soco'].includes(attack.moveId) && activationFrame !== undefined) {
@@ -37,6 +37,11 @@ export function grapplerEffects(state: CharacterState, activationFrame?: number,
   }
   if (attack.moveId === 'ultimate-soco') {
     return pose.drawing >= 1 ? [smoke('ultimate-soco', pose.drawing - 1)] : [];
+  }
+  // The second and third light punches of a chain let off steam from the extended arm while the blows land.
+  if (pose.name === 'combo-111') {
+    const age = attack.elapsedFrames - (attack.startupFrames ?? grappler.moves.find(candidate => candidate.id === 'light-punch')!.startup) + 6;
+    return age >= 0 && age < 24 ? [smoke('combo-111-vapor', Math.floor(age / 4))] : [];
   }
   const move = grappler.moves.find(candidate => candidate.id === attack.moveId);
   if (!move || (!SMOKE_ORIGINS[move.id] && move.category !== 'throw') || ((move.commandGrab || move.category === 'throw') && !attack.hasHit)) return [];

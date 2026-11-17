@@ -85,6 +85,18 @@
   },
   "hurt-high": {
    "scale": 1.287
+  },
+  "combo-111": {
+   "scale": 1.365
+  },
+  "far-arc-punch": {
+   "scale": 1.569
+  },
+  "heavy-punch": {
+   "scale": 1.304
+  },
+  "heavy-punch-between": {
+   "scale": 1.331
   }
  }
 }

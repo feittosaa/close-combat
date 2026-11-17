@@ -13,7 +13,7 @@ describe('elenco reiniciado', () => {
     expect(defaultCharacter.moves.filter(move => move.category === 'basic' && !move.airborne).map(move => [move.name, move.input.buttons])).toEqual([
       ['Soco fraco', ['1']], ['Soco forte', ['2']], ['Chute fraco', ['3']], ['Chute forte', ['4']],
     ]);
-    expect(defaultCharacter.combos).toHaveLength(6);
+    expect(defaultCharacter.combos).toHaveLength(5);
     expect(defaultCharacter).not.toHaveProperty('assets');
     expect(defaultCharacter).not.toHaveProperty('combatRules');
   });
@@ -31,8 +31,8 @@ describe('elenco reiniciado', () => {
   });
   it('separa básicos, especiais e receitas manuais com busca', () => {
     const entries = fighterMoveList(defaultCharacter);
-    expect(entries).toHaveLength(defaultCharacter.moves.filter(move => !move.comboOnly).length + 6);
-    expect(filterMoveList(entries, 'combos', '')).toHaveLength(6);
+    expect(entries).toHaveLength(defaultCharacter.moves.filter(move => !move.comboOnly).length + 5);
+    expect(filterMoveList(entries, 'combos', '')).toHaveLength(5);
     expect(filterMoveList(entries, 'basics', 'forte').map(entry => entry.notation)).toEqual(['2', '4', 'no ar + 2', 'no ar + 4']);
   });
 });

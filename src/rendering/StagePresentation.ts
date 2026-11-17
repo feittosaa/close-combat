@@ -23,6 +23,8 @@ export class StagePresentation {
   private round = 0;
   private knockoutAt?: number;
   private knockoutRemaining = 0;
+  /** The knockout was made by a fighter who took no damage in the round: the title reads PERFECT instead of K.O. */
+  private knockoutPerfect = false;
   private resultFrame?: number;
   private moveOnlyNow = false;
 
@@ -39,6 +41,8 @@ export class StagePresentation {
     if (snapshot.round !== this.round) { this.intro = this.introTotal = this.withIntro ? introMs(snapshot.round) : 0; this.round = snapshot.round; this.knockoutAt = undefined; this.knockoutRemaining = 0; this.resultFrame = undefined; }
     if (snapshot.knockoutStartedAt !== undefined && snapshot.knockoutStartedAt !== this.knockoutAt) {
       this.knockoutAt = snapshot.knockoutStartedAt; this.knockoutRemaining = 2000;
+      const standing = snapshot.characters.filter(character => character.health > 0);
+      this.knockoutPerfect = standing.length === 1 && standing[0].health === standing[0].maxHealth;
     }
     const showingKnockout = this.knockoutRemaining > 0;
     if (showingKnockout) this.knockoutRemaining = Math.max(0, this.knockoutRemaining - delta);
@@ -47,10 +51,10 @@ export class StagePresentation {
     const endAge = snapshot.roundEndedFrame === undefined ? -1 : snapshot.frame - snapshot.roundEndedFrame;
     const timedOut = snapshot.roundEndReason === 'time' || (snapshot.roundEndReason === 'draw' && snapshot.roundFramesRemaining === 0);
     const finalRound = snapshot.roundWins.some(wins => wins >= this.winsToFinish);
-    const name = showingKnockout ? 'ko' : wasIntro ? (this.intro > FIGHT_MS + ATTACK_GRACE_MS ? 'ready' : this.intro > ATTACK_GRACE_MS ? 'fight' : undefined) : endAge >= 0 && endAge < RESULT_TITLE_END_FRAME ?
+    const name = showingKnockout ? (this.knockoutPerfect ? 'perfect' : 'ko') : wasIntro ? (this.intro > FIGHT_MS + ATTACK_GRACE_MS ? 'ready' : this.intro > ATTACK_GRACE_MS ? 'fight' : undefined) : endAge >= 0 && endAge < RESULT_TITLE_END_FRAME ?
       (timedOut && (endAge < TIMEOUT_TITLE_FRAMES || !snapshot.roundWinnerId) ? 'timeout' : snapshot.roundWinnerId ?
-        (snapshot.roundWinnerId === snapshot.characters[0].characterId ? (finalRound ? 'victory' : 'round-win') : (finalRound ? 'lose' : 'round-lose')) : undefined) : undefined;
-    // The fighters' victory/defeat poses start only once the round-win/victory title has left the screen.
+        (snapshot.roundWinnerId === snapshot.characters[0].characterId ? (finalRound ? 'victory' : undefined) : 'lose') : undefined) : undefined;
+    // The fighters' victory/defeat poses start once the victory/lose title has left the screen.
     if (this.resultFrame === undefined && snapshot.roundWinnerId && endAge >= RESULT_TITLE_END_FRAME) this.resultFrame = snapshot.frame;
     if (name) {
       this.title.setTexture(presentationKey(this.theme, name));
