@@ -26,7 +26,7 @@ it.each([['low', 640], ['high', 1280]] as const)('loads only the %s texture set 
   const packedAtlas = vi.fn();
   preloadTexasSprites({ textures: { exists: () => false }, load: { packedAtlas } } as never);
   expect(texasFrameSize).toBe(size);
-  expect(packedAtlas).toHaveBeenCalledTimes(98);
+  expect(packedAtlas).toHaveBeenCalledTimes(97);
   for (const name of ['double-shot', 'fall-landing', 'launch-hit']) {
     const art = packedAtlas.mock.calls.find(([key]) => key === `texas-${name}`)!;
     expect(layoutOf(art[2]).frames['0'].sourceSize.w).toBe(size);

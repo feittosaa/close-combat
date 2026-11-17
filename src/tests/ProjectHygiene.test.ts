@@ -24,6 +24,10 @@ describe('Project asset and documentation hygiene', () => {
       { eager: true, query: '?url', import: 'default' },
     );
     const used = new Set<string>();
+    // Mídia embutida num Markdown com `![texto](caminho)` conta como consumida.
+    for (const [key, text] of Object.entries(markdown)) {
+      for (const match of text.matchAll(/!\[[^\]]*\]\(([^)\s]+)\)/g)) used.add(relativeTo(projectPath(key), match[1]));
+    }
     const code = import.meta.glob<string>('../**/*.ts', { eager: true, query: '?raw', import: 'default' });
     for (const [key, source] of Object.entries(code)) {
       if (key.includes('/tests/')) continue;
@@ -84,7 +88,8 @@ describe('Project asset and documentation hygiene', () => {
 
   it('keeps individual character decisions in the pipeline', () => {
     for (const [key, text] of Object.entries(markdown)) {
-      if (projectPath(key) === 'pipeline.md') continue;
+      // O README público apresenta o elenco pelo nome; as decisões de cada personagem continuam só na pipeline.
+      if (['pipeline.md', 'README.md'].includes(projectPath(key))) continue;
       expect(text, projectPath(key)).not.toMatch(/\b(?:bob|ayla|gris|tester|dummy)\b/i);
     }
   });

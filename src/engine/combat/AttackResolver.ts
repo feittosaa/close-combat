@@ -16,6 +16,8 @@ export interface HitEvent {
   damage: number;
   outcome: 'hit' | 'block';
   armored?: boolean;
+  /** Texas's point-blank grab: each arm shot is a hit of its own (`shot`); the throw that follows (`launch`) deals no damage and adds no hit. */
+  armShot?: 'shot' | 'launch';
   perfectBlock?: boolean;
   pushback: number;
   pushbackDirection?: 'left' | 'right';

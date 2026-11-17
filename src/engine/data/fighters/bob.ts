@@ -108,7 +108,7 @@ export const bob: CharacterDefinition = {
     { id: 'rake-ultimate', name: 'Ultimate — Redemoinho', category: 'ultimate', notation: 'd,df,f,d,df,f,1', input: { buttons: ['1'], sequence: ['D','DF','F','D','DF','F'] },
       rageCost: RAGE_LEVEL, startup: 8, activeFrames: 60, recovery: 20, damage: 400, hitstun: 12, blockstun: 9, pushback: { hit: 40, block: 0 }, hitPushbackFrames: 14, knockdown: true, hitLevel: 'mid',
       multiHit: { hits: 10, interval: 6, damageReductionPerPriorHit: 20 },
-      movement: { speed: 4, until: 28 }, hitbox: { forward: -110, yOffset: -185, width: 220, height: 160 } },
+      movement: { speed: 4, until: 68 }, hitbox: { forward: -110, yOffset: -185, width: 220, height: 160 } },
     { id: 'crow-ultimate', name: 'Ultimate — Revoada', category: 'ultimate', notation: 'b,f,b,f,1+2', input: { buttons: ['1','2'], sequence: ['B','F','B','F'] },
       rageCost: RAGE_LEVEL, startup: 1, activeFrames: 91, recovery: 36, damage: 30, hitstun: 20, blockstun: 12, pushback: { hit: 0, block: 0 }, hitLevel: 'mid',
       screenVolley: { shots: 12, interval: 18, bandHeight: 44, firstHitLevel: 'low', damageReductionPerPriorHit: 20,

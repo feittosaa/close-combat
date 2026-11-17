@@ -341,16 +341,22 @@ export class Simulation {
       this.pendingHeadbutt = undefined;
     }
     let confirmedThrow: HitEvent | undefined;
+    const armShots: HitEvent[] = [];
     if (this.pendingThrow) {
       const pending = this.pendingThrow;
       const attackerIndex = this.characters.findIndex(c => c.characterId === pending.event.attackerId);
       const targetIndex = 1 - attackerIndex;
       const target = this.characters[targetIndex], attacker = this.characters[attackerIndex];
       const move = this.move(attackerIndex, pending.event.moveId)!;
-      if (pending.confirmed && attacker.fighterId === 'texas' && move.id === 'throw-24' &&
-          attacker.attack?.throwConfirmedFrame !== undefined &&
-          TEXAS_GRAB_SHOTS.some(shot => this.frame - attacker.attack!.throwConfirmedFrame! === shot)) {
+      const shotIndex = pending.confirmed && attacker.fighterId === 'texas' && move.id === 'throw-24' && attacker.attack?.throwConfirmedFrame !== undefined
+        ? TEXAS_GRAB_SHOTS.findIndex(shot => this.frame - attacker.attack!.throwConfirmedFrame! === shot) : -1;
+      if (shotIndex >= 0) {
+        // The throw's damage is split among the arm shots, the last one taking the remainder; each is a hit.
+        const total = pending.event.damage, shots = TEXAS_GRAB_SHOTS.length;
+        const damage = Math.floor(total / shots) + (shotIndex === shots - 1 ? total % shots : 0);
         target.hitReaction = { level: 'mid', startedFrame: this.frame };
+        target.health = Math.max(0, target.health - damage);
+        armShots.push({ ...pending.event, damage, armShot: 'shot' });
       }
       const buttons = (inputs[targetIndex] ?? neutral()).buttons;
       const pressed = [...buttons].filter(button => !pending.previousButtons.has(button));
@@ -369,7 +375,8 @@ export class Simulation {
         attacker.attack.throwConfirmedFrame = this.frame;
         target.remainingStateFrames = 2;
       } else if (pending.remaining <= 0) {
-        confirmedThrow = pending.event;
+        const armShotThrow = attacker.fighterId === 'texas' && move.id === 'throw-24';
+        confirmedThrow = armShotThrow ? { ...pending.event, damage: 0, armShot: 'launch' } : pending.event;
         if (attacker.attack) attacker.attack.throwConfirmedFrame ??= this.frame;
         target.health = Math.max(0, target.health - confirmedThrow.damage);
         target.grabbedHold = undefined;
@@ -689,6 +696,7 @@ export class Simulation {
       this.pendingThrow = { event, remaining: 15, previousButtons: new Set((inputs[targetIndex] ?? neutral()).buttons), attempted: false };
       return false;
     });
+    this.lastHitEvents.push(...armShots);
     if (confirmedThrow) this.lastHitEvents.push(confirmedThrow);
     for (const hit of this.lastHitEvents) {
       if (hit.outcome !== 'hit') continue;
@@ -701,7 +709,8 @@ export class Simulation {
           ...(weak === '1' || weak === '3' ? { starterWeakFamily: weak } : {}) };
         this.comboHistory.push(combo);
       }
-      combo.hits += 1; combo.lastFrame = this.frame;
+      if (hit.armShot !== 'launch') combo.hits += 1;
+      combo.lastFrame = this.frame;
       // The ultimate's damage counts when the opponent hits the floor, like the health it takes.
       if (!this.pendingGroundDamage.has(hit.targetId) && !(hit.moveId === 'grab-low' && this.pendingHeadbutt?.moveId === 'grab-low')) combo.damage += hit.damage;
       if (hit.moveId === 'light-punch' && this.characters.find(character => character.characterId === hit.attackerId)?.fighterId === 'texas') combo.usedLightPunch = true;
@@ -749,6 +758,8 @@ export class Simulation {
     }
     const contactPositions = this.characters.map(character => character.x);
     this.lastHitEvents.forEach(event => {
+      // An arm shot only deals its damage and counts as a hit; the throw's reaction comes with its launch.
+      if (event.armShot === 'shot') return;
       const attacker = this.characters.find(character => character.characterId === event.attackerId)!;
       const target = this.characters.find(character => character.characterId === event.targetId)!;
       const attackerIndex = this.characters.indexOf(attacker), targetIndex = this.characters.indexOf(target);

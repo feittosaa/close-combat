@@ -61,6 +61,14 @@ it('o READY bloqueia tudo, o FIGHT libera só o movimento e os golpes esperam 8 
 });
 
 
+it.each([sm0g,bob,texas])('o perdedor ainda caindo no fim do round segue a queda de onde parou, sem pular para o quadro final: $name', fighter => {
+  const standing=new Simulation(createGameConfig(1024,576),[fighter,bob]).snapshot().characters[0];
+  const falling={...standing,mode:'knockdown' as const,stateStartedFrame:100,remainingStateFrames:30,hitReaction:{level:'mid' as const,startedFrame:98}};
+  const shown=settleAfterRound(falling,5,standing.y,.5,true);
+  expect(shown).toMatchObject({mode:'knockdown',stateStartedFrame:95,hitReaction:{startedFrame:93}});
+  expect(settleAfterRound(falling,0,standing.y,.5,true).stateStartedFrame).toBe(100);
+});
+
 it.each([sm0g,bob,texas])('faz $name cair após vitória aérea e mantém perdedor deitado', fighter => {
   const sim = new Simulation(createGameConfig(1024,576),[fighter,bob]);
   const standing=sim.snapshot().characters[0], floor=standing.y;

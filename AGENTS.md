@@ -3,6 +3,7 @@
 - Ler `base.md` como documentação raiz e seguir `pipeline.md`.
 - Priorizar código limpo, legível e bem organizado: nomes claros, responsabilidades coesas e a solução mais simples que atenda ao escopo. Não incluir código morto, duplicações, abstrações especulativas, dependências, arquivos ou conteúdo sem necessidade comprovada.
 - `base.md`, `identidade-visual.md`, READMEs, este arquivo e os demais Markdown contêm somente princípios duradouros, contratos gerais e processos aplicáveis ao projeto inteiro. Estado de implementação, tarefas atuais, personagens, cenários, números específicos, pendências, validações e histórico ficam exclusivamente em `pipeline.md`. Não espalhar fichas ou diários de entrega por novos Markdown.
+- Exceção: o `README.md` da raiz é público e pode apresentar o elenco pelo nome, o estado geral (já implementado e planejado) e mídia de exemplo (`docs/media/`); detalhes de design, números e histórico continuam exclusivamente na pipeline, que é a fonte do estado.
 - Criar branches, commits e push somente mediante pedido explícito do usuário. Nunca fazer commits ou push diretamente em `main` ou `development`; se solicitados nessas branches, pedir autorização para criar uma nova branch.
 - Qualquer merge, integração, promoção para `main` ou release exige pedido explícito. Registrar na pipeline dependências ainda não integradas.
 - Preservar alterações existentes. Não fazer force push nem reescrever tags publicadas.

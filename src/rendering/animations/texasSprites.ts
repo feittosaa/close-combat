@@ -107,6 +107,12 @@ function settledTexas(state: CharacterState): CharacterState {
     sm0gGrabReaction: undefined, grabbedStartedFrame: undefined, grabbedHold: undefined,
     pushbackMotion: undefined, throwPull: undefined } : state;
 }
+/** The drawings of a fighter's current state, `ticks` frames further along. */
+const agedByRoundEnd = (state: CharacterState, ticks: number): Pick<CharacterState, 'stateStartedFrame' | 'hitReaction'> => ({
+  stateStartedFrame: state.stateStartedFrame - Math.max(0, ticks),
+  ...(state.hitReaction ? { hitReaction: { ...state.hitReaction, startedFrame: state.hitReaction.startedFrame - Math.max(0, ticks) } } : {}),
+});
+
 /** A fighter who did not lose the round goes back to the idle stance, whatever he was doing when it ended. */
 const standingIdle = (state: CharacterState): CharacterState => ({ ...state, mode: 'neutral', attack: undefined, crouching: false, tauntStartedFrame: undefined,
   rageAnimation: undefined, animationTransition: undefined, facingTransition: undefined });
@@ -117,7 +123,8 @@ const standingIdle = (state: CharacterState): CharacterState => ({ ...state, mod
  */
 export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number, floorY: number, gravity: number, lost: boolean): CharacterState {
   if (state.grounded) {
-    if (lost) return state.mode === 'knockdown' ? { ...settledTexas(state), remainingStateFrames: LYING_HOLD_FRAMES, stateStartedFrame: Number.NEGATIVE_INFINITY } : state;
+    // A loser still falling when the round ends keeps falling: the visual clock stopped, so its drawings age by the time since then.
+    if (lost) return state.mode === 'knockdown' ? { ...settledTexas(state), remainingStateFrames: LYING_HOLD_FRAMES, ...agedByRoundEnd(state, ageSinceRoundEnd) } : state;
     return standingIdle(state);
   }
   const landing = flightFramesRemaining(state.y, state.verticalVelocity, floorY, gravity);
@@ -125,8 +132,7 @@ export function settleAfterRound(state: CharacterState, ageSinceRoundEnd: number
   if (ticks < landing) {
     // The loser falls in the knocked-down drawing, not the jump one.
     // The visual clock stops at the round's end, so the loser's fall ages by the frames of flight: its drawings keep advancing.
-    const aged = lost ? { mode: 'knockdown' as const, stateStartedFrame: state.stateStartedFrame - ticks,
-      ...(state.hitReaction ? { hitReaction: { ...state.hitReaction, startedFrame: state.hitReaction.startedFrame - ticks } } : {}) } : {};
+    const aged = lost ? { mode: 'knockdown' as const, ...agedByRoundEnd(state, ticks) } : {};
     return { ...state, ...aged, y: Math.min(floorY, state.y + ticks * state.verticalVelocity + gravity * ticks * (ticks - 1) / 2), verticalVelocity: state.verticalVelocity + gravity * ticks };
   }
   // A loser lands already lying: plenty of knockdown time left, so neither fighter's pose reads as getting up.
@@ -233,7 +239,7 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
     }
     const reaction = state.hitReaction;
     if (!state.grounded && state.juggle) return pose('launch-hit', Math.min(5, Math.floor(Math.max(0, frame - (reaction?.startedFrame ?? state.stateStartedFrame)) / 4)), state);
-    const name = reaction?.level === 'high' ? 'hurt-high' : !state.grounded ? 'air-hurt' : state.crouching ? (reaction?.level === 'low' ? 'crouch-hurt-low' : 'crouch-hurt') : reaction?.level === 'low' ? 'hurt-low' : 'hurt';
+    const name = !state.grounded ? 'air-hurt' : reaction?.level === 'high' ? 'hurt-high' : state.crouching ? 'crouch-hurt-low' : reaction?.level === 'low' ? 'hurt-low' : 'hurt';
     const age = frame - (reaction?.startedFrame ?? state.stateStartedFrame);
     const index = sample('hurt', Math.max(0, age));
     // The standing recoil straightens up in the recovery sheet, which starts from the hunched drawing.

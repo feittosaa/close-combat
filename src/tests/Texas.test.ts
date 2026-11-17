@@ -21,7 +21,7 @@ it.each([0,1])('reinicia a reação da vítima nos tiros do agarrão 2+4: jogado
     if (confirmed === undefined || target.hitReaction?.startedFrame !== snapshot.frame - 1) continue;
     const age = target.hitReaction.startedFrame - confirmed;
     if (TEXAS_GRAB_SHOTS.some(shot => shot === age)) {
-      seen.push(age);
+      if (seen[seen.length - 1] !== age) seen.push(age);
       expect(getTexasSpriteLayers(target,snapshot.frame)[0].texture).toBe('texas-hurt');
     }
   }
@@ -1145,13 +1145,34 @@ it.each([0,1])('o agarrão 2+4 é próximo, rápido e não carrega: jogador %i',
   }
 });
 
+it.each([0,1])('cada tiro de braço do agarrão 2+4 vale um acerto com a sua parte do dano: jogador %i', player => {
+  const defs=player===0?[texas,bob] as const:[bob,texas] as const;
+  const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
+  const step=(attack:FrameInput=input())=>sim.stepFrame(player===0?[attack,input()]:[input(),attack]);
+  const throwDamage=texas.moves.find(move=>move.id==='throw-24')!.damage;
+  step({direction:'B',buttons:new Set(['2','4'])});
+  const shots:number[]=[]; let healthAfterShots=0, launchHits=0;
+  for(let tick=0;tick<200;tick++) {
+    step(); const snapshot=sim.snapshot();
+    for(const event of snapshot.hitEvents) {
+      if(event.armShot==='shot') shots.push(event.damage);
+      if(event.armShot==='launch') { launchHits++; expect(event.damage).toBe(0); healthAfterShots=snapshot.characters[1-player].health; }
+    }
+  }
+  expect(shots).toHaveLength(TEXAS_GRAB_SHOTS.length);
+  expect(shots.reduce((total,damage)=>total+damage,0)).toBe(throwDamage);
+  expect(launchHits).toBe(1);
+  expect(healthAfterShots).toBe(1000-throwDamage);
+  const combo=sim.snapshot().comboHistory.find(entry=>entry.attackerId===`player-${player+1}`)!;
+  expect(combo).toMatchObject({hits:TEXAS_GRAB_SHOTS.length,damage:throwDamage});
+});
 it.each([0,1])('o agarrão 2+4 mantém a captura, dispara e lança o alvo: jogador %i', player => {
   const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step=(attack:FrameInput=input())=>sim.stepFrame(player===0?[attack,input()]:[input(),attack]);
   step({direction:'B',buttons:new Set(['2','4'])});
   let held=false, magic=false, horizontal=false, launched=false, landed=false;
-  for(let tick=0;tick<110;tick++) {
+  for(let tick=0;tick<160;tick++) {
     step(); const snapshot=sim.snapshot(), attacker=snapshot.characters[player], target=snapshot.characters[1-player];
     if(attacker.attack?.throwCapturedFrame!==undefined && attacker.attack.throwConfirmedFrame===undefined) {
       held=true; expect(target.health).toBe(1000); expect(target.grounded).toBe(true);
@@ -1160,7 +1181,9 @@ it.each([0,1])('o agarrão 2+4 mantém a captura, dispara e lança o alvo: jogad
     if(getTexasSpriteLayers(attacker,snapshot.frame).some(layer=>layer.texture==='texas-magic-horizontal')) horizontal=true;
     if (attacker.attack?.throwConfirmedFrame !== undefined && snapshot.frame - attacker.attack.throwConfirmedFrame < 40) {
       expect(target.grounded).toBe(true);
-      expect(target.health).toBe(1000);
+      // Each arm shot takes its share of the damage as it lands; nothing is taken before the first one.
+      const shotsLanded = TEXAS_GRAB_SHOTS.filter(shot => snapshot.frame - attacker.attack!.throwConfirmedFrame! > shot).length;
+      if (shotsLanded === 0) expect(target.health).toBe(1000);
     }
     if(attacker.attack?.throwConfirmedFrame!==undefined && !target.grounded) {
       launched=true; expect(target.mode).toBe('knockdown');

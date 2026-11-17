@@ -567,7 +567,7 @@ export class FightScene extends Phaser.Scene {
     });
     this.contactShadows?.update(shown, this.resultFloorY, shown.map((character, index) => hiddenBySm0gUltimate(character, shown[1 - index])));
     const alternateOwnerIds = new Set(snapshot.characters.filter((_, index) => this.alternatePalettes[index]).map(character => character.characterId));
-    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds,snapshot.hitstopFramesRemaining > 0);
+    this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,snapshot.frame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds,snapshot.hitstopFramesRemaining > 0);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);
     this.hud?.update(snapshot, this.hudWidth);
     if (this.training) {

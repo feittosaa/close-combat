@@ -92,7 +92,7 @@ describe.each(fighters)('escala automática das animações de $definition.name'
 
 describe('uso das escalas no jogo', () => {
   it('a Texas e o Bob desenham cada folha com a escala validada', () => {
-    expect(texasSheetScale('fall-landing', 5)).toBeCloseTo(.975, 3);
+    expect(texasSheetScale('fall-landing', 5)).toBeCloseTo(.9555, 3);
     const state = new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true }).snapshot().characters[0];
     expect(getBobSpritePose({ ...state, mode: 'blocking', crouching: true, stateStartedFrame: 0 }, 14)?.scale).toBeCloseTo(1.08, 9);
     expect(getBobSpritePose({ ...state, mode: 'knockdown', grounded: false, stateStartedFrame: 0 }, 4)?.scale).toBe(1);

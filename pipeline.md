@@ -1,3 +1,13 @@
+## Correções de luta, README e escalas — 2026-11-16
+
+Integrado por pedido do usuário, sem conferência no jogo. Validação local: `tsc`, 1124 testes e build.
+
+- Texas: o agarrão 2+4 (tiros de braço) divide o dano entre os três tiros, cada um conta como um acerto de combo, e o lançamento final não dá dano nem acerto; a pose `crouch-hurt` saiu (a `crouch-hurt-low` vale para todos os níveis); acerto no ar usa sempre `air-hurt`.
+- Fim de round: efeitos de acerto seguem animando após o KO (usam o relógio normal) e o derrotado ainda caindo continua a queda em vez de pular para o último desenho de caído.
+- Bob: o Redemoinho avança com o ancinho até o fim da ultimate (quadro 68), alcançando alvos a 300 px, mas não a 420 px.
+- Escalas: o usuário terminou a verificação manual das escalas de todos os personagens; o teste da `fall-landing` da Texas acompanha o novo valor (0,9555).
+- README público com proposta, estado atual, planejamento e vídeo de exemplo em `docs/media/`; `AGENTS.md` abre exceção para o README. Folhas ampliadas pela escala ficam com baixa resolução: em estudo o upscale por IA (Upscayl) das folhas «high» com escala > 1, a aprovar antes de aplicar.
+
 ## Ajustes gerais de luta, tutorial, rush e praia — 2026-11-16
 
 Integrado por pedido do usuário, sem aprovação artística nem conferência no jogo. Validação local: `tsc`, 1119 testes e build.

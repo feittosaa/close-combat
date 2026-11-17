@@ -55,7 +55,7 @@ it.each([0,1])('uses the approved standing perfect-block and wall-bounce poses f
     wallBounceEffect:{x:state.x,y:state.y,frame:200,direction:1 as const}, hitReaction:{level:'mid' as const,startedFrame:190}};
   expect(getTexasSpritePose(bounce,200)).toMatchObject({texture:'texas-wall-bounce',frame:0});
   expect(getTexasSpritePose(bounce,218)).toMatchObject({texture:'texas-wall-bounce',frame:3});
-  expect(getTexasSpritePose({...bounce,hitReaction:{level:'high',startedFrame:205}},206)?.texture).toBe('texas-hurt-high');
+  expect(getTexasSpritePose({...bounce,hitReaction:{level:'high',startedFrame:205}},206)?.texture).toBe('texas-air-hurt');
   expect(getTexasSpritePose(bounce,224)?.texture).toBe('texas-air-hurt');
 });
 
@@ -250,11 +250,11 @@ it.each([['low','hurt-low'],['mid','hurt'],['high','hurt-high']] as const)('sele
   expect(getTexasSpritePose({...hurt,hitReaction:{level,startedFrame:50}},50)?.frame).toBe(initial?.frame);
 });
 
-it('uses a separate low reaction while crouching', () => {
+it('uses the same crouching reaction for every hit level', () => {
   const state = new Simulation(createGameConfig(1024,576),[texas,texas]).snapshot().characters[0];
   const crouched = {...state,mode:'hitstun' as const,crouching:true,hitReaction:{level:'low' as const,startedFrame:40}};
   expect(getTexasSpritePose(crouched,40)?.texture).toBe('texas-crouch-hurt-low');
-  expect(getTexasSpritePose({...crouched,hitReaction:{level:'mid',startedFrame:40}},40)?.texture).toBe('texas-crouch-hurt');
+  expect(getTexasSpritePose({...crouched,hitReaction:{level:'mid',startedFrame:40}},40)?.texture).toBe('texas-crouch-hurt-low');
 });
 
 it.each([0, 1])('uses approved shots and three distinct stomp phases, mirrored for player %i', player => {

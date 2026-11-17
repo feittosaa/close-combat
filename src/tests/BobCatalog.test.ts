@@ -308,10 +308,15 @@ describe('manual Bob catalogue', () => {
       if(snapshot.hitEvents.some(event=>event.moveId==='rake-ultimate'))firstHit=i;}
     expect(firstHit-activationEnd).toBeGreaterThanOrEqual(6);
     expect(firstHit-activationEnd).toBeLessThanOrEqual(9);
-    const far=create(300);far.fillTrainingRage();command(far,move('rake-ultimate'));
-    let contacts=0;
-    for(let i=0;i<400;i++){step(far);contacts+=far.snapshot().hitEvents.length;}
-    expect(contacts).toBe(0);
+    // The rake keeps advancing until the ultimate ends: it reaches a target at a fair distance but not one across the stage.
+    const reach=(distance:number)=>{
+      const sim=create(distance);sim.fillTrainingRage();command(sim,move('rake-ultimate'));
+      let contacts=0;
+      for(let i=0;i<400;i++){step(sim);contacts+=sim.snapshot().hitEvents.filter(event=>event.moveId==='rake-ultimate').length;}
+      return contacts;
+    };
+    expect(reach(300)).toBeGreaterThan(0);
+    expect(reach(420)).toBe(0);
   });
 
   it('rake ultimate hits the target in place, then its last hit knocks it down and sends it a short way', () => {
