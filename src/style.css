@@ -132,6 +132,9 @@ canvas.menu-film { filter: sepia(.1) saturate(.95); }
 .controls-volume input { width: 240px; accent-color: var(--accent); cursor: pointer; }
 .controls-volume-value { min-width: 3.5em; text-align: right; font-weight: 700; }
 .controls-panel footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.controls-panel.quick-setup { width: min(640px, 100%); height: auto; }
+.quick-setup-shortcuts { display: flex; gap: 8px; }
+.controls-panel .quick-setup-shortcuts button { width: 112px; }
 .controls-panel.controls-confirm { width: min(620px, 100%); height: auto; gap: 16px; }
 .controls-panel footer button:last-child { background: var(--accent); }
 /* Attack keys keep their button colours, printed on a dark chip like the command notation. */

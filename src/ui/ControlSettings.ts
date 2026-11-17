@@ -16,7 +16,7 @@ const trainingCommands = [['step','settings.step'],['speed','settings.speed'],['
 const TABS = [['general','settings.tabGeneral'],['volume','settings.tabVolume'],['keyboard','settings.tabKeyboard'],['gamepad','settings.tabGamepad']] as const;
 const PAD_TABS = [['p1','settings.player'],['p2','settings.player']] as const;
 const KEY_TABS = [['p1','settings.player'],['p2','settings.player'],['commands','settings.tabCommands']] as const;
-type Tab = typeof TABS[number][0];
+export type Tab = typeof TABS[number][0];
 type KeyTab = typeof KEY_TABS[number][0];
 type Capture = { player?: number; group?: 'directions'|'buttons'|'ultimate'|'taunt'|'rageAction'; action: string; system?: true; training?: true; gamepad?: true; button: HTMLButtonElement };
 
@@ -56,8 +56,8 @@ export class ControlSettings {
   private capture?: Capture;
   private readonly status = document.createElement('p');
   private readonly previousFocus = document.activeElement as HTMLElement | null;
-  constructor(private readonly close: () => void) {
-    ControlSettings.active = true; this.root.className = 'control-settings'; this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); this.root.setAttribute('aria-label',t('settings.label'));
+  constructor(private readonly close: () => void, tab: Tab = 'general') {
+    this.tab = tab; ControlSettings.active = true; this.root.className = 'control-settings'; this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); this.root.setAttribute('aria-label',t('settings.label'));
     document.body.append(this.root); this.render(); window.addEventListener('keydown',this.onKey,true);
     this.releasePad = gamepads.subscribe(this.onPad);
     window.addEventListener('gamepadconnected', this.onPadsChanged); window.addEventListener('gamepaddisconnected', this.onPadsChanged);

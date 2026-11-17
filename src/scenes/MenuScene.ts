@@ -11,6 +11,7 @@ import '../ui/menu.css';
 import { loadDeveloperPanel } from '../devMode';
 
 import { ControlSettings } from '../ui/ControlSettings';
+import { QuickSetup, needsQuickSetup } from '../ui/QuickSetup';
 import Phaser from 'phaser';
 import { getCharacterById, playableCharacters } from '../engine/data/characters';
 import { drawVersusStage, groupsFor, STAGE_GROUPS } from '../rendering/stages/stageGroups';
@@ -69,7 +70,7 @@ export class MenuScene extends Phaser.Scene {
   };
   private transitioning = false;
   private readonly handleKey = (event: KeyboardEvent): void => {
-    if (ControlSettings.active || event.repeat || this.transitioning) return;
+    if (ControlSettings.active || QuickSetup.active || event.repeat || this.transitioning) return;
     const key = event.key;
     if (key === 'Enter' && event.target instanceof HTMLButtonElement &&
       !((this.page === 'home' || this.page === 'difficulty') && event.target.classList.contains('arena-mode'))) return;
@@ -188,6 +189,7 @@ export class MenuScene extends Phaser.Scene {
     this.render();
     window.addEventListener('keydown', this.handleKey);
     const releasePad = gamepads.subscribe(this.handlePad);
+    if (needsQuickSetup()) new QuickSetup(() => this.render());
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener('keydown', this.handleKey);
       releasePad();
