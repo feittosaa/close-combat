@@ -2,13 +2,13 @@ import { it, expect } from 'vitest';
 import { TrainingSession, OPPONENT_MODES } from '../training/TrainingSession';
 import { TutorialSession, type TutorialLesson } from '../training/TutorialSession';
 import { Simulation } from '../engine/simulation/Simulation';
-import { defaultCharacter as shoto } from '../engine/data/characters';
+import { defaultCharacter as bob } from '../engine/data/characters';
 import { texas } from '../engine/data/fighters/texas';
 import { fighterMoveList } from '../training/MoveList';
 import { createGameConfig } from '../engine/data/gameConfig';
 import type { FrameInput } from '../input/types';
 const N: FrameInput = { direction: 'N', buttons: new Set() };
-const create = () => new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true, initialDistance: 64 });
+const create = () => new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true, initialDistance: 64 });
 it('treino alterna controles e mantém inspeção dos quatro golpes', () => {
   const session = new TrainingSession(), sim = create();
   expect(session.opponentInput(0, sim.snapshot().characters)).toEqual(N);
@@ -32,7 +32,7 @@ const openLesson = (tutorial: TutorialSession, find: (lesson: TutorialLesson) =>
   return tutorial.lesson!;
 };
 it('tutorial livre tem básico, combos, avançado e rage, em ordem contínua e sem exigir conclusão', () => {
-  const tutorial = new TutorialSession(shoto);
+  const tutorial = new TutorialSession(bob);
   expect(tutorial.sections.map(section => section.id)).toEqual(['basic', 'combos', 'advanced', 'rage']);
   expect(tutorial.sections[0].lessons.slice(0, 8).map(lesson => lesson.notation)).toEqual(['f / b', 'u', 'd', 'b', '1', '2', '3', '4']);
   // Next lesson reads straight through: the end of a section leads into the next one, the very end back to the start.
@@ -46,7 +46,7 @@ it('tutorial livre tem básico, combos, avançado e rage, em ordem contínua e s
   tutorial.changeSection(-2); expect(tutorial.section.id).toBe('basic');
 });
 it('golpe básico só conta com contato real e fica marcado como concluído', () => {
-  const tutorial = new TutorialSession(shoto), lesson = openLesson(tutorial, entry => entry.key === 'move:light-punch'), sim = create();
+  const tutorial = new TutorialSession(bob), lesson = openLesson(tutorial, entry => entry.key === 'move:light-punch'), sim = create();
   tutorial.observe(sim.snapshot(), { direction: 'N', buttons: new Set(['1']) }); expect(tutorial.passed).toBe(false);
   sim.stepFrame([{ direction: 'N', buttons: new Set(['1']) }, N]);
   for (let f = 0; f < 11; f++) { tutorial.observe(sim.snapshot(), N); sim.stepFrame([N, N]); }
@@ -59,11 +59,11 @@ it('combos trazem receitas, sequências encadeadas, especiais e ultimates de cad
   expect(combos.map(lesson => lesson.key)).toEqual([...texas.combos!.map(combo => `combo:${combo.id}`), 'chain:0',
     ...texas.moves.filter(move => move.category === 'special' || move.category === 'ultimate').map(move => `move:${move.id}`)]);
   expect(combos.find(lesson => lesson.key === 'chain:0')?.moves).toEqual(['light-kick', 'light-kick', 'light-kick', 'light-punch', 'heavy-punch', 'heavy-punch', 'heavy-punch']);
-  expect(new TutorialSession(shoto).sections[1].lessons.filter(lesson => lesson.key.startsWith('move:')).map(lesson => lesson.key))
-    .toEqual(shoto.moves.filter(move => !move.comboOnly && (move.category === 'special' || move.category === 'ultimate')).map(move => `move:${move.id}`));
+  expect(new TutorialSession(bob).sections[1].lessons.filter(lesson => lesson.key.startsWith('move:')).map(lesson => lesson.key))
+    .toEqual(bob.moves.filter(move => !move.comboOnly && (move.category === 'special' || move.category === 'ultimate')).map(move => `move:${move.id}`));
 });
 it('exemplo substitui as entradas até o fim e não conclui a lição sozinho', () => {
-  const tutorial = new TutorialSession(shoto);
+  const tutorial = new TutorialSession(bob);
   openLesson(tutorial, entry => entry.key === 'move:light-punch');
   expect(tutorial.startDemo()).toBe(true);
   const sim = create();
@@ -84,7 +84,7 @@ it('tutorial reconhece finalizador agachado e lista não o oferece como golpe in
 it('tutorial de combo agachado reconhece as duas coronhadas e o projétil', () => {
   const tutorial=new TutorialSession(texas);
   openLesson(tutorial,lesson=>lesson.notation==='d+1,1,1');
-  const sim=new Simulation(createGameConfig(1024,576),[texas,shoto],{training:true,initialDistance:65});
+  const sim=new Simulation(createGameConfig(1024,576),[texas,bob],{training:true,initialDistance:65});
   const down:FrameInput={direction:'D',buttons:new Set()};
   const step=(value:FrameInput)=>{sim.stepFrame([value,N]);tutorial.observe(sim.snapshot(),value);};
   for(const move of ['crouch-punch','crouch-punch','crouch-combo-shot']) {
@@ -98,7 +98,7 @@ it('tutorial de combo agachado reconhece as duas coronhadas e o projétil', () =
   expect(tutorial.passed).toBe(true);
 });
 it('a lição de rage do combo breaker faz o adversário combar o jogador e só conclui com o E depois do segundo golpe', () => {
-  const tutorial = new TutorialSession(shoto), lesson = openLesson(tutorial, entry => entry.check === 'breaker'), sim = create();
+  const tutorial = new TutorialSession(bob), lesson = openLesson(tutorial, entry => entry.check === 'breaker'), sim = create();
   sim.fillTrainingRage();
   let early = false;
   for (let f = 0; f < 600 && !tutorial.passed; f++) {
@@ -111,7 +111,7 @@ it('a lição de rage do combo breaker faz o adversário combar o jogador e só 
   expect(lesson.dummy?.length).toBeGreaterThan(0); expect(early).toBe(false); expect(tutorial.passed).toBe(true);
 });
 it('as lições de rage concluem ao reforçar um especial e ao ativar o Rush', () => {
-  const tutorial = new TutorialSession(shoto), rush = openLesson(tutorial, entry => entry.check === 'rush'), sim = create();
+  const tutorial = new TutorialSession(bob), rush = openLesson(tutorial, entry => entry.check === 'rush'), sim = create();
   sim.fillTrainingRage();
   for (let f = 0; f < 5; f++) { sim.stepFrame([{ ...N, rageAction: true, taunt: true }, N]); tutorial.observe(sim.snapshot(), N); }
   expect(rush.demo?.length).toBeGreaterThan(0); expect(tutorial.passed).toBe(true);

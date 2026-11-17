@@ -9,8 +9,8 @@ import type { ProjectileState } from '../engine/combat/ProjectileState';
 import { getTimedAnimationFrame, type AnimationClip } from './animations/AnimationPlayback';
 import { contactEffectKey, contactFrameGrowth } from './contactEffects';
 import { CharacterColorEffect } from './characterColor';
-import { grapplerTrail, grapplerTrailPosition } from './grapplerTrails';
-import { grapplerCapturePose } from './grapplerCapture';
+import { sm0gTrail, sm0gTrailPosition } from './sm0gTrails';
+import { sm0gCapturePose } from './sm0gCapture';
 
 const effectClips: Readonly<Record<string, AnimationClip>> = {
   shot:{key:'shot',start:0,end:5,frameRate:20,frameDurations:[2,3,3,3,3,3],repeat:-1},
@@ -50,10 +50,10 @@ export class ProjectileView {
     if (reset) this.shownTrails.clear();
     for (const attacker of characters) {
       const victim = characters.find(character => character.characterId !== attacker.characterId);
-      const trail = victim && grapplerTrail(attacker, victim);
+      const trail = victim && sm0gTrail(attacker, victim);
       if (!trail || !victim || contactPaused) continue;
-      const token = `${attacker.characterId}:${victim.characterId}:${victim.grapplerGrabReaction!.moveId}:${victim.grapplerGrabReaction!.startedFrame}`;
-      const key = `contact-grappler-trail-${trail.name}`;
+      const token = `${attacker.characterId}:${victim.characterId}:${victim.sm0gGrabReaction!.moveId}:${victim.sm0gGrabReaction!.startedFrame}`;
+      const key = `contact-sm0g-trail-${trail.name}`;
       if (this.shownTrails.has(token) || !this.scene.textures.exists(key)) continue;
       this.shownTrails.add(token);
       this.grabTrails.get(attacker.characterId)?.sprite.destroy();
@@ -64,8 +64,8 @@ export class ProjectileView {
       const age = frame - effect.started, attacker = characters.find(character => character.characterId === id);
       const victim = characters.find(character => character.characterId === effect.victimId);
       if (age < 0 || age >= 36 || !attacker || !victim) { effect.sprite.destroy(); this.grabTrails.delete(id); continue; }
-      const shown = grapplerCapturePose(victim, attacker);
-      const position = grapplerTrailPosition(shown, effect.name, effect.facing);
+      const shown = sm0gCapturePose(victim, attacker);
+      const position = sm0gTrailPosition(shown, effect.name, effect.facing);
       effect.sprite.setFrame(Math.floor(age / 6)).setPosition(position.x, position.y);
     }
     for (const character of characters) {
@@ -103,21 +103,21 @@ export class ProjectileView {
       const move = getCharacterById(p.fighterId)?.moves.find(m=>m.id===p.attack.moveId);
       if(!move)continue;
       const box=createProjectileHitbox(p,move);
-      if (p.visual === 'crow' && this.scene.textures.exists('shoto-crow')) {
+      if (p.visual === 'crow' && this.scene.textures.exists('bob-crow')) {
         const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
-        const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, 'shoto-crow', '0').setDepth(11);
+        const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, 'bob-crow', '0').setDepth(11);
         this.sprites.set(p.id, sprite);
-        sprite.setTexture('shoto-crow', String(Math.floor(age / 3) % 6)).setPosition(box.x + box.width / 2, box.y + box.height / 2)
+        sprite.setTexture('bob-crow', String(Math.floor(age / 3) % 6)).setPosition(box.x + box.width / 2, box.y + box.height / 2)
           .setDisplaySize(box.width * .6, box.height * 1.2).setFlipX(p.facing === 'left').setVisible(true);
         continue;
       }
-      if (p.visual === 'tomato' && this.scene.textures.exists('shoto-tomato')) {
-        const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, 'shoto-tomato', '0').setDepth(11);
+      if (p.visual === 'tomato' && this.scene.textures.exists('bob-tomato')) {
+        const sprite = this.sprites.get(p.id) ?? this.scene.add.image(0, 0, 'bob-tomato', '0').setDepth(11);
         this.sprites.set(p.id, sprite);
         const age = (move.projectile?.life ?? p.remainingFrames) - p.remainingFrames;
         const size = 66.8;
         const sign = p.facing === 'right' ? 1 : -1;
-        sprite.setTexture('shoto-tomato', String(Math.floor(age / 3) % 6))
+        sprite.setTexture('bob-tomato', String(Math.floor(age / 3) % 6))
           .setPosition(box.x + box.width / 2 - sign * size / 4, box.y + box.height / 2)
           .setDisplaySize(size, size).setFlipX(p.facing === 'left').setVisible(true);
         continue;
@@ -174,7 +174,7 @@ export class ProjectileView {
       if (!attacker || !defender) continue;
       const move = getCharacterById(attacker.fighterId)?.moves.find(candidate => candidate.id === contact.moveId);
       // Launcher uses its own arm-attached steam instead of the generic contact flash.
-      if (attacker.fighterId === 'grappler' && ['grab-launcher', 'grab-headbutt'].includes(contact.moveId) && contact.outcome === 'hit') continue;
+      if (attacker.fighterId === 'sm0g' && ['grab-launcher', 'grab-headbutt'].includes(contact.moveId) && contact.outcome === 'hit') continue;
       const purpleContact = alternateOwnerIds.has(attacker.characterId) && attacker.fighterId === 'texas';
       const purpleBlock = contact.outcome === 'block' && purpleContact &&
         (move?.projectile?.visual === 'bullet' || move?.projectile?.visual === 'dynamite');
@@ -220,7 +220,7 @@ export class ProjectileView {
     }
   }
   /**
-   * Every time the Grappler throws the opponent to the floor, a ground impact like the ultimate's, 50% subtler (half the
+   * Every time SM0G-000 throws the opponent to the floor, a ground impact like the ultimate's, 50% subtler (half the
    * size): the slam and the foot grab when the hands hit the floor, the air grab when it drives the victim down, and the
    * far throw when the victim lands.
    */
@@ -235,13 +235,13 @@ export class ProjectileView {
     };
     for (const attacker of characters) {
       const attack = attacker.attack;
-      const move = attacker.fighterId === 'grappler' && attack?.hasHit ? getCharacterById('grappler')?.moves.find(candidate => candidate.id === attack.moveId) : undefined;
+      const move = attacker.fighterId === 'sm0g' && attack?.hasHit ? getCharacterById('sm0g')?.moves.find(candidate => candidate.id === attack.moveId) : undefined;
       const delay = move && GRAB_IMPACT_DELAYS[move.id];
-      const victim = move && characters.find(character => character.grapplerGrabReaction?.moveId === move.id && character.characterId !== attacker.characterId);
+      const victim = move && characters.find(character => character.sm0gGrabReaction?.moveId === move.id && character.characterId !== attacker.characterId);
       if (!move || !attack || delay === undefined || !victim) continue;
       // The air grab waits for the victim to reach the floor; the others follow the attack's own timing.
       if (move.id === 'air-grab' && !victim.grounded) continue;
-      if (attack.elapsedFrames - (attack.startupFrames ?? move.startup) >= delay) impact(`${attacker.characterId}:${move.id}:${victim.grapplerGrabReaction!.startedFrame}`, victim.x, move.id === 'air-grab' ? victim.y : attacker.y);
+      if (attack.elapsedFrames - (attack.startupFrames ?? move.startup) >= delay) impact(`${attacker.characterId}:${move.id}:${victim.sm0gGrabReaction!.startedFrame}`, victim.x, move.id === 'air-grab' ? victim.y : attacker.y);
     }
     for (const character of characters) {
       const thrown = character.knockdownBy?.moveId === 'grab-throw' && !character.grounded;

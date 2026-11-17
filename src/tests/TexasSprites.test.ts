@@ -100,7 +100,7 @@ it.each([0,1])('uses the current lying frame when Texas is defeated while alread
     pushbackMotion:{distancePerFrame:5,remainingFrames:3},
     throwPull:{distancePerFrame:1,remainingFrames:5,launchDistance:100,launchFrames:20,liftSpeed:-5},
     commandGrabbed:true, grabbedStartedFrame:10,
-    grapplerGrabReaction:{moveId:'grab-low',startedFrame:10,startedLying:true}};
+    sm0gGrabReaction:{moveId:'grab-low',startedFrame:10,startedLying:true}};
   const presented = settleAfterRound(down, 0, state.y, .55, true);
   expect(getTexasSpriteLayers(presented, 20)).toHaveLength(1);
   expect(getTexasSpritePose(presented, 20)).toMatchObject({texture:'texas-fall-landing',frame:5,flipX:player===1});

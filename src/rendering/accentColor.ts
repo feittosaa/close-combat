@@ -2,7 +2,7 @@
 export interface Accent { label: string; from: number; to: number }
 
 export const accents: Readonly<Record<string, Accent>> = {
-  shoto: { label: 'verde/oliva da camisa', from: 27, to: 56 },
+  bob: { label: 'verde/oliva da camisa', from: 27, to: 56 },
   texas: { label: 'vermelho', from: 300, to: 12 },
 };
 

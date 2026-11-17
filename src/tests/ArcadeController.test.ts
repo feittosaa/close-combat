@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ArcadeController, ARCADE_DIFFICULTIES, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
 import { Simulation } from '../engine/simulation/Simulation';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { texas } from '../engine/data/fighters/texas';
 import { createGameConfig } from '../engine/data/gameConfig';
 import type { CharacterDefinition } from '../engine/data/characters';
@@ -22,23 +22,23 @@ function duel(first: [CharacterDefinition, ArcadeDifficulty], second: [Character
 
 describe('IA do Arcade', () => {
   it.each(levels)('conclui partida por entradas reais, de forma reproduzível (%s)', level => {
-    const first = duel([shoto, level], [shoto, level]);
+    const first = duel([bob, level], [bob, level]);
     expect(first.snapshot.phase).toBe('match-over');
     expect(first.snapshot.recentContacts.length).toBeGreaterThan(0);
-    expect(first.snapshot).toEqual(duel([shoto, level], [shoto, level]).snapshot);
+    expect(first.snapshot).toEqual(duel([bob, level], [bob, level]).snapshot);
   });
   it('reproduz suas decisões após reset', () => {
-    const sim = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true, initialDistance: 64 });
-    const bot = new ArcadeController(shoto, shoto, 'hard'), states = sim.snapshot().characters;
+    const sim = new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true, initialDistance: 64 });
+    const bot = new ArcadeController(bob, bob, 'hard'), states = sim.snapshot().characters;
     const read = () => Array.from({ length: 400 }, (_, f) => bot.readInput(f, states[1], states[0]));
     const first = read(); bot.reset(); expect(read()).toEqual(first);
   });
-  it.each([[shoto, texas], [texas, shoto]])('o nível difícil vence o fácil, com o lado trocado também (%#)', (a, b) => {
+  it.each([[bob, texas], [texas, bob]])('o nível difícil vence o fácil, com o lado trocado também (%#)', (a, b) => {
     const outcomes = [duel([a, 'hard'], [b, 'easy']).snapshot.matchWinnerId, duel([b, 'easy'], [a, 'hard']).snapshot.matchWinnerId];
     expect(outcomes).toEqual(['player-1', 'player-2']);
   });
   it('o nível difícil usa especiais e golpes agachados que o fácil nunca usa', () => {
-    const used = (level: ArcadeDifficulty) => [...duel([texas, level], [shoto, 'normal']).moves].filter(entry => entry.startsWith('player-1:')).map(entry => entry.split(':')[1]);
+    const used = (level: ArcadeDifficulty) => [...duel([texas, level], [bob, 'normal']).moves].filter(entry => entry.startsWith('player-1:')).map(entry => entry.split(':')[1]);
     const easy = used('easy'), hard = used('hard');
     expect(easy.every(id => texas.moves.find(move => move.id === id)?.category !== 'special')).toBe(true);
     expect(hard.some(id => texas.moves.find(move => move.id === id)?.category === 'special' || id.includes('crouch'))).toBe(true);

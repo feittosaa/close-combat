@@ -2,8 +2,8 @@ import { expect, it, vi } from 'vitest';
 import type Phaser from 'phaser';
 import { StagePresentation } from '../rendering/StagePresentation';
 import { RESULT_TITLE_END_FRAME } from '../rendering/roundEnd';
-import { grappler } from '../engine/data/fighters/grappler';
-import { shoto } from '../engine/data/fighters/shoto';
+import { sm0g } from '../engine/data/fighters/sm0g';
+import { bob } from '../engine/data/fighters/bob';
 import { settleAfterRound } from '../rendering/animations/texasSprites';
 import { getTexasRoundEndPose } from '../rendering/animations/texasSprites';
 import { Simulation } from '../engine/simulation/Simulation';
@@ -61,8 +61,8 @@ it('o READY bloqueia tudo, o FIGHT libera só o movimento e os golpes esperam 8 
 });
 
 
-it.each([grappler,shoto,texas])('faz $name cair após vitória aérea e mantém perdedor deitado', fighter => {
-  const sim = new Simulation(createGameConfig(1024,576),[fighter,shoto]);
+it.each([sm0g,bob,texas])('faz $name cair após vitória aérea e mantém perdedor deitado', fighter => {
+  const sim = new Simulation(createGameConfig(1024,576),[fighter,bob]);
   const standing=sim.snapshot().characters[0], floor=standing.y;
   const airborne={...standing,grounded:false,y:floor-100,verticalVelocity:-3,mode:'airborne' as const};
   expect(settleAfterRound(airborne,1,floor,.5,false).grounded).toBe(false);

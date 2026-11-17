@@ -2,7 +2,7 @@ import { it, expect } from 'vitest';
 import { getTimedAnimationFrame, getAttackAnimationFrame, getPhaseAnimationFrame, getStateAnimationFrame, shouldFlipAnimation, validateAnimationManifest, type AnimationClip } from '../rendering/animations/AnimationPlayback';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { defaultCharacter as shoto } from '../engine/data/characters';
+import { defaultCharacter as bob } from '../engine/data/characters';
 const loop: AnimationClip = { key: 'future-idle', start: 0, end: 2, frames: [0, 1, 2, 1], frameDurations: [14, 10, 14, 10], frameRate: 10, repeat: -1 };
 it('mantém holds e o retorno de um clipe genérico sem depender de assets retirados', () => {
   expect([0, 13, 14, 23, 24, 37, 38, 47, 48].map(t => getTimedAnimationFrame(loop, t))).toEqual([0, 0, 1, 1, 2, 2, 1, 1, 0]);
@@ -20,7 +20,7 @@ it('permite velocidades independentes e pausas diferentes sem alterar o relógio
 });
 it('amostra fases a partir do frame lógico, incluindo recuperação em acerto', () => {
   const state = new Simulation(createGameConfig(1024, 576)).snapshot().characters[0];
-  const move = shoto.moves[0];
+  const move = bob.moves[0];
   const start = { ...state, mode: 'startup' as const, attack: { moveId: move.id, buttons: move.input.buttons, elapsedFrames: 0, hasHit: false } };
   expect(getAttackAnimationFrame(start, loop, move)).toBe(0);
   const recovery = { ...start, mode: 'recovery' as const, attack: { ...start.attack, elapsedFrames: move.startup + move.activeFrames + move.recovery - 1, hitOutcome: 'hit' as const } };

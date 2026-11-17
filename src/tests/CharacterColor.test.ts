@@ -122,15 +122,15 @@ it('corrects a sheet by its own matrix and offset, leaving uncorrected sheets an
   // Rows: red takes the green, green gains a quarter, blue is cleared; the result stays within 0–255.
   expect(correctedPixel(120, 80, 40, [0, 1, 0, 0, 0, 1, 0, .25, 0, 0, 0, 0])).toEqual([80, 144, 0]);
   expect(correctedPixel(250, 250, 250, [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1])).toEqual([255, 250, 0]);
-  expect(sheetCorrection('shoto-idle')).toBeUndefined();
-  expect(sheetCorrection('shoto-idle-normal')).toBeUndefined();
+  expect(sheetCorrection('bob-idle')).toBeUndefined();
+  expect(sheetCorrection('bob-idle-normal')).toBeUndefined();
   expect(sheetCorrection(undefined)).toBeUndefined();
-  expect(sheetCorrection('shoto-defeat')).toHaveLength(12);
+  expect(sheetCorrection('bob-defeat')).toHaveLength(12);
 });
 
 it('draws a fighter with corrected sheets through the colour pipeline even without palette or light', () => {
   const { sprite } = webglSprite();
-  Object.assign(sprite, { texture: { key: 'shoto-defeat' } });
+  Object.assign(sprite, { texture: { key: 'bob-defeat' } });
   new CharacterColorEffect().apply(sprite as never, { alternate: false }, 'bob');
   expect(sprite.setPipeline).toHaveBeenCalled();
 });

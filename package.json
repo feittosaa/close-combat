@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
-    "test:visual": "python3 scripts/verify-shoto-visual.py",
+    "test:visual": "python3 scripts/verify-bob-visual.py",
     "measure:sprites": "python3 scripts/measure-sprites.py",
     "guides:sprites": "python3 scripts/measure-sprites.py && vite-node scripts/export-sprite-layout.ts && python3 scripts/render-sprite-guides.py",
     "calibrate:sprites": "python3 scripts/measure-sprites.py && vite-node scripts/calibrate-sprites.ts",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { texas } from '../engine/data/fighters/texas';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { Simulation, volleyShotDamage } from '../engine/simulation/Simulation';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
@@ -43,7 +43,7 @@ it('divide a vulnerabilidade em cabeça, barriga e pernas sem mudar sua área to
 });
 
 it.each([0,1])('dispara no limite mesmo mantendo o botão pressionado: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
   const held = input('N','2');
   for (let tick=0;tick<145 && !sim.snapshot().hitEvents.length;tick++) sim.stepFrame(player===0?[held,input()]:[input(),held]);
@@ -51,7 +51,7 @@ it.each([0,1])('dispara no limite mesmo mantendo o botão pressionado: jogador %
 });
 
 it.each([0,1])('permite os três pisões defendidos sem reiniciar o combo: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input('DB')]:[input('DB'),value]);
   for (let kick=0;kick<3;kick++) {
@@ -70,7 +70,7 @@ const input = (direction: Direction = 'N', button?: AttackButton): FrameInput =>
 it.each([0, 1])('chute 3+4 é overhead contra as duas guardas, jogador %i', player => {
   const move = texas.moves.find(candidate => candidate.id === 'power-kick')!;
   expect(move).toMatchObject({ hitLevel: 'mid', overhead: true });
-  for (const defender of [shoto, texas]) {
+  for (const defender of [bob, texas]) {
     for (const [direction, outcome] of [['B', 'block'], ['DB', 'hit']] as const) {
       const defs = player === 0 ? [texas, defender] as const : [defender, texas] as const;
       const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 56 });
@@ -87,7 +87,7 @@ it.each([0,1])('o afastamento e o laço quicam o adversário na borda e o lança
  for (const move of ['push-away', 'throw-13'] as const) {
   const base = createGameConfig(1024,576);
   const config = {...base, arena:{...base.arena, left:0, right:350, maxSeparation:undefined}};
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(config,defs,{training:true,initialDistance:56});
   const step = (a:FrameInput=input(), b:FrameInput=input()) => sim.stepFrame(player === 0 ? [a,b] : [b,a]);
   for (let i=0; i<160; i++) step(input('F'),input('B'));
@@ -135,7 +135,7 @@ it.each([0,1])('o limite da tela no meio da arena não causa quique nem arrasta 
  for (const move of ['push-away', 'throw-13'] as const) {
   const base=createGameConfig(1024,576);
   const config={...base,arena:{...base.arena,maxSeparation:200}};
-  const sim=new Simulation(config,player===0?[texas,shoto]:[shoto,texas],{training:true,initialDistance:56});
+  const sim=new Simulation(config,player===0?[texas,bob]:[bob,texas],{training:true,initialDistance:56});
   const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
   if (move === 'push-away') {
     for(const d of ['D','DF','F'] as const)step(input(d));
@@ -157,7 +157,7 @@ it.each([0,1])('o limite da tela no meio da arena não causa quique nem arrasta 
 
 it.each([0,1])('um golpe letal ainda quica antes do fim do round, jogador %i', player => {
   const base=createGameConfig(1024,576), config={...base,arena:{...base.arena,left:0,right:350,maxSeparation:undefined}};
-  const fragile={...shoto,maxHealth:1};
+  const fragile={...bob,maxHealth:1};
   const sim=new Simulation(config,player===0?[texas,fragile]:[fragile,texas],{initialDistance:56});
   const step=(a:FrameInput=input(),b:FrameInput=input())=>sim.stepFrame(player===0?[a,b]:[b,a]);
   for(let i=0;i<160;i++)step(input('F'),input('B'));
@@ -173,7 +173,7 @@ it.each([0,1])('um golpe letal ainda quica antes do fim do round, jogador %i', p
 
 it.each([0,1])('permite dash aéreo nos dois sentidos com duplo toque ou atalho: jogador %i', player => {
   for (const direction of ['F','B'] as const) for (const shortcut of [false,true]) {
-    const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+    const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
     const sim = new Simulation(createGameConfig(2200,700), defs, {training:true,initialDistance:400});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     step(input('U')); step();
@@ -196,15 +196,15 @@ it.each([0,1])('permite dash aéreo nos dois sentidos com duplo toque ou atalho:
   }
 });
 
-it('não habilita dash aéreo no Shoto',()=>{
-  const sim=new Simulation(createGameConfig(2200,700),[shoto,texas],{training:true,initialDistance:400});
+it('não habilita dash aéreo no Bob',()=>{
+  const sim=new Simulation(createGameConfig(2200,700),[bob,texas],{training:true,initialDistance:400});
   sim.stepFrame([input('U'),input()]);
   sim.stepFrame([{...input(),dash:'F'},input()]);
   expect(sim.snapshot().characters[0].mode).toBe('airborne');
 });
 
 it.each([0,1])('limita o dash aéreo a um por salto e restaura após pousar: jogador %i', player => {
-  const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+  const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(2200,700),defs,{training:true,initialDistance:400});
   const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
   step(input('U')); step({...input(),dash:'F'});
@@ -219,7 +219,7 @@ it.each([0,1])('limita o dash aéreo a um por salto e restaura após pousar: jog
 });
 
 it.each([0,1])('dash aéreo para trás funciona sob ameaça e pode ser interrompido por ataque aéreo: jogador %i', player=>{
-  const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+  const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(2200,700),defs,{training:true,initialDistance:350});
   const step=(self:FrameInput=input(),opponent:FrameInput=input())=>sim.stepFrame(player===0?[self,opponent]:[opponent,self]);
   step(input('U')); step(input(),input('N','1'));
@@ -232,7 +232,7 @@ it.each([0,1])('dash aéreo para trás funciona sob ameaça e pode ser interromp
 
 it.each([0, 1])('mantém raiz e caixas estáveis durante golpes sem deslocamento: jogador %i', player => {
   for (const [direction, button] of [['N','1'],['N','2'],['N','3'],['D','4']] as const) {
-    const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+    const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:400});
     const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     const start=sim.snapshot().characters[player].x;
@@ -265,7 +265,7 @@ it('dá mais antecipação e recuperação à coronhada', () => {
 
 it.each([0, 1])('carrega o soco forte por até dois segundos e dispara automaticamente: jogador %i', player => {
   for (const [heldFrames, expectedDamage] of [[1,38],[59,38],[60,46],[119,46],[120,53]] as const) {
-    const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+    const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
     const sim = new Simulation(createGameConfig(1024,576), defs, {training:true,initialDistance:100});
     const step = (value:FrameInput) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
     for (let tick=0; tick<heldFrames; tick++) step(input('N','2'));
@@ -278,7 +278,7 @@ it.each([0, 1])('carrega o soco forte por até dois segundos e dispara automatic
 });
 
 it.each([0,1])('carrega um soco forte no combo de tiros sem trocar a receita: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
   const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
   step(input('N','1'));
@@ -294,7 +294,7 @@ it.each([0,1])('carrega um soco forte no combo de tiros sem trocar a receita: jo
 
 it.each([0, 1])('executa as receitas aéreas com uma entrada por tiro: jogador %i', player => {
   for (const buttons of [['1', '1', '2'], ['2', '2']] as const) {
-    const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+    const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
     const sim = new Simulation(createGameConfig(1024, 576), defs, {training: true, initialDistance: 65});
     const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
     step(input('U'));
@@ -360,7 +360,7 @@ it.each([0, 1])('encerra a provocação naturalmente após 132 quadros: jogador 
 
 it.each([0, 1])('usa chute potente médio e laço que lança para longe: jogador %i', player => {
   for (const [buttons, id] of [[['3','4'], 'power-kick'], [['1','3'], 'throw-13']] as const) {
-    const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+    const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
     const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});
     const chord: FrameInput = {direction:'N', buttons:new Set(buttons)};
     const step = (value: FrameInput, defender: FrameInput = input()) => sim.stepFrame(player === 0 ? [value, defender] : [defender, value]);
@@ -382,7 +382,7 @@ it.each([0, 1])('usa chute potente médio e laço que lança para longe: jogador
 });
 
 it.each([0, 1])('laço erra alvos agachados e acerta alvos em pé: jogador %i', player => {
-  for (const targetFighter of [shoto, texas]) for (const direction of ['D', 'DB', 'N'] as const) for (const charged of [false, true]) {
+  for (const targetFighter of [bob, texas]) for (const direction of ['D', 'DB', 'N'] as const) for (const charged of [false, true]) {
     const defs = player === 0 ? [texas, targetFighter] as const : [targetFighter, texas] as const;
     const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 65 });
     const chord: FrameInput = { direction: 'N', buttons: new Set(['1', '3']) };
@@ -400,7 +400,7 @@ it.each([0, 1])('laço erra alvos agachados e acerta alvos em pé: jogador %i', 
 
 it.each([0, 1])('a caixa do laço passa acima dos alvos agachados: jogador %i', player => {
   const move = texas.moves.find(candidate => candidate.id === 'throw-13')!;
-  for (const targetFighter of [texas, shoto]) for (const chargeFrames of [1, 60]) {
+  for (const targetFighter of [texas, bob]) for (const chargeFrames of [1, 60]) {
     const defs = player === 0 ? [texas, targetFighter] as const : [targetFighter, texas] as const;
     const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 65 });
     const [attacker, defender] = [sim.snapshot().characters[player], sim.snapshot().characters[1 - player]];
@@ -413,7 +413,7 @@ it.each([0, 1])('a caixa do laço passa acima dos alvos agachados: jogador %i', 
 
 it.each([0, 1])('carrega o alcance do laço sem mudar o dano: jogador %i', player => {
   for (const [buttons,id] of [[['1','3'],'throw-13']] as const) {
-    const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+    const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:200});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     const chord: FrameInput = {direction:'N',buttons:new Set(buttons)};
@@ -434,7 +434,7 @@ it.each([0, 1])('carrega o alcance do laço sem mudar o dano: jogador %i', playe
 });
 
 it.each([0, 1])('soltar qualquer botão libera o agarrão com o alcance acumulado: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:200});
   const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
   for(let tick=0;tick<30;tick++)step({direction:'N',buttons:new Set(['1','3'])});
@@ -447,7 +447,7 @@ it.each([0, 1])('soltar qualquer botão libera o agarrão com o alcance acumulad
 });
 
 it.each([0, 1])('arremessa gradualmente para trás sem mover quem laçou: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});
   const step = (value: FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   step({direction:'B',buttons:new Set(['1','3'])});
@@ -467,7 +467,7 @@ it.each([0, 1])('arremessa gradualmente para trás sem mover quem laçou: jogado
 });
 
 it.each([0, 1])('laça de mais longe e puxa antes de chutar para frente: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:115});
   const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   step({direction:'N',buttons:new Set(['1','3'])});
@@ -484,7 +484,7 @@ it.each([0, 1])('laça de mais longe e puxa antes de chutar para frente: jogador
 });
 
 it.each([0, 1])('Bulls Eye dispara seis projéteis móveis em alturas crescentes: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   const sim = new Simulation(createGameConfig(1024,576), defs, {training:true,initialDistance:400});
   const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   sim.fillTrainingRage(); step({...input(),ultimate:true});
@@ -504,7 +504,7 @@ it.each([0, 1])('Bulls Eye dispara seis projéteis móveis em alturas crescentes
 });
 
 it.each([0, 1])('o primeiro disparo da ultimate percorre distância antes de atingir: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   const sim = new Simulation(createGameConfig(1024,576), defs, {training:true,initialDistance:400});
   const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   sim.fillTrainingRage(); step({...input(),ultimate:true});
@@ -521,7 +521,7 @@ it.each([0, 1])('o primeiro disparo da ultimate percorre distância antes de ati
 });
 
 it.each([0,1])('a ultimate levanta e acerta seis vezes após o primeiro disparo: jogador %i', player => {
-  for (const targetFighter of [shoto,texas]) for (const distance of [100,400]) {
+  for (const targetFighter of [bob,texas]) for (const distance of [100,400]) {
     const defs=player===0?[texas,targetFighter] as const:[targetFighter,texas] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
     const step=()=>sim.stepFrame([input(),input()]);
@@ -546,7 +546,7 @@ it.each([0,1])('a ultimate levanta e acerta seis vezes após o primeiro disparo:
 
 it.each([0,1])('completa a ultimate mesmo após zerar a vida no primeiro tiro, jogador %i', player => {
   const attacker = {...texas, moves:texas.moves.map(move => move.id === 'bulls-eye' ? {...move, rageCost:0} : move), rage:{...texas.rage!, maximum:0}};
-  const target = {...shoto, maxHealth:1};
+  const target = {...bob, maxHealth:1};
   const sim = new Simulation(createGameConfig(1024,576), player === 0 ? [attacker,target] : [target,attacker], {initialDistance:100});
   const step = (value:FrameInput=input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   step({...input(),ultimate:true});
@@ -562,7 +562,7 @@ it.each([0,1])('completa a ultimate mesmo após zerar a vida no primeiro tiro, j
 
 it.each([0,1])('o primeiro disparo da ultimate só é bloqueado agachado: jogador %i', player => {
   for (const [guard,expected] of [['B','hit'],['DB','block']] as const) {
-    const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+    const defs=player===0?[texas,bob] as const:[bob,texas] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:250});
     const defender=input(guard);
     const step=(attacker:FrameInput=input())=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
@@ -573,7 +573,7 @@ it.each([0,1])('o primeiro disparo da ultimate só é bloqueado agachado: jogado
 });
 
 it.each([0, 1])('executa duas coronhadas e um tiro no combo agachado: jogador %i', player => {
-  const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+  const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
   for(const expected of ['crouch-punch','crouch-punch','crouch-combo-shot']) {
@@ -592,7 +592,7 @@ it.each([0, 1])('executa duas coronhadas e um tiro no combo agachado: jogador %i
 });
 
 it.each([0, 1])('não executa o finalizador com apenas uma entrada: jogador %i', player => {
-  const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+  const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:300});
   const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
   step(input('D','1'));
@@ -604,7 +604,7 @@ it.each([0, 1])('não executa o finalizador com apenas uma entrada: jogador %i',
 });
 
 it.each([0, 1])('afastamento bloqueado não derruba: jogador %i', player => {
-  const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+  const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:56});
   const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input('B')]:[input('B'),value]);
   for(const direction of ['D','DF','F'] as const)step(input(direction));
@@ -627,7 +627,7 @@ describe('Texas protótipo', () => {
   });
   it.each([0, 1])('executa os disparos e o afastamento do lado %i', player => {
     for (const [button, id, distance] of [['1', 'quick-shot', 65], ['2', 'heavy-shot', 65], ['4', 'push-away', 56]] as const) {
-      const definitions = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+      const definitions = player === 0 ? [texas, bob] as const : [bob, texas] as const;
       const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: distance });
       const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
       for (const direction of ['D', 'DF', 'F'] as const) step(input(direction));
@@ -665,7 +665,7 @@ it.each([0, 1])('dispara horizontalmente, para baixo no ar e para cima agachada:
     ['1', 'N', false, 0], ['2', 'N', false, 0],
     ['1', 'N', true, 1], ['2', 'N', true, 1], ['2', 'D', false, -1],
   ] as const) {
-    const definitions = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+    const definitions = player === 0 ? [texas, bob] as const : [bob, texas] as const;
     const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: 400 });
     const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
     if (jump) { step(input('U')); step(input()); }
@@ -680,7 +680,7 @@ it.each([0, 1])('dispara horizontalmente, para baixo no ar e para cima agachada:
 
 it.each([0, 1])('rasteira derruba no acerto, mas não na guarda ou no vazio: jogador %i', player => {
   for (const [distance, guard, expected] of [[65, 'N', 'hit'], [65, 'DB', 'block'], [220, 'N', 'miss']] as const) {
-    const definitions = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+    const definitions = player === 0 ? [texas, bob] as const : [bob, texas] as const;
     const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: distance });
     const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input(guard)] : [input(guard), value]);
     step(input('D', '4'));
@@ -696,7 +696,7 @@ it.each([0, 1])('rasteira derruba no acerto, mas não na guarda ou no vazio: jog
 });
 
 it('usa proporção de altura de 1,60 m para 1,85 m e chutes curtos', () => {
-  expect(texas.collision.hurtboxes.standing.height / shoto.collision.hurtboxes.standing.height).toBeCloseTo(1.6 / 1.85, 3);
+  expect(texas.collision.hurtboxes.standing.height / bob.collision.hurtboxes.standing.height).toBeCloseTo(1.6 / 1.85, 3);
   for (const id of ['light-kick', 'heavy-kick', 'crouch-light-kick', 'crouch-heavy-kick']) {
     const move = texas.moves.find(entry => entry.id === id)!;
     expect(move.hitLevel).toBe('low');
@@ -707,7 +707,7 @@ it('usa proporção de altura de 1,60 m para 1,85 m e chutes curtos', () => {
 it.each([0, 1])('tiros especiais têm dano alto e alcance curto: jogador %i', player => {
   for (const [button, id, damage] of [['1', 'quick-shot', 65], ['2', 'heavy-shot', 80]] as const) {
     for (const [distance, defense, expected] of [[65, 'N', 'hit'], [65, 'B', 'block'], [300, 'N', 'miss'], [65, 'D', 'miss']] as const) {
-      const definitions = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+      const definitions = player === 0 ? [texas, bob] as const : [bob, texas] as const;
       const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: distance });
       const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input(defense)] : [input(defense), value]);
       for (const direction of ['D', 'DF', 'F'] as const) step(input(direction));
@@ -725,7 +725,7 @@ it.each([0, 1])('tiros especiais têm dano alto e alcance curto: jogador %i', pl
 
 it.each([0, 1])('permite segurar os especiais e soltar para disparar: jogador %i', player => {
   for (const [button,id,damage] of [['1','quick-shot',65],['2','heavy-shot',80]] as const) {
-    const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+    const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     for (const direction of ['D','DF','F'] as const) step(input(direction));
@@ -740,7 +740,7 @@ it.each([0, 1])('permite segurar os especiais e soltar para disparar: jogador %i
 
 it.each([0, 1])('dispara automaticamente os especiais após um segundo: jogador %i', player => {
   for (const [button,id] of [['1','quick-shot'],['2','heavy-shot']] as const) {
-    const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+    const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:100});
     const step=(value:FrameInput)=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     for (const direction of ['D','DF','F'] as const) step(input(direction));
@@ -750,7 +750,7 @@ it.each([0, 1])('dispara automaticamente os especiais após um segundo: jogador 
 });
 
 it.each([0, 1])('tiro especial forte alcança adversário no ar próximo: jogador %i', player => {
-  const definitions = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const definitions = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), definitions, { training: true, initialDistance: 85 });
   const step = (value: FrameInput, target: FrameInput) => sim.stepFrame(player === 0 ? [value, target] : [target, value]);
   for (const direction of ['D', 'DF', 'F'] as const) step(input(direction), input());
@@ -764,7 +764,7 @@ it.each([0, 1])('tiro especial forte alcança adversário no ar próximo: jogado
 });
 
 it.each([0, 1])('executa 3,3,3 com entradas e acertos separados: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 65 });
   const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
   for (let strike = 0; strike < 3; strike++) {
@@ -782,7 +782,7 @@ it.each([0, 1])('executa 3,3,3 com entradas e acertos separados: jogador %i', pl
 
 it.each([0, 1])('impede chute fraco agachado após chute fraco em pé no mesmo combo: jogador %i', player => {
   for (const count of [1,3]) {
-    const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+    const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
     const step = (value:FrameInput=input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
     for (let strike=0;strike<count;strike++) {
@@ -802,7 +802,7 @@ it.each([0, 1])('impede chute fraco agachado após chute fraco em pé no mesmo c
 
 it.each([0, 1])('confirma 1,2,2 e emenda a ultimate pelo comando ou atalho: jogador %i', player => {
   for (const [method,distance,punches] of [['command',100,3],['shortcut',100,3],['command',250,3],['shortcut',250,3],['command',100,4],['shortcut',100,4]] as const) {
-    const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+    const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
     const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
     sim.fillTrainingRage();
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
@@ -840,7 +840,7 @@ it('distribui exatamente a redução da ultimate e não aplica dano negativo', (
 });
 
 it.each([0, 1])('comando da ultimate exige movimento completo e rage: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   for (const [rage,directions,expected] of [[true,['B','DB','D','DF','F'],true],[false,['B','DB','D','DF','F'],false],[true,['D','DF','F'],false]] as const) {
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:400});
     if (rage) sim.fillTrainingRage();
@@ -852,7 +852,7 @@ it.each([0, 1])('comando da ultimate exige movimento completo e rage: jogador %i
 });
 
 it.each([0, 1])('não reinicia os três chutes durante o mesmo combo confirmado: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, {training:true, initialDistance:65});
   const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   for (let kick = 0; kick < 3; kick++) {
@@ -867,7 +867,7 @@ it.each([0, 1])('não reinicia os três chutes durante o mesmo combo confirmado:
 });
 
 it.each([0, 1])('não cancela o soco fraco confirmado para outro soco fraco: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
   step(input('N','1'));
@@ -880,7 +880,7 @@ it.each([0, 1])('não cancela o soco fraco confirmado para outro soco fraco: jog
 });
 
 it.each([0, 1])('permite o chute forte após os três chutes confirmados: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step = (value:FrameInput = input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   for (let kick=0;kick<3;kick++) {
@@ -927,8 +927,8 @@ it.each([0, 1])('cada golpe baixo reinicia a reação de dano da Texas: jogador 
   }
 });
 
-it.each([0, 1])('um soco alto do Shoto seleciona a reação alta da Texas: jogador %i', player => {
-  const defs = player === 0 ? [shoto,texas] as const : [texas,shoto] as const;
+it.each([0, 1])('um soco alto do Bob seleciona a reação alta da Texas: jogador %i', player => {
+  const defs = player === 0 ? [bob,texas] as const : [texas,bob] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
   step(input('N','1'));
@@ -938,7 +938,7 @@ it.each([0, 1])('um soco alto do Shoto seleciona a reação alta da Texas: jogad
 });
 
 it.each([0, 1])('cancela o soco fraco bloqueado para o combo de chutes: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, {training: true, initialDistance: 65});
   const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input('B')] : [input('B'), value]);
   step(input('N', '1'));
@@ -950,7 +950,7 @@ it.each([0, 1])('cancela o soco fraco bloqueado para o combo de chutes: jogador 
 });
 
 it.each([0, 1])('encadeia 1,2,2,2 com dois tiros atrasados após acertos: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 100 });
   const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input('B')] : [input('B'), value]);
   // Defender só começa a defender após o primeiro impacto.
@@ -973,7 +973,7 @@ it.each([0, 1])('encadeia 1,2,2,2 com dois tiros atrasados após acertos: jogado
 });
 
 it.each([0, 1])('permite punir entre os tiros quando os primeiros foram bloqueados: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 65 });
   const step = (value: FrameInput, guard: FrameInput = input('B')) => sim.stepFrame(player === 0 ? [value, guard] : [guard, value]);
   for (const button of ['1', '2'] as const) {
@@ -998,7 +998,7 @@ it.each([0, 1])('permite punir entre os tiros quando os primeiros foram bloquead
 });
 
 it.each([0, 1])('tiro atrasado acerta quem solta a guarda depois dos dois primeiros: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 65 });
   const step = (value: FrameInput, guard: FrameInput = input('B')) => sim.stepFrame(player === 0 ? [value, guard] : [guard, value]);
   for (const button of ['1', '2'] as const) {
@@ -1017,7 +1017,7 @@ it.each([0, 1])('tiro atrasado acerta quem solta a guarda depois dos dois primei
 });
 
 it.each([0, 1])('mantém confirmação dos projéteis em voo na sequência de longa distância: jogador %i', player => {
-  const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024, 576), defs, { training: true, initialDistance: 300 });
   const step = (value: FrameInput) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
   step(input('N', '1'));
@@ -1041,7 +1041,7 @@ it.each([0, 1])('mantém confirmação dos projéteis em voo na sequência de lo
 
 it.each([0,1])('permite quebrar o laço com o mesmo comando durante a captura: jogador %i', player => {
   for (const buttons of [['1','3'],['2','4']] as AttackButton[][]) {
-    const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+    const defs=player===0?[texas,bob] as const:[bob,texas] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:buttons[0] === '2' ? 65 : 100});
     const send=(attacker:FrameInput=input(),defender:FrameInput=input())=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
     send({direction:'N',buttons:new Set(buttons)}); send();
@@ -1074,7 +1074,7 @@ it.each([0,1])('mantém a captura por 15 quadros antes do arremesso: jogador %i'
 
 it.each([0,1])('a direção para trás arremessa com 1+3 para o outro lado: jogador %i', player => {
   for (const buttons of [['1','3']] as AttackButton[][]) {
-    const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+    const defs=player===0?[texas,bob] as const:[bob,texas] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     const initial=sim.snapshot().characters;
@@ -1090,7 +1090,7 @@ it.each([0,1])('a direção para trás arremessa com 1+3 para o outro lado: joga
 
 it.each([0,1])('a dinamite explode no ar ao acertar ou terminar o alcance: jogador %i', player => {
   for (const [button,moveId] of [['1','quick-shot'],['2','heavy-shot']] as const) for (const distance of [65,300]) {
-    const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+    const defs=player===0?[texas,bob] as const:[bob,texas] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
     const step=(value:FrameInput=input())=>sim.stepFrame(player===0?[value,input()]:[input(),value]);
     for(const direction of ['D','DF','F'] as const)step(input(direction));
@@ -1110,7 +1110,7 @@ it.each([0,1])('a dinamite explode no ar ao acertar ou terminar o alcance: jogad
 it.each([0,1])('cada laço aceita apenas um botão correto na primeira tentativa: jogador %i', player => {
   for (const [chord,allowed,wrong] of [[['1','3'],['1','3'],['2','4']], [['2','4'],['2','4'],['1','3']]] as AttackButton[][][]) {
     for (const button of [...allowed,...wrong]) {
-      const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+      const defs=player===0?[texas,bob] as const:[bob,texas] as const;
       const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
       const step=(attacker:FrameInput=input(),defender:FrameInput=input())=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
       step({direction:'N',buttons:new Set(chord)}); step();
@@ -1133,7 +1133,7 @@ it.each([0,1])('o agarrão 2+4 é próximo, rápido e não carrega: jogador %i',
   expect(low.hitLevel).toBe('mid'); expect(low.startup).toBeLessThan(normal.startup);
   expect(low.hitbox.width).toBeLessThan(normal.hitbox.width); expect(low.charge).toBeUndefined();
   for (const [distance,shouldHit] of [[65,true],[120,false],[160,false]] as const) {
-    const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+    const defs=player===0?[texas,bob] as const:[bob,texas] as const;
     const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:distance});
     const held:FrameInput={direction:'N',buttons:new Set(['2','4'])};
     const step=()=>sim.stepFrame(player===0?[held,input()]:[input(),held]);
@@ -1146,7 +1146,7 @@ it.each([0,1])('o agarrão 2+4 é próximo, rápido e não carrega: jogador %i',
 });
 
 it.each([0,1])('o agarrão 2+4 mantém a captura, dispara e lança o alvo: jogador %i', player => {
-  const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+  const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step=(attack:FrameInput=input())=>sim.stepFrame(player===0?[attack,input()]:[input(),attack]);
   step({direction:'B',buttons:new Set(['2','4'])});
@@ -1190,7 +1190,7 @@ it.each([0,1])('amplia somente a pose intermediária da vítima texas no agarrã
 });
 
 it.each([0,1])('permite ao adversário pular durante a preparação do agarrão 2+4: jogador %i', player => {
-  const defs=player===0?[texas,shoto] as const:[shoto,texas] as const;
+  const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});
   const step=(attacker:FrameInput, defender:FrameInput)=>sim.stepFrame(player===0?[attacker,defender]:[defender,attacker]);
   step({direction:'N',buttons:new Set(['2','4'])},input('U'));
@@ -1201,7 +1201,7 @@ it.each([0,1])('permite ao adversário pular durante a preparação do agarrão 
 
 
 it.each([0,1])('executa dois antiaéreos agachados no combo: jogador %i', player => {
-  const definitions = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const definitions = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024,576), definitions, { training: true, initialDistance: 56 });
   const step = (value: FrameInput = input('D')) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
   for (let hit = 0; hit < 2; hit++) {
@@ -1214,7 +1214,7 @@ it.each([0,1])('executa dois antiaéreos agachados no combo: jogador %i', player
 });
 
 it.each([0,1])('executa dois chutes fortes e tiro forte: jogador %i', player => {
-  const definitions = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+  const definitions = player === 0 ? [texas, bob] as const : [bob, texas] as const;
   const sim = new Simulation(createGameConfig(1024,576), definitions, { training: true, initialDistance: 56 });
   const step = (value: FrameInput = input()) => sim.stepFrame(player === 0 ? [value, input()] : [input(), value]);
   for (const [button, move, startup] of [['4','heavy-kick',17], ['4','heavy-kick',12], ['2','heavy-punch',10]] as const) {
@@ -1233,7 +1233,7 @@ it.each([0,1])('executa dois chutes fortes e tiro forte: jogador %i', player => 
 
 
 it.each([0,1])('dispara dois projéteis simultâneos com 1+2: jogador %i', player => {
-  const defs = player === 0 ? [texas,shoto] as const : [shoto,texas] as const;
+  const defs = player === 0 ? [texas,bob] as const : [bob,texas] as const;
   const sim = new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:300});
   const step = (value:FrameInput=input()) => sim.stepFrame(player === 0 ? [value,input()] : [input(),value]);
   step({direction:'N',buttons:new Set(['1','2'])});
@@ -1248,7 +1248,7 @@ it.each([0,1])('dispara dois projéteis simultâneos com 1+2: jogador %i', playe
 });
 
 it('a gravidade ao apanhar no ar e ao ser levantado é a mesma do Bob (o pulo da Texas segue mais alto)', async () => {
-  const { shoto } = await import('../engine/data/fighters/shoto');
-  expect(texas.movement.jumpVelocity).toBeLessThan(shoto.movement.jumpVelocity);
-  expect(texas.juggle).toEqual(shoto.juggle);
+  const { bob } = await import('../engine/data/fighters/bob');
+  expect(texas.movement.jumpVelocity).toBeLessThan(bob.movement.jumpVelocity);
+  expect(texas.juggle).toEqual(bob.juggle);
 });

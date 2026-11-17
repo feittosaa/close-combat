@@ -12,5 +12,5 @@ export function rageDrawing(state: CharacterState, frame: number): { name: strin
   return { name: rage.airborne ? 'combo-breaker-air' : 'combo-breaker', drawing: age < 1 ? BREAKER_PEAK_DRAWING : Math.min(5, BREAKER_PEAK_DRAWING + 1 + Math.floor((age - 1) / 8)) };
 }
 
-/** Only the combo breaker has drawings for every fighter; air recovery exists for the Grappler alone. */
+/** Only the combo breaker has drawings for every fighter; air recovery exists for SM0G-000 alone. */
 export const breakerDrawing = (state: CharacterState, frame: number) => state.rageAnimation?.kind === 'breaker' ? rageDrawing(state, frame) : undefined;

@@ -10,7 +10,7 @@ import { autoSpriteScale, bodyCenterShift, lyingFloorAnchor } from './spriteScal
 import { framePlacement } from './frameAdjustments';
 import texasCalibration from '../../assets/sprites/characters/texas/calibration.json';
 import texasMeasurements from '../../assets/sprites/characters/texas/measurements.json';
-import { grapplerReaction } from '../grapplerReaction';
+import { sm0gReaction } from '../sm0gReaction';
 import { breakerDrawing } from './rageAnimation';
 
 const images = import.meta.glob<string>('../../assets/sprites/characters/texas/*.png', { eager: true, query: '?url', import: 'default' });
@@ -104,7 +104,7 @@ const LYING_HOLD_FRAMES = 999;
 /** A defeated Texas on the floor must show her normal lying pose, not an interrupted capture or push. */
 function settledTexas(state: CharacterState): CharacterState {
   return state.fighterId === 'texas' ? { ...state, attack: undefined, commandGrabbed: undefined,
-    grapplerGrabReaction: undefined, grabbedStartedFrame: undefined, grabbedHold: undefined,
+    sm0gGrabReaction: undefined, grabbedStartedFrame: undefined, grabbedHold: undefined,
     pushbackMotion: undefined, throwPull: undefined } : state;
 }
 /** A fighter who did not lose the round goes back to the idle stance, whatever he was doing when it ended. */
@@ -143,7 +143,7 @@ export function getTexasRoundEndPose(state: CharacterState, winner: boolean, ela
 
 
 export function getTexasSpritePose(state: CharacterState, frame: number) {
-  const grab = grapplerReaction(state, frame);
+  const grab = sm0gReaction(state, frame);
   if (grab) return pose(grab.name, grab.drawing, state);
   if (state.fighterId !== 'texas') return undefined;
   const breaker = breakerDrawing(state, frame);
@@ -304,7 +304,7 @@ export function getTexasSpritePose(state: CharacterState, frame: number) {
 export function getTexasSpriteLayers(state: CharacterState, frame: number) {
   const character = getTexasSpritePose(state, frame);
   if (!character) return [];
-  if (grapplerReaction(state, frame)) return [character];
+  if (sm0gReaction(state, frame)) return [character];
   if (!state.attack) {
     const defending = state.mode === 'blocking' || state.mode === 'blockstun';
     const transition = state.animationTransition;

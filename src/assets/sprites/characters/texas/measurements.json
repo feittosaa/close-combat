@@ -2537,7 +2537,7 @@
   ],
   "cleanBody": 0.2842
  },
- "grappler-reaction-air-grab": {
+ "sm0g-reaction-air-grab": {
   "minHeight": 0.225,
   "maxHeight": 0.5859,
   "body": 0.2992,
@@ -2591,7 +2591,7 @@
   ],
   "cleanBody": 0.279
  },
- "grappler-reaction-grab-headbutt": {
+ "sm0g-reaction-grab-headbutt": {
   "minHeight": 0.2094,
   "maxHeight": 0.6141,
   "body": 0.2995,
@@ -2645,7 +2645,7 @@
   ],
   "cleanBody": 0.2782
  },
- "grappler-reaction-grab-launcher": {
+ "sm0g-reaction-grab-launcher": {
   "minHeight": 0.1891,
   "maxHeight": 0.5219,
   "body": 0.3014,
@@ -2699,7 +2699,7 @@
   ],
   "cleanBody": 0.2773
  },
- "grappler-reaction-grab-low": {
+ "sm0g-reaction-grab-low": {
   "minHeight": 0.2094,
   "maxHeight": 0.4813,
   "body": 0.3134,
@@ -2753,7 +2753,7 @@
   ],
   "cleanBody": 0.274
  },
- "grappler-reaction-grab-slam": {
+ "sm0g-reaction-grab-slam": {
   "minHeight": 0.1812,
   "maxHeight": 0.5281,
   "body": 0.3011,
@@ -2807,7 +2807,7 @@
   ],
   "cleanBody": 0.2708
  },
- "grappler-reaction-grab-throw": {
+ "sm0g-reaction-grab-throw": {
   "minHeight": 0.2078,
   "maxHeight": 0.5859,
   "body": 0.3003,
@@ -2861,7 +2861,7 @@
   ],
   "cleanBody": 0.2795
  },
- "grappler-reaction-ultimate-grab": {
+ "sm0g-reaction-ultimate-grab": {
   "minHeight": 0.2109,
   "maxHeight": 0.5906,
   "body": 0.3004,

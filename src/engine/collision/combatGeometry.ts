@@ -28,7 +28,7 @@ export function createHurtbox(character: CharacterState): Hurtbox {
 }
 
 /** Fighters whose body is hit by anatomical zone (high, mid and low) rather than by the single hurtbox. */
-export const hasHurtZones = (fighterId: string): boolean => fighterId === 'texas' || fighterId === 'shoto' || fighterId === 'grappler';
+export const hasHurtZones = (fighterId: string): boolean => fighterId === 'texas' || fighterId === 'bob' || fighterId === 'sm0g';
 
 /** Anatomical contact zones partition the existing box without changing guard rules. */
 export function createHurtZones(character: CharacterState) {

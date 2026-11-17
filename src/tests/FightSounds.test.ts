@@ -3,7 +3,7 @@ import { FightSounds, selectSoundVariant } from '../audio/FightSounds';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { texas } from '../engine/data/fighters/texas';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import type { FrameInput } from '../input/types';
 
 afterEach(() => vi.restoreAllMocks());
@@ -28,12 +28,12 @@ it('announces the round, dashes, full rage, and final result only once per event
   expect(play.mock.calls.filter(call => call[0] === 'sfx-victory')).toHaveLength(1);
 });
 
-it('uses heavy footsteps only for Grappler and plays each Grappler step when a foot lands', () => {
+it('uses heavy footsteps only for SM0G-000 and plays each SM0G-000 step when a foot lands', () => {
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
   const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
-  snapshot.characters[0].fighterId = 'grappler';
+  snapshot.characters[0].fighterId = 'sm0g';
   snapshot.characters[0].mode = 'moving'; snapshot.characters[1].mode = 'moving';
   sounds.observe(snapshot); sounds.observe(snapshot);
   expect(play.mock.calls.map(call => call[0])).toEqual(['sfx-heavy_step_1', 'sfx-steps_1']);
@@ -75,7 +75,7 @@ it('plays lasso and landing sounds once at their corresponding transitions', () 
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never);
-  const sim = new Simulation(createGameConfig(1024,576),[texas,shoto],{training:true,initialDistance:65});
+  const sim = new Simulation(createGameConfig(1024,576),[texas,bob],{training:true,initialDistance:65});
   const neutral: FrameInput = {direction:'N',buttons:new Set()};
   sim.stepFrame([{direction:'N',buttons:new Set(['1','3'])},neutral]); sounds.observe(sim.snapshot());
   for(let tick=0; tick<150; tick++) { sim.stepFrame([neutral,neutral]); sounds.observe(sim.snapshot()); }
@@ -90,7 +90,7 @@ it('plays the missed lasso sound as soon as the active frames end', () => {
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
-  const sim = new Simulation(createGameConfig(1024,576),[texas,shoto],{training:true,initialDistance:400});
+  const sim = new Simulation(createGameConfig(1024,576),[texas,bob],{training:true,initialDistance:400});
   const neutral: FrameInput = {direction:'N',buttons:new Set()};
   sim.stepFrame([{direction:'N',buttons:new Set(['1','3'])},neutral]); sounds.observe(sim.snapshot());
   for (let i=0; i<100 && !play.mock.calls.some(call => call[0] === 'sfx-lace_error'); i++) {
@@ -106,7 +106,7 @@ it('plays a heavy step once at the Texas stomp and when her ground dash finishes
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
-  const sim = new Simulation(createGameConfig(1024,576),[texas,shoto],{training:true,initialDistance:300});
+  const sim = new Simulation(createGameConfig(1024,576),[texas,bob],{training:true,initialDistance:300});
   const neutral: FrameInput = {direction:'N',buttons:new Set()};
   sim.stepFrame([{direction:'N',buttons:new Set(['3'])},neutral]); sounds.observe(sim.snapshot());
   for (let i=0; i<40; i++) { sim.stepFrame([neutral,neutral]); sounds.observe(sim.snapshot()); }
@@ -134,7 +134,7 @@ it('plays taunt, ultimate and round cues once, with the victory cue delayed', ()
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never);
-  const sim = new Simulation(createGameConfig(1024,576),[texas,shoto],{training:true});
+  const sim = new Simulation(createGameConfig(1024,576),[texas,bob],{training:true});
   const snapshot = sim.snapshot();
   snapshot.characters[0].tauntStartedFrame = 1;
   sounds.observe(snapshot); sounds.observe(snapshot);
@@ -202,7 +202,7 @@ it('uses available light-hit files and the counter and push cues', () => {
   vi.spyOn(Math, 'random').mockReturnValue(.97);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never);
-  const snapshot = new Simulation(createGameConfig(1024,576),[texas,shoto]).snapshot();
+  const snapshot = new Simulation(createGameConfig(1024,576),[texas,bob]).snapshot();
   const event = {attackerId:'player-1',targetId:'player-2',moveId:'light-punch',damage:20,outcome:'hit' as const,
     pushback:0,attackerRecoveryFrames:0,defenderStunFrames:0,frameAdvantage:0,context:'counter-hit' as const};
   snapshot.hitEvents = [event]; sounds.observe(snapshot);
@@ -217,7 +217,7 @@ it.each([[.1, 'heavy_hit_1', .295], [.6, 'heavy_hit_2', .022], [.8, 'heavy_hit_3
     vi.spyOn(Math, 'random').mockReturnValue(random);
     const play = vi.fn();
     const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never);
-    const snapshot = new Simulation(createGameConfig(1024,576),[shoto,shoto]).snapshot();
+    const snapshot = new Simulation(createGameConfig(1024,576),[bob,bob]).snapshot();
     snapshot.hitEvents = [{attackerId:'player-1',targetId:'player-2',moveId:'heavy-punch',damage:35,outcome:'hit',
       pushback:0,attackerRecoveryFrames:0,defenderStunFrames:0,frameAdvantage:0}];
     sounds.observe(snapshot);
@@ -229,7 +229,7 @@ it('plays a hit cue even when the training target is already depleted', () => {
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never, true);
-  const snapshot = new Simulation(createGameConfig(1024,576),[shoto,shoto]).snapshot();
+  const snapshot = new Simulation(createGameConfig(1024,576),[bob,bob]).snapshot();
   snapshot.characters[1].health = 0;
   snapshot.hitEvents = [{attackerId:'player-1',targetId:'player-2',moveId:'light-punch',damage:20,outcome:'hit',
     pushback:0,attackerRecoveryFrames:0,defenderStunFrames:0,frameAdvantage:0}];
@@ -240,7 +240,7 @@ it('plays a hit cue even when the training target is already depleted', () => {
 it('cancels a delayed pistol draw if the taunt is interrupted', () => {
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never);
-  const snapshot = new Simulation(createGameConfig(1024,576),[texas,shoto]).snapshot();
+  const snapshot = new Simulation(createGameConfig(1024,576),[texas,bob]).snapshot();
   snapshot.characters[0].tauntStartedFrame = 1; sounds.observe(snapshot);
   snapshot.characters[0].tauntStartedFrame = undefined; snapshot.elapsedFrames = 10; sounds.observe(snapshot);
   snapshot.elapsedFrames = 35; sounds.observe(snapshot);
@@ -251,7 +251,7 @@ it.each(['hit','block'] as const)('plays magic and %s once per simulation event'
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play=vi.fn();
   const sounds=new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never);
-  const sim=new Simulation(createGameConfig(1024,576),[texas,shoto],{training:true,initialDistance:65});
+  const sim=new Simulation(createGameConfig(1024,576),[texas,bob],{training:true,initialDistance:65});
   const neutral:FrameInput={direction:'N',buttons:new Set()};
   const guard:FrameInput={direction:outcome==='block'?'B':'N',buttons:new Set()};
   const attack:FrameInput={direction:'N',buttons:new Set(['1'])};
@@ -271,7 +271,7 @@ it('plays the three grab shots separately while the defender is captured', () =>
   vi.spyOn(Math, 'random').mockReturnValue(0);
   const play = vi.fn();
   const sounds = new FightSounds({cache:{audio:{exists:()=>true}},sound:{play}} as never);
-  const sim = new Simulation(createGameConfig(1024,576),[texas,shoto],{training:true,initialDistance:65});
+  const sim = new Simulation(createGameConfig(1024,576),[texas,bob],{training:true,initialDistance:65});
   const neutral: FrameInput = {direction:'N',buttons:new Set()};
   sim.stepFrame([{direction:'N',buttons:new Set(['2','4'])},neutral]); sounds.observe(sim.snapshot());
   for (let tick=0;tick<110;tick++) { sim.stepFrame([neutral,neutral]); sounds.observe(sim.snapshot()); }

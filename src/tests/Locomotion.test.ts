@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { defaultCharacter as shoto } from '../engine/data/characters';
+import { defaultCharacter as bob } from '../engine/data/characters';
 import type { Direction, FrameInput } from '../input/types';
 import { getCharacterAnimationKey } from '../rendering/animations/CharacterAnimationMap';
 const input=(direction:Direction):FrameInput=>({direction,buttons:new Set()});const N=input('N');
 describe('locomoção sem corrida',()=>{
-  it.each([shoto])('$name volta a caminhar ao manter avanço após os 18F de dash',fighter=>{
+  it.each([bob])('$name volta a caminhar ao manter avanço após os 18F de dash',fighter=>{
     const sim=new Simulation(createGameConfig(2200,700),[fighter,fighter],{training:true,initialDistance:900});
     sim.stepFrame([input('F'),N]);sim.stepFrame([N,N]);
     for(let f=0;f<18;f++){sim.stepFrame([input('F'),N]);expect(sim.snapshot().characters[0].mode).toBe('dashing');}
@@ -21,12 +21,12 @@ describe('locomoção sem corrida',()=>{
     sim.stepFrame([input('F'),N]);expect(sim.snapshot().characters[0].mode).toBe('moving');
   });
   it('caminhada normal e backdash não viram corrida; salto e golpe interrompem',()=>{
-    const sim=new Simulation(createGameConfig(2200,700),[shoto,shoto],{training:true,initialDistance:900});
+    const sim=new Simulation(createGameConfig(2200,700),[bob,bob],{training:true,initialDistance:900});
     for(let f=0;f<30;f++)sim.stepFrame([input('F'),N]);expect(sim.snapshot().characters[0].mode).toBe('moving');
     sim.stepFrame([input('B'),N]);sim.stepFrame([N,N]);for(let f=0;f<30;f++)sim.stepFrame([input('B'),N]);expect(sim.snapshot().characters[0].mode).toBe('moving');
     sim.stepFrame([input('F'),N]);sim.stepFrame([N,N]);for(let f=0;f<25;f++)sim.stepFrame([input('F'),N]);expect(sim.snapshot().characters[0].mode).toBe('moving');
     sim.stepFrame([{direction:'F',buttons:new Set(['1'])},N]);expect(sim.snapshot().characters[0].mode).toBe('startup');
-    const airborne=new Simulation(createGameConfig(2200,700),[shoto,shoto],{training:true,initialDistance:900});
+    const airborne=new Simulation(createGameConfig(2200,700),[bob,bob],{training:true,initialDistance:900});
     airborne.stepFrame([input('F'),N]);airborne.stepFrame([N,N]);for(let f=0;f<25;f++)airborne.stepFrame([input('F'),N]);airborne.stepFrame([input('UF'),N]);
     expect(airborne.snapshot().characters[0]).toMatchObject({grounded:false,mode:'airborne'});
   });

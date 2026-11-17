@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import type { AttackButton, FrameInput } from '../input/types';
 
 const config=createGameConfig(1024,576);
@@ -11,10 +11,10 @@ function step(sim:Simulation,player=0,value=N){const inputs=[N,N];inputs[player]
 function wait(sim:Simulation,frames:number){for(let i=0;i<frames;i++)step(sim);}
 
 it.each([0,1])('executes every authored punch recipe in empty space with separate legal inputs: player %i',player=>{
-  for(const recipe of shoto.combos!){
+  for(const recipe of bob.combos!){
     const sim=new Simulation(config,undefined,{training:true,initialDistance:300});
     for(const id of recipe.moveIds){
-      const move=shoto.moves.find(candidate=>candidate.id===id)!;
+      const move=bob.moves.find(candidate=>candidate.id===id)!;
       step(sim,player,input(move.input.buttons));
       expect(sim.snapshot().characters[player].attack).toMatchObject({moveId:id,elapsedFrames:0,hasHit:false});
       wait(sim,move.startup+move.activeFrames);
@@ -23,7 +23,7 @@ it.each([0,1])('executes every authored punch recipe in empty space with separat
       expect(sim.snapshot().hitEvents).toEqual([]);
       expect(sim.snapshot().characters[player].hitSequence).toBeUndefined();
     }
-    const last=shoto.moves.find(move=>move.id===recipe.moveIds[recipe.moveIds.length-1])!;
+    const last=bob.moves.find(move=>move.id===recipe.moveIds[recipe.moveIds.length-1])!;
     wait(sim,last.recovery);
     expect(sim.snapshot().characters[player].attack).toBeUndefined();
     expect(sim.snapshot().recentContacts).toEqual([]);
@@ -31,7 +31,7 @@ it.each([0,1])('executes every authored punch recipe in empty space with separat
 });
 
 it('does not skip startup/activity, auto-repeat a held button, or invent a whiff route',()=>{
-  const jab=shoto.moves.find(move=>move.id==='light-punch')!;
+  const jab=bob.moves.find(move=>move.id==='light-punch')!;
   const create=()=>new Simulation(config,undefined,{training:true,initialDistance:300});
   const early=create();step(early,0,input(['1']));step(early);step(early,0,input(['1']));
   wait(early,jab.startup+jab.activeFrames-2);
@@ -50,7 +50,7 @@ it('does not skip startup/activity, auto-repeat a held button, or invent a whiff
 });
 
 it.each([0,1])('uses each grounded strike’s authored hit pushback: player %i',player=>{
-  for(const move of shoto.moves.filter(move=>!move.airborne&&['basic','crouching','power'].includes(move.category??''))){
+  for(const move of bob.moves.filter(move=>!move.airborne&&['basic','crouching','power'].includes(move.category??''))){
     const sim=new Simulation(config,undefined,{training:true,initialDistance:64});
     const start=sim.snapshot().characters[1-player].x;
     const attack:FrameInput={direction:move.crouching?'D':'N',buttons:new Set(move.input.buttons)};

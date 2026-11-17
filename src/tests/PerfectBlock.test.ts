@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { FightSounds } from '../audio/FightSounds';
 import { contactLabel } from '../ui/combatLabels';
 import type { FrameInput } from '../input/types';
@@ -11,9 +11,9 @@ const guard: FrameInput = { direction: 'B', buttons: new Set() };
 const lowGuard: FrameInput = { direction: 'DB', buttons: new Set() };
 
 function defend(player: number, lead: number, low = false) {
-  const sim = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true, initialDistance: 56 });
+  const sim = new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true, initialDistance: 56 });
   const attacker = 1 - player;
-  const move = shoto.moves.find(m => m.id === (low ? 'crouch-light-kick' : 'light-punch'))!;
+  const move = bob.moves.find(m => m.id === (low ? 'crouch-light-kick' : 'light-punch'))!;
   const inputs = [neutral, neutral];
   inputs[attacker] = { direction: low ? 'D' : 'N', buttons: new Set([low ? '3' : '1']) };
   sim.stepFrame(inputs);
@@ -48,14 +48,14 @@ it('plays the dedicated perfect-block sound and identifies the contact', () => {
 });
 
 it('awards 10 rage for hitting and 15 for receiving a hit', () => {
-  const sim = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true, initialDistance: 56 });
+  const sim = new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true, initialDistance: 56 });
   sim.stepFrame([{ ...neutral, buttons: new Set(['1']) }, neutral]);
   for (let i = 0; i < 30 && !sim.snapshot().hitEvents.length; i++) sim.stepFrame([neutral, neutral]);
   expect(sim.snapshot().characters.map(c => c.rage)).toEqual([10, 15]);
 });
 
 it('requires 300 rage for an ultimate', () => {
-  const fast = { ...shoto, rage: { ...shoto.rage!, onHit: 299 } };
+  const fast = { ...bob, rage: { ...bob.rage!, onHit: 299 } };
   const sim = new Simulation(createGameConfig(1024, 576), [fast, fast], { training: true, initialDistance: 56 });
   sim.stepFrame([{ ...neutral, buttons: new Set(['1']) }, neutral]);
   for (let i = 0; i < 30 && !sim.snapshot().hitEvents.length; i++) sim.stepFrame([neutral, neutral]);

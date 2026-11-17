@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
 const config=createGameConfig(1024,576);
@@ -13,7 +13,7 @@ function contact(sim:Simulation,player:number) {
 }
 
 it.each([0,1])('chooses front/back for both throws when the command starts, even if released or changed: player %i',player=>{
-  for(const move of shoto.moves.filter(m=>m.category==='throw'))for(const direction of ['N','F','B'] as const) {
+  for(const move of bob.moves.filter(m=>m.category==='throw'))for(const direction of ['N','F','B'] as const) {
     const sim=new Simulation(config,undefined,{training:true,initialDistance:48});
     step(sim); // Resolve initial body overlap before measuring throw displacement.
     const initial=sim.snapshot().characters;const sign=initial[player].facing==='right'?1:-1;
@@ -35,14 +35,14 @@ it.each([0,1])('chooses front/back for both throws when the command starts, even
 });
 
 it.each([0,1])('keeps back throws inside both walls with body separation: player %i',player=>{
-  for(const wall of ['left','right'] as const)for(const move of shoto.moves.filter(m=>m.category==='throw')) {
+  for(const wall of ['left','right'] as const)for(const move of bob.moves.filter(m=>m.category==='throw')) {
     const sim=new Simulation(config,undefined,{training:true,initialDistance:48});
     for(let tick=0;tick<600;tick++)sim.stepFrame([input(wall==='left'?'B':'F'),input(wall==='left'?'F':'B')]);
     step(sim,player,input('B',move.input.buttons));contact(sim,player);
     if (move.throwFlight) for (let tick=0; tick<80 && sim.snapshot().characters[1-player].throwFlight; tick++) step(sim);
     const states=sim.snapshot().characters;
     for(const state of states){expect(state.x-state.collision.bodyWidth/2).toBeGreaterThanOrEqual(config.arena.left);expect(state.x+state.collision.bodyWidth/2).toBeLessThanOrEqual(config.arena.right);}
-    expect(Math.abs(states[0].x-states[1].x)).toBeGreaterThanOrEqual(shoto.collision.bodyWidth-0.00001);
+    expect(Math.abs(states[0].x-states[1].x)).toBeGreaterThanOrEqual(bob.collision.bodyWidth-0.00001);
   }
 });
 
@@ -75,7 +75,7 @@ it('resolves simultaneous back throws symmetrically from the contact positions',
 
 it.each([0,1])('delays both throws until frame fifteen and captures at expanded range: player %i',player=>{
   // Bob's 2+4 grab is a one-inch punch with its own timing and reach.
-  for(const move of shoto.moves.filter(m=>m.category==='throw'&&m.id!=='power-punch')) {
+  for(const move of bob.moves.filter(m=>m.category==='throw'&&m.id!=='power-punch')) {
     const sim=new Simulation(config,undefined,{training:true,initialDistance:88});
     step(sim,player,input('N',move.input.buttons));
     for(let elapsed=0;elapsed<15;elapsed++) {
@@ -98,7 +98,7 @@ it.each([0,1])('delays both throws until frame fifteen and captures at expanded 
 });
 
 it.each([0, 1])('ippon projeta a vítima e termina em queda: jogador %i', player => {
-  const sim = new Simulation(config, [shoto, shoto], { training: true, initialDistance: 56 });
+  const sim = new Simulation(config, [bob, bob], { training: true, initialDistance: 56 });
   step(sim, player, input('N', ['1', '3']));
   expect(contact(sim, player).moveId).toBe('throw-13');
   expect(sim.snapshot().characters[1-player]).toMatchObject({ throwFlight: true, mode: 'knockdown' });

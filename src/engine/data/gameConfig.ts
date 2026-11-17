@@ -13,7 +13,7 @@ export interface GameConfig {
   match: { maxHealth: number; roundDurationFrames: number; roundCount: number; roundEndPauseFrames: number };
 }
 
-/** Configuração técnica de arena e rounds; valores provisórios, separados do kit do Shoto. */
+/** Configuração técnica de arena e rounds; valores provisórios, separados do kit do Bob. */
 export function createGameConfig(width: number, height: number): GameConfig {
   const arenaInset = 24;
   return {

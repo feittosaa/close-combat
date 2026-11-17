@@ -34,7 +34,7 @@ export const CROUCH_EXIT = 1.4;
 const REFERENCE_SHEETS = ['idle-normal', 'idle'] as const;
 const CROUCH_REFERENCE = 'crouch';
 /** Falls, knockdowns, defeat and getups: the fighter lying or on the way to the floor. */
-const LYING = /^(fall|fall-landing|knockdown|push-fall|defeat|getup|ippon-victim|grappler-reaction-.*)$/;
+const LYING = /^(fall|fall-landing|knockdown|push-fall|defeat|getup|ippon-victim|sm0g-reaction-.*)$/;
 const AIRBORNE = /^(jump|air-|enter-jump|turn-air|launch-hit|wall-bounce|flying-kick)/;
 /** Effects and projectiles drawn apart from the body, and `idle` (Texas's reference, Bob's legacy idle on its own frame grid). */
 const NOT_A_BODY = /^(effect-|magic-|crow$|tomato$|dynamite$|idle$)/;

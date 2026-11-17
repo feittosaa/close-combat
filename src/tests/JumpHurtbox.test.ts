@@ -2,7 +2,7 @@ import type { FrameInput } from '../input/types';
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { createHurtbox } from '../engine/collision/combatGeometry';
 import { intersects } from '../engine/collision/intersects';
 
@@ -23,10 +23,10 @@ it.each([0,1])('uses an authored compact hurtbox only while the free jump folds 
         expect(intersects(box,{x:state.x-4,y:state.y-150,width:8,height:10})).toBe(false);
         expect(intersects(box,{x:state.x-4,y:state.y-120,width:8,height:10})).toBe(true);
       }
-      for(const mode of ['startup','active','blocking','hitstun'] as const)expect(createHurtbox({...state,mode}).height).toBe(shoto.collision.hurtboxes.airborne.height);
+      for(const mode of ['startup','active','blocking','hitstun'] as const)expect(createHurtbox({...state,mode}).height).toBe(bob.collision.hurtboxes.airborne.height);
     } else {
       expect(state.airborneElapsedFrames).toBeUndefined();
-      expect(box.height).toBe(shoto.collision.hurtboxes.standing.height);
+      expect(box.height).toBe(bob.collision.hurtboxes.standing.height);
     }
   }
 });

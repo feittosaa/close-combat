@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { texas } from '../engine/data/fighters/texas';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
 const input = (direction: Direction = 'N', button?: AttackButton): FrameInput => ({ direction, buttons: new Set(button ? [button] : []) });
@@ -24,15 +24,15 @@ function block(sim: Simulation, player: number, button: AttackButton) {
   throw new Error(`No blocked ${button}`);
 }
 
-it.each([0, 1])('Shoto continua golpes defendidos e preserva sua família fraca, jogador %i', player => {
+it.each([0, 1])('Bob continua golpes defendidos e preserva sua família fraca, jogador %i', player => {
   for (const [first, wrong] of [['3', '1'], ['3', '2']] as const) {
     guardDirection = 'B';
-    const sim = new Simulation(config, [shoto, shoto], { training: true, initialDistance: 56 });
+    const sim = new Simulation(config, [bob, bob], { training: true, initialDistance: 56 });
     block(sim, player, first);
     const previous = sim.snapshot().characters[player].attack?.moveId;
     send(sim, player, input('N', wrong));
     expect(sim.snapshot().characters[player].attack?.moveId).toBe(previous);
-    const repeat = new Simulation(config, [shoto, shoto], { training: true, initialDistance: 56 });
+    const repeat = new Simulation(config, [bob, bob], { training: true, initialDistance: 56 });
     block(repeat, player, first);
     send(repeat, player, input('N', first));
     for (let i = 0; i < 4; i++) send(repeat, player);
@@ -43,7 +43,7 @@ it.each([0, 1])('Shoto continua golpes defendidos e preserva sua família fraca,
 it.each([0, 1])('Texas pode trocar entre golpes fracos defendidos, jogador %i', player => {
   for (const [first, next] of [['1', '3'], ['3', '1']] as const) {
     guardDirection = first === '3' ? 'DB' : 'B';
-    const defs = player === 0 ? [texas, shoto] as const : [shoto, texas] as const;
+    const defs = player === 0 ? [texas, bob] as const : [bob, texas] as const;
     const sim = new Simulation(config, defs, { training: true, initialDistance: 65 });
     block(sim, player, first);
     send(sim, player, input('N', next));
@@ -53,20 +53,20 @@ it.each([0, 1])('Texas pode trocar entre golpes fracos defendidos, jogador %i', 
 });
 
 it.each([0, 1])('cancela um golpe defendido em especial para cada personagem, jogador %i', player => {
-  for (const fighter of [shoto, texas]) {
+  for (const fighter of [bob, texas]) {
     guardDirection = 'B';
-    const defs = player === 0 ? [fighter, shoto] as const : [shoto, fighter] as const;
+    const defs = player === 0 ? [fighter, bob] as const : [bob, fighter] as const;
     const sim = new Simulation(config, defs, { training: true, initialDistance: 56 });
     block(sim, player, '1');
     send(sim, player, input('D')); send(sim, player, input('DF')); send(sim, player, input('F', '1'));
-    expect(sim.snapshot().characters[player].attack?.moveId).toBe(fighter.id === 'shoto' ? 'tomato-light' : 'quick-shot');
+    expect(sim.snapshot().characters[player].attack?.moveId).toBe(fighter.id === 'bob' ? 'tomato-light' : 'quick-shot');
   }
 });
 
-it.each([0, 1])('Shoto limita repetição de 1,1,1 e 2,2,2 defendidos, mas aceita especial, jogador %i', player => {
+it.each([0, 1])('Bob limita repetição de 1,1,1 e 2,2,2 defendidos, mas aceita especial, jogador %i', player => {
   guardDirection = 'B';
   for (const button of ['1', '2'] as const) {
-    const sim = new Simulation(config, [shoto, shoto], { training: true, initialDistance: 56 });
+    const sim = new Simulation(config, [bob, bob], { training: true, initialDistance: 56 });
     for (let i = 0; i < 3; i++) block(sim, player, button);
     const attack = sim.snapshot().characters[player].attack!;
     expect(attack.recoveryFrames).toBe(button === '1' ? 20 : 30);

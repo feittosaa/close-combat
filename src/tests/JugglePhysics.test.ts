@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { AttackResolver } from '../engine/combat/AttackResolver';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { texas } from '../engine/data/fighters/texas';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
@@ -20,7 +20,7 @@ function contact(sim: Simulation, player=0) {
   }
   throw new Error('No contact');
 }
-function launch(player=0, fighter: CharacterDefinition=shoto) {
+function launch(player=0, fighter: CharacterDefinition=bob) {
   const sim=new Simulation(config,[fighter,fighter],{training:true,initialDistance:56});
   for(const button of ['1','1','2'] as const){step(sim,player,input('N',[button]));contact(sim,player);}
   return sim;
@@ -55,7 +55,7 @@ it.each([0,1])('uses lighter launcher gravity, keeps the target stunned and rese
     }
   }
   expect(flightTicks).toBeGreaterThan(Math.ceil(20/config.movement.gravity));
-  expect(announcedStun).toBe(flightTicks+shoto.juggle!.getupFrames);
+  expect(announcedStun).toBe(flightTicks+bob.juggle!.getupFrames);
   const landed=sim.snapshot().characters[1-player];
   expect(landed).toMatchObject({mode:'knockdown',grounded:true,remainingStateFrames:36,wakeupInvulnerabilityFrames:44});
   expect(landed.juggle).toBeUndefined();
@@ -67,8 +67,8 @@ it.each([0,1])('uses lighter launcher gravity, keeps the target stunned and rese
 });
 
 // Isolate reaction physics with legal single-button attacks and guaranteed geometric range.
-const juggleFixture: CharacterDefinition={...shoto,id:'juggle-fixture',combos:shoto.combos,juggle:{...shoto.juggle!,maximumGravityScale:1},
-  moves:shoto.moves.map(m=>m.id==='heavy-punch'?{...m,activeFrames:3,recovery:18,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:
+const juggleFixture: CharacterDefinition={...bob,id:'juggle-fixture',combos:bob.combos,juggle:{...bob.juggle!,maximumGravityScale:1},
+  moves:bob.moves.map(m=>m.id==='heavy-punch'?{...m,activeFrames:3,recovery:18,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:
     ['light-punch','heavy-kick'].includes(m.id)?{...m,startup:4,activeFrames:1,recovery:1,hitbox:{...m.hitbox,yOffset:-400,height:400},pushback:{hit:0,block:0}}:m)};
 
 it('increases gravity once per real air hit, caps it, and lifts on ordinary hits',()=>{
@@ -88,7 +88,7 @@ it('increases gravity once per real air hit, caps it, and lifts on ordinary hits
   expect(hits).toBeGreaterThanOrEqual(2);
 });
 
-it.each([shoto, texas])('levanta o alvo $name quando é atingido enquanto cai', defender => {
+it.each([bob, texas])('levanta o alvo $name quando é atingido enquanto cai', defender => {
   const sim = new Simulation(config, [juggleFixture, defender], { training: true, initialDistance: 56 });
   step(sim, 1, input('U'));
   for (let tick = 0; tick < 26; tick++) step(sim);
@@ -105,12 +105,12 @@ it.each([shoto, texas])('levanta o alvo $name quando é atingido enquanto cai', 
 it('protects getup and the exact wakeup interval from strikes, throws and projectiles, then accepts contacts',()=>{
   const sim=launch();
   while(!sim.snapshot().characters[1].grounded)step(sim);
-  const resolver=new AttackResolver((_,id)=>shoto.moves.find(m=>m.id===id));
+  const resolver=new AttackResolver((_,id)=>bob.moves.find(m=>m.id===id));
   for(let tick=0;tick<33;tick++) {
     const snapshot=sim.snapshot();
     for(const id of ['light-punch','throw-13','tomato-light']) {
       const [attacker,target]=structuredClone(snapshot.characters);
-      const move=shoto.moves.find(m=>m.id===id)!;
+      const move=bob.moves.find(m=>m.id===id)!;
       attacker.x=target.x-(id==='throw-13'?30:56);attacker.y=target.y;attacker.facing='right';attacker.mode='active';
       attacker.attack={moveId:id,buttons:move.input.buttons,elapsedFrames:move.startup,hasHit:false};
       const projectiles=id==='tomato-light'?[{id:0,ownerId:attacker.characterId,fighterId:attacker.fighterId,
@@ -131,7 +131,7 @@ it('freezes juggle state during contact pauses and clears flight/protection on r
 });
 
 it('keeps a launcher KO in flight until the target reaches the floor',()=>{
-  const fighter={...shoto,maxHealth:75};
+  const fighter={...bob,maxHealth:75};
   const sim=new Simulation(config,[fighter,fighter],{initialDistance:56});
   for(const button of ['1','1','2'] as const){step(sim,0,input('N',[button]));contact(sim);}
   expect(sim.snapshot().characters[1].health).toBe(0);

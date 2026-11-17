@@ -21,7 +21,7 @@ import buff from '../assets/sprites/effects/contact/buff.png';
 import rush from '../assets/sprites/effects/contact/rush.png';
 import wallBounce from '../assets/sprites/effects/contact/wall-bounce.png';
 import authoredCuts from '../assets/sprites/effects/contact/frames.json';
-const grapplerEffects = import.meta.glob<string>('../assets/sprites/effects/contact/grappler-*.png', { eager: true, query: '?url', import: 'default' });
+const sm0gEffects = import.meta.glob<string>('../assets/sprites/effects/contact/sm0g-*.png', { eager: true, query: '?url', import: 'default' });
 
 const sheets = {
   'ultimate-ground-impact': ultimateGroundImpact,
@@ -72,7 +72,7 @@ export function contactFrameCut(key: string, frame: number): FrameCut {
 }
 /** Whether a texture is a contact sheet whose frames can be recut. */
 export const isContactSheet = (key: string): boolean => key.startsWith('contact-') &&
-  (key.slice('contact-'.length) in sheets || Object.keys(grapplerEffects).some(path => path.endsWith(`/${key.slice('contact-'.length)}.png`)));
+  (key.slice('contact-'.length) in sheets || Object.keys(sm0gEffects).some(path => path.endsWith(`/${key.slice('contact-'.length)}.png`)));
 
 /** Recuts every frame of a loaded contact sheet inside the sheet's frame size. */
 export function applyContactFrames(textures: Phaser.Textures.TextureManager, key: string): void {
@@ -93,7 +93,7 @@ export function preloadContactEffects(scene: Phaser.Scene): void {
     scene.load.spritesheet(key, url, { frameWidth: frameWidth(name), frameHeight: FRAME_HEIGHT });
     scene.load.once(`filecomplete-spritesheet-${key}`, () => applyContactFrames(scene.textures, key));
   }
-  for (const [path, url] of Object.entries(grapplerEffects)) {
+  for (const [path, url] of Object.entries(sm0gEffects)) {
     const key = `contact-${path.split('/').pop()!.replace('.png', '')}`;
     if (scene.textures.exists(key)) continue;
     scene.load.spritesheet(key, url, { frameWidth: 362, frameHeight: FRAME_HEIGHT });

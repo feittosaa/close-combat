@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { texas } from '../engine/data/fighters/texas';
 import type { CharacterDefinition } from '../engine/data/characters';
 import { Simulation } from '../engine/simulation/Simulation';
@@ -9,7 +9,7 @@ import type { FrameInput } from '../input/types';
 const neutral: FrameInput = { direction: 'N', buttons: new Set() };
 const attack: FrameInput = { direction: 'N', buttons: new Set(['2', '4']) };
 const fighter = (base: CharacterDefinition): CharacterDefinition => ({
-  ...base, id: `${base.id}-bounce-test`, combos: [{ id: 'test', name: 'test', notation: '2+4,2+4', moveIds: ['power-punch', 'power-punch'] }], moves: [{ ...shoto.moves.find(move => move.id === 'power-punch')!, category: 'power',
+  ...base, id: `${base.id}-bounce-test`, combos: [{ id: 'test', name: 'test', notation: '2+4,2+4', moveIds: ['power-punch', 'power-punch'] }], moves: [{ ...bob.moves.find(move => move.id === 'power-punch')!, category: 'power',
     startup: 2, activeFrames: 2, recovery: 3, damage: 1, hitstun: 18, knockdown: false,
     hitbox: { forward: 0, yOffset: -600, width: 300, height: 600 },
     pushback: { hit: 250, block: 0 }, hitPushbackFrames: 12 }],
@@ -17,10 +17,10 @@ const fighter = (base: CharacterDefinition): CharacterDefinition => ({
 
 it.each([0, 1])('impede outro quique no próximo combo e libera o posterior, jogador %i', player => {
   for (const afterRecovery of [false, true]) {
-    for (const victim of [shoto, texas]) {
+    for (const victim of [bob, texas]) {
       const base = createGameConfig(1024, 576);
       const config = { ...base, arena: { ...base.arena, left: 0, right: 350, maxSeparation: undefined } };
-      const definitions: [CharacterDefinition, CharacterDefinition] = player === 0 ? [fighter(shoto), victim] : [victim, fighter(texas)];
+      const definitions: [CharacterDefinition, CharacterDefinition] = player === 0 ? [fighter(bob), victim] : [victim, fighter(texas)];
       const sim = new Simulation(config, definitions, { training: true, initialDistance: 56 });
       const step = (value = neutral) => sim.stepFrame(player === 0 ? [value, neutral] : [neutral, value]);
       const until = (condition: () => boolean, description: string) => {
@@ -67,7 +67,7 @@ it.each([0, 1])('allows the victim to recover from a real wall bounce: victim %i
   const base = createGameConfig(1024, 576);
   const config = { ...base, arena: { ...base.arena, left: 0, right: 350, maxSeparation: undefined } };
   const attacker = 1 - victim;
-  const definitions: [CharacterDefinition, CharacterDefinition] = attacker === 0 ? [fighter(shoto), texas] : [texas, fighter(shoto)];
+  const definitions: [CharacterDefinition, CharacterDefinition] = attacker === 0 ? [fighter(bob), texas] : [texas, fighter(bob)];
   const sim = new Simulation(config, definitions, { training: true, initialDistance: 56 });
   const step = (attackerInput = neutral, victimInput = neutral) => sim.stepFrame(attacker === 0 ? [attackerInput, victimInput] : [victimInput, attackerInput]);
   for (let i = 0; i < 150; i++) step({ direction: 'F', buttons: new Set() });
@@ -87,7 +87,7 @@ it.each([0, 1])('permite dano após o quique de um golpe que derruba: vítima %i
   const base = createGameConfig(1024, 576);
   const config = { ...base, arena: { ...base.arena, left: 0, right: 350, maxSeparation: undefined } };
   const attacker = 1 - victim;
-  const definitions: [CharacterDefinition, CharacterDefinition] = attacker === 0 ? [shoto, texas] : [texas, shoto];
+  const definitions: [CharacterDefinition, CharacterDefinition] = attacker === 0 ? [bob, texas] : [texas, bob];
   const sim = new Simulation(config, definitions, { training: true, initialDistance: 56 });
   const step = (attackerInput = neutral) => sim.stepFrame(attacker === 0 ? [attackerInput, neutral] : [neutral, attackerInput]);
   for (let i = 0; i < 150; i++) step({ direction: 'F', buttons: new Set() });

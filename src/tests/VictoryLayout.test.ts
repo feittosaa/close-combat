@@ -11,7 +11,7 @@ describe('tela de vitória', () => {
 
   it('todo personagem, jogável ou não, tem arte de corpo inteiro e enquadramento para a vitória', () => {
     const frames = Object.values(fighterArt);
-    expect(Object.keys(fighterArt).sort()).toEqual(['gimmick', 'grappler', 'mixup', 'mrapple', 'rushdown', 'setplay', 'shoto', 'stance', 'texas']);
+    expect(Object.keys(fighterArt).sort()).toEqual(['bob', 'gimmick', 'mixup', 'mrapple', 'rushdown', 'setplay', 'sm0g', 'stance', 'texas']);
     for (const art of frames) { expect(art.fullbody).toBeTruthy(); expect(art.victory.height).toBeGreaterThan(0); expect(Number.isFinite(art.victory.top)).toBe(true); }
     expect(playableCharacters.every(character => fighterArt[character.id])).toBe(true);
   });

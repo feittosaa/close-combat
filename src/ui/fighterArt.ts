@@ -1,14 +1,14 @@
 import mrappleBackground from '../assets/art/characters/mrapple/selection-background.png';
-import grapplerBackground from '../assets/art/characters/grappler/selection-background.png';
-import shotoBackground from '../assets/art/characters/shoto/selection-background.png';
+import sm0gBackground from '../assets/art/characters/sm0g/selection-background.png';
+import bobBackground from '../assets/art/characters/bob/selection-background.png';
 import texasBackground from '../assets/art/characters/texas/selection-background.png';
 import texasIcon from '../assets/art/characters/texas/selection-icon.png';
-import shotoIcon from '../assets/art/characters/shoto/selection-icon.png';
-import grapplerIcon from '../assets/art/characters/grappler/selection-icon.png';
+import bobIcon from '../assets/art/characters/bob/selection-icon.png';
+import sm0gIcon from '../assets/art/characters/sm0g/selection-icon.png';
 import mrappleIcon from '../assets/art/characters/mrapple/selection-icon.png';
-import shotoFullbody from '../assets/art/characters/shoto/fullbody.png';
+import bobFullbody from '../assets/art/characters/bob/fullbody.png';
 import texasFullbody from '../assets/art/characters/texas/fullbody.png';
-import grapplerFullbody from '../assets/art/characters/grappler/fullbody.png';
+import sm0gFullbody from '../assets/art/characters/sm0g/fullbody.png';
 import mrappleFullbody from '../assets/art/characters/mrapple/fullbody.png';
 import gimmickFullbody from '../assets/art/characters/gimmick/fullbody.png';
 import rushdownFullbody from '../assets/art/characters/rushdown/fullbody.png';
@@ -47,9 +47,9 @@ export interface FighterArt {
   tile?: SelectionFrame;
 }
 export const fighterArt: Readonly<Record<string, FighterArt>> = {
-  shoto: {background:shotoBackground,icon:shotoIcon,iconWindow:{x:7,y:26,size:1228},fullbody:shotoFullbody,victory:{height:1.4557,top:.0441},name:'Bob', hero: { zoom: 1, x: 25, y: 50 }, arcade: { zoom: 1.15, x: 100, y: 0 }, tile: { zoom: 1.15, x: 50, y: 50 }},
+  bob: {background:bobBackground,icon:bobIcon,iconWindow:{x:7,y:26,size:1228},fullbody:bobFullbody,victory:{height:1.4557,top:.0441},name:'Bob', hero: { zoom: 1, x: 25, y: 50 }, arcade: { zoom: 1.15, x: 100, y: 0 }, tile: { zoom: 1.15, x: 50, y: 50 }},
   texas: {background:texasBackground,icon:texasIcon,iconWindow:{x:0,y:13,size:1241},fullbody:texasFullbody,victory:{height:1.4639,top:.0455},name:'Texas', arcade: { zoom: 1.15, x: 10, y: 0 }},
-  grappler: {background:grapplerBackground,icon:grapplerIcon,iconWindow:{ x: 10, y: 0, size: 1228 },fullbody:grapplerFullbody,victory:{height:1.2982,top:.1277},name:'Grappler', arcade: { zoom: 1.15, x: 30, y: 0 }},
+  sm0g: {background:sm0gBackground,icon:sm0gIcon,iconWindow:{ x: 10, y: 0, size: 1228 },fullbody:sm0gFullbody,victory:{height:1.2982,top:.1277},name:'SM0G-000', arcade: { zoom: 1.15, x: 30, y: 0 }},
   mrapple: {background:mrappleBackground,icon:mrappleIcon,iconWindow:{x:0,y:0,size:928},fullbody:mrappleFullbody,victory:{height:1.4871,top:.052},name:'Mr. Apple', arcade: { zoom: 1, x: 50, y: 0 }},
   gimmick: {background:gimmickBackground,icon:gimmickIcon,iconWindow:{x:0,y:0,size:1254},fullbody:gimmickFullbody,victory:{ height: 1, top: 0 },name:'Gimmick', arcade: { zoom: 1.05, x: 70, y: 0 }},
   rushdown: {background:rushdownBackground,icon:rushdownIcon,iconWindow:{x:0,y:0,size:1254},fullbody:rushdownFullbody,victory:{height:1.3624,top:.0504},name:'Rushdown', hero: { zoom: 1, x: 16, y: 50 }, arcade: { zoom: 1.15, x: 70, y: 0 }},

@@ -40,15 +40,15 @@ it.each([['low', 640], ['high', 1280]] as const)('loads only the %s texture set 
 it.each(['low', 'high'] as const)('loads every Bob atlas at %s quality without changing display scale', async quality => {
   vi.stubGlobal('localStorage', { getItem: () => quality, setItem: vi.fn() });
   vi.resetModules();
-  const { preloadShotoSprites, getShotoResolution, shotoSpriteScale, shotoIdleScale } = await import('../rendering/animations/shotoSprites');
+  const { preloadBobSprites, getBobResolution, bobSpriteScale, bobIdleScale } = await import('../rendering/animations/bobSprites');
   const packedAtlas = vi.fn();
-  preloadShotoSprites({ textures: { exists: () => false }, load: { packedAtlas } } as never);
+  preloadBobSprites({ textures: { exists: () => false }, load: { packedAtlas } } as never);
   expect(packedAtlas).toHaveBeenCalledTimes(78);
   const ratio = quality === 'high' ? 2 : 1;
   const originals = import.meta.glob<{ frames: Record<string, { frame: Record<string, number> }> }>(
-    '../assets/sprites/characters/shoto/*.atlas.json', { eager: true, import: 'default' });
+    '../assets/sprites/characters/bob/*.atlas.json', { eager: true, import: 'default' });
   for (const [key, image, url] of packedAtlas.mock.calls) {
-    const original = originals[`../assets/sprites/characters/shoto/${key.slice('shoto-'.length)}.atlas.json`];
+    const original = originals[`../assets/sprites/characters/bob/${key.slice('bob-'.length)}.atlas.json`];
     const metadata = layoutOf(url);
     expect(url.includes('/high/'), key).toBe(quality === 'high');
     expect(Object.keys(metadata.frames), key).toEqual(Object.keys(original.frames));
@@ -60,17 +60,17 @@ it.each(['low', 'high'] as const)('loads every Bob atlas at %s quality without c
     }
 
     expect(image.includes('/high/'), key).toBe(quality === 'high');
-    expect(getShotoResolution(key), key).toBe(ratio);
+    expect(getBobResolution(key), key).toBe(ratio);
     const frame = metadata.frames['0'].sourceSize;
     expect(frame.w % ratio, key).toBe(0);
     expect(frame.h % ratio, key).toBe(0);
-    if (key === 'shoto-idle') expect(frame.w).toBe(480 * ratio);
-    if (key === 'shoto-jump') expect(frame.w).toBe(1024 * ratio);
-    if (key === 'shoto-tomato') expect(frame.w).toBe(512 * ratio);
-    if (key === 'shoto-effect-ultimate-wind') expect(frame.w).toBe(512 * ratio);
+    if (key === 'bob-idle') expect(frame.w).toBe(480 * ratio);
+    if (key === 'bob-jump') expect(frame.w).toBe(1024 * ratio);
+    if (key === 'bob-tomato') expect(frame.w).toBe(512 * ratio);
+    if (key === 'bob-effect-ultimate-wind') expect(frame.w).toBe(512 * ratio);
   }
-  expect(shotoSpriteScale / ratio * (1024 * ratio)).toBeCloseTo(shotoSpriteScale * 1024);
-  expect(shotoIdleScale / ratio * (480 * ratio)).toBeCloseTo(shotoIdleScale * 480);
+  expect(bobSpriteScale / ratio * (1024 * ratio)).toBeCloseTo(bobSpriteScale * 1024);
+  expect(bobIdleScale / ratio * (480 * ratio)).toBeCloseTo(bobIdleScale * 480);
 });
 
 it('defaults to low and persists the selected quality', async () => {

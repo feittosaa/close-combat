@@ -2,14 +2,14 @@ import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { texas } from '../engine/data/fighters/texas';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import type { Direction, FrameInput } from '../input/types';
 
 const config = createGameConfig(1024, 576);
 const press = (direction: Direction, ...buttons: ('1' | '2')[]): FrameInput => ({ direction, buttons: new Set(buttons) });
 
 it.each([['left wall', 'left'], ['right wall', 'right']] as const)('os tiros da ultimate da Texas acertam o adversário colado nela, mesmo encurralada na %s', (_name, wall) => {
-  const sim = new Simulation(config, [texas, shoto], { training: true, initialDistance: 40 });
+  const sim = new Simulation(config, [texas, bob], { training: true, initialDistance: 40 });
   sim.fillTrainingRage();
   const state = (sim as unknown as { characters: { x: number; facing: string }[] }).characters;
   const edge = wall === 'left' ? config.arena.left + 40 : config.arena.right - 40;

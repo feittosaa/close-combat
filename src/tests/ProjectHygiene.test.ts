@@ -46,23 +46,23 @@ describe('Project asset and documentation hygiene', () => {
     }
     const texasAtlases = import.meta.glob('../assets/sprites/characters/*/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
     for (const key of Object.keys(texasAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
-    const shotoAtlases = import.meta.glob('../assets/sprites/characters/shoto/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
-    for (const key of Object.keys(shotoAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
+    const bobAtlases = import.meta.glob('../assets/sprites/characters/bob/**/*.atlas.json', { eager: true, query: '?raw', import: 'default' });
+    for (const key of Object.keys(bobAtlases)) used.add(projectPath(key.replace(/\.atlas\.json$/, '.png')));
     // Full-body art kept for future in-game use (pipeline.md lists it).
     const canonical = import.meta.glob(['../../assets/art/characters/*/turnaround*.png', '../../assets/art/characters/*/fullbody*.png'], { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(canonical)) used.add(projectPath(key));
     const wallpaperArt = import.meta.glob('../../assets/art/wallpapers/*.png', { eager: true, query: '?url', import: 'default' });
     for (const key of Object.keys(wallpaperArt)) used.add(projectPath(key));
-    const grapplerEffects = import.meta.glob('../assets/sprites/effects/contact/grappler-*.png', { eager: true, query: '?url', import: 'default' });
-    for (const key of Object.keys(grapplerEffects)) used.add(projectPath(key));
+    const sm0gEffects = import.meta.glob('../assets/sprites/effects/contact/sm0g-*.png', { eager: true, query: '?url', import: 'default' });
+    for (const key of Object.keys(sm0gEffects)) used.add(projectPath(key));
     for (const name of ['throw', 'slam', 'launcher']) {
-      expect(used.has(`src/assets/sprites/effects/contact/grappler-trail-${name}.png`)).toBe(true);
-      used.add(`assets/art/effects/contact/grappler-trail-${name}.png`);
+      expect(used.has(`src/assets/sprites/effects/contact/sm0g-trail-${name}.png`)).toBe(true);
+      used.add(`assets/art/effects/contact/sm0g-trail-${name}.png`);
     }
-    expect(used.has('src/assets/sprites/effects/contact/grappler-ultimate-soco.png')).toBe(true);
-    used.add('assets/art/effects/contact/grappler-ultimate-soco.png');
-    expect(used.has('src/assets/sprites/effects/contact/grappler-combo-111-vapor.png')).toBe(true);
-    used.add('assets/art/effects/contact/grappler-combo-111-vapor.png');
+    expect(used.has('src/assets/sprites/effects/contact/sm0g-ultimate-soco.png')).toBe(true);
+    used.add('assets/art/effects/contact/sm0g-ultimate-soco.png');
+    expect(used.has('src/assets/sprites/effects/contact/sm0g-combo-111-vapor.png')).toBe(true);
+    used.add('assets/art/effects/contact/sm0g-combo-111-vapor.png');
     for (const name of ['shield', 'ultimate-spend', 'breaker', 'breaker-fail', 'buff', 'rush']) {
       expect(used.has(`src/assets/sprites/effects/contact/${name}.png`)).toBe(true);
       used.add(`assets/art/effects/contact/${name}.png`);
@@ -85,7 +85,7 @@ describe('Project asset and documentation hygiene', () => {
   it('keeps individual character decisions in the pipeline', () => {
     for (const [key, text] of Object.entries(markdown)) {
       if (projectPath(key) === 'pipeline.md') continue;
-      expect(text, projectPath(key)).not.toMatch(/\b(?:shoto|ayla|gris|tester|dummy)\b/i);
+      expect(text, projectPath(key)).not.toMatch(/\b(?:bob|ayla|gris|tester|dummy)\b/i);
     }
   });
 

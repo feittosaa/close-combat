@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import { TrainingSession } from '../training/TrainingSession';
 import type { AttackButton, FrameInput } from '../input/types';
@@ -25,7 +25,7 @@ function launch(player:number){
 }
 
 it.each([0,1])('recovers early enough for a real jumping heavy-punch continuation: player %i',player=>{
-  const sim=launch(player);const initial=sim.snapshot();const move=shoto.moves.find(m=>m.id==='heavy-punch')!;
+  const sim=launch(player);const initial=sim.snapshot();const move=bob.moves.find(m=>m.id==='heavy-punch')!;
   expect(initial.characters[player].attack).toMatchObject({elapsedFrames:move.startup,recoveryFrames:6});
   expect(initial.hitEvents[0].attackerRecoveryFrames).toBe(move.activeFrames+6);
   for(let tick=0;tick<CONTACT_HITSTOP_FRAMES;tick++){

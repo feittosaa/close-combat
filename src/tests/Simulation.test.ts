@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { defaultCharacter as shoto } from '../engine/data/characters';
+import { defaultCharacter as bob } from '../engine/data/characters';
 import { createHurtbox } from '../engine/collision/combatGeometry';
 import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
@@ -9,11 +9,11 @@ import type { CharacterState } from '../engine/characters/CharacterState';
 const input = (direction: Direction = 'N', buttons: AttackButton[] = []): FrameInput => ({ direction, buttons: new Set(buttons) });
 const N = input();
 const config = createGameConfig(1024, 576);
-const practice = (distance = 64) => new Simulation(config, [shoto, shoto], { training: true, initialDistance: distance });
+const practice = (distance = 64) => new Simulation(config, [bob, bob], { training: true, initialDistance: distance });
 const advance = (sim: Simulation, frames: number, inputs = [N, N]) => { for (let f = 0; f < frames; f++) sim.stepFrame(inputs); };
 
-describe('quatro básicos do Shoto', () => {
-  it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name acerta uma única vez em ambos os lados', move => {
+describe('quatro básicos do Bob', () => {
+  it.each(bob.moves.filter(move => move.category === 'basic' && !move.airborne))('$name acerta uma única vez em ambos os lados', move => {
     for (const index of [0, 1]) {
       const sim = practice(); const inputs = [N, N]; inputs[index] = input('N', [...move.input.buttons]);
       sim.stepFrame(inputs);
@@ -24,14 +24,14 @@ describe('quatro básicos do Shoto', () => {
       const snapshot = sim.snapshot(); const target = snapshot.characters[1 - index];
       expect(snapshot.hitEvents).toHaveLength(1);
       expect(snapshot.hitEvents[0]).toMatchObject({ outcome: 'hit', moveId: move.id, damage: move.damage });
-      expect(target.health).toBe(shoto.maxHealth - move.damage);
+      expect(target.health).toBe(bob.maxHealth - move.damage);
       expect(snapshot.activeHitboxes).toHaveLength(1);
       advance(sim, move.activeFrames + move.recovery + 10);
       expect(sim.snapshot().characters[1 - index].health).toBe(target.health);
       expect(sim.snapshot().characters[index].attack).toBeUndefined();
     }
   });
-  it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name recupera integralmente em acerto, bloqueio e erro', move => {
+  it.each(bob.moves.filter(move => move.category === 'basic' && !move.airborne))('$name recupera integralmente em acerto, bloqueio e erro', move => {
     for (const outcome of ['hit', 'block', 'whiff'] as const) {
       const sim = practice(outcome === 'whiff' ? 300 : 64);
       const guard = outcome === 'block' ? input('B') : N;
@@ -43,10 +43,10 @@ describe('quatro básicos do Shoto', () => {
       expect(sim.snapshot().characters[0]).toMatchObject({ mode: 'recovery', attack: { elapsedFrames: total - 1 } });
       sim.stepFrame([N, guard]);
       expect(sim.snapshot().characters[0].attack).toBeUndefined();
-      if (outcome === 'block') expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
+      if (outcome === 'block') expect(sim.snapshot().characters[1].health).toBe(bob.maxHealth);
     }
   });
-  it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name usa guarda sem parry mesmo no primeiro frame de contato', move => {
+  it.each(bob.moves.filter(move => move.category === 'basic' && !move.airborne))('$name usa guarda sem parry mesmo no primeiro frame de contato', move => {
     const sim = practice(); sim.stepFrame([input('N', [...move.input.buttons]), N]);
     advance(sim, move.startup - 1);
     sim.stepFrame([N, input('B')]);
@@ -57,28 +57,28 @@ describe('quatro básicos do Shoto', () => {
     expect(contact.attackerRecoveryFrames).toBe(Math.max(move.activeFrames + move.recovery - 1, move.blockstun + punishWindow));
     expect(contact.frameAdvantage).toBe(contact.defenderStunFrames - contact.attackerRecoveryFrames);
   });
-  it.each(shoto.moves.filter(move => move.category === 'basic' && !move.airborne))('$name não repete enquanto o botão estiver mantido', move => {
+  it.each(bob.moves.filter(move => move.category === 'basic' && !move.airborne))('$name não repete enquanto o botão estiver mantido', move => {
     const sim = practice(); const held = input('N', [...move.input.buttons]);
     advance(sim, 120, [held, N]);
-    expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth - move.damage);
+    expect(sim.snapshot().characters[1].health).toBe(bob.maxHealth - move.damage);
     expect(sim.snapshot().characters[0].attack).toBeUndefined();
   });
   it.each(['F', 'B'] as const)('direção %s não cria variantes', direction => {
-    for (const move of shoto.moves.filter(move => move.category === 'basic' && !move.airborne)) {
+    for (const move of bob.moves.filter(move => move.category === 'basic' && !move.airborne)) {
       const sim = practice(); sim.stepFrame([input(direction, [...move.input.buttons]), N]);
       expect(sim.snapshot().characters[0].attack?.moveId).toBe(move.id);
     }
   });
   it.each([['1', '4'], ['2', '3'], ['1', '2', '3', '4']] as AttackButton[][])('ignora acorde sem cadastro %s', (...buttons: AttackButton[]) => {
     const sim = practice(); sim.stepFrame([input('N', buttons), N]); advance(sim, 80);
-    expect(sim.snapshot().characters[0].attack).toBeUndefined(); expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
+    expect(sim.snapshot().characters[0].attack).toBeUndefined(); expect(sim.snapshot().characters[1].health).toBe(bob.maxHealth);
   });
   it('não cancela erro nem enfileira comandos antigos', () => {
     const sim = practice(300); sim.stepFrame([input('N', ['1']), N]);
     advance(sim, 9); sim.stepFrame([input('N', ['2']), N]);
     expect(sim.snapshot().characters[0].attack?.moveId).toBe('light-punch');
     advance(sim, 40); expect(sim.snapshot().characters[0].attack).toBeUndefined();
-    expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
+    expect(sim.snapshot().characters[1].health).toBe(bob.maxHealth);
   });
   it('seleciona versões agachada e aérea conforme a postura', () => {
     const sim = practice(); sim.stepFrame([input('D', ['1']), N]);
@@ -90,7 +90,7 @@ describe('quatro básicos do Shoto', () => {
   });
   it('não soma acertos fora de alcance nem dá dano no bloqueio', () => {
     const sim = practice(300); sim.stepFrame([input('N', ['4']), N]); advance(sim, 40);
-    expect(sim.snapshot().recentContacts).toEqual([]); expect(sim.snapshot().characters[1].health).toBe(shoto.maxHealth);
+    expect(sim.snapshot().recentContacts).toEqual([]); expect(sim.snapshot().characters[1].health).toBe(bob.maxHealth);
   });
   it('resolve simultâneos como trade sem viés de ordem', () => {
     const sim = practice(); sim.stepFrame([input('N', ['1']), input('N', ['1'])]); advance(sim, 8);
@@ -110,13 +110,13 @@ describe('quatro básicos do Shoto', () => {
 describe('fundação da simulação', () => {
   it('mantém os corpos na arena e não atravessa em aproximação', () => {
     // Isolate physical stage walls; shared viewport edges have their own integration coverage.
-    const sim = new Simulation({...config,arena:{...config.arena,maxSeparation:undefined}},[shoto,shoto],{training:true,initialDistance:200});
+    const sim = new Simulation({...config,arena:{...config.arena,maxSeparation:undefined}},[bob,bob],{training:true,initialDistance:200});
     advance(sim, 300, [input('F'), input('F')]);
     const [a, b] = sim.snapshot().characters;
-    expect(b.x - a.x).toBeGreaterThanOrEqual(shoto.collision.bodyWidth);
+    expect(b.x - a.x).toBeGreaterThanOrEqual(bob.collision.bodyWidth);
     advance(sim, 400, [input('B'), input('B')]);
     const ends = sim.snapshot().characters;
-    expect(ends[0].x).toBe(config.arena.left + shoto.collision.bodyWidth / 2); expect(ends[1].x).toBe(config.arena.right - shoto.collision.bodyWidth / 2);
+    expect(ends[0].x).toBe(config.arena.left + bob.collision.bodyWidth / 2); expect(ends[1].x).toBe(config.arena.right - bob.collision.bodyWidth / 2);
   });
   it('salta, aplica gravidade e aterrissa no piso compartilhado', () => {
     const sim = practice(); sim.stepFrame([input('UF'), N]);
@@ -143,16 +143,16 @@ describe('fundação da simulação', () => {
     expect(snapshot.characters[1].x - snapshot.characters[0].x).toBe(144);
   });
   it('restaura vida só após 90 frames tranquilos e não encerra treino por KO ou tempo', () => {
-    const fragile = { ...shoto, maxHealth: 20 };
-    const sim = new Simulation({ ...config, match: { ...config.match, roundDurationFrames: 1 } }, [shoto, fragile], { training: true, initialDistance: 64 });
+    const fragile = { ...bob, maxHealth: 20 };
+    const sim = new Simulation({ ...config, match: { ...config.match, roundDurationFrames: 1 } }, [bob, fragile], { training: true, initialDistance: 64 });
     sim.setTrainingAutoRestore(true); sim.stepFrame([input('N', ['1']), N]); advance(sim, 50);
     expect(sim.snapshot().characters[1].health).toBe(0); expect(sim.snapshot().phase).toBe('fight');
     advance(sim, 90); expect(sim.snapshot().characters[1].health).toBe(20);
     expect(sim.snapshot().roundFramesRemaining).toBe(1);
   });
   it('registra o dano integral de novos acertos contra alvo sem vida no treino', () => {
-    const fragile = { ...shoto, maxHealth: 20 };
-    const sim = new Simulation(config, [shoto, fragile], { training: true, initialDistance: 64 });
+    const fragile = { ...bob, maxHealth: 20 };
+    const sim = new Simulation(config, [bob, fragile], { training: true, initialDistance: 64 });
     const hit = (): NonNullable<ReturnType<Simulation['snapshot']>['hitEvents'][number]> => {
       sim.stepFrame([input('N', ['1']), N]);
       for (let frame = 0; frame < 80; frame++) {
@@ -174,7 +174,7 @@ describe('fundação da simulação', () => {
     expect(createHurtbox({ ...states[1], crouching: true }).height).toBe(113.85);
   });
   it('vence rounds por KO, conta vitórias e permite reinício da partida', () => {
-    const fragile = { ...shoto, maxHealth: 20 };
+    const fragile = { ...bob, maxHealth: 20 };
     const sim = new Simulation({ ...config, match: { ...config.match, roundEndPauseFrames: 2 } }, [fragile, fragile], { initialDistance: 64 });
     for (let round = 1; round <= 2; round++) {
       sim.stepFrame([input('N', ['1']), N]); advance(sim, 8 + CONTACT_HITSTOP_FRAMES);
@@ -187,7 +187,7 @@ describe('fundação da simulação', () => {
     expect(sim.isMatchOver()).toBe(true); sim.resetMatch(); expect(sim.isMatchOver()).toBe(false);
   });
   it('registra o KO no golpe fatal e aguarda o golpe terminar antes do resultado', () => {
-    const fragile = { ...shoto, maxHealth: 20 };
+    const fragile = { ...bob, maxHealth: 20 };
     const sim = new Simulation(config, [fragile, fragile], { initialDistance: 64 });
     sim.stepFrame([input('N', ['1']), N]);
     while (sim.snapshot().characters[1].health > 0) advance(sim, 1);
@@ -205,12 +205,12 @@ describe('fundação da simulação', () => {
     const tie = new Simulation(timeout); tie.stepFrame([N, N]);
     expect(tie.snapshot()).toMatchObject({ phase: 'round-over', roundEndReason: 'draw' });
     tie.stepFrame([N, N]); expect(tie.snapshot().phase).toBe('match-over');
-    const sim = new Simulation(timeout, [shoto, { ...shoto, maxHealth: 900 }]); sim.stepFrame([N, N]);
+    const sim = new Simulation(timeout, [bob, { ...bob, maxHealth: 900 }]); sim.stepFrame([N, N]);
     expect(sim.snapshot()).toMatchObject({ roundEndReason: 'time', roundWinnerId: 'player-1' });
   });
   it('interrompe passos acumulados no início do próximo round antes de ler outra entrada', () => {
     const rules = {...config, match:{...config.match,roundDurationFrames:1,roundEndPauseFrames:1}};
-    const sim = new Simulation(rules, [shoto,{...shoto,maxHealth:900}]);
+    const sim = new Simulation(rules, [bob,{...bob,maxHealth:900}]);
     let reads = 0;
     sim.advance(1000, () => { reads++; return [N,N]; }, snapshot => snapshot.round === 1);
     expect(sim.snapshot()).toMatchObject({round:2,phase:'fight',roundFramesRemaining:1});
@@ -218,7 +218,7 @@ describe('fundação da simulação', () => {
   });
   it('mantém o resultado por 160 quadros e aguarda mais 90 quadros (a pose de vitória) antes do próximo round', () => {
     const rules = {...config, match:{...config.match,roundDurationFrames:1}};
-    const sim = new Simulation(rules, [shoto,{...shoto,maxHealth:900}]);
+    const sim = new Simulation(rules, [bob,{...bob,maxHealth:900}]);
     sim.stepFrame([N,N]);
     expect(sim.snapshot()).toMatchObject({phase:'round-over',round:1});
     advance(sim, 249);
@@ -244,7 +244,7 @@ it('não interpreta novo botão com outro mantido como acorde ou golpe independe
 });
 
 it.each([0, 1])('mantém o derrotado caído em vez de iniciar o levantamento: jogador %i', player => {
-  const sim = new Simulation(config, [shoto, shoto], { initialDistance: 64 });
+  const sim = new Simulation(config, [bob, bob], { initialDistance: 64 });
   const target = sim.snapshot().characters[player];
   expect(target.health).toBeGreaterThan(0);
   const internal = sim as unknown as { characters: CharacterState[] };

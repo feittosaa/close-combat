@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import type { CharacterDefinition } from '../engine/data/characters';
 import type { FrameInput } from '../input/types';
 import { RAGE_BUFF_COST, RUSH_FREEZE_FRAMES } from '../engine/combat/rage';
 
 const input = (extra: Partial<FrameInput> = {}): FrameInput => ({ direction: 'N', buttons: new Set(), ...extra });
-const punch = shoto.moves.find(move => move.id === 'light-punch')!;
+const punch = bob.moves.find(move => move.id === 'light-punch')!;
 const fixture = (category: 'basic' | 'special' | 'throw' | 'ultimate'): CharacterDefinition => ({
-  ...shoto, combos: [],
+  ...bob, combos: [],
   moves: [{ ...punch, category, startup: 10, activeFrames: 2, recovery: 4, damage: 100, hitbox: { forward: 0, yOffset: -140, width: 120, height: 140 } }],
 });
 const create = (definition: CharacterDefinition, rage = 600, training = true) => {
@@ -69,7 +69,7 @@ describe('buffs de rage', () => {
   });
   it('o reforço de especial gasta só um segmento de 150 e o rage acumula até 900', () => {
     expect(RAGE_BUFF_COST).toBe(150);
-    expect(shoto.rage?.maximum).toBe(900);
+    expect(bob.rage?.maximum).toBe(900);
     const sim = create(fixture('special'), 150);
     expect(strike(sim, { rageAction: true })).toBe(110);
     expect(sim.snapshot().characters[0].rage).toBe(10);
@@ -80,8 +80,8 @@ describe('buffs de rage', () => {
     expect(sim.snapshot().characters[0].rage).toBe(610);
   });
   it('mantém o reforço no projétil já lançado', () => {
-    const tomato = shoto.moves.find(move => move.id === 'tomato-light')!;
-    const definition: CharacterDefinition = { ...shoto, combos: [], moves: [{ ...tomato, startup: 3, damage: 100, input: { buttons: ['1'] }, hitbox: { forward: 0, yOffset: -140, width: 60, height: 140 } }] };
+    const tomato = bob.moves.find(move => move.id === 'tomato-light')!;
+    const definition: CharacterDefinition = { ...bob, combos: [], moves: [{ ...tomato, startup: 3, damage: 100, input: { buttons: ['1'] }, hitbox: { forward: 0, yOffset: -140, width: 60, height: 140 } }] };
     const sim = create(definition);
     expect(strike(sim, { rageAction: true })).toBe(110);
   });

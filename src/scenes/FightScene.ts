@@ -32,7 +32,7 @@ import { preloadContactEffects } from '../rendering/contactEffects';
 import { StagePresentation } from '../rendering/StagePresentation';
 import { CombatantView } from '../rendering/CombatantView';
 import { ContactShadows } from '../rendering/ContactShadows';
-import { grapplerCapturePose, hiddenByGrapplerUltimate } from '../rendering/grapplerCapture';
+import { sm0gCapturePose, hiddenBySm0gUltimate } from '../rendering/sm0gCapture';
 import { HitboxView } from '../rendering/HitboxView';
 import { defaultStage } from '../rendering/stages/stageCatalog';
 import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stageLayout';
@@ -562,10 +562,10 @@ export class FightScene extends Phaser.Scene {
         ? {winner: snapshot.roundWinnerId === character.characterId, elapsed: resultElapsed} : undefined;
       const color = characterColor(this.selectedStage, layout, character.x, this.cameras.main.scrollX,
         this.alternatePalettes[index]);
-      const presented = grapplerCapturePose(character, shown[1 - index]);
-      this.combatants[index]?.sync(presented, snapshot.roundWinnerId === character.characterId ? snapshot.frame : visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color, hiddenByGrapplerUltimate(character, shown[1 - index]), snapshot.hitstopFramesRemaining > 0);
+      const presented = sm0gCapturePose(character, shown[1 - index]);
+      this.combatants[index]?.sync(presented, snapshot.roundWinnerId === character.characterId ? snapshot.frame : visualFrame, snapshot.ultimateActivation?.ownerIds.includes(character.characterId) ? snapshot.ultimateActivation.elapsedFrames : undefined, result, color, hiddenBySm0gUltimate(character, shown[1 - index]), snapshot.hitstopFramesRemaining > 0);
     });
-    this.contactShadows?.update(shown, this.resultFloorY, shown.map((character, index) => hiddenByGrapplerUltimate(character, shown[1 - index])));
+    this.contactShadows?.update(shown, this.resultFloorY, shown.map((character, index) => hiddenBySm0gUltimate(character, shown[1 - index])));
     const alternateOwnerIds = new Set(snapshot.characters.filter((_, index) => this.alternatePalettes[index]).map(character => character.characterId));
     this.projectileView?.sync(snapshot.projectiles,snapshot.explosions,visualFrame,this.pendingVisualHits.splice(0),snapshot.characters,alternateOwnerIds,snapshot.hitstopFramesRemaining > 0);
     this.hitboxView?.update(snapshot.activeHitboxes, this.training ? snapshot.characters : []);

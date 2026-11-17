@@ -9,7 +9,7 @@ import { stages, stageTextureKey } from '../rendering/stages/stageCatalog';
 import { Simulation, type SimulationSnapshot } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { wallpapers } from '../ui/wallpapers';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 
 it('keeps the available wallpaper on the loading screen and removes it afterwards', () => {
   vi.useFakeTimers();
@@ -58,14 +58,14 @@ it.each([['KeyS','KeyJ',undefined],['ArrowDown','Numpad1','player-2']] as const)
     const fight = new FightScene();
     const start=vi.fn();
     Object.assign(fight,{scene:{start,restart:vi.fn()},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
-    fight.init({mode:'versus',fighterId:'shoto',opponentId:'texas'});
+    fight.init({mode:'versus',fighterId:'bob',opponentId:'texas'});
     const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
     snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
     (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
     expect(buttons.slice(0,3).map(button=>button.textContent)).toEqual(['REVANCHE','TROCAR PERSONAGEM','MENU PRINCIPAL']);
     const send=(code:string)=>listeners.get('keydown')!({code,repeat:false,preventDefault:vi.fn(),stopImmediatePropagation:vi.fn()} as unknown as Event);
     send(down); send(confirm);
-    expect(start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto',selectVersus:true,...(winner ? {stageChooser:1} : {})});
+    expect(start).toHaveBeenCalledWith('MenuScene',{fighterId:'bob',selectVersus:true,...(winner ? {stageChooser:1} : {})});
   } finally { vi.unstubAllGlobals(); }
 });
 
@@ -80,7 +80,7 @@ const postMatch = (mode: 'versus' | 'arcade', winner: string | undefined, arcade
   const fight = new FightScene();
   const start=vi.fn(), restart=vi.fn();
   Object.assign(fight,{scene:{start,restart},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
-  fight.init({mode,fighterId:'shoto',opponentId:'texas',arcadeIndex});
+  fight.init({mode,fighterId:'bob',opponentId:'texas',arcadeIndex});
   const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
   snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
   (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
@@ -92,7 +92,7 @@ it('versus offers rematch, character swap and main menu', () => {
     const menu = postMatch('versus', 'player-2');
     expect(menu.buttons).toEqual(['REVANCHE','TROCAR PERSONAGEM','MENU PRINCIPAL']);
     menu.click(0); expect(menu.restart).toHaveBeenCalledOnce();
-    menu.click(2); expect(menu.start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto'});
+    menu.click(2); expect(menu.start).toHaveBeenCalledWith('MenuScene',{fighterId:'bob'});
   } finally { vi.unstubAllGlobals(); }
 });
 
@@ -101,7 +101,7 @@ it('arcade after a loss offers only a rematch or giving up, never a character sw
     const menu = postMatch('arcade', 'player-2');
     expect(menu.buttons).toEqual(['REVANCHE','DESISTIR E VOLTAR AO MENU']);
     menu.click(0); expect(menu.restart.mock.calls[0][0]).toMatchObject({ arcadeIndex: 0 });
-    menu.click(1); expect(menu.start).toHaveBeenCalledWith('MenuScene',{fighterId:'shoto'});
+    menu.click(1); expect(menu.start).toHaveBeenCalledWith('MenuScene',{fighterId:'bob'});
   } finally { vi.unstubAllGlobals(); }
 });
 
@@ -120,7 +120,7 @@ it('arcade after a win offers to continue or give up, and after the last opponen
 });
 
 it('runs two real seconds of slow motion after a fatal hit before continuing the round', () => {
-  const fighter = {...shoto,maxHealth:20};
+  const fighter = {...bob,maxHealth:20};
   const simulation = new Simulation(createGameConfig(1024,576),[fighter,fighter],{initialDistance:64});
   const fight = new FightScene();
   const neutral = {direction:'N' as const,buttons:new Set<'1'>()};
@@ -140,7 +140,7 @@ it('runs two real seconds of slow motion after a fatal hit before continuing the
 });
 
 it('keeps held movement but clears actions and buffered commands when the intro ends', () => {
-  const simulation = new Simulation(createGameConfig(1024,576),[shoto,shoto],{initialDistance:64});
+  const simulation = new Simulation(createGameConfig(1024,576),[bob,bob],{initialDistance:64});
   const fight = new FightScene();
   const keyboard = {clear:vi.fn(),clearActions:vi.fn(),read:()=>({direction:'N' as const,buttons:new Set<'1'>()})}, buffer = {clear:vi.fn(),push:vi.fn()};
   let intro = true;
@@ -164,12 +164,12 @@ it('boots with shared assets only; each match loads its own fighters, stage and 
   const shared={textures:{exists:(key:string)=>textures.has(key),getTextureKeys:()=>[...textures.keys()],remove:(key:string)=>{textures.delete(key);removed.push(key);}},
     cache:{audio:{exists:(key:string)=>textures.has(key)}},load};
   const finishLoading=()=>{for(const key of queued)textures.set(key,{});queued.clear();};
-  const matchKeys=/^(stage:|presentation:|texas-|shoto-)/;
+  const matchKeys=/^(stage:|presentation:|texas-|bob-)/;
   const boot=new BootScene();
   Object.assign(boot,shared,{cameras:{main:camera},scale:{width:1920,height:1080},scene:{start:vi.fn()}});
   boot.preload();
   for (const key of [...wallpapers.map(wallpaper => wallpaper.key),'sfx-perfect_block_1','contact-hit-light','wall-bounce']) expect(queued.has(key),key).toBe(true);
-  for (const fighter of ['shoto','texas','grappler','mrapple']) expect(queued.has(`fighter-icon-${fighter}`)).toBe(true);
+  for (const fighter of ['bob','texas','sm0g','mrapple']) expect(queued.has(`fighter-icon-${fighter}`)).toBe(true);
   expect([...queued].filter(key=>matchKeys.test(key))).toEqual([]);
   finishLoading();
   boot.create();
@@ -180,14 +180,14 @@ it('boots with shared assets only; each match loads its own fighters, stage and 
     const loaded=[...queued];finishLoading();return loaded;
   };
   const farm=stages.find(stage=>stage.id==='fazenda')!, saloon=stages.find(stage=>stage.id==='saloon-dia')!;
-  const first=match('shoto','shoto','fazenda');
-  expect(first).toContain('shoto-idle');expect(first.some(key=>key.startsWith('texas-'))).toBe(false);
+  const first=match('bob','bob','fazenda');
+  expect(first).toContain('bob-idle');expect(first.some(key=>key.startsWith('texas-'))).toBe(false);
   for(const layer of farm.layers)expect(first).toContain(stageTextureKey(farm,layer));
   expect(first).toContain('presentation:fazenda:ko');
   expect(first.filter(key=>/^(stage|presentation):/.test(key)&&!/^(stage|presentation):fazenda:/.test(key))).toEqual([]);
-  expect(match('shoto','shoto','fazenda'),'a rematch reuses what is loaded').toEqual([]);
-  const second=match('texas','shoto','saloon-dia');
-  expect(second).toContain('texas-idle');expect(second.some(key=>key.startsWith('shoto-'))).toBe(false);
+  expect(match('bob','bob','fazenda'),'a rematch reuses what is loaded').toEqual([]);
+  const second=match('texas','bob','saloon-dia');
+  expect(second).toContain('texas-idle');expect(second.some(key=>key.startsWith('bob-'))).toBe(false);
   for(const layer of saloon.layers)expect(second).toContain(stageTextureKey(saloon,layer));
   expect(second).toContain('presentation:saloon:ko');
   expect(removed.length).toBeGreaterThan(0);
@@ -205,7 +205,7 @@ it('starts the preparation scene before exposing any menu or fighter selection',
 it.each([
   ['PvP com vencedor', 'versus', 'player-2', 0, [['texas', 'Texas', 2]]],
   ['PvP empatado', 'versus', undefined, 0, []],
-  ['Arcade: vitória sobre o último adversário', 'arcade', 'player-1', -1, [['shoto', 'Bob', undefined]]],
+  ['Arcade: vitória sobre o último adversário', 'arcade', 'player-1', -1, [['bob', 'Bob', undefined]]],
   ['Arcade: vitória no meio da jornada', 'arcade', 'player-1', 0, []],
   ['Arcade: derrota', 'arcade', 'player-2', -1, []],
 ] as const)('tela de vitória: %s', (_name, mode, winner, arcadeIndex, expected) => {
@@ -216,9 +216,9 @@ it.each([
   try {
     const fight = new FightScene();
     Object.assign(fight,{scene:{start:vi.fn(),restart:vi.fn()},game:{canvas:{getBoundingClientRect:()=>({left:0,top:0,width:1024,height:576})}}});
-    fight.init({mode,fighterId:'shoto',opponentId:'texas',arcadeIndex:Math.max(0,arcadeIndex)});
+    fight.init({mode,fighterId:'bob',opponentId:'texas',arcadeIndex:Math.max(0,arcadeIndex)});
     if (arcadeIndex < 0) arcadeIndex = (fight as unknown as {arcadeRun:{opponents:string[]}}).arcadeRun.opponents.length - 1;
-    if (mode === 'arcade') fight.init({mode,fighterId:'shoto',arcadeIndex:Math.max(0,arcadeIndex),arcadeRun:(fight as unknown as {arcadeRun:object}).arcadeRun as never});
+    if (mode === 'arcade') fight.init({mode,fighterId:'bob',arcadeIndex:Math.max(0,arcadeIndex),arcadeRun:(fight as unknown as {arcadeRun:object}).arcadeRun as never});
     const snapshot = new Simulation(createGameConfig(1024,576)).snapshot();
     snapshot.phase='match-over'; snapshot.matchWinnerId=winner;
     (fight as unknown as {showResultMenu:(snapshot:SimulationSnapshot)=>void}).showResultMenu(snapshot);
@@ -233,10 +233,10 @@ it('draws every loaded texture once, through both sprite shaders, and waits for 
   const image = { setPipeline: vi.fn(() => image), destroy: vi.fn() };
   const finish = vi.fn(), addDynamicTexture = vi.fn(() => target);
   const scene = { game: { renderer: { gl: { finish } } }, make: { image: () => image },
-    textures: { getTextureKeys: () => ['__DEFAULT', 'shoto-idle', 'stage:fazenda:fundo', 'presentation:fazenda:ready', 'contact-hit-light'],
+    textures: { getTextureKeys: () => ['__DEFAULT', 'bob-idle', 'stage:fazenda:fundo', 'presentation:fazenda:ready', 'contact-hit-light'],
       addDynamicTexture, remove: (key: string) => { removed.push(key); } } };
   primeMatchTextures(scene as never);
-  expect(drawn).toEqual(['shoto-idle', 'stage:fazenda:fundo', 'presentation:fazenda:ready', 'contact-hit-light']);
+  expect(drawn).toEqual(['bob-idle', 'stage:fazenda:fundo', 'presentation:fazenda:ready', 'contact-hit-light']);
   expect(image.setPipeline).toHaveBeenCalledWith('character-color', expect.objectContaining({ palette: 1, lit: true }));
   expect(target.batchDraw).toHaveBeenCalledWith(image, 0, 0);
   expect(target.endDraw).toHaveBeenCalledOnce();
@@ -254,7 +254,7 @@ it('mostra os dois lutadores escolhidos durante o carregamento de combate', asyn
   vi.stubGlobal('window',{setTimeout,clearInterval,setInterval});
   try {
     const {showLoadingScreen}=await import('../ui/loadingScreen');
-    const close=showLoadingScreen(['shoto','texas']);
+    const close=showLoadingScreen(['bob','texas']);
     const screen=elements[0];
     expect(screen.classList.add).toHaveBeenCalledWith('match-loading');
     expect(screen.children.map(child=>child.className)).toEqual(['loading-caption','loading-fighter left','loading-fighter right']);

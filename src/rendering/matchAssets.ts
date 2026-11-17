@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { preloadTexasSprites } from './animations/texasSprites';
-import { preloadGrapplerSprites } from './animations/grapplerSprites';
-import { preloadShotoSprites } from './animations/shotoSprites';
+import { preloadSm0gSprites } from './animations/sm0gSprites';
+import { preloadBobSprites } from './animations/bobSprites';
 import { stages } from './stages/stageCatalog';
 import type { StageDefinition } from './stages/StageDefinition';
 import { preloadStage } from './stages/StageView';
@@ -9,7 +9,7 @@ import { preloadPresentations, presentationTheme } from './stages/stagePresentat
 import { CHARACTER_COLOR_PIPELINE } from './characterColor';
 
 /** Sheets of each fighter with body artwork; their texture keys start with `<fighter id>-`. */
-const fighterSprites: Readonly<Record<string, (scene: Phaser.Scene) => void>> = { texas: preloadTexasSprites, shoto: preloadShotoSprites, grappler: preloadGrapplerSprites };
+const fighterSprites: Readonly<Record<string, (scene: Phaser.Scene) => void>> = { texas: preloadTexasSprites, bob: preloadBobSprites, sm0g: preloadSm0gSprites };
 
 /**
  * Only what one match draws stays in memory: its fighters' sheets, its stage and that stage's fight titles. Textures of

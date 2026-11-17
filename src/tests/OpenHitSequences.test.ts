@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { CONTACT_HITSTOP_FRAMES } from '../engine/combat/hitstop';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
@@ -26,8 +26,8 @@ function hit(sim: Simulation, player:number, buttons:AttackButton[], continuous=
 }
 
 it.each([0,1])('drops the target at once when the last blow takes his health to zero, player %i', player => {
-  const fragile = {...shoto, maxHealth:20};
-  const fighters = player === 0 ? [shoto, fragile] as const : [fragile, shoto] as const;
+  const fragile = {...bob, maxHealth:20};
+  const fighters = player === 0 ? [bob, fragile] as const : [fragile, bob] as const;
   const sim = new Simulation(config, fighters, {initialDistance:56});
   for (const button of ['1','1','1'] as const) if (sim.snapshot().characters[1-player].health > 0) hit(sim, player, [button]);
   expect(sim.snapshot().characters[1-player]).toMatchObject({health:0, mode:'knockdown'});
@@ -36,8 +36,8 @@ it.each([0,1])('drops the target at once when the last blow takes his health to 
 });
 
 it.each([0,1])('allows an ultimate after the hit that reduced health to zero, player %i', player => {
-  const attacker = {...shoto, rage:{...shoto.rage!, maximum:0}, moves:shoto.moves.map(move => move.category === 'ultimate' ? {...move, rageCost:0} : move)};
-  const fragile = {...shoto, maxHealth:20};
+  const attacker = {...bob, rage:{...bob.rage!, maximum:0}, moves:bob.moves.map(move => move.category === 'ultimate' ? {...move, rageCost:0} : move)};
+  const fragile = {...bob, maxHealth:20};
   const fighters = player === 0 ? [attacker, fragile] as const : [fragile, attacker] as const;
   const sim = new Simulation(config, fighters, {initialDistance:56});
   hit(sim, player, ['1']);
@@ -122,7 +122,7 @@ it('reset clears connected pressure and lets a weak attack start after a strong 
 });
 
 it('releases a grounded defender when landing ends the attacker’s air basic early',()=>{
-  const fighter={...shoto,moves:shoto.moves.map(move=>move.id==='air-heavy-punch'?{
+  const fighter={...bob,moves:bob.moves.map(move=>move.id==='air-heavy-punch'?{
     ...move,startup:1,activeFrames:1,recovery:80,hitbox:{...move.hitbox,yOffset:-200,height:400},
   }:move)};
   const sim=new Simulation(config,[fighter,fighter],{training:true,initialDistance:56});
@@ -135,7 +135,7 @@ it('releases a grounded defender when landing ends the attacker’s air basic ea
 });
 
 it('preserves protected getup until a successful juggle follow-up has recovered',()=>{
-  const fighter={...shoto,moves:shoto.moves.map(move=>move.id==='heavy-kick'?{
+  const fighter={...bob,moves:bob.moves.map(move=>move.id==='heavy-kick'?{
     ...move,startup:1,activeFrames:1,recovery:80,hitbox:{...move.hitbox,yOffset:-400,height:400},
   }:move)};
   const sim=new Simulation(config,[fighter,fighter],{training:true,initialDistance:56});

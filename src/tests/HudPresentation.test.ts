@@ -33,9 +33,9 @@ function mockScene(){
 }
 it('positions each fighter icon at the outer edge of the health bar',()=>{
   const {scene,images}=mockScene();
-  const hud=new CombatHud(scene,1024,['Texas','Shoto'],false,'TREINO LIVRE',['texas','shoto']);
+  const hud=new CombatHud(scene,1024,['Texas','Bob'],false,'TREINO LIVRE',['texas','bob']);
   // Every icon shows a square window of its art at exactly 76 × 76 px, centred at the outer edge of its bar.
-  expect(images.map(image=>image.key)).toEqual(['fighter-icon-texas','fighter-icon-shoto']);
+  expect(images.map(image=>image.key)).toEqual(['fighter-icon-texas','fighter-icon-bob']);
   images.forEach((image,index)=>{
     const [cropX,cropY,cropWidth,cropHeight]=image.crop!;
     expect(cropWidth).toBe(cropHeight);
@@ -54,12 +54,12 @@ it('barra representa zero, máximo e dano simétrico sem ultrapassar o trilho',(
 });
 it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar recursos',()=>{
   const {scene,texts,commands}=mockScene();
-  const hud=new CombatHud(scene,1024,['Shoto','Shoto']);
+  const hud=new CombatHud(scene,1024,['Bob','Bob']);
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
   snapshot.characters[0].health=750;snapshot.characters[1].health=250;
   const original=structuredClone(snapshot);hud.update(snapshot,1024);
   expect(texts.some(t=>t.value==='99')).toBe(true);
-  expect(texts.filter(t=>t.value==='SHOTO').map(t=>(t.style as {fontSize:string}).fontSize)).toEqual(['18px','18px']);
+  expect(texts.filter(t=>t.value==='BOB').map(t=>(t.style as {fontSize:string}).fontSize)).toEqual(['18px','18px']);
   expect(texts.filter(t=>/ \/ 1000|P[12]\b|JOGADOR|SALA/.test(t.value)).map(t=>t.value)).toEqual([]);
   expect(texts.some(t=>t.value==='ROUND 1')).toBe(true);
   expect(commands).toContainEqual(['fillStyle',HUD.players[0]]);
@@ -77,7 +77,7 @@ it('HUD acompanha vida, timer e rounds reais, sem alterar o snapshot ou inventar
 });
 it('mostra o combo com o número de acertos grande e o dano embaixo, no lado do jogador',()=>{
   const {scene,texts}=mockScene();
-  const hud=new CombatHud(scene,1024,['Texas','Shoto'],true);
+  const hud=new CombatHud(scene,1024,['Texas','Bob'],true);
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
   hud.update({...snapshot,comboHistory:[{attackerId:'player-1',targetId:'player-2',hits:3,damage:72,active:true,lastFrame:0}]},1024);
   const count=texts.find(text=>text.value==='3')!;
@@ -136,7 +136,7 @@ it('layers white, yellow and red rage fills and shows completed levels', () => {
 });
 it('only restyles HUD text when its colour changes, so identical frames redraw no text texture',()=>{
   const {scene,texts,colorChanges}=mockScene();
-  const hud=new CombatHud(scene,1024,['Texas','Shoto'],true);
+  const hud=new CombatHud(scene,1024,['Texas','Bob'],true);
   const snapshot=new Simulation(createGameConfig(1024,576)).snapshot();
   hud.update(snapshot,1024);
   const colours=texts.map(text=>(text.style as {color?:string}).color), changes=colorChanges();
@@ -148,7 +148,7 @@ it('only restyles HUD text when its colour changes, so identical frames redraw n
 
 it.each([[0, 45, 1, false], [1, 979, -1, true]] as const)('o efeito do gasto da ultimate corre pela linha inferior da barra do jogador %i, espelhado no segundo, em 300 ms', (index, startX, direction, flipped) => {
   const {scene}=mockScene();
-  const hud=new CombatHud(scene,1024,['Texas','Shoto'],false,'TREINO LIVRE',['texas','shoto']);
+  const hud=new CombatHud(scene,1024,['Texas','Bob'],false,'TREINO LIVRE',['texas','bob']);
   const sprite:Record<string,any>={x:0,y:0,flip:false,destroy:vi.fn()};
   sprite.setDisplaySize=vi.fn(()=>sprite); sprite.setFlipX=vi.fn((value:boolean)=>{sprite.flip=value;return sprite;});
   sprite.setPosition=vi.fn((x:number,y:number)=>{sprite.x=x;sprite.y=y;return sprite;}); sprite.setFrame=vi.fn(()=>sprite);

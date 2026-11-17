@@ -85,12 +85,12 @@ describe('developer tuning', () => {
 
   it('trims or grows every frame\'s outline toward the width tried, and back to the saved one when cleared', async () => {
     const { outlineTargets, outlineTrim } = await import('../rendering/characterColor');
-    const tuning = new DevTuning(fresh()), saved = outlineTargets.get('shoto')!;
-    const trim = () => outlineTrim('shoto-walk', 0, 1024, .35);
+    const tuning = new DevTuning(fresh()), saved = outlineTargets.get('bob')!;
+    const trim = () => outlineTrim('bob-walk', 0, 1024, .35);
     const before = trim();
-    tuning.setOutline('shoto', saved + .35);
+    tuning.setOutline('bob', saved + .35);
     expect(trim()).toBeCloseTo(before - 1);
-    tuning.setOutline('shoto', undefined);
+    tuning.setOutline('bob', undefined);
     expect(trim()).toBeCloseTo(before);
     expect(tuning.overrides.outlines).toEqual({});
   });
@@ -125,9 +125,9 @@ describe('developer tuning', () => {
 });
 
 it('ajustes salvos com os ids antigos dos personagens passam para os ids novos', () => {
-  const saved = { moves: { cowboy: { 'light-punch': { damage: 30 } } }, spriteScales: { 'cowboy:idle': 1.1, 'shoto:idle': .9 }, selection: { puppet: { hero: { zoom: 2 } } } };
+  const saved = { moves: { cowboy: { 'light-punch': { damage: 30 } } }, spriteScales: { 'cowboy:idle': 1.1, 'bob:idle': .9 }, selection: { puppet: { hero: { zoom: 2 } } } };
   const loaded = loadOverrides({ getItem: () => JSON.stringify(saved) });
   expect(loaded.moves).toEqual({ texas: { 'light-punch': { damage: 30 } } });
-  expect(loaded.spriteScales).toEqual({ 'texas:idle': 1.1, 'shoto:idle': .9 });
+  expect(loaded.spriteScales).toEqual({ 'texas:idle': 1.1, 'bob:idle': .9 });
   expect(Object.keys(loaded.selection)).toEqual(['mrapple']);
 });

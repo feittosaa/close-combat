@@ -1,0 +1,56 @@
+import type { CharacterState } from '../engine/characters/CharacterState';
+import { sm0g } from '../engine/data/fighters/sm0g';
+import { getSm0gPose } from './animations/sm0gSprites';
+import { sm0gElbow, sm0gHand } from './sm0gHands';
+import { SM0G_DISPLAY, sm0gAdjustment } from './animations/sm0gSprites';
+import { SM0G_ULTIMATE_SPIN_FRAMES } from '../engine/combat/ultimateActivation';
+
+/** `x`, `y`: world offset from the fighter, mirrored already; `scale`: world pixels per sheet pixel; `origin`: the sheet point placed there. */
+export type Sm0gEffect = { name: string; frame: number; x: number; y: number; scale: number; origin: { x: number; y: number } };
+
+/** Where the smoke leaves the arm in each sheet's regular grid frame (362 × 724), and how large it is drawn. */
+const ARM_SMOKE_SCALE = .5;
+const SMOKE_ORIGINS: Readonly<Record<string, { x: number; y: number }>> = {
+  'air-grab': { x: 35, y: 248 }, 'grab-low': { x: 21, y: 337 }, 'grab-slam': { x: 95, y: 398 },
+  'grab-throw': { x: 59, y: 380 }, 'ultimate-soco': { x: 300, y: 362 }, 'hammer-punch': { x: 47, y: 382 }, 'ultimate-grab': { x: 94, y: 364 }, 'ultimate-start': { x: 180, y: 460 }, 'combo-111-vapor': { x: 215, y: 362 },
+};
+const WHIRL = { scale: .6, origin: { x: 181, y: 362 }, y: -115 };
+
+/** Smoke comes out of the fists, following the arm through the drawings, and the ultimate's whirl surrounds the body. */
+export function sm0gEffects(state: CharacterState, activationFrame?: number, contactPaused = false): Sm0gEffect[] {
+  const attack = state.attack;
+  if (!attack) return [];
+  const sign = state.facing === 'right' ? 1 : -1, pose = getSm0gPose(state, 0, activationFrame);
+  const smoke = (name: string, frame: number): Sm0gEffect => {
+    // The hammer's and the combo's smoke come off the elbow, not from where the fists land.
+    const hand = (name === 'hammer-punch' || name === 'combo-111-vapor' ? sm0gElbow : sm0gHand)(state, pose.name, pose.drawing) ?? { x: sign * 60, y: -150 };
+    return { name, frame, x: hand.x - (name === 'hammer-punch' ? sign * 30 : 0), y: hand.y, scale: ARM_SMOKE_SCALE, origin: SMOKE_ORIGINS[name] };
+  };
+  if (['ultimate-grab', 'ultimate-soco'].includes(attack.moveId) && activationFrame !== undefined) {
+    if (activationFrame < 25) return [];
+    const elbows = [[36,-210],[37,-210],[45,-220],[42,-240],[45,-235],[70,-230]] as const;
+    const point = elbows[pose.drawing], adjustment = sm0gAdjustment(pose.name, pose.drawing);
+    const unit = SM0G_DISPLAY * adjustment.scale / 640;
+    return [{ name: 'ultimate-start', frame: Math.floor((activationFrame - 25) / 8) % 6,
+      x: sign * (adjustment.center * SM0G_DISPLAY * adjustment.scale + point[0] * unit - 55), y: point[1] * unit,
+      scale: ARM_SMOKE_SCALE, origin: SMOKE_ORIGINS['ultimate-start'] }];
+  }
+  if (attack.moveId === 'ultimate-soco') {
+    return pose.drawing >= 1 ? [smoke('ultimate-soco', pose.drawing - 1)] : [];
+  }
+  // The second and third light punches of a chain let off steam from the extended arm while the blows land.
+  if (pose.name === 'combo-111') {
+    const age = attack.elapsedFrames - (attack.startupFrames ?? sm0g.moves.find(candidate => candidate.id === 'light-punch')!.startup) + 6;
+    return age >= 0 && age < 24 ? [smoke('combo-111-vapor', Math.floor(age / 4))] : [];
+  }
+  const move = sm0g.moves.find(candidate => candidate.id === attack.moveId);
+  if (!move || (!SMOKE_ORIGINS[move.id] && move.category !== 'throw') || ((move.commandGrab || move.category === 'throw') && !attack.hasHit)) return [];
+  if (contactPaused && attack.hasHit && attack.elapsedFrames <= (attack.startupFrames ?? move.startup)) return [];
+  const delay = move.id === 'grab-slam' ? 10 : move.id === 'grab-throw' ? 8 : move.id === 'hammer-punch' ? -6 : 0;
+  const age = attack.elapsedFrames - (attack.startupFrames ?? move.startup) - delay;
+  const result: Sm0gEffect[] = SMOKE_ORIGINS[move.id] && age >= 0 && age < 24 ? [smoke(move.id, Math.floor(age / 4))] : [];
+  if (move.id === 'ultimate-grab' && age >= 0 && age < SM0G_ULTIMATE_SPIN_FRAMES) {
+    result.push({ name: 'ultimate-rotation', frame: Math.floor(age / 3) % 6, x: 0, y: WHIRL.y, scale: WHIRL.scale, origin: WHIRL.origin });
+  }
+  return result;
+}

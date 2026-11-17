@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { defaultCharacter as shoto } from '../engine/data/characters';
+import { defaultCharacter as bob } from '../engine/data/characters';
 import { KeyboardInput } from '../input/KeyboardInput';
 import { PLAYER_ONE_KEYS } from '../input/keyboardLayouts';
 import type { Direction, FrameInput } from '../input/types';
@@ -13,7 +13,7 @@ it.each(['F','B'] as const)('segundo toque %s inicia imediatamente e completa 18
     const sim=practice();const pair=[N,N];pair[index]=input(direction);
     sim.stepFrame(pair);sim.stepFrame([N,N]);const before=sim.snapshot().characters[index].x;
     sim.stepFrame(pair);
-    const speed=direction==='F'?shoto.movement.dashSpeed:shoto.movement.backdashSpeed;
+    const speed=direction==='F'?bob.movement.dashSpeed:bob.movement.backdashSpeed;
     const sign=(index===0?1:-1)*(direction==='F'?1:-1);
     expect(sim.snapshot().characters[index].mode).toBe('dashing');
     expect(sim.snapshot().characters[index].x-before).toBeCloseTo(sign*speed);
@@ -33,7 +33,7 @@ it.each([0,1])('segurar para trás não cancela nem inverte o dash para frente d
   const request=[N,N];request[index]={...N,dash:'F'};sim.stepFrame(request);
   expect(sim.snapshot().characters[index].mode).toBe('dashing');
   for(let frame=1;frame<18;frame++){sim.stepFrame(side('B'));expect(sim.snapshot().characters[index].mode,`${frame}`).toBe('dashing');}
-  expect((sim.snapshot().characters[index].x-before)*(index===0?1:-1)).toBeCloseTo(shoto.movement.dashSpeed*18);
+  expect((sim.snapshot().characters[index].x-before)*(index===0?1:-1)).toBeCloseTo(bob.movement.dashSpeed*18);
 });
 it('um «trás» novo ainda cancela o dash para frente quando não estava mantido',()=>{
   const sim=practice();sim.stepFrame([{...N,dash:'F'},N]);sim.stepFrame([N,N]);

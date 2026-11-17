@@ -39,13 +39,13 @@ export function outlineTrim(texture: string, frame: string | number, frameHeight
 }
 /**
  * Colour of one sprite, read by the shared pipeline (`palettePipeline.ts`) while it draws that sprite: the selective
- * alternate palette (`palette`: 0 none, 1 bob, 2 texas, 3 magic, 4 magic highlight, 5 grappler) and, when `lit`, the stage light.
+ * alternate palette (`palette`: 0 none, 1 bob, 2 texas, 3 magic, 4 magic highlight, 5 sm0g) and, when `lit`, the stage light.
  * The sheet correction is read by the pipeline from the texture being drawn.
  */
 export interface CharacterColorData {
   palette: number; lit: boolean; exposure: number; shadow: readonly [number, number, number]; occlusion: number; volume: number; side: number; warmth: number;
 }
-export type Palette = 'none' | 'bob' | 'texas' | 'magic' | 'magic-highlight' | 'grappler';
+export type Palette = 'none' | 'bob' | 'texas' | 'magic' | 'magic-highlight' | 'sm0g';
 /**
  * Stage lighting for a fighter: `exposure` scales the whole figure, `shadow` is the ambient colour taken by its dark tones,
  * `occlusion` deepens them, `volume` lightens each frame's top and darkens its feet, `side` lightens the side facing the brighter part of the stage and `warmth` is the flame light on the lit surfaces. Nothing rotates hue, so clothing keeps its colour.
@@ -108,7 +108,7 @@ export function palettePixel(r: number, g: number, b: number, palette: Palette, 
   const [dh, ds, dv] = hsv(...drawn);
   if (!ds) return [r, g, b];
   // The olive shirt, its shadows and the tie reach greener, duller tones in some sheets than in the idle.
-  if (palette === 'grappler') {
+  if (palette === 'sm0g') {
     // The suit's neon orange and amber (saturated and bright, unlike leather, hair and skin) turn cyan, keeping light and shade;
     // the olive jacket and the dark hair (read from the corrected colour, which aligns the sheets) only darken, to set this model apart.
     const orange = smoothstep(.74, .82, ds) * smoothstep(8, 14, dh) * (1 - smoothstep(26, 30, dh));
@@ -222,6 +222,6 @@ export class CharacterColorEffect {
   }
 }
 
-const PALETTE_CODES: Readonly<Record<Palette, number>> = { none: 0, bob: 1, texas: 2, magic: 3, 'magic-highlight': 4, grappler: 5 };
+const PALETTE_CODES: Readonly<Record<Palette, number>> = { none: 0, bob: 1, texas: 2, magic: 3, 'magic-highlight': 4, sm0g: 5 };
 const isLit = (color: CharacterColor): boolean =>
   (color.exposure ?? 1) !== 1 || (color.occlusion ?? 0) > 0 || (color.volume ?? 0) > 0 || (color.side ?? 0) !== 0 || (color.warmth ?? 0) > 0 || (color.shadow ?? [1, 1, 1]).some(channel => channel !== 1);

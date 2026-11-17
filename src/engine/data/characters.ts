@@ -1,7 +1,7 @@
 import type { MoveDefinition } from './moves';
-import { shoto } from './fighters/shoto';
+import { bob } from './fighters/bob';
 import { texas } from './fighters/texas';
-import { grappler } from './fighters/grappler';
+import { sm0g } from './fighters/sm0g';
 
 export interface CharacterHurtbox {
   offsetX: number;
@@ -59,10 +59,10 @@ export interface CharacterDefinition {
   comboChains?: readonly { name: string; recipeIds: readonly string[] }[];
   collision: CharacterCollisionProfile;
 }
-export const DEFAULT_CHARACTER_ID = 'shoto';
-export const characters: readonly CharacterDefinition[] = [shoto, texas, grappler];
+export const DEFAULT_CHARACTER_ID = 'bob';
+export const characters: readonly CharacterDefinition[] = [bob, texas, sm0g];
 export const playableCharacters = characters;
-export const defaultCharacter = shoto;
+export const defaultCharacter = bob;
 export function getCharacterById(id: string): CharacterDefinition | undefined {
   return characters.find(character => character.id === id);
 }

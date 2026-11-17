@@ -1,14 +1,14 @@
 import { expect, it } from 'vitest';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import type { AttackButton, Direction, FrameInput } from '../input/types';
 
 const press = (direction: Direction, ...buttons: AttackButton[]): FrameInput => ({ direction, buttons: new Set(buttons) });
 const crouch = press('D');
 
 function lowThenHigh(defender: Direction) {
-  const sim = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true, initialDistance: 56 });
+  const sim = new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true, initialDistance: 56 });
   for (let i = 0; i < 6; i++) sim.stepFrame([press('N'), press(defender)]);
   const defenderState = () => sim.snapshot().characters[1];
   sim.stepFrame([press('D', '1'), press(defender)]);
@@ -35,7 +35,7 @@ it('quem leva um golpe agachado se levanta, e o combo continua com um golpe alto
 });
 
 it('um golpe baixo bloqueado agachado não levanta o defensor', () => {
-  const sim = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true, initialDistance: 56 });
+  const sim = new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true, initialDistance: 56 });
   const guard = press('DB');
   for (let i = 0; i < 6; i++) sim.stepFrame([press('N'), guard]);
   sim.stepFrame([press('D', '1'), guard]);

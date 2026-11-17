@@ -33,7 +33,7 @@ EFFECTS = {'tomato', 'crow'}
 EFFECT_PREFIXES = ('effect-', 'magic-')
 MATERIALS = 10
 # Palette of each fighter's second model (`Palette` in `characterColor.ts`).
-ALTERNATE_PALETTES = {'shoto': 'bob', 'texas': 'texas', 'grappler': 'grappler'}
+ALTERNATE_PALETTES = {'bob': 'bob', 'texas': 'texas', 'sm0g': 'sm0g'}
 # Pixels darker than this lightness are outline and line work, not material color.
 OUTLINE_L = 22
 # Distance (ΔE) beyond which a pixel matches no material of the reference.

@@ -2,7 +2,7 @@
  * Procura rotas de combo para o tutorial testando entradas legais na simulação real.
  * Só combina golpes e receitas já existentes; não cria receitas, regras nem dados de combate.
  * Também audita as regras (sem combo infinito, nada depois da ultimate) e lista violações sem corrigi-las.
- * Uso: npm run combos:find  (grava src/training/comboRoutes.json); `-- --only shoto` refaz só esse personagem e preserva os demais;
+ * Uso: npm run combos:find  (grava src/training/comboRoutes.json); `-- --only bob` refaz só esse personagem e preserva os demais;
  * com personagem e comandos, testa uma rota (ver testRoute).
  * Quem tem golpe que quica o adversário na parede também ganha um combo de quique, procurado com o adversário
  * perto da parede (`wall` em comboRoutes.json) e tocado assim no tutorial.
@@ -35,7 +35,7 @@ const ULTIMATE_ROUTES = 2;
 /** Routes the user gave as examples (one press per entry); kept whenever the simulation confirms them. */
 const SUGGESTED: Readonly<Record<string, readonly (readonly string[])[]>> = {
   texas: [['3', '3', '3', '1', 'd+1', 'd+1', '4', '4', '2', 'd,df,f,2']],
-  shoto: [['1', '1', '2', '1', '1', '1', '3', '3', '2', '2', '2', 'f,d,df,4']],
+  bob: [['1', '1', '2', '1', '1', '1', '3', '3', '2', '2', '2', 'f,d,df,4']],
 };
 /** Advanced routes join several presses; shorter ones belong to the combos section. */
 const MIN_ADVANCED_STEPS = 4;
@@ -336,7 +336,7 @@ function testRoute(fighterId: string, commands: readonly string[]): void {
 const args = process.argv.slice(2);
 if (args.length && args[0] !== '--only') testRoute(args[0], args.slice(1));
 else {
-  // `--only shoto,texas` searches just those fighters and keeps the routes already saved for the others.
+  // `--only bob,texas` searches just those fighters and keeps the routes already saved for the others.
   const only = args[0] === '--only' ? new Set(args.slice(1).join(',').split(',').filter(Boolean)) : undefined;
   const unknown = [...only ?? []].filter(id => !characters.some(fighter => fighter.id === id));
   if (unknown.length) throw new Error(`Personagem desconhecido: ${unknown.join(', ')}`);

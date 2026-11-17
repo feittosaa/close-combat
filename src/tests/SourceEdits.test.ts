@@ -4,27 +4,27 @@ import { texas } from '../engine/data/fighters/texas';
 import { editCss, editFighter, editFighterArt, editHud, editNames, literal } from '../dev/sourceEdits';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
-const shotoSource = read('../engine/data/fighters/shoto.ts'), texasSource = read('../engine/data/fighters/texas.ts');
-const grapplerSource = read('../engine/data/fighters/grappler.ts'), enLocale = read('../i18n/locales/en.ts');
+const bobSource = read('../engine/data/fighters/bob.ts'), texasSource = read('../engine/data/fighters/texas.ts');
+const sm0gSource = read('../engine/data/fighters/sm0g.ts'), enLocale = read('../i18n/locales/en.ts');
 const artSource = read('../ui/fighterArt.ts'), cssSource = read('../style.css'), hudSource = read('../ui/hudTheme.ts');
 const none = { moves: {}, recipes: {}, combos: {} };
 const line = (source: string, id: string) => source.split('\n').findIndex(text => text.includes(`{ id: '${id}'`));
 
 describe('salvar ajustes do modo desenvolvedor no código', () => {
   it('sem ajustes, nenhum arquivo muda', () => {
-    expect(editFighter(shotoSource, 'shoto', none)).toBe(shotoSource);
+    expect(editFighter(bobSource, 'bob', none)).toBe(bobSource);
     expect(editCss(cssSource, {})).toBe(cssSource);
     expect(editHud(hudSource, {})).toBe(hudSource);
     expect(editFighterArt(artSource, {})).toBe(artSource);
   });
 
   it('grava tempos, dano e recuos só no golpe ajustado, inclusive no golpe aéreo de mesmo nome', () => {
-    const edited = editFighter(shotoSource, 'shoto', { ...none, moves: { shoto: { 'light-punch': { startup: 9, damage: 22, pushbackBlock: 7 } } } });
+    const edited = editFighter(bobSource, 'bob', { ...none, moves: { bob: { 'light-punch': { startup: 9, damage: 22, pushbackBlock: 7 } } } });
     const lines = edited.split('\n'), at = line(edited, 'light-punch');
     expect(lines[at]).toContain('startup: 9, activeFrames: 3, recovery: 15,');
     expect(lines[at + 1]).toContain('damage: 22, hitstun: 15, blockstun: 8, pushback: { hit: 1, block: 7 },');
-    expect(lines[line(edited, 'air-light-punch')]).toBe(shotoSource.split('\n')[line(shotoSource, 'air-light-punch')]);
-    expect(edited.split('\n').filter((text, index) => text !== shotoSource.split('\n')[index])).toHaveLength(2);
+    expect(lines[line(edited, 'air-light-punch')]).toBe(bobSource.split('\n')[line(bobSource, 'air-light-punch')]);
+    expect(edited.split('\n').filter((text, index) => text !== bobSource.split('\n')[index])).toHaveLength(2);
   });
 
   it('retempera receitas existentes, acrescentando o campo quando falta, e adiciona receitas novas ao fim da lista', () => {
@@ -55,7 +55,7 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
   });
 
   it('recusa golpes e receitas que não existem no arquivo', () => {
-    expect(() => editFighter(shotoSource, 'shoto', { ...none, moves: { shoto: { inexistente: { startup: 1 } } } })).toThrow('inexistente');
+    expect(() => editFighter(bobSource, 'bob', { ...none, moves: { bob: { inexistente: { startup: 1 } } } })).toThrow('inexistente');
   });
 
   it('grava cores do :root e do HUD no formato original', () => {
@@ -76,17 +76,17 @@ describe('salvar ajustes do modo desenvolvedor no código', () => {
     expect(() => editFighterArt(artSource, { nobody: { hero: { zoom: 1, x: 0, y: 0 } } })).toThrow('nobody');
   });
 
-  it('grava ajustes em qualquer golpe do Grappler, todos escritos na própria lista de golpes dele', () => {
-    const edited = editFighter(grapplerSource, 'grappler', { ...none, moves: { grappler: { 'ultimate-grab': { damage: 777 }, 'hammer-punch': { recovery: 31 }, 'light-punch': { damage: 999 } } } });
+  it('grava ajustes em qualquer golpe do SM0G-000, todos escritos na própria lista de golpes dele', () => {
+    const edited = editFighter(sm0gSource, 'sm0g', { ...none, moves: { sm0g: { 'ultimate-grab': { damage: 777 }, 'hammer-punch': { recovery: 31 }, 'light-punch': { damage: 999 } } } });
     expect(edited).toMatch(/id:'ultimate-grab'.*damage:777/);
-    expect(edited.split('\n').filter((text, index) => text !== grapplerSource.split('\n')[index])).toHaveLength(3);
-    expect(() => editFighter(grapplerSource, 'grappler', { ...none, moves: { grappler: { 'inexistente': { damage: 1 } } } })).toThrow(/não encontrado/);
-    expect(grapplerSource).not.toMatch(/shoto\.moves/);
+    expect(edited.split('\n').filter((text, index) => text !== sm0gSource.split('\n')[index])).toHaveLength(3);
+    expect(() => editFighter(sm0gSource, 'sm0g', { ...none, moves: { sm0g: { 'inexistente': { damage: 1 } } } })).toThrow(/não encontrado/);
+    expect(sm0gSource).not.toMatch(/bob\.moves/);
   });
 
   it('renomeia golpes no código e nas traduções', () => {
-    const renamed = editFighter(grapplerSource, 'grappler', { ...none, moveNames: { grappler: { 'hammer-punch': 'Marreta' } } });
+    const renamed = editFighter(sm0gSource, 'sm0g', { ...none, moveNames: { sm0g: { 'hammer-punch': 'Marreta' } } });
     expect(renamed).toMatch(/id:'hammer-punch', name:'Marreta'/);
-    expect(editNames(enLocale, 'grappler', { 'hammer-punch': 'Marreta' })).toContain("'move.grappler.hammer-punch': 'Marreta'");
+    expect(editNames(enLocale, 'sm0g', { 'hammer-punch': 'Marreta' })).toContain("'move.sm0g.hammer-punch': 'Marreta'");
   });
 });

@@ -8,7 +8,7 @@ import { createStageLayout, getStageArenaBounds } from '../rendering/stages/stag
 import { LOGICAL_VIEW } from '../rendering/presentation';
 
 /** The tutorial opponent is always Bob, whoever the player chooses. */
-export const TUTORIAL_OPPONENT_ID = 'shoto';
+export const TUTORIAL_OPPONENT_ID = 'bob';
 export const tutorialOpponent = (): CharacterDefinition => getCharacterById(TUTORIAL_OPPONENT_ID)!;
 
 /** Separation from which the combo routes were found and are replayed. */

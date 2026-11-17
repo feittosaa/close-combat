@@ -52,13 +52,13 @@ export interface CharacterState {
   idleStartedFrame?: number;
   attack?: CharacterAttack;
   hitFlashFrames: number;
-  /** Presentation of the last Grappler grab while the victim is held or recovering from it. */
-  grapplerGrabReaction?: { moveId: string; startedFrame: number; startedLying: boolean };
+  /** Presentation of the last SM0G-000 grab while the victim is held or recovering from it. */
+  sm0gGrabReaction?: { moveId: string; startedFrame: number; startedLying: boolean };
   rageAnimation?: { kind: 'breaker' | 'air-recovery'; startedFrame: number; airborne: boolean };
   perfectBlockStartedFrame?: number;
   hitReaction?: { level: 'low' | 'mid' | 'high'; startedFrame: number };
   grabbedStartedFrame?: number;
-  /** Start of the Shoto ippon victim reaction. */
+  /** Start of the Bob ippon victim reaction. */
   ipponReceivedFrame?: number;
   grabbedHold?: boolean;
   commandGrabbed?: boolean;

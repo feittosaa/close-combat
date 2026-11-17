@@ -7,8 +7,8 @@ import { attackDurationFrames } from '../engine/combat/frameData';
 import { stages } from '../rendering/stages/stageCatalog';
 import { autoSpriteScale, type SheetMeasurements, type SpriteCalibration } from '../rendering/animations/spriteScale';
 import { texasDisplayHeight, texasFootAnchor, getTexasFrameSize } from '../rendering/animations/texasSprites';
-import { GRAPPLER_DISPLAY, grapplerFrameSize } from '../rendering/animations/grapplerSprites';
-import { getShotoResolution, SHOTO_FRAME, shotoIdleScale, shotoIdleTexture, shotoSpriteScale } from '../rendering/animations/shotoSprites';
+import { SM0G_DISPLAY, sm0gFrameSize } from '../rendering/animations/sm0gSprites';
+import { getBobResolution, BOB_FRAME, bobIdleScale, bobIdleTexture, bobSpriteScale } from '../rendering/animations/bobSprites';
 import { ALTERNATIVE_KINDS, alternativeArt, arcadeFrame, fighterArt, frameStyle, heroFrame, tileFrame, withAlternative, type AlternativeArtKind, type AlternativeFraming, type FighterArt, type IconWindow, type SelectionFrame, type VictoryFrame } from '../ui/fighterArt';
 import { preloadAllMatchAssets } from '../rendering/matchAssets';
 import { outlineTargets } from '../rendering/characterColor';
@@ -55,9 +55,9 @@ const fighterSizing = (id: string, pixelScale: Sizing['pixelScale'], footAnchor:
 });
 const SIZING: Readonly<Record<string, Sizing>> = {
   texas: fighterSizing('texas', key => texasDisplayHeight / getTexasFrameSize(key), () => texasFootAnchor),
-  shoto: fighterSizing('shoto', key => (key === shotoIdleTexture ? shotoIdleScale : shotoSpriteScale) / getShotoResolution(key),
-    key => key === shotoIdleTexture ? 670 / 724 : 900 / SHOTO_FRAME),
-  grappler: fighterSizing('grappler', key => GRAPPLER_DISPLAY / grapplerFrameSize(key.slice('grappler-'.length)), () => 465 / 640),
+  bob: fighterSizing('bob', key => (key === bobIdleTexture ? bobIdleScale : bobSpriteScale) / getBobResolution(key),
+    key => key === bobIdleTexture ? 670 / 724 : 900 / BOB_FRAME),
+  sm0g: fighterSizing('sm0g', key => SM0G_DISPLAY / sm0gFrameSize(key.slice('sm0g-'.length)), () => 465 / 640),
 };
 const REFERENCE_SHEETS = ['idle-normal', 'idle'];
 const SPRITE_FPS = 12;

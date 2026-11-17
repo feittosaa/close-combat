@@ -4,7 +4,7 @@ import { ProjectileView } from '../rendering/ProjectileView';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
 import { texas } from '../engine/data/fighters/texas';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import type { HitEvent } from '../engine/combat/AttackResolver';
 import type { ProjectileState } from '../engine/combat/ProjectileState';
 
@@ -13,7 +13,7 @@ const event: HitEvent = { attackerId:'player-1',targetId:'player-2',moveId:'ligh
 const move = (fighter: typeof texas, id: string) => fighter.moves.find(item => item.id === id)!;
 
 it('usa a imagem de blindagem para qualquer golpe absorvido, de qualquer lutador', () => {
-  for (const fighter of [texas, shoto]) expect(contactEffectKey({...event,armored:true},fighter.moves[0])).toBe('shield');
+  for (const fighter of [texas, bob]) expect(contactEffectKey({...event,armored:true},fighter.moves[0])).toBe('shield');
 });
 
 it.each(['hit','block'] as const)('selects separate images for %s variants', outcome => {
@@ -23,9 +23,9 @@ it.each(['hit','block'] as const)('selects separate images for %s variants', out
   expect(contactEffectKey(contact,move(texas,'crouch-heavy-kick'))).toBe(`${outcome}-sweep`);
   expect(contactEffectKey(contact,move(texas,'push-away'))).toBe(`${outcome}-sweep`);
   expect(contactEffectKey(contact,move(texas,'quick-shot'))).toBe(`${outcome}-blue`);
-  expect(contactEffectKey(contact,move(shoto,'tomato-light'))).toBe(`${outcome}-wine`);
-  expect(contactEffectKey(contact,move(shoto,'tomato-heavy'))).toBe(`${outcome}-wine`);
-  expect(contactEffectKey(contact,move(shoto,'crow-ultimate'))).toBe(`${outcome}-heavy`);
+  expect(contactEffectKey(contact,move(bob,'tomato-light'))).toBe(`${outcome}-wine`);
+  expect(contactEffectKey(contact,move(bob,'tomato-heavy'))).toBe(`${outcome}-wine`);
+  expect(contactEffectKey(contact,move(bob,'crow-ultimate'))).toBe(`${outcome}-heavy`);
 });
 
 it('preloads every image as a six-frame sheet', () => {
@@ -34,7 +34,7 @@ it('preloads every image as a six-frame sheet', () => {
   expect(once).toHaveBeenCalledWith('filecomplete-spritesheet-contact-hit-blue', expect.any(Function));
   expect(image).toHaveBeenCalledWith('wall-bounce', expect.any(String));
   expect(spritesheet).toHaveBeenCalledTimes(31);
-  expect(spritesheet).toHaveBeenCalledWith('contact-grappler-ultimate-rotation', expect.any(String), { frameWidth:362, frameHeight:724 });
+  expect(spritesheet).toHaveBeenCalledWith('contact-sm0g-ultimate-rotation', expect.any(String), { frameWidth:362, frameHeight:724 });
   expect(spritesheet).toHaveBeenCalledWith('contact-ultimate-ground-impact', expect.any(String), { frameWidth:362, frameHeight:724 });
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-light',expect.any(String),{frameWidth:362,frameHeight:724});
   expect(spritesheet).toHaveBeenCalledWith('contact-hit-heavy',expect.any(String),{frameWidth:464,frameHeight:724});
@@ -49,7 +49,7 @@ it('renders simultaneous contacts using sprites, advances frames and clears them
   const first=makeSprite(),second=makeSprite();
   const image=vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
   const view=new ProjectileView({add:{graphics:()=>graphics,image},textures:{exists:()=>true}} as never);
-  const characters=new Simulation(createGameConfig(1024,576),[texas,shoto]).snapshot().characters;
+  const characters=new Simulation(createGameConfig(1024,576),[texas,bob]).snapshot().characters;
   view.sync([],[],10,[{...event,contactPoint:{x:300,y:250}}, {...event,outcome:'block',perfectBlock:true,contactPoint:{x:400,y:200},attackerId:'player-2',targetId:'player-1'}],characters);
   expect(image).toHaveBeenCalledTimes(2);
   expect(image).toHaveBeenNthCalledWith(2,400,200,'contact-block-perfect',0);
@@ -68,7 +68,7 @@ it('fixa o impacto da ultimate no ponto de aterrissagem e encerra o efeito', () 
   Object.values(sprite).forEach(fn => fn.mockReturnValue(sprite));
   const image = vi.fn().mockReturnValue(sprite);
   const view = new ProjectileView({add:{graphics:()=>graphics,image},textures:{exists:()=>true}} as never);
-  const [state] = new Simulation(createGameConfig(1024,576),[shoto,texas]).snapshot().characters;
+  const [state] = new Simulation(createGameConfig(1024,576),[bob,texas]).snapshot().characters;
   const victim = {...state, y:440, ultimateImpactFrame:100, ultimateImpactPosition:{x:420,y:488}};
   view.sync([],[],101,[],[victim]);
   expect(image).toHaveBeenCalledWith(420,488,'contact-ultimate-ground-impact','0');

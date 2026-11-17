@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shoto } from '../engine/data/fighters/shoto';
+import { bob } from '../engine/data/fighters/bob';
 import { texas } from '../engine/data/fighters/texas';
 import type { CharacterDefinition } from '../engine/data/characters';
 import {
@@ -7,16 +7,16 @@ import {
   type SheetMeasure, type SheetMeasurements, type SpriteCalibration,
 } from '../rendering/animations/spriteScale';
 import { texasSheetScale } from '../rendering/animations/texasSprites';
-import { getShotoSpritePose } from '../rendering/animations/shotoSprites';
+import { getBobSpritePose } from '../rendering/animations/bobSprites';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import shotoMeasurements from '../assets/sprites/characters/shoto/measurements.json';
+import bobMeasurements from '../assets/sprites/characters/bob/measurements.json';
 import texasMeasurements from '../assets/sprites/characters/texas/measurements.json';
-import shotoCalibration from '../assets/sprites/characters/shoto/calibration.json';
+import bobCalibration from '../assets/sprites/characters/bob/calibration.json';
 import texasCalibration from '../assets/sprites/characters/texas/calibration.json';
 
 const fighters = [
-  { definition: shoto, measurements: shotoMeasurements as SheetMeasurements, calibration: shotoCalibration as SpriteCalibration, reference: 'idle-normal' },
+  { definition: bob, measurements: bobMeasurements as SheetMeasurements, calibration: bobCalibration as SpriteCalibration, reference: 'idle-normal' },
   { definition: texas, measurements: texasMeasurements as SheetMeasurements, calibration: texasCalibration as SpriteCalibration, reference: 'idle' },
 ] satisfies { definition: CharacterDefinition; measurements: SheetMeasurements; calibration: SpriteCalibration; reference: string }[];
 const atlases = Object.keys(import.meta.glob('../assets/sprites/characters/*/*.atlas.json'));
@@ -24,7 +24,7 @@ const NOT_A_BODY = /^(effect-|magic-|crow$|tomato$|dynamite$|idle$)/;
 
 /** Escalas do refinamento manual validado antes da análise automática: medem a precisão do modelo, não a calibração vigente. */
 const manual: Record<string, Record<string, number | readonly number[]>> = {
-  shoto: {
+  bob: {
     'crouch-guard': 1.08, 'turn-air': 1.1, hurt: .97 * 1.02, 'hurt-high': .97 * 1.02, 'hurt-low': .97 * 1.02, 'air-hurt': 1.05 * .97,
     defeat: 1.1 * .8, fall: [1.3 * .92 * 1.1, 1.3 * .92 * 1.1, 1.3 * .92 * 1.1, 1.08 * 1.1, 1.08 * 1.1, 1.08 * 1.1],
   },
@@ -64,7 +64,7 @@ describe.each(fighters)('escala automática das animações de $definition.name'
   });
 
   it('traz uma folha regenerada em outro tamanho de volta ao tamanho validado', () => {
-    for (const name of ['walk', 'guard', 'crouch-guard', 'hurt', definition.id === 'shoto' ? 'fall' : 'fall-landing']) {
+    for (const name of ['walk', 'guard', 'crouch-guard', 'hurt', definition.id === 'bob' ? 'fall' : 'fall-landing']) {
       const regenerated: SheetMeasurements = { ...measurements, [name]: {
         ...measurements[name], bodies: measurements[name].bodies.map(body => body * 1.2), heights: measurements[name].heights.map(height => height * 1.2),
       } };
@@ -86,16 +86,16 @@ describe.each(fighters)('escala automática das animações de $definition.name'
     for (const name of ['crouch-guard', 'crouch-punch', 'crouch-hurt'].filter(name => measurements[name])) {
       expect(sheetKind(definition, measurements, name), name).toBe('crouching');
     }
-    if (definition.id === 'shoto') expect(sheetKind(definition, measurements, 'crouch-uppercut')).toBe('standing');
+    if (definition.id === 'bob') expect(sheetKind(definition, measurements, 'crouch-uppercut')).toBe('standing');
   });
 });
 
 describe('uso das escalas no jogo', () => {
   it('a Texas e o Bob desenham cada folha com a escala validada', () => {
     expect(texasSheetScale('fall-landing', 5)).toBeCloseTo(.975, 3);
-    const state = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true }).snapshot().characters[0];
-    expect(getShotoSpritePose({ ...state, mode: 'blocking', crouching: true, stateStartedFrame: 0 }, 14)?.scale).toBeCloseTo(1.08, 9);
-    expect(getShotoSpritePose({ ...state, mode: 'knockdown', grounded: false, stateStartedFrame: 0 }, 4)?.scale).toBe(1);
+    const state = new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true }).snapshot().characters[0];
+    expect(getBobSpritePose({ ...state, mode: 'blocking', crouching: true, stateStartedFrame: 0 }, 14)?.scale).toBeCloseTo(1.08, 9);
+    expect(getBobSpritePose({ ...state, mode: 'knockdown', grounded: false, stateStartedFrame: 0 }, 4)?.scale).toBe(1);
   });
 });
 
@@ -121,9 +121,9 @@ describe('modelo por postura para folhas ainda não validadas', () => {
   });
   it('compara agachados com agachados e golpes que se levantam com as poses em pé', () => {
     const set = sheets({ 'crouch-punch': measure(.33, .34, .27), 'crouch-uppercut': measure(.36, .35 * CROUCH_EXIT + .05, .25) });
-    expect(sheetKind(shoto, set, 'crouch-punch')).toBe('crouching');
-    expect(autoSpriteScale(shoto, set, 'crouch-punch')).toBe(1);
-    expect(sheetKind(shoto, set, 'crouch-uppercut')).toBe('standing');
+    expect(sheetKind(bob, set, 'crouch-punch')).toBe('crouching');
+    expect(autoSpriteScale(bob, set, 'crouch-punch')).toBe(1);
+    expect(sheetKind(bob, set, 'crouch-uppercut')).toBe('standing');
   });
   it('amplia por quadro um corpo caído desenhado pequeno, limitado pelo comprimento aprendido', () => {
     expect(autoSpriteScale(texas, sheets({ fall: measure(.2, .2, .2, .4) }), 'fall')).toBeCloseTo(LYING_LENGTH * .6 / .4, 2);

@@ -24,7 +24,7 @@ it('lê comandos da notação universal, incluindo agachado, simultâneo, sequê
 });
 
 it('o combo de exemplo do Bob (1,1,2 levantamento, 1,1,1,3,3,2,2,2 e chute antiaéreo forte) está no avançado', () => {
-  expect(routes.shoto.advanced.map(route => route.steps.map(step => step.command).join(' '))).toContain('1 1 2 1 1 1 3 3 2 2 2 f,d,df,4');
+  expect(routes.bob.advanced.map(route => route.steps.map(step => step.command).join(' '))).toContain('1 1 2 1 1 1 3 3 2 2 2 f,d,df,4');
   expect(routes.texas.advanced.map(route => route.steps.map(step => step.command).join(' '))).toContain('3 3 3 1 d+1 d+1 4 4 2 d,df,f,2');
 });
 
@@ -98,7 +98,7 @@ describe.each(characters.filter(fighter => routes[fighter.id]).map(fighter => [f
     const ultimate = (route: (typeof data.advanced)[number]) => route.moveIds.some(id => fighter.moves.find(move => move.id === id)?.category === 'ultimate');
     const plain = data.advanced.filter(route => !ultimate(route));
     expect(plain.length).toBeGreaterThan(1);
-    // An ultimate only on a shortcut key (the Grappler's) cannot end a pressed route.
+    // An ultimate only on a shortcut key (SM0G-000's) cannot end a pressed route.
     if (fighter.moves.some(move => move.category === 'ultimate' && !move.shortcutOnly)) expect(ultimate(data.advanced[data.advanced.length - 1])).toBe(true);
     expect(data.advanced.slice(0, plain.length)).toEqual(plain);
     const pairs = plain.slice(1).map((route, index) => [plain[index], route]);

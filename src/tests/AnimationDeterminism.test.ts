@@ -3,14 +3,14 @@ import type Phaser from 'phaser';
 import { CombatantView } from '../rendering/CombatantView';
 import { Simulation } from '../engine/simulation/Simulation';
 import { createGameConfig } from '../engine/data/gameConfig';
-import { defaultCharacter as shoto } from '../engine/data/characters';
+import { defaultCharacter as bob } from '../engine/data/characters';
 vi.mock('phaser', () => ({ default: {} }));
 it('geometria neutra mantém corpo, pés e contato em FPS distintos, pausa e reset', () => {
   const read = (fps: number) => {
     const commands: unknown[][] = [];
     const graphics = Object.fromEntries(['setDepth', 'clear', 'fillStyle', 'fillRect', 'lineStyle', 'strokeRect', 'lineBetween', 'destroy'].map(method => [method, (...args: unknown[]) => { commands.push([method, ...args]); return graphics; }]));
     const view = new CombatantView({ add: { graphics: () => graphics } } as unknown as Phaser.Scene, 0xe45b5b);
-    const sim = new Simulation(createGameConfig(1024, 576), [shoto, shoto], { training: true, initialDistance: 64 });
+    const sim = new Simulation(createGameConfig(1024, 576), [bob, bob], { training: true, initialDistance: 64 });
     const N = { direction: 'N' as const, buttons: new Set<'1'>() };
     for (let i = 0; i < fps; i++) {
       sim.advance(1000 / fps, (_states, frame) => [{ ...N, buttons: new Set(frame === 0 ? ['1'] as const : []) }, N]);
