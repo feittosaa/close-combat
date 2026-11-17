@@ -45,6 +45,7 @@ import { PlayerInputDisplay } from '../ui/PlayerInputDisplay';
 import { TrainingSession } from '../training/TrainingSession';
 import { TrainingHud } from '../ui/TrainingHud';
 import { ArcadeController, type ArcadeDifficulty } from '../engine/combat/ArcadeController';
+import { arcadeRoutes } from '../training/arcadeRoutes';
 import { createArcadeRun, isTrainingMode, opponentFor, stageForMatch, matchPalettes, type ArcadeRun, type FightSetup, type MatchMode } from './matchSetup';
 import { FightSounds, preloadFightSounds } from '../audio/FightSounds';
 import { UltimateOverlay } from '../ui/UltimateOverlay';
@@ -268,7 +269,8 @@ export class FightScene extends Phaser.Scene {
     if (this.tutorial) { this.training!.initialDistance = TUTORIAL_START_DISTANCE; this.training!.showGeometry = false; this.training!.autoRestore = false; }
     this.tutorialBrowsing = false;
     this.difficulty = data.difficulty;
-    this.bot = this.mode === 'arcade' ? new ArcadeController(this.opponentFighter, this.selectedFighter, this.difficulty) : undefined;
+    this.bot = this.mode === 'arcade' ? new ArcadeController(this.opponentFighter, this.selectedFighter, this.difficulty,
+      { routes: arcadeRoutes(this.opponentFighter.id), gravity: createGameConfig(LOGICAL_VIEW.width, LOGICAL_VIEW.height).movement.gravity }) : undefined;
     this.botRound = 0;
     this.resultMenuIndex = 0;
   }
@@ -485,7 +487,7 @@ export class FightScene extends Phaser.Scene {
     if (this.bot && snapshot) {
       if (this.botRound !== snapshot.round) { this.bot.reset(); this.botRound = snapshot.round; }
       inputs[1] = snapshot.phase === 'fight'
-        ? this.bot.readInput(frame, characters[1], characters[0], snapshot.projectiles) : neutralInput();
+        ? this.bot.readInput(frame, characters[1], characters[0], snapshot.projectiles, snapshot.comboHistory) : neutralInput();
     }
     if (this.simulation?.hasKnockout()) inputs.fill(neutralInput());
     this.currentInputs = inputs as [FrameInput, FrameInput];

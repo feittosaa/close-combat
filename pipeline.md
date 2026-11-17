@@ -1,3 +1,16 @@
+## IA dos bots do Arcade — 2026-11-17
+
+Sem aprovação de jogo: validada só por testes e duelos simulados entre bots.
+
+- Estilo por personagem (`arcadeStyles.ts`): Bob luta a média distância e atravessa projéteis com os golpes invulneráveis a eles (também para fechar a distância contra quem atira); SM0G-000 cola e agarra mais; Texas segura a distância atirando, foge de quem chega perto com dash (ou, no nível difícil, pelo ar com dash aéreo) e passa por cima se encurralada.
+- Percepção: só usa o que se vê na tela (animação do golpe, projéteis, rage, combo em curso), com atraso de reação mais um sorteio; nunca lê os comandos digitados do adversário e não pune no primeiro quadro de recuperação.
+- Defesa: abaixa quando o golpe ou projétil passa por cima do corpo agachado (mesma geometria do resolvedor) e defende nos demais casos. Contra o Bob, o laço da Texas sobrepõe cerca de 12 px do corpo agachado e não é desviável; já a Texas e o Bob agachados desviam de golpes altos.
+- Anti-aéreo por previsão da trajetória do pulo (gravidade e deslocamento observado): só ataca quando o golpe encontraria o adversário.
+- Punição: usa os combos avançados de `comboRoutes.json` (normal até a dificuldade 2, difícil todos) quando o primeiro golpe alcança o adversário na janela de recuperação, e desiste se o primeiro golpe é bloqueado ou o combo é quebrado.
+- Rage (difícil): quebra o combo se ele já é longo ou perigoso, guardando a barra da ultimate quando ela ainda vale mais; a ultimate só sai quando mata, a rage vai transbordar ou a luta está perdida; o Rush sai com a rage cheia ou numa virada.
+- `ArcadeController` aceita `{ routes, gravity, seed }`; a `FightScene` passa as rotas (`src/training/arcadeRoutes.ts`) e o histórico de combos. Testes em `ArcadeBehavior.test.ts`.
+- Pendente: ajuste fino de dificuldade jogando de verdade (SM0G-000 sem dash perde para a Texas difícil), carga de laço e tecnologia de agarrão não usadas, e espelhos com a mesma semente terminam em empate.
+
 ## Folhas ampliadas por IA e peso do repositório — 2026-11-17
 
 - Texas: o KO do agarrão 2+4 só é decidido depois que a captura devolve o dano, ou seja, só pelos tiros de braço (antes aparecia ao agarrar).
