@@ -537,7 +537,7 @@ it.each([0,1])('a ultimate levanta e acerta seis vezes após o primeiro disparo:
     }
     expect(steps,`${targetFighter.id}, distância ${distance}`).toEqual([0,1,2,3,4,5]);
     for(let index=1;index<heights.length;index++)expect(heights[index]).toBeLessThan(heights[index-1]);
-    expect(sim.snapshot().comboHistory.slice(-1)[0]).toMatchObject({hits:6,damage:360});
+    expect(sim.snapshot().comboHistory.slice(-1)[0]).toMatchObject({hits:6,damage:420});
     expect(sim.snapshot().characters[1-player].mode).toBe('knockdown');
     for(let tick=0;tick<120&&!sim.snapshot().characters[1-player].grounded;tick++) step();
     expect(sim.snapshot().characters[1-player]).toMatchObject({grounded:true,mode:'knockdown'});
@@ -825,17 +825,17 @@ it.each([0, 1])('confirma 1,2,2 e emenda a ultimate pelo comando ou atalho: joga
     expect(combo,method).toMatchObject({hits:punches+1,damage:20+(punches-1)*38+volleyShotDamage(ultimate,punches,0)});
     for(let tick=0;tick<500 && (sim.snapshot().comboHistory.find(c=>c.attackerId===`player-${player+1}`)?.hits ?? 0)<punches+6;tick++)step();
     expect(sim.snapshot().comboHistory.find(c=>c.attackerId===`player-${player+1}`),method)
-      .toMatchObject({hits:punches+6,damage:20+(punches-1)*38+360-20*punches});
+      .toMatchObject({hits:punches+6,damage:20+(punches-1)*38+420-20*punches});
   }
 });
 
 it('distribui exatamente a redução da ultimate e não aplica dano negativo', () => {
   const ultimate = texas.moves.find(move => move.id === 'bulls-eye')!;
   const shots = (hits: number) => Array.from({length:6}, (_, shot) => volleyShotDamage(ultimate,hits,shot));
-  expect(shots(0)).toEqual([60,60,60,60,60,60]);
-  expect(shots(6)).toEqual([40,40,40,40,40,40]);
-  expect(shots(4).reduce((sum,damage) => sum + damage,0)).toBe(280);
-  expect(shots(18)).toEqual([0,0,0,0,0,0]);
+  expect(shots(0)).toEqual([70,70,70,70,70,70]);
+  expect(shots(6)).toEqual([50,50,50,50,50,50]);
+  expect(shots(4).reduce((sum,damage) => sum + damage,0)).toBe(340);
+  expect(shots(21)).toEqual([0,0,0,0,0,0]);
   expect(shots(25)).toEqual([0,0,0,0,0,0]);
 });
 
