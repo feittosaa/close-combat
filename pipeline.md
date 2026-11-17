@@ -1,3 +1,9 @@
+## Folhas ampliadas por IA e peso do repositório — 2026-11-17
+
+- Texas: o KO do agarrão 2+4 só é decidido depois que a captura devolve o dano, ou seja, só pelos tiros de braço (antes aparecia ao agarrar).
+- As 251 folhas «high» foram ampliadas com o Upscayl (`digital-art-4x`, `scripts/upscale-sprite-sheets.py`, em lotes, retomável pelo registro `upscaled` em `prepared.json`) e reduzidas ao mesmo tamanho; as «low» derivam delas. As escalas validadas em `calibration.json` foram deslocadas pela variação das medições, e o usuário aprovou o resultado no jogo. Cores: o `verify-character-colors.py` ainda lista desvios de tom, não comparados com o estado anterior.
+- Peso: essa troca alterou cerca de 770 MB de PNG. Mudanças em massa de sprites incham o histórico do Git; de tempos em tempos, principalmente após mudanças de sprites, será preciso recriar o repositório no GitHub com histórico limpo para não pesá-lo. Subir os sprites em commits menores (um por personagem) até lá.
+
 ## Correções de luta, README e escalas — 2026-11-16
 
 Integrado por pedido do usuário, sem conferência no jogo. Validação local: `tsc`, 1124 testes e build.

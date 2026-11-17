@@ -1166,6 +1166,19 @@ it.each([0,1])('cada tiro de braço do agarrão 2+4 vale um acerto com a sua par
   const combo=sim.snapshot().comboHistory.find(entry=>entry.attackerId===`player-${player+1}`)!;
   expect(combo).toMatchObject({hits:TEXAS_GRAB_SHOTS.length,damage:throwDamage});
 });
+it('o agarrão 2+4 só pode nocautear com os tiros de braço, nunca na captura',()=>{
+  const throwDamage=texas.moves.find(move=>move.id==='throw-24')!.damage;
+  const fragile={...bob,maxHealth:throwDamage};
+  const sim=new Simulation(createGameConfig(1024,576),[texas,fragile],{initialDistance:65});
+  sim.stepFrame([{direction:'B',buttons:new Set(['2','4'])},input()]);
+  let shots=0;
+  for(let tick=0;tick<200&&shots===0;tick++) {
+    sim.stepFrame([input(),input()]); const snapshot=sim.snapshot();
+    shots=snapshot.hitEvents.filter(event=>event.armShot==='shot').length;
+    if(shots===0) expect(snapshot).toMatchObject({phase:'fight',characters:[{},{health:throwDamage}]}); expect(snapshot.knockoutStartedAt).toBeUndefined();
+  }
+  expect(shots).toBe(1);
+});
 it.each([0,1])('o agarrão 2+4 mantém a captura, dispara e lança o alvo: jogador %i', player => {
   const defs=player===0?[texas,bob] as const:[bob,texas] as const;
   const sim=new Simulation(createGameConfig(1024,576),defs,{training:true,initialDistance:65});

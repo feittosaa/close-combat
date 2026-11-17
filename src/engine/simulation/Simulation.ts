@@ -671,10 +671,6 @@ export class Simulation {
         this.pendingGroundDamage.set(target.characterId, event.damage);
       }
     }
-    if (!this.options.training && this.knockoutStartedAt === undefined && this.characters.some(character => character.health === 0)) {
-      this.knockoutStartedAt = this.elapsedFrames;
-    }
-    if (!this.options.training) this.dropDefeated();
     for (const event of this.lastHitEvents) {
       const index = this.characters.findIndex(character => character.characterId === event.targetId);
       if (event.outcome === 'block' && !lockedAtInput[index] && this.frame - this.guardStarted[index] < PERFECT_BLOCK_WINDOW) {
@@ -696,6 +692,11 @@ export class Simulation {
       this.pendingThrow = { event, remaining: 15, previousButtons: new Set((inputs[targetIndex] ?? neutral()).buttons), attempted: false };
       return false;
     });
+    // After the grab returns its damage, so the KO is only decided by the arm shots.
+    if (!this.options.training && this.knockoutStartedAt === undefined && this.characters.some(character => character.health === 0)) {
+      this.knockoutStartedAt = this.elapsedFrames;
+    }
+    if (!this.options.training) this.dropDefeated();
     this.lastHitEvents.push(...armShots);
     if (confirmedThrow) this.lastHitEvents.push(confirmedThrow);
     for (const hit of this.lastHitEvents) {
