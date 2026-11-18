@@ -1,4 +1,4 @@
-import { getLanguage, LANGUAGES, saveLanguage, t, type Language } from '../i18n/i18n';
+import { getLanguage, loadLanguage, saveLanguage, t } from '../i18n/i18n';
 import { getAudioVolumes, saveAudioVolumes, type AudioVolumes } from '../audio/audioSettings';
 import { gamepads, type PadPress } from '../input/GamepadHub';
 import { ControlSettings, type Tab } from './ControlSettings';
@@ -17,16 +17,17 @@ export function needsQuickSetup(): boolean {
 function markDone(): void { try { globalThis.localStorage?.setItem(doneKey, '1'); } catch { /* Without storage the card simply shows again. */ } }
 
 /**
- * Card shown on the first visit: language, graphics quality, volume and the entry to the keyboard and controller
- * shortcuts. Each choice is stored as it is made; changing the language or the graphics restarts the game on Start.
+ * Card shown on the first visit, after the welcome guide (which previews the language): graphics quality, volume and the
+ * entry to the keyboard and controller shortcuts. Volume is stored as it is changed; language and graphics are stored on
+ * Start, which then warns that the game restarts when either one differs from what was stored.
  */
 export class QuickSetup {
   static active = false;
   private readonly root = document.createElement('section');
-  private readonly initialLanguage = getLanguage();
-  private readonly initialGraphics = loadGraphicsQuality();
+  private graphics = loadGraphicsQuality();
   private readonly previousFocus = document.activeElement as HTMLElement | null;
   private readonly releasePad: () => void;
+  private restarting = false;
   constructor(private readonly close: () => void) {
     QuickSetup.active = true; this.root.className = 'control-settings'; this.root.setAttribute('role', 'dialog'); this.root.setAttribute('aria-modal', 'true');
     document.body.append(this.root); this.render();
@@ -42,10 +43,8 @@ export class QuickSetup {
       for (const [id, text] of options) { const option = document.createElement('option'); option.value = id; option.textContent = text; field.append(option); }
       field.value = value; field.onchange = () => change(field.value as T); page.append(row(label, field));
     };
-    select(t('settings.language'), LANGUAGES.map(language => [language.id, language.name] as const), getLanguage(),
-      (language: Language) => { saveLanguage(language); this.render(); this.root.querySelector<HTMLElement>('select')?.focus(); });
-    select(t('settings.graphics'), [['low', t('settings.graphicsLow')], ['high', t('settings.graphicsHigh')]] as const, loadGraphicsQuality(),
-      (quality: GraphicsQuality) => { saveGraphicsQuality(quality); });
+    select(t('settings.graphics'), [['low', t('settings.graphicsLow')], ['high', t('settings.graphicsHigh')]] as const, this.graphics,
+      (quality: GraphicsQuality) => { this.graphics = quality; });
     const volume = getAudioVolumes();
     for (const [channel, key] of [['master', 'settings.volumeMaster'], ['music', 'settings.volumeMusic'], ['effects', 'settings.volumeEffects']] as const) {
       const value = el('output', 'controls-volume-value', `${volume[channel]}%`), slider = document.createElement('input');
@@ -55,22 +54,31 @@ export class QuickSetup {
     }
     const shortcuts = el('span', 'quick-setup-shortcuts');
     shortcuts.append(button(t('settings.tabKeyboard'), () => this.shortcuts('keyboard')), button(t('settings.tabGamepad'), () => this.shortcuts('gamepad')));
-    page.append(row(t('setup.shortcuts'), shortcuts));
+    page.append(row(t('setup.shortcuts'), shortcuts, 'div'));
     const footer = el('footer'); footer.append(button(t('setup.start'), () => this.finish()));
     panel.append(el('h1', '', t('setup.title')), el('p', '', t('setup.intro')), page, footer);
     this.root.replaceChildren(panel);
     this.root.querySelector<HTMLElement>('select')?.focus();
   }
 
-  private shortcuts(tab: Tab): void { new ControlSettings(() => this.root.querySelector<HTMLElement>('.quick-setup-shortcuts button')?.focus(), tab); }
+  private shortcuts(tab: Tab): void { new ControlSettings(() => undefined, tab); }
 
-  /** Restarts only when a choice that is read once at startup has changed. */
+  /** Stores the language and graphics; when either changed, a notice explains the restart before it happens. */
   private finish(): void {
-    markDone();
-    const restart = getLanguage() !== this.initialLanguage || loadGraphicsQuality() !== this.initialGraphics;
-    this.destroy();
-    if (restart) window.location.reload();
+    const language = getLanguage(), restart = language !== loadLanguage() || this.graphics !== loadGraphicsQuality();
+    saveLanguage(language); saveGraphicsQuality(this.graphics); markDone();
+    if (restart) this.notice(); else this.destroy();
   }
+
+  private notice(): void {
+    this.restarting = true;
+    const panel = el('div', 'controls-panel quick-setup controls-confirm'), footer = el('footer');
+    panel.setAttribute('role', 'alertdialog'); panel.setAttribute('aria-label', t('setup.restartTitle'));
+    footer.append(button(t('setup.restartOk'), () => this.restart()));
+    panel.append(el('h1', '', t('setup.restartTitle')), el('p', '', t('setup.restartNotice')), footer);
+    this.root.replaceChildren(panel); footer.querySelector('button')?.focus();
+  }
+  private restart(): void { this.destroy(); window.location.reload(); }
 
   private readonly onKey = (event: KeyboardEvent): void => {
     if (ControlSettings.active) return;
@@ -80,10 +88,10 @@ export class QuickSetup {
       return;
     }
     event.stopImmediatePropagation();
-    if (event.code === 'Escape') { event.preventDefault(); this.finish(); }
+    if (event.code === 'Escape') { event.preventDefault(); this.restarting ? this.restart() : this.finish(); }
   };
   private readonly onPad = (press: PadPress): void => {
-    if (press.action === 'back') this.finish(); else if (press.action) navigateFocus(this.root, press.action);
+    if (press.action === 'back') this.restarting ? this.restart() : this.finish(); else if (press.action) navigateFocus(this.root, press.action);
   };
   private destroy(): void {
     window.removeEventListener('keydown', this.onKey, true); this.releasePad(); this.root.remove(); QuickSetup.active = false;
@@ -97,6 +105,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text 
 function button(text: string, action: () => void): HTMLButtonElement {
   const node = el('button', '', text); node.type = 'button'; node.onclick = action; return node;
 }
-function row(label: string, control: HTMLElement): HTMLElement {
-  const line = el('label', 'control-system-row'); line.append(el('span', '', label), control); return line;
+/** A `<label>` passes its hover to its first control, so a row with several buttons is a plain `<div>`. */
+function row(label: string, control: HTMLElement, tag: 'label' | 'div' = 'label'): HTMLElement {
+  const line = el(tag, 'control-system-row'); line.append(el('span', '', label), control); return line;
 }

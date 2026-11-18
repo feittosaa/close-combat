@@ -36,6 +36,8 @@ export function saveLanguage(language: Language): boolean {
   applyDocumentLanguage();
   try { localStorage.setItem(STORAGE_KEY, language); return true; } catch { return false; }
 }
+/** Shows a language without storing it, so a screen can preview the choice until it is confirmed with `saveLanguage`. */
+export function previewLanguage(language: Language): void { current = language; applyDocumentLanguage(); }
 export function getLanguage(): Language { return current; }
 export function applyDocumentLanguage(): void {
   if (typeof document !== 'undefined') document.documentElement.lang = LANGUAGES.find(language => language.id === current)!.tag;

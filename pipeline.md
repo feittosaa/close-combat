@@ -1,6 +1,7 @@
 ## Configuração rápida da primeira visita — 2026-11-17
 
-- Na primeira abertura o menu mostra um cartão (`src/ui/QuickSetup.ts`) com idioma, qualidade gráfica, volumes e a entrada para os atalhos de teclado e de controle (abre as abas correspondentes das Configurações). Cada escolha é salva na hora; **Começar** (ou Esc / B) marca como feito e reinicia o jogo só se idioma ou qualidade mudaram.
+- Na primeira abertura o menu mostra, em sequência, o guia de boas-vindas (`src/ui/WelcomeGuide.ts`, cartão maior) e a configuração rápida (`src/ui/QuickSetup.ts`). O guia tem duas páginas: idioma (com os modos de jogo) e os controles atuais do jogador 1 com a dica de começar pelo Tutorial. Esc ou B pulam o guia.
+- O idioma escolhido aparece na hora apenas nesses dois cartões (`previewLanguage`, sem gravar). A configuração rápida traz qualidade gráfica, volumes (gravados ao mudar) e a entrada para os atalhos de teclado e controle. Ao **Começar**, idioma e qualidade são gravados; se algum difere do que estava salvo, um aviso explica que o jogo será reiniciado e só então reinicia. Esc ou B também concluem. Textos `welcome.*` e `setup.*` nos 8 idiomas.
 - Quem já tem idioma, qualidade ou volume salvos não vê o cartão. Textos `setup.*` nos 8 idiomas; teste em `QuickSetup.test.ts`.
 - Validação local: tsc, suíte (1145 testes) e build. Falta conferir no navegador (layout, foco por teclado e controle).
 
